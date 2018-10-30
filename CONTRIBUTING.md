@@ -151,6 +151,7 @@ Pull requests are the best way to propose changes to our codebase (we use [Githu
 * Keep your pull request as small as possible (break up your feature into multiple pull requests)
 * Create it early, update it often, and sync it regularly with `master`
 * Don't clutter your branch history with merge commits, try to [rebase](https://www.atlassian.com/git/tutorials/merging-vs-rebasing): `git pull --rebase origin/upstream master`
+* Make use of `git rebase -i master` to structure your commits in meaningful an logical parts
 
 > **Work in Progress:** Use `[WIP]` as title prefix for unfinished work.
 > This shows that the pull request is still in progress and not ready to be merged.
@@ -176,7 +177,7 @@ An issue, feature, or bug-fix is considered done, if **all** of the following el
     - [ ] meets all functional & non-functional requirements
 - [ ] Tests are implemented with an appropriate diff coverage
 - [ ] Pull request
-    - [ ] Travis-CI must build successfully
+    - [ ] CI build finalizes successfully
     - [ ] Contains detailed description of your changes
     - [ ] Approved by at least one reviewer
     - [ ] Ensure that the commit messages are [good commit messages](https://chris.beams.io/posts/git-commit/)
