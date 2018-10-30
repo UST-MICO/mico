@@ -10,13 +10,13 @@ When contributing to MICO, please first discuss the change you wish to make via 
 
 [Code of Conduct](#code-of-conduct)
 
-[What should I know before I get started?](#what-should-i-know-before-i-get-started)
+[What should I know before I get started](#what-should-i-know-before-i-get-started)
 
   * [GitHub Flow](#we-use-github-flow-for-development)
   * [Design Decisions](#design-decisions)
   * [Versioning](#versioning)
 
-[How Can I Contribute?](#how-can-i-contribute)
+[How Can I Contribute](#how-can-i-contribute)
 
   * [Reporting Bugs](#reporting-bugs)
   * [Proposing new Features](#proposing-new-features)
@@ -26,6 +26,7 @@ When contributing to MICO, please first discuss the change you wish to make via 
 
   * [Git Commit Messages](#git-commit-messages)
   * [Branch Naming Guidelines](#branch-naming-guidelines)
+  * [Source File Headers](#source-file-headers)
 
 ---
 
@@ -51,9 +52,6 @@ In short, when you submit code changes, your submissions are understood to be un
 Feel free to contact the maintainers if that's a concern.
 By contributing, you agree that your contributions will be licensed under the corresponding open source license of the respective component.
 
-In the following, USTUTT staff members are called **committers**, which have write access to `master` branches and are permitted to review and merge pull requests.
-In contrast, students and external parties are called **contributors**, which can only contribute and propose changes through respective issues and pull requests.
-
 ### We use GitHub Flow for Development
 
 All our component repositories usually consists of a _master_ and several branches.
@@ -65,13 +63,13 @@ The name of your **branch** should closely describe the added changes and comply
 ### Design Decisions
 
 When we make a significant decision in how we maintain the project and what we can or cannot support, we will document it as a [MADR](https://adr.github.io/madr/).
-The architectural decisions records are maintained under `adr` inside our `docs` repository.
+The architectural decisions records are maintained under `adr` inside our [docs](https://github.com/UST-MICO/docs) repository.
 If you have a question around how we do things, check to see if it is documented there.
 If it is *not* documented there, please raise your question in our Slack channel.
 
 ### Versioning
 
-This project uses [Semantic Versioning](https://semver.org/) or _SemVer_ for short.
+This project uses [Semantic Versioning](https://semver.org) or _SemVer_ for short.
 If you do not know what SemVer is, a detailed explanation is available on their website.
 Any new releases must adhere to this versioning scheme.
 
@@ -88,7 +86,7 @@ Before creating new issues, please check the following as you might find out tha
 * **Perform a [cursory search](https://github.com/search?q=+is:issue+user:UST-MICO)** to see if the bug has already been reported.
   If it has, add a comment to the existing issue instead of opening a new one.
 
-Afterwards, provide the following information by filling in the [template](ISSUE_TEMPLATE.md).
+Afterwards, provide the following information by filling in the [template](.github/ISSUE_TEMPLATE.md).
 Explain the problem and include additional details (configuration and environment) to help maintainers reproduce the problem:
 
 * **Use a clear and descriptive title** for the issue to identify the problem.
@@ -137,35 +135,29 @@ As we use [GitHub Flow](https://guides.github.com/introduction/flow/index.html) 
 The name of your **branch** should closely describe the added changes and comply with our [naming guidelines](#branch-naming-guidelines).
 
 > **Hotfixes:** Commits with small, insignificant changes can be done without creating an issue.
-> In such cases, it's allowed to directly open a pull request..
+> In such cases, it's allowed to directly open a pull request.
 
 #### Pull Requests
 
 Pull requests are the best way to propose changes to our codebase (we use [Github Flow](https://guides.github.com/introduction/flow/index.html)).
 
 * Create your [branch](#branch-naming-guidelines) from `master`
-* Fill in [the required template](PULL_REQUEST_TEMPLATE.md)
+* Fill in [the required template](.github/PULL_REQUEST_TEMPLATE.md)
 * Use a clear and descriptive title related to your issue
 * Commit your changes with a [meaningful title and description](#git-commit-messages)
 * Include screenshots and animated GIFs in your pull request whenever possible
-* Document new code based on our [Documentation Guideline](#documentation-guideline)
-* Ensure the [test suite](#test-suite) passes
-* If you've added code that should be tested, add unit/integration tests or extend the test suite
+* If you've added code that should be tested, add unit/integration tests
 * Make sure your code applies the coding guidelines of the respective component
 * Keep your pull request as small as possible (break up your feature into multiple pull requests)
 * Create it early, update it often, and sync it regularly with `master`
 * Don't clutter your branch history with merge commits, try to [rebase](https://www.atlassian.com/git/tutorials/merging-vs-rebasing): `git pull --rebase origin/upstream master`
-
-> **Note:** Some repositories may require a special pull request setup.
-> For example, commits in a pull request for Winery have to squashed into a single commit.
-> Therefore, be sure to read the guidelines of the respective source code repository!
 
 > **Work in Progress:** Use `[WIP]` as title prefix for unfinished work.
 > This shows that the pull request is still in progress and not ready to be merged.
 
 #### Reviewing a Pull Request
 
-Before a pull request can be merged, it must fulfill the criteria specified in the [Definition of Done](dod.md).
+Before a pull request can be merged, it must fulfill the criteria specified in the [Definition of Done](#definition-of-done).
 
 When a feature is considered finished it is necessary to get a **review**.
 To get a review, remove the `[WIP]` prefix and add the `needs review` label.
@@ -173,6 +165,26 @@ To get a review, remove the `[WIP]` prefix and add the `needs review` label.
 Pull Requests are usually reviewed by one or two committers, and checked on a regular basis.
 If the reviewers submitted their review react to their comments and update your feature.
 A pull request is ready to merge if the reviewers approved it.
+
+#### Definition of Done
+
+An issue, feature, or bug-fix is considered done, if **all** of the following elements are checked:
+
+- [ ] Implementation
+    - [ ] is completed
+    - [ ] works as expected
+    - [ ] meets all functional & non-functional requirements
+- [ ] Tests are implemented with an appropriate diff coverage
+- [ ] Pull request
+    - [ ] Travis-CI must build successfully
+    - [ ] Contains detailed description of your changes
+    - [ ] Approved by at least one reviewer
+    - [ ] Ensure that the commit messages are [good commit messages](https://chris.beams.io/posts/git-commit/)
+- [ ] Contribution guidelines must be followed
+    - [ ] Source files are properly formatted
+    - [ ] Documentation is updated
+    - [ ] License header is applied
+- [ ] Design decisions are discussed in an ADR
 
 ---
 
@@ -203,3 +215,26 @@ Each branch should start with a `tag` to indicate a category:
 * Documentation: `docs/<short-title>` if the branch covers only the documentation of something
 * Tests: `test/<short-title>` if a branch mainly covers the addition or modification of tests or testing related resources
 * WIP: `wip/<short-title>` for work in progress without issues or containing something thats not covered in the above categories
+
+### Source File Headers
+
+Each source file should include the following license header.
+
+```plain
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+```
