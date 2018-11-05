@@ -1,4 +1,4 @@
-package io.github.ustmico.micocore;
+package io.github.ust.mico.core;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
