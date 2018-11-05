@@ -1,10 +1,17 @@
 package io.github.ustmico.micocore;
 
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+
 import java.util.List;
 
+@NodeEntity
 public class Service {
     //mandatory fields
-    private String id;
+    @Id
+    @GeneratedValue
+    private Long id;
     private String version;
     private String shortName;
     private String description;
@@ -22,6 +29,13 @@ public class Service {
     private String owner;
     private List<DependsOn> dependsOn;
     private List<ServiceDescription> serviceDescriptions;
+
+    public Service(){};
+
+    public Service(String shortName,String version) {
+        this.version = version;
+        this.shortName = shortName;
+    }
 
     //TODO: Verfiy if all are necessary
     public String getVersion() {
