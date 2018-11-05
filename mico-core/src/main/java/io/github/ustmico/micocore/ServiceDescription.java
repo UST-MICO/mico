@@ -10,6 +10,7 @@ public class ServiceDescription {
     private String transport_protocol;
     private String public_dns;
 
+    //TODO: Verfiy if all are necessary
     public int getPort() {
         return port;
     }
