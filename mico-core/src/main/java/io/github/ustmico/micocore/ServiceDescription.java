@@ -1,21 +1,30 @@
 package io.github.ustmico.micocore;
 
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+
 public class ServiceDescription {
 
-    private int port;
+    @Id
+    @GeneratedValue
+    public Long id;
+
+    private String port;
     private String type;
     private String description;
-    private String service_name;
+    private String service_name; //with _ to match pivio description
     private String protocol;
     private String transport_protocol;
     private String public_dns;
 
     //TODO: Verfiy if all are necessary
-    public int getPort() {
+
+
+    public String getPort() {
         return port;
     }
 
-    public void setPort(int port) {
+    public void setPort(String port) {
         this.port = port;
     }
 
