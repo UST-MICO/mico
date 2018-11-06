@@ -27,6 +27,7 @@ on_rtd = os.environ.get('READTHEDOCS') == 'True'
 from functools import wraps
 from recommonmark.states import DummyStateMachine
 
+
 old_run_role = DummyStateMachine.run_role
 @wraps(old_run_role)
 def run_role(self, name, *args, **kwargs):
@@ -35,6 +36,45 @@ def run_role(self, name, *args, **kwargs):
     return old_run_role(self, name, *args, **kwargs)
 
 DummyStateMachine.run_role = run_role
+
+# -- sphinx-js Monkey patch --------------------------------------------------
+from sphinx_js import doclets
+from tempfile import NamedTemporaryFile
+import subprocess
+from os.path import relpath, join
+from sphinx.errors import SphinxError
+from errno import ENOENT
+
+
+def analyze_typescript(abs_source_paths, app):
+    command = doclets.Command('typedoc')
+    if app.config.jsdoc_config_path:
+        command.add('--tsconfig', app.config.jsdoc_config_path)
+
+    source = abs_source_paths[0]
+    command.add('--json', '../doc/mico-admin/ts/typedoc.json', '--ignoreCompilerErrors')
+    try:
+        subprocess.call(command.make(), cwd=source)
+    except OSError as exc:
+        if exc.errno == ENOENT:
+            raise SphinxError('%s was not found. Install it using "npm install -g typedoc".' % command.program)
+        else:
+            raise
+        # typedoc emits a valid JSON file even if it finds no TS files in the dir:
+    with open('mico-admin/ts/typedoc.json') as temp:
+        return doclets.parse_typedoc(temp)
+
+
+doclets.ANALYZERS['custom_typescript'] = analyze_typescript
+
+
+def new_relpath(path, basedir):
+    if basedir:
+        path = join(basedir, path)
+    return relpath(path)[1:] # grammar for path only allows for paths to start with './' and not '../'
+
+
+doclets.relpath = new_relpath
 
 
 # -- Project information -----------------------------------------------------
@@ -221,7 +261,8 @@ def setup(app):
     app.add_transform(AutoStructify)
 
 # -- Options for jsdoc -------------------------------------------------------
-js_source_path = '../mico-admin/src'
+js_language = 'custom_typescript'
+js_source_path = '../mico-admin'
 
 # -- Options for javasphinx --------------------------------------------------
 javadoc_url_map = {

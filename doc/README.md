@@ -37,6 +37,11 @@ sudo -H pip2 install --upgrade pip
 sudo -H pip3 install --upgrade pip
 ```
 
+**Install Typedoc**
+
+```bash
+npm install -g typedoc
+```
 
 **Install requirements:**
 
@@ -45,6 +50,12 @@ pip install -r requirements.txt
 ```
 
 Make sure you have the `dot` command from `graphviz`, `typedoc` and a basic `LaTeX` environment in your path!
+
+**Update Javadoc:**
+
+```bash
+javasphinx-apidoc --update --output-dir="./mico-core/java" "../mico-core/src/main/java"
+```
 
 
 **Build html:**

@@ -3,6 +3,7 @@
 
 ### VSCode ###
 .vscode
+.mypy_cache
 
 ### STS ###
 .apt_generated

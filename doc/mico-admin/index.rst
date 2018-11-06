@@ -1,6 +1,9 @@
 MICO-Admin UI
 =============
 
+.. toctree::
+   ts/test
+
 Code Documentation for the MICO-Admin UI.
 
 Mockups
