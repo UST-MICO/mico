@@ -1,8 +1,8 @@
 # Developer Documentation for MICO (working title)
 
-Documentation: [readthedocs](http://mico-docs.readthedocs.io)
+Documentation: [readthedocs](https://mico-dev.readthedocs.io)
 
-![build badge](https://readthedocs.org/projects/mico-docs/badge/?version=latest)
+![build badge](https://readthedocs.org/projects/mico-dev/badge/?version=latest)
 
 
 ## Useful links:
