@@ -53,14 +53,17 @@ def analyze_typescript(abs_source_paths, app):
 
     source = abs_source_paths[0]
     command.add('--json', '../doc/mico-admin/ts/typedoc.json', '--ignoreCompilerErrors')
-    try:
-        subprocess.call(command.make(), cwd=source)
-    except OSError as exc:
-        if exc.errno == ENOENT:
-            raise SphinxError('%s was not found. Install it using "npm install -g typedoc".' % command.program)
-        else:
-            raise
-        # typedoc emits a valid JSON file even if it finds no TS files in the dir:
+    if not on_rtd:
+        # only build typedoc json locally as readthedocs build container does not
+        # support it natively (and typedoc process takes a while to finish)
+        try:
+            subprocess.call(command.make(), cwd=source)
+        except OSError as exc:
+            if exc.errno == ENOENT:
+                raise SphinxError('%s was not found. Install it using "npm install -g typedoc".' % command.program)
+            else:
+                raise
+            # typedoc emits a valid JSON file even if it finds no TS files in the dir:
     with open('mico-admin/ts/typedoc.json') as temp:
         return doclets.parse_typedoc(temp)
 

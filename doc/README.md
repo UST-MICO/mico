@@ -66,6 +66,8 @@ make html
 
 open `_build/html/index.html` in your browser
 
+If the typescript documentation has changed please build the documentation locally and commit the new `typedoc.json`!
+
 
 ## Enabled Extensions:
 

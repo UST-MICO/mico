@@ -5,4 +5,3 @@ _static
 .vscode
 venv
 default.nix
-typedoc.json
