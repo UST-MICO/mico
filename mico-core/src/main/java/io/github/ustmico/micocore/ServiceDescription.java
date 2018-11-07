@@ -17,9 +17,7 @@ public class ServiceDescription {
     private String transport_protocol;
     private String public_dns;
 
-    //TODO: Verfiy if all are necessary
-
-
+    //TODO: Verify if all are necessary
     public String getPort() {
         return port;
     }
