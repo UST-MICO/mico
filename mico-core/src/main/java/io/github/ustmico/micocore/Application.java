@@ -4,7 +4,7 @@ public class Application extends Service {
     private String deployInformation;
     private String visualizationData;
 
-    //TODO: Verfiy if all are necessary
+    //TODO: Verify if all are necessary
     public String getDeployInformation() {
         return deployInformation;
     }
