@@ -5,7 +5,7 @@ public class DependsOn {
     private String minVersion;
     private String maxVersion;
 
-    //TODO: Verfiy if all are necessary
+    //TODO: Verify if all are necessary
     public Service getService() {
         return service;
     }
