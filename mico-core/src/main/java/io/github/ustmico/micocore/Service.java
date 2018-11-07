@@ -37,7 +37,7 @@ public class Service {
         this.shortName = shortName;
     }
 
-    //TODO: Verfiy if all are necessary
+    //TODO: Verify if all are necessary
     public String getVersion() {
         return version;
     }
