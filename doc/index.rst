@@ -14,6 +14,6 @@ Welcome to MICO Developer Documentation's documentation!
    mico-core/index
 
 
-Developer documentation for `MICO <https://mico-docs.readthedocs.io/en/latest/>`_.
+User documentation for `MICO <https://mico-docs.readthedocs.io>`_.
 
 List of :ref:`Architectural Design Decisions <adr-toc>`.
