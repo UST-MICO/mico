@@ -1,4 +1,4 @@
-package io.github.ustmico.micocore;
+package io.github.ust.mico.core;
 
 public class Application extends Service {
     private String deployInformation;

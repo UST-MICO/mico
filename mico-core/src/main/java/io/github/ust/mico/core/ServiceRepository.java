@@ -1,4 +1,4 @@
-package io.github.ustmico.micocore;
+package io.github.ust.mico.core;
 
 import org.springframework.data.repository.CrudRepository;
 
