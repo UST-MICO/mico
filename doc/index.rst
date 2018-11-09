@@ -17,3 +17,10 @@ Welcome to MICO Developer Documentation's documentation!
 User documentation for `MICO <https://mico-docs.readthedocs.io>`_.
 
 List of :ref:`Architectural Design Decisions <adr-toc>`.
+
+.. ifconfig:: not on_rtd
+
+   TODO Entries:
+   -------------
+
+   .. todolist::
