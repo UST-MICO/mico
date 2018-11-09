@@ -1,6 +1,10 @@
 /target/
 !.mvn/wrapper/maven-wrapper.jar
 
+### VSCode ###
+.vscode
+.mypy_cache
+
 ### STS ###
 .apt_generated
 .classpath
