@@ -12,7 +12,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/fabian/git/mico/mico/mico-admin/e2e/src/app.e2e-spec.ts",
+			"originalName": "../mico-admin/e2e/src/app.e2e-spec.ts",
 			"sources": [
 				{
 					"fileName": "e2e/src/app.e2e-spec.ts",
@@ -29,7 +29,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/fabian/git/mico/mico/mico-admin/e2e/src/app.po.ts",
+			"originalName": "../mico-admin/e2e/src/app.po.ts",
 			"children": [
 				{
 					"id": 2,
@@ -155,7 +155,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/fabian/git/mico/mico/mico-admin/src/app/app-routing.module.ts",
+			"originalName": "../mico-admin/src/app/app-routing.module.ts",
 			"children": [
 				{
 					"id": 9,
@@ -239,7 +239,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/fabian/git/mico/mico/mico-admin/src/app/app.component.ts",
+			"originalName": "../mico-admin/src/app/app.component.ts",
 			"children": [
 				{
 					"id": 12,
@@ -327,7 +327,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/fabian/git/mico/mico/mico-admin/src/app/app.component.spec.ts",
+			"originalName": "../mico-admin/src/app/app.component.spec.ts",
 			"sources": [
 				{
 					"fileName": "src/app/app.component.spec.ts",
@@ -344,7 +344,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/fabian/git/mico/mico/mico-admin/src/app/app.module.ts",
+			"originalName": "../mico-admin/src/app/app.module.ts",
 			"children": [
 				{
 					"id": 15,
@@ -353,6 +353,9 @@
 					"kindString": "Class",
 					"flags": {
 						"isExported": true
+					},
+					"comment": {
+						"shortText": "Hello Nothing"
 					},
 					"decorators": [
 						{
@@ -369,7 +372,7 @@
 					"sources": [
 						{
 							"fileName": "src/app/app.module.ts",
-							"line": 18,
+							"line": 21,
 							"character": 22
 						}
 					]
@@ -400,7 +403,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/fabian/git/mico/mico/mico-admin/src/environments/environment.ts",
+			"originalName": "../mico-admin/src/environments/environment.ts",
 			"children": [
 				{
 					"id": 17,
@@ -481,7 +484,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/fabian/git/mico/mico/mico-admin/src/environments/environment.prod.ts",
+			"originalName": "../mico-admin/src/environments/environment.prod.ts",
 			"children": [
 				{
 					"id": 26,
@@ -562,7 +565,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/fabian/git/mico/mico/mico-admin/src/main.ts",
+			"originalName": "../mico-admin/src/main.ts",
 			"sources": [
 				{
 					"fileName": "src/main.ts",
@@ -579,7 +582,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/fabian/git/mico/mico/mico-admin/src/polyfills.ts",
+			"originalName": "../mico-admin/src/polyfills.ts",
 			"comment": {
 				"shortText": "This file includes polyfills needed by Angular and is loaded before the app.\nYou can add your own extra polyfills to this file.",
 				"text": "This file is divided into 2 sections:\n  1. Browser polyfills. These are applied before loading ZoneJS and are sorted by browsers.\n  2. Application imports. Files imported after ZoneJS that should be loaded before your main\n     file.\n\nThe current setup is for so-called \"evergreen\" browsers; the last versions of browsers that\nautomatically update themselves. This includes Safari >= 10, Chrome >= 55 (including Opera),\nEdge >= 13 on the desktop, and iOS 10 and Chrome on mobile.\n\nLearn more in https://angular.io/guide/browser-support\n"
@@ -600,7 +603,7 @@
 			"flags": {
 				"isExported": true
 			},
-			"originalName": "/home/fabian/git/mico/mico/mico-admin/src/test.ts",
+			"originalName": "../mico-admin/src/test.ts",
 			"children": [
 				{
 					"id": 23,
