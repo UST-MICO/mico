@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -133,6 +134,38 @@ public class MicoCoreApplicationTests {
 
 	}
 
+	@Test
+	public void testStoreApplication(){
+		//TODO: We might want to delete all database entries at the beginning of each test?
+		serviceRepository.deleteAll();
 
+		Service service1 = new Service("Service1","0.1");
+		Service service2 = new Service("Service2","0.1");
+
+		//TODO: We might want to have the following possibility?
+		//DependsOn dependency = new DependsOn(service, min (optional), max (optional));
+		DependsOn depends1 = new DependsOn();
+		depends1.setService(service1);
+		DependsOn depends2 = new DependsOn();
+		depends2.setService(service2);
+
+		//TODO: We might want to have the following possibility?
+		//Application application = new Application("shortName", version (optional));
+		Application application = new Application();
+		application.setShortName("App");
+		application.setName("Application"); //TODO: Should not be required
+		application.setDependsOn(Arrays.asList(depends1, depends2));
+		serviceRepository.save(application);
+
+		//TODO: We might want to have the following possibilities?
+        //Application storedApplication = serviceRepository.findByName("Application");
+		//Application storedApplication = serviceRepository.findByShortName("App");
+		Service storedApplication = serviceRepository.findByName("Application",2);
+
+		assertNotNull(storedApplication);
+		assertEquals("App", storedApplication.getShortName());
+		assertEquals("Service1", storedApplication.getDependsOn().get(0).getService().getShortName());
+		assertEquals("Service2", storedApplication.getDependsOn().get(1).getService().getShortName());
+	}
 
 }

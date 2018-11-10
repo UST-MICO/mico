@@ -44,6 +44,7 @@ import subprocess
 from os.path import relpath, join
 from sphinx.errors import SphinxError
 from errno import ENOENT
+from json import load, dump
 
 
 def analyze_typescript(abs_source_paths, app):
@@ -51,13 +52,34 @@ def analyze_typescript(abs_source_paths, app):
     if app.config.jsdoc_config_path:
         command.add('--tsconfig', app.config.jsdoc_config_path)
 
+    json_path = '../doc/mico-admin/ts/typedoc.json'
+
     source = abs_source_paths[0]
-    command.add('--json', '../doc/mico-admin/ts/typedoc.json', '--ignoreCompilerErrors')
+    command.add('--json', json_path, '--ignoreCompilerErrors')
     if not on_rtd:
         # only build typedoc json locally as readthedocs build container does not
         # support it natively (and typedoc process takes a while to finish)
         try:
             subprocess.call(command.make(), cwd=source)
+            with open(json_path) as typedoc_json:
+                typedoc = load(typedoc_json)
+
+            def clean_paths(typedoc):
+                """Make all paths relative to not leak path info to github."""
+                if not isinstance(typedoc, dict):
+                    return
+                for key in typedoc:
+                    if isinstance(typedoc[key], dict):
+                        clean_paths(typedoc[key])
+                    if isinstance(typedoc[key], list):
+                        for entry in typedoc[key]:
+                            clean_paths(entry)
+                    if key == 'originalName':
+                        filepath = typedoc[key]
+                        typedoc[key] = relpath(filepath)
+            clean_paths(typedoc)
+            with open(json_path, mode='w') as typedoc_json:
+                dump(typedoc, typedoc_json, indent='\t')
         except OSError as exc:
             if exc.errno == ENOENT:
                 raise SphinxError('%s was not found. Install it using "npm install -g typedoc".' % command.program)
