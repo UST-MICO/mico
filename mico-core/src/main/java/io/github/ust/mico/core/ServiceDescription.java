@@ -3,6 +3,8 @@ package io.github.ust.mico.core;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 
+import java.util.Objects;
+
 public class ServiceDescription {
 
     @Id

@@ -5,6 +5,7 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
 import java.util.List;
+import java.util.Objects;
 
 @NodeEntity
 public class Service {
