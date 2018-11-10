@@ -5,7 +5,6 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
 import java.util.List;
-import java.util.Objects;
 
 @NodeEntity
 public class Service {
@@ -31,7 +30,7 @@ public class Service {
     private List<DependsOn> dependsOn;
     private List<ServiceDescription> serviceDescriptions;
 
-    public Service(){};
+    public Service(){}
 
     public Service(String shortName,String version) {
         this.version = version;

@@ -28,6 +28,7 @@ public class MicoCoreApplicationTests {
 	public static final String TEST_SERVICE_INTERFACE_NAME = "Service interface name";
 	public static final String TEST_LONGER_NAME = "TEST LONGER NAME";
 	public static final String TEST_VERSION = "1.0";
+
 	@Autowired
 	private ServiceRepository serviceRepository;
 
@@ -38,7 +39,7 @@ public class MicoCoreApplicationTests {
 	@Test
 	public void testServiceRepository(){
 		serviceRepository.deleteAll();
-		serviceRepository.save(createServiceinDB());
+		serviceRepository.save(createServiceInDB());
 
 		Service serviceTest = serviceRepository.findByName(TEST_LONGER_NAME);
         checkDefaultService(serviceTest);
@@ -62,7 +63,7 @@ public class MicoCoreApplicationTests {
         assertEquals(TEST_SERVICE_INTERFACE_NAME,serviceDescriptionTest.getService_name());
     }
 
-    private Service createServiceinDB() {
+    private Service createServiceInDB() {
 		Service service = new Service(TEST_SHORT_NAME, TEST_VERSION);
 		service.setName(TEST_LONGER_NAME);
 		service.setDescription(TEST_SERVICE_DESCRIPTION);
@@ -75,20 +76,20 @@ public class MicoCoreApplicationTests {
 		serviceDescription.setProtocol(TEST_PROTOCOL);
 		serviceDescription.setPublic_dns(TEST_DNS);
 		serviceDescription.setService_name(TEST_SERVICE_INTERFACE_NAME);
-		service.setServiceDescriptions(Collections.singletonList(serviceDescription));
 
+		service.setServiceDescriptions(Collections.singletonList(serviceDescription));
 		return service;
 	}
 
 	@Test
 	public void testDependencyServiceRepository(){
 		serviceRepository.deleteAll();
-		Service service = createServiceinDB();
+		Service service = createServiceInDB();
 
 		String testShortName2 = "ShortName2";
 		String testVersion2 = "1.0";
 		String testLongerName = "Longer Name2";
-		String testServiceDescribtion = "test Service2";
+		String testServiceDescription = "test Service2";
 		String testVcsRoot = "http://test.org/test2";
 		String testContact = "Test Person 2";
 		String testPort = "<PORT_VARIABLE2>";
@@ -98,7 +99,7 @@ public class MicoCoreApplicationTests {
 		//2. service
         Service service2 = new Service(testShortName2,testVersion2);
         service2.setName(testLongerName);
-        service2.setDescription(testServiceDescribtion);
+        service2.setDescription(testServiceDescription);
         service2.setVcsRoot(testVcsRoot);
         service2.setContact(testContact);
 
@@ -127,7 +128,7 @@ public class MicoCoreApplicationTests {
         assertNotNull(testService2);
         assertEquals(testVersion2,testService2.getVersion());
         assertEquals(testLongerName,testService2.getName());
-        assertEquals(testServiceDescribtion,testService2.getDescription());
+        assertEquals(testServiceDescription,testService2.getDescription());
         assertEquals(testVcsRoot,testService2.getVcsRoot());
         assertEquals(testContact,testService2.getContact());
 	}

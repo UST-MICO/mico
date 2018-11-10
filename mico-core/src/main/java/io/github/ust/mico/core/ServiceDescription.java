@@ -3,8 +3,6 @@ package io.github.ust.mico.core;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 
-import java.util.Objects;
-
 public class ServiceDescription {
 
     @Id
@@ -14,7 +12,7 @@ public class ServiceDescription {
     private String port;
     private String type;
     private String description;
-    private String service_name; //with _ to match pivio description
+    private String service_name; //with _ to match pivio description //TODO: Do we want to match Pivio description?
     private String protocol;
     private String transport_protocol;
     private String public_dns;
