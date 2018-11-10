@@ -30,7 +30,7 @@ public class Service {
     private List<DependsOn> dependsOn;
     private List<ServiceDescription> serviceDescriptions;
 
-    public Service(){};
+    public Service(){}
 
     public Service(String shortName,String version) {
         this.version = version;
