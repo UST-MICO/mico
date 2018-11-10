@@ -42,7 +42,6 @@ public class MicoCoreApplicationTests {
 
 		Service serviceTest = serviceRepository.findByName(TEST_LONGER_NAME);
         checkDefaultService(serviceTest);
-
     }
 
     private void checkDefaultService(Service serviceTest) {
@@ -77,6 +76,7 @@ public class MicoCoreApplicationTests {
 		serviceDescription.setPublic_dns(TEST_DNS);
 		serviceDescription.setService_name(TEST_SERVICE_INTERFACE_NAME);
 		service.setServiceDescriptions(Collections.singletonList(serviceDescription));
+
 		return service;
 	}
 
@@ -116,7 +116,6 @@ public class MicoCoreApplicationTests {
         service.setDependsOn(Collections.singletonList(dependsOn));
         serviceRepository.save(service);
 
-
         Service serviceTest = serviceRepository.findByName(TEST_LONGER_NAME,2);
         checkDefaultService(serviceTest);
         List<DependsOn> dependsOnList = serviceTest.getDependsOn();
@@ -131,7 +130,6 @@ public class MicoCoreApplicationTests {
         assertEquals(testServiceDescribtion,testService2.getDescription());
         assertEquals(testVcsRoot,testService2.getVcsRoot());
         assertEquals(testContact,testService2.getContact());
-
 	}
 
 	@Test
@@ -167,5 +165,4 @@ public class MicoCoreApplicationTests {
 		assertEquals("Service1", storedApplication.getDependsOn().get(0).getService().getShortName());
 		assertEquals("Service2", storedApplication.getDependsOn().get(1).getService().getShortName());
 	}
-
 }
