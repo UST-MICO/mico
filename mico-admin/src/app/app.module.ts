@@ -10,6 +10,9 @@ import { AppDetailDeploystatusComponent } from './app-detail-deploystatus/app-de
 import { AppDetailDeploysettingsComponent } from './app-detail-deploysettings/app-detail-deploysettings.component';
 import { ServiceDetailDeploystatusComponent } from './service-detail-deploystatus/service-detail-deploystatus.component';
 import { ServiceDetailOverviewComponent } from './service-detail-overview/service-detail-overview.component';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { MatButtonModule, MatCardModule, MatMenuModule, MatIconModule, MatListModule, MatSidenavModule, MatDialogModule, MatToolbarModule, MatTooltipModule, } from '@angular/material';
+
 
 @NgModule({
   declarations: [
@@ -24,7 +27,17 @@ import { ServiceDetailOverviewComponent } from './service-detail-overview/servic
   imports: [
     BrowserModule,
     AppRoutingModule,
-    RoutingModule
+    RoutingModule,
+    BrowserAnimationsModule,
+    MatButtonModule,
+    MatCardModule,
+    MatMenuModule,
+    MatIconModule,
+    MatListModule,
+    MatSidenavModule,
+    MatDialogModule,
+    MatToolbarModule,
+    MatTooltipModule,
   ],
   providers: [],
   bootstrap: [AppComponent]
