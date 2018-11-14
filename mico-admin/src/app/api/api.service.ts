@@ -23,7 +23,7 @@ export class ApiService {
      * @param streamURL resource url
      */
     private canonizeStreamUrl(streamURL: string): string {
-        // todo implement
+        // TODO implement
         return streamURL;
     }
 
@@ -56,7 +56,18 @@ export class ApiService {
 
         // TODO
         const mockData: ApiObject[] = [
-
+            {
+                'id': '1',
+                'name': 'Mock Service',
+                'shortName': 'test.mock-service',
+                'description': 'A generic dummy service',
+            },
+            {
+                'id': '2',
+                'name': 'Hello World Service',
+                'shortName': 'test.hello-world-service',
+                'description': 'A generic hello world service',
+            },
         ];
 
         stream.next(mockData);
@@ -75,7 +86,12 @@ export class ApiService {
 
         // TODO
         const mockData: ApiObject[] = [
-
+            {
+                'id': '2',
+                'name': 'Hello World Service',
+                'shortName': 'test.hello-world-service',
+                'description': 'A generic hello world service',
+            },
         ];
 
         stream.next(mockData);
