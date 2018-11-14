@@ -7,9 +7,6 @@ import { MatButtonModule, MatCardModule, MatMenuModule, MatIconModule, MatListMo
 import { RoutingModule } from './routing.module';
 import { AppRoutingModule } from './app-routing.module';
 
-//services
-import { ApiService } from './api/api.service';
-
 //components
 import { AppComponent } from './app.component';
 
@@ -50,9 +47,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
         MatToolbarModule,
         MatTooltipModule,
     ],
-    providers: [
-        ApiService,
-    ],
+    providers: [],
     bootstrap: [AppComponent]
 })
 export class AppModule { }

@@ -148,7 +148,993 @@
 			]
 		},
 		{
-			"id": 8,
+			"id": 68,
+			"name": "\"src/app/api/api.service\"",
+			"kind": 1,
+			"kindString": "External module",
+			"flags": {
+				"isExported": true
+			},
+			"originalName": "../mico-admin/src/app/api/api.service.ts",
+			"children": [
+				{
+					"id": 69,
+					"name": "ApiService",
+					"kind": 128,
+					"kindString": "Class",
+					"flags": {
+						"isExported": true
+					},
+					"comment": {
+						"shortText": "Service to interact with the mico api."
+					},
+					"decorators": [
+						{
+							"name": "Injectable",
+							"type": {
+								"type": "reference",
+								"name": "Injectable"
+							},
+							"arguments": {
+								"options": "{\n  providedIn: 'root'\n}"
+							}
+						}
+					],
+					"children": [
+						{
+							"id": 71,
+							"name": "constructor",
+							"kind": 512,
+							"kindString": "Constructor",
+							"flags": {
+								"isExported": true
+							},
+							"signatures": [
+								{
+									"id": 72,
+									"name": "new ApiService",
+									"kind": 16384,
+									"kindString": "Constructor signature",
+									"flags": {},
+									"type": {
+										"type": "reference",
+										"name": "ApiService",
+										"id": 69
+									}
+								}
+							],
+							"sources": [
+								{
+									"fileName": "src/app/api/api.service.ts",
+									"line": 14,
+									"character": 79
+								}
+							]
+						},
+						{
+							"id": 70,
+							"name": "streams",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isPrivate": true,
+								"isExported": true
+							},
+							"sources": [
+								{
+									"fileName": "src/app/api/api.service.ts",
+									"line": 14,
+									"character": 19
+								}
+							],
+							"type": {
+								"type": "reference",
+								"name": "Map",
+								"typeArguments": [
+									{
+										"type": "intrinsic",
+										"name": "string"
+									},
+									{
+										"type": "reference",
+										"name": "Subject",
+										"typeArguments": [
+											{
+												"type": "union",
+												"types": [
+													{
+														"type": "reference",
+														"name": "ApiObject",
+														"id": 65
+													},
+													{
+														"type": "array",
+														"elementType": {
+															"type": "reference",
+															"name": "ApiObject",
+															"id": 65
+														}
+													}
+												]
+											}
+										]
+									}
+								]
+							},
+							"defaultValue": " new Map()"
+						},
+						{
+							"id": 73,
+							"name": "canonizeStreamUrl",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isPrivate": true,
+								"isExported": true
+							},
+							"signatures": [
+								{
+									"id": 74,
+									"name": "canonizeStreamUrl",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"comment": {
+										"shortText": "Canonize a resource url.",
+										"text": "(Remove schema, host, port, api path prefix and leading/trailing slashes.)\n"
+									},
+									"parameters": [
+										{
+											"id": 75,
+											"name": "streamURL",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"comment": {
+												"text": "resource url\n"
+											},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										}
+									],
+									"type": {
+										"type": "intrinsic",
+										"name": "string"
+									}
+								}
+							],
+							"sources": [
+								{
+									"fileName": "src/app/api/api.service.ts",
+									"line": 25,
+									"character": 29
+								}
+							]
+						},
+						{
+							"id": 84,
+							"name": "getApplications",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExported": true
+							},
+							"signatures": [
+								{
+									"id": 85,
+									"name": "getApplications",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"comment": {
+										"shortText": "Get application list"
+									},
+									"type": {
+										"type": "reference",
+										"name": "Observable",
+										"typeArguments": [
+											{
+												"type": "array",
+												"elementType": {
+													"type": "reference",
+													"name": "ApiObject",
+													"id": 65
+												}
+											}
+										]
+									}
+								}
+							],
+							"sources": [
+								{
+									"fileName": "src/app/api/api.service.ts",
+									"line": 72,
+									"character": 19
+								}
+							]
+						},
+						{
+							"id": 82,
+							"name": "getServices",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExported": true
+							},
+							"signatures": [
+								{
+									"id": 83,
+									"name": "getServices",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"comment": {
+										"shortText": "Get service list"
+									},
+									"type": {
+										"type": "reference",
+										"name": "Observable",
+										"typeArguments": [
+											{
+												"type": "array",
+												"elementType": {
+													"type": "reference",
+													"name": "ApiObject",
+													"id": 65
+												}
+											}
+										]
+									}
+								}
+							],
+							"sources": [
+								{
+									"fileName": "src/app/api/api.service.ts",
+									"line": 53,
+									"character": 15
+								}
+							]
+						},
+						{
+							"id": 76,
+							"name": "getStreamSource",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isPrivate": true,
+								"isExported": true
+							},
+							"signatures": [
+								{
+									"id": 77,
+									"name": "getStreamSource",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"comment": {
+										"shortText": "Fetch the stream source for the given resource url."
+									},
+									"parameters": [
+										{
+											"id": 78,
+											"name": "streamURL",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"comment": {
+												"text": "resource url"
+											},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										},
+										{
+											"id": 79,
+											"name": "defaultSubject",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"comment": {
+												"text": "function to create a new streamSource if needed (default: BehaviourSubject)\n"
+											},
+											"type": {
+												"type": "reflection",
+												"declaration": {
+													"id": 80,
+													"name": "__type",
+													"kind": 65536,
+													"kindString": "Type literal",
+													"flags": {},
+													"signatures": [
+														{
+															"id": 81,
+															"name": "__call",
+															"kind": 4096,
+															"kindString": "Call signature",
+															"flags": {},
+															"type": {
+																"type": "reference",
+																"name": "Subject",
+																"typeArguments": [
+																	{
+																		"type": "union",
+																		"types": [
+																			{
+																				"type": "reference",
+																				"name": "ApiObject",
+																				"id": 65
+																			},
+																			{
+																				"type": "array",
+																				"elementType": {
+																					"type": "reference",
+																					"name": "ApiObject",
+																					"id": 65
+																				}
+																			}
+																		]
+																	}
+																]
+															}
+														}
+													],
+													"sources": [
+														{
+															"fileName": "src/app/api/api.service.ts",
+															"line": 36,
+															"character": 62
+														}
+													]
+												}
+											},
+											"defaultValue": "\n                            () => new BehaviorSubject<ApiObject | ApiObject[]>(undefined)"
+										}
+									],
+									"type": {
+										"type": "reference",
+										"name": "Subject",
+										"typeArguments": [
+											{
+												"type": "union",
+												"types": [
+													{
+														"type": "reference",
+														"name": "ApiObject",
+														"id": 65
+													},
+													{
+														"type": "array",
+														"elementType": {
+															"type": "reference",
+															"name": "ApiObject",
+															"id": 65
+														}
+													}
+												]
+											}
+										]
+									}
+								}
+							],
+							"sources": [
+								{
+									"fileName": "src/app/api/api.service.ts",
+									"line": 36,
+									"character": 27
+								}
+							]
+						}
+					],
+					"groups": [
+						{
+							"title": "Constructors",
+							"kind": 512,
+							"children": [
+								71
+							]
+						},
+						{
+							"title": "Properties",
+							"kind": 1024,
+							"children": [
+								70
+							]
+						},
+						{
+							"title": "Methods",
+							"kind": 2048,
+							"children": [
+								73,
+								84,
+								82,
+								76
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "src/app/api/api.service.ts",
+							"line": 13,
+							"character": 23
+						}
+					]
+				}
+			],
+			"groups": [
+				{
+					"title": "Classes",
+					"kind": 128,
+					"children": [
+						69
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "src/app/api/api.service.ts",
+					"line": 1,
+					"character": 0
+				}
+			]
+		},
+		{
+			"id": 86,
+			"name": "\"src/app/api/api.service.spec\"",
+			"kind": 1,
+			"kindString": "External module",
+			"flags": {
+				"isExported": true
+			},
+			"originalName": "../mico-admin/src/app/api/api.service.spec.ts",
+			"sources": [
+				{
+					"fileName": "src/app/api/api.service.spec.ts",
+					"line": 1,
+					"character": 0
+				}
+			]
+		},
+		{
+			"id": 64,
+			"name": "\"src/app/api/apiobject\"",
+			"kind": 1,
+			"kindString": "External module",
+			"flags": {
+				"isExported": true
+			},
+			"originalName": "../mico-admin/src/app/api/apiobject.ts",
+			"children": [
+				{
+					"id": 65,
+					"name": "ApiObject",
+					"kind": 256,
+					"kindString": "Interface",
+					"flags": {
+						"isExported": true
+					},
+					"indexSignature": {
+						"id": 66,
+						"name": "__index",
+						"kind": 8192,
+						"kindString": "Index signature",
+						"flags": {},
+						"parameters": [
+							{
+								"id": 67,
+								"name": "propName",
+								"kind": 32768,
+								"kindString": "Parameter",
+								"flags": {},
+								"type": {
+									"type": "intrinsic",
+									"name": "string"
+								}
+							}
+						],
+						"type": {
+							"type": "intrinsic",
+							"name": "any"
+						}
+					},
+					"sources": [
+						{
+							"fileName": "src/app/api/apiobject.ts",
+							"line": 1,
+							"character": 26
+						}
+					]
+				}
+			],
+			"groups": [
+				{
+					"title": "Interfaces",
+					"kind": 256,
+					"children": [
+						65
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "src/app/api/apiobject.ts",
+					"line": 1,
+					"character": 0
+				}
+			]
+		},
+		{
+			"id": 26,
+			"name": "\"src/app/app-detail-deploysettings/app-detail-deploysettings.component\"",
+			"kind": 1,
+			"kindString": "External module",
+			"flags": {
+				"isExported": true
+			},
+			"originalName": "../mico-admin/src/app/app-detail-deploysettings/app-detail-deploysettings.component.ts",
+			"children": [
+				{
+					"id": 27,
+					"name": "AppDetailDeploysettingsComponent",
+					"kind": 128,
+					"kindString": "Class",
+					"flags": {
+						"isExported": true
+					},
+					"decorators": [
+						{
+							"name": "Component",
+							"type": {
+								"type": "reference",
+								"name": "Component"
+							},
+							"arguments": {
+								"obj": "{\n  selector: 'app-app-detail-deploysettings',\n  templateUrl: './app-detail-deploysettings.component.html',\n  styleUrls: ['./app-detail-deploysettings.component.css']\n}"
+							}
+						}
+					],
+					"children": [
+						{
+							"id": 28,
+							"name": "constructor",
+							"kind": 512,
+							"kindString": "Constructor",
+							"flags": {
+								"isExported": true
+							},
+							"signatures": [
+								{
+									"id": 29,
+									"name": "new AppDetailDeploysettingsComponent",
+									"kind": 16384,
+									"kindString": "Constructor signature",
+									"flags": {},
+									"type": {
+										"type": "reference",
+										"name": "AppDetailDeploysettingsComponent",
+										"id": 27
+									}
+								}
+							],
+							"sources": [
+								{
+									"fileName": "src/app/app-detail-deploysettings/app-detail-deploysettings.component.ts",
+									"line": 8,
+									"character": 65
+								}
+							]
+						},
+						{
+							"id": 30,
+							"name": "ngOnInit",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExported": true
+							},
+							"signatures": [
+								{
+									"id": 31,
+									"name": "ngOnInit",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"type": {
+										"type": "intrinsic",
+										"name": "void"
+									}
+								}
+							],
+							"sources": [
+								{
+									"fileName": "src/app/app-detail-deploysettings/app-detail-deploysettings.component.ts",
+									"line": 12,
+									"character": 10
+								}
+							]
+						}
+					],
+					"groups": [
+						{
+							"title": "Constructors",
+							"kind": 512,
+							"children": [
+								28
+							]
+						},
+						{
+							"title": "Methods",
+							"kind": 2048,
+							"children": [
+								30
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "src/app/app-detail-deploysettings/app-detail-deploysettings.component.ts",
+							"line": 8,
+							"character": 45
+						}
+					],
+					"implementedTypes": [
+						{
+							"type": "reference",
+							"name": "OnInit"
+						}
+					]
+				}
+			],
+			"groups": [
+				{
+					"title": "Classes",
+					"kind": 128,
+					"children": [
+						27
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "src/app/app-detail-deploysettings/app-detail-deploysettings.component.ts",
+					"line": 1,
+					"character": 0
+				}
+			]
+		},
+		{
+			"id": 87,
+			"name": "\"src/app/app-detail-deploysettings/app-detail-deploysettings.component.spec\"",
+			"kind": 1,
+			"kindString": "External module",
+			"flags": {
+				"isExported": true
+			},
+			"originalName": "../mico-admin/src/app/app-detail-deploysettings/app-detail-deploysettings.component.spec.ts",
+			"sources": [
+				{
+					"fileName": "src/app/app-detail-deploysettings/app-detail-deploysettings.component.spec.ts",
+					"line": 1,
+					"character": 0
+				}
+			]
+		},
+		{
+			"id": 20,
+			"name": "\"src/app/app-detail-deploystatus/app-detail-deploystatus.component\"",
+			"kind": 1,
+			"kindString": "External module",
+			"flags": {
+				"isExported": true
+			},
+			"originalName": "../mico-admin/src/app/app-detail-deploystatus/app-detail-deploystatus.component.ts",
+			"children": [
+				{
+					"id": 21,
+					"name": "AppDetailDeploystatusComponent",
+					"kind": 128,
+					"kindString": "Class",
+					"flags": {
+						"isExported": true
+					},
+					"decorators": [
+						{
+							"name": "Component",
+							"type": {
+								"type": "reference",
+								"name": "Component"
+							},
+							"arguments": {
+								"obj": "{\n  selector: 'app-app-detail-deploystatus',\n  templateUrl: './app-detail-deploystatus.component.html',\n  styleUrls: ['./app-detail-deploystatus.component.css']\n}"
+							}
+						}
+					],
+					"children": [
+						{
+							"id": 22,
+							"name": "constructor",
+							"kind": 512,
+							"kindString": "Constructor",
+							"flags": {
+								"isExported": true
+							},
+							"signatures": [
+								{
+									"id": 23,
+									"name": "new AppDetailDeploystatusComponent",
+									"kind": 16384,
+									"kindString": "Constructor signature",
+									"flags": {},
+									"type": {
+										"type": "reference",
+										"name": "AppDetailDeploystatusComponent",
+										"id": 21
+									}
+								}
+							],
+							"sources": [
+								{
+									"fileName": "src/app/app-detail-deploystatus/app-detail-deploystatus.component.ts",
+									"line": 8,
+									"character": 63
+								}
+							]
+						},
+						{
+							"id": 24,
+							"name": "ngOnInit",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExported": true
+							},
+							"signatures": [
+								{
+									"id": 25,
+									"name": "ngOnInit",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"type": {
+										"type": "intrinsic",
+										"name": "void"
+									}
+								}
+							],
+							"sources": [
+								{
+									"fileName": "src/app/app-detail-deploystatus/app-detail-deploystatus.component.ts",
+									"line": 12,
+									"character": 10
+								}
+							]
+						}
+					],
+					"groups": [
+						{
+							"title": "Constructors",
+							"kind": 512,
+							"children": [
+								22
+							]
+						},
+						{
+							"title": "Methods",
+							"kind": 2048,
+							"children": [
+								24
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "src/app/app-detail-deploystatus/app-detail-deploystatus.component.ts",
+							"line": 8,
+							"character": 43
+						}
+					],
+					"implementedTypes": [
+						{
+							"type": "reference",
+							"name": "OnInit"
+						}
+					]
+				}
+			],
+			"groups": [
+				{
+					"title": "Classes",
+					"kind": 128,
+					"children": [
+						21
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "src/app/app-detail-deploystatus/app-detail-deploystatus.component.ts",
+					"line": 1,
+					"character": 0
+				}
+			]
+		},
+		{
+			"id": 88,
+			"name": "\"src/app/app-detail-deploystatus/app-detail-deploystatus.component.spec\"",
+			"kind": 1,
+			"kindString": "External module",
+			"flags": {
+				"isExported": true
+			},
+			"originalName": "../mico-admin/src/app/app-detail-deploystatus/app-detail-deploystatus.component.spec.ts",
+			"sources": [
+				{
+					"fileName": "src/app/app-detail-deploystatus/app-detail-deploystatus.component.spec.ts",
+					"line": 1,
+					"character": 0
+				}
+			]
+		},
+		{
+			"id": 14,
+			"name": "\"src/app/app-detail-overview/app-detail-overview.component\"",
+			"kind": 1,
+			"kindString": "External module",
+			"flags": {
+				"isExported": true
+			},
+			"originalName": "../mico-admin/src/app/app-detail-overview/app-detail-overview.component.ts",
+			"children": [
+				{
+					"id": 15,
+					"name": "AppDetailOverviewComponent",
+					"kind": 128,
+					"kindString": "Class",
+					"flags": {
+						"isExported": true
+					},
+					"decorators": [
+						{
+							"name": "Component",
+							"type": {
+								"type": "reference",
+								"name": "Component"
+							},
+							"arguments": {
+								"obj": "{\n  selector: 'app-app-detail-overview',\n  templateUrl: './app-detail-overview.component.html',\n  styleUrls: ['./app-detail-overview.component.css']\n}"
+							}
+						}
+					],
+					"children": [
+						{
+							"id": 16,
+							"name": "constructor",
+							"kind": 512,
+							"kindString": "Constructor",
+							"flags": {
+								"isExported": true
+							},
+							"signatures": [
+								{
+									"id": 17,
+									"name": "new AppDetailOverviewComponent",
+									"kind": 16384,
+									"kindString": "Constructor signature",
+									"flags": {},
+									"type": {
+										"type": "reference",
+										"name": "AppDetailOverviewComponent",
+										"id": 15
+									}
+								}
+							],
+							"sources": [
+								{
+									"fileName": "src/app/app-detail-overview/app-detail-overview.component.ts",
+									"line": 8,
+									"character": 59
+								}
+							]
+						},
+						{
+							"id": 18,
+							"name": "ngOnInit",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExported": true
+							},
+							"signatures": [
+								{
+									"id": 19,
+									"name": "ngOnInit",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"type": {
+										"type": "intrinsic",
+										"name": "void"
+									}
+								}
+							],
+							"sources": [
+								{
+									"fileName": "src/app/app-detail-overview/app-detail-overview.component.ts",
+									"line": 12,
+									"character": 10
+								}
+							]
+						}
+					],
+					"groups": [
+						{
+							"title": "Constructors",
+							"kind": 512,
+							"children": [
+								16
+							]
+						},
+						{
+							"title": "Methods",
+							"kind": 2048,
+							"children": [
+								18
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "src/app/app-detail-overview/app-detail-overview.component.ts",
+							"line": 8,
+							"character": 39
+						}
+					],
+					"implementedTypes": [
+						{
+							"type": "reference",
+							"name": "OnInit"
+						}
+					]
+				}
+			],
+			"groups": [
+				{
+					"title": "Classes",
+					"kind": 128,
+					"children": [
+						15
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "src/app/app-detail-overview/app-detail-overview.component.ts",
+					"line": 1,
+					"character": 0
+				}
+			]
+		},
+		{
+			"id": 89,
+			"name": "\"src/app/app-detail-overview/app-detail-overview.component.spec\"",
+			"kind": 1,
+			"kindString": "External module",
+			"flags": {
+				"isExported": true
+			},
+			"originalName": "../mico-admin/src/app/app-detail-overview/app-detail-overview.component.spec.ts",
+			"sources": [
+				{
+					"fileName": "src/app/app-detail-overview/app-detail-overview.component.spec.ts",
+					"line": 1,
+					"character": 0
+				}
+			]
+		},
+		{
+			"id": 47,
 			"name": "\"src/app/app-routing.module\"",
 			"kind": 1,
 			"kindString": "External module",
@@ -158,7 +1144,7 @@
 			"originalName": "../mico-admin/src/app/app-routing.module.ts",
 			"children": [
 				{
-					"id": 9,
+					"id": 48,
 					"name": "AppRoutingModule",
 					"kind": 128,
 					"kindString": "Class",
@@ -186,7 +1172,7 @@
 					]
 				},
 				{
-					"id": 10,
+					"id": 49,
 					"name": "routes",
 					"kind": 32,
 					"kindString": "Variable",
@@ -212,14 +1198,14 @@
 					"title": "Classes",
 					"kind": 128,
 					"children": [
-						9
+						48
 					]
 				},
 				{
 					"title": "Variables",
 					"kind": 32,
 					"children": [
-						10
+						49
 					]
 				}
 			],
@@ -232,7 +1218,7 @@
 			]
 		},
 		{
-			"id": 11,
+			"id": 50,
 			"name": "\"src/app/app.component\"",
 			"kind": 1,
 			"kindString": "External module",
@@ -242,7 +1228,7 @@
 			"originalName": "../mico-admin/src/app/app.component.ts",
 			"children": [
 				{
-					"id": 12,
+					"id": 51,
 					"name": "AppComponent",
 					"kind": 128,
 					"kindString": "Class",
@@ -263,7 +1249,7 @@
 					],
 					"children": [
 						{
-							"id": 13,
+							"id": 52,
 							"name": "title",
 							"kind": 1024,
 							"kindString": "Property",
@@ -289,7 +1275,7 @@
 							"title": "Properties",
 							"kind": 1024,
 							"children": [
-								13
+								52
 							]
 						}
 					],
@@ -307,7 +1293,7 @@
 					"title": "Classes",
 					"kind": 128,
 					"children": [
-						12
+						51
 					]
 				}
 			],
@@ -320,7 +1306,7 @@
 			]
 		},
 		{
-			"id": 24,
+			"id": 63,
 			"name": "\"src/app/app.component.spec\"",
 			"kind": 1,
 			"kindString": "External module",
@@ -337,7 +1323,7 @@
 			]
 		},
 		{
-			"id": 14,
+			"id": 53,
 			"name": "\"src/app/app.module\"",
 			"kind": 1,
 			"kindString": "External module",
@@ -347,15 +1333,12 @@
 			"originalName": "../mico-admin/src/app/app.module.ts",
 			"children": [
 				{
-					"id": 15,
+					"id": 54,
 					"name": "AppModule",
 					"kind": 128,
 					"kindString": "Class",
 					"flags": {
 						"isExported": true
-					},
-					"comment": {
-						"shortText": "Hello Nothing"
 					},
 					"decorators": [
 						{
@@ -365,14 +1348,14 @@
 								"name": "NgModule"
 							},
 							"arguments": {
-								"obj": "{\n  declarations: [\n    AppComponent\n  ],\n  imports: [\n    BrowserModule,\n    AppRoutingModule\n  ],\n  providers: [],\n  bootstrap: [AppComponent]\n}"
+								"obj": "{\n    declarations: [\n        AppComponent,\n        DashboardComponent,\n        AppDetailOverviewComponent,\n        AppDetailDeploystatusComponent,\n        AppDetailDeploysettingsComponent,\n        ServiceDetailDeploystatusComponent,\n        ServiceDetailOverviewComponent,\n    ],\n    imports: [\n        BrowserModule,\n\n        AppRoutingModule,\n        RoutingModule,\n\n        //material\n        BrowserAnimationsModule,\n        MatButtonModule,\n        MatCardModule,\n        MatMenuModule,\n        MatIconModule,\n        MatListModule,\n        MatSidenavModule,\n        MatDialogModule,\n        MatToolbarModule,\n        MatTooltipModule,\n    ],\n    providers: [],\n    bootstrap: [AppComponent]\n}"
 							}
 						}
 					],
 					"sources": [
 						{
 							"fileName": "src/app/app.module.ts",
-							"line": 21,
+							"line": 53,
 							"character": 22
 						}
 					]
@@ -383,7 +1366,7 @@
 					"title": "Classes",
 					"kind": 128,
 					"children": [
-						15
+						54
 					]
 				}
 			],
@@ -396,7 +1379,559 @@
 			]
 		},
 		{
-			"id": 16,
+			"id": 8,
+			"name": "\"src/app/dashboard/dashboard.component\"",
+			"kind": 1,
+			"kindString": "External module",
+			"flags": {
+				"isExported": true
+			},
+			"originalName": "../mico-admin/src/app/dashboard/dashboard.component.ts",
+			"children": [
+				{
+					"id": 9,
+					"name": "DashboardComponent",
+					"kind": 128,
+					"kindString": "Class",
+					"flags": {
+						"isExported": true
+					},
+					"decorators": [
+						{
+							"name": "Component",
+							"type": {
+								"type": "reference",
+								"name": "Component"
+							},
+							"arguments": {
+								"obj": "{\n  selector: 'app-dashboard',\n  templateUrl: './dashboard.component.html',\n  styleUrls: ['./dashboard.component.css']\n}"
+							}
+						}
+					],
+					"children": [
+						{
+							"id": 10,
+							"name": "constructor",
+							"kind": 512,
+							"kindString": "Constructor",
+							"flags": {
+								"isExported": true
+							},
+							"signatures": [
+								{
+									"id": 11,
+									"name": "new DashboardComponent",
+									"kind": 16384,
+									"kindString": "Constructor signature",
+									"flags": {},
+									"type": {
+										"type": "reference",
+										"name": "DashboardComponent",
+										"id": 9
+									}
+								}
+							],
+							"sources": [
+								{
+									"fileName": "src/app/dashboard/dashboard.component.ts",
+									"line": 8,
+									"character": 51
+								}
+							]
+						},
+						{
+							"id": 12,
+							"name": "ngOnInit",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExported": true
+							},
+							"signatures": [
+								{
+									"id": 13,
+									"name": "ngOnInit",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"type": {
+										"type": "intrinsic",
+										"name": "void"
+									}
+								}
+							],
+							"sources": [
+								{
+									"fileName": "src/app/dashboard/dashboard.component.ts",
+									"line": 12,
+									"character": 10
+								}
+							]
+						}
+					],
+					"groups": [
+						{
+							"title": "Constructors",
+							"kind": 512,
+							"children": [
+								10
+							]
+						},
+						{
+							"title": "Methods",
+							"kind": 2048,
+							"children": [
+								12
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "src/app/dashboard/dashboard.component.ts",
+							"line": 8,
+							"character": 31
+						}
+					],
+					"implementedTypes": [
+						{
+							"type": "reference",
+							"name": "OnInit"
+						}
+					]
+				}
+			],
+			"groups": [
+				{
+					"title": "Classes",
+					"kind": 128,
+					"children": [
+						9
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "src/app/dashboard/dashboard.component.ts",
+					"line": 1,
+					"character": 0
+				}
+			]
+		},
+		{
+			"id": 90,
+			"name": "\"src/app/dashboard/dashboard.component.spec\"",
+			"kind": 1,
+			"kindString": "External module",
+			"flags": {
+				"isExported": true
+			},
+			"originalName": "../mico-admin/src/app/dashboard/dashboard.component.spec.ts",
+			"sources": [
+				{
+					"fileName": "src/app/dashboard/dashboard.component.spec.ts",
+					"line": 1,
+					"character": 0
+				}
+			]
+		},
+		{
+			"id": 44,
+			"name": "\"src/app/routing.module\"",
+			"kind": 1,
+			"kindString": "External module",
+			"flags": {
+				"isExported": true
+			},
+			"originalName": "../mico-admin/src/app/routing.module.ts",
+			"children": [
+				{
+					"id": 45,
+					"name": "RoutingModule",
+					"kind": 128,
+					"kindString": "Class",
+					"flags": {
+						"isExported": true
+					},
+					"decorators": [
+						{
+							"name": "NgModule",
+							"type": {
+								"type": "reference",
+								"name": "NgModule"
+							},
+							"arguments": {
+								"obj": "{\n  declarations: [],\n  exports: [ RouterModule ],\n  imports: [ RouterModule.forRoot(routes),\n  ]\n}"
+							}
+						}
+					],
+					"sources": [
+						{
+							"fileName": "src/app/routing.module.ts",
+							"line": 28,
+							"character": 26
+						}
+					]
+				},
+				{
+					"id": 46,
+					"name": "routes",
+					"kind": 32,
+					"kindString": "Variable",
+					"flags": {
+						"isConst": true
+					},
+					"sources": [
+						{
+							"fileName": "src/app/routing.module.ts",
+							"line": 12,
+							"character": 12
+						}
+					],
+					"type": {
+						"type": "reference",
+						"name": "Routes"
+					},
+					"defaultValue": " [\n    { path: 'dashboard', component: DashboardComponent },\n    { path: '', redirectTo: '/dashboard', pathMatch: 'full' },\n    { path: 'app-detail-overview', component: AppDetailOverviewComponent },\n    { path: 'app-detail-deploystatus', component: AppDetailDeploystatusComponent },\n    { path: 'app-detail-deploysettings', component: AppDetailDeploysettingsComponent },\n    { path: 'service-detail-overview', component:  ServiceDetailOverviewComponent },\n    { path: 'service-detail-deploystatus', component:  ServiceDetailDeploystatusComponent },\n  ]"
+				}
+			],
+			"groups": [
+				{
+					"title": "Classes",
+					"kind": 128,
+					"children": [
+						45
+					]
+				},
+				{
+					"title": "Variables",
+					"kind": 32,
+					"children": [
+						46
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "src/app/routing.module.ts",
+					"line": 1,
+					"character": 0
+				}
+			]
+		},
+		{
+			"id": 38,
+			"name": "\"src/app/service-detail-deploystatus/service-detail-deploystatus.component\"",
+			"kind": 1,
+			"kindString": "External module",
+			"flags": {
+				"isExported": true
+			},
+			"originalName": "../mico-admin/src/app/service-detail-deploystatus/service-detail-deploystatus.component.ts",
+			"children": [
+				{
+					"id": 39,
+					"name": "ServiceDetailDeploystatusComponent",
+					"kind": 128,
+					"kindString": "Class",
+					"flags": {
+						"isExported": true
+					},
+					"decorators": [
+						{
+							"name": "Component",
+							"type": {
+								"type": "reference",
+								"name": "Component"
+							},
+							"arguments": {
+								"obj": "{\n  selector: 'app-service-detail-deploystatus',\n  templateUrl: './service-detail-deploystatus.component.html',\n  styleUrls: ['./service-detail-deploystatus.component.css']\n}"
+							}
+						}
+					],
+					"children": [
+						{
+							"id": 40,
+							"name": "constructor",
+							"kind": 512,
+							"kindString": "Constructor",
+							"flags": {
+								"isExported": true
+							},
+							"signatures": [
+								{
+									"id": 41,
+									"name": "new ServiceDetailDeploystatusComponent",
+									"kind": 16384,
+									"kindString": "Constructor signature",
+									"flags": {},
+									"type": {
+										"type": "reference",
+										"name": "ServiceDetailDeploystatusComponent",
+										"id": 39
+									}
+								}
+							],
+							"sources": [
+								{
+									"fileName": "src/app/service-detail-deploystatus/service-detail-deploystatus.component.ts",
+									"line": 8,
+									"character": 67
+								}
+							]
+						},
+						{
+							"id": 42,
+							"name": "ngOnInit",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExported": true
+							},
+							"signatures": [
+								{
+									"id": 43,
+									"name": "ngOnInit",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"type": {
+										"type": "intrinsic",
+										"name": "void"
+									}
+								}
+							],
+							"sources": [
+								{
+									"fileName": "src/app/service-detail-deploystatus/service-detail-deploystatus.component.ts",
+									"line": 12,
+									"character": 10
+								}
+							]
+						}
+					],
+					"groups": [
+						{
+							"title": "Constructors",
+							"kind": 512,
+							"children": [
+								40
+							]
+						},
+						{
+							"title": "Methods",
+							"kind": 2048,
+							"children": [
+								42
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "src/app/service-detail-deploystatus/service-detail-deploystatus.component.ts",
+							"line": 8,
+							"character": 47
+						}
+					],
+					"implementedTypes": [
+						{
+							"type": "reference",
+							"name": "OnInit"
+						}
+					]
+				}
+			],
+			"groups": [
+				{
+					"title": "Classes",
+					"kind": 128,
+					"children": [
+						39
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "src/app/service-detail-deploystatus/service-detail-deploystatus.component.ts",
+					"line": 1,
+					"character": 0
+				}
+			]
+		},
+		{
+			"id": 91,
+			"name": "\"src/app/service-detail-deploystatus/service-detail-deploystatus.component.spec\"",
+			"kind": 1,
+			"kindString": "External module",
+			"flags": {
+				"isExported": true
+			},
+			"originalName": "../mico-admin/src/app/service-detail-deploystatus/service-detail-deploystatus.component.spec.ts",
+			"sources": [
+				{
+					"fileName": "src/app/service-detail-deploystatus/service-detail-deploystatus.component.spec.ts",
+					"line": 1,
+					"character": 0
+				}
+			]
+		},
+		{
+			"id": 32,
+			"name": "\"src/app/service-detail-overview/service-detail-overview.component\"",
+			"kind": 1,
+			"kindString": "External module",
+			"flags": {
+				"isExported": true
+			},
+			"originalName": "../mico-admin/src/app/service-detail-overview/service-detail-overview.component.ts",
+			"children": [
+				{
+					"id": 33,
+					"name": "ServiceDetailOverviewComponent",
+					"kind": 128,
+					"kindString": "Class",
+					"flags": {
+						"isExported": true
+					},
+					"decorators": [
+						{
+							"name": "Component",
+							"type": {
+								"type": "reference",
+								"name": "Component"
+							},
+							"arguments": {
+								"obj": "{\n  selector: 'app-service-detail-overview',\n  templateUrl: './service-detail-overview.component.html',\n  styleUrls: ['./service-detail-overview.component.css']\n}"
+							}
+						}
+					],
+					"children": [
+						{
+							"id": 34,
+							"name": "constructor",
+							"kind": 512,
+							"kindString": "Constructor",
+							"flags": {
+								"isExported": true
+							},
+							"signatures": [
+								{
+									"id": 35,
+									"name": "new ServiceDetailOverviewComponent",
+									"kind": 16384,
+									"kindString": "Constructor signature",
+									"flags": {},
+									"type": {
+										"type": "reference",
+										"name": "ServiceDetailOverviewComponent",
+										"id": 33
+									}
+								}
+							],
+							"sources": [
+								{
+									"fileName": "src/app/service-detail-overview/service-detail-overview.component.ts",
+									"line": 8,
+									"character": 63
+								}
+							]
+						},
+						{
+							"id": 36,
+							"name": "ngOnInit",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExported": true
+							},
+							"signatures": [
+								{
+									"id": 37,
+									"name": "ngOnInit",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"type": {
+										"type": "intrinsic",
+										"name": "void"
+									}
+								}
+							],
+							"sources": [
+								{
+									"fileName": "src/app/service-detail-overview/service-detail-overview.component.ts",
+									"line": 12,
+									"character": 10
+								}
+							]
+						}
+					],
+					"groups": [
+						{
+							"title": "Constructors",
+							"kind": 512,
+							"children": [
+								34
+							]
+						},
+						{
+							"title": "Methods",
+							"kind": 2048,
+							"children": [
+								36
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "src/app/service-detail-overview/service-detail-overview.component.ts",
+							"line": 8,
+							"character": 43
+						}
+					],
+					"implementedTypes": [
+						{
+							"type": "reference",
+							"name": "OnInit"
+						}
+					]
+				}
+			],
+			"groups": [
+				{
+					"title": "Classes",
+					"kind": 128,
+					"children": [
+						33
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "src/app/service-detail-overview/service-detail-overview.component.ts",
+					"line": 1,
+					"character": 0
+				}
+			]
+		},
+		{
+			"id": 92,
+			"name": "\"src/app/service-detail-overview/service-detail-overview.component.spec\"",
+			"kind": 1,
+			"kindString": "External module",
+			"flags": {
+				"isExported": true
+			},
+			"originalName": "../mico-admin/src/app/service-detail-overview/service-detail-overview.component.spec.ts",
+			"sources": [
+				{
+					"fileName": "src/app/service-detail-overview/service-detail-overview.component.spec.ts",
+					"line": 1,
+					"character": 0
+				}
+			]
+		},
+		{
+			"id": 55,
 			"name": "\"src/environments/environment\"",
 			"kind": 1,
 			"kindString": "External module",
@@ -406,7 +1941,7 @@
 			"originalName": "../mico-admin/src/environments/environment.ts",
 			"children": [
 				{
-					"id": 17,
+					"id": 56,
 					"name": "environment",
 					"kind": 2097152,
 					"kindString": "Object literal",
@@ -416,7 +1951,7 @@
 					},
 					"children": [
 						{
-							"id": 18,
+							"id": 57,
 							"name": "production",
 							"kind": 32,
 							"kindString": "Variable",
@@ -442,7 +1977,7 @@
 							"title": "Variables",
 							"kind": 32,
 							"children": [
-								18
+								57
 							]
 						}
 					],
@@ -464,7 +1999,7 @@
 					"title": "Object literals",
 					"kind": 2097152,
 					"children": [
-						17
+						56
 					]
 				}
 			],
@@ -477,7 +2012,7 @@
 			]
 		},
 		{
-			"id": 25,
+			"id": 93,
 			"name": "\"src/environments/environment.prod\"",
 			"kind": 1,
 			"kindString": "External module",
@@ -487,7 +2022,7 @@
 			"originalName": "../mico-admin/src/environments/environment.prod.ts",
 			"children": [
 				{
-					"id": 26,
+					"id": 94,
 					"name": "environment",
 					"kind": 2097152,
 					"kindString": "Object literal",
@@ -497,7 +2032,7 @@
 					},
 					"children": [
 						{
-							"id": 27,
+							"id": 95,
 							"name": "production",
 							"kind": 32,
 							"kindString": "Variable",
@@ -523,7 +2058,7 @@
 							"title": "Variables",
 							"kind": 32,
 							"children": [
-								27
+								95
 							]
 						}
 					],
@@ -545,7 +2080,7 @@
 					"title": "Object literals",
 					"kind": 2097152,
 					"children": [
-						26
+						94
 					]
 				}
 			],
@@ -558,7 +2093,7 @@
 			]
 		},
 		{
-			"id": 19,
+			"id": 58,
 			"name": "\"src/main\"",
 			"kind": 1,
 			"kindString": "External module",
@@ -575,7 +2110,7 @@
 			]
 		},
 		{
-			"id": 20,
+			"id": 59,
 			"name": "\"src/polyfills\"",
 			"kind": 1,
 			"kindString": "External module",
@@ -596,7 +2131,7 @@
 			]
 		},
 		{
-			"id": 21,
+			"id": 60,
 			"name": "\"src/test\"",
 			"kind": 1,
 			"kindString": "External module",
@@ -606,7 +2141,7 @@
 			"originalName": "../mico-admin/src/test.ts",
 			"children": [
 				{
-					"id": 23,
+					"id": 62,
 					"name": "context",
 					"kind": 32,
 					"kindString": "Variable",
@@ -627,7 +2162,7 @@
 					"defaultValue": " require.context('./', true, /\\.spec\\.ts$/)"
 				},
 				{
-					"id": 22,
+					"id": 61,
 					"name": "require",
 					"kind": 32,
 					"kindString": "Variable",
@@ -652,8 +2187,8 @@
 					"title": "Variables",
 					"kind": 32,
 					"children": [
-						23,
-						22
+						62,
+						61
 					]
 				}
 			],
@@ -673,15 +2208,31 @@
 			"children": [
 				7,
 				1,
-				8,
-				11,
-				24,
-				14,
-				16,
-				25,
-				19,
+				68,
+				86,
+				64,
+				26,
+				87,
 				20,
-				21
+				88,
+				14,
+				89,
+				47,
+				50,
+				63,
+				53,
+				8,
+				90,
+				44,
+				38,
+				91,
+				32,
+				92,
+				55,
+				93,
+				58,
+				59,
+				60
 			]
 		}
 	]

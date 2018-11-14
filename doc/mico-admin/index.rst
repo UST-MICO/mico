@@ -2,7 +2,7 @@ MICO-Admin UI
 =============
 
 .. toctree::
-   ts/test
+   ts/index
 
 
 The MICO-Admin UI uses the `Angular <https://v7.angular.io>`_ framework (v7) with the `Angular Material <https://material.angular.io>`_ component library.
