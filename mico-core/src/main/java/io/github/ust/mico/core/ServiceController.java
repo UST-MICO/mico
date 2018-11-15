@@ -10,15 +10,10 @@ public class ServiceController {
 
     @Autowired
     private ServiceRepository serviceRepository;
-
+    
     @GetMapping("/service")
     public List<Service> getAllServices(){
         return (List<Service>) serviceRepository.findAll();
-    }
-
-    @GetMapping(value = "/getServiceByName/{serviceName}")
-    public Service getServiceByName(@PathVariable String serviceName){
-        return serviceRepository.findByName(serviceName);
     }
 
     @GetMapping("/service/{id}")
