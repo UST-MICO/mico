@@ -1,9 +1,29 @@
-<p>
-  mico dashboard!
-</p>
+<mat-card>MICO - A Management System For Microservice Compositions</mat-card>
+<mat-divider></mat-divider>
+
+<mat-card>
+    <mat-card-title>Applications</mat-card-title>
+    <mat-card-content>
+        <mat-table [dataSource]="applications" class="mat-elevation-z2">
+            <ng-container matColumnDef="id">
+                <mat-header-cell *matHeaderCellDef>ID</mat-header-cell>
+                <mat-cell *matCellDef="let element">{{element.id}}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="name">
+                <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+                <mat-cell *matCellDef="let element">{{element.name}}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="shortName">
+                <mat-header-cell *matHeaderCellDef>Short Name</mat-header-cell>
+                <mat-cell *matCellDef="let element">{{element.shortName}}</mat-cell>
+            </ng-container>
+            <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        </mat-table>
+    </mat-card-content>
+</mat-card>
+
 
 <button mat-button type="button" [routerLink]="['/app-detail-overview']">App-Detail Overview</button>
-<button type="button" [routerLink]="['/app-detail-deploystatus']">App-Detail Deploystatus</button>
-<button type="button" [routerLink]="['/app-detail-deploysettings']">App-Detail Deploysettings</button>
-
-<mico-form [modelUrl]="'local/servicePOST'"></mico-form>
+<button type="button" [routerLink]="['/app-detail/deploystatus']">App-Detail Deploystatus</button>
+<button type="button" [routerLink]="['/app-detail/deploysettings']">App-Detail Deploysettings</button>

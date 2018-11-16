@@ -12,11 +12,11 @@ import { ServiceDetailDeploystatusComponent} from './service-detail-deploystatus
 const routes: Routes = [
     { path: 'dashboard', component: DashboardComponent },
     { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
-    { path: 'app-detail-overview', component: AppDetailOverviewComponent },
-    { path: 'app-detail-deploystatus', component: AppDetailDeploystatusComponent },
-    { path: 'app-detail-deploysettings', component: AppDetailDeploysettingsComponent },
-    { path: 'service-detail-overview', component:  ServiceDetailOverviewComponent },
-    { path: 'service-detail-deploystatus', component:  ServiceDetailDeploystatusComponent },
+    { path: 'app-detail/overview', component: AppDetailOverviewComponent },
+    { path: 'app-detail/deploystatus', component: AppDetailDeploystatusComponent },
+    { path: 'app-detail/deploysettings', component: AppDetailDeploysettingsComponent },
+    { path: 'service-detail/overview', component:  ServiceDetailOverviewComponent },
+    { path: 'service-detail/deploystatus', component:  ServiceDetailDeploystatusComponent },
   ];
 
 @NgModule({

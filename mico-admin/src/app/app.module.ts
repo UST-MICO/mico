@@ -4,10 +4,9 @@ import { NgModule } from '@angular/core';
 //modules
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { MatButtonModule, MatCardModule, MatMenuModule, MatIconModule, MatListModule, MatSidenavModule, MatDialogModule, MatToolbarModule, MatTooltipModule, MatInputModule } from '@angular/material';
+import { MatButtonModule, MatCardModule, MatMenuModule, MatIconModule, MatListModule, MatSidenavModule, MatDialogModule, MatToolbarModule, MatTooltipModule, MatInputModule, MatTableModule } from '@angular/material';
 
 import { RoutingModule } from './routing.module';
-import { AppRoutingModule } from './app-routing.module';
 
 //components
 import { AppComponent } from './app.component';
@@ -23,6 +22,7 @@ import { ServiceDetailOverviewComponent } from './service-detail-overview/servic
 //non page components
 import { MicoFormComponent } from './forms/mico-form/mico-form.component';
 import { MicoFormQuestionComponent } from './forms/mico-form-question/mico-form-question.component';
+import { ToolbarComponent } from './toolbar/toolbar.component';
 
 
 @NgModule({
@@ -36,6 +36,7 @@ import { MicoFormQuestionComponent } from './forms/mico-form-question/mico-form-
         ServiceDetailOverviewComponent,
         MicoFormComponent,
         MicoFormQuestionComponent,
+        ToolbarComponent,
     ],
     imports: [
         BrowserModule,
@@ -43,7 +44,6 @@ import { MicoFormQuestionComponent } from './forms/mico-form-question/mico-form-
         FormsModule,
         ReactiveFormsModule,
 
-        AppRoutingModule,
         RoutingModule,
 
         //material
@@ -58,6 +58,7 @@ import { MicoFormQuestionComponent } from './forms/mico-form-question/mico-form-
         MatToolbarModule,
         MatTooltipModule,
         MatInputModule,
+        MatTableModule,
     ],
     providers: [],
     bootstrap: [AppComponent]
