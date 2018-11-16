@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { AsyncSubject, Observable, of, from } from 'rxjs';
 import { ApiModel, ApiModelAllOf, ApiModelRef } from './apimodel';
-import { concatMap, reduce, first, timeout } from 'rxjs/operators';
+import { concatMap, reduce, first, timeout, map } from 'rxjs/operators';
 
 @Injectable({
     providedIn: 'root'
@@ -22,7 +22,8 @@ export class ModelsService {
                     'type': 'string',
                     'x-order': 2,
                 }
-            }
+            },
+            'required': ['name'],
         },
         'servicePUT': {
             'allOf': [
@@ -161,6 +162,24 @@ export class ModelsService {
             this.resolveModel(modelUrl).pipe(
                 concatMap(this.resolveModelLinks),
                 reduce(this.mergeModels, null),
+                map(model => {
+                    // inject name into properties
+                    if (model.properties != null) {
+                        for (const key in model.properties) {
+                            model.properties[key]['x-key'] = key;
+                        }
+                    }
+                    // inject required information into property
+                    if (model.required != null && model.properties != null) {
+                        model.required.forEach(key => {
+                            const prop = model.properties[key];
+                            if (prop != null) {
+                                prop['x-required'] = true;
+                            }
+                        });
+                    }
+                    return model;
+                }),
                 first(),
             ).subscribe((model) => {
                 if (model != null) {
