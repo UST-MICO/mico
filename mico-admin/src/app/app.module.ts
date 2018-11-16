@@ -2,9 +2,10 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 
 //modules
+
+import { MatButtonModule, MatCardModule, MatMenuModule, MatIconModule, MatListModule, MatSidenavModule, MatDialogModule, MatToolbarModule, MatTooltipModule, MatTableModule, MatInputModule, MatTabsModule} from '@angular/material';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { MatButtonModule, MatCardModule, MatMenuModule, MatIconModule, MatListModule, MatSidenavModule, MatDialogModule, MatToolbarModule, MatTooltipModule, MatInputModule, MatTableModule } from '@angular/material';
 
 import { RoutingModule } from './routing.module';
 
@@ -23,6 +24,8 @@ import { ServiceDetailOverviewComponent } from './service-detail-overview/servic
 import { MicoFormComponent } from './forms/mico-form/mico-form.component';
 import { MicoFormQuestionComponent } from './forms/mico-form-question/mico-form-question.component';
 import { ToolbarComponent } from './toolbar/toolbar.component';
+import { AppListComponent } from './app-list/app-list.component';
+import { AppDetailComponent } from './app-detail/app-detail.component';
 
 
 @NgModule({
@@ -37,6 +40,8 @@ import { ToolbarComponent } from './toolbar/toolbar.component';
         MicoFormComponent,
         MicoFormQuestionComponent,
         ToolbarComponent,
+        AppListComponent,
+        AppDetailComponent,
     ],
     imports: [
         BrowserModule,
@@ -59,6 +64,7 @@ import { ToolbarComponent } from './toolbar/toolbar.component';
         MatTooltipModule,
         MatInputModule,
         MatTableModule,
+        MatTabsModule,
     ],
     providers: [],
     bootstrap: [AppComponent]

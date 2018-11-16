@@ -3,11 +3,11 @@ import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
 
 @Component({
-  selector: 'app-dashboard',
-  templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.css']
+  selector: 'app-app-list',
+  templateUrl: './app-list.component.html',
+  styleUrls: ['./app-list.component.css']
 })
-export class DashboardComponent implements OnInit {
+export class AppListComponent implements OnInit {
 
     constructor(
         private apiService: ApiService
@@ -17,18 +17,13 @@ export class DashboardComponent implements OnInit {
 
     @Input() applications: ApiObject[]
 
-    displayedColumns: string[] = ['id', 'name', 'shortName'];
+    displayedColumns: string[] = ['id', 'name', 'shortName', 'description'];
 
-    ngOnInit() {    }
+    ngOnInit() {
+    }
 
-    /**
-     * receives a list of applications from the apiService
-     */
-    getApplications(): void {
+     getApplications(): void {
         this.apiService.getApplications()
         .subscribe(applications => this.applications = applications);
     }
-
-
-
 }

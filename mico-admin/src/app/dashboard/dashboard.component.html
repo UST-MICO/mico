@@ -1,29 +1,93 @@
-<mat-card>MICO - A Management System For Microservice Compositions</mat-card>
+<h3 class="ma3">MICO - A Management System For Microservice Compositions</h3>
 <mat-divider></mat-divider>
 
-<mat-card>
-    <mat-card-title>Applications</mat-card-title>
-    <mat-card-content>
-        <mat-table [dataSource]="applications" class="mat-elevation-z2">
-            <ng-container matColumnDef="id">
-                <mat-header-cell *matHeaderCellDef>ID</mat-header-cell>
-                <mat-cell *matCellDef="let element">{{element.id}}</mat-cell>
-            </ng-container>
-            <ng-container matColumnDef="name">
-                <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
-                <mat-cell *matCellDef="let element">{{element.name}}</mat-cell>
-            </ng-container>
-            <ng-container matColumnDef="shortName">
-                <mat-header-cell *matHeaderCellDef>Short Name</mat-header-cell>
-                <mat-cell *matCellDef="let element">{{element.shortName}}</mat-cell>
-            </ng-container>
-            <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-            <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-        </mat-table>
-    </mat-card-content>
+<div class="flex">
+    <!-- large content box-->
+    <div class="flex-grow-1 flex-column">
+        <!-- Application table -->
+        <mat-card class="ma2">
+            <mat-card-title>Applications</mat-card-title>
+            <mat-card-content>
+                <mat-table [dataSource]="applications" class="mat-elevation-z2">
+                    <ng-container matColumnDef="id">
+                        <mat-header-cell *matHeaderCellDef>ID</mat-header-cell>
+                        <mat-cell *matCellDef="let element">{{element.id}}</mat-cell>
+                    </ng-container>
+                    <ng-container matColumnDef="name">
+                        <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+                        <mat-cell *matCellDef="let element">{{element.name}}</mat-cell>
+                    </ng-container>
+                    <ng-container matColumnDef="shortName">
+                        <mat-header-cell *matHeaderCellDef>Short Name</mat-header-cell>
+                        <mat-cell *matCellDef="let element">{{element.shortName}}</mat-cell>
+                    </ng-container>
+                    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+                    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+                </mat-table>
+            </mat-card-content>
+        </mat-card>
+    </div>
+
+    <!-- small control boxes -->
+    <div class="w-25 ma2 flex-column">
+        <!-- Create/Add Box-->
+        <div class="w-100">
+            <mat-card>
+                <mat-card-title>Create/Add</mat-card-title>
+                <mat-card-content>
+                    <mat-action-list>
+                        <mat-divider></mat-divider>
+                        <mat-list-item (click)="newService()">
+                            <span mat-line>new Service</span>
+                            <mat-icon>add</mat-icon>
+                        </mat-list-item>
+                        <mat-divider></mat-divider>
+                        <mat-list-item (click)="newApplication()">
+                            <span mat-line>new Application</span>
+                            <mat-icon>add</mat-icon>
+                        </mat-list-item>
+                        <mat-divider></mat-divider>
+                    </mat-action-list>
+                </mat-card-content>
+            </mat-card>
+        </div>
+
+        <!-- Learn/Feedback Box-->
+        <div class="w-100">
+            <mat-card class="mt3">
+                <mat-card-title>Learn/Feedback</mat-card-title>
+                <mat-card-content>
+                    <mat-action-list>
+                        <mat-divider></mat-divider>
+                        <mat-list-item (click)="someAction()">
+                            <span mat-line>User Guide</span>
+                            <mat-icon>link</mat-icon>
+                        </mat-list-item>
+                        <mat-divider></mat-divider>
+                        <mat-list-item (click)="someAction()">
+                            <span mat-line>Developer Guide</span>
+                            <mat-icon>link</mat-icon>
+                        </mat-list-item>
+                        <mat-divider></mat-divider>
+                        <mat-list-item (click)="someAction()">
+                            <span mat-line>Suggest a Feature</span>
+                            <mat-icon>question_answer</mat-icon>
+                        </mat-list-item>
+                        <mat-divider></mat-divider>
+                    </mat-action-list>
+                </mat-card-content>
+            </mat-card>
+        </div>
+    </div>
+</div>
+
+<mat-card ma2>
+    <button mat-button type="button" [routerLink]="['/app-detail/overview']">App-Detail Overview</button>
+    <button type="button" [routerLink]="['/app-detail/deploystatus']">App-Detail Deploystatus</button>
+    <button type="button" [routerLink]="['/app-detail/deploysettings']">App-Detail Deploysettings</button>
 </mat-card>
 
+<mat-card ma2>
+    <mico-form [modelUrl]="'local/servicePOST'"></mico-form>
+</mat-card>
 
-<button mat-button type="button" [routerLink]="['/app-detail-overview']">App-Detail Overview</button>
-<button type="button" [routerLink]="['/app-detail/deploystatus']">App-Detail Deploystatus</button>
-<button type="button" [routerLink]="['/app-detail/deploysettings']">App-Detail Deploysettings</button>
