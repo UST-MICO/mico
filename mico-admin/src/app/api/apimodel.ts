@@ -5,7 +5,7 @@ export interface ApiModelRef {
 
 export interface ApiModel {
     type: string
-    properties?: {[propName: string]: ApiModel}
+    properties?: {[propName: string]: ApiModel | ApiModelRef}
     required?: string[]
     title?: string
     description?:string

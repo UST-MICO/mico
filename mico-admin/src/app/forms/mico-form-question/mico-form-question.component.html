@@ -1,0 +1,10 @@
+<div class="" [formGroup]="form">
+    <div [ngSwitch]="propertyType()" class="">
+
+        <mat-form-field class="form-element" *ngSwitchCase="'string'">
+            <mat-label>{{property['x-key']}}</mat-label>
+            <input matInput [formControlName]="property['x-key']" [attr.placeholder]="property['x-key']" [required]="property['x-required']">
+        </mat-form-field>
+
+    </div>
+</div>

@@ -2,21 +2,29 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 
 //modules
-import { MatButtonModule, MatCardModule, MatMenuModule, MatIconModule, MatListModule, MatSidenavModule, MatDialogModule, MatToolbarModule, MatTooltipModule, MatTableModule, } from '@angular/material';
+
+import { MatButtonModule, MatCardModule, MatMenuModule, MatIconModule, MatListModule, MatSidenavModule, MatDialogModule, MatToolbarModule, MatTooltipModule, MatTableModule, MatInputModule} from '@angular/material';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+
 
 import { RoutingModule } from './routing.module';
 
 //components
 import { AppComponent } from './app.component';
 
+//page components
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { AppDetailOverviewComponent } from './app-detail-overview/app-detail-overview.component';
 import { AppDetailDeploystatusComponent } from './app-detail-deploystatus/app-detail-deploystatus.component';
 import { AppDetailDeploysettingsComponent } from './app-detail-deploysettings/app-detail-deploysettings.component';
 import { ServiceDetailDeploystatusComponent } from './service-detail-deploystatus/service-detail-deploystatus.component';
 import { ServiceDetailOverviewComponent } from './service-detail-overview/service-detail-overview.component';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ToolbarComponent } from './toolbar/toolbar.component';
+
+//non page components
+import { MicoFormComponent } from './forms/mico-form/mico-form.component';
+import { MicoFormQuestionComponent } from './forms/mico-form-question/mico-form-question.component';
 
 
 @NgModule({
@@ -29,9 +37,14 @@ import { ToolbarComponent } from './toolbar/toolbar.component';
         ServiceDetailDeploystatusComponent,
         ServiceDetailOverviewComponent,
         ToolbarComponent,
+        MicoFormComponent,
+        MicoFormQuestionComponent,
     ],
     imports: [
         BrowserModule,
+
+        FormsModule,
+        ReactiveFormsModule,
 
         RoutingModule,
 
@@ -47,6 +60,7 @@ import { ToolbarComponent } from './toolbar/toolbar.component';
         MatToolbarModule,
         MatTooltipModule,
         MatTableModule,
+        MatInputModule,
     ],
     providers: [],
     bootstrap: [AppComponent]
