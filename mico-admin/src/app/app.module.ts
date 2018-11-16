@@ -2,6 +2,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 
 //modules
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatButtonModule, MatCardModule, MatMenuModule, MatIconModule, MatListModule, MatSidenavModule, MatDialogModule, MatToolbarModule, MatTooltipModule, MatInputModule } from '@angular/material';
 
@@ -38,6 +39,9 @@ import { MicoFormQuestionComponent } from './forms/mico-form-question/mico-form-
     ],
     imports: [
         BrowserModule,
+
+        FormsModule,
+        ReactiveFormsModule,
 
         AppRoutingModule,
         RoutingModule,

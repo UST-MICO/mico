@@ -1,5 +1,7 @@
-<form class="form-container"><!-- *ngIf="form" [formGroup]="form"-->
+<form class="form-container" *ngIf="form" [formGroup]="form">
     <div *ngFor="let property of properties">
-        <mico-form-question [property]="property"><!-- [form]="form"--></mico-form-question>
+        <mico-form-question [property]="property" [form]="form"></mico-form-question>
     </div>
 </form>
+
+<div>{{form?.value | json}}</div>

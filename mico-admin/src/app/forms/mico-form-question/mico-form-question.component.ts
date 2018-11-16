@@ -1,5 +1,6 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { ApiModel } from 'src/app/api/apimodel';
+import { FormGroup } from '@angular/forms';
 
 @Component({
   selector: 'mico-form-question',
@@ -9,6 +10,7 @@ import { ApiModel } from 'src/app/api/apimodel';
 export class MicoFormQuestionComponent implements OnInit {
 
     @Input() property: ApiModel;
+    @Input() form: FormGroup;
 
     constructor() { }
 
