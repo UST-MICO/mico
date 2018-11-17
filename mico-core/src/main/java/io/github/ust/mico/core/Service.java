@@ -1,8 +1,12 @@
 package io.github.ust.mico.core;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.annotations.ApiModelProperty;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.rest.core.annotation.RestResource;
 
 import java.util.List;
 
@@ -12,8 +16,11 @@ public class Service {
     @Id
     @GeneratedValue
     private Long id;
+    @ApiModelProperty(required = true)
     private String version;
+    @ApiModelProperty(required = true)
     private String shortName;
+    @ApiModelProperty(required = true)
     private String description;
 
     //additional fields
@@ -27,12 +34,17 @@ public class Service {
     private List<String> links;
     private String type;
     private String owner;
+    @Relationship
+    @JsonIgnore
     private List<DependsOn> dependsOn;
+    @Relationship(direction = Relationship.UNDIRECTED)
+    @RestResource(path = "serviceDescriptions", rel = "serviceDescriptions")
     private List<ServiceDescription> serviceDescriptions;
 
-    public Service(){}
+    public Service() {
+    }
 
-    public Service(String shortName,String version) {
+    public Service(String shortName, String version) {
         this.version = version;
         this.shortName = shortName;
     }
@@ -156,5 +168,27 @@ public class Service {
 
     public void setServiceDescriptions(List<ServiceDescription> serviceDescriptions) {
         this.serviceDescriptions = serviceDescriptions;
+    }
+
+    @Override
+    public String toString() {
+        return "Service{" +
+                "id=" + id +
+                ", version='" + version + '\'' +
+                ", shortName='" + shortName + '\'' +
+                ", description='" + description + '\'' +
+                ", predecessor=" + predecessor +
+                ", vcsRoot='" + vcsRoot + '\'' +
+                ", name='" + name + '\'' +
+                ", dockerfile='" + dockerfile + '\'' +
+                ", contact='" + contact + '\'' +
+                ", tags=" + tags +
+                ", lifecycle='" + lifecycle + '\'' +
+                ", links=" + links +
+                ", type='" + type + '\'' +
+                ", owner='" + owner + '\'' +
+                ", dependsOn=" + dependsOn +
+                ", serviceDescriptions=" + serviceDescriptions +
+                '}';
     }
 }
