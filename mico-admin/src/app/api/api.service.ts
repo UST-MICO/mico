@@ -5,13 +5,36 @@ import { ApiObject } from './apiobject';
 
 
 /**
+ * Recursively freeze object.
+ *
+ * ONLY use this if you are sure what objects this will freeze!
+ *
+ * @param obj the object to freeze
+ */
+export function freezeObject<T>(obj: T): Readonly<T> {
+    if (Object.isFrozen(obj)) return;
+    const propNames = Object.getOwnPropertyNames(obj);
+    // Freeze properties before freezing self
+    for (const key of propNames) {
+      let value = obj[key];
+      if (value && typeof value === "object") {
+          obj[key] = freezeObject(value);
+      } else {
+          obj[key] = value;
+      }
+    }
+    return Object.freeze(obj);
+}
+
+
+/**
  * Service to interact with the mico api.
  */
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
-    private streams: Map<string, Subject<ApiObject | ApiObject[]>> = new Map();
+    private streams: Map<string, Subject<Readonly<ApiObject> | Readonly<ApiObject[]>>> = new Map();
 
     constructor() { }
 
@@ -33,9 +56,9 @@ export class ApiService {
      * @param streamURL resource url
      * @param defaultSubject function to create a new streamSource if needed (default: BehaviourSubject)
      */
-    private getStreamSource(streamURL: string, defaultSubject: () => Subject<ApiObject | ApiObject[]> =
-                            () => new BehaviorSubject<ApiObject | ApiObject[]>(undefined)
-                           ): Subject<ApiObject | ApiObject[]> {
+    private getStreamSource(streamURL: string, defaultSubject: () => Subject<Readonly<ApiObject> | Readonly<ApiObject[]>> =
+                            () => new BehaviorSubject<Readonly<ApiObject> | Readonly<ApiObject[]>>(undefined)
+                           ): Subject<Readonly<ApiObject> | Readonly<ApiObject[]>> {
         streamURL = this.canonizeStreamUrl(streamURL);
         let stream = this.streams.get(streamURL);
         if (stream == null) {
@@ -50,7 +73,7 @@ export class ApiService {
     /**
      * Get service list
      */
-    getServices(): Observable<ApiObject[]> {
+    getServices(): Observable<Readonly<ApiObject[]>> {
         let resource = 'services';
         const stream = this.getStreamSource(resource);
 
@@ -70,9 +93,9 @@ export class ApiService {
             },
         ];
 
-        stream.next(mockData);
+        stream.next(freezeObject(mockData));
 
-        return (stream.asObservable() as Observable<ApiObject[]>).pipe(
+        return (stream.asObservable() as Observable<Readonly<ApiObject[]>>).pipe(
             filter(data => data !== undefined)
         );
     }
@@ -80,7 +103,7 @@ export class ApiService {
     /**
      * Get application list
      */
-    getApplications(): Observable<ApiObject[]> {
+    getApplications(): Observable<Readonly<ApiObject[]>> {
         let resource = 'applications';
         const stream = this.getStreamSource(resource);
 
@@ -100,14 +123,14 @@ export class ApiService {
             },
         ];
 
-        stream.next(mockData);
+        stream.next(freezeObject(mockData));
 
-        return (stream.asObservable() as Observable<ApiObject[]>).pipe(
+        return (stream.asObservable() as Observable<Readonly<ApiObject[]>>).pipe(
             filter(data => data !== undefined)
         );
     }
 
-    getApplicationById(id): Observable<ApiObject> {
+    getApplicationById(id): Observable<Readonly<ApiObject>> {
         // TODO check if there is a resource for single applications
         let resource = 'applications';
         const stream = this.getStreamSource(resource);
@@ -142,9 +165,9 @@ export class ApiService {
                 'description': 'A generic service',
             }
 
-        stream.next(mockData);
+        stream.next(freezeObject(mockData));
 
-        return (stream.asObservable() as Observable<ApiObject[]>).pipe(
+        return (stream.asObservable() as Observable<Readonly<ApiObject[]>>).pipe(
             filter(data => data !== undefined)
         );
     }

@@ -19,11 +19,11 @@ import { AppDetailDeploystatusComponent } from './app-detail-deploystatus/app-de
 import { AppDetailDeploysettingsComponent } from './app-detail-deploysettings/app-detail-deploysettings.component';
 import { ServiceDetailDeploystatusComponent } from './service-detail-deploystatus/service-detail-deploystatus.component';
 import { ServiceDetailOverviewComponent } from './service-detail-overview/service-detail-overview.component';
+import { ToolbarComponent } from './toolbar/toolbar.component';
 
 //non page components
 import { MicoFormComponent } from './forms/mico-form/mico-form.component';
 import { MicoFormQuestionComponent } from './forms/mico-form-question/mico-form-question.component';
-import { ToolbarComponent } from './toolbar/toolbar.component';
 import { AppListComponent } from './app-list/app-list.component';
 import { AppDetailComponent } from './app-detail/app-detail.component';
 import { ServiceListComponent } from './service-list/service-list.component';
@@ -39,9 +39,9 @@ import { ServiceDetailComponent } from './service-detail/service-detail.componen
         AppDetailDeploysettingsComponent,
         ServiceDetailDeploystatusComponent,
         ServiceDetailOverviewComponent,
+        ToolbarComponent,
         MicoFormComponent,
         MicoFormQuestionComponent,
-        ToolbarComponent,
         AppListComponent,
         AppDetailComponent,
         ServiceListComponent,
@@ -66,8 +66,8 @@ import { ServiceDetailComponent } from './service-detail/service-detail.componen
         MatDialogModule,
         MatToolbarModule,
         MatTooltipModule,
-        MatInputModule,
         MatTableModule,
+        MatInputModule,
         MatTabsModule,
     ],
     providers: [],
