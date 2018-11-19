@@ -18,6 +18,8 @@ export class ModelsService {
                 'name': {
                     'type': 'string',
                     'x-order': 1,
+                    'minLength': 3,
+                    'maxLength': 22,
                 },
                 'description': {
                     'type': 'string',
@@ -199,11 +201,13 @@ export class ModelsService {
      * Return a stream filter for api models. (use with map in observable pipe)
      *
      * @param properties the property keys to filter for (array/set or other iterable)
+     *                   Use Empty iterable or null to deactivate filter
      * @param isBlacklist if true the filter ill be appliead as blacklist. (default=whitelest/false)
      */
     filterModel(properties: Iterable<string>, isBlacklist: boolean=false): (ApiModel) => Readonly<ApiModel> {
-        const filterset: Set<string> = new Set<string>(properties);
+        const filterset: Set<string> = (properties !== null) ? new Set<string>(properties) : new Set<string>();
         return (model) => {
+            if (filterset.size === 0) return model;
             const newModel: ApiModel = { type: model.type };
             for (const key in model) {
                 if (key === 'type') {
