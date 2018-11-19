@@ -18,6 +18,8 @@ export class ModelsService {
                 'name': {
                     'type': 'string',
                     'x-order': 1,
+                    'minLength': 3,
+                    'maxLength': 22,
                 },
                 'description': {
                     'type': 'string',
