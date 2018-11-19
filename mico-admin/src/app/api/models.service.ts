@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { AsyncSubject, Observable, of, from } from 'rxjs';
 import { ApiModel, ApiModelAllOf, ApiModelRef } from './apimodel';
 import { concatMap, reduce, first, timeout, map } from 'rxjs/operators';
+import { freezeObject } from './api.service';
 
 @Injectable({
     providedIn: 'root'
@@ -138,11 +139,11 @@ export class ModelsService {
      *
      * @param cacheUrl resource url
      */
-    private getCacheSource(cacheURL: string): AsyncSubject<ApiModel> {
+    private getCacheSource(cacheURL: string): AsyncSubject<Readonly<ApiModel>> {
         cacheURL = this.canonizeModelUri(cacheURL);
         let stream = this.modelCache.get(cacheURL);
         if (stream == null) {
-            stream = new AsyncSubject<ApiModel>();
+            stream = new AsyncSubject<Readonly<ApiModel>>();
             this.modelCache.set(cacheURL, stream);
         }
         return stream;
@@ -156,7 +157,7 @@ export class ModelsService {
      *
      * @param modelUrl
      */
-    getModel(modelUrl): Observable<ApiModel> {
+    getModel(modelUrl): Observable<Readonly<ApiModel>> {
         const stream = this.getCacheSource(modelUrl);
         if (! stream.closed) {
             this.resolveModel(modelUrl).pipe(
@@ -183,7 +184,7 @@ export class ModelsService {
                 first(),
             ).subscribe((model) => {
                 if (model != null) {
-                    stream.next(model);
+                    stream.next(freezeObject(model));
                     stream.complete();
                 }
             });
@@ -192,5 +193,44 @@ export class ModelsService {
             timeout(2000),
             first(),
         );
+    }
+
+    /**
+     * Return a stream filter for api models. (use with map in observable pipe)
+     *
+     * @param properties the property keys to filter for (array/set or other iterable)
+     * @param isBlacklist if true the filter ill be appliead as blacklist. (default=whitelest/false)
+     */
+    filterModel(properties: Iterable<string>, isBlacklist: boolean=false): (ApiModel) => Readonly<ApiModel> {
+        const filterset: Set<string> = new Set<string>(properties);
+        return (model) => {
+            const newModel: ApiModel = { type: model.type };
+            for (const key in model) {
+                if (key === 'type') {
+                    continue;
+                } else if (key === 'properties') {
+                    const props = model[key];
+                    const newProps: any = {};
+                    for (const propKey in props) {
+                        if ((isBlacklist && !filterset.has(propKey)) ||
+                            (!isBlacklist && filterset.has(propKey))) {
+                            // create new object because direct assignement fails (except for the debugger...)
+                            newProps[propKey] = Object.assign(new Object(), props[propKey]);
+                        }
+                    }
+                    newModel[key] = newProps;
+                    continue;
+                } else if (key === 'required') {
+                    if (isBlacklist) {
+                        newModel[key] = model[key].filter((propKey) => !filterset.has(propKey));
+                    } else {
+                        newModel[key] = model[key].filter((propKey) => filterset.has(propKey));
+                    }
+                    continue;
+                }
+                newModel[key] = model[key];
+            }
+            return freezeObject(newModel);
+        };
     }
 }
