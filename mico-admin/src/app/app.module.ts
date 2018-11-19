@@ -27,6 +27,8 @@ import { MicoFormComponent } from './forms/mico-form/mico-form.component';
 import { MicoFormQuestionComponent } from './forms/mico-form-question/mico-form-question.component';
 import { AppListComponent } from './app-list/app-list.component';
 import { AppDetailComponent } from './app-detail/app-detail.component';
+import { ServiceListComponent } from './service-list/service-list.component';
+import { ServiceDetailComponent } from './service-detail/service-detail.component';
 
 
 @NgModule({
@@ -43,6 +45,8 @@ import { AppDetailComponent } from './app-detail/app-detail.component';
         MicoFormQuestionComponent,
         AppListComponent,
         AppDetailComponent,
+        ServiceListComponent,
+        ServiceDetailComponent,
     ],
     imports: [
         BrowserModule,

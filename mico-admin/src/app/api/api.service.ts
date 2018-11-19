@@ -116,7 +116,28 @@ export class ApiService {
         const mockData: ApiObject =
             {
                 'id': id,
-                'name': 'Hello World Service',
+                'name': 'Hello World Application id ' + id,
+                'shortName': 'test.' + id + 'application',
+                'description': 'A generic application',
+            }
+
+        stream.next(mockData);
+
+        return (stream.asObservable() as Observable<ApiObject[]>).pipe(
+            filter(data => data !== undefined)
+        );
+    }
+
+    getServiceById(id): Observable<ApiObject> {
+        // TODO check if there is a resource for single services
+        let resource = 'service';
+        const stream = this.getStreamSource(resource);
+
+        // TODO
+        const mockData: ApiObject =
+            {
+                'id': id,
+                'name': 'Hello World Service id ' + id,
                 'shortName': 'test.' + id + 'service',
                 'description': 'A generic service',
             }
