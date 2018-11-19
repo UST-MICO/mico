@@ -1,6 +1,8 @@
 package io.github.ust.mico.core;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -10,6 +12,7 @@ import org.springframework.data.rest.core.annotation.RestResource;
 
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @NodeEntity
 public class Service {
     //mandatory fields
@@ -18,6 +21,7 @@ public class Service {
     private Long id;
     @ApiModelProperty(required = true)
     private String version;
+    @JsonProperty("name")
     @ApiModelProperty(required = true)
     private String shortName;
     @ApiModelProperty(required = true)
@@ -33,6 +37,7 @@ public class Service {
     private String lifecycle;
     private List<String> links;
     private String type;
+    @JsonIgnore
     private String owner;
     @Relationship
     @JsonIgnore
