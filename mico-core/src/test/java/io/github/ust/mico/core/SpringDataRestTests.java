@@ -87,7 +87,7 @@ public class SpringDataRestTests {
         ResponseEntity<JsonNode> getResultServiceToServiceDescription = restTemplate.getForEntity(serviceDescriptionsURI, JsonNode.class);
 
         assertThat(getResultServiceToServiceDescription.getStatusCode()).isEqualTo(HttpStatus.OK);
-        JsonNode serviceDescriptionsList = getResultServiceToServiceDescription.getBody().get("_embedded").get("serviceDescribtions");
+        JsonNode serviceDescriptionsList = getResultServiceToServiceDescription.getBody().get("_embedded").get("serviceDescriptions");
         assertThat(serviceDescriptionsList.size()).isEqualTo(2);
     }
 
@@ -165,7 +165,7 @@ public class SpringDataRestTests {
 
     private URI postServiceDescription(ServiceDescription serviceDescription) throws URISyntaxException {
         RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<JsonNode> resultPostServiceDescription = restTemplate.postForEntity(getLocalHostWithPort() + "serviceDescribtions", serviceDescription, JsonNode.class);
+        ResponseEntity<JsonNode> resultPostServiceDescription = restTemplate.postForEntity(getLocalHostWithPort() + "serviceDescriptions", serviceDescription, JsonNode.class);
         JsonNode serviceDescriptionBody = resultPostServiceDescription.getBody();
 
         assertThat(serviceDescriptionBody.get("port").asText()).isEqualTo(serviceDescription.getPort());
