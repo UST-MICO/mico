@@ -1,4 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
+import { ActivatedRoute } from '@angular/router'
+
+import { ApiService } from '../api/api.service';
+import { ApiObject } from '../api/apiobject';
 
 @Component({
   selector: 'app-service-detail-overview',
@@ -7,9 +11,17 @@ import { Component, OnInit } from '@angular/core';
 })
 export class ServiceDetailOverviewComponent implements OnInit {
 
-  constructor() { }
+    constructor(
+        private apiService: ApiService,
+        private route: ActivatedRoute,
+    ) {}
 
-  ngOnInit() {
-  }
+    @Input() service: ApiObject
+
+    ngOnInit() {
+        const id = +this.route.snapshot.paramMap.get('id');
+        this.apiService.getServiceById(id)
+        .subscribe(service => this.service = service);
+    }
 
 }

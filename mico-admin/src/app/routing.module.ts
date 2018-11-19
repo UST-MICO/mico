@@ -11,8 +11,6 @@ import { AppDetailDeploysettingsComponent } from './app-detail-deploysettings/ap
 
 import { ServiceListComponent } from './service-list/service-list.component';
 import { ServiceDetailComponent } from './service-detail/service-detail.component';
-import { ServiceDetailOverviewComponent } from './service-detail-overview/service-detail-overview.component';
-import { ServiceDetailDeploystatusComponent} from './service-detail-deploystatus/service-detail-deploystatus.component';
 
 
 const routes: Routes = [
@@ -27,8 +25,6 @@ const routes: Routes = [
 
     { path: 'service-detail/app-service-list', component: ServiceListComponent },
     { path: 'service-detail/:id', component:  ServiceDetailComponent},
-    { path: 'service-detail/overview', component:  ServiceDetailOverviewComponent },
-    { path: 'service-detail/deploystatus', component:  ServiceDetailDeploystatusComponent },
   ];
 
 @NgModule({

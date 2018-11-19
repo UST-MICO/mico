@@ -84,12 +84,32 @@ export class ApiService {
                 'name': 'Mock Service',
                 'shortName': 'test.mock-service',
                 'description': 'A generic dummy service',
+                'internalDependencies': [2, 3],
+                'externalDependencies': [4],
             },
             {
                 'id': '2',
                 'name': 'Hello World Service',
                 'shortName': 'test.hello-world-service',
                 'description': 'A generic hello world service',
+                'internalDependencies': [],
+                'externalDependencies': [4],
+            },
+            {
+                'id': '3',
+                'name': 'Bye World Service',
+                'shortName': 'test.bye-world-service',
+                'description': 'A generic service',
+                'internalDependencies': [2],
+                'externalDependencies': [],
+            },
+            {
+                'id': '4',
+                'name': 'External Service',
+                'shortName': 'ext.service',
+                'description': 'A generic service',
+                'internalDependencies': [],
+                'externalDependencies': [],
             },
         ];
 
@@ -157,15 +177,56 @@ export class ApiService {
         const stream = this.getStreamSource(resource);
 
         // TODO
-        const mockData: ApiObject =
+
+        const mockData: ApiObject[] = [
+            {
+                'id': '1',
+                'name': 'Mock Service',
+                'shortName': 'test.mock-service',
+                'description': 'A generic dummy service',
+                'internalDependencies': [2, 3],
+                'externalDependencies': [4],
+            },
+            {
+                'id': '2',
+                'name': 'Hello World Service',
+                'shortName': 'test.hello-world-service',
+                'description': 'A generic hello world service',
+                'internalDependencies': [],
+                'externalDependencies': [4],
+            },
+            {
+                'id': '3',
+                'name': 'Bye World Service',
+                'shortName': 'test.bye-world-service',
+                'description': 'A generic service',
+                'internalDependencies': [2],
+                'externalDependencies': [],
+            },
+            {
+                'id': '4',
+                'name': 'External Service',
+                'shortName': 'ext.service',
+                'description': 'A generic service',
+                'internalDependencies': [],
+                'externalDependencies': [],
+            },
+        ];
+
+        const genericMockData: ApiObject =
             {
                 'id': id,
-                'name': 'Hello World Service id ' + id,
+                'name': 'Generic World Service id ' + id,
                 'shortName': 'test.' + id + 'service',
-                'description': 'A generic service',
+                'description': 'A generic generated service',
             }
 
-        stream.next(freezeObject(mockData));
+        if (id > 0 && id <= 4) {
+            stream.next(freezeObject(mockData[id-1]));
+        } else {
+            stream.next(freezeObject(genericMockData));
+        }
+
 
         return (stream.asObservable() as Observable<Readonly<ApiObject[]>>).pipe(
             filter(data => data !== undefined)

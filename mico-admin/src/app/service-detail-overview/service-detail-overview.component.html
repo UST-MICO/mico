@@ -1,3 +1,142 @@
-<p>
-  service-detail-overview works!
-</p>
+<mat-form-field class="mat-form-field-large" class="mat-form-field-medium">
+    <input matInput placeholder="{{service.name}}" value="">
+</mat-form-field>
+<!-- TODO: add buttons, TODO check usage...-->
+<mat-divider></mat-divider>
+
+<div class="flex">
+    <!-- Information Grid-->
+    <div class="flex-grow-1 ma2 flex-column">
+
+        <div class="w-100">
+            <!-- editable version -->
+            <mat-list>
+                <mat-list-item class="ma2">
+                    <mat-form-field class="mat-form-field-large">
+                        <input matInput placeholder="VCS Root" value="$root">
+                    </mat-form-field>
+                </mat-list-item>
+
+                <mat-list-item class="ma2">
+                    <mat-form-field class="mat-form-field-large">
+                        <input matInput placeholder="Documentation" value="$doc">
+                    </mat-form-field>
+                </mat-list-item>
+
+                <mat-list-item class="ma2 mt5">
+                    <mat-form-field class="mat-form-field-large">
+                        <input matInput placeholder="Owner" value="$owner">
+                    </mat-form-field>
+                </mat-list-item>
+
+                <mat-list-item class="ma2">
+                    <mat-form-field class="mat-form-field-large">
+                        <input matInput placeholder="Type" value="$service">
+                    </mat-form-field>
+                </mat-list-item>
+
+                <mat-list-item class="ma2">
+                    <mat-form-field class="mat-form-field-large">
+                        <input matInput placeholder="Tags" value="$tag1 $tag2">
+                    </mat-form-field>
+                </mat-list-item>
+            </mat-list>
+            <!-- EndOf editable version-->
+
+            <!-- display version -->
+            <mat-list dense>
+                <mat-list-item class="mat-list-item mt2">
+                    <b>VCS Root</b>
+                </mat-list-item>
+                <mat-divider></mat-divider>
+                <mat-list-item>
+                    http://...
+                </mat-list-item>
+
+                <mat-list-item class="mat-list-item mt2">
+                    <b>Documentation</b>
+                </mat-list-item>
+                <mat-divider></mat-divider>
+                <mat-list-item>
+                    http://...
+                </mat-list-item>
+
+                <mat-list-item class="mt2">
+                    <b>Info</b>
+                </mat-list-item>
+                <mat-divider></mat-divider>
+                <mat-list-item>
+                    Owner: name
+                </mat-list-item>
+                <mat-list-item>
+                    Type: service
+                </mat-list-item>
+                <mat-list-item>
+                    <!-- TODO FIX tags (are shown in a strange way...) -->
+                    Tags: <mat-basic-chip>awesome</mat-basic-chip> <mat-basic-chip>myService</mat-basic-chip>
+                </mat-list-item>
+
+            </mat-list>
+
+            <!-- EndOf display version-->
+        </div>
+
+
+    </div>
+
+    <!-- Controling Grid-->
+    <div class="w-25 ma2 flex-column">
+
+        <!-- Provides/Dependencies box-->
+        <div class="w-100">
+            <mat-card>
+                <mat-card-content>
+                    <mat-action-list>
+                        <mat-divider></mat-divider>
+                        <mat-list-item (click)="addProvides()">
+                            <!-- TODO method not existing yet-->
+                            <span mat-line>Provides</span>
+                            <mat-icon>add</mat-icon>
+                        </mat-list-item>
+                        <mat-divider></mat-divider>
+                        <!-- TODO list provides -->
+
+                        <mat-list-item (click)="addDependencie()()">
+                            <!-- TODO method not existing yet-->
+                            <span mat-line>Dependencies (internal)</span>
+                            <mat-icon>add</mat-icon>
+                        </mat-list-item>
+                        <mat-divider></mat-divider>
+                        <!-- list internal dependencies-->
+                        <div *ngFor="let dependencie of service.internalDependencies">
+                            <mat-list-item>
+                                <!-- Todo load name and add click event and add status-->
+                                {{dependencie}}
+                            </mat-list-item>
+                            <mat-divider></mat-divider>
+                        </div>
+
+                        <mat-list-item (click)="addDependencie()">
+                            <!-- TODO method not existing yet-->
+                            <span mat-line>Dependencies (external)</span>
+                            <mat-icon>add</mat-icon>
+                        </mat-list-item>
+                        <mat-divider></mat-divider>
+                        <!-- list external dependencies-->
+                        <div *ngFor="let dependencie of service.externalDependencies">
+                            <mat-list-item>
+                                <!-- Todo load name and add click event and add status -->
+                                {{dependencie}}
+                            </mat-list-item>
+                            <mat-divider></mat-divider>
+                        </div>
+
+
+                    </mat-action-list>
+                </mat-card-content>
+            </mat-card>
+        </div>
+
+    </div>
+
+</div>

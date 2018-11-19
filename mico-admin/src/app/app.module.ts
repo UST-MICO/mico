@@ -3,7 +3,7 @@ import { NgModule } from '@angular/core';
 
 //modules
 
-import { MatButtonModule, MatCardModule, MatMenuModule, MatIconModule, MatListModule, MatSidenavModule, MatDialogModule, MatToolbarModule, MatTooltipModule, MatTableModule, MatInputModule, MatTabsModule} from '@angular/material';
+import { MatButtonModule, MatCardModule, MatMenuModule, MatIconModule, MatListModule, MatSidenavModule, MatDialogModule, MatToolbarModule, MatTooltipModule, MatTableModule, MatInputModule, MatTabsModule, MatChipsModule} from '@angular/material';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
@@ -69,6 +69,7 @@ import { ServiceDetailComponent } from './service-detail/service-detail.componen
         MatTableModule,
         MatInputModule,
         MatTabsModule,
+        MatChipsModule,
     ],
     providers: [],
     bootstrap: [AppComponent]
