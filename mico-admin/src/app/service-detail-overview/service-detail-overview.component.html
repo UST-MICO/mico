@@ -2,6 +2,19 @@
     <input matInput placeholder="{{service.name}}" value="">
 </mat-form-field>
 <!-- TODO: add buttons, TODO check usage...-->
+<div align="right">
+    <div class="ma1 pa1" *ngIf="!edit">
+        <button mat-raised-button (click)="edit = !edit">Edit</button>
+    </div>
+    <div class="ma1 pa1" *ngIf="edit">
+        <span class="ma1">
+            <button  mat-raised-button>Save</button>
+        </span>
+        <span class="ma1">
+            <button mat-raised-button (click)="edit = !edit">Cancel</button>
+        </span>
+    </div>
+</div>
 <mat-divider></mat-divider>
 
 <div class="flex">
@@ -9,76 +22,82 @@
     <div class="flex-grow-1 ma2 flex-column">
 
         <div class="w-100">
-            <!-- editable version -->
-            <mat-list>
-                <mat-list-item class="ma2">
-                    <mat-form-field class="mat-form-field-large">
-                        <input matInput placeholder="VCS Root" value="$root">
-                    </mat-form-field>
-                </mat-list-item>
+            <div *ngIf="!edit">
+                <!-- display version -->
+                <mat-list dense>
+                    <mat-list-item class="mat-list-item mt2">
+                        <b>VCS Root</b>
+                    </mat-list-item>
+                    <mat-divider></mat-divider>
+                    <mat-list-item>
+                        http://...
+                    </mat-list-item>
 
-                <mat-list-item class="ma2">
-                    <mat-form-field class="mat-form-field-large">
-                        <input matInput placeholder="Documentation" value="$doc">
-                    </mat-form-field>
-                </mat-list-item>
+                    <mat-list-item class="mat-list-item mt2">
+                        <b>Documentation</b>
+                    </mat-list-item>
+                    <mat-divider></mat-divider>
+                    <mat-list-item>
+                        http://...
+                    </mat-list-item>
 
-                <mat-list-item class="ma2 mt5">
-                    <mat-form-field class="mat-form-field-large">
-                        <input matInput placeholder="Owner" value="$owner">
-                    </mat-form-field>
-                </mat-list-item>
-
-                <mat-list-item class="ma2">
-                    <mat-form-field class="mat-form-field-large">
-                        <input matInput placeholder="Type" value="$service">
-                    </mat-form-field>
-                </mat-list-item>
-
-                <mat-list-item class="ma2">
-                    <mat-form-field class="mat-form-field-large">
-                        <input matInput placeholder="Tags" value="$tag1 $tag2">
-                    </mat-form-field>
-                </mat-list-item>
-            </mat-list>
-            <!-- EndOf editable version-->
-
-            <!-- display version -->
-            <mat-list dense>
-                <mat-list-item class="mat-list-item mt2">
-                    <b>VCS Root</b>
-                </mat-list-item>
-                <mat-divider></mat-divider>
-                <mat-list-item>
-                    http://...
-                </mat-list-item>
-
-                <mat-list-item class="mat-list-item mt2">
-                    <b>Documentation</b>
-                </mat-list-item>
-                <mat-divider></mat-divider>
-                <mat-list-item>
-                    http://...
-                </mat-list-item>
-
-                <mat-list-item class="mt2">
-                    <b>Info</b>
-                </mat-list-item>
-                <mat-divider></mat-divider>
-                <mat-list-item>
-                    Owner: name
-                </mat-list-item>
-                <mat-list-item>
-                    Type: service
-                </mat-list-item>
-                <mat-list-item>
-                    <!-- TODO FIX tags (are shown in a strange way...) -->
-                    Tags: <mat-basic-chip>awesome</mat-basic-chip> <mat-basic-chip>myService</mat-basic-chip>
-                </mat-list-item>
-
-            </mat-list>
-
+                    <mat-list-item class="mt2">
+                        <b>Info</b>
+                    </mat-list-item>
+                    <mat-divider></mat-divider>
+                    <mat-list-item>
+                        Owner: name
+                    </mat-list-item>
+                    <mat-list-item>
+                        Type: service
+                    </mat-list-item>
+                    <mat-list-item>
+                        <!-- TODO FIX tags (are shown in a strange way...) -->
+                        Tags:
+                        <mat-chip-list class="ma1">
+                            <mat-chip>awesome</mat-chip>
+                            <mat-chip>myService</mat-chip>
+                        </mat-chip-list>
+                    </mat-list-item>
+                </mat-list>
+            </div>
             <!-- EndOf display version-->
+
+            <!-- editable version -->
+            <div *ngIf="edit">
+                <mat-list>
+                    <mat-list-item class="ma2">
+                        <mat-form-field class="mat-form-field-large">
+                            <input matInput placeholder="VCS Root" value="$root">
+                        </mat-form-field>
+                    </mat-list-item>
+
+                    <mat-list-item class="ma2">
+                        <mat-form-field class="mat-form-field-large">
+                            <input matInput placeholder="Documentation" value="$doc">
+                        </mat-form-field>
+                    </mat-list-item>
+
+                    <mat-list-item class="ma2 mt5">
+                        <mat-form-field class="mat-form-field-large">
+                            <input matInput placeholder="Owner" value="$owner">
+                        </mat-form-field>
+                    </mat-list-item>
+
+                    <mat-list-item class="ma2">
+                        <mat-form-field class="mat-form-field-large">
+                            <input matInput placeholder="Type" value="$service">
+                        </mat-form-field>
+                    </mat-list-item>
+
+                    <mat-list-item class="ma2">
+                        <mat-form-field class="mat-form-field-large">
+                            <input matInput placeholder="Tags" value="$tag1 $tag2">
+                        </mat-form-field>
+                    </mat-list-item>
+                </mat-list>
+            </div>
+            <!-- EndOf editable version-->
         </div>
 
 
@@ -95,7 +114,7 @@
                         <mat-divider></mat-divider>
                         <mat-list-item (click)="addProvides()">
                             <!-- TODO method not existing yet-->
-                            <span mat-line>Provides</span>
+                            <span mat-line><b>Provides</b></span>
                             <mat-icon>add</mat-icon>
                         </mat-list-item>
                         <mat-divider></mat-divider>
@@ -103,30 +122,31 @@
 
                         <mat-list-item (click)="addDependencie()()">
                             <!-- TODO method not existing yet-->
-                            <span mat-line>Dependencies (internal)</span>
+                            <span mat-line><b>Dependencies (internal) </b></span>
                             <mat-icon>add</mat-icon>
                         </mat-list-item>
                         <mat-divider></mat-divider>
                         <!-- list internal dependencies-->
-                        <div *ngFor="let dependencie of service.internalDependencies">
-                            <mat-list-item>
-                                <!-- Todo load name and add click event and add status-->
-                                {{dependencie}}
+                        <div *ngFor="let dependencie of internalDependencies">
+                            <mat-list-item [routerLink]="['/service-detail/', dependencie.id]">
+                                <!-- Todo add click event and add status-->
+                                {{dependencie.name}}
                             </mat-list-item>
                             <mat-divider></mat-divider>
                         </div>
 
                         <mat-list-item (click)="addDependencie()">
                             <!-- TODO method not existing yet-->
-                            <span mat-line>Dependencies (external)</span>
+                            <span mat-line><b>Dependencies (external)</b></span>
                             <mat-icon>add</mat-icon>
                         </mat-list-item>
                         <mat-divider></mat-divider>
                         <!-- list external dependencies-->
-                        <div *ngFor="let dependencie of service.externalDependencies">
-                            <mat-list-item>
-                                <!-- Todo load name and add click event and add status -->
-                                {{dependencie}}
+                        <div *ngFor="let dependencie of externalDependencies">
+                            <!-- todo reload does not work properly (url changes, lists change not -->
+                            <mat-list-item [routerLink]="['/service-detail/', dependencie.id]">
+                                <!-- Todo add click event and add status -->
+                                {{dependencie.name}}
                             </mat-list-item>
                             <mat-divider></mat-divider>
                         </div>

@@ -86,6 +86,7 @@ export class ApiService {
                 'description': 'A generic dummy service',
                 'internalDependencies': [2, 3],
                 'externalDependencies': [4],
+                'status': 'online',
             },
             {
                 'id': '2',
@@ -94,6 +95,7 @@ export class ApiService {
                 'description': 'A generic hello world service',
                 'internalDependencies': [],
                 'externalDependencies': [4],
+                'status': 'online',
             },
             {
                 'id': '3',
@@ -102,6 +104,7 @@ export class ApiService {
                 'description': 'A generic service',
                 'internalDependencies': [2],
                 'externalDependencies': [],
+                'status': 'offline',
             },
             {
                 'id': '4',
@@ -110,6 +113,7 @@ export class ApiService {
                 'description': 'A generic service',
                 'internalDependencies': [],
                 'externalDependencies': [],
+                'status': 'problem'
             },
         ];
 
@@ -173,7 +177,7 @@ export class ApiService {
 
     getServiceById(id): Observable<ApiObject> {
         // TODO check if there is a resource for single services
-        let resource = 'service';
+        let resource = 'service/' + id;
         const stream = this.getStreamSource(resource);
 
         // TODO
@@ -186,6 +190,7 @@ export class ApiService {
                 'description': 'A generic dummy service',
                 'internalDependencies': [2, 3],
                 'externalDependencies': [4],
+                'status': 'online',
             },
             {
                 'id': '2',
@@ -194,6 +199,7 @@ export class ApiService {
                 'description': 'A generic hello world service',
                 'internalDependencies': [],
                 'externalDependencies': [4],
+                'status': 'online',
             },
             {
                 'id': '3',
@@ -202,6 +208,7 @@ export class ApiService {
                 'description': 'A generic service',
                 'internalDependencies': [2],
                 'externalDependencies': [],
+                'status': 'offline',
             },
             {
                 'id': '4',
@@ -210,6 +217,7 @@ export class ApiService {
                 'description': 'A generic service',
                 'internalDependencies': [],
                 'externalDependencies': [],
+                'status': 'problem'
             },
         ];
 
