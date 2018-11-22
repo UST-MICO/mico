@@ -4,4 +4,4 @@
     </div>
 </form>
 
-<div>{{form?.value | json}}</div>
+<div *ngIf="debug">{{form?.value | json}}</div>

@@ -1,9 +1,10 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, SimpleChanges, EventEmitter, Output } from '@angular/core';
 import { ModelsService } from '../../api/models.service';
 import { ApiModel, ApiModelRef } from '../../api/apimodel';
 import { FormGroup } from '@angular/forms';
 import { FormGroupService } from '../form-group.service';
 import { map, first } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'mico-form',
@@ -15,10 +16,16 @@ export class MicoFormComponent implements OnInit, OnChanges {
     @Input() modelUrl: string;
     @Input() filter: string[] = [];
     @Input() isBlacklist: boolean = false;
+    @Input() debug: boolean = false;
+
+    @Output() valid: EventEmitter<boolean> = new EventEmitter<boolean>();
+    @Output() data: EventEmitter<any> = new EventEmitter<any>();
 
     model: ApiModel;
     properties: (ApiModel | ApiModelRef)[];
     form: FormGroup;
+
+    private formSubscription: Subscription;
 
     constructor(private models: ModelsService, private formGroup: FormGroupService) { }
 
@@ -39,6 +46,13 @@ export class MicoFormComponent implements OnInit, OnChanges {
                 this.model = model;
                 this.properties = props;
                 this.form = this.formGroup.modelToFormGroup(model);
+                if (this.formSubscription != null) {
+                    this.formSubscription.unsubscribe();
+                }
+                this.formSubscription = this.form.statusChanges.subscribe(status => {
+                    this.valid.emit(this.form.valid);
+                    this.data.emit(this.form.value);
+                });
             });
         }
     }
