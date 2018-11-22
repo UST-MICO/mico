@@ -12,6 +12,17 @@ export class ModelsService {
     private modelCache: Map<string, AsyncSubject<ApiModel>> = new Map<string, AsyncSubject<ApiModel>>();
 
     private localModels: {[property: string]: ApiModelAllOf|ApiModel} = {
+        'serviceFromGitPOST': {
+            'type': 'object',
+            'properties': {
+                'vcsroot': {
+                    'type': 'string',
+                    'x-order': 1,
+                    'pattern': '(https?://)?github\.com(/[a-zA-Z0-9-]+)+/?',
+                }
+            },
+            'required': ['name'],
+        },
         'servicePOST': {
             'type': 'object',
             'properties': {
@@ -67,7 +78,8 @@ export class ModelsService {
         modelUrl = this.canonizeModelUri(modelUrl);
         if (modelUrl.startsWith('local/')) {
             const modelID = modelUrl.substring(6);
-            const model = this.localModels[modelID];
+            // deep clone model because they will be frozen later...
+            const model = JSON.parse(JSON.stringify(this.localModels[modelID]));
             return of(model);
         }
         return of(null); // TODO load models from openapi definitions

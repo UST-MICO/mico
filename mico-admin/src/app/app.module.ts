@@ -28,6 +28,7 @@ import { AppListComponent } from './app-list/app-list.component';
 import { AppDetailComponent } from './app-detail/app-detail.component';
 import { ServiceListComponent } from './service-list/service-list.component';
 import { ServiceDetailComponent } from './service-detail/service-detail.component';
+import { CreateServiceDialogComponent } from './dialogs/create-service/create-service.component';
 
 
 @NgModule({
@@ -46,6 +47,10 @@ import { ServiceDetailComponent } from './service-detail/service-detail.componen
         AppDetailComponent,
         ServiceListComponent,
         ServiceDetailComponent,
+        CreateServiceDialogComponent,
+    ],
+    entryComponents: [
+        CreateServiceDialogComponent,
     ],
     imports: [
         BrowserModule,
