@@ -59,6 +59,10 @@ public class Service {
         this.description = description;
     }
 
+    public Long getId(){
+        return id;
+    }
+
     //TODO: Verify if all are necessary
     public String getVersion() {
         return version;

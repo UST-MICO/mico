@@ -8,11 +8,11 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
+import static org.junit.Assert.assertEquals;
+
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class GitHubCrawlerTests {
-
-    private static final String testRepo = "/repos/UST-MICO/mico";
     private static final String absoluteUri = "https://api.github.com/repos/UST-MICO/mico";
 
     @Autowired
@@ -25,6 +25,15 @@ public class GitHubCrawlerTests {
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
         Service service = crawler.restTemplateRestCall(absoluteUri);
         serviceRepository.save(service);
+        System.out.println(service.toString());
+        Service readService = serviceRepository.findByShortName(service.getShortName());
+        System.out.println(readService.toString());
+        assertEquals(service.getShortName(),readService.getShortName());
+        assertEquals(service.getDescription(),readService.getDescription());
+        assertEquals(service.getId(),readService.getId());
+        assertEquals(service.getVersion(),readService.getVersion());
+        assertEquals(service.getVcsRoot(),readService.getVcsRoot());
+        assertEquals(service.getName(),readService.getName());
     }
 
 }
