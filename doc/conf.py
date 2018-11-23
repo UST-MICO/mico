@@ -79,7 +79,7 @@ def analyze_typescript(abs_source_paths, app):
                         typedoc[key] = relpath(filepath)
             clean_paths(typedoc)
             with open(json_path, mode='w') as typedoc_json:
-                dump(typedoc, typedoc_json, indent='\t')
+                dump(typedoc, typedoc_json)
         except OSError as exc:
             if exc.errno == ENOENT:
                 raise SphinxError('%s was not found. Install it using "npm install -g typedoc".' % command.program)
