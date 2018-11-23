@@ -1,10 +1,15 @@
 MICO-Admin UI
 =============
 
-.. toctree::
-   ts/test
+The MICO-Admin UI uses the `Angular <https://v7.angular.io>`_ framework (v7) with the `Angular Material <https://material.angular.io>`_ component library.
 
-Code Documentation for the MICO-Admin UI.
+
+Documentation of Core Components
+--------------------------------
+
+.. toctree::
+   ts/index
+
 
 Mockups
 -------
@@ -15,3 +20,12 @@ Mockups
 * :ref:`mockup-initial-sketch-appdetail-deploy-settings`
 * :ref:`mockup-initial-sketch-servicedetail-overview`
 * :ref:`mockup-initial-sketch-servicedetail-deploy-status`
+
+Design Decisions
+----------------
+
+* :doc:`adr/0006-ui-framework`
+* :doc:`adr/0008-browser-compatibility`
+* :doc:`adr/0009-features-first`
+* :doc:`adr/0011-json+hal`
+* :doc:`adr/0012-winery-topology-modeler`

@@ -1,0 +1,158 @@
+<!-- TODO: add buttons, TODO check usage...-->
+<div class="flex">
+    <h3 class="flex-grow-1">{{service.name}}</h3>
+    <mat-button-toggle class="mv1 inline-flex items-center" value="edit" [checked]="edit" (change)="edit = !edit"><span class="mr2">Edit</span><mat-icon>edit</mat-icon></mat-button-toggle>
+</div>
+<mat-divider></mat-divider>
+
+<div class="flex">
+    <!-- Information Grid-->
+    <div class="flex-grow-1 ma2 ml0 flex flex-column">
+
+        <div class="relative w-100">
+            <ng-container *ngIf="!edit">
+                <!-- display version -->
+                <mat-list dense>
+                    <mat-list-item class="mat-list-item mt2">
+                        <b>VCS Root</b>
+                    </mat-list-item>
+                    <mat-divider></mat-divider>
+                    <mat-list-item>
+                        http://...
+                    </mat-list-item>
+
+                    <mat-list-item class="mat-list-item mt2">
+                        <b>Documentation</b>
+                    </mat-list-item>
+                    <mat-divider></mat-divider>
+                    <mat-list-item>
+                        http://...
+                    </mat-list-item>
+
+                    <mat-list-item class="mt2">
+                        <b>Info</b>
+                    </mat-list-item>
+                    <mat-divider></mat-divider>
+                    <mat-list-item>
+                        Owner: name
+                    </mat-list-item>
+                    <mat-list-item>
+                        Type: service
+                    </mat-list-item>
+                    <mat-list-item>
+                        <!-- TODO FIX tags (are shown in a strange way...) -->
+                        Tags:
+                        <mat-chip-list class="ma1">
+                            <mat-chip>awesome</mat-chip>
+                            <mat-chip>myService</mat-chip>
+                        </mat-chip-list>
+                    </mat-list-item>
+                </mat-list>
+            </ng-container>
+            <!-- EndOf display version-->
+
+            <!-- editable version -->
+            <ng-container *ngIf="edit">
+                <mat-list>
+                    <mat-list-item class="mt2 pa0">
+                        <mat-form-field class="w-100 ma0">
+                            <input matInput placeholder="VCS Root" value="$root">
+                        </mat-form-field>
+                    </mat-list-item>
+
+                    <mat-list-item class="mt2">
+                        <mat-form-field class="w-100">
+                            <input matInput placeholder="Documentation" value="$doc">
+                        </mat-form-field>
+                    </mat-list-item>
+
+                    <mat-list-item class="mt5">
+                        <mat-form-field class="w-100">
+                            <input matInput placeholder="Owner" value="$owner">
+                        </mat-form-field>
+                    </mat-list-item>
+
+                    <mat-list-item class="mt2">
+                        <mat-form-field class="w-100">
+                            <input matInput placeholder="Type" value="$service">
+                        </mat-form-field>
+                    </mat-list-item>
+
+                    <mat-list-item class="mt2">
+                        <mat-form-field class="w-100">
+                            <input matInput placeholder="Tags" value="$tag1 $tag2">
+                        </mat-form-field>
+                    </mat-list-item>
+                </mat-list>
+                <div class="ma1 pa1">
+                    <span class="ma1">
+                        <button  mat-raised-button>Save</button>
+                    </span>
+                    <span class="ma1">
+                        <button mat-raised-button (click)="edit = !edit">Cancel</button>
+                    </span>
+                </div>
+            </ng-container>
+            <!-- EndOf editable version-->
+        </div>
+
+
+    </div>
+
+    <!-- Controling Grid-->
+    <div class="w-25 ma2 flex-column">
+
+        <!-- Provides/Dependencies box-->
+        <div class="w-100">
+            <mat-card>
+                <mat-card-content>
+                    <mat-action-list>
+                        <mat-divider></mat-divider>
+                        <mat-list-item (click)="addProvides()">
+                            <!-- TODO method not existing yet-->
+                            <span mat-line><b>Provides</b></span>
+                            <mat-icon>add</mat-icon>
+                        </mat-list-item>
+                        <mat-divider></mat-divider>
+                        <!-- TODO list provides -->
+
+                        <mat-list-item (click)="addDependencie()()">
+                            <!-- TODO method not existing yet-->
+                            <span mat-line><b>Dependencies (internal) </b></span>
+                            <mat-icon>add</mat-icon>
+                        </mat-list-item>
+                        <mat-divider></mat-divider>
+                        <!-- list internal dependencies-->
+                        <div *ngFor="let dependencie of internalDependencies">
+                            <mat-list-item [routerLink]="['/service-detail/', dependencie.id]">
+                                <!-- Todo add click event and add status-->
+                                {{dependencie.name}}
+                            </mat-list-item>
+                            <mat-divider></mat-divider>
+                        </div>
+
+                        <mat-list-item (click)="addDependencie()">
+                            <!-- TODO method not existing yet-->
+                            <span mat-line><b>Dependencies (external)</b></span>
+                            <mat-icon>add</mat-icon>
+                        </mat-list-item>
+                        <mat-divider></mat-divider>
+                        <!-- list external dependencies-->
+                        <div *ngFor="let dependencie of externalDependencies">
+                            <!-- todo reload does not work properly (url changes, lists change not -->
+                            <mat-list-item [routerLink]="['/service-detail/', dependencie.id]">
+                                <!-- Todo add click event and add status -->
+                                {{dependencie.name}}
+                            </mat-list-item>
+                            <mat-divider></mat-divider>
+                        </div>
+
+
+                    </mat-action-list>
+                </mat-card-content>
+            </mat-card>
+        </div>
+
+    </div>
+
+</div>
