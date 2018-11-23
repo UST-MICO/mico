@@ -37,7 +37,6 @@ public class Service {
     private String lifecycle;
     private List<String> links;
     private String type;
-    @JsonIgnore
     private String owner;
     @Relationship
     @JsonIgnore
@@ -52,6 +51,12 @@ public class Service {
     public Service(String shortName, String version) {
         this.version = version;
         this.shortName = shortName;
+    }
+
+    public Service(String shortName, String version, String description) {
+        this.version = version;
+        this.shortName = shortName;
+        this.description = description;
     }
 
     //TODO: Verify if all are necessary

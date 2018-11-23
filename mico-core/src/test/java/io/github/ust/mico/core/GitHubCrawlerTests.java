@@ -20,14 +20,11 @@ public class GitHubCrawlerTests {
 
     @Test
     public void testGitHubCrawler(){
-
+        serviceRepository.deleteAll();
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
-
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
-        //crawler.downloadResource(testRepo);
-        //crawler.urlConnectionHttpCall(absoluteUri);
-        crawler.restTemplateRestCall(absoluteUri);
-
+        Service service = crawler.restTemplateRestCall(absoluteUri);
+        serviceRepository.save(service);
     }
 
 }
