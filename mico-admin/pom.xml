@@ -82,7 +82,7 @@
 							<goal>npm</goal>
 						</goals>
 						<configuration>
-							<arguments>run lint</arguments>
+							<arguments>run lint -- --force</arguments>
 						</configuration>
 					</execution>
 					<execution>
