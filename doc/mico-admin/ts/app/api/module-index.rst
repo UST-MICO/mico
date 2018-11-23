@@ -7,3 +7,4 @@ app/api/api.service
    :maxdepth: 1
 
    api.service
+   models.service

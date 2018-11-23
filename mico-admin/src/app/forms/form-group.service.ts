@@ -11,6 +11,11 @@ export class FormGroupService {
 
     constructor() { }
 
+    /**
+     * Create a new FormGroup for use with reactive forms.
+     *
+     * @param model the source ApiModel to create a FormGroup for
+     */
     modelToFormGroup(model: ApiModel): FormGroup {
         const group: {[key: string]: AbstractControl} = {};
         if (model.properties != null) {

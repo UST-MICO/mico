@@ -6,6 +6,9 @@ import { FormGroupService } from '../form-group.service';
 import { map, first } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 
+/**
+ * Dynamic form component that renders a form from the given modelUrl.
+ */
 @Component({
   selector: 'mico-form',
   templateUrl: './mico-form.component.html',
