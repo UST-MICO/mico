@@ -12,12 +12,12 @@ import { ApiObject } from './apiobject';
  * @param obj the object to freeze
  */
 export function freezeObject<T>(obj: T): Readonly<T> {
-    if (Object.isFrozen(obj)) return;
+    if (Object.isFrozen(obj)) {return; }
     const propNames = Object.getOwnPropertyNames(obj);
     // Freeze properties before freezing self
     for (const key of propNames) {
-      let value = obj[key];
-      if (value && typeof value === "object") {
+      const value = obj[key];
+      if (value && typeof value === 'object') {
           obj[key] = freezeObject(value);
       } else {
           obj[key] = value;
@@ -74,7 +74,7 @@ export class ApiService {
      * Get service list
      */
     getServices(): Observable<Readonly<ApiObject[]>> {
-        let resource = 'services';
+        const resource = 'services';
         const stream = this.getStreamSource(resource);
 
         // TODO
@@ -128,7 +128,7 @@ export class ApiService {
      * Get application list
      */
     getApplications(): Observable<Readonly<ApiObject[]>> {
-        let resource = 'applications';
+        const resource = 'applications';
         const stream = this.getStreamSource(resource);
 
         // TODO
@@ -156,17 +156,16 @@ export class ApiService {
 
     getApplicationById(id): Observable<Readonly<ApiObject>> {
         // TODO check if there is a resource for single applications
-        let resource = 'applications';
+        const resource = 'applications';
         const stream = this.getStreamSource(resource);
 
         // TODO
-        const mockData: ApiObject =
-            {
+        const mockData: ApiObject = {
                 'id': id,
                 'name': 'Hello World Application id ' + id,
                 'shortName': 'test.' + id + 'application',
                 'description': 'A generic application',
-            }
+            };
 
         stream.next(mockData);
 
@@ -177,7 +176,7 @@ export class ApiService {
 
     getServiceById(id): Observable<ApiObject> {
         // TODO check if there is a resource for single services
-        let resource = 'service/' + id;
+        const resource = 'service/' + id;
         const stream = this.getStreamSource(resource);
 
         // TODO
@@ -221,16 +220,15 @@ export class ApiService {
             },
         ];
 
-        const genericMockData: ApiObject =
-            {
+        const genericMockData: ApiObject = {
                 'id': id,
                 'name': 'Generic World Service id ' + id,
                 'shortName': 'test.' + id + 'service',
                 'description': 'A generic generated service',
-            }
+            };
 
         if (id > 0 && id <= 4) {
-            stream.next(freezeObject(mockData[id-1]));
+            stream.next(freezeObject(mockData[id - 1]));
         } else {
             stream.next(freezeObject(genericMockData));
         }

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 @Component({
-  selector: 'app-app-detail-deploystatus',
+  selector: 'mico-app-detail-deploystatus',
   templateUrl: './app-detail-deploystatus.component.html',
   styleUrls: ['./app-detail-deploystatus.component.css']
 })

@@ -17,13 +17,13 @@ const routes: Routes = [
     { path: 'dashboard', component: DashboardComponent },
     { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
 
-    { path: 'app-detail/app-app-list', component: AppListComponent },
+    { path: 'app-detail/app-list', component: AppListComponent },
     { path: 'app-detail/overview', component: AppDetailOverviewComponent },
     { path: 'app-detail/:id', component:  AppDetailComponent},
     { path: 'app-detail/deploystatus', component: AppDetailDeploystatusComponent },
     { path: 'app-detail/deploysettings', component: AppDetailDeploysettingsComponent },
 
-    { path: 'service-detail/app-service-list', component: ServiceListComponent },
+    { path: 'service-detail/service-list', component: ServiceListComponent },
     { path: 'service-detail/:id', component:  ServiceDetailComponent},
   ];
 

@@ -43,6 +43,9 @@ export class MicoFormComponent implements OnInit, OnChanges {
                 const props = [];
                 if (model.properties != null) {
                     for (const key in model.properties) {
+                        if (!model.properties.hasOwnProperty(key)) {
+                            continue;
+                        }
                         props.push(model.properties[key]);
                     }
                 }

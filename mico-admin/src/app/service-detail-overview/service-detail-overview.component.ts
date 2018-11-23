@@ -1,12 +1,12 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { ActivatedRoute } from '@angular/router'
+import { ActivatedRoute } from '@angular/router';
 
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
 import { Subscription } from 'rxjs';
 
 @Component({
-    selector: 'app-service-detail-overview',
+    selector: 'mico-service-detail-overview',
     templateUrl: './service-detail-overview.component.html',
     styleUrls: ['./service-detail-overview.component.css']
 })
@@ -30,14 +30,14 @@ export class ServiceDetailOverviewComponent implements OnInit {
     ngOnInit() {
 
         this.paramSubscription = this.route.params.subscribe(params => {
-            this.update(parseInt(params['id'],10));
-        })
+            this.update(parseInt(params['id'], 10));
+        });
 
     }
 
     update(id) {
-        if (id == this.id){
-            return
+        if (id === this.id) {
+            return;
         } else {
             if (this.serviceSubscription != null) {
                 this.serviceSubscription.unsubscribe();
@@ -49,13 +49,13 @@ export class ServiceDetailOverviewComponent implements OnInit {
 
         // get dependencies and their status
         // TODO service is changed in the following lines... why??
-        const internal = []
+        const internal = [];
         this.service.internalDependencies.forEach(element => {
             internal.push(this.getServiceMetaData(element));
         });
         this.internalDependencies = internal;
 
-        const external = []
+        const external = [];
         this.service.externalDependencies.forEach(element => {
             external.push(this.getServiceMetaData(element));
         });
@@ -63,22 +63,22 @@ export class ServiceDetailOverviewComponent implements OnInit {
     }
 
     editOrSave() {
-        console.log("edit or save")
-        if (this.edit){
+        console.log('edit or save');
+        if (this.edit) {
             // save content
         }
-        this.edit = !this.edit
+        this.edit = !this.edit;
     }
 
     getServiceMetaData(id) {
-        var service_object
-        this.apiService.getServiceById(id).subscribe(val => service_object = val)
-        var return_object = {
+        let service_object;
+        this.apiService.getServiceById(id).subscribe(val => service_object = val);
+        const return_object = {
             'id': id,
             'name': service_object.name,
             'status': service_object.status,
-        }
-        return return_object
+        };
+        return return_object;
     }
 
 }

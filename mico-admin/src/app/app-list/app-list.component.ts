@@ -3,7 +3,7 @@ import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
 
 @Component({
-  selector: 'app-app-list',
+  selector: 'mico-app-list',
   templateUrl: './app-list.component.html',
   styleUrls: ['./app-list.component.css']
 })
@@ -15,7 +15,7 @@ export class AppListComponent implements OnInit {
         this.getApplications();
     }
 
-    @Input() applications: ApiObject[]
+    @Input() applications: ApiObject[];
 
     displayedColumns: string[] = ['id', 'name', 'shortName', 'description'];
 

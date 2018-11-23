@@ -20,6 +20,9 @@ export class FormGroupService {
         const group: {[key: string]: AbstractControl} = {};
         if (model.properties != null) {
             for (const key in model.properties) {
+                if (!model.properties.hasOwnProperty(key)) {
+                    continue;
+                }
                 const itemModel = model.properties[key];
                 let value = null;
                 if (itemModel.hasOwnProperty('default')) {

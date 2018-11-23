@@ -53,7 +53,7 @@ export class ModelsService {
                 },
             ]
         }
-    }
+    };
 
     constructor() { }
 
@@ -117,14 +117,17 @@ export class ModelsService {
         if (sourceModel != null) {
             // merge models
             for (const key in sourceModel) {
-                if (key == 'required') {
+                if (!sourceModel.hasOwnProperty(key)) {
+                    continue;
+                }
+                if (key === 'required') {
                     // merge reqired attributes list
                     if (targetModel[key] != null) {
-                        let required = new Set<string>(targetModel[key]);
+                        const required = new Set<string>(targetModel[key]);
                         sourceModel[key].forEach(required.add);
                         targetModel[key] = Array.from(required);
                     }
-                } else if (key == 'properties') {
+                } else if (key === 'properties') {
                     // merge nested models in properties
                     if (targetModel[key] != null) {
                         const targetProperties = targetModel[key];
@@ -169,7 +172,7 @@ export class ModelsService {
      * Observable only sends a value if the model was found.
      * Times out after 2s
      *
-     * @param modelUrl
+     * @param modelUrl modelUrl
      */
     getModel(modelUrl): Observable<Readonly<ApiModel>> {
         const stream = this.getCacheSource(modelUrl);
@@ -181,6 +184,9 @@ export class ModelsService {
                     // inject name into properties
                     if (model.properties != null) {
                         for (const key in model.properties) {
+                            if (!model.properties.hasOwnProperty(key)) {
+                                continue;
+                            }
                             model.properties[key]['x-key'] = key;
                         }
                     }
@@ -216,10 +222,10 @@ export class ModelsService {
      *                   Use Empty iterable or null to deactivate filter
      * @param isBlacklist if true the filter ill be appliead as blacklist. (default=whitelest/false)
      */
-    filterModel(properties: Iterable<string>, isBlacklist: boolean=false): (ApiModel) => Readonly<ApiModel> {
+    filterModel(properties: Iterable<string>, isBlacklist: boolean= false): (ApiModel) => Readonly<ApiModel> {
         const filterset: Set<string> = (properties !== null) ? new Set<string>(properties) : new Set<string>();
         return (model) => {
-            if (filterset.size === 0) return model;
+            if (filterset.size === 0) { return model; }
             const newModel: ApiModel = { type: model.type };
             for (const key in model) {
                 if (key === 'type') {

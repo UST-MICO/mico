@@ -30,8 +30,7 @@ export class MicoFormQuestionComponent implements OnInit {
     propertyType(): string {
         if (this.property != null && this.property.type != null) {
             return this.property.type;
-        }
-        else return 'string';
+        } else { return 'string'; }
     }
 
     getErrorMessage() {

@@ -3,7 +3,7 @@ import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
 
 @Component({
-  selector: 'app-service-list',
+  selector: 'mico-service-list',
   templateUrl: './service-list.component.html',
   styleUrls: ['./service-list.component.css']
 })
@@ -15,7 +15,7 @@ export class ServiceListComponent implements OnInit {
         this.getServices();
     }
 
-    @Input() services: ApiObject[]
+    @Input() services: ApiObject[];
 
     displayedColumns: string[] = ['id', 'name', 'shortName', 'description'];
 

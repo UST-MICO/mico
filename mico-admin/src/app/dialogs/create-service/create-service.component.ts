@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 @Component({
-    selector: 'create-service',
+    selector: 'mico-create-service',
     templateUrl: './create-service.component.html',
     styleUrls: ['./create-service.component.css']
 })

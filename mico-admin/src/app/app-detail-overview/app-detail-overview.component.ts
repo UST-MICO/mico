@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 @Component({
-  selector: 'app-app-detail-overview',
+  selector: 'mico-app-detail-overview',
   templateUrl: './app-detail-overview.component.html',
   styleUrls: ['./app-detail-overview.component.css']
 })
