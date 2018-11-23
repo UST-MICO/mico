@@ -21,7 +21,6 @@ public class Service {
     private Long id;
     @ApiModelProperty(required = true)
     private String version;
-    @JsonProperty("name")
     @ApiModelProperty(required = true)
     private String shortName;
     @ApiModelProperty(required = true)
