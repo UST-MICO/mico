@@ -45,7 +45,7 @@ public class MicoCoreApplicationTests {
         checkDefaultService(serviceTest);
     }
 
-    private void checkDefaultService(Service serviceTest) {
+    public static void checkDefaultService(Service serviceTest) {
         List<ServiceDescription> serviceDescriptionsTest = serviceTest.getServiceDescriptions();
 
         assertEquals(TEST_VERSION,serviceTest.getVersion());
@@ -63,7 +63,7 @@ public class MicoCoreApplicationTests {
         assertEquals(TEST_SERVICE_INTERFACE_NAME,serviceDescriptionTest.getService_name());
     }
 
-    private Service createServiceInDB() {
+    public static Service createServiceInDB() {
 		Service service = new Service(TEST_SHORT_NAME, TEST_VERSION);
 		service.setName(TEST_LONGER_NAME);
 		service.setDescription(TEST_SERVICE_DESCRIPTION);

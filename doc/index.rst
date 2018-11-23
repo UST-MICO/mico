@@ -7,9 +7,10 @@ Welcome to MICO Developer Documentation's documentation!
 ========================================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
 
+   cicd/index 
    mico-admin/index
    mico-core/index
 

@@ -35,7 +35,7 @@
         <repository>
             <id>jcenter-snapshots</id>
             <name>jcenter</name>
-            <url>https://jcenter.bintray.com/</url>
+            <url>http://oss.jfrog.org/artifactory/oss-snapshot-local/</url>
         </repository>
     </repositories>
 
@@ -66,15 +66,28 @@
         <dependency>
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger2</artifactId>
-            <version>2.9.2</version>
+            <version>3.0.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger-ui</artifactId>
-            <version>2.9.2</version>
+            <version>3.0.0-SNAPSHOT</version>
         </dependency>
-        
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-rest</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-data-rest</artifactId>
+            <version>3.0.0-SNAPSHOT</version>
+        </dependency>
+
+
+
     </dependencies>
 
     <build>
@@ -82,32 +95,6 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>com.spotify</groupId>
-                <artifactId>dockerfile-maven-plugin</artifactId>
-                <version>1.4.8</version>
-                <configuration>
-                    <repository>${docker.cloud.orga}/${project.artifactId}</repository>
-                    <tag>${project.version}</tag>
-                    <buildArgs>
-                        <JAR_FILE>target/${project.build.finalName}.jar</JAR_FILE>
-                    </buildArgs>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>build</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>javax.activation</groupId>
-                        <artifactId>activation</artifactId>
-                        <version>1.1.1</version>
-                    </dependency>
-                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
