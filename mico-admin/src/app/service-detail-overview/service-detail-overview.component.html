@@ -1,28 +1,16 @@
-<mat-form-field class="mat-form-field-large" class="mat-form-field-medium">
-    <input matInput placeholder="{{service.name}}" value="">
-</mat-form-field>
 <!-- TODO: add buttons, TODO check usage...-->
-<div align="right">
-    <div class="ma1 pa1" *ngIf="!edit">
-        <button mat-raised-button (click)="edit = !edit">Edit</button>
-    </div>
-    <div class="ma1 pa1" *ngIf="edit">
-        <span class="ma1">
-            <button  mat-raised-button>Save</button>
-        </span>
-        <span class="ma1">
-            <button mat-raised-button (click)="edit = !edit">Cancel</button>
-        </span>
-    </div>
+<div class="flex">
+    <h3 class="flex-grow-1">{{service.name}}</h3>
+    <mat-button-toggle class="mv1 inline-flex items-center" value="edit" [checked]="edit" (change)="edit = !edit"><span class="mr2">Edit</span><mat-icon>edit</mat-icon></mat-button-toggle>
 </div>
 <mat-divider></mat-divider>
 
 <div class="flex">
     <!-- Information Grid-->
-    <div class="flex-grow-1 ma2 flex-column">
+    <div class="flex-grow-1 ma2 ml0 flex flex-column">
 
-        <div class="w-100">
-            <div *ngIf="!edit">
+        <div class="relative w-100">
+            <ng-container *ngIf="!edit">
                 <!-- display version -->
                 <mat-list dense>
                     <mat-list-item class="mat-list-item mt2">
@@ -60,43 +48,51 @@
                         </mat-chip-list>
                     </mat-list-item>
                 </mat-list>
-            </div>
+            </ng-container>
             <!-- EndOf display version-->
 
             <!-- editable version -->
-            <div *ngIf="edit">
+            <ng-container *ngIf="edit">
                 <mat-list>
-                    <mat-list-item class="ma2">
-                        <mat-form-field class="mat-form-field-large">
+                    <mat-list-item class="mt2 pa0">
+                        <mat-form-field class="w-100 ma0">
                             <input matInput placeholder="VCS Root" value="$root">
                         </mat-form-field>
                     </mat-list-item>
 
-                    <mat-list-item class="ma2">
-                        <mat-form-field class="mat-form-field-large">
+                    <mat-list-item class="mt2">
+                        <mat-form-field class="w-100">
                             <input matInput placeholder="Documentation" value="$doc">
                         </mat-form-field>
                     </mat-list-item>
 
-                    <mat-list-item class="ma2 mt5">
-                        <mat-form-field class="mat-form-field-large">
+                    <mat-list-item class="mt5">
+                        <mat-form-field class="w-100">
                             <input matInput placeholder="Owner" value="$owner">
                         </mat-form-field>
                     </mat-list-item>
 
-                    <mat-list-item class="ma2">
-                        <mat-form-field class="mat-form-field-large">
+                    <mat-list-item class="mt2">
+                        <mat-form-field class="w-100">
                             <input matInput placeholder="Type" value="$service">
                         </mat-form-field>
                     </mat-list-item>
 
-                    <mat-list-item class="ma2">
-                        <mat-form-field class="mat-form-field-large">
+                    <mat-list-item class="mt2">
+                        <mat-form-field class="w-100">
                             <input matInput placeholder="Tags" value="$tag1 $tag2">
                         </mat-form-field>
                     </mat-list-item>
                 </mat-list>
-            </div>
+                <div class="ma1 pa1">
+                    <span class="ma1">
+                        <button  mat-raised-button>Save</button>
+                    </span>
+                    <span class="ma1">
+                        <button mat-raised-button (click)="edit = !edit">Cancel</button>
+                    </span>
+                </div>
+            </ng-container>
             <!-- EndOf editable version-->
         </div>
 

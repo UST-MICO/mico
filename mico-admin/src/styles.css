@@ -1,8 +1,11 @@
 /* You can add global styles to this file, and also import other style files */
+@import "tachyons-spacing";
 @import "tachyons-flexbox";
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+.relative {position: relative;}
 
 .w-10 { width: 10%; }
 .w-20 { width: 20%; }
