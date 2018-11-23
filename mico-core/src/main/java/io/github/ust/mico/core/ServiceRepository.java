@@ -10,7 +10,11 @@ package io.github.ust.mico.core;
 public interface ServiceRepository extends PagingAndSortingRepository<Service, Long> {
 
     Service findByName(@Param("name") String name);
+    Service findByShortName(@Param("shortName") String shortName);
 
     @RestResource(exported = false)
     Service findByName(String name, @Depth int depth);
+
+    @RestResource(exported = false)
+    Service findByShortName(String shortName, @Depth int depth);
 }
