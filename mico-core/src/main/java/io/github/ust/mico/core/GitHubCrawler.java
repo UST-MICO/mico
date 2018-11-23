@@ -16,7 +16,13 @@ public class GitHubCrawler {
         this.restTemplate = restTemplateBuilder.build();
     }
 
-    public Service restTemplateRestCall(String uri){
+    /**
+     * Gets an URI for a GitHub Repo and crawls all necessary information about the service.
+     *
+     * @param uri URI for the GitHub Repository
+     * @return Service object
+     */
+    public Service crawlGitHubRepo(String uri){
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<String> responseEntity = restTemplate.getForEntity(uri, String.class);
 

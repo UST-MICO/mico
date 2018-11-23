@@ -23,7 +23,7 @@ public class GitHubCrawlerTests {
         serviceRepository.deleteAll();
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
-        Service service = crawler.restTemplateRestCall(absoluteUri);
+        Service service = crawler.crawlGitHubRepo(absoluteUri);
         serviceRepository.save(service);
         System.out.println(service.toString());
         Service readService = serviceRepository.findByShortName(service.getShortName());
