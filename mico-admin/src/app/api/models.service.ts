@@ -52,6 +52,39 @@ export class ModelsService {
                     '$ref': 'local/servicePOST',
                 },
             ]
+        },
+        'editService': {
+            'type': 'object',
+            'properties': {
+                'Name': {
+                    'type': 'string',
+                    'x-order': 10
+                },
+                'VCS Root': {
+                    'type': 'string',
+                    'x-order': 20
+                },
+                'Dockerfile': {
+                    'type': 'string',
+                    'x-order': 20
+                },
+                'Documentation': {
+                    'type': 'string',
+                    'x-order': 30
+                },
+                'Owner': {
+                    'type': 'string',
+                    'x-order': 40
+                },
+                'Contact': {
+                    'type': 'string',
+                    'x-order': 50
+                },
+                'external service': {
+                    'type': 'boolean',
+                    'x-order': 60
+                }
+            }
         }
     };
 
