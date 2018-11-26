@@ -52,38 +52,9 @@
             <!-- EndOf display version-->
 
             <!-- editable version -->
+
             <ng-container *ngIf="edit">
-                <mat-list>
-                    <mat-list-item class="mt2 pa0">
-                        <mat-form-field class="w-100 ma0">
-                            <input matInput placeholder="VCS Root" value="$root">
-                        </mat-form-field>
-                    </mat-list-item>
-
-                    <mat-list-item class="mt2">
-                        <mat-form-field class="w-100">
-                            <input matInput placeholder="Documentation" value="$doc">
-                        </mat-form-field>
-                    </mat-list-item>
-
-                    <mat-list-item class="mt5">
-                        <mat-form-field class="w-100">
-                            <input matInput placeholder="Owner" value="$owner">
-                        </mat-form-field>
-                    </mat-list-item>
-
-                    <mat-list-item class="mt2">
-                        <mat-form-field class="w-100">
-                            <input matInput placeholder="Type" value="$service">
-                        </mat-form-field>
-                    </mat-list-item>
-
-                    <mat-list-item class="mt2">
-                        <mat-form-field class="w-100">
-                            <input matInput placeholder="Tags" value="$tag1 $tag2">
-                        </mat-form-field>
-                    </mat-list-item>
-                </mat-list>
+                <mico-form [modelUrl]="'local/editService'" (data)="serviceData = $event"></mico-form>
                 <div class="ma1 pa1">
                     <span class="ma1">
                         <button  mat-raised-button>Save</button>

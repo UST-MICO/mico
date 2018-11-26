@@ -24,6 +24,9 @@ export class ServiceDetailOverviewComponent implements OnInit {
     @Input() internalDependencies = [];
     @Input() externalDependencies = [];
 
+    // will be used by the update form
+    serviceData;
+
     edit: Boolean = false;
     id: number;
 

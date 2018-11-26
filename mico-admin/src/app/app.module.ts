@@ -5,7 +5,7 @@ import { NgModule } from '@angular/core';
 
 import { MatButtonModule, MatButtonToggleModule, MatCardModule, MatMenuModule,
     MatIconModule, MatListModule, MatSidenavModule, MatDialogModule, MatToolbarModule,
-    MatTooltipModule, MatTableModule, MatInputModule, MatTabsModule, MatChipsModule} from '@angular/material';
+    MatTooltipModule, MatTableModule, MatInputModule, MatTabsModule, MatChipsModule, MatSlideToggleModule} from '@angular/material';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
@@ -78,6 +78,7 @@ import { CreateServiceDialogComponent } from './dialogs/create-service/create-se
         MatInputModule,
         MatTabsModule,
         MatChipsModule,
+        MatSlideToggleModule,
     ],
     providers: [],
     bootstrap: [AppComponent]
