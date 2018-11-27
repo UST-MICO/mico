@@ -141,28 +141,44 @@ public class MicoCoreApplicationTests {
 		Service service1 = new Service("Service1","0.1");
 		Service service2 = new Service("Service2","0.1");
 		Service service3 = new Service("Service3","0.1");
-		
+
 		DependsOn depends1 = new DependsOn(service1);
 		DependsOn depends2 = new DependsOn(service2, "0.1");
 		DependsOn depends3 = new DependsOn(service3, "0.1", "0.3");
+		
+		Application application1 = new Application();
+		application1.setShortName("App1");
+		application1.setName("Application1"); //TODO: Should not be required
+		application1.setDependsOn(Arrays.asList(depends1, depends2, depends3));
+		serviceRepository.save(application1);
 
-		//TODO: We might want to have the following possibility?
-		//Application application = new Application("shortName", version (optional));
-		Application application = new Application();
-		application.setShortName("App");
-		application.setName("Application"); //TODO: Should not be required
-		application.setDependsOn(Arrays.asList(depends1, depends2, depends3));
-		serviceRepository.save(application);
+        Application application2 = new Application("App2");
+        application2.setName("Application2"); //TODO: Should not be required
+        serviceRepository.save(application2);
+
+        Application application3 = new Application("App3", "0.1");
+        application3.setName("Application3"); //TODO: Should not be required
+        serviceRepository.save(application3);
 
 		//TODO: We might want to have the following possibilities?
         //Application storedApplication = serviceRepository.findByName("Application");
 		//Application storedApplication = serviceRepository.findByShortName("App");
-		Service storedApplication = serviceRepository.findByName("Application",2);
+		Service storedApplication1 = serviceRepository.findByName("Application1",2);
 
-		assertNotNull(storedApplication);
-		assertEquals("App", storedApplication.getShortName());
-		assertEquals("Service1", storedApplication.getDependsOn().get(0).getService().getShortName());
-		assertEquals("Service2", storedApplication.getDependsOn().get(1).getService().getShortName());
-		assertEquals("Service3", storedApplication.getDependsOn().get(2).getService().getShortName());
+        Service storedApplication2 = serviceRepository.findByShortName("App2",2);
+
+        Service storedApplication3 = serviceRepository.findByShortName("App3",2);
+
+		assertNotNull(storedApplication1);
+		assertEquals("App1", storedApplication1.getShortName());
+		assertEquals("Service1", storedApplication1.getDependsOn().get(0).getService().getShortName());
+		assertEquals("Service2", storedApplication1.getDependsOn().get(1).getService().getShortName());
+		assertEquals("Service3", storedApplication1.getDependsOn().get(2).getService().getShortName());
+
+        assertNotNull(storedApplication2);
+        assertEquals("App2", storedApplication2.getShortName());
+
+        assertNotNull(storedApplication3);
+        assertEquals("App3", storedApplication3.getShortName());
 	}
 }
