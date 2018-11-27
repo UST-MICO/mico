@@ -59,8 +59,8 @@ public class MicoCoreApplicationTests {
         assertEquals(TEST_PORT_VARIABLE, serviceInterfaceTest.getPort());
         assertEquals(TEST_SERVICE_INTERFACE_DESCRIPTION, serviceInterfaceTest.getDescription());
         assertEquals(TEST_PROTOCOL, serviceInterfaceTest.getProtocol());
-        assertEquals(TEST_DNS, serviceInterfaceTest.getPublic_dns());
-        assertEquals(TEST_SERVICE_INTERFACE_NAME, serviceInterfaceTest.getService_name());
+        assertEquals(TEST_DNS, serviceInterfaceTest.getPublicDns());
+        assertEquals(TEST_SERVICE_INTERFACE_NAME, serviceInterfaceTest.getServiceName());
     }
 
     public static Service createServiceInDB() {
@@ -74,8 +74,8 @@ public class MicoCoreApplicationTests {
 		serviceInterface.setPort(TEST_PORT_VARIABLE);
 		serviceInterface.setDescription(TEST_SERVICE_INTERFACE_DESCRIPTION);
 		serviceInterface.setProtocol(TEST_PROTOCOL);
-		serviceInterface.setPublic_dns(TEST_DNS);
-		serviceInterface.setService_name(TEST_SERVICE_INTERFACE_NAME);
+		serviceInterface.setPublicDns(TEST_DNS);
+		serviceInterface.setServiceName(TEST_SERVICE_INTERFACE_NAME);
 
 		service.setServiceInterfaces(Collections.singletonList(serviceInterface));
 		return service;
@@ -89,7 +89,7 @@ public class MicoCoreApplicationTests {
 		String testShortName2 = "ShortName2";
 		String testVersion2 = "1.0";
 		String testLongerName = "Longer Name2";
-		String testserviceInterface = "test Service2";
+		String testServiceInterface = "test Service2";
 		String testVcsRoot = "http://test.org/test2";
 		String testContact = "Test Person 2";
 		String testPort = "<PORT_VARIABLE2>";
@@ -99,7 +99,7 @@ public class MicoCoreApplicationTests {
 		//2. service
         Service service2 = new Service(testShortName2,testVersion2);
         service2.setName(testLongerName);
-        service2.setDescription(testserviceInterface);
+        service2.setDescription(testServiceInterface);
         service2.setVcsRoot(testVcsRoot);
         service2.setContact(testContact);
 
@@ -107,8 +107,8 @@ public class MicoCoreApplicationTests {
         serviceInterface2.setPort(testPort);
         serviceInterface2.setDescription(testsServiceInterface);
         serviceInterface2.setProtocol(TEST_PROTOCOL);
-        serviceInterface2.setPublic_dns(TEST_DNS);
-        serviceInterface2.setService_name(testServiceInterfaceName);
+        serviceInterface2.setPublicDns(TEST_DNS);
+        serviceInterface2.setServiceName(testServiceInterfaceName);
         service2.setServiceInterfaces(Collections.singletonList(serviceInterface2));
         DependsOn dependsOn = new DependsOn();
         dependsOn.setMaxVersion("1.0");
@@ -128,7 +128,7 @@ public class MicoCoreApplicationTests {
         assertNotNull(testService2);
         assertEquals(testVersion2,testService2.getVersion());
         assertEquals(testLongerName,testService2.getName());
-        assertEquals(testserviceInterface,testService2.getDescription());
+        assertEquals(testServiceInterface,testService2.getDescription());
         assertEquals(testVcsRoot,testService2.getVcsRoot());
         assertEquals(testContact,testService2.getContact());
 	}
