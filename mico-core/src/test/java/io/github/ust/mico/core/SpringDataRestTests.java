@@ -131,7 +131,7 @@ public class SpringDataRestTests {
         serviceInterface1.setDescription(serviceInterfaceValue);
         serviceInterface1.setPort(serviceInterfacePortVariable);
         serviceInterface1.setProtocol(serviceInterfaceProtocol);
-        serviceInterface1.setService_name(serviceName);
+        serviceInterface1.setServiceName(serviceName);
         return serviceInterface1;
     }
 
@@ -152,7 +152,7 @@ public class SpringDataRestTests {
         assertThat(serviceInterfaceBody.get("port").asText()).isEqualTo(serviceInterface.getPort());
         assertThat(serviceInterfaceBody.get("description").asText()).isEqualTo(serviceInterface.getDescription());
         assertThat(serviceInterfaceBody.get("protocol").asText()).isEqualTo(serviceInterface.getProtocol());
-        assertThat(serviceInterfaceBody.get("service_name").asText()).isEqualTo(serviceInterface.getService_name());
+        assertThat(serviceInterfaceBody.get("serviceName").asText()).isEqualTo(serviceInterface.getServiceName());
 
         JsonNode serviceInterfaceLinks = serviceInterfaceBody.get("_links");
         return new URI(serviceInterfaceLinks.get("self").get("href").asText());

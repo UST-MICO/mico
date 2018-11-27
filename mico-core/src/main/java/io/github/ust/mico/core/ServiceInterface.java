@@ -12,10 +12,10 @@ public class ServiceInterface {
     private String port;
     private String type;
     private String description;
-    private String service_name; //with _ to match pivio description //TODO: Do we want to match Pivio description?
+    private String serviceName;
     private String protocol;
-    private String transport_protocol;
-    private String public_dns;
+    private String transportProtocol;
+    private String publicDns;
 
     //TODO: Verify if all are necessary
     public String getPort() {
@@ -42,12 +42,12 @@ public class ServiceInterface {
         this.description = description;
     }
 
-    public String getService_name() {
-        return service_name;
+    public String getServiceName() {
+        return serviceName;
     }
 
-    public void setService_name(String service_name) {
-        this.service_name = service_name;
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
     }
 
     public String getProtocol() {
@@ -58,19 +58,19 @@ public class ServiceInterface {
         this.protocol = protocol;
     }
 
-    public String getTransport_protocol() {
-        return transport_protocol;
+    public String getTransportProtocol() {
+        return transportProtocol;
     }
 
-    public void setTransport_protocol(String transport_protocol) {
-        this.transport_protocol = transport_protocol;
+    public void setTransportProtocol(String transportProtocol) {
+        this.transportProtocol = transportProtocol;
     }
 
-    public String getPublic_dns() {
-        return public_dns;
+    public String getPublicDns() {
+        return publicDns;
     }
 
-    public void setPublic_dns(String public_dns) {
-        this.public_dns = public_dns;
+    public void setPublicDns(String publicDns) {
+        this.publicDns = publicDns;
     }
 }
