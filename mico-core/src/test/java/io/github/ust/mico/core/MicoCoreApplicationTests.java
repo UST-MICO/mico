@@ -46,7 +46,7 @@ public class MicoCoreApplicationTests {
     }
 
     public static void checkDefaultService(Service serviceTest) {
-        List<ServiceInterface> serviceDescriptionsTest = serviceTest.getServiceInterfaces();
+        List<ServiceInterface> serviceInterfacesTest = serviceTest.getServiceInterfaces();
 
         assertEquals(TEST_VERSION,serviceTest.getVersion());
         assertEquals(TEST_LONGER_NAME,serviceTest.getName());
@@ -54,8 +54,8 @@ public class MicoCoreApplicationTests {
         assertEquals(TEST_VCS_ROOT,serviceTest.getVcsRoot());
         assertEquals(TEST_CONTACT,serviceTest.getContact());
 
-        assertEquals(1,serviceDescriptionsTest.size());
-        ServiceInterface serviceInterfaceTest = serviceDescriptionsTest.get(0);
+        assertEquals(1,serviceInterfacesTest.size());
+        ServiceInterface serviceInterfaceTest = serviceInterfacesTest.get(0);
         assertEquals(TEST_PORT_VARIABLE, serviceInterfaceTest.getPort());
         assertEquals(TEST_SERVICE_INTERFACE_DESCRIPTION, serviceInterfaceTest.getDescription());
         assertEquals(TEST_PROTOCOL, serviceInterfaceTest.getProtocol());
@@ -89,7 +89,7 @@ public class MicoCoreApplicationTests {
 		String testShortName2 = "ShortName2";
 		String testVersion2 = "1.0";
 		String testLongerName = "Longer Name2";
-		String testServiceDescription = "test Service2";
+		String testserviceInterface = "test Service2";
 		String testVcsRoot = "http://test.org/test2";
 		String testContact = "Test Person 2";
 		String testPort = "<PORT_VARIABLE2>";
@@ -99,7 +99,7 @@ public class MicoCoreApplicationTests {
 		//2. service
         Service service2 = new Service(testShortName2,testVersion2);
         service2.setName(testLongerName);
-        service2.setDescription(testServiceDescription);
+        service2.setDescription(testserviceInterface);
         service2.setVcsRoot(testVcsRoot);
         service2.setContact(testContact);
 
@@ -128,7 +128,7 @@ public class MicoCoreApplicationTests {
         assertNotNull(testService2);
         assertEquals(testVersion2,testService2.getVersion());
         assertEquals(testLongerName,testService2.getName());
-        assertEquals(testServiceDescription,testService2.getDescription());
+        assertEquals(testserviceInterface,testService2.getDescription());
         assertEquals(testVcsRoot,testService2.getVcsRoot());
         assertEquals(testContact,testService2.getContact());
 	}

@@ -48,28 +48,28 @@ public class SpringDataRestTests {
         JsonNode body = postService(service);
 
         JsonNode links = body.get("_links");
-        JsonNode linkServiceDescriptions = links.get("serviceDescriptions").get("href");
-        URI serviceDescriptionsURI = new URI(linkServiceDescriptions.asText());
+        JsonNode linkserviceInterfaces = links.get("serviceInterfaces").get("href");
+        URI serviceInterfacesURI = new URI(linkserviceInterfaces.asText());
 
-        String serviceDescriptionValue = "Some description";
-        String serviceDescriptionPortVariable = "<PORT>";
-        String serviceDescriptionProtocol = "HTTP";
+        String serviceInterfaceValue = "Some description";
+        String serviceInterfacePortVariable = "<PORT>";
+        String serviceInterfaceProtocol = "HTTP";
         String serviceName = "Some Service Name";
 
-        ServiceInterface serviceInterface1 = generateServiceDescription("1");
-        ServiceInterface serviceInterface2 = generateServiceDescription("2");
+        ServiceInterface serviceInterface1 = generateserviceInterface("1");
+        ServiceInterface serviceInterface2 = generateserviceInterface("2");
 
-        URI serviceDescriptionLinkSelf1 = postServiceDescription(serviceInterface1);
-        URI serviceDescriptionLinkSelf2 = postServiceDescription(serviceInterface2);
+        URI serviceInterfaceLinkSelf1 = postserviceInterface(serviceInterface1);
+        URI serviceInterfaceLinkSelf2 = postserviceInterface(serviceInterface2);
 
-        putServiceDescription(serviceDescriptionsURI, serviceDescriptionLinkSelf1);
-        putServiceDescription(serviceDescriptionsURI, serviceDescriptionLinkSelf2);
+        putserviceInterface(serviceInterfacesURI, serviceInterfaceLinkSelf1);
+        putserviceInterface(serviceInterfacesURI, serviceInterfaceLinkSelf2);
 
-        ResponseEntity<JsonNode> getResultServiceToServiceDescription = restTemplate.getForEntity(serviceDescriptionsURI, JsonNode.class);
+        ResponseEntity<JsonNode> getResultServiceToserviceInterface = restTemplate.getForEntity(serviceInterfacesURI, JsonNode.class);
 
-        assertThat(getResultServiceToServiceDescription.getStatusCode()).isEqualTo(HttpStatus.OK);
-        JsonNode serviceDescriptionsList = getResultServiceToServiceDescription.getBody().get("_embedded").get("serviceDescriptions");
-        assertThat(serviceDescriptionsList.size()).isEqualTo(2);
+        assertThat(getResultServiceToserviceInterface.getStatusCode()).isEqualTo(HttpStatus.OK);
+        JsonNode serviceInterfacesList = getResultServiceToserviceInterface.getBody().get("_embedded").get("serviceInterfaces");
+        assertThat(serviceInterfacesList.size()).isEqualTo(2);
     }
 
     @Test(expected = HttpClientErrorException.NotFound.class)
@@ -78,20 +78,20 @@ public class SpringDataRestTests {
         Service service = generateService("2");
         JsonNode serviceResult = postService(service);
         JsonNode links = serviceResult.get("_links");
-        JsonNode linkServiceDescriptions = links.get("serviceDescriptions").get("href");
+        JsonNode linkserviceInterfaces = links.get("serviceInterfaces").get("href");
         JsonNode linkServiceSelf = links.get("self").get("href");
-        URI serviceDescriptionsURI = new URI(linkServiceDescriptions.asText());
+        URI serviceInterfacesURI = new URI(linkserviceInterfaces.asText());
         URI linkServiceSelfURI = new URI(linkServiceSelf.asText());
 
-        ServiceInterface serviceInterface1 = generateServiceDescription("2");
-        URI serviceDescriptionLinkSelf1 = postServiceDescription(serviceInterface1);
-        putServiceDescription(serviceDescriptionsURI, serviceDescriptionLinkSelf1);
+        ServiceInterface serviceInterface1 = generateserviceInterface("2");
+        URI serviceInterfaceLinkSelf1 = postserviceInterface(serviceInterface1);
+        putserviceInterface(serviceInterfacesURI, serviceInterfaceLinkSelf1);
 
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.delete(linkServiceSelfURI);
 
-        ResponseEntity<JsonNode> getServiceDescriptionResult = restTemplate.getForEntity(serviceDescriptionLinkSelf1, JsonNode.class);
-        assertThat(getServiceDescriptionResult.getStatusCode()).isEqualTo(HttpStatus.OK);
+        ResponseEntity<JsonNode> getserviceInterfaceResult = restTemplate.getForEntity(serviceInterfaceLinkSelf1, JsonNode.class);
+        assertThat(getserviceInterfaceResult.getStatusCode()).isEqualTo(HttpStatus.OK);
         ResponseEntity<JsonNode> getServiceResult = restTemplate.getForEntity(linkServiceSelfURI, JsonNode.class);
     }
 
@@ -122,40 +122,40 @@ public class SpringDataRestTests {
     }
 
 
-    private ServiceInterface generateServiceDescription(String variance) {
-        String serviceDescriptionValue = "Some description" + variance;
-        String serviceDescriptionPortVariable = "<PORT>" + variance;
-        String serviceDescriptionProtocol = "HTTP" + variance;
+    private ServiceInterface generateserviceInterface(String variance) {
+        String serviceInterfaceValue = "Some description" + variance;
+        String serviceInterfacePortVariable = "<PORT>" + variance;
+        String serviceInterfaceProtocol = "HTTP" + variance;
         String serviceName = "Some Service Name" + variance;
         ServiceInterface serviceInterface1 = new ServiceInterface();
-        serviceInterface1.setDescription(serviceDescriptionValue);
-        serviceInterface1.setPort(serviceDescriptionPortVariable);
-        serviceInterface1.setProtocol(serviceDescriptionProtocol);
+        serviceInterface1.setDescription(serviceInterfaceValue);
+        serviceInterface1.setPort(serviceInterfacePortVariable);
+        serviceInterface1.setProtocol(serviceInterfaceProtocol);
         serviceInterface1.setService_name(serviceName);
         return serviceInterface1;
     }
 
-    private void putServiceDescription(URI serviceDescriptionsURI, URI serviceDescriptionLinkSelf1) {
+    private void putserviceInterface(URI serviceInterfacesURI, URI serviceInterfaceLinkSelf1) {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders reqHeaders = new HttpHeaders();
         reqHeaders.add(HttpHeaders.CONTENT_TYPE, new MediaType("text", "uri-list").toString());
-        HttpEntity<String> reqEntity = new HttpEntity<String>(serviceDescriptionLinkSelf1.toString(), reqHeaders);
-        ResponseEntity<String> putServiceDescriptionResult = restTemplate.exchange(serviceDescriptionsURI, HttpMethod.PUT, reqEntity, String.class);
-        assertThat(putServiceDescriptionResult.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        HttpEntity<String> reqEntity = new HttpEntity<String>(serviceInterfaceLinkSelf1.toString(), reqHeaders);
+        ResponseEntity<String> putserviceInterfaceResult = restTemplate.exchange(serviceInterfacesURI, HttpMethod.PUT, reqEntity, String.class);
+        assertThat(putserviceInterfaceResult.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
     }
 
-    private URI postServiceDescription(ServiceInterface serviceInterface) throws URISyntaxException {
+    private URI postserviceInterface(ServiceInterface serviceInterface) throws URISyntaxException {
         RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<JsonNode> resultPostServiceDescription = restTemplate.postForEntity(getLocalHostWithPort() + "serviceDescriptions", serviceInterface, JsonNode.class);
-        JsonNode serviceDescriptionBody = resultPostServiceDescription.getBody();
+        ResponseEntity<JsonNode> resultPostserviceInterface = restTemplate.postForEntity(getLocalHostWithPort() + "serviceInterfaces", serviceInterface, JsonNode.class);
+        JsonNode serviceInterfaceBody = resultPostserviceInterface.getBody();
 
-        assertThat(serviceDescriptionBody.get("port").asText()).isEqualTo(serviceInterface.getPort());
-        assertThat(serviceDescriptionBody.get("description").asText()).isEqualTo(serviceInterface.getDescription());
-        assertThat(serviceDescriptionBody.get("protocol").asText()).isEqualTo(serviceInterface.getProtocol());
-        assertThat(serviceDescriptionBody.get("service_name").asText()).isEqualTo(serviceInterface.getService_name());
+        assertThat(serviceInterfaceBody.get("port").asText()).isEqualTo(serviceInterface.getPort());
+        assertThat(serviceInterfaceBody.get("description").asText()).isEqualTo(serviceInterface.getDescription());
+        assertThat(serviceInterfaceBody.get("protocol").asText()).isEqualTo(serviceInterface.getProtocol());
+        assertThat(serviceInterfaceBody.get("service_name").asText()).isEqualTo(serviceInterface.getService_name());
 
-        JsonNode serviceDescriptionLinks = serviceDescriptionBody.get("_links");
-        return new URI(serviceDescriptionLinks.get("self").get("href").asText());
+        JsonNode serviceInterfaceLinks = serviceInterfaceBody.get("_links");
+        return new URI(serviceInterfaceLinks.get("self").get("href").asText());
     }
 
     private String getLocalHostWithPort() {
