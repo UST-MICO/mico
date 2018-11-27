@@ -19,17 +19,17 @@ import static org.junit.Assert.assertThat;
 @SpringBootTest
 public class MicoCoreApplicationTests {
 
-	public static final String TEST_SHORT_NAME = "Test";
-	public static final String TEST_SERVICE_DESCRIPTION = "Test Service";
-	public static final String TEST_VCS_ROOT = "http://test.org/test";
-	public static final String TEST_CONTACT = "Test Person";
-	public static final String TEST_PORT_VARIABLE = "<PORT_VARIABLE>";
-	public static final String TEST_SERVICE_INTERFACE_DESCRIPTION = "This is an interface of an service";
-	public static final String TEST_PROTOCOL = "http";
-	public static final String TEST_DNS = "DNS";
-	public static final String TEST_SERVICE_INTERFACE_NAME = "Service interface name";
-	public static final String TEST_LONGER_NAME = "TEST LONGER NAME";
-	public static final String TEST_VERSION = "1.0";
+	private static final String TEST_SHORT_NAME = "Test";
+    private static final String TEST_SERVICE_DESCRIPTION = "Test Service";
+    private static final String TEST_VCS_ROOT = "http://test.org/test";
+    private static final String TEST_CONTACT = "Test Person";
+    private static final String TEST_PORT_VARIABLE = "<PORT_VARIABLE>";
+    private static final String TEST_SERVICE_INTERFACE_DESCRIPTION = "This is an interface of an service";
+    private static final String TEST_PROTOCOL = "http";
+    private static final String TEST_DNS = "DNS";
+    private static final String TEST_SERVICE_INTERFACE_NAME = "Service interface name";
+    private static final String TEST_LONGER_NAME = "TEST LONGER NAME";
+    private static final String TEST_VERSION = "1.0";
 
 	@Autowired
 	private ServiceRepository serviceRepository;
