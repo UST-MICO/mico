@@ -148,16 +148,14 @@ public class MicoCoreApplicationTests {
 
 		Application application1 = new Application();
 		application1.setShortName("App1");
-		application1.setName("Application1"); //TODO: Should not be required
+		application1.setName("Application1");
 		application1.setDependsOn(Arrays.asList(depends1, depends2, depends3));
 		serviceRepository.save(application1);
 
         Application application2 = new Application("App2");
-        application2.setName("Application2"); //TODO: Should not be required
         serviceRepository.save(application2);
 
         Application application3 = new Application("App3", "0.1");
-        application3.setName("Application3"); //TODO: Should not be required
         serviceRepository.save(application3);
 
         Application storedApplication1 = (Application)serviceRepository.findByName("Application1",2);
