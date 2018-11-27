@@ -1,3 +1,3 @@
-import Clock from "./clock";
+import GraphEditor from "./mico-graph";
 
-window.customElements.define('custom-clock', Clock);
+window.customElements.define('mico-graph', GraphEditor);
