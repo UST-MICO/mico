@@ -46,7 +46,7 @@ public class MicoCoreApplicationTests {
     }
 
     public static void checkDefaultService(Service serviceTest) {
-        List<ServiceDescription> serviceDescriptionsTest = serviceTest.getServiceDescriptions();
+        List<ServiceInterface> serviceDescriptionsTest = serviceTest.getServiceInterfaces();
 
         assertEquals(TEST_VERSION,serviceTest.getVersion());
         assertEquals(TEST_LONGER_NAME,serviceTest.getName());
@@ -55,12 +55,12 @@ public class MicoCoreApplicationTests {
         assertEquals(TEST_CONTACT,serviceTest.getContact());
 
         assertEquals(1,serviceDescriptionsTest.size());
-        ServiceDescription serviceDescriptionTest = serviceDescriptionsTest.get(0);
-        assertEquals(TEST_PORT_VARIABLE,serviceDescriptionTest.getPort());
-        assertEquals(TEST_SERVICE_INTERFACE_DESCRIPTION,serviceDescriptionTest.getDescription());
-        assertEquals(TEST_PROTOCOL,serviceDescriptionTest.getProtocol());
-        assertEquals(TEST_DNS,serviceDescriptionTest.getPublic_dns());
-        assertEquals(TEST_SERVICE_INTERFACE_NAME,serviceDescriptionTest.getService_name());
+        ServiceInterface serviceInterfaceTest = serviceDescriptionsTest.get(0);
+        assertEquals(TEST_PORT_VARIABLE, serviceInterfaceTest.getPort());
+        assertEquals(TEST_SERVICE_INTERFACE_DESCRIPTION, serviceInterfaceTest.getDescription());
+        assertEquals(TEST_PROTOCOL, serviceInterfaceTest.getProtocol());
+        assertEquals(TEST_DNS, serviceInterfaceTest.getPublic_dns());
+        assertEquals(TEST_SERVICE_INTERFACE_NAME, serviceInterfaceTest.getService_name());
     }
 
     public static Service createServiceInDB() {
@@ -70,14 +70,14 @@ public class MicoCoreApplicationTests {
 		service.setVcsRoot(TEST_VCS_ROOT);
 		service.setContact(TEST_CONTACT);
 
-		ServiceDescription serviceDescription = new ServiceDescription();
-		serviceDescription.setPort(TEST_PORT_VARIABLE);
-		serviceDescription.setDescription(TEST_SERVICE_INTERFACE_DESCRIPTION);
-		serviceDescription.setProtocol(TEST_PROTOCOL);
-		serviceDescription.setPublic_dns(TEST_DNS);
-		serviceDescription.setService_name(TEST_SERVICE_INTERFACE_NAME);
+		ServiceInterface serviceInterface = new ServiceInterface();
+		serviceInterface.setPort(TEST_PORT_VARIABLE);
+		serviceInterface.setDescription(TEST_SERVICE_INTERFACE_DESCRIPTION);
+		serviceInterface.setProtocol(TEST_PROTOCOL);
+		serviceInterface.setPublic_dns(TEST_DNS);
+		serviceInterface.setService_name(TEST_SERVICE_INTERFACE_NAME);
 
-		service.setServiceDescriptions(Collections.singletonList(serviceDescription));
+		service.setServiceInterfaces(Collections.singletonList(serviceInterface));
 		return service;
 	}
 
@@ -103,13 +103,13 @@ public class MicoCoreApplicationTests {
         service2.setVcsRoot(testVcsRoot);
         service2.setContact(testContact);
 
-        ServiceDescription serviceDescription2 = new ServiceDescription();
-        serviceDescription2.setPort(testPort);
-        serviceDescription2.setDescription(testsServiceInterface);
-        serviceDescription2.setProtocol(TEST_PROTOCOL);
-        serviceDescription2.setPublic_dns(TEST_DNS);
-        serviceDescription2.setService_name(testServiceInterfaceName);
-        service2.setServiceDescriptions(Collections.singletonList(serviceDescription2));
+        ServiceInterface serviceInterface2 = new ServiceInterface();
+        serviceInterface2.setPort(testPort);
+        serviceInterface2.setDescription(testsServiceInterface);
+        serviceInterface2.setProtocol(TEST_PROTOCOL);
+        serviceInterface2.setPublic_dns(TEST_DNS);
+        serviceInterface2.setService_name(testServiceInterfaceName);
+        service2.setServiceInterfaces(Collections.singletonList(serviceInterface2));
         DependsOn dependsOn = new DependsOn();
         dependsOn.setMaxVersion("1.0");
         dependsOn.setMinVersion("1.0");

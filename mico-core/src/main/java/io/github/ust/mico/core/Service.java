@@ -2,7 +2,6 @@ package io.github.ust.mico.core;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -41,8 +40,8 @@ public class Service {
     @JsonIgnore
     private List<DependsOn> dependsOn;
     @Relationship(direction = Relationship.UNDIRECTED)
-    @RestResource(path = "serviceDescriptions", rel = "serviceDescriptions")
-    private List<ServiceDescription> serviceDescriptions;
+    @RestResource(path = "serviceInterfaces", rel = "serviceInterfaces")
+    private List<ServiceInterface> serviceInterfaces;
 
     public Service() {
     }
@@ -175,12 +174,12 @@ public class Service {
         this.dependsOn = dependsOn;
     }
 
-    public List<ServiceDescription> getServiceDescriptions() {
-        return serviceDescriptions;
+    public List<ServiceInterface> getServiceInterfaces() {
+        return serviceInterfaces;
     }
 
-    public void setServiceDescriptions(List<ServiceDescription> serviceDescriptions) {
-        this.serviceDescriptions = serviceDescriptions;
+    public void setServiceInterfaces(List<ServiceInterface> serviceInterfaces) {
+        this.serviceInterfaces = serviceInterfaces;
     }
 
     @Override
@@ -201,7 +200,7 @@ public class Service {
                 ", type='" + type + '\'' +
                 ", owner='" + owner + '\'' +
                 ", dependsOn=" + dependsOn +
-                ", serviceDescriptions=" + serviceDescriptions +
+                ", serviceInterfaces=" + serviceInterfaces +
                 '}';
     }
 }
