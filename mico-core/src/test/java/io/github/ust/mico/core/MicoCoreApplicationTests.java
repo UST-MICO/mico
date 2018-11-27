@@ -10,8 +10,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -166,9 +168,9 @@ public class MicoCoreApplicationTests {
 
 		assertNotNull(storedApplication1);
 		assertEquals("App1", storedApplication1.getShortName());
-		assertEquals("Service1", storedApplication1.getDependsOn().get(0).getService().getShortName());
-		assertEquals("Service2", storedApplication1.getDependsOn().get(1).getService().getShortName());
-		assertEquals("Service3", storedApplication1.getDependsOn().get(2).getService().getShortName());
+        assertThat(storedApplication1.getDependsOn().get(0).getService().getShortName(), startsWith("Service"));
+        assertThat(storedApplication1.getDependsOn().get(1).getService().getShortName(), startsWith("Service"));
+        assertThat(storedApplication1.getDependsOn().get(2).getService().getShortName(), startsWith("Service"));
 
         assertNotNull(storedApplication2);
         assertEquals("App2", storedApplication2.getShortName());
