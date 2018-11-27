@@ -3,7 +3,7 @@ package io.github.ust.mico.core;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 
-public class ServiceDescription {
+public class ServiceInterface {
 
     @Id
     @GeneratedValue
