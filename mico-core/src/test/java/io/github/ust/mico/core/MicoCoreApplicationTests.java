@@ -145,7 +145,7 @@ public class MicoCoreApplicationTests {
 		DependsOn depends1 = new DependsOn(service1);
 		DependsOn depends2 = new DependsOn(service2, "0.1");
 		DependsOn depends3 = new DependsOn(service3, "0.1", "0.3");
-		
+
 		Application application1 = new Application();
 		application1.setShortName("App1");
 		application1.setName("Application1"); //TODO: Should not be required
@@ -160,14 +160,11 @@ public class MicoCoreApplicationTests {
         application3.setName("Application3"); //TODO: Should not be required
         serviceRepository.save(application3);
 
-		//TODO: We might want to have the following possibilities?
-        //Application storedApplication = serviceRepository.findByName("Application");
-		//Application storedApplication = serviceRepository.findByShortName("App");
-		Service storedApplication1 = serviceRepository.findByName("Application1",2);
+        Application storedApplication1 = (Application)serviceRepository.findByName("Application1",2);
 
-        Service storedApplication2 = serviceRepository.findByShortName("App2",2);
+        Application storedApplication2 = (Application)serviceRepository.findByShortName("App2",2);
 
-        Service storedApplication3 = serviceRepository.findByShortName("App3",2);
+        Application storedApplication3 = (Application)serviceRepository.findByShortName("App3",2);
 
 		assertNotNull(storedApplication1);
 		assertEquals("App1", storedApplication1.getShortName());
