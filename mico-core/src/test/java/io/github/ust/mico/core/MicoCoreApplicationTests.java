@@ -140,20 +140,18 @@ public class MicoCoreApplicationTests {
 
 		Service service1 = new Service("Service1","0.1");
 		Service service2 = new Service("Service2","0.1");
-
-		//TODO: We might want to have the following possibility?
-		//DependsOn dependency = new DependsOn(service, min (optional), max (optional));
-		DependsOn depends1 = new DependsOn();
-		depends1.setService(service1);
-		DependsOn depends2 = new DependsOn();
-		depends2.setService(service2);
+		Service service3 = new Service("Service3","0.1");
+		
+		DependsOn depends1 = new DependsOn(service1);
+		DependsOn depends2 = new DependsOn(service2, "0.1");
+		DependsOn depends3 = new DependsOn(service3, "0.1", "0.3");
 
 		//TODO: We might want to have the following possibility?
 		//Application application = new Application("shortName", version (optional));
 		Application application = new Application();
 		application.setShortName("App");
 		application.setName("Application"); //TODO: Should not be required
-		application.setDependsOn(Arrays.asList(depends1, depends2));
+		application.setDependsOn(Arrays.asList(depends1, depends2, depends3));
 		serviceRepository.save(application);
 
 		//TODO: We might want to have the following possibilities?
@@ -165,5 +163,6 @@ public class MicoCoreApplicationTests {
 		assertEquals("App", storedApplication.getShortName());
 		assertEquals("Service1", storedApplication.getDependsOn().get(0).getService().getShortName());
 		assertEquals("Service2", storedApplication.getDependsOn().get(1).getService().getShortName());
+		assertEquals("Service3", storedApplication.getDependsOn().get(2).getService().getShortName());
 	}
 }
