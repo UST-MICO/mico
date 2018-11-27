@@ -41,18 +41,6 @@ public class ClusterAwarenessTest {
     }
 
     @Test
-    public void readNamespaces() throws Exception {
-        V1NamespaceList list = cluster.getAllNamespaces();
-
-    }
-
-    @Test
-    public void checkNamespace() throws Exception {
-        Assert.assertTrue(cluster.existsNamespace("kube-system"));
-        Assert.assertFalse(cluster.existsNamespace("nonExistantNamespace"));
-    }
-
-    @Test
     public void deleteNamespace() throws ApiException {
         cluster.deleteNamespace(cluster.buildNamespace(namespaceName));
     }
