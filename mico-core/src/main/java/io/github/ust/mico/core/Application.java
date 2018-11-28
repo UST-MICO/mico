@@ -8,8 +8,7 @@ public class Application extends Service {
     }
 
     public Application(String shortName) {
-        super();
-        this.setShortName(shortName);
+        super(shortName);
     }
 
     public Application(String shortName, String version) {
