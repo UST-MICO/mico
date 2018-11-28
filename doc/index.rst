@@ -10,7 +10,6 @@ Welcome to MICO Developer Documentation's documentation!
    :maxdepth: 3
    :caption: Contents:
 
-   cicd/index 
    mico-admin/index
    mico-core/index
 
