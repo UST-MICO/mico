@@ -8,5 +8,6 @@
             <mat-error *ngIf="formControl.invalid">{{getErrorMessage()}}</mat-error>
         </mat-form-field>
         <mico-form-boolean *ngSwitchCase="'boolean'" [formControlName]="property['x-key']" [config]="property"></mico-form-boolean>
+        <mico-form-number *ngSwitchCase="'number'" [formControlName]="property['x-key']" [config]="property"></mico-form-number>
     </div>
 </div>

@@ -83,6 +83,10 @@ export class ModelsService {
                 'external service': {
                     'type': 'boolean',
                     'x-order': 60
+                },
+                'numberTest': {
+                    'type': 'number',
+                    'x-order': 70
                 }
             }
         }

@@ -4,15 +4,16 @@ import { NG_VALUE_ACCESSOR } from '@angular/forms';
 import { ApiModel } from 'src/app/api/apimodel';
 
 @Component({
-  selector: 'mico-form-boolean',
-  templateUrl: './mico-form-boolean.component.html',
-  styleUrls: ['./mico-form-boolean.component.css'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => MicoFormBooleanComponent),
-    multi: true
-  },{provide: MatFormFieldControl, useExisting: Boolean}],
+    selector: 'mico-form-boolean',
+    templateUrl: './mico-form-boolean.component.html',
+    styleUrls: ['./mico-form-boolean.component.css'],
+    providers: [{
+        provide: NG_VALUE_ACCESSOR,
+        useExisting: forwardRef(() => MicoFormBooleanComponent),
+        multi: true
+        },{provide: MatFormFieldControl, useExisting: Boolean}],
 })
+
 export class MicoFormBooleanComponent implements OnInit {
 
     constructor() { }
