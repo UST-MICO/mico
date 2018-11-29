@@ -1,5 +1,7 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+
+import 'mico-grapheditor/dist/bundle';
 
 // modules
 
@@ -80,6 +82,9 @@ import { CreateServiceDialogComponent } from './dialogs/create-service/create-se
         MatChipsModule,
     ],
     providers: [],
-    bootstrap: [AppComponent]
+    bootstrap: [AppComponent],
+    schemas: [
+      CUSTOM_ELEMENTS_SCHEMA
+    ]
 })
 export class AppModule { }
