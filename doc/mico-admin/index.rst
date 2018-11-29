@@ -3,6 +3,10 @@ MICO-Admin UI
 
 The MICO-Admin UI uses the `Angular <https://v7.angular.io>`_ framework (v7) with the `Angular Material <https://material.angular.io>`_ component library.
 
+.. hint:: mico-graph dependency
+
+   To update the mico graph dependency use ``npm run grapheditor``.
+
 
 Documentation of Core Components
 --------------------------------

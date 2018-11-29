@@ -1,5 +1,7 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+
+import 'mico-grapheditor/dist/bundle';
 
 // modules
 
@@ -85,6 +87,9 @@ import { MicoFormNumberComponent } from './forms/mico-form-number/mico-form-numb
         MatSlideToggleModule,
     ],
     providers: [],
-    bootstrap: [AppComponent]
+    bootstrap: [AppComponent],
+    schemas: [
+      CUSTOM_ELEMENTS_SCHEMA
+    ]
 })
 export class AppModule { }

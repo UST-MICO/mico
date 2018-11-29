@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "webpack --mode production",
-    "start": "webpack --mode development --watch"
+    "start": "webpack --mode development --watch",
+    "postinstall": "npm run build"
   },
   "author": "",
   "dependencies": {

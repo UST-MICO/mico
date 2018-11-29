@@ -1,3 +1,3 @@
 import GraphEditor from "./mico-graph";
 
-window.customElements.define('mico-graph', GraphEditor);
+window.customElements.define('network-graph', GraphEditor);
