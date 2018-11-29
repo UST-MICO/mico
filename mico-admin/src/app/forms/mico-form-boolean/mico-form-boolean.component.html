@@ -1,1 +1,4 @@
-<mat-slide-toggle matInput #input [required]="config['x-required']" [(ngModel)]="checked"></mat-slide-toggle>
+<div>
+    <mat-label class="mr3">{{config['x-key']}}:</mat-label>
+    <mat-slide-toggle matInput #input [required]="config['x-required']" [(ngModel)]="checked"></mat-slide-toggle>
+</div>
