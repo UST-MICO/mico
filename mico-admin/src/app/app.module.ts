@@ -31,6 +31,7 @@ import { AppDetailComponent } from './app-detail/app-detail.component';
 import { ServiceListComponent } from './service-list/service-list.component';
 import { ServiceDetailComponent } from './service-detail/service-detail.component';
 import { CreateServiceDialogComponent } from './dialogs/create-service/create-service.component';
+import { MicoFormBooleanComponent } from './forms/mico-form-boolean/mico-form-boolean.component';
 
 
 @NgModule({
@@ -50,6 +51,7 @@ import { CreateServiceDialogComponent } from './dialogs/create-service/create-se
         ServiceListComponent,
         ServiceDetailComponent,
         CreateServiceDialogComponent,
+        MicoFormBooleanComponent,
     ],
     entryComponents: [
         CreateServiceDialogComponent,
