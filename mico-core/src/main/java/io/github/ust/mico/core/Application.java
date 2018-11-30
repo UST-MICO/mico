@@ -4,6 +4,17 @@ public class Application extends Service {
     private String deployInformation;
     private String visualizationData;
 
+    public Application() {
+    }
+
+    public Application(String shortName) {
+        super(shortName);
+    }
+
+    public Application(String shortName, String version) {
+        super(shortName, version);
+    }
+
     //TODO: Verify if all are necessary
     public String getDeployInformation() {
         return deployInformation;

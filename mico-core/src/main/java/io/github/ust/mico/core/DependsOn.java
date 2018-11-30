@@ -4,7 +4,6 @@ import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
-import org.springframework.data.neo4j.annotation.Depth;
 import org.springframework.data.rest.core.annotation.RestResource;
 
 @NodeEntity
@@ -19,6 +18,24 @@ public class DependsOn {
     private Service service;
     private String minVersion;
     private String maxVersion;
+
+    public DependsOn() {
+    }
+
+    public DependsOn(Service service) {
+        this.service = service;
+    }
+
+    public DependsOn(Service service, String minVersion) {
+        this.service = service;
+        this.minVersion = minVersion;
+    }
+
+    public DependsOn(Service service, String minVersion, String maxVersion) {
+        this.service = service;
+        this.minVersion = minVersion;
+        this.maxVersion = maxVersion;
+    }
 
     //TODO: Verify if all are necessary
     public Service getService() {

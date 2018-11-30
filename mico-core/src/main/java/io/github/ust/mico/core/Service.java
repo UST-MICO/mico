@@ -46,6 +46,10 @@ public class Service {
     public Service() {
     }
 
+    public Service(String shortName) {
+        this.shortName = shortName;
+    }
+
     public Service(String shortName, String version) {
         this.version = version;
         this.shortName = shortName;

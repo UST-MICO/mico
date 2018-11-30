@@ -10,35 +10,44 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class MicoCoreApplicationTests {
 
-	public static final String TEST_SHORT_NAME = "Test";
-	public static final String TEST_SERVICE_DESCRIPTION = "Test Service";
-	public static final String TEST_VCS_ROOT = "http://test.org/test";
-	public static final String TEST_CONTACT = "Test Person";
-	public static final String TEST_PORT_VARIABLE = "<PORT_VARIABLE>";
-	public static final String TEST_SERVICE_INTERFACE_DESCRIPTION = "This is an interface of an service";
-	public static final String TEST_PROTOCOL = "http";
-	public static final String TEST_DNS = "DNS";
-	public static final String TEST_SERVICE_INTERFACE_NAME = "Service interface name";
-	public static final String TEST_LONGER_NAME = "TEST LONGER NAME";
-	public static final String TEST_VERSION = "1.0";
+	private static final String TEST_SHORT_NAME = "Test";
+    private static final String TEST_SERVICE_DESCRIPTION = "Test Service";
+    private static final String TEST_VCS_ROOT = "http://test.org/test";
+    private static final String TEST_CONTACT = "Test Person";
+    private static final String TEST_PORT_VARIABLE = "<PORT_VARIABLE>";
+    private static final String TEST_SERVICE_INTERFACE_DESCRIPTION = "This is an interface of an service";
+    private static final String TEST_PROTOCOL = "http";
+    private static final String TEST_DNS = "DNS";
+    private static final String TEST_SERVICE_INTERFACE_NAME = "Service interface name";
+    private static final String TEST_LONGER_NAME = "TEST LONGER NAME";
+    private static final String TEST_VERSION = "1.0";
 
 	@Autowired
 	private ServiceRepository serviceRepository;
+	@Autowired
+    private DependsOnRepository dependsOnRepository;
+	@Autowired
+    private ServiceInterfaceRepository serviceInterfaceRepository;
 
 	@Test
 	public void contextLoads() {
+	    //TODO: Why is this test needed?
 	}
 
 	@Test
 	public void testServiceRepository(){
-		serviceRepository.deleteAll();
+        serviceRepository.deleteAll();
+        dependsOnRepository.deleteAll();
+        serviceInterfaceRepository.deleteAll();
 		serviceRepository.save(createServiceInDB());
 
 		Service serviceTest = serviceRepository.findByName(TEST_LONGER_NAME);
@@ -83,7 +92,9 @@ public class MicoCoreApplicationTests {
 
 	@Test
 	public void testDependencyServiceRepository(){
-		serviceRepository.deleteAll();
+        serviceRepository.deleteAll();
+        dependsOnRepository.deleteAll();
+        serviceInterfaceRepository.deleteAll();
 		Service service = createServiceInDB();
 
 		String testShortName2 = "ShortName2";
@@ -135,35 +146,53 @@ public class MicoCoreApplicationTests {
 
 	@Test
 	public void testStoreApplication(){
-		//TODO: We might want to delete all database entries at the beginning of each test?
-		serviceRepository.deleteAll();
+        serviceRepository.deleteAll();
+        dependsOnRepository.deleteAll();
+        serviceInterfaceRepository.deleteAll();
 
 		Service service1 = new Service("Service1","0.1");
 		Service service2 = new Service("Service2","0.1");
+		Service service3 = new Service("Service3","0.1");
 
-		//TODO: We might want to have the following possibility?
-		//DependsOn dependency = new DependsOn(service, min (optional), max (optional));
-		DependsOn depends1 = new DependsOn();
-		depends1.setService(service1);
-		DependsOn depends2 = new DependsOn();
-		depends2.setService(service2);
+		DependsOn depends1 = new DependsOn(service1);
+		DependsOn depends2 = new DependsOn(service2, "0.1");
+		DependsOn depends3 = new DependsOn(service3, "0.1", "0.3");
 
-		//TODO: We might want to have the following possibility?
-		//Application application = new Application("shortName", version (optional));
-		Application application = new Application();
-		application.setShortName("App");
-		application.setName("Application"); //TODO: Should not be required
-		application.setDependsOn(Arrays.asList(depends1, depends2));
-		serviceRepository.save(application);
+		Application application1 = new Application();
+		application1.setShortName("App1");
+		application1.setName("Application1");
+		application1.setDependsOn(Arrays.asList(depends1, depends2, depends3));
+		serviceRepository.save(application1);
 
-		//TODO: We might want to have the following possibilities?
-        //Application storedApplication = serviceRepository.findByName("Application");
-		//Application storedApplication = serviceRepository.findByShortName("App");
-		Service storedApplication = serviceRepository.findByName("Application",2);
+        Application application2 = new Application("App2");
+        serviceRepository.save(application2);
 
-		assertNotNull(storedApplication);
-		assertEquals("App", storedApplication.getShortName());
-		assertEquals("Service1", storedApplication.getDependsOn().get(0).getService().getShortName());
-		assertEquals("Service2", storedApplication.getDependsOn().get(1).getService().getShortName());
+        Application application3 = new Application("App3", "0.1");
+        serviceRepository.save(application3);
+
+        Application storedApplication1 = (Application)serviceRepository.findByName("Application1",2);
+
+        Application storedApplication2 = (Application)serviceRepository.findByShortName("App2",2);
+
+        Application storedApplication3 = (Application)serviceRepository.findByShortName("App3",2);
+
+		assertNotNull(storedApplication1);
+		assertEquals("App1", storedApplication1.getShortName());
+        assertThat(storedApplication1.getDependsOn().get(0).getService().getShortName(), startsWith("Service"));
+        assertThat(storedApplication1.getDependsOn().get(1).getService().getShortName(), startsWith("Service"));
+        assertThat(storedApplication1.getDependsOn().get(2).getService().getShortName(), startsWith("Service"));
+
+        assertNotNull(storedApplication2);
+        assertEquals("App2", storedApplication2.getShortName());
+
+        assertNotNull(storedApplication3);
+        assertEquals("App3", storedApplication3.getShortName());
 	}
+
+	@Test
+    public void cleanupDatabase() {
+        serviceRepository.deleteAll();
+        dependsOnRepository.deleteAll();
+        serviceInterfaceRepository.deleteAll();
+    }
 }
