@@ -7,7 +7,6 @@ import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
-import org.springframework.data.rest.core.annotation.RestResource;
 
 import java.util.List;
 
@@ -37,10 +36,8 @@ public class Service {
     private String type;
     private String owner;
     @Relationship
-    @JsonIgnore
     private List<DependsOn> dependsOn;
     @Relationship(direction = Relationship.UNDIRECTED)
-    @RestResource(path = "serviceInterfaces", rel = "serviceInterfaces")
     private List<ServiceInterface> serviceInterfaces;
 
     public Service() {
