@@ -67,6 +67,16 @@
 				    </execution>
 					<execution>
 						<phase>compile</phase>
+						<id>install webpack-cli</id>
+						<goals>
+							<goal>npm</goal>
+						</goals>
+						<configuration>
+							<arguments>install webpack-cli</arguments>
+						</configuration>
+					</execution>
+					<execution>
+						<phase>compile</phase>
 						<id>install graph editor</id>
 						<goals>
 							<goal>npm</goal>
