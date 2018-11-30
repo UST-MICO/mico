@@ -1,7 +1,10 @@
 <!-- TODO: add buttons, TODO check usage...-->
 <div class="flex">
     <h3 class="flex-grow-1">{{service.name}}</h3>
-    <mat-button-toggle class="mv1 inline-flex items-center" value="edit" [checked]="edit" (change)="edit = !edit"><span class="mr2">Edit</span><mat-icon>edit</mat-icon></mat-button-toggle>
+    <mat-button-toggle class="mv1 inline-flex items-center" value="edit" [checked]="edit" (change)="edit = !edit"><span
+            class="mr2">Edit</span>
+        <mat-icon>edit</mat-icon>
+    </mat-button-toggle>
 </div>
 <mat-divider></mat-divider>
 
@@ -57,7 +60,7 @@
                 <mico-form [modelUrl]="'local/editService'" (data)="serviceData = $event"></mico-form>
                 <div class="ma1 pa1">
                     <span class="ma1">
-                        <button  mat-raised-button>Save</button>
+                        <button mat-raised-button>Save</button>
                     </span>
                     <span class="ma1">
                         <button mat-raised-button (click)="edit = !edit">Cancel</button>
@@ -87,7 +90,7 @@
                         <mat-divider></mat-divider>
                         <!-- TODO list provides -->
 
-                        <mat-list-item (click)="addDependencie()()">
+                        <mat-list-item (click)="addInternalDependencie()">
                             <!-- TODO method not existing yet-->
                             <span mat-line><b>Dependencies (internal) </b></span>
                             <mat-icon>add</mat-icon>
@@ -102,7 +105,7 @@
                             <mat-divider></mat-divider>
                         </div>
 
-                        <mat-list-item (click)="addDependencie()">
+                        <mat-list-item (click)="addExternalDependencie()">
                             <!-- TODO method not existing yet-->
                             <span mat-line><b>Dependencies (external)</b></span>
                             <mat-icon>add</mat-icon>

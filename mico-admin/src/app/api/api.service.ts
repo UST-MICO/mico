@@ -12,16 +12,16 @@ import { ApiObject } from './apiobject';
  * @param obj the object to freeze
  */
 export function freezeObject<T>(obj: T): Readonly<T> {
-    if (Object.isFrozen(obj)) {return; }
+    if (Object.isFrozen(obj)) { return; }
     const propNames = Object.getOwnPropertyNames(obj);
     // Freeze properties before freezing self
     for (const key of propNames) {
-      const value = obj[key];
-      if (value && typeof value === 'object') {
-          obj[key] = freezeObject(value);
-      } else {
-          obj[key] = value;
-      }
+        const value = obj[key];
+        if (value && typeof value === 'object') {
+            obj[key] = freezeObject(value);
+        } else {
+            obj[key] = value;
+        }
     }
     return Object.freeze(obj);
 }
@@ -31,7 +31,7 @@ export function freezeObject<T>(obj: T): Readonly<T> {
  * Service to interact with the mico api.
  */
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
 export class ApiService {
     private streams: Map<string, Subject<Readonly<ApiObject> | Readonly<ApiObject[]>>> = new Map();
@@ -57,8 +57,8 @@ export class ApiService {
      * @param defaultSubject function to create a new streamSource if needed (default: BehaviourSubject)
      */
     private getStreamSource(streamURL: string, defaultSubject: () => Subject<Readonly<ApiObject> | Readonly<ApiObject[]>> =
-                            () => new BehaviorSubject<Readonly<ApiObject> | Readonly<ApiObject[]>>(undefined)
-                           ): Subject<Readonly<ApiObject> | Readonly<ApiObject[]>> {
+        () => new BehaviorSubject<Readonly<ApiObject> | Readonly<ApiObject[]>>(undefined)
+    ): Subject<Readonly<ApiObject> | Readonly<ApiObject[]>> {
         streamURL = this.canonizeStreamUrl(streamURL);
         let stream = this.streams.get(streamURL);
         if (stream == null) {
@@ -87,6 +87,7 @@ export class ApiService {
                 'internalDependencies': [2, 3],
                 'externalDependencies': [4],
                 'status': 'online',
+                'external': 'false',
             },
             {
                 'id': '2',
@@ -96,6 +97,7 @@ export class ApiService {
                 'internalDependencies': [],
                 'externalDependencies': [4],
                 'status': 'online',
+                'external': 'false',
             },
             {
                 'id': '3',
@@ -105,6 +107,7 @@ export class ApiService {
                 'internalDependencies': [2],
                 'externalDependencies': [],
                 'status': 'offline',
+                'external': 'false',
             },
             {
                 'id': '4',
@@ -113,7 +116,8 @@ export class ApiService {
                 'description': 'A generic service',
                 'internalDependencies': [],
                 'externalDependencies': [],
-                'status': 'problem'
+                'status': 'problem',
+                'external': 'true',
             },
         ];
 
@@ -161,11 +165,11 @@ export class ApiService {
 
         // TODO
         const mockData: ApiObject = {
-                'id': id,
-                'name': 'Hello World Application id ' + id,
-                'shortName': 'test.' + id + 'application',
-                'description': 'A generic application',
-            };
+            'id': id,
+            'name': 'Hello World Application id ' + id,
+            'shortName': 'test.' + id + 'application',
+            'description': 'A generic application',
+        };
 
         stream.next(mockData);
 
@@ -221,11 +225,11 @@ export class ApiService {
         ];
 
         const genericMockData: ApiObject = {
-                'id': id,
-                'name': 'Generic World Service id ' + id,
-                'shortName': 'test.' + id + 'service',
-                'description': 'A generic generated service',
-            };
+            'id': id,
+            'name': 'Generic World Service id ' + id,
+            'shortName': 'test.' + id + 'service',
+            'description': 'A generic generated service',
+        };
 
         if (id > 0 && id <= 4) {
             stream.next(freezeObject(mockData[id - 1]));

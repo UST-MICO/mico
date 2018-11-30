@@ -1,9 +1,12 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-
+import { Subscription } from 'rxjs';
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
-import { Subscription } from 'rxjs';
+import { ServicePickerComponent } from '../dialogs/service-picker/service-picker.component';
+import { MatDialog } from '@angular/material';
+import { CreateServiceDialogComponent } from '../dialogs/create-service/create-service.component';
+
 
 @Component({
     selector: 'mico-service-detail-overview',
@@ -18,6 +21,7 @@ export class ServiceDetailOverviewComponent implements OnInit {
     constructor(
         private apiService: ApiService,
         private route: ActivatedRoute,
+        private dialog: MatDialog,
     ) { }
 
     @Input() service: ApiObject;
@@ -82,6 +86,22 @@ export class ServiceDetailOverviewComponent implements OnInit {
             'status': service_object.status,
         };
         return return_object;
+    }
+
+    addInternalDependencie() {
+        const dialogRef = this.dialog.open(ServicePickerComponent);
+        dialogRef.afterClosed().subscribe(result => {
+            console.log(result);
+        });
+        // TODO use result in a useful way
+    }
+
+    addExternalDependencie() {
+        const dialogRef = this.dialog.open(CreateServiceDialogComponent);
+        dialogRef.afterClosed().subscribe(result => {
+            console.log(result);
+        });
+        // TODO use result in a useful way and replace CreateServiceDialog...
     }
 
 }
