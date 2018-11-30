@@ -11,7 +11,7 @@ export class ModelsService {
 
     private modelCache: Map<string, AsyncSubject<ApiModel>> = new Map<string, AsyncSubject<ApiModel>>();
 
-    private localModels: {[property: string]: ApiModelAllOf|ApiModel} = {
+    private localModels: { [property: string]: ApiModelAllOf | ApiModel } = {
         'serviceFromGitPOST': {
             'type': 'object',
             'properties': {
@@ -84,10 +84,6 @@ export class ModelsService {
                     'type': 'boolean',
                     'x-order': 60
                 },
-                'numberTest': {
-                    'type': 'number',
-                    'x-order': 70
-                }
             }
         }
     };
@@ -111,7 +107,7 @@ export class ModelsService {
      *
      * @param modelUrl resource url
      */
-    private resolveModel(modelUrl: string): Observable<ApiModelAllOf|ApiModel> {
+    private resolveModel(modelUrl: string): Observable<ApiModelAllOf | ApiModel> {
         modelUrl = this.canonizeModelUri(modelUrl);
         if (modelUrl.startsWith('local/')) {
             const modelID = modelUrl.substring(6);
@@ -129,7 +125,7 @@ export class ModelsService {
      *
      * @param model input model
      */
-    private resolveModelLinks(model: ApiModelAllOf|ApiModelRef|ApiModel): Observable<ApiModel> {
+    private resolveModelLinks(model: ApiModelAllOf | ApiModelRef | ApiModel): Observable<ApiModel> {
         if ((model as ApiModelAllOf).allOf != null) {
             const models = (model as ApiModelAllOf).allOf;
             return from(models).pipe(concatMap(this.resolveModelLinks));
@@ -213,7 +209,7 @@ export class ModelsService {
      */
     getModel(modelUrl): Observable<Readonly<ApiModel>> {
         const stream = this.getCacheSource(modelUrl);
-        if (! stream.closed) {
+        if (!stream.closed) {
             this.resolveModel(modelUrl).pipe(
                 concatMap(this.resolveModelLinks),
                 reduce(this.mergeModels, null),
@@ -259,7 +255,7 @@ export class ModelsService {
      *                   Use Empty iterable or null to deactivate filter
      * @param isBlacklist if true the filter ill be appliead as blacklist. (default=whitelest/false)
      */
-    filterModel(properties: Iterable<string>, isBlacklist: boolean= false): (ApiModel) => Readonly<ApiModel> {
+    filterModel(properties: Iterable<string>, isBlacklist: boolean = false): (ApiModel) => Readonly<ApiModel> {
         const filterset: Set<string> = (properties !== null) ? new Set<string>(properties) : new Set<string>();
         return (model) => {
             if (filterset.size === 0) { return model; }
