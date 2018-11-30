@@ -27,7 +27,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import springfox.documentation.spring.data.rest.configuration.SpringDataRestConfiguration;
 
 /**
  * Entry point for the MICO core application.

@@ -4,7 +4,6 @@ import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
-import org.springframework.data.rest.core.annotation.RestResource;
 
 @NodeEntity
 public class DependsOn {
@@ -14,7 +13,6 @@ public class DependsOn {
     private Long id;
 
     @Relationship
-    @RestResource(path = "serviceDependencies", rel = "services")
     private Service service;
     private String minVersion;
     private String maxVersion;
