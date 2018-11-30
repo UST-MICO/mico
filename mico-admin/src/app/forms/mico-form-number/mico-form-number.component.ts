@@ -11,7 +11,7 @@ import { ApiModel } from 'src/app/api/apimodel';
         provide: NG_VALUE_ACCESSOR,
         useExisting: forwardRef(() => MicoFormNumberComponent),
         multi: true
-        },{provide: MatFormFieldControl, useExisting: Number}],
+    }, { provide: MatFormFieldControl, useExisting: Number }],
 })
 
 export class MicoFormNumberComponent implements OnInit {
@@ -24,9 +24,9 @@ export class MicoFormNumberComponent implements OnInit {
     ngOnInit() {
     }
 
-    onChange: any = () => {};
+    onChange: any = () => { };
 
-    onTouched: any = () => {};
+    onTouched: any = () => { };
 
     get value(): number {
         return this.content;
