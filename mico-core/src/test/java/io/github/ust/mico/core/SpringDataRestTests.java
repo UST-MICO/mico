@@ -37,11 +37,17 @@ public class SpringDataRestTests {
 
     @Autowired
     private ServiceRepository serviceRepository;
+    @Autowired
+    private DependsOnRepository dependsOnRepository;
+    @Autowired
+    private ServiceInterfaceRepository serviceInterfaceRepository;
 
     @Test
     public void testServicesWithMultipleDescriptions() throws Exception {
-        //todo evaluate json-path-assert,json-path from com.jayway.jsonpath
+        //TODO: evaluate json-path-assert,json-path from com.jayway.jsonpath
         serviceRepository.deleteAll();
+        dependsOnRepository.deleteAll();
+        serviceInterfaceRepository.deleteAll();
         Service service = generateService("1");
 
         RestTemplate restTemplate = new RestTemplate();
@@ -75,6 +81,9 @@ public class SpringDataRestTests {
     @Test(expected = HttpClientErrorException.NotFound.class)
     public void testDeleteService() throws Exception {
         serviceRepository.deleteAll();
+        dependsOnRepository.deleteAll();
+        serviceInterfaceRepository.deleteAll();
+
         Service service = generateService("2");
         JsonNode serviceResult = postService(service);
         JsonNode links = serviceResult.get("_links");
@@ -160,5 +169,12 @@ public class SpringDataRestTests {
 
     private String getLocalHostWithPort() {
         return HTTP_LOCALHOST + port + "/";
+    }
+
+    @Test
+    public void cleanupDatabase() {
+        serviceRepository.deleteAll();
+        dependsOnRepository.deleteAll();
+        serviceInterfaceRepository.deleteAll();
     }
 }

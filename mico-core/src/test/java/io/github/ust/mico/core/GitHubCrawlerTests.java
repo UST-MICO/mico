@@ -17,10 +17,17 @@ public class GitHubCrawlerTests {
 
     @Autowired
     private ServiceRepository serviceRepository;
+    @Autowired
+    private DependsOnRepository dependsOnRepository;
+    @Autowired
+    private ServiceInterfaceRepository serviceInterfaceRepository;
 
     @Test
     public void testGitHubCrawler(){
         serviceRepository.deleteAll();
+        dependsOnRepository.deleteAll();
+        serviceInterfaceRepository.deleteAll();
+
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
         Service service = crawler.crawlGitHubRepo(absoluteUri);
@@ -36,4 +43,10 @@ public class GitHubCrawlerTests {
         assertEquals(service.getName(),readService.getName());
     }
 
+    @Test
+    public void cleanupDatabase() {
+        serviceRepository.deleteAll();
+        dependsOnRepository.deleteAll();
+        serviceInterfaceRepository.deleteAll();
+    }
 }

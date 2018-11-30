@@ -33,14 +33,21 @@ public class MicoCoreApplicationTests {
 
 	@Autowired
 	private ServiceRepository serviceRepository;
+	@Autowired
+    private DependsOnRepository dependsOnRepository;
+	@Autowired
+    private ServiceInterfaceRepository serviceInterfaceRepository;
 
 	@Test
 	public void contextLoads() {
+	    //TODO: Why is this test needed?
 	}
 
 	@Test
 	public void testServiceRepository(){
-		serviceRepository.deleteAll();
+        serviceRepository.deleteAll();
+        dependsOnRepository.deleteAll();
+        serviceInterfaceRepository.deleteAll();
 		serviceRepository.save(createServiceInDB());
 
 		Service serviceTest = serviceRepository.findByName(TEST_LONGER_NAME);
@@ -85,7 +92,9 @@ public class MicoCoreApplicationTests {
 
 	@Test
 	public void testDependencyServiceRepository(){
-		serviceRepository.deleteAll();
+        serviceRepository.deleteAll();
+        dependsOnRepository.deleteAll();
+        serviceInterfaceRepository.deleteAll();
 		Service service = createServiceInDB();
 
 		String testShortName2 = "ShortName2";
@@ -137,8 +146,9 @@ public class MicoCoreApplicationTests {
 
 	@Test
 	public void testStoreApplication(){
-		//TODO: We might want to delete all database entries at the beginning of each test?
-		serviceRepository.deleteAll();
+        serviceRepository.deleteAll();
+        dependsOnRepository.deleteAll();
+        serviceInterfaceRepository.deleteAll();
 
 		Service service1 = new Service("Service1","0.1");
 		Service service2 = new Service("Service2","0.1");
@@ -178,4 +188,11 @@ public class MicoCoreApplicationTests {
         assertNotNull(storedApplication3);
         assertEquals("App3", storedApplication3.getShortName());
 	}
+
+	@Test
+    public void cleanupDatabase() {
+        serviceRepository.deleteAll();
+        dependsOnRepository.deleteAll();
+        serviceInterfaceRepository.deleteAll();
+    }
 }
