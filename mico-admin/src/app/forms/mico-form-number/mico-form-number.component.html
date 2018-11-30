@@ -1,5 +1,5 @@
 <mat-form-field class="form-element">
     <mat-label>{{config['x-key']}}</mat-label>
-    <input matInput #input [required]="config['x-required']" [(ngModel)]="content">
+    <input matInput #input type="number" [required]="config['x-required']" [(ngModel)]="content">
 </mat-form-field>
 {{content}}
