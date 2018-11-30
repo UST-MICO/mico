@@ -6,7 +6,8 @@
     </head>
     <body>
         <script src="./dist/bundle.js"></script>
-        <network-graph nodes="[{'id': 1, 'title': 'hello world'}]">
+        <network-graph nodes="[{'id': 1, 'title': 'hello world', 'x': 0, 'y': 0}, {'id': 2, 'title': 'HI2', 'x': 50, 'y': 50}]"
+                edges="[{'source': 1, 'target': 2}]">
             <template>
                 <h1 data-content="Hello World!"></h1>
             </template>
