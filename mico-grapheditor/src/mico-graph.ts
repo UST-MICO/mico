@@ -1,4 +1,4 @@
-import {select, scaleLinear, zoom, zoomIdentity, zoomTransform, event} from "d3";
+import {select, scaleLinear, zoom, zoomIdentity, zoomTransform, event, line, curveLinear} from "d3";
 
 
 export default class GraphEditor extends HTMLElement {
@@ -10,6 +10,7 @@ export default class GraphEditor extends HTMLElement {
     private xScale: scaleLinear;
     private yScale: scaleLinear;
     private zoom: zoom;
+    private edgeGenerator;
 
     private contentMinHeight = 0;
     private contentMaxHeight = 1;
@@ -25,6 +26,7 @@ export default class GraphEditor extends HTMLElement {
         this._nodes = [];
         this._edges = [];
         this.initialized = false;
+        this.edgeGenerator = line().x((d) => d.x).y((d) => d.y).curve(curveLinear);
 
         this.mutationObserver = new MutationObserver(this.completeRender.bind(this));
     }
@@ -32,16 +34,18 @@ export default class GraphEditor extends HTMLElement {
     static get observedAttributes() { return ['nodes', 'edges']; }
 
     attributeChangedCallback(name, oldValue, newValue: string) {
-      if (name === 'nodes') {
-          newValue = newValue.replace("'", '"');
-          console.log(newValue);
-          this._nodes =[{'id': 1, 'title': 'hello world'}]; // JSON.parse(newValue);
-      }
-      if (name === 'edges') {
-          this._edges = JSON.parse(newValue);
-      }
-      this.completeRender();
-      this.updateLayout();
+        if (name === 'nodes') {
+            newValue = newValue.replace(/'/g, '"');
+            console.log('Nodes ' + newValue);
+            this._nodes = JSON.parse(newValue);
+        }
+        if (name === 'edges') {
+            newValue = newValue.replace(/'/g, '"');
+            console.log('Edges ' + newValue);
+            this._edges = JSON.parse(newValue);
+        }
+        this.completeRender();
+        this.updateLayout();
     }
 
     connectedCallback() {
@@ -285,17 +289,33 @@ export default class GraphEditor extends HTMLElement {
         const graph = svg.select("g.zoom-group");
 
         // update nodes ////////////////////////////////////////////////////////
-        const nodeSelection = graph.select(".nodes")
-            .selectAll("g.node")
+        const nodeSelection = graph.select('.nodes')
+            .selectAll('g.node')
             .data(this._nodes, (d) => {return d.id;});
 
         nodeSelection.exit().remove();
 
         nodeSelection.enter().append("g")
-            .attr("class", "node")
+            .classed('node', true)
+            .attr('id', (d) => d.id)
             .call(this.createNodes.bind(this))
           .merge(nodeSelection)
             .call(this.updateNodes.bind(this))
+            .call(this.updateNodePositions.bind(this));
+
+        // update edges ////////////////////////////////////////////////////////
+        const edgeSelection = graph.select('.edges')
+            .selectAll('path.edge:not(.dragged)')
+            .data(this._edges, (d) => {return `s${d.source},t${d.target}`;});
+
+        edgeSelection.exit().remove();
+
+        edgeSelection.enter().append('path')
+            .classed('edge', true)
+            .attr('id', (d) => {return `s${d.source},t${d.target}`;})
+          .merge(edgeSelection)
+            .call(this.updateEdges.bind(this))
+            .call(this.updateEdgePaths.bind(this));
     }
 
 
@@ -307,8 +327,30 @@ export default class GraphEditor extends HTMLElement {
     private updateNodes(nodeSelection) {
         nodeSelection.select('circle')
             .attr('fill', 'black')
-            .attr('cx', (d) => {d.x != null ? d.x : 0})
-            .attr('cy', (d) => {d.y != null ? d.y : 0})
+            .attr('cx', 0)
+            .attr('cy', 0)
             .attr('r', 5);
+    }
+
+    private updateNodePositions(nodeSelection) {
+        nodeSelection.attr('transform', (d) => {
+                const x = d.x != null ? d.x : 0;
+                const y = d.y != null ? d.y : 0;
+                return `translate(${x},${y})`;
+            });
+    }
+
+
+    private updateEdges(edgeSelection) {
+        edgeSelection.attr('stroke', 'black');
+    }
+
+    private updateEdgePaths(edgeSelection) {
+        edgeSelection.attr('d', (d) => {
+            const source = this._nodes.find((n) => n.id === d.source);
+            const target = this._nodes.find((n) => n.id === d.target);
+            console.log(source, target)
+            return this.edgeGenerator([source, target]);
+        });
     }
 }
