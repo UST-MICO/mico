@@ -11,6 +11,9 @@ import { ApiObject } from '../api/apiobject';
 })
 export class AppDetailComponent implements OnInit {
 
+    nodes = [{id: 1, title: 'A', x: 1, y: 1}, {id: 2, title: 'B', x: 10, y:10}];
+    edges = [{source: 1, target: 2}];
+
     constructor(
         private apiService: ApiService,
         private route: ActivatedRoute,

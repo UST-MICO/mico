@@ -4,9 +4,10 @@
 <mat-card class="ma2">
     <mat-tab-group>
         <mat-tab label="Overview">
-            App-Detail-Overview
-            <network-graph nodes="[]"></network-graph>
-
+            <div class="flex flex-column">
+                App-Detail-Overview
+                <network-graph class="flex-grow-1" [attr.nodes]="nodes|json" [attr.edges]="edges|json"></network-graph>
+            </div>
         </mat-tab>
         <mat-tab label="Deployment">
             App-Detail-Deployment...
