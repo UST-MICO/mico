@@ -12,7 +12,7 @@ import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NodeEntity
-public class Service extends ResourceSupport {
+public class Service {
     //mandatory fields
     @Id
     @GeneratedValue
@@ -58,7 +58,7 @@ public class Service extends ResourceSupport {
         this.description = description;
     }
 
-    public Long getSerivceId(){
+    public Long getId(){
         return id;
     }
 
