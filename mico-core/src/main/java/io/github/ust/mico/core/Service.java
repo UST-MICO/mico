@@ -1,18 +1,18 @@
 package io.github.ust.mico.core;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModelProperty;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.hateoas.ResourceSupport;
 
 import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NodeEntity
-public class Service {
+public class Service extends ResourceSupport {
     //mandatory fields
     @Id
     @GeneratedValue
@@ -58,7 +58,7 @@ public class Service {
         this.description = description;
     }
 
-    public Long getId(){
+    public Long getSerivceId(){
         return id;
     }
 
@@ -143,7 +143,7 @@ public class Service {
         this.lifecycle = lifecycle;
     }
 
-    public List<String> getLinks() {
+    public List<String> getServiceLinks() {
         return links;
     }
 
