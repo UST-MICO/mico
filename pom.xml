@@ -23,6 +23,7 @@
 
 	<modules>
 		<module>mico-core</module>
+		<module>mico-grapheditor</module>
 		<module>mico-admin</module>
 	</modules>
 
