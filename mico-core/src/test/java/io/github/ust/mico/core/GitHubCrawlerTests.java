@@ -33,7 +33,7 @@ public class GitHubCrawlerTests {
         Service service = crawler.crawlGitHubRepo(absoluteUri);
         serviceRepository.save(service);
         System.out.println(service.toString());
-        Service readService = serviceRepository.findByShortName(service.getShortName());
+        Service readService = serviceRepository.findByShortName(service.getShortName()).get(0);
         System.out.println(readService.toString());
         assertEquals(service.getShortName(),readService.getShortName());
         assertEquals(service.getDescription(),readService.getDescription());

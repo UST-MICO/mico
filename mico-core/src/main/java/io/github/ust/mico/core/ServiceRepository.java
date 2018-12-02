@@ -11,7 +11,7 @@ public interface ServiceRepository extends Neo4jRepository<Service, Long> {
 
     Service findByName(@Param("name") String name);
 
-    Service findByShortName(@Param("shortName") String shortName);
+    List<Service> findByShortName(@Param("shortName") String shortName);
 
     Service findByName(String name, @Depth int depth);
 

@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import javax.xml.ws.Response;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -35,8 +33,7 @@ public class ServiceController {
     @GetMapping()
     public ResponseEntity<Resources<Resource<Service>>> getServiceList() {
         List<Service> services = serviceRepository.findAll();
-        List<Resource<Service>> serviceResources = services.stream().map(service -> new Resource<>(service, getServiceLinks(service)))
-                .collect(Collectors.toList());
+        List<Resource<Service>> serviceResources = getServiceResourcesList(services);
         return ResponseEntity.ok(
                 new Resources<>(serviceResources,
                         linkTo(methodOn(ServiceController.class).getServiceList()).withSelfRel()));
@@ -49,6 +46,21 @@ public class ServiceController {
         return serviceOpt.map(service -> new Resource<>(service, getServiceLinks(service)))
                 .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
+
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/")
+    public ResponseEntity<Resources<Resource<Service>>> getVersionsOfaServiceList(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
+        List<Service> services = serviceRepository.findByShortName(shortName);
+        List<Resource<Service>> serviceResources = getServiceResourcesList(services);
+        return ResponseEntity.ok(
+                new Resources<>(serviceResources,
+                        linkTo(methodOn(ServiceController.class).getVersionsOfaServiceList(shortName)).withSelfRel()));
+    }
+
+    private List<Resource<Service>> getServiceResourcesList(List<Service> services) {
+        return services.stream().map(service -> new Resource<>(service, getServiceLinks(service)))
+                .collect(Collectors.toList());
+    }
+
 
     private Iterable<Link> getServiceLinks(Service service) {
         LinkedList<Link> links = new LinkedList<>();
