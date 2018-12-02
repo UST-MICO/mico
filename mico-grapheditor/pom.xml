@@ -67,7 +67,7 @@
 				    </execution>
 					<execution>
 						<phase>compile</phase>
-						<id>install angular app</id>
+						<id>install dependencies</id>
 						<goals>
 							<goal>npm</goal>
 						</goals>
@@ -81,9 +81,9 @@
 				<artifactId>maven-assembly-plugin</artifactId>
 				<configuration>
 					<descriptors>
-						<descriptor>mico-admin.xml</descriptor>
+						<descriptor>mico-grapheditor.xml</descriptor>
 					</descriptors>
-					<finalName>mico-admin</finalName>
+					<finalName>mico-grapheditor</finalName>
 					<appendAssemblyId>false</appendAssemblyId>
 				</configuration>
 				<executions>
@@ -97,6 +97,6 @@
 				</executions>
 			</plugin>
 		</plugins>
-		<finalName>mico-admin</finalName>
+		<finalName>mico-grapheditor</finalName>
 	</build>
 </project>
