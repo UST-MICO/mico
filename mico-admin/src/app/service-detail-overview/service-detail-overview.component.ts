@@ -39,7 +39,6 @@ export class ServiceDetailOverviewComponent implements OnInit {
         this.paramSubscription = this.route.params.subscribe(params => {
             this.update(parseInt(params['id'], 10));
         });
-
     }
 
     update(id) {
@@ -116,6 +115,10 @@ export class ServiceDetailOverviewComponent implements OnInit {
             console.log(result);
         });
         // TODO use result in a useful way
+    }
+
+    deleteDependencie(id) {
+        console.log("delete " + id)
     }
 
 }

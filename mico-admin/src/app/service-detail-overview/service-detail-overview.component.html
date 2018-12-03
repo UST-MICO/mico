@@ -98,10 +98,19 @@
                         <mat-divider></mat-divider>
                         <!-- list internal dependencies-->
                         <div *ngFor="let dependencie of internalDependencies">
-                            <mat-list-item [routerLink]="['/service-detail/', dependencie.id]">
-                                <!-- Todo add click event and add status-->
-                                {{dependencie.name}}
-                            </mat-list-item>
+                            <div class="flex">
+                                <div class="flex-grow-1">
+                                    <mat-list-item [routerLink]="['/service-detail/', dependencie.id]">
+                                        <!-- Todo add click event and add status-->
+                                        <span mat-line [routerLink]="['/service-detail/', dependencie.id]">{{dependencie.name}}</span>
+                                    </mat-list-item>
+                                </div>
+                                <div class="w-20">
+                                    <mat-list-item>
+                                        <mat-icon (click)="deleteDependencie(dependencie.id)">delete</mat-icon>
+                                    </mat-list-item>
+                                </div>
+                            </div>
                             <mat-divider></mat-divider>
                         </div>
 
@@ -116,7 +125,8 @@
                             <!-- todo reload does not work properly (url changes, lists change not -->
                             <mat-list-item [routerLink]="['/service-detail/', dependencie.id]">
                                 <!-- Todo add click event and add status -->
-                                {{dependencie.name}}
+                                <span mat-line>{{dependencie.name}}</span>
+                                <mat-icon>delete</mat-icon>
                             </mat-list-item>
                             <mat-divider></mat-divider>
                         </div>
