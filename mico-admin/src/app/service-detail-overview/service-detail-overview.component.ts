@@ -5,7 +5,6 @@ import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
 import { ServicePickerComponent } from '../dialogs/service-picker/service-picker.component';
 import { MatDialog } from '@angular/material';
-import { CreateServiceDialogComponent } from '../dialogs/create-service/create-service.component';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 
 
@@ -91,7 +90,7 @@ export class ServiceDetailOverviewComponent implements OnInit {
         return return_object;
     }
 
-    addInternalDependencie() {
+    addInternalDependency() {
         const dialogRef = this.dialog.open(ServicePickerComponent, {
             data: {
                 filter: "internal",
@@ -105,7 +104,7 @@ export class ServiceDetailOverviewComponent implements OnInit {
         // TODO use result in a useful way
     }
 
-    addExternalDependencie() {
+    addExternalDependency() {
         const dialogRef = this.dialog.open(ServicePickerComponent, {
             data: {
                 filter: "external",
@@ -119,7 +118,7 @@ export class ServiceDetailOverviewComponent implements OnInit {
         // TODO use result in a useful way
     }
 
-    deleteDependencie(id) {
+    deleteDependency(id) {
 
         const dialogRef = this.dialog.open(YesNoDialogComponent, {
             data: {

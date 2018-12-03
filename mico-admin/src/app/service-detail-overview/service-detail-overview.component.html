@@ -82,56 +82,83 @@
                 <mat-card-content>
                     <mat-action-list>
                         <mat-divider></mat-divider>
-                        <mat-list-item (click)="addProvides()">
+                        <div class="flex" (click)="addProvides()">
                             <!-- TODO method not existing yet-->
-                            <span mat-line><b>Provides</b></span>
-                            <mat-icon>add</mat-icon>
-                        </mat-list-item>
+                            <div class="flex-grow-1">
+                                <mat-list-item>
+                                    <span mat-line><b>Provides</b></span>
+                                </mat-list-item>
+                            </div>
+                            <div class="w-20">
+                                <mat-list-item>
+                                    <mat-icon>add</mat-icon>
+                                </mat-list-item>
+                            </div>
+                        </div>
                         <mat-divider></mat-divider>
                         <!-- TODO list provides -->
 
-                        <mat-list-item (click)="addInternalDependencie()">
-                            <!-- TODO method not existing yet-->
-                            <span mat-line><b>Dependencies (internal) </b></span>
-                            <mat-icon>add</mat-icon>
-                        </mat-list-item>
+                        <!-- INTERNAL DEPENDENCIES-->
+                        <div class="flex" (click)="addInternalDependency()">
+                            <div class="flex-grow-1">
+                                <mat-list-item>
+                                    <span mat-line><b>Dependencies (internal) </b></span>
+                                </mat-list-item>
+                            </div>
+                            <div class="w-20">
+                                <mat-list-item>
+                                    <mat-icon>add</mat-icon>
+                                </mat-list-item>
+                            </div>
+                        </div>
                         <mat-divider></mat-divider>
                         <!-- list internal dependencies-->
                         <div *ngFor="let dependencie of internalDependencies">
                             <div class="flex">
                                 <div class="flex-grow-1">
                                     <mat-list-item [routerLink]="['/service-detail/', dependencie.id]">
-                                        <!-- Todo add click event and add status-->
                                         <span mat-line [routerLink]="['/service-detail/', dependencie.id]">{{dependencie.name}}</span>
                                     </mat-list-item>
                                 </div>
                                 <div class="w-20">
                                     <mat-list-item>
-                                        <mat-icon (click)="deleteDependencie(dependencie.id)">delete</mat-icon>
+                                        <mat-icon (click)="deleteDependency(dependencie.id)">delete</mat-icon>
                                     </mat-list-item>
                                 </div>
                             </div>
                             <mat-divider></mat-divider>
                         </div>
 
-                        <mat-list-item (click)="addExternalDependencie()">
-                            <!-- TODO method not existing yet-->
-                            <span mat-line><b>Dependencies (external)</b></span>
-                            <mat-icon>add</mat-icon>
-                        </mat-list-item>
+                        <!-- EXTERNAL DEPENDENCIES-->
+                        <div class="flex" (click)="addExternalDependency()">
+                            <div class="flex-grow-1">
+                                <mat-list-item (click)="addExternalDependency()">
+                                    <span mat-line><b>Dependencies (external) </b></span>
+                                </mat-list-item>
+                            </div>
+                            <div class="w-20">
+                                <mat-list-item>
+                                    <mat-icon>add</mat-icon>
+                                </mat-list-item>
+                            </div>
+                        </div>
                         <mat-divider></mat-divider>
                         <!-- list external dependencies-->
                         <div *ngFor="let dependencie of externalDependencies">
-                            <!-- todo reload does not work properly (url changes, lists change not -->
-                            <mat-list-item [routerLink]="['/service-detail/', dependencie.id]">
-                                <!-- Todo add click event and add status -->
-                                <span mat-line>{{dependencie.name}}</span>
-                                <mat-icon>delete</mat-icon>
-                            </mat-list-item>
+                            <div class="flex">
+                                <div class="flex-grow-1">
+                                    <mat-list-item [routerLink]="['/service-detail/', dependencie.id]">
+                                        <span mat-line [routerLink]="['/service-detail/', dependencie.id]">{{dependencie.name}}</span>
+                                    </mat-list-item>
+                                </div>
+                                <div class="w-20">
+                                    <mat-list-item>
+                                        <mat-icon (click)="deleteDependency(dependencie.id)">delete</mat-icon>
+                                    </mat-list-item>
+                                </div>
+                            </div>
                             <mat-divider></mat-divider>
                         </div>
-
-
                     </mat-action-list>
                 </mat-card-content>
             </mat-card>

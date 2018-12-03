@@ -119,6 +119,26 @@ export class ApiService {
                 'status': 'problem',
                 'external': true,
             },
+            {
+                'id': '5',
+                'name': 'Internal Service',
+                'shortName': 'int.service',
+                'description': 'A generic service',
+                'internalDependencies': [],
+                'externalDependencies': [6],
+                'status': 'online',
+                'external': false,
+            },
+            {
+                'id': '6',
+                'name': 'External Service',
+                'shortName': 'ext.service',
+                'description': 'A generic service',
+                'internalDependencies': [5],
+                'externalDependencies': [],
+                'status': 'problem',
+                'external': true,
+            },
         ];
 
         stream.next(freezeObject(mockData));
@@ -219,6 +239,24 @@ export class ApiService {
                 'shortName': 'ext.service',
                 'description': 'A generic service',
                 'internalDependencies': [],
+                'externalDependencies': [],
+                'status': 'problem'
+            },
+            {
+                'id': '5',
+                'name': 'Internal Service',
+                'shortName': 'int.service',
+                'description': 'A generic service',
+                'internalDependencies': [],
+                'externalDependencies': [6],
+                'status': 'online'
+            },
+            {
+                'id': '6',
+                'name': 'External Service',
+                'shortName': 'ext.service',
+                'description': 'A generic service',
+                'internalDependencies': [5],
                 'externalDependencies': [],
                 'status': 'problem'
             },
