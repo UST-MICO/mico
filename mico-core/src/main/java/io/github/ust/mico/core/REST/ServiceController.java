@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +27,7 @@ public class ServiceController {
 
     public static final String PATH_VARIABLE_SHORT_NAME = "shortName";
     public static final String PATH_VARIABLE_VERSION = "version";
+    public static final String PATH_VARIABLE_ID = "id";
 
     @Autowired
     private ServiceRepository serviceRepository;
@@ -41,19 +43,20 @@ public class ServiceController {
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     //TODO Add validation to path variables
-    public ResponseEntity<Resource<Service>> getService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName, @PathVariable(PATH_VARIABLE_VERSION) String version) {
+    public ResponseEntity<Resource<Service>> getServiceByShortNameAndVersion(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                             @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         return serviceOpt.map(service -> new Resource<>(service, getServiceLinks(service)))
                 .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/")
-    public ResponseEntity<Resources<Resource<Service>>> getVersionsOfaServiceList(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
+    public ResponseEntity<Resources<Resource<Service>>> getVersionsOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
         List<Service> services = serviceRepository.findByShortName(shortName);
         List<Resource<Service>> serviceResources = getServiceResourcesList(services);
         return ResponseEntity.ok(
                 new Resources<>(serviceResources,
-                        linkTo(methodOn(ServiceController.class).getVersionsOfaServiceList(shortName)).withSelfRel()));
+                        linkTo(methodOn(ServiceController.class).getVersionsOfService(shortName)).withSelfRel()));
     }
 
     private List<Resource<Service>> getServiceResourcesList(List<Service> services) {
@@ -64,7 +67,7 @@ public class ServiceController {
 
     private Iterable<Link> getServiceLinks(Service service) {
         LinkedList<Link> links = new LinkedList<>();
-        links.add(linkTo(methodOn(ServiceController.class).getService(service.getShortName(), service.getVersion())).withSelfRel());
+        links.add(linkTo(methodOn(ServiceController.class).getServiceByShortNameAndVersion(service.getShortName(), service.getVersion())).withSelfRel());
         links.add(linkTo(methodOn(ServiceController.class).getServiceList()).withRel("services"));
         return links;
     }
