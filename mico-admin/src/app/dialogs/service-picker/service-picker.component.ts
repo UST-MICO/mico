@@ -68,7 +68,7 @@ export class ServicePickerComponent implements OnInit {
         return this.service;
     }
 
-    private filterElement(element) {
+    private filterElement = (element): boolean => {
 
         var val = false;
 
