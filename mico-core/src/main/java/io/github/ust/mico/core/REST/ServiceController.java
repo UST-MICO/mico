@@ -8,10 +8,7 @@ import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -25,9 +22,9 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 @RequestMapping(value = "/services", produces = MediaTypes.HAL_JSON_VALUE)
 public class ServiceController {
 
-    public static final String PATH_VARIABLE_SHORT_NAME = "shortName";
-    public static final String PATH_VARIABLE_VERSION = "version";
-    public static final String PATH_VARIABLE_ID = "id";
+    private static final String PATH_VARIABLE_SHORT_NAME = "shortName";
+    private static final String PATH_VARIABLE_VERSION = "version";
+    private static final String PATH_VARIABLE_ID = "id";
 
     @Autowired
     private ServiceRepository serviceRepository;
@@ -58,7 +55,7 @@ public class ServiceController {
                 new Resources<>(serviceResources,
                         linkTo(methodOn(ServiceController.class).getVersionsOfService(shortName)).withSelfRel()));
     }
-    
+
     //TODO: Ambiguous endpoint with /services/shortName
     //@GetMapping("/{" + PATH_VARIABLE_ID + "}/")
     public ResponseEntity<Resource<Service>> getServiceById(@PathVariable(PATH_VARIABLE_ID) Long id){
@@ -66,6 +63,16 @@ public class ServiceController {
 
         return serviceOpt.map(service -> new Resource<>(service, getServiceLinks(service)))
                 .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    public ResponseEntity<Resource<Service>> createService(@RequestBody Service newService){
+        Service savedService = serviceRepository.save(newService);
+
+        return ResponseEntity
+                .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+                .body(new Resource<>(newService,getServiceLinks(newService)));
+
     }
 
     private List<Resource<Service>> getServiceResourcesList(List<Service> services) {
