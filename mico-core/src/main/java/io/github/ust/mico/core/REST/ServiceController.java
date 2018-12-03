@@ -58,6 +58,15 @@ public class ServiceController {
                 new Resources<>(serviceResources,
                         linkTo(methodOn(ServiceController.class).getVersionsOfService(shortName)).withSelfRel()));
     }
+    
+    //TODO: Ambiguous endpoint with /services/shortName
+    //@GetMapping("/{" + PATH_VARIABLE_ID + "}/")
+    public ResponseEntity<Resource<Service>> getServiceById(@PathVariable(PATH_VARIABLE_ID) Long id){
+        Optional<Service> serviceOpt = serviceRepository.findById(id);
+
+        return serviceOpt.map(service -> new Resource<>(service, getServiceLinks(service)))
+                .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    }
 
     private List<Resource<Service>> getServiceResourcesList(List<Service> services) {
         return services.stream().map(service -> new Resource<>(service, getServiceLinks(service)))
