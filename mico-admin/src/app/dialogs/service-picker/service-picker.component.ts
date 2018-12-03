@@ -1,9 +1,8 @@
 import { Component, OnInit, Inject } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { Observable, Subscription } from 'rxjs';
-import { map, startWith } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 import { ApiService } from 'src/app/api/api.service';
-import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 
 
 enum FilterTypes {
@@ -28,8 +27,7 @@ export class ServicePickerComponent implements OnInit {
 
     servicePickerForm = new FormControl();
     picker = new FormControl();
-    options: string[] = [];
-    filteredOptions: Observable<string[]>;
+    options: any[] = [];
 
     constructor(public dialogRef: MatDialogRef<ServicePickerComponent>, @Inject(MAT_DIALOG_DATA) public data: any, private apiService: ApiService) {
 
@@ -44,12 +42,6 @@ export class ServicePickerComponent implements OnInit {
 
     ngOnInit() {
 
-        this.filteredOptions = this.picker.valueChanges
-            .pipe(
-                startWith(''),
-                map(value => this._filter(value))
-            );
-
         // get the list of services
         this.serviceSubscription = this.apiService.getServices()
             .subscribe(services => this.serviceList = services);
@@ -59,24 +51,18 @@ export class ServicePickerComponent implements OnInit {
         const tempList: string[] = [];
         this.serviceList.forEach(element => {
             if (this.filter == FilterTypes.None) {
-                tempList.push(element.name);
+                tempList.push(element);
             } else if (this.filter == FilterTypes.Internal) {
                 if (!element.external) {
-                    tempList.push(element.name);
+                    tempList.push(element);
                 }
             } else if (this.filter == FilterTypes.External) {
                 if (element.external) {
-                    tempList.push(element.name);
+                    tempList.push(element);
                 }
             }
         });
         this.options = tempList;
-    }
-
-    private _filter(value: string): string[] {
-        const filterValue = value.toLowerCase();
-
-        return this.options.filter(option => option.toLowerCase().includes(filterValue));
     }
 
     input() {

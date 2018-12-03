@@ -1,13 +1,12 @@
 <h2 mat-dialog-title>Pick a Service</h2>
 <mat-dialog-content style="min-width: 16rem">
-    *List of services*
     <form>
         <mat-form-field>
             <input type="text" matInput [formControl]="servicePickerForm" [matAutocomplete]="auto" [(ngModel)]="service">
         </mat-form-field>
 
         <mat-autocomplete #auto="matAutocomplete">
-            <mat-option *ngFor="let option of options" [value]="option">{{option}}</mat-option>
+            <mat-option *ngFor="let option of options" [value]="option.name">{{option.name}}</mat-option>
         </mat-autocomplete>
     </form>
 

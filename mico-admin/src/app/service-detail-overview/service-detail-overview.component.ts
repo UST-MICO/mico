@@ -108,7 +108,7 @@ export class ServiceDetailOverviewComponent implements OnInit {
         dialogRef.afterClosed().subscribe(result => {
             console.log(result);
         });
-        // TODO use result in a useful way and replace CreateServiceDialog...
+        // TODO use result in a useful way
     }
 
 }
