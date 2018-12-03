@@ -39,6 +39,7 @@ import { CreateServiceDialogComponent } from './dialogs/create-service/create-se
 import { MicoFormBooleanComponent } from './forms/mico-form-boolean/mico-form-boolean.component';
 import { MicoFormNumberComponent } from './forms/mico-form-number/mico-form-number.component';
 import { ServicePickerComponent } from './dialogs/service-picker/service-picker.component';
+import { YesNoDialogComponent } from './dialogs/yes-no-dialog/yes-no-dialog.component';
 
 
 @NgModule({
@@ -61,10 +62,13 @@ import { ServicePickerComponent } from './dialogs/service-picker/service-picker.
         MicoFormBooleanComponent,
         MicoFormNumberComponent,
         ServicePickerComponent,
+        YesNoDialogComponent,
     ],
     entryComponents: [
+        // dialogs
         CreateServiceDialogComponent,
         ServicePickerComponent,
+        YesNoDialogComponent,
     ],
     imports: [
         BrowserModule,

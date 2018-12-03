@@ -6,6 +6,7 @@ import { ApiObject } from '../api/apiobject';
 import { ServicePickerComponent } from '../dialogs/service-picker/service-picker.component';
 import { MatDialog } from '@angular/material';
 import { CreateServiceDialogComponent } from '../dialogs/create-service/create-service.component';
+import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 
 
 @Component({
@@ -84,6 +85,7 @@ export class ServiceDetailOverviewComponent implements OnInit {
         const return_object = {
             'id': id,
             'name': service_object.name,
+            'shortName': service_object.shortName,
             'status': service_object.status,
         };
         return return_object;
@@ -118,7 +120,20 @@ export class ServiceDetailOverviewComponent implements OnInit {
     }
 
     deleteDependencie(id) {
-        console.log("delete " + id)
+
+        const dialogRef = this.dialog.open(YesNoDialogComponent, {
+            data: {
+                object: this.getServiceMetaData(id).shortName,
+                question: 'deleteDependency',
+            }
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+                console.log("delete " + id)
+                // TODO really delete the dependency
+            }
+        });
     }
 
 }
