@@ -22,6 +22,7 @@ export class ServicePickerComponent implements OnInit {
     service;
     serviceList;
     filter = FilterTypes.None;
+    exisitingDependencies: number[] = [];
 
     private serviceSubscription: Subscription;
 
@@ -38,6 +39,12 @@ export class ServicePickerComponent implements OnInit {
             this.filter = FilterTypes.External;
         }
 
+        data.exisitingDependencies.forEach(element => {
+            this.exisitingDependencies.push(parseInt(element.id, 10));
+        });
+        console.log(data.serviceId);
+        this.exisitingDependencies.push(data.serviceId);
+        console.log(this.exisitingDependencies);
     }
 
     ngOnInit() {
@@ -49,23 +56,39 @@ export class ServicePickerComponent implements OnInit {
         // fill options with the service names
         const tempList: string[] = [];
         this.serviceList.forEach(element => {
-            if (this.filter == FilterTypes.None) {
+            if (this.filterElement(element)) {
                 tempList.push(element);
-            } else if (this.filter == FilterTypes.Internal) {
-                if (!element.external) {
-                    tempList.push(element);
-                }
-            } else if (this.filter == FilterTypes.External) {
-                if (element.external) {
-                    tempList.push(element);
-                }
             }
+
         });
         this.options = tempList;
     }
 
     input() {
         return this.service;
+    }
+
+    private filterElement(element) {
+
+        var val = false;
+
+        if (!this.exisitingDependencies.includes(parseInt(element.id, 10))) {
+            if (this.filter == FilterTypes.None) {
+                val = true;
+            } else if (this.filter == FilterTypes.Internal) {
+                if (!element.external) {
+                    val = true;
+                }
+            } else if (this.filter == FilterTypes.External) {
+                if (element.external) {
+                    val = true;
+                }
+            } else {
+                val = false;
+            }
+        }
+        return val;
+
     }
 
 }

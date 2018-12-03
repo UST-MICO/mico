@@ -46,6 +46,9 @@ export class ServiceDetailOverviewComponent implements OnInit {
         if (id === this.id) {
             return;
         } else {
+
+            this.id = id;
+
             if (this.serviceSubscription != null) {
                 this.serviceSubscription.unsubscribe();
             }
@@ -90,7 +93,9 @@ export class ServiceDetailOverviewComponent implements OnInit {
     addInternalDependencie() {
         const dialogRef = this.dialog.open(ServicePickerComponent, {
             data: {
-                filter: "internal"
+                filter: "internal",
+                exisitingDependencies: this.internalDependencies,
+                serviceId: this.id,
             }
         });
         dialogRef.afterClosed().subscribe(result => {
@@ -102,7 +107,9 @@ export class ServiceDetailOverviewComponent implements OnInit {
     addExternalDependencie() {
         const dialogRef = this.dialog.open(ServicePickerComponent, {
             data: {
-                filter: "external"
+                filter: "external",
+                exisitingDependencies: this.externalDependencies,
+                serviceId: this.id,
             }
         });
         dialogRef.afterClosed().subscribe(result => {

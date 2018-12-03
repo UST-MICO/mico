@@ -7,7 +7,7 @@
 
         <mat-autocomplete #auto="matAutocomplete">
             <mat-option *ngFor="let option of options" style="height:45pt; line-height:initial" [value]="option.shortName">
-                <b>{{option.name}}</b>, {{option.id}} (<i>{{option.shortName}}</i>)<br>{{option.description}}
+                <b>{{option.name}}</b> (<i>{{option.shortName}}</i>)<br>{{option.description}}
             </mat-option>
         </mat-autocomplete>
     </form>
