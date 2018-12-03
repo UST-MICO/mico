@@ -54,7 +54,7 @@
             <!-- editable version -->
 
             <ng-container *ngIf="edit">
-                <mico-form [modelUrl]="'local/editService'" (data)="serviceData = $event"></mico-form>
+                <mico-form [modelUrl]="'local/servicePUT'" (data)="serviceData = $event" [startData]="service"></mico-form>
                 <div class="ma1 pa1">
                     <span class="ma1">
                         <button  mat-raised-button>Save</button>
