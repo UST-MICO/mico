@@ -1,4 +1,4 @@
-import {select, scaleLinear, zoom, zoomIdentity, zoomTransform, event, line, curveLinear} from "d3";
+import {select, scaleLinear, zoom, zoomIdentity, zoomTransform, event, line, curveStep, drag} from "d3";
 
 
 export default class GraphEditor extends HTMLElement {
@@ -17,21 +17,37 @@ export default class GraphEditor extends HTMLElement {
     private contentMinWidth = 0;
     private contentMaxWidth = 1;
 
-    private isInteractive: boolean = true;
+    private hovered: Set<any> = new Set();
+
     private _nodes: any[];
     private _edges: any[];
+    private _mode: string = 'display'; // interaction mode ['display', 'layout', 'link', 'select']
+
+    private interactionStateData: {
+        source?: any,
+        target?: any,
+        selected?: Set<any>,
+        fromMode?: string,
+        [property: string]: any
+    } = null;
+
+    private get isInteractive(): boolean {
+        return (this._mode !== 'display') && !(this._mode === 'select' && this.interactionStateData.fromMode === 'display');
+    }
 
     constructor() {
         super();
         this._nodes = [];
         this._edges = [];
         this.initialized = false;
-        this.edgeGenerator = line().x((d) => d.x).y((d) => d.y).curve(curveLinear);
+        this.edgeGenerator = line().x((d) => d.x).y((d) => d.y).curve(curveStep);
 
-        this.mutationObserver = new MutationObserver(this.completeRender.bind(this));
+        this.mutationObserver = new MutationObserver(() => {
+            this.completeRender(true);
+        });
     }
 
-    static get observedAttributes() { return ['nodes', 'edges']; }
+    static get observedAttributes() { return ['nodes', 'edges', 'mode', 'interactive']; }
 
     attributeChangedCallback(name, oldValue, newValue: string) {
         if (name === 'nodes') {
@@ -44,8 +60,62 @@ export default class GraphEditor extends HTMLElement {
             console.log('Edges ' + newValue);
             this._edges = JSON.parse(newValue);
         }
+        if (name === 'interactive') {
+            if (newValue.toLowerCase() !== 'true') {
+                this.updateMode('display');
+            }
+            this.completeRender();
+        }
+        if (name === 'mode') {
+            this.updateMode(newValue.toLowerCase());
+        }
         this.completeRender();
-        this.updateLayout();
+        this.zoomToBoundingBox();
+    }
+
+    /**
+     * Set the graph interaction mode and cleanup temp data from old interaction mode.
+     *
+     * @param mode interaction mode (one of ["display", "layout", "link", "select"])
+     */
+    updateMode(mode: string) {
+        if (mode === this._mode) {
+            return;
+        }
+        if (mode === 'display') {
+            if (this._mode != 'display') {
+                this.interactionStateData = null;
+                this._mode = 'display';
+                this.completeRender();
+            }
+        } else if (mode === 'layout') {
+            if (this._mode != 'layout') {
+                this.interactionStateData = null;
+                this._mode = 'layout';
+                this.completeRender();
+            }
+        } else if (mode === 'link') {
+            if (this._mode != 'link') {
+                this.interactionStateData = {
+                    source: null,
+                    target: null,
+                    allowedTargets: new Set(),
+                }
+                this._mode = 'link';
+                this.completeRender();
+            }
+        } else if (mode === 'select') {
+            if (this._mode != 'select') {
+                this.interactionStateData = {
+                    selected: new Set(),
+                    fromMode: this._mode,
+                }
+                this._mode = 'select';
+                this.completeRender();
+            }
+        } else {
+            console.log(`Wrong mode "${mode}". Allowed are: ["display", "layout", "link", "select"]`)
+        }
     }
 
     connectedCallback() {
@@ -54,15 +124,18 @@ export default class GraphEditor extends HTMLElement {
         }
         this.initialize();
         this.completeRender();
-        this.updateLayout();
+        this.zoomToBoundingBox();
 
         this.mutationObserver.observe(this, {
             childList: true,
             characterData: true,
-            subtree: true
+            subtree: true,
         });
     }
 
+    /**
+     * Initialize the shadow dom with a drawing svg.
+     */
     initialize() {
         if (!this.initialized) {
             this.initialized = true;
@@ -221,10 +294,10 @@ export default class GraphEditor extends HTMLElement {
 
             graph.append('g')
                 .attr('class', 'edges')
-                .attr('filter', 'url(#shadow-edge)');
+            //    .attr('filter', 'url(#shadow-edge)') <- performance drain...
             //  .append('circle')
-            //    .attr('cx', 0)
-            //    .attr('cy', 0)
+            //    .attr('cx', -100)
+            //    .attr('cy', -100)
             //    .attr('r', 0.1)
             //    .attr('fill', '#FFFFFF'); // fix for shadow of first line
 
@@ -253,7 +326,10 @@ export default class GraphEditor extends HTMLElement {
         this.xScale.range([0, Math.max(this.contentMaxWidth, this.contentMinWidth)]);
     }
 
-    private updateLayout() {
+    /**
+     * Zooms and pans the graph to get all content inside the visible area.
+     */
+    private zoomToBoundingBox() {
         if (! this.initialized || ! this.isConnected) {
             return;
         }
@@ -278,7 +354,10 @@ export default class GraphEditor extends HTMLElement {
         svg.call(this.zoom.transform, newZoom);
     }
 
-    completeRender() {
+    /**
+     * Render all changes of the data to the graph.
+     */
+    completeRender(updateTemplates: boolean=false) {
         if (! this.initialized || ! this.isConnected) {
             return;
         }
@@ -289,6 +368,10 @@ export default class GraphEditor extends HTMLElement {
         const graph = svg.select("g.zoom-group");
 
         // update nodes ////////////////////////////////////////////////////////
+        if (updateTemplates) {
+            graph.select('.nodes').selectAll('g.node').remove();
+        }
+
         const nodeSelection = graph.select('.nodes')
             .selectAll('g.node')
             .data(this._nodes, (d) => {return d.id;});
@@ -301,9 +384,26 @@ export default class GraphEditor extends HTMLElement {
             .call(this.createNodes.bind(this))
           .merge(nodeSelection)
             .call(this.updateNodes.bind(this))
-            .call(this.updateNodePositions.bind(this));
+            .call(this.updateNodePositions.bind(this))
+            .on('mouseover', (d) => {this.onNodeEnter.bind(this)(d);})
+            .on('mouseout', (d) => {this.onNodeLeave.bind(this)(d);})
+            .on('click', (d) => {this.onNodeClick.bind(this)(d);});
+
+        if (this.isInteractive) {
+            nodeSelection.call(drag().on('drag', (d) => {
+                d.x = event.x;
+                d.y = event.y;
+                this.updateGraphPositions.bind(this)();
+            }));
+        } else {
+            nodeSelection.on('.drag', null);
+        }
 
         // update edges ////////////////////////////////////////////////////////
+        if (updateTemplates) {
+            graph.select('.edges').selectAll('g.edge:not(.dragged)').remove();
+        }
+
         const edgeSelection = graph.select('.edges')
             .selectAll('path.edge:not(.dragged)')
             .data(this._edges, (d) => {return `s${d.source},t${d.target}`;});
@@ -312,6 +412,7 @@ export default class GraphEditor extends HTMLElement {
 
         edgeSelection.enter().append('path')
             .classed('edge', true)
+            .attr('fill', 'none')
             .attr('id', (d) => {return `s${d.source},t${d.target}`;})
           .merge(edgeSelection)
             .call(this.updateEdges.bind(this))
@@ -319,11 +420,20 @@ export default class GraphEditor extends HTMLElement {
     }
 
 
+    /**
+     * Add nodes to graph.
+     *
+     * @param nodeSelection d3 selection of nodes to add with bound data
+     */
     private createNodes(nodeSelection) {
         nodeSelection.append('circle');
     }
 
-
+    /**
+     * Update existing nodes.
+     *
+     * @param nodeSelection d3 selection of nodes to update with bound data
+     */
     private updateNodes(nodeSelection) {
         nodeSelection.select('circle')
             .attr('fill', 'black')
@@ -332,6 +442,11 @@ export default class GraphEditor extends HTMLElement {
             .attr('r', 5);
     }
 
+    /**
+     * Update node positions.
+     *
+     * @param nodeSelection d3 selection of nodes to update with bound data
+     */
     private updateNodePositions(nodeSelection) {
         nodeSelection.attr('transform', (d) => {
                 const x = d.x != null ? d.x : 0;
@@ -340,17 +455,182 @@ export default class GraphEditor extends HTMLElement {
             });
     }
 
-
+    /**
+     * Update existing edges.
+     *
+     * @param edgeSelection d3 selection of edges to update with bound data
+     */
     private updateEdges(edgeSelection) {
         edgeSelection.attr('stroke', 'black');
     }
 
+    /**
+     * Update existing edge path.
+     *
+     * @param edgeSelection d3 selection of edges to update with bound data
+     */
     private updateEdgePaths(edgeSelection) {
         edgeSelection.attr('d', (d) => {
             const source = this._nodes.find((n) => n.id === d.source);
             const target = this._nodes.find((n) => n.id === d.target);
-            console.log(source, target)
             return this.edgeGenerator([source, target]);
         });
+    }
+
+    /**
+     * UUpdate all node positions and edge paths.
+     */
+    private updateGraphPositions() {
+        const svg = this.getSvg();
+
+        const graph = svg.select("g.zoom-group");
+        const nodeSelection = graph.select('.nodes')
+            .selectAll('g.node')
+            .data(this._nodes, (d) => {return d.id;})
+            .call(this.updateNodePositions.bind(this));
+        const edgeSelection = graph.select('.edges')
+            .selectAll('path.edge:not(.dragged)')
+            .data(this._edges, (d) => {return `s${d.source},t${d.target}`;})
+            .call(this.updateEdgePaths.bind(this));
+    }
+
+    /**
+     * Callback on nodes for mouseEnter event.
+     *
+     * @param nodeDatum Corresponding datum of node
+     */
+    private onNodeEnter(nodeDatum) {
+        this.hovered.add(nodeDatum.id);
+        if (this._mode === 'link' && this.interactionStateData.source != null) {
+            this.interactionStateData.target = nodeDatum.id;
+        }
+        this.updateHighligts();
+    }
+
+    /**
+     * Callback on nodes for mouseLeave event.
+     *
+     * @param nodeDatum Corresponding datum of node
+     */
+    private onNodeLeave(nodeDatum) {
+        this.hovered.delete(nodeDatum.id);
+        if (this._mode === 'link' && this.interactionStateData.target === nodeDatum.id) {
+            this.interactionStateData.target = null;
+        }
+        this.updateHighligts();
+    }
+
+    /**
+     * Callback on nodes for click event.
+     *
+     * @param nodeDatum Corresponding datum of node
+     */
+    private onNodeClick(nodeDatum) {
+        if (this._mode === 'link') {
+            return this.onNodeSelectLink(nodeDatum);
+        }
+        if (this._mode !== 'select') {
+            this.updateMode('select');
+            this.interactionStateData.selected.add(nodeDatum.id);
+            return;
+        }
+        if (this.interactionStateData.selected.has(nodeDatum.id)) {
+            this.interactionStateData.selected.delete(nodeDatum.id);
+            if (this.interactionStateData.selected.size <= 0) {
+                this.updateMode(this.interactionStateData.fromMode);
+            }
+        } else {
+            this.interactionStateData.selected.add(nodeDatum.id);
+        }
+    }
+
+    /**
+     * Selection logik in 'link' mode.
+     *
+     * @param nodeDatum Corresponding datum of node
+     */
+    private onNodeSelectLink(nodeDatum) {
+        if (this.interactionStateData.source == null) {
+            this.interactionStateData.source = nodeDatum.id;
+            return;
+        }
+        if (nodeDatum.id === this.interactionStateData.source) {
+            // doesn't handle edges to self
+            this.interactionStateData.source = null;
+            this.interactionStateData.target = null;
+            return;
+        }
+        this.interactionStateData.target = nodeDatum.id;
+        const oldEdge = this._edges.findIndex((e) => {
+            return (e.source === this.interactionStateData.source) &&
+            (e.target === this.interactionStateData.target);
+        });
+        if (oldEdge !== -1) {
+            this._edges.splice(oldEdge, 1);
+        } else {
+            this._edges.push({
+                source: this.interactionStateData.source,
+                target: this.interactionStateData.target,
+            });
+        }
+        this.completeRender();
+        this.interactionStateData.source = null;
+        this.interactionStateData.target = null;
+    }
+
+    /**
+     * Calculate highlighted nodes and update them accordingly.
+     */
+    private updateHighligts() {
+        const svg = this.getSvg();
+
+        const graph = svg.select("g.zoom-group");
+        let nodeSelection = graph.select('.nodes')
+            .selectAll('g.node')
+            .data(this._nodes, (d) => {return d.id;});
+
+        const isHighlighted = (d) => {
+            if (this.hovered.has(d.id)) {
+                return true;
+            }
+            if (this._mode === 'select') {
+                const selected = this.interactionStateData.selected;
+                if (selected != null) {
+                    return selected.has(d.id);
+                }
+            }
+            if (this._mode === 'link') {
+                if (this.interactionStateData.source != null) {
+                    if (d.id === this.interactionStateData.source) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        nodeSelection.filter((d) => !isHighlighted(d))
+            .call(this.unHighlightNodes.bind(this))
+        nodeSelection.filter(isHighlighted)
+            .call(this.highlightNodes.bind(this));
+    }
+
+    /**
+     * Remove highlight from existing nodes.
+     *
+     * @param nodeSelection d3 selection of nodes to update with bound data
+     */
+    private unHighlightNodes(nodeSelection) {
+        nodeSelection.select('circle').attr('fill', 'black');
+    }
+
+
+    /**
+     * Add highlight from existing nodes.
+     *
+     * @param nodeSelection d3 selection of nodes to update with bound data
+     */
+    private highlightNodes(nodeSelection) {
+        nodeSelection.select('circle').attr('fill', 'blue');
     }
 }
