@@ -20,6 +20,12 @@ export class MicoFormComponent implements OnInit, OnChanges {
     @Input() filter: string[] = [];
     @Input() isBlacklist: boolean = false;
     @Input() debug: boolean = false;
+    @Input() set startData(data: {[prop: string]: any}) {
+        this._startData = data;
+        if (this.form != null) {
+            this.form.patchValue(data);
+        }
+    }
 
     @Output() valid: EventEmitter<boolean> = new EventEmitter<boolean>();
     @Output() data: EventEmitter<any> = new EventEmitter<any>();
@@ -27,6 +33,8 @@ export class MicoFormComponent implements OnInit, OnChanges {
     model: ApiModel;
     properties: (ApiModel | ApiModelRef)[];
     form: FormGroup;
+
+    private _startData: {[prop: string]: any};
 
     private formSubscription: Subscription;
 
@@ -50,10 +58,17 @@ export class MicoFormComponent implements OnInit, OnChanges {
                     }
                 }
                 this.model = model;
-                this.properties = props;
+                this.properties = props.sort((a, b) => {
+                    const orderA = a['x-order'] != null ? a['x-order'] : 0;
+                    const orderB = b['x-order'] != null ? b['x-order'] : 0;
+                    return orderA-orderB;
+                });
                 this.form = this.formGroup.modelToFormGroup(model);
                 if (this.formSubscription != null) {
                     this.formSubscription.unsubscribe();
+                }
+                if (this._startData != null) {
+                    this.form.patchValue(this._startData);
                 }
                 this.formSubscription = this.form.statusChanges.subscribe(status => {
                     this.valid.emit(this.form.valid);

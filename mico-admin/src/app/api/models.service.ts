@@ -17,7 +17,7 @@ export class ModelsService {
             'properties': {
                 'vcsroot': {
                     'type': 'string',
-                    'x-order': 1,
+                    'x-order': 10,
                     'pattern': '(https?://)?github\.com(/[a-zA-Z0-9-]+)+/?',
                 }
             },
@@ -28,13 +28,15 @@ export class ModelsService {
             'properties': {
                 'name': {
                     'type': 'string',
-                    'x-order': 1,
+                    'title': 'Name',
+                    'x-order': 10,
                     'minLength': 3,
                     'maxLength': 22,
                 },
                 'description': {
+                    'title': 'Description',
                     'type': 'string',
-                    'x-order': 2,
+                    'x-order': 20,
                 }
             },
             'required': ['name'],
@@ -44,6 +46,45 @@ export class ModelsService {
                 {
                     '$ref': 'local/servicePOST',
                 },
+                {
+                    'type': 'object',
+                    'properties': {
+                        'name': {
+                            'type': 'string',
+                            'x-order': 10
+                        },
+                        'vcsRoot': {
+                            'title': 'VCS Root',
+                            'type': 'string',
+                            'x-order': 20
+                        },
+                        'dockerfile': {
+                            'title': 'Dockerfile',
+                            'type': 'string',
+                            'x-order': 20
+                        },
+                        'documentation': {
+                            'title': 'Documentation',
+                            'type': 'string',
+                            'x-order': 30
+                        },
+                        'owner': {
+                            'title': 'Owner',
+                            'type': 'string',
+                            'x-order': 40
+                        },
+                        'contact': {
+                            'title': 'Contact',
+                            'type': 'string',
+                            'x-order': 50
+                        },
+                        'externalService': {
+                            'title': 'Is external service',
+                            'type': 'boolean',
+                            'x-order': 60
+                        },
+                    }
+                }
             ]
         },
         'applicationPOST': {
@@ -52,39 +93,6 @@ export class ModelsService {
                     '$ref': 'local/servicePOST',
                 },
             ]
-        },
-        'editService': {
-            'type': 'object',
-            'properties': {
-                'Name': {
-                    'type': 'string',
-                    'x-order': 10
-                },
-                'VCS Root': {
-                    'type': 'string',
-                    'x-order': 20
-                },
-                'Dockerfile': {
-                    'type': 'string',
-                    'x-order': 20
-                },
-                'Documentation': {
-                    'type': 'string',
-                    'x-order': 30
-                },
-                'Owner': {
-                    'type': 'string',
-                    'x-order': 40
-                },
-                'Contact': {
-                    'type': 'string',
-                    'x-order': 50
-                },
-                'external service': {
-                    'type': 'boolean',
-                    'x-order': 60
-                },
-            }
         }
     };
 
@@ -107,7 +115,7 @@ export class ModelsService {
      *
      * @param modelUrl resource url
      */
-    private resolveModel(modelUrl: string): Observable<ApiModelAllOf | ApiModel> {
+    private resolveModel = (modelUrl: string): Observable<ApiModelAllOf | ApiModel> => {
         modelUrl = this.canonizeModelUri(modelUrl);
         if (modelUrl.startsWith('local/')) {
             const modelID = modelUrl.substring(6);
@@ -125,7 +133,7 @@ export class ModelsService {
      *
      * @param model input model
      */
-    private resolveModelLinks(model: ApiModelAllOf | ApiModelRef | ApiModel): Observable<ApiModel> {
+    private resolveModelLinks = (model: ApiModelAllOf | ApiModelRef | ApiModel): Observable<ApiModel> => {
         if ((model as ApiModelAllOf).allOf != null) {
             const models = (model as ApiModelAllOf).allOf;
             return from(models).pipe(concatMap(this.resolveModelLinks));
@@ -142,7 +150,7 @@ export class ModelsService {
      * @param targetModel the model to be merged into
      * @param sourceModel the model to be merged
      */
-    private mergeModels(targetModel: ApiModel, sourceModel: ApiModel): ApiModel {
+    private mergeModels = (targetModel: ApiModel, sourceModel: ApiModel): ApiModel => {
         if (targetModel == null) {
             // return next in line
             return sourceModel;
@@ -165,7 +173,7 @@ export class ModelsService {
                     if (targetModel[key] != null) {
                         const targetProperties = targetModel[key];
                         const sourceProperties = sourceModel[key];
-                        for (const attrKey in sourceModel[key]) {
+                        for (const attrKey in sourceProperties) {
                             if (targetProperties[attrKey] != null) {
                                 const target = targetProperties[attrKey];
                                 const source = sourceProperties[attrKey];
@@ -174,11 +182,14 @@ export class ModelsService {
                                 } else if (target.$ref === undefined && source.$ref === undefined) {
                                     targetProperties[attrKey] = this.mergeModels(target as ApiModel, source as ApiModel);
                                 }
+                            } else {
+                                targetProperties[attrKey] = sourceProperties[attrKey];
                             }
                         }
                     }
+                } else {
+                    targetModel[key] = sourceModel[key];
                 }
-                targetModel[key] = sourceModel[key];
             }
         }
         return targetModel;
@@ -189,7 +200,7 @@ export class ModelsService {
      *
      * @param cacheUrl resource url
      */
-    private getCacheSource(cacheURL: string): AsyncSubject<Readonly<ApiModel>> {
+    private getCacheSource = (cacheURL: string): AsyncSubject<Readonly<ApiModel>> => {
         cacheURL = this.canonizeModelUri(cacheURL);
         let stream = this.modelCache.get(cacheURL);
         if (stream == null) {
@@ -207,7 +218,7 @@ export class ModelsService {
      *
      * @param modelUrl modelUrl
      */
-    getModel(modelUrl): Observable<Readonly<ApiModel>> {
+    getModel = (modelUrl): Observable<Readonly<ApiModel>> => {
         const stream = this.getCacheSource(modelUrl);
         if (!stream.closed) {
             this.resolveModel(modelUrl).pipe(
@@ -219,6 +230,10 @@ export class ModelsService {
                         for (const key in model.properties) {
                             if (!model.properties.hasOwnProperty(key)) {
                                 continue;
+                            }
+                            if (model.properties[key]['title'] == null) {
+                                // set title from key if unset
+                                model.properties[key]['title'] = key;
                             }
                             model.properties[key]['x-key'] = key;
                         }
