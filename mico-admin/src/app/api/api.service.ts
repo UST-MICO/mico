@@ -280,4 +280,43 @@ export class ApiService {
             filter(data => data !== undefined)
         );
     }
+
+    getServiceInterfaces(serviceId): Observable<ApiObject> {
+        const resource = 'service/' + serviceId + '/interfaces';
+        const stream = this.getStreamSource(resource);
+
+        // TODO
+
+        const mockData: ApiObject[] = [
+            {
+                'Name': 'test.mock-service.rest',
+                'Description': 'the awesome REST interface for the even more awesome Mock Sertice!',
+                'Port': '0815',
+                'Protocol': 'gRPC',
+                'TransportProtocol': 'HTTP',
+                'Public-DNS': 'to be defined',
+            }
+        ];
+
+
+        const genericMockData: ApiObject = {
+            'Name': 'generic' + serviceId,
+            'Description': 'A generic interface for service nr ' + serviceId,
+            'Port': '11833-' + serviceId,
+            'Protocol': 'pigeon5',
+            'TransportProtocol': 'carrier pigeon',
+            'Public-DNS': 'to be defined',
+        };
+
+        if (serviceId > 0 && serviceId <= 1) {
+            stream.next(freezeObject(mockData[serviceId - 1]));
+        } else {
+            stream.next(freezeObject(genericMockData));
+        }
+
+
+        return (stream.asObservable() as Observable<Readonly<ApiObject[]>>).pipe(
+            filter(data => data !== undefined)
+        );
+    }
 }

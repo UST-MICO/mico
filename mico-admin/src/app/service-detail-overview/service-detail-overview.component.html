@@ -97,6 +97,29 @@
                         </div>
                         <mat-divider></mat-divider>
                         <!-- TODO list provides -->
+                        <!-- TODO update style as soon as branch mico034 is merged in here-->
+                        <div *ngFor="let interface of interfaces">
+
+                            <div class="flex">
+                                <div class="flex-grow-1">
+                                    <mat-list-item.large style="font-size:small">
+                                        <!-- Todo add delete button-->
+                                        <div class="pv2 pl4">
+                                            {{interface.Name}}<br>
+                                            {{interface.Port}}<br>
+                                            {{interface.Protocol}}<br>
+                                            {{interface.TransportProtocol}}
+                                        </div>
+                                    </mat-list-item.large>
+                                </div>
+                                <div class="w-20">
+                                    <mat-list-item>
+                                        <mat-icon (click)="deleteServiceInterface(interface.Name)">delete</mat-icon>
+                                    </mat-list-item>
+                                </div>
+                            </div>
+                            <mat-divider></mat-divider>
+                        </div>
 
                         <!-- INTERNAL DEPENDENCIES-->
                         <div class="flex" (click)="addInternalDependency()">

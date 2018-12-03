@@ -1,3 +1,9 @@
-<p>
-  create-service-interface works!
-</p>
+<h2 mat-dialog-title>Create a new Service Interface</h2>
+<mat-dialog-content style="min-width: 35rem">
+    <mico-form [modelUrl]="'local/serviceInterfacePOST'" (data)="serviceData = $event"></mico-form>
+</mat-dialog-content>
+<mat-dialog-actions>
+    <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
+    <button mat-button [mat-dialog-close]="input()">Create</button>
+    <button mat-button mat-dialog-close>Cancel</button>
+</mat-dialog-actions>

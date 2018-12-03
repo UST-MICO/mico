@@ -6,7 +6,7 @@ import { ApiObject } from '../api/apiobject';
 import { ServicePickerComponent } from '../dialogs/service-picker/service-picker.component';
 import { MatDialog } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
-
+import { CreateServiceInterfaceComponent } from '../dialogs/create-service-interface/create-service-interface.component'
 
 @Component({
     selector: 'mico-service-detail-overview',
@@ -27,6 +27,7 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
     @Input() service: ApiObject;
     @Input() internalDependencies = [];
     @Input() externalDependencies = [];
+    interfaces = [];
 
     // will be used by the update form
     serviceData;
@@ -77,6 +78,13 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
             external.push(this.getServiceMetaData(element));
         });
         this.externalDependencies = external;
+
+        const interf = [];
+        this.apiService.getServiceInterfaces(id).forEach(element => {
+            interf.push(element);
+            console.log(element);
+        })
+        this.interfaces = interf;
     }
 
     editOrSave() {
@@ -97,6 +105,14 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
             'status': service_object.status,
         };
         return return_object;
+    }
+
+    addProvides() {
+        const dialogRef = this.dialog.open(CreateServiceInterfaceComponent);
+        dialogRef.afterClosed().subscribe(result => {
+            console.log(result);
+        });
+        // TODO use result in a useful way
     }
 
     addInternalDependency() {
@@ -144,4 +160,8 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
         });
     }
 
+    deleteServiceInterface(name) {
+        // TODO insert delete dialog (needs a merge with branch mico034 first)
+
+    }
 }
