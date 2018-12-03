@@ -46,7 +46,6 @@ export class ServicePickerComponent implements OnInit {
         this.serviceSubscription = this.apiService.getServices()
             .subscribe(services => this.serviceList = services);
 
-
         // fill options with the service names
         const tempList: string[] = [];
         this.serviceList.forEach(element => {
