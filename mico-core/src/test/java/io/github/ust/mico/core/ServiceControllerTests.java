@@ -1,5 +1,6 @@
 package io.github.ust.mico.core;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ust.mico.core.REST.ServiceController;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -11,6 +12,7 @@ import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -24,17 +26,28 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.hamcrest.CoreMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(ServiceController.class)
 @OverrideAutoConfiguration(enabled = true) //Needed to override our neo4j config
 public class ServiceControllerTests {
 
+    //TODO: Use these variables inside the tests instead of the local variables
+    private static final String SHORT_NAME = "ServiceShortName";
+    private static final String VERSION = "1.0.0";
+    private static final String DESCRIPTION = "Some description";
+    private static final String BASE_PATH = "/services/";
+    private static final Long TEST_ID = new Long(45325345);
+
     @Autowired
     private MockMvc mvc;
 
     @MockBean
     private ServiceRepository serviceRepository;
+
+    @Autowired
+    private ObjectMapper mapper;
 
     @Test
     public void getCompleteServiceList() throws Exception {
@@ -80,7 +93,7 @@ public class ServiceControllerTests {
         String shortName = "ServiceShortName";
         String version = "1.0.0";
         String description = "Some description";
-        String urlTemplate = "/services/" + id;
+        String urlTemplate = BASE_PATH + id;
         String linksSelf = "http://localhost" + urlTemplate;
         String linksServices = "http://localhost/services";
 
@@ -99,5 +112,18 @@ public class ServiceControllerTests {
                 .andReturn();
     }
 
+    @Test
+    public void createService() throws Exception {
+        Service service = new Service(SHORT_NAME,VERSION,DESCRIPTION);
+
+        given(serviceRepository.save(any(Service.class))).willReturn(service);
+
+        final ResultActions result = mvc.perform(post(BASE_PATH)
+                .content(mapper.writeValueAsBytes(service))
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print());
+
+        result.andExpect(status().isCreated());
+    }
 
 }
