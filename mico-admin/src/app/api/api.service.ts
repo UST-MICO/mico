@@ -87,7 +87,7 @@ export class ApiService {
                 'internalDependencies': [2, 3],
                 'externalDependencies': [4],
                 'status': 'online',
-                'external': 'false',
+                'external': false,
             },
             {
                 'id': '2',
@@ -97,7 +97,7 @@ export class ApiService {
                 'internalDependencies': [],
                 'externalDependencies': [4],
                 'status': 'online',
-                'external': 'false',
+                'external': false,
             },
             {
                 'id': '3',
@@ -107,7 +107,7 @@ export class ApiService {
                 'internalDependencies': [2],
                 'externalDependencies': [],
                 'status': 'offline',
-                'external': 'false',
+                'external': false,
             },
             {
                 'id': '4',
@@ -117,7 +117,7 @@ export class ApiService {
                 'internalDependencies': [],
                 'externalDependencies': [],
                 'status': 'problem',
-                'external': 'true',
+                'external': true,
             },
         ];
 

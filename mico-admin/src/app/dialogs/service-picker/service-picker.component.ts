@@ -1,29 +1,49 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Inject } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { Observable, Subscription } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { ApiService } from 'src/app/api/api.service';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
+
+
+enum FilterTypes {
+    None,
+    Internal,
+    External,
+}
 
 @Component({
     selector: 'mico-service-picker',
     templateUrl: './service-picker.component.html',
     styleUrls: ['./service-picker.component.css']
 })
+
 export class ServicePickerComponent implements OnInit {
 
     service;
     serviceList;
+    filter = FilterTypes.None;
 
     private serviceSubscription: Subscription;
-
-    constructor(private apiService: ApiService) { }
 
     servicePickerForm = new FormControl();
     picker = new FormControl();
     options: string[] = [];
     filteredOptions: Observable<string[]>;
 
+    constructor(public dialogRef: MatDialogRef<ServicePickerComponent>, @Inject(MAT_DIALOG_DATA) public data: any, private apiService: ApiService) {
+
+        console.log(data.filter);
+        if (data.filter === 'internal') {
+            this.filter = FilterTypes.Internal;
+        } else if (data.filter === 'external') {
+            this.filter = FilterTypes.External;
+        }
+
+    }
+
     ngOnInit() {
+
         this.filteredOptions = this.picker.valueChanges
             .pipe(
                 startWith(''),
@@ -34,12 +54,20 @@ export class ServicePickerComponent implements OnInit {
         this.serviceSubscription = this.apiService.getServices()
             .subscribe(services => this.serviceList = services);
 
+
         // fill options with the service names
         const tempList: string[] = [];
         this.serviceList.forEach(element => {
-            // TODO is there a better way to get a boolean from the JSON?
-            if ("false" === element.external) {
+            if (this.filter == FilterTypes.None) {
                 tempList.push(element.name);
+            } else if (this.filter == FilterTypes.Internal) {
+                if (!element.external) {
+                    tempList.push(element.name);
+                }
+            } else if (this.filter == FilterTypes.External) {
+                if (element.external) {
+                    tempList.push(element.name);
+                }
             }
         });
         this.options = tempList;
@@ -52,7 +80,6 @@ export class ServicePickerComponent implements OnInit {
     }
 
     input() {
-        //TODO add the service to the dependencies
         return this.service;
     }
 

@@ -55,7 +55,6 @@ export class ServiceDetailOverviewComponent implements OnInit {
             .subscribe(service => this.service = service);
 
         // get dependencies and their status
-        // TODO service is changed in the following lines... why??
         const internal = [];
         this.service.internalDependencies.forEach(element => {
             internal.push(this.getServiceMetaData(element));
@@ -72,7 +71,7 @@ export class ServiceDetailOverviewComponent implements OnInit {
     editOrSave() {
         console.log('edit or save');
         if (this.edit) {
-            // save content
+            // TODO save content
         }
         this.edit = !this.edit;
     }
@@ -89,7 +88,11 @@ export class ServiceDetailOverviewComponent implements OnInit {
     }
 
     addInternalDependencie() {
-        const dialogRef = this.dialog.open(ServicePickerComponent);
+        const dialogRef = this.dialog.open(ServicePickerComponent, {
+            data: {
+                filter: "internal"
+            }
+        });
         dialogRef.afterClosed().subscribe(result => {
             console.log(result);
         });
@@ -97,7 +100,11 @@ export class ServiceDetailOverviewComponent implements OnInit {
     }
 
     addExternalDependencie() {
-        const dialogRef = this.dialog.open(CreateServiceDialogComponent);
+        const dialogRef = this.dialog.open(ServicePickerComponent, {
+            data: {
+                filter: "external"
+            }
+        });
         dialogRef.afterClosed().subscribe(result => {
             console.log(result);
         });
