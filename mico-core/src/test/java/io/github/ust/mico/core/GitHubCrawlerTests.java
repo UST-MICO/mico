@@ -7,7 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.web.client.RestTemplate;
+
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -16,7 +17,8 @@ import static org.junit.Assert.assertEquals;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class GitHubCrawlerTests {
-    private static final String absoluteUri = "https://api.github.com/repos/UST-MICO/mico";
+    private static final String absoluteUri = "https://api.github.com/repos/octokit/octokit.rb";
+    private static final String RELEASE = "v4.12.0";
 
     @Autowired
     private ServiceRepository serviceRepository;
@@ -26,24 +28,63 @@ public class GitHubCrawlerTests {
     private ServiceInterfaceRepository serviceInterfaceRepository;
 
     @Test
-    public void testGitHubCrawler(){
+    public void testGitHubCrawlerLatestRelease() {
         serviceRepository.deleteAll();
         dependsOnRepository.deleteAll();
         serviceInterfaceRepository.deleteAll();
 
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
-        Service service = crawler.crawlGitHubRepo(absoluteUri);
+        Service service = crawler.crawlGitHubRepoLatestRelease(absoluteUri);
         serviceRepository.save(service);
-        System.out.println(service.toString());
+
         Service readService = serviceRepository.findByShortName(service.getShortName());
-        System.out.println(readService.toString());
-        assertEquals(service.getShortName(),readService.getShortName());
-        assertEquals(service.getDescription(),readService.getDescription());
-        assertEquals(service.getId(),readService.getId());
-        assertEquals(service.getVersion(),readService.getVersion());
-        assertEquals(service.getVcsRoot(),readService.getVcsRoot());
-        assertEquals(service.getName(),readService.getName());
+        assertEquals(service.getShortName(), readService.getShortName());
+        assertEquals(service.getDescription(), readService.getDescription());
+        assertEquals(service.getId(), readService.getId());
+        assertEquals(service.getVersion(), readService.getVersion());
+        assertEquals(service.getVcsRoot(), readService.getVcsRoot());
+        assertEquals(service.getName(), readService.getName());
+    }
+
+    @Test
+    public void testGitHubCrawlerSpecificRelease() {
+        serviceRepository.deleteAll();
+        dependsOnRepository.deleteAll();
+        serviceInterfaceRepository.deleteAll();
+
+        RestTemplateBuilder restTemplate = new RestTemplateBuilder();
+        GitHubCrawler crawler = new GitHubCrawler(restTemplate);
+        Service service = crawler.crawlGitHubRepoSpecificRelease(absoluteUri, RELEASE);
+        serviceRepository.save(service);
+
+        Service readService = serviceRepository.findByShortName(service.getShortName());
+        assertEquals(service.getShortName(), readService.getShortName());
+        assertEquals(service.getDescription(), readService.getDescription());
+        assertEquals(service.getId(), readService.getId());
+        assertEquals(service.getVersion(), readService.getVersion());
+        assertEquals(service.getVcsRoot(), readService.getVcsRoot());
+        assertEquals(service.getName(), readService.getName());
+    }
+
+    @Test
+    public void testGitHubCrawlerAllReleases() {
+        serviceRepository.deleteAll();
+        dependsOnRepository.deleteAll();
+        serviceInterfaceRepository.deleteAll();
+
+        RestTemplateBuilder restTemplate = new RestTemplateBuilder();
+        GitHubCrawler crawler = new GitHubCrawler(restTemplate);
+        List<Service> serviceList = crawler.crawlGitHubRepoAllReleases(absoluteUri);
+        serviceRepository.saveAll(serviceList);
+
+//        Service readService = serviceRepository.findByShortName(service.getShortName());
+//        assertEquals(service.getShortName(), readService.getShortName());
+//        assertEquals(service.getDescription(), readService.getDescription());
+//        assertEquals(service.getId(), readService.getId());
+//        assertEquals(service.getVersion(), readService.getVersion());
+//        assertEquals(service.getVcsRoot(), readService.getVcsRoot());
+//        assertEquals(service.getName(), readService.getName());
     }
 
     @Test
