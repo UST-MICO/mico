@@ -22,6 +22,7 @@ export default class GraphEditor extends HTMLElement {
     private _nodes: any[];
     private _edges: any[];
     private _mode: string = 'display'; // interaction mode ['display', 'layout', 'link', 'select']
+    private allowZoom: boolean = true;
 
     private interactionStateData: {
         source?: any,
@@ -43,11 +44,13 @@ export default class GraphEditor extends HTMLElement {
         this.edgeGenerator = line().x((d) => d.x).y((d) => d.y).curve(curveStep);
 
         this.mutationObserver = new MutationObserver(() => {
+            this.updateTemplates();
             this.completeRender(true);
+            this.zoomToBoundingBox();
         });
     }
 
-    static get observedAttributes() { return ['nodes', 'edges', 'mode', 'interactive']; }
+    static get observedAttributes() { return ['nodes', 'edges', 'mode', 'zoom']; }
 
     attributeChangedCallback(name, oldValue, newValue: string) {
         if (name === 'nodes') {
@@ -60,15 +63,14 @@ export default class GraphEditor extends HTMLElement {
             console.log('Edges ' + newValue);
             this._edges = JSON.parse(newValue);
         }
-        if (name === 'interactive') {
-            if (newValue.toLowerCase() !== 'true') {
-                this.updateMode('display');
-            }
+        if (name === 'zoom') {
+            this.allowZoom = (newValue.toLowerCase() !== 'true')
             this.completeRender();
         }
         if (name === 'mode') {
             this.updateMode(newValue.toLowerCase());
         }
+        this.initialize();
         this.completeRender();
         this.zoomToBoundingBox();
     }
@@ -122,7 +124,7 @@ export default class GraphEditor extends HTMLElement {
         if (! this.isConnected) {
             return;
         }
-        this.initialize();
+        //this.initialize();
         this.completeRender();
         this.zoomToBoundingBox();
 
@@ -285,13 +287,6 @@ export default class GraphEditor extends HTMLElement {
                 graph.attr('transform', event.transform);
             });
 
-            svg.call(this.zoom);
-
-            if (!this.isInteractive) {
-                svg.on('.zoom', null);
-            }
-
-
             graph.append('g')
                 .attr('class', 'edges')
             //    .attr('filter', 'url(#shadow-edge)') <- performance drain...
@@ -355,6 +350,27 @@ export default class GraphEditor extends HTMLElement {
     }
 
     /**
+     * Get templates in this node and render them into defs node of svg.
+     */
+    updateTemplates() {
+        const defs = this.getSvg().select('defs');
+        const templates = select(this).selectAll('template');
+        const html = [];
+        templates.each(function() {
+            html.push(this);
+        });
+        const defTemplates = defs.selectAll('g.template').data(html, (d) => d.id);
+        console.log(html);
+
+        defTemplates.exit().remove();
+        defTemplates.enter()
+          .append('g')
+          .merge(defTemplates)
+            .attr('id', (d) => d.id)
+            .html((d) => d.innerHTML);
+    }
+
+    /**
      * Render all changes of the data to the graph.
      */
     completeRender(updateTemplates: boolean=false) {
@@ -362,6 +378,12 @@ export default class GraphEditor extends HTMLElement {
             return;
         }
         const svg = this.getSvg();
+
+        if (this.allowZoom) {
+            svg.call(this.zoom);
+        } else {
+            svg.on('.zoom', null);
+        }
 
         this.updateSize();
 
@@ -426,7 +448,14 @@ export default class GraphEditor extends HTMLElement {
      * @param nodeSelection d3 selection of nodes to add with bound data
      */
     private createNodes(nodeSelection) {
-        nodeSelection.append('circle');
+        const templateRoot = this.getSvg().select('defs');
+        nodeSelection.html(function(d) {
+            const template = templateRoot.select('#node');
+            if (template.empty()) {
+                return "<circle></circle>";
+            }
+            return template.html();
+        });
     }
 
     /**
@@ -435,11 +464,8 @@ export default class GraphEditor extends HTMLElement {
      * @param nodeSelection d3 selection of nodes to update with bound data
      */
     private updateNodes(nodeSelection) {
-        nodeSelection.select('circle')
+        nodeSelection.select('.child')
             .attr('fill', 'black')
-            .attr('cx', 0)
-            .attr('cy', 0)
-            .attr('r', 5);
     }
 
     /**
@@ -621,7 +647,7 @@ export default class GraphEditor extends HTMLElement {
      * @param nodeSelection d3 selection of nodes to update with bound data
      */
     private unHighlightNodes(nodeSelection) {
-        nodeSelection.select('circle').attr('fill', 'black');
+        nodeSelection.select('.child').attr('fill', 'black');
     }
 
 
@@ -631,6 +657,6 @@ export default class GraphEditor extends HTMLElement {
      * @param nodeSelection d3 selection of nodes to update with bound data
      */
     private highlightNodes(nodeSelection) {
-        nodeSelection.select('circle').attr('fill', 'blue');
+        nodeSelection.select('.child').attr('fill', 'blue');
     }
 }
