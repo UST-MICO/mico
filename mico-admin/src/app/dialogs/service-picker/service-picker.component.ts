@@ -32,7 +32,6 @@ export class ServicePickerComponent implements OnInit {
 
     constructor(public dialogRef: MatDialogRef<ServicePickerComponent>, @Inject(MAT_DIALOG_DATA) public data: any, private apiService: ApiService) {
 
-        console.log(data.filter);
         if (data.filter === 'internal') {
             this.filter = FilterTypes.Internal;
         } else if (data.filter === 'external') {
@@ -42,9 +41,7 @@ export class ServicePickerComponent implements OnInit {
         data.exisitingDependencies.forEach(element => {
             this.exisitingDependencies.push(parseInt(element.id, 10));
         });
-        console.log(data.serviceId);
         this.exisitingDependencies.push(data.serviceId);
-        console.log(this.exisitingDependencies);
     }
 
     ngOnInit() {
