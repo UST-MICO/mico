@@ -13,4 +13,6 @@ public interface ServiceRepository extends Neo4jRepository<Service, Long> {
     Service findByName(String name, @Depth int depth);
 
     Service findByShortName(String shortName, @Depth int depth);
+
+    //TODO: If multiple versions exist for one Service, the methods return "Incorrect result size: expected at most 1"
 }
