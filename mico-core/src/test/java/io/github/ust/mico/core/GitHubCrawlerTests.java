@@ -78,6 +78,7 @@ public class GitHubCrawlerTests {
         List<Service> serviceList = crawler.crawlGitHubRepoAllReleases(absoluteUri);
         serviceRepository.saveAll(serviceList);
 
+        //TODO: Add checks
 //        Service readService = serviceRepository.findByShortName(service.getShortName());
 //        assertEquals(service.getShortName(), readService.getShortName());
 //        assertEquals(service.getDescription(), readService.getDescription());
