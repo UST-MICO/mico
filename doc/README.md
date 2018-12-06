@@ -1,4 +1,4 @@
-# Developer Documentation for MICO (working title)
+# Developer Documentation
 
 Documentation: [readthedocs](https://mico-dev.readthedocs.io)
 
