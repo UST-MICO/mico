@@ -1,4 +1,6 @@
 
+[![Build Status](https://travis-ci.org/UST-MICO/mico.svg?branch=master)](https://travis-ci.org/UST-MICO/mico)
+
 # MICO
 
 > A Management System for Microservice Compositions
