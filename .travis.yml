@@ -1,0 +1,8 @@
+sudo: required
+language: java
+services:
+  - docker
+cache:
+  npm: true
+  directories:
+    - $HOME/.m2

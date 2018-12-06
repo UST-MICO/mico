@@ -6,11 +6,13 @@ import io.kubernetes.client.models.*;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
 
-//TODO make real test on a cluster, this gives a rough overview of the functionality
+// TODO: make real test on a cluster, this gives a rough overview of the functionality
+@Ignore
 public class ClusterAwarenessTest {
     ClusterAwareness cluster;
     CoreV1Api api;
