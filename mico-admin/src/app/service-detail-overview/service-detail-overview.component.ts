@@ -22,6 +22,7 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
     private subExternalDependency: Subscription;
     private subDeleteDependency: Subscription;
     private subDeleteServiceInterface: Subscription;
+    private subServiceInterfaces: Subscription;
 
     constructor(
         private apiService: ApiService,
@@ -55,6 +56,7 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
         this.unsubscribe(this.subExternalDependency);
         this.unsubscribe(this.subDeleteDependency);
         this.unsubscribe(this.subDeleteServiceInterface);
+        this.unsubscribe(this.subServiceInterfaces);
     }
 
     unsubscribe(subscription: Subscription) {
@@ -91,11 +93,9 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
         });
         this.externalDependencies = external;
 
-        const interfaces = [];
-        this.apiService.getServiceInterfaces(id).forEach(element => {
-            interfaces.push(element);
-        })
-        this.serviceInterfaces = interfaces;
+        this.subServiceInterfaces = this.apiService.getServiceInterfaces(id).subscribe(element => this.serviceInterfaces = element);
+
+
     }
 
     editOrSave() {

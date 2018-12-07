@@ -281,7 +281,7 @@ export class ApiService {
         );
     }
 
-    getServiceInterfaces(serviceId): Observable<ApiObject> {
+    getServiceInterfaces(serviceId): Observable<ApiObject[]> {
         const resource = 'service/' + serviceId + '/interfaces';
         const stream = this.getStreamSource(resource);
 
@@ -295,21 +295,29 @@ export class ApiService {
                 'Protocol': 'gRPC',
                 'TransportProtocol': 'HTTP',
                 'Public-DNS': 'to be defined',
-            }
+            },
+            {
+                'Name': 'test.mock-service.sth',
+                'Description': 'some interface for test.mock-service',
+                'Port': '12',
+                'Protocol': 'SQL',
+                'TransportProtocol': 'MQTT',
+                'Public-DNS': 'to be defined',
+            },
         ];
 
 
-        const genericMockData: ApiObject = {
+        const genericMockData: ApiObject = [{
             'Name': 'generic' + serviceId,
             'Description': 'A generic interface for service nr ' + serviceId,
             'Port': '11833-' + serviceId,
             'Protocol': 'pigeon5',
             'TransportProtocol': 'carrier pigeon',
             'Public-DNS': 'to be defined',
-        };
+        }];
 
         if (serviceId > 0 && serviceId <= 1) {
-            stream.next(freezeObject(mockData[serviceId - 1]));
+            stream.next(freezeObject(mockData));
         } else {
             stream.next(freezeObject(genericMockData));
         }
