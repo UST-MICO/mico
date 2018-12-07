@@ -1,0 +1,14 @@
+<mat-dialog-content>
+    <div [ngSwitch]="question" class="">
+        <div *ngSwitchCase="'deleteDependency'">
+            Do you really want wo delete the dependency to <b>{{object}}</b>?
+        </div>
+        <!-- add further questions -->
+
+    </div>
+</mat-dialog-content>
+<mat-dialog-actions>
+    <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
+    <button mat-button [mat-dialog-close]="input()">Delete</button>
+    <button mat-button mat-dialog-close>Cancel</button>
+</mat-dialog-actions>
