@@ -1,6 +1,7 @@
 import { Component, OnInit, Inject } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { Subscription, Observable } from 'rxjs';
+import { map, startWith } from 'rxjs/operators';
 import { ApiService } from 'src/app/api/api.service';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 
@@ -11,6 +12,15 @@ enum FilterTypes {
     External,
 }
 
+
+export interface Service {
+    name: string;
+    shortName: string;
+    description: string;
+    id: number;
+    filterName: string;
+}
+
 @Component({
     selector: 'mico-service-picker',
     templateUrl: './service-picker.component.html',
@@ -19,16 +29,17 @@ enum FilterTypes {
 
 export class ServicePickerComponent implements OnInit {
 
-    service;
+    choosenService: Service;
     serviceList;
     filter = FilterTypes.None;
     exisitingDependencies: number[] = [];
 
     private serviceSubscription: Subscription;
 
-    servicePickerForm = new FormControl();
     picker = new FormControl();
-    options: any[] = [];
+
+    options: Service[];
+    filteredOptions: Observable<Service[]>;
 
     constructor(public dialogRef: MatDialogRef<ServicePickerComponent>, @Inject(MAT_DIALOG_DATA) public data: any, private apiService: ApiService) {
 
@@ -51,18 +62,40 @@ export class ServicePickerComponent implements OnInit {
             .subscribe(services => this.serviceList = services);
 
         // fill options with the service names
-        const tempList: string[] = [];
+        const tempList: Service[] = [];
         this.serviceList.forEach(element => {
             if (this.filterElement(element)) {
-                tempList.push(element);
+                tempList.push({
+                    name: element.name,
+                    shortName: element.shortName,
+                    description: element.description,
+                    id: element.id,
+                    filterName: element.shortName + ' ' + element.name,
+                });
             }
 
         });
         this.options = tempList;
+
+        this.picker.valueChanges.subscribe(element => {
+
+            // TODO check if a service with shortName 'element' exists. If yes, store in this.chosenService
+            console.log(element);
+            this.choosenService = element
+
+        })
+
+        this.filteredOptions = this.picker.valueChanges
+            .pipe(
+                startWith<string | Service>(''),
+                map(value => typeof value === 'string' ? value : value.name),
+                map(name => name ? this._filter(name) : this.options.slice())
+            );
+
     }
 
-    input() {
-        return this.service;
+    getSelectedService() {
+        return this.choosenService;
     }
 
     private filterElement = (element): boolean => {
@@ -85,7 +118,16 @@ export class ServicePickerComponent implements OnInit {
             }
         }
         return val;
+    }
 
+    displayFn(service?: Service): string | undefined {
+        return service ? service.shortName : undefined;
+    }
+
+    private _filter(value: string): Service[] {
+        const filterValue = value.toLowerCase();
+
+        return this.options.filter(option => option.filterName.toLowerCase().indexOf(filterValue) >= 0);
     }
 
 }

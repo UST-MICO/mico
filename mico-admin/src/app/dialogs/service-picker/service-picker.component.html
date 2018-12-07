@@ -2,11 +2,11 @@
 <mat-dialog-content style="min-width: 32rem">
     <form>
         <mat-form-field style="width:95%">
-            <input type="text" matInput [formControl]="servicePickerForm" [matAutocomplete]="auto" [(ngModel)]="service">
+            <input type="text" matInput [formControl]="picker" [matAutocomplete]="auto">
         </mat-form-field>
 
-        <mat-autocomplete #auto="matAutocomplete">
-            <mat-option *ngFor="let option of options" style="height:45pt; line-height:initial" [value]="option.shortName">
+        <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn">
+            <mat-option *ngFor="let option of filteredOptions|async" style="height:45pt; line-height:initial" [value]="option">
                 <b>{{option.name}}</b> (<i>{{option.shortName}}</i>)<br>{{option.description}}
             </mat-option>
         </mat-autocomplete>
@@ -16,5 +16,5 @@
 <mat-dialog-actions>
     <button mat-button mat-dialog-close>Cancel</button>
     <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
-    <button mat-button [mat-dialog-close]="input()">Ok</button>
+    <button mat-button [mat-dialog-close]="getSelectedService()">Ok</button>
 </mat-dialog-actions>
