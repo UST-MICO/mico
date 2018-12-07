@@ -1,9 +1,8 @@
 import { Component, OnInit, Inject } from '@angular/core';
-import { FormControl } from '@angular/forms';
-import { Subscription, Observable } from 'rxjs';
-import { map, startWith } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 import { ApiService } from 'src/app/api/api.service';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
+import { MatDialogRef, MAT_DIALOG_DATA, MatTableDataSource } from '@angular/material';
+import { SelectionModel } from '@angular/cdk/collections';
 
 
 enum FilterTypes {
@@ -18,7 +17,6 @@ export interface Service {
     shortName: string;
     description: string;
     id: number;
-    filterName: string;
 }
 
 @Component({
@@ -29,17 +27,15 @@ export interface Service {
 
 export class ServicePickerComponent implements OnInit {
 
-    choosenService: Service;
     serviceList;
     filter = FilterTypes.None;
     exisitingDependencies: number[] = [];
 
     private serviceSubscription: Subscription;
 
-    picker = new FormControl();
-
-    options: Service[];
-    filteredOptions: Observable<Service[]>;
+    displayedColumns: string[] = ['select', 'id', 'name', 'shortName', 'description'];
+    dataSource;
+    selection = new SelectionModel<Service>(true, []);
 
     constructor(public dialogRef: MatDialogRef<ServicePickerComponent>, @Inject(MAT_DIALOG_DATA) public data: any, private apiService: ApiService) {
 
@@ -70,32 +66,15 @@ export class ServicePickerComponent implements OnInit {
                     shortName: element.shortName,
                     description: element.description,
                     id: element.id,
-                    filterName: element.shortName + ' ' + element.name,
                 });
             }
 
         });
-        this.options = tempList;
-
-        this.picker.valueChanges.subscribe(element => {
-
-            // TODO check if a service with shortName 'element' exists. If yes, store in this.chosenService
-            console.log(element);
-            this.choosenService = element
-
-        })
-
-        this.filteredOptions = this.picker.valueChanges
-            .pipe(
-                startWith<string | Service>(''),
-                map(value => typeof value === 'string' ? value : value.name),
-                map(name => name ? this._filter(name) : this.options.slice())
-            );
-
+        this.dataSource = new MatTableDataSource(tempList);
     }
 
     getSelectedService() {
-        return this.choosenService;
+        return this.selection.selected;
     }
 
     private filterElement = (element): boolean => {
@@ -120,14 +99,20 @@ export class ServicePickerComponent implements OnInit {
         return val;
     }
 
-    displayFn(service?: Service): string | undefined {
-        return service ? service.shortName : undefined;
+    applyFilter(filterValue: string) {
+        this.dataSource.filter = filterValue.trim().toLowerCase();
     }
 
-    private _filter(value: string): Service[] {
-        const filterValue = value.toLowerCase();
-
-        return this.options.filter(option => option.filterName.toLowerCase().indexOf(filterValue) >= 0);
+    isAllSelected() {
+        const numSelected = this.selection.selected.length;
+        const numRows = this.dataSource.data.length;
+        return numSelected === numRows;
     }
 
+    /** Selects all rows if they are not all selected; otherwise clear selection. */
+    masterToggle() {
+        this.isAllSelected() ?
+            this.selection.clear() :
+            this.dataSource.data.forEach(row => this.selection.select(row));
+    }
 }

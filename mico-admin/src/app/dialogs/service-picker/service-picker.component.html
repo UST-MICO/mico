@@ -1,17 +1,49 @@
 <h2 mat-dialog-title>Pick a Service</h2>
-<mat-dialog-content style="min-width: 32rem">
-    <form>
-        <mat-form-field style="width:95%">
-            <input type="text" matInput [formControl]="picker" [matAutocomplete]="auto">
-        </mat-form-field>
+<mat-dialog-content style="min-width: 48rem">
 
-        <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn">
-            <mat-option *ngFor="let option of filteredOptions|async" style="height:45pt; line-height:initial" [value]="option">
-                <b>{{option.name}}</b> (<i>{{option.shortName}}</i>)<br>{{option.description}}
-            </mat-option>
-        </mat-autocomplete>
-    </form>
+    <mat-form-field style="width:95%">
+        <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
+    </mat-form-field>
 
+    <table mat-table [dataSource]="dataSource" class="">
+
+        <!-- Checkbox Column -->
+        <ng-container matColumnDef="select" class="pr2">
+            <th mat-header-cell *matHeaderCellDef>
+                <mat-checkbox (change)="$event ? masterToggle() : null" [checked]="selection.hasValue() && isAllSelected()"
+                    [indeterminate]="selection.hasValue() && !isAllSelected()">
+                </mat-checkbox>
+            </th>
+            <td mat-cell *matCellDef="let row">
+                <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? selection.toggle(row) : null"
+                    [checked]="selection.isSelected(row)">
+                </mat-checkbox>
+            </td>
+        </ng-container>
+
+        <!-- Data Columns -->
+        <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef> ID. </th>
+            <td mat-cell *matCellDef="let element"> {{element.id}} </td>
+        </ng-container>
+        <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef> Name </th>
+            <td mat-cell *matCellDef="let element"> {{element.name}} </td>
+        </ng-container>
+        <ng-container matColumnDef="shortName">
+            <th mat-header-cell *matHeaderCellDef> Short Name </th>
+            <td mat-cell *matCellDef="let element"> {{element.shortName}} </td>
+        </ng-container>
+        <ng-container matColumnDef="description">
+            <th mat-header-cell *matHeaderCellDef> Description </th>
+            <td mat-cell *matCellDef="let element"> {{element.description}} </td>
+        </ng-container>
+
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selection.toggle(row)">
+        </tr>
+    </table>
 </mat-dialog-content>
 <mat-dialog-actions>
     <button mat-button mat-dialog-close>Cancel</button>

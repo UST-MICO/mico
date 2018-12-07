@@ -8,8 +8,9 @@ import 'mico-grapheditor/dist/bundle';
 import {
     MatButtonModule, MatButtonToggleModule, MatCardModule, MatMenuModule,
     MatIconModule, MatListModule, MatSidenavModule, MatDialogModule, MatToolbarModule,
-    MatTooltipModule, MatTableModule, MatInputModule, MatTabsModule, MatChipsModule, MatSlideToggleModule
+    MatTooltipModule, MatTableModule, MatInputModule, MatTabsModule, MatChipsModule, MatSlideToggleModule,
 } from '@angular/material';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -96,6 +97,7 @@ import { YesNoDialogComponent } from './dialogs/yes-no-dialog/yes-no-dialog.comp
         MatChipsModule,
         MatSlideToggleModule,
         MatAutocompleteModule,
+        MatCheckboxModule,
     ],
     providers: [],
     bootstrap: [AppComponent],
