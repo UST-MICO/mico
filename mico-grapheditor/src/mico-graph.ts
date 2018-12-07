@@ -533,6 +533,22 @@ export default class GraphEditor extends HTMLElement {
 
         nodeSelection
             .call(this.updateNodeHighligts.bind(this));
+
+        nodeSelection.each(function(d){
+            const singleNodeSelection = select(this);
+            const textSelection = singleNodeSelection.selectAll('.text').datum(function() {
+                return this.getAttribute('data-content');
+            });
+            textSelection.text(function(attr) {
+                if (attr != null) {
+                    const text = d[attr];
+                    if (text != null) {
+                        return text;
+                    }
+                }
+                return '';
+            })
+        })
     }
 
     /**
