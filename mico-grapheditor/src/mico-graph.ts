@@ -4,6 +4,11 @@ import {Node} from './node';
 import {Edge, edgeId} from './edge';
 import { GraphObjectCache } from "./object-cache";
 
+const SHADOW_DOM_TEMPLATE = `
+<style>
+</style>
+`
+
 
 export default class GraphEditor extends HTMLElement {
 
@@ -49,6 +54,10 @@ export default class GraphEditor extends HTMLElement {
         this.objectCache = new GraphObjectCache();
         this.initialized = false;
         this.edgeGenerator = line().x((d) => d.x).y((d) => d.y).curve(curveStep);
+
+        this.root = this.attachShadow({mode: 'open'});
+
+        select(this.root).html(SHADOW_DOM_TEMPLATE);
 
         this.mutationObserver = new MutationObserver(() => {
             this.updateTemplates();
@@ -176,7 +185,7 @@ export default class GraphEditor extends HTMLElement {
     initialize() {
         if (!this.initialized) {
             this.initialized = true;
-            this.root = this.attachShadow({mode: 'open'});
+
             const svg = select(this.root).append('svg')
                 .attr('class', 'graph-editor')
                 .attr('width', '100%')
@@ -385,17 +394,31 @@ export default class GraphEditor extends HTMLElement {
     }
 
     /**
-     * Get templates in this node and render them into defs node of svg.
+     * Get templates in this dom-node and render them into defs node of svg or style tags.
      */
     updateTemplates() {
-        const defs = this.getSvg().select('defs');
         const templates = select(this).selectAll('template');
-        const html = [];
-        templates.each(function() {
-            html.push(this);
+        const styleTemplates = templates.filter(function() {
+            return this.getAttribute('template-type') === 'style';
         });
-        const defTemplates = defs.selectAll('g.template').data(html, (d) => d.id);
-        console.log(html);
+        const stylehtml = [];
+        styleTemplates.each(function() {
+            // extract style attribute from template
+            select(this.content).selectAll('style').each(function() {stylehtml.push(this)})
+        });
+        const styles = select(this.root).selectAll('style').data(stylehtml);
+        styles.exit().remove();
+        styles.enter().merge(styles).html((d) => d.innerHTML);
+
+        const nodeTemplates = templates.filter(function() {
+            return this.getAttribute('template-type') === 'node';
+        });
+        const nodehtml = [];
+        nodeTemplates.each(function() {
+            nodehtml.push(this);
+        });
+        const defs = this.getSvg().select('defs');
+        const defTemplates = defs.selectAll('g.template').data(nodehtml, (d) => d.id);
 
         defTemplates.exit().remove();
         defTemplates.enter()
@@ -499,8 +522,17 @@ export default class GraphEditor extends HTMLElement {
      * @param nodeSelection d3 selection of nodes to update with bound data
      */
     private updateNodes(nodeSelection) {
-        nodeSelection.select('.child')
-            .attr('fill', 'black')
+        if (nodeSelection == null) {
+            const svg = this.getSvg();
+
+            const graph = svg.select("g.zoom-group");
+            nodeSelection = graph.select('.nodes')
+                .selectAll('g.node')
+                .data(this._nodes, (d) => {return d.id;});
+        }
+
+        nodeSelection
+            .call(this.updateNodeHighligts.bind(this));
     }
 
     /**
@@ -522,7 +554,18 @@ export default class GraphEditor extends HTMLElement {
      * @param edgeSelection d3 selection of edges to update with bound data
      */
     private updateEdges(edgeSelection) {
-        edgeSelection.attr('stroke', 'black');
+        if (edgeSelection == null) {
+            const svg = this.getSvg();
+
+            const graph = svg.select("g.zoom-group");
+            edgeSelection = graph.select('.edges')
+                .selectAll('path.edge:not(.dragged)')
+                .data(this._edges, edgeId);
+        }
+
+        edgeSelection
+            .attr('stroke', 'black')
+            .call(this.updateEdgeHighligts.bind(this));
     }
 
     /**
@@ -565,7 +608,8 @@ export default class GraphEditor extends HTMLElement {
         if (this._mode === 'link' && this.interactionStateData.source != null) {
             this.interactionStateData.target = nodeDatum.id;
         }
-        this.updateHighligts();
+        this.updateNodeHighligts();
+        this.updateEdgeHighligts();
     }
 
     /**
@@ -578,7 +622,8 @@ export default class GraphEditor extends HTMLElement {
         if (this._mode === 'link' && this.interactionStateData.target === nodeDatum.id) {
             this.interactionStateData.target = null;
         }
-        this.updateHighligts();
+        this.updateNodeHighligts();
+        this.updateEdgeHighligts();
     }
 
     /**
@@ -593,9 +638,7 @@ export default class GraphEditor extends HTMLElement {
         if (this._mode !== 'select') {
             this.updateMode('select');
             this.interactionStateData.selected.add(nodeDatum.id);
-            return;
-        }
-        if (this.interactionStateData.selected.has(nodeDatum.id)) {
+        } else if (this.interactionStateData.selected.has(nodeDatum.id)) {
             this.interactionStateData.selected.delete(nodeDatum.id);
             if (this.interactionStateData.selected.size <= 0) {
                 this.updateMode(this.interactionStateData.fromMode);
@@ -603,6 +646,8 @@ export default class GraphEditor extends HTMLElement {
         } else {
             this.interactionStateData.selected.add(nodeDatum.id);
         }
+        this.updateNodeHighligts();
+        this.updateEdgeHighligts();
     }
 
     /**
@@ -641,58 +686,63 @@ export default class GraphEditor extends HTMLElement {
     }
 
     /**
-     * Calculate highlighted nodes and update them accordingly.
+     * Calculate highlighted nodes and update their classes.
      */
-    private updateHighligts() {
-        const svg = this.getSvg();
+    private updateNodeHighligts(nodeSelection?) {
+        if (nodeSelection == null) {
+            const svg = this.getSvg();
 
-        const graph = svg.select("g.zoom-group");
-        let nodeSelection = graph.select('.nodes')
-            .selectAll('g.node')
-            .data(this._nodes, (d) => {return d.id;});
-
-        const isHighlighted = (d) => {
-            if (this.hovered.has(d.id)) {
-                return true;
-            }
-            if (this._mode === 'select') {
-                const selected = this.interactionStateData.selected;
-                if (selected != null) {
-                    return selected.has(d.id);
-                }
-            }
-            if (this._mode === 'link') {
-                if (this.interactionStateData.source != null) {
-                    if (d.id === this.interactionStateData.source) {
-                        return true;
-                    }
-                }
-            }
-            return false;
+            const graph = svg.select("g.zoom-group");
+            nodeSelection = graph.select('.nodes')
+                .selectAll('g.node')
+                .data(this._nodes, (d) => {return d.id;});
         }
 
-        nodeSelection.filter((d) => !isHighlighted(d))
-            .call(this.unHighlightNodes.bind(this))
-        nodeSelection.filter(isHighlighted)
-            .call(this.highlightNodes.bind(this));
+        nodeSelection
+            .classed('hovered', (d) => this.hovered.has(d.id))
+            .classed('selected', (d) => {
+                if (this._mode === 'select') {
+                    const selected = this.interactionStateData.selected;
+                    if (selected != null) {
+                        return selected.has(d.id);
+                    }
+                }
+                if (this._mode === 'link') {
+                    if (this.interactionStateData.source != null) {
+                        if (d.id === this.interactionStateData.source) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            });
     }
 
     /**
-     * Remove highlight from existing nodes.
-     *
-     * @param nodeSelection d3 selection of nodes to update with bound data
+     * Calculate highlighted edges and update their classes.
      */
-    private unHighlightNodes(nodeSelection) {
-        nodeSelection.select('.child').attr('fill', 'black');
-    }
+    private updateEdgeHighligts(edgeSelection?) {
+        if (edgeSelection == null) {
+            const svg = this.getSvg();
 
+            const graph = svg.select("g.zoom-group");
+            edgeSelection = graph.select('.edges')
+                .selectAll('path.edge:not(.dragged)')
+                .data(this._edges, edgeId);
+        }
 
-    /**
-     * Add highlight from existing nodes.
-     *
-     * @param nodeSelection d3 selection of nodes to update with bound data
-     */
-    private highlightNodes(nodeSelection) {
-        nodeSelection.select('.child').attr('fill', 'blue');
+        let nodes: Set<number|string> = new Set();
+
+        if (this.mode === 'link') {
+            if (this.interactionStateData.source != null) {
+                nodes.add(this.interactionStateData.source);
+            }
+        } else {
+            nodes = this.hovered;
+        }
+
+        edgeSelection
+            .classed('highlight-outgoing', (d) => nodes.has(d.source))
+            .classed('highlight-incoming', (d) => nodes.has(d.target));
     }
 }
