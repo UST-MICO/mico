@@ -38,7 +38,7 @@ public class GitHubCrawlerTests {
         Service service = crawler.crawlGitHubRepoLatestRelease(absoluteUri);
         serviceRepository.save(service);
 
-        Service readService = serviceRepository.findByShortName(service.getShortName());
+        Service readService = serviceRepository.findByShortNameAndVersion(service.getShortName(), service.getVersion());
         assertEquals(service.getShortName(), readService.getShortName());
         assertEquals(service.getDescription(), readService.getDescription());
         assertEquals(service.getId(), readService.getId());
@@ -58,7 +58,7 @@ public class GitHubCrawlerTests {
         Service service = crawler.crawlGitHubRepoSpecificRelease(absoluteUri, RELEASE);
         serviceRepository.save(service);
 
-        Service readService = serviceRepository.findByShortName(service.getShortName());
+        Service readService = serviceRepository.findByShortNameAndVersion(service.getShortName(), service.getVersion());
         assertEquals(service.getShortName(), readService.getShortName());
         assertEquals(service.getDescription(), readService.getDescription());
         assertEquals(service.getId(), readService.getId());
