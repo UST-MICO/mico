@@ -9,11 +9,14 @@ export class CreateServiceInterfaceComponent implements OnInit {
 
     constructor() { }
 
+    // form elements are stored in here
+    serviceData;
+
     ngOnInit() {
     }
 
-    input() {
-
+    confirmButton() {
+        return this.serviceData;
     }
 
 }

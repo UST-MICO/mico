@@ -1,14 +1,5 @@
 <!-- TODO: add buttons, TODO check usage...-->
 <div class="flex">
-    <h3 class="flex-grow-1">{{service.name}}</h3>
-    <mat-button-toggle class="mv1 inline-flex items-center" value="edit" [checked]="edit" (change)="edit = !edit"><span
-            class="mr2">Edit</span>
-        <mat-icon>edit</mat-icon>
-    </mat-button-toggle>
-</div>
-<mat-divider></mat-divider>
-
-<div class="flex">
     <!-- Information Grid-->
     <div class="flex-grow-1 ma2 ml0 flex flex-column">
 
@@ -76,6 +67,13 @@
     <!-- Controling Grid-->
     <div class="w-25 ma2 flex-column">
 
+        <div class="w-100" style="display: flex; justify-content: flex-end">
+            <mat-button-toggle class="mt1 mb2 inline-flex items-center" value="edit" [checked]="edit" (change)="edit = !edit"><span
+                    class="mr2">Edit</span>
+                <mat-icon>edit</mat-icon>
+            </mat-button-toggle>
+        </div>
+
         <!-- Provides/Dependencies box-->
         <div class="w-100">
             <mat-card>
@@ -98,7 +96,7 @@
                         <mat-divider></mat-divider>
                         <!-- TODO list provides -->
                         <!-- TODO update style as soon as branch mico034 is merged in here-->
-                        <div *ngFor="let interface of interfaces">
+                        <div *ngFor="let interface of serviceInterfaces">
 
                             <div class="flex">
                                 <div class="flex-grow-1">
