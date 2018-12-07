@@ -1,5 +1,9 @@
 import {select, scaleLinear, zoom, zoomIdentity, zoomTransform, event, line, curveStep, drag} from "d3";
 
+import {Node} from './node';
+import {Edge, edgeId} from './edge';
+import { GraphObjectCache } from "./object-cache";
+
 
 export default class GraphEditor extends HTMLElement {
 
@@ -17,17 +21,19 @@ export default class GraphEditor extends HTMLElement {
     private contentMinWidth = 0;
     private contentMaxWidth = 1;
 
-    private hovered: Set<any> = new Set();
+    private hovered: Set<number|string> = new Set();
 
-    private _nodes: any[];
-    private _edges: any[];
+    private _nodes: Node[];
+    private _edges: Edge[];
     private _mode: string = 'display'; // interaction mode ['display', 'layout', 'link', 'select']
     private allowZoom: boolean = true;
 
+    private objectCache: GraphObjectCache;
+
     private interactionStateData: {
-        source?: any,
-        target?: any,
-        selected?: Set<any>,
+        source?: number|string,
+        target?: number|string,
+        selected?: Set<number|string>,
         fromMode?: string,
         [property: string]: any
     } = null;
@@ -40,6 +46,7 @@ export default class GraphEditor extends HTMLElement {
         super();
         this._nodes = [];
         this._edges = [];
+        this.objectCache = new GraphObjectCache();
         this.initialized = false;
         this.edgeGenerator = line().x((d) => d.x).y((d) => d.y).curve(curveStep);
 
@@ -50,18 +57,45 @@ export default class GraphEditor extends HTMLElement {
         });
     }
 
+    get nodeList() {
+        return this._nodes;
+    }
+
+    set nodeList(nodes: Node[]) {
+        this._nodes = nodes;
+        this.objectCache.updateNodeCache(nodes);
+    }
+
+    get edgeList() {
+        return this._edges;
+    }
+
+    set edgeList(edges: Edge[]) {
+        this._edges = edges;
+        this.objectCache.updateEdgeCache(edges);
+    }
+
+    get mode() {
+        return this._mode;
+    }
+
+    set mode(mode: string) {
+        this.updateMode(mode.toLowerCase());
+        this.setAttribute('mode', mode);
+    }
+
     static get observedAttributes() { return ['nodes', 'edges', 'mode', 'zoom']; }
 
     attributeChangedCallback(name, oldValue, newValue: string) {
         if (name === 'nodes') {
             newValue = newValue.replace(/'/g, '"');
             console.log('Nodes ' + newValue);
-            this._nodes = JSON.parse(newValue);
+            this.nodeList = JSON.parse(newValue);
         }
         if (name === 'edges') {
             newValue = newValue.replace(/'/g, '"');
             console.log('Edges ' + newValue);
-            this._edges = JSON.parse(newValue);
+            this.edgeList = JSON.parse(newValue);
         }
         if (name === 'zoom') {
             this.allowZoom = (newValue.toLowerCase() !== 'true')
@@ -81,6 +115,7 @@ export default class GraphEditor extends HTMLElement {
      * @param mode interaction mode (one of ["display", "layout", "link", "select"])
      */
     updateMode(mode: string) {
+        console.log(mode);
         if (mode === this._mode) {
             return;
         }
@@ -394,13 +429,13 @@ export default class GraphEditor extends HTMLElement {
             graph.select('.nodes').selectAll('g.node').remove();
         }
 
-        const nodeSelection = graph.select('.nodes')
+        let nodeSelection = graph.select('.nodes')
             .selectAll('g.node')
             .data(this._nodes, (d) => {return d.id;});
 
         nodeSelection.exit().remove();
 
-        nodeSelection.enter().append("g")
+        nodeSelection = nodeSelection.enter().append("g")
             .classed('node', true)
             .attr('id', (d) => d.id)
             .call(this.createNodes.bind(this))
@@ -426,16 +461,16 @@ export default class GraphEditor extends HTMLElement {
             graph.select('.edges').selectAll('g.edge:not(.dragged)').remove();
         }
 
-        const edgeSelection = graph.select('.edges')
+        let edgeSelection = graph.select('.edges')
             .selectAll('path.edge:not(.dragged)')
-            .data(this._edges, (d) => {return `s${d.source},t${d.target}`;});
+            .data(this._edges, edgeId);
 
         edgeSelection.exit().remove();
 
-        edgeSelection.enter().append('path')
+        edgeSelection = edgeSelection.enter().append('path')
             .classed('edge', true)
             .attr('fill', 'none')
-            .attr('id', (d) => {return `s${d.source},t${d.target}`;})
+            .attr('id', edgeId)
           .merge(edgeSelection)
             .call(this.updateEdges.bind(this))
             .call(this.updateEdgePaths.bind(this));
@@ -497,8 +532,8 @@ export default class GraphEditor extends HTMLElement {
      */
     private updateEdgePaths(edgeSelection) {
         edgeSelection.attr('d', (d) => {
-            const source = this._nodes.find((n) => n.id === d.source);
-            const target = this._nodes.find((n) => n.id === d.target);
+            const source = this.objectCache.getNode(d.source);
+            const target = this.objectCache.getNode(d.target);
             return this.edgeGenerator([source, target]);
         });
     }
@@ -516,7 +551,7 @@ export default class GraphEditor extends HTMLElement {
             .call(this.updateNodePositions.bind(this));
         const edgeSelection = graph.select('.edges')
             .selectAll('path.edge:not(.dragged)')
-            .data(this._edges, (d) => {return `s${d.source},t${d.target}`;})
+            .data(this._edges, edgeId)
             .call(this.updateEdgePaths.bind(this));
     }
 
@@ -599,6 +634,7 @@ export default class GraphEditor extends HTMLElement {
                 target: this.interactionStateData.target,
             });
         }
+        this.objectCache.updateEdgeCache(this._edges);
         this.completeRender();
         this.interactionStateData.source = null;
         this.interactionStateData.target = null;
