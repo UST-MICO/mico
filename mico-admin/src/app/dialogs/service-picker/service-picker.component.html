@@ -41,7 +41,7 @@
 
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selection.toggle(row)">
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selection.toggle(row)" class="example-element-row">
         </tr>
     </table>
 </mat-dialog-content>
