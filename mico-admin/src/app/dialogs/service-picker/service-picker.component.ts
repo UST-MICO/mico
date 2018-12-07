@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ApiService } from 'src/app/api/api.service';
 import { MatDialogRef, MAT_DIALOG_DATA, MatTableDataSource } from '@angular/material';
@@ -25,7 +25,7 @@ export interface Service {
     styleUrls: ['./service-picker.component.css']
 })
 
-export class ServicePickerComponent implements OnInit {
+export class ServicePickerComponent implements OnInit, OnDestroy {
 
     serviceList;
     filter = FilterTypes.None;
@@ -33,7 +33,7 @@ export class ServicePickerComponent implements OnInit {
 
     private serviceSubscription: Subscription;
 
-    displayedColumns: string[] = ['select', 'id', 'name', 'shortName', 'description'];
+    displayedColumns: string[] = ['select', 'name', 'shortName', 'description'];
     dataSource;
     selection = new SelectionModel<Service>(true, []);
 
@@ -71,6 +71,10 @@ export class ServicePickerComponent implements OnInit {
 
         });
         this.dataSource = new MatTableDataSource(tempList);
+    }
+
+    ngOnDestroy() {
+        this.serviceSubscription.unsubscribe();
     }
 
     getSelectedService() {

@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ApiService } from '../api/api.service';
@@ -13,7 +13,7 @@ import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.com
     templateUrl: './service-detail-overview.component.html',
     styleUrls: ['./service-detail-overview.component.css']
 })
-export class ServiceDetailOverviewComponent implements OnInit {
+export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
 
     private serviceSubscription: Subscription;
     private paramSubscription: Subscription;
@@ -39,6 +39,11 @@ export class ServiceDetailOverviewComponent implements OnInit {
         this.paramSubscription = this.route.params.subscribe(params => {
             this.update(parseInt(params['id'], 10));
         });
+    }
+
+    ngOnDestroy() {
+        this.serviceSubscription.unsubscribe();
+        this.paramSubscription.unsubscribe();
     }
 
     update(id) {
