@@ -42,8 +42,12 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy() {
-        this.serviceSubscription.unsubscribe();
-        this.paramSubscription.unsubscribe();
+        if (this.serviceSubscription != null) {
+            this.serviceSubscription.unsubscribe();
+        }
+        if (this.paramSubscription != null) {
+            this.paramSubscription.unsubscribe();
+        }
     }
 
     update(id) {

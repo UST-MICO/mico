@@ -74,7 +74,9 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy() {
-        this.serviceSubscription.unsubscribe();
+        if (this.serviceSubscription != null) {
+            this.serviceSubscription.unsubscribe();
+        }
     }
 
     getSelectedService() {
