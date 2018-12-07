@@ -1,6 +1,7 @@
 package io.github.ust.mico.core;
 
 import io.github.ust.mico.core.REST.ServiceController;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.BDDMockito.given;
@@ -96,6 +98,45 @@ public class ServiceControllerTests {
                 .andExpect(jsonPath("$.version", is(version)))
                 .andExpect(jsonPath("$._links.self.href", is(linksSelf)))
                 .andExpect(jsonPath("$._links.services.href", is(linksServices)))
+                .andReturn();
+    }
+
+    @Test
+    public void getServiceInterfaces() throws Exception {
+        ServiceInterface serviceInterface1 = new ServiceInterface("ServiceInterfaceName1");
+        serviceInterface1.setDescription("serviceInterfaceDescription1");
+        serviceInterface1.setPort("1024");
+        serviceInterface1.setProtocol("HTTP");
+
+        ServiceInterface serviceInterface2 = new ServiceInterface("ServiceInterfaceName2");
+        serviceInterface2.setDescription("serviceInterfaceDescription2");
+        serviceInterface2.setPort("1025");
+        serviceInterface2.setProtocol("MQTT");
+
+        String serviceShortName = "ShortName";
+        String serviceVersion = "1.0";
+        List<ServiceInterface> serviceInterfaces = Arrays.asList(
+                serviceInterface1,
+                serviceInterface2);
+        given(serviceRepository.findInterfacesOfService(serviceShortName, serviceVersion)).willReturn(
+                serviceInterfaces);
+
+        mvc.perform(get("/services/" + serviceShortName + "/1.0/interfaces").accept(MediaTypes.HAL_JSON_VALUE))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andExpect(jsonPath("$._embedded.serviceInterfaceList[*]", hasSize(serviceInterfaces.size())))
+                .andExpect(jsonPath("$._embedded.serviceInterfaceList[?(@.serviceInterfaceName =='ServiceInterfaceName1' " +
+                        "&& @.description == '" + serviceInterface1.getDescription() + "' " +
+                        "&& @.port == '" + serviceInterface1.getPort() + "' " +
+                        "&& @.protocol == '" + serviceInterface1.getProtocol() + "' " +
+                        "&& @._links.self.href =~ /[\\S]+\\/services\\/" + serviceShortName + "\\/1\\.0\\/interfaces\\/ServiceInterfaceName1/i )]", hasSize(1)))
+                .andExpect(jsonPath("$._embedded.serviceInterfaceList[?(@.serviceInterfaceName =='ServiceInterfaceName2' " +
+                        "&& @.description == '" + serviceInterface2.getDescription() + "' " +
+                        "&& @.port == '" + serviceInterface2.getPort() + "' " +
+                        "&& @.protocol == '" + serviceInterface2.getProtocol() + "' " +
+                        "&& @._links.self.href =~ /[\\S]+\\/services\\/" + serviceShortName + "\\/1\\.0\\/interfaces\\/ServiceInterfaceName2/i )]", hasSize(1)))
+                .andExpect(jsonPath("$._links.self.href", endsWith("/services/ShortName/1.0/interfaces")))
                 .andReturn();
     }
 
