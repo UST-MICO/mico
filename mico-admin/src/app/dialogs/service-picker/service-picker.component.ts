@@ -11,6 +11,11 @@ enum FilterTypes {
     External,
 }
 
+enum ChoiceTypes {
+    single,
+    multi,
+}
+
 
 export interface Service {
     name: string;
@@ -29,11 +34,12 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
 
     serviceList;
     filter = FilterTypes.None;
+    choiceModel = ChoiceTypes.multi;
     exisitingDependencies: number[] = [];
 
     private serviceSubscription: Subscription;
 
-    displayedColumns: string[] = ['select', 'name', 'shortName', 'description'];
+    displayedColumns: string[] = ['name', 'shortName', 'description'];
     dataSource;
     selection = new SelectionModel<Service>(true, []);
 
@@ -43,6 +49,13 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
             this.filter = FilterTypes.Internal;
         } else if (data.filter === 'external') {
             this.filter = FilterTypes.External;
+        }
+
+        if (data.choice === 'single') {
+            this.choiceModel = ChoiceTypes.single;
+        } else if (data.choice === 'multi') {
+            this.choiceModel = ChoiceTypes.multi;
+            this.displayedColumns = ['select', 'name', 'shortName', 'description'];
         }
 
         data.exisitingDependencies.forEach(element => {
