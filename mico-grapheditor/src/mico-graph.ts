@@ -31,7 +31,7 @@ export default class GraphEditor extends HTMLElement {
     private _nodes: Node[];
     private _edges: Edge[];
     private _mode: string = 'display'; // interaction mode ['display', 'layout', 'link', 'select']
-    private allowZoom: boolean = true;
+    private _zoomMode: string = 'both'; // ['none', 'manual', 'automatic', 'both']
 
     private objectCache: GraphObjectCache;
 
@@ -62,7 +62,7 @@ export default class GraphEditor extends HTMLElement {
         this.mutationObserver = new MutationObserver(() => {
             this.updateTemplates();
             this.completeRender(true);
-            this.zoomToBoundingBox();
+            this.zoomToBoundingBox(false);
         });
     }
 
@@ -107,7 +107,7 @@ export default class GraphEditor extends HTMLElement {
             this.edgeList = JSON.parse(newValue);
         }
         if (name === 'zoom') {
-            this.allowZoom = (newValue.toLowerCase() !== 'true')
+            this.updateZoomMode(newValue.toLowerCase());
             this.completeRender();
         }
         if (name === 'mode') {
@@ -115,7 +115,7 @@ export default class GraphEditor extends HTMLElement {
         }
         this.initialize();
         this.completeRender();
-        this.zoomToBoundingBox();
+        this.zoomToBoundingBox(false);
     }
 
     /**
@@ -124,7 +124,6 @@ export default class GraphEditor extends HTMLElement {
      * @param mode interaction mode (one of ["display", "layout", "link", "select"])
      */
     updateMode(mode: string) {
-        console.log(mode);
         if (mode === this._mode) {
             return;
         }
@@ -164,13 +163,47 @@ export default class GraphEditor extends HTMLElement {
         }
     }
 
+    /**
+     * Set the graph zoom mode.
+     *
+     * @param mode zoom mode (one of ["none", "manual", "automatic", "both"])
+     */
+    updateZoomMode(mode: string) {
+        if (mode === this._mode) {
+            return;
+        }
+        if (mode === 'none') {
+            if (this._zoomMode != 'none') {
+                this._zoomMode = 'none';
+                this.completeRender();
+            }
+        } else if (mode === 'manual') {
+            if (this._zoomMode != 'manual') {
+                this._zoomMode = 'manual';
+                this.completeRender();
+            }
+        } else if (mode === 'automatic') {
+            if (this._mode != 'automatic') {
+                this._zoomMode = 'automatic';
+                this.completeRender();
+            }
+        } else if (mode === 'both') {
+            if (this._mode != 'both') {
+                this._zoomMode = 'both';
+                this.completeRender();
+            }
+        } else {
+            console.log(`Wrong zoom mode "${mode}". Allowed are: ["none", "manual", "automatic", "both"]`)
+        }
+    }
+
     connectedCallback() {
         if (! this.isConnected) {
             return;
         }
         //this.initialize();
         this.completeRender();
-        this.zoomToBoundingBox();
+        this.zoomToBoundingBox(false);
 
         this.mutationObserver.observe(this, {
             childList: true,
@@ -367,11 +400,18 @@ export default class GraphEditor extends HTMLElement {
 
     /**
      * Zooms and pans the graph to get all content inside the visible area.
+     *
+     * @param force if false only zooms in zoomMode 'automatic' and 'both' (default=true)
      */
-    private zoomToBoundingBox() {
+    private zoomToBoundingBox(force: boolean=true) {
         if (! this.initialized || ! this.isConnected) {
             return;
         }
+
+        if (!(force || this._zoomMode === 'automatic' || this._zoomMode === 'both')) {
+            return;
+        }
+
         const svg = this.getSvg();
 
         // reset zoom
@@ -437,7 +477,7 @@ export default class GraphEditor extends HTMLElement {
         }
         const svg = this.getSvg();
 
-        if (this.allowZoom) {
+        if (this._zoomMode === 'manual' || this._zoomMode === 'both') {
             svg.call(this.zoom);
         } else {
             svg.on('.zoom', null);
