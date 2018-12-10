@@ -126,4 +126,13 @@ public class ServiceControllerTests {
         result.andExpect(status().isCreated());
     }
 
+    @Test
+    public void createServiceWithDependees() throws Exception {
+        Service service = new Service(SHORT_NAME,VERSION,DESCRIPTION);
+
+        given(serviceRepository.save(any(Service.class))).willReturn(service);
+
+
+    }
+
 }
