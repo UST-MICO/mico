@@ -41,7 +41,7 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
 
     displayedColumns: string[] = ['name', 'shortName', 'description'];
     dataSource;
-    selection = new SelectionModel<Service>(true, []);
+    selection;
 
     constructor(public dialogRef: MatDialogRef<ServicePickerComponent>, @Inject(MAT_DIALOG_DATA) public data: any, private apiService: ApiService) {
 
@@ -53,9 +53,11 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
 
         if (data.choice === 'single') {
             this.choiceModel = ChoiceTypes.single;
+            this.selection = new SelectionModel<Service>(false, []);
         } else if (data.choice === 'multi') {
             this.choiceModel = ChoiceTypes.multi;
             this.displayedColumns = ['select', 'name', 'shortName', 'description'];
+            this.selection = new SelectionModel<Service>(true, []);
         }
 
         data.exisitingDependencies.forEach(element => {
@@ -133,5 +135,11 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
         this.isAllSelected() ?
             this.selection.clear() :
             this.dataSource.data.forEach(row => this.selection.select(row));
+    }
+
+    selectedRowIndex: number = -1;
+
+    highlight(row) {
+        this.selectedRowIndex = row.id;
     }
 }

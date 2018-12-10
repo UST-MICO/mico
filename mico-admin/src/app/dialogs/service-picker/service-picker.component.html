@@ -9,7 +9,9 @@
 
         <!-- Checkbox Column -->
         <div *ngIf="choiceModel==1">
-            <!-- 1: multi -->
+            <!-- 1: multi
+            insert checkboxes
+            -->
             <ng-container matColumnDef="select" class="pr2">
                 <th mat-header-cell *matHeaderCellDef>
                     <mat-checkbox (change)="$event ? masterToggle() : null" [checked]="selection.hasValue() && isAllSelected()"
@@ -44,8 +46,24 @@
 
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selection.toggle(row)" class="table-row">
-        </tr>
+        <div *ngIf="choiceModel==1">
+            <!-- 1: multi
+            no row highlighting
+            -->
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selection.toggle(row)" class="table-row"
+                [ngClass]="{'highlight': selectedRowIndex == row.id}">
+            </tr>
+        </div>
+        <div *ngIf="choiceModel==0">
+            <!-- 0: single
+            selected row is highlighted
+            -->
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selection.toggle(row)" class="table-row"
+                [ngClass]="{'highlight': selectedRowIndex == row.id}" (click)="highlight(row)">
+            </tr>
+        </div>
+
+
     </table>
 </mat-dialog-content>
 <mat-dialog-actions>

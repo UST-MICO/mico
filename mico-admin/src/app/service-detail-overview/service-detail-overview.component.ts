@@ -104,7 +104,7 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
         const dialogRef = this.dialog.open(ServicePickerComponent, {
             data: {
                 filter: "internal",
-                choice: "single",
+                choice: "multi",
                 exisitingDependencies: this.internalDependencies,
                 serviceId: this.id,
             }
