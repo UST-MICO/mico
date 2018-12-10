@@ -1,5 +1,6 @@
 package io.github.ust.mico.core.REST;
 
+import io.github.ust.mico.core.DependsOn;
 import io.github.ust.mico.core.Service;
 import io.github.ust.mico.core.ServiceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,12 +68,64 @@ public class ServiceController {
 
     @PostMapping
     public ResponseEntity<Resource<Service>> createService(@RequestBody Service newService){
-        Service savedService = serviceRepository.save(newService);
+        if(newService.getDependsOn() == null){
+            Service savedService = serviceRepository.save(newService);
 
-        return ResponseEntity
-                .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
-                .body(new Resource<>(newService,getServiceLinks(newService)));
+            return ResponseEntity
+                    .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+                    .body(new Resource<>(newService,getServiceLinks(newService)));
+        }else{
+            List<DependsOn> dependees = newService.getDependsOn();
+            LinkedList<Service> services = getDependentServices(dependees);
+            List<DependsOn> newDependees = new LinkedList<>();
 
+            services.forEach(service -> {
+                Optional<Service> serviceOpt = serviceRepository.findById(service.getId());
+                serviceOpt.isPresent();
+                DependsOn dependsOnService = new DependsOn(serviceOpt.get());
+                newDependees.add(dependsOnService);
+            });
+
+            newService.setDependsOn(newDependees);
+
+            Service savedService = serviceRepository.save(newService);
+
+            return ResponseEntity
+                    .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+                    .body(new Resource<>(newService,getServiceLinks(newService)));
+        }
+    }
+
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
+    public ResponseEntity<Resources<Resource<Service>>> getDependees(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version){
+        Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
+
+        Service service = serviceOpt.get();
+        
+        List<DependsOn> dependees = service.getDependsOn();
+        LinkedList<Service> services = getDependentServices(dependees);
+
+        List<Resource<Service>> resourceList = getServiceResourcesList(services);
+
+        return ResponseEntity.ok(
+                new Resources<>(resourceList,
+                        linkTo(methodOn(ServiceController.class).getDependees(shortName,version)).withSelfRel()));
+    }
+
+    private LinkedList<Service> getDependentServices(List<DependsOn> dependees){
+        LinkedList<Service> services = new LinkedList<>();
+
+        dependees.forEach(dependee -> {
+            String shortName = dependee.getService().getShortName();
+            String version = dependee.getService().getVersion();
+
+            Optional<Service> dependeeServiceOpt = serviceRepository.findByShortNameAndVersion(shortName,version);
+            Service dependeeService = dependeeServiceOpt.get();
+            services.add(dependeeService);
+        });
+
+        return services;
     }
 
     private List<Resource<Service>> getServiceResourcesList(List<Service> services) {
@@ -80,13 +133,11 @@ public class ServiceController {
                 .collect(Collectors.toList());
     }
 
-
     private Iterable<Link> getServiceLinks(Service service) {
         LinkedList<Link> links = new LinkedList<>();
         links.add(linkTo(methodOn(ServiceController.class).getServiceByShortNameAndVersion(service.getShortName(), service.getVersion())).withSelfRel());
         links.add(linkTo(methodOn(ServiceController.class).getServiceList()).withRel("services"));
         return links;
     }
-
 
 }
