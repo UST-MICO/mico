@@ -1,4 +1,13 @@
-import {select, scaleLinear, zoom, zoomIdentity, zoomTransform, event, line, curveLinear} from "d3";
+import {select, scaleLinear, zoom, zoomIdentity, zoomTransform, event, line, curveStep, drag} from "d3";
+
+import {Node} from './node';
+import {Edge, edgeId} from './edge';
+import { GraphObjectCache } from "./object-cache";
+
+const SHADOW_DOM_TEMPLATE = `
+<style>
+</style>
+`
 
 
 export default class GraphEditor extends HTMLElement {
@@ -17,56 +26,199 @@ export default class GraphEditor extends HTMLElement {
     private contentMinWidth = 0;
     private contentMaxWidth = 1;
 
-    private isInteractive: boolean = true;
-    private _nodes: any[];
-    private _edges: any[];
+    private hovered: Set<number|string> = new Set();
+
+    private _nodes: Node[];
+    private _edges: Edge[];
+    private _mode: string = 'display'; // interaction mode ['display', 'layout', 'link', 'select']
+    private _zoomMode: string = 'both'; // ['none', 'manual', 'automatic', 'both']
+
+    private objectCache: GraphObjectCache;
+
+    private interactionStateData: {
+        source?: number|string,
+        target?: number|string,
+        selected?: Set<number|string>,
+        fromMode?: string,
+        [property: string]: any
+    } = null;
+
+    private get isInteractive(): boolean {
+        return (this._mode !== 'display') && !(this._mode === 'select' && this.interactionStateData.fromMode === 'display');
+    }
 
     constructor() {
         super();
         this._nodes = [];
         this._edges = [];
+        this.objectCache = new GraphObjectCache();
         this.initialized = false;
-        this.edgeGenerator = line().x((d) => d.x).y((d) => d.y).curve(curveLinear);
+        this.edgeGenerator = line().x((d) => d.x).y((d) => d.y).curve(curveStep);
 
-        this.mutationObserver = new MutationObserver(this.completeRender.bind(this));
+        this.root = this.attachShadow({mode: 'open'});
+
+        select(this.root).html(SHADOW_DOM_TEMPLATE);
+
+        this.mutationObserver = new MutationObserver(() => {
+            this.updateTemplates();
+            this.completeRender(true);
+            this.zoomToBoundingBox(false);
+        });
     }
 
-    static get observedAttributes() { return ['nodes', 'edges']; }
+    get nodeList() {
+        return this._nodes;
+    }
+
+    set nodeList(nodes: Node[]) {
+        this._nodes = nodes;
+        this.objectCache.updateNodeCache(nodes);
+    }
+
+    get edgeList() {
+        return this._edges;
+    }
+
+    set edgeList(edges: Edge[]) {
+        this._edges = edges;
+        this.objectCache.updateEdgeCache(edges);
+    }
+
+    get mode() {
+        return this._mode;
+    }
+
+    set mode(mode: string) {
+        this.updateMode(mode.toLowerCase());
+        this.setAttribute('mode', mode);
+    }
+
+    static get observedAttributes() { return ['nodes', 'edges', 'mode', 'zoom']; }
 
     attributeChangedCallback(name, oldValue, newValue: string) {
         if (name === 'nodes') {
             newValue = newValue.replace(/'/g, '"');
             console.log('Nodes ' + newValue);
-            this._nodes = JSON.parse(newValue);
+            this.nodeList = JSON.parse(newValue);
         }
         if (name === 'edges') {
             newValue = newValue.replace(/'/g, '"');
             console.log('Edges ' + newValue);
-            this._edges = JSON.parse(newValue);
+            this.edgeList = JSON.parse(newValue);
         }
+        if (name === 'zoom') {
+            this.updateZoomMode(newValue.toLowerCase());
+            this.completeRender();
+        }
+        if (name === 'mode') {
+            this.updateMode(newValue.toLowerCase());
+        }
+        this.initialize();
         this.completeRender();
-        this.updateLayout();
+        this.zoomToBoundingBox(false);
+    }
+
+    /**
+     * Set the graph interaction mode and cleanup temp data from old interaction mode.
+     *
+     * @param mode interaction mode (one of ["display", "layout", "link", "select"])
+     */
+    updateMode(mode: string) {
+        if (mode === this._mode) {
+            return;
+        }
+        if (mode === 'display') {
+            if (this._mode != 'display') {
+                this.interactionStateData = null;
+                this._mode = 'display';
+                this.completeRender();
+            }
+        } else if (mode === 'layout') {
+            if (this._mode != 'layout') {
+                this.interactionStateData = null;
+                this._mode = 'layout';
+                this.completeRender();
+            }
+        } else if (mode === 'link') {
+            if (this._mode != 'link') {
+                this.interactionStateData = {
+                    source: null,
+                    target: null,
+                    allowedTargets: new Set(),
+                }
+                this._mode = 'link';
+                this.completeRender();
+            }
+        } else if (mode === 'select') {
+            if (this._mode != 'select') {
+                this.interactionStateData = {
+                    selected: new Set(),
+                    fromMode: this._mode,
+                }
+                this._mode = 'select';
+                this.completeRender();
+            }
+        } else {
+            console.log(`Wrong mode "${mode}". Allowed are: ["display", "layout", "link", "select"]`)
+        }
+    }
+
+    /**
+     * Set the graph zoom mode.
+     *
+     * @param mode zoom mode (one of ["none", "manual", "automatic", "both"])
+     */
+    updateZoomMode(mode: string) {
+        if (mode === this._mode) {
+            return;
+        }
+        if (mode === 'none') {
+            if (this._zoomMode != 'none') {
+                this._zoomMode = 'none';
+                this.completeRender();
+            }
+        } else if (mode === 'manual') {
+            if (this._zoomMode != 'manual') {
+                this._zoomMode = 'manual';
+                this.completeRender();
+            }
+        } else if (mode === 'automatic') {
+            if (this._mode != 'automatic') {
+                this._zoomMode = 'automatic';
+                this.completeRender();
+            }
+        } else if (mode === 'both') {
+            if (this._mode != 'both') {
+                this._zoomMode = 'both';
+                this.completeRender();
+            }
+        } else {
+            console.log(`Wrong zoom mode "${mode}". Allowed are: ["none", "manual", "automatic", "both"]`)
+        }
     }
 
     connectedCallback() {
         if (! this.isConnected) {
             return;
         }
-        this.initialize();
+        //this.initialize();
         this.completeRender();
-        this.updateLayout();
+        this.zoomToBoundingBox(false);
 
         this.mutationObserver.observe(this, {
             childList: true,
             characterData: true,
-            subtree: true
+            subtree: true,
         });
     }
 
+    /**
+     * Initialize the shadow dom with a drawing svg.
+     */
     initialize() {
         if (!this.initialized) {
             this.initialized = true;
-            this.root = this.attachShadow({mode: 'open'});
+
             const svg = select(this.root).append('svg')
                 .attr('class', 'graph-editor')
                 .attr('width', '100%')
@@ -212,19 +364,12 @@ export default class GraphEditor extends HTMLElement {
                 graph.attr('transform', event.transform);
             });
 
-            svg.call(this.zoom);
-
-            if (!this.isInteractive) {
-                svg.on('.zoom', null);
-            }
-
-
             graph.append('g')
                 .attr('class', 'edges')
-                .attr('filter', 'url(#shadow-edge)');
+            //    .attr('filter', 'url(#shadow-edge)') <- performance drain...
             //  .append('circle')
-            //    .attr('cx', 0)
-            //    .attr('cy', 0)
+            //    .attr('cx', -100)
+            //    .attr('cy', -100)
             //    .attr('r', 0.1)
             //    .attr('fill', '#FFFFFF'); // fix for shadow of first line
 
@@ -253,10 +398,20 @@ export default class GraphEditor extends HTMLElement {
         this.xScale.range([0, Math.max(this.contentMaxWidth, this.contentMinWidth)]);
     }
 
-    private updateLayout() {
+    /**
+     * Zooms and pans the graph to get all content inside the visible area.
+     *
+     * @param force if false only zooms in zoomMode 'automatic' and 'both' (default=true)
+     */
+    private zoomToBoundingBox(force: boolean=true) {
         if (! this.initialized || ! this.isConnected) {
             return;
         }
+
+        if (!(force || this._zoomMode === 'automatic' || this._zoomMode === 'both')) {
+            return;
+        }
+
         const svg = this.getSvg();
 
         // reset zoom
@@ -278,60 +433,169 @@ export default class GraphEditor extends HTMLElement {
         svg.call(this.zoom.transform, newZoom);
     }
 
-    completeRender() {
+    /**
+     * Get templates in this dom-node and render them into defs node of svg or style tags.
+     */
+    updateTemplates() {
+        const templates = select(this).selectAll('template');
+        const styleTemplates = templates.filter(function() {
+            return this.getAttribute('template-type') === 'style';
+        });
+        const stylehtml = [];
+        styleTemplates.each(function() {
+            // extract style attribute from template
+            select(this.content).selectAll('style').each(function() {stylehtml.push(this)})
+        });
+        const styles = select(this.root).selectAll('style').data(stylehtml);
+        styles.exit().remove();
+        styles.enter().merge(styles).html((d) => d.innerHTML);
+
+        const nodeTemplates = templates.filter(function() {
+            return this.getAttribute('template-type') === 'node';
+        });
+        const nodehtml = [];
+        nodeTemplates.each(function() {
+            nodehtml.push(this);
+        });
+        const defs = this.getSvg().select('defs');
+        const defTemplates = defs.selectAll('g.template').data(nodehtml, (d) => d.id);
+
+        defTemplates.exit().remove();
+        defTemplates.enter()
+          .append('g')
+          .merge(defTemplates)
+            .attr('id', (d) => d.id)
+            .html((d) => d.innerHTML);
+    }
+
+    /**
+     * Render all changes of the data to the graph.
+     */
+    completeRender(updateTemplates: boolean=false) {
         if (! this.initialized || ! this.isConnected) {
             return;
         }
         const svg = this.getSvg();
+
+        if (this._zoomMode === 'manual' || this._zoomMode === 'both') {
+            svg.call(this.zoom);
+        } else {
+            svg.on('.zoom', null);
+        }
 
         this.updateSize();
 
         const graph = svg.select("g.zoom-group");
 
         // update nodes ////////////////////////////////////////////////////////
-        const nodeSelection = graph.select('.nodes')
+        if (updateTemplates) {
+            graph.select('.nodes').selectAll('g.node').remove();
+        }
+
+        let nodeSelection = graph.select('.nodes')
             .selectAll('g.node')
             .data(this._nodes, (d) => {return d.id;});
 
         nodeSelection.exit().remove();
 
-        nodeSelection.enter().append("g")
+        nodeSelection = nodeSelection.enter().append("g")
             .classed('node', true)
             .attr('id', (d) => d.id)
             .call(this.createNodes.bind(this))
           .merge(nodeSelection)
             .call(this.updateNodes.bind(this))
-            .call(this.updateNodePositions.bind(this));
+            .call(this.updateNodePositions.bind(this))
+            .on('mouseover', (d) => {this.onNodeEnter.bind(this)(d);})
+            .on('mouseout', (d) => {this.onNodeLeave.bind(this)(d);})
+            .on('click', (d) => {this.onNodeClick.bind(this)(d);});
+
+        if (this.isInteractive) {
+            nodeSelection.call(drag().on('drag', (d) => {
+                d.x = event.x;
+                d.y = event.y;
+                this.updateGraphPositions.bind(this)();
+            }));
+        } else {
+            nodeSelection.on('.drag', null);
+        }
 
         // update edges ////////////////////////////////////////////////////////
-        const edgeSelection = graph.select('.edges')
+        if (updateTemplates) {
+            graph.select('.edges').selectAll('g.edge:not(.dragged)').remove();
+        }
+
+        let edgeSelection = graph.select('.edges')
             .selectAll('path.edge:not(.dragged)')
-            .data(this._edges, (d) => {return `s${d.source},t${d.target}`;});
+            .data(this._edges, edgeId);
 
         edgeSelection.exit().remove();
 
-        edgeSelection.enter().append('path')
+        edgeSelection = edgeSelection.enter().append('path')
             .classed('edge', true)
-            .attr('id', (d) => {return `s${d.source},t${d.target}`;})
+            .attr('fill', 'none')
+            .attr('id', edgeId)
           .merge(edgeSelection)
             .call(this.updateEdges.bind(this))
             .call(this.updateEdgePaths.bind(this));
     }
 
 
+    /**
+     * Add nodes to graph.
+     *
+     * @param nodeSelection d3 selection of nodes to add with bound data
+     */
     private createNodes(nodeSelection) {
-        nodeSelection.append('circle');
+        const templateRoot = this.getSvg().select('defs');
+        nodeSelection.html(function(d) {
+            const template = templateRoot.select('#node');
+            if (template.empty()) {
+                return "<circle></circle>";
+            }
+            return template.html();
+        });
     }
 
-
+    /**
+     * Update existing nodes.
+     *
+     * @param nodeSelection d3 selection of nodes to update with bound data
+     */
     private updateNodes(nodeSelection) {
-        nodeSelection.select('circle')
-            .attr('fill', 'black')
-            .attr('cx', 0)
-            .attr('cy', 0)
-            .attr('r', 5);
+        if (nodeSelection == null) {
+            const svg = this.getSvg();
+
+            const graph = svg.select("g.zoom-group");
+            nodeSelection = graph.select('.nodes')
+                .selectAll('g.node')
+                .data(this._nodes, (d) => {return d.id;});
+        }
+
+        nodeSelection
+            .call(this.updateNodeHighligts.bind(this));
+
+        nodeSelection.each(function(d){
+            const singleNodeSelection = select(this);
+            const textSelection = singleNodeSelection.selectAll('.text').datum(function() {
+                return this.getAttribute('data-content');
+            });
+            textSelection.text(function(attr) {
+                if (attr != null) {
+                    const text = d[attr];
+                    if (text != null) {
+                        return text;
+                    }
+                }
+                return '';
+            })
+        })
     }
 
+    /**
+     * Update node positions.
+     *
+     * @param nodeSelection d3 selection of nodes to update with bound data
+     */
     private updateNodePositions(nodeSelection) {
         nodeSelection.attr('transform', (d) => {
                 const x = d.x != null ? d.x : 0;
@@ -340,17 +604,201 @@ export default class GraphEditor extends HTMLElement {
             });
     }
 
-
+    /**
+     * Update existing edges.
+     *
+     * @param edgeSelection d3 selection of edges to update with bound data
+     */
     private updateEdges(edgeSelection) {
-        edgeSelection.attr('stroke', 'black');
+        if (edgeSelection == null) {
+            const svg = this.getSvg();
+
+            const graph = svg.select("g.zoom-group");
+            edgeSelection = graph.select('.edges')
+                .selectAll('path.edge:not(.dragged)')
+                .data(this._edges, edgeId);
+        }
+
+        edgeSelection
+            .attr('stroke', 'black')
+            .call(this.updateEdgeHighligts.bind(this));
     }
 
+    /**
+     * Update existing edge path.
+     *
+     * @param edgeSelection d3 selection of edges to update with bound data
+     */
     private updateEdgePaths(edgeSelection) {
         edgeSelection.attr('d', (d) => {
-            const source = this._nodes.find((n) => n.id === d.source);
-            const target = this._nodes.find((n) => n.id === d.target);
-            console.log(source, target)
+            const source = this.objectCache.getNode(d.source);
+            const target = this.objectCache.getNode(d.target);
             return this.edgeGenerator([source, target]);
         });
+    }
+
+    /**
+     * UUpdate all node positions and edge paths.
+     */
+    private updateGraphPositions() {
+        const svg = this.getSvg();
+
+        const graph = svg.select("g.zoom-group");
+        const nodeSelection = graph.select('.nodes')
+            .selectAll('g.node')
+            .data(this._nodes, (d) => {return d.id;})
+            .call(this.updateNodePositions.bind(this));
+        const edgeSelection = graph.select('.edges')
+            .selectAll('path.edge:not(.dragged)')
+            .data(this._edges, edgeId)
+            .call(this.updateEdgePaths.bind(this));
+    }
+
+    /**
+     * Callback on nodes for mouseEnter event.
+     *
+     * @param nodeDatum Corresponding datum of node
+     */
+    private onNodeEnter(nodeDatum) {
+        this.hovered.add(nodeDatum.id);
+        if (this._mode === 'link' && this.interactionStateData.source != null) {
+            this.interactionStateData.target = nodeDatum.id;
+        }
+        this.updateNodeHighligts();
+        this.updateEdgeHighligts();
+    }
+
+    /**
+     * Callback on nodes for mouseLeave event.
+     *
+     * @param nodeDatum Corresponding datum of node
+     */
+    private onNodeLeave(nodeDatum) {
+        this.hovered.delete(nodeDatum.id);
+        if (this._mode === 'link' && this.interactionStateData.target === nodeDatum.id) {
+            this.interactionStateData.target = null;
+        }
+        this.updateNodeHighligts();
+        this.updateEdgeHighligts();
+    }
+
+    /**
+     * Callback on nodes for click event.
+     *
+     * @param nodeDatum Corresponding datum of node
+     */
+    private onNodeClick(nodeDatum) {
+        if (this._mode === 'link') {
+            return this.onNodeSelectLink(nodeDatum);
+        }
+        if (this._mode !== 'select') {
+            this.updateMode('select');
+            this.interactionStateData.selected.add(nodeDatum.id);
+        } else if (this.interactionStateData.selected.has(nodeDatum.id)) {
+            this.interactionStateData.selected.delete(nodeDatum.id);
+            if (this.interactionStateData.selected.size <= 0) {
+                this.updateMode(this.interactionStateData.fromMode);
+            }
+        } else {
+            this.interactionStateData.selected.add(nodeDatum.id);
+        }
+        this.updateNodeHighligts();
+        this.updateEdgeHighligts();
+    }
+
+    /**
+     * Selection logik in 'link' mode.
+     *
+     * @param nodeDatum Corresponding datum of node
+     */
+    private onNodeSelectLink(nodeDatum) {
+        if (this.interactionStateData.source == null) {
+            this.interactionStateData.source = nodeDatum.id;
+            return;
+        }
+        if (nodeDatum.id === this.interactionStateData.source) {
+            // doesn't handle edges to self
+            this.interactionStateData.source = null;
+            this.interactionStateData.target = null;
+            return;
+        }
+        this.interactionStateData.target = nodeDatum.id;
+        const oldEdge = this._edges.findIndex((e) => {
+            return (e.source === this.interactionStateData.source) &&
+            (e.target === this.interactionStateData.target);
+        });
+        if (oldEdge !== -1) {
+            this._edges.splice(oldEdge, 1);
+        } else {
+            this._edges.push({
+                source: this.interactionStateData.source,
+                target: this.interactionStateData.target,
+            });
+        }
+        this.objectCache.updateEdgeCache(this._edges);
+        this.completeRender();
+        this.interactionStateData.source = null;
+        this.interactionStateData.target = null;
+    }
+
+    /**
+     * Calculate highlighted nodes and update their classes.
+     */
+    private updateNodeHighligts(nodeSelection?) {
+        if (nodeSelection == null) {
+            const svg = this.getSvg();
+
+            const graph = svg.select("g.zoom-group");
+            nodeSelection = graph.select('.nodes')
+                .selectAll('g.node')
+                .data(this._nodes, (d) => {return d.id;});
+        }
+
+        nodeSelection
+            .classed('hovered', (d) => this.hovered.has(d.id))
+            .classed('selected', (d) => {
+                if (this._mode === 'select') {
+                    const selected = this.interactionStateData.selected;
+                    if (selected != null) {
+                        return selected.has(d.id);
+                    }
+                }
+                if (this._mode === 'link') {
+                    if (this.interactionStateData.source != null) {
+                        if (d.id === this.interactionStateData.source) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            });
+    }
+
+    /**
+     * Calculate highlighted edges and update their classes.
+     */
+    private updateEdgeHighligts(edgeSelection?) {
+        if (edgeSelection == null) {
+            const svg = this.getSvg();
+
+            const graph = svg.select("g.zoom-group");
+            edgeSelection = graph.select('.edges')
+                .selectAll('path.edge:not(.dragged)')
+                .data(this._edges, edgeId);
+        }
+
+        let nodes: Set<number|string> = new Set();
+
+        if (this.mode === 'link') {
+            if (this.interactionStateData.source != null) {
+                nodes.add(this.interactionStateData.source);
+            }
+        } else {
+            nodes = this.hovered;
+        }
+
+        edgeSelection
+            .classed('highlight-outgoing', (d) => nodes.has(d.source))
+            .classed('highlight-incoming', (d) => nodes.has(d.target));
     }
 }

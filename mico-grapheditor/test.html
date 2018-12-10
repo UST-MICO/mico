@@ -3,13 +3,33 @@
     <head>
         <meta charset="utf-8" />
         <title>Test</title>
+        <style>
+            html {height: 100%}
+            body {height: 100%}
+        </style>
     </head>
     <body>
         <script src="./dist/bundle.js"></script>
-        <network-graph nodes="[{'id': 1, 'title': 'hello world', 'x': 0, 'y': 0}, {'id': 2, 'title': 'HI2', 'x': 50, 'y': 50}]"
-                edges="[{'source': 1, 'target': 2}]">
-            <template>
-                <h1 data-content="Hello World!"></h1>
+        <network-graph nodes="[{'id': 1, 'title': 'hello world', 'type': 'REST', 'x': 0, 'y': 0}, {'id': 2, 'title': 'HI2', 'type': 'gRPC', 'x': 150, 'y': 100}]"
+                edges="[{'source': 1, 'target': 2}]"
+                mode="layout"
+                zoom="both">
+            <template template-type="style">
+                <style>
+                    .node {fill: aqua;}
+                    .text {fill: black;}
+                    .text.title {width: 80;}
+                    .node.hovered {fill: red;}
+                    .node.selected {fill: green; content:attr(class)}
+                    .edge.highlight-outgoing {stroke: red;}
+                    .edge.highlight-incoming {stroke: green;}
+                </style>
+            </template>
+            <template id="node" template-type="node">
+                <rect width="100" height="60" x="-50" y="-30">
+                </rect>
+                <text class="title text" data-content="title" x="-40" y="-10"></text>
+                <text class="text" data-content="type" x="-40" y="10"></text>
             </template>
         </network-graph>
     </body>
