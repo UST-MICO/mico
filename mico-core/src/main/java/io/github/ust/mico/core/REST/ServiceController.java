@@ -59,7 +59,7 @@ public class ServiceController {
 
     //TODO: Ambiguous endpoint with /services/shortName
     //@GetMapping("/{" + PATH_VARIABLE_ID + "}/")
-    public ResponseEntity<Resource<Service>> getServiceById(@PathVariable(PATH_VARIABLE_ID) Long id){
+    public ResponseEntity<Resource<Service>> getServiceById(@PathVariable(PATH_VARIABLE_ID) Long id) {
         Optional<Service> serviceOpt = serviceRepository.findById(id);
 
         return serviceOpt.map(service -> new Resource<>(service, getServiceLinks(service)))
@@ -67,14 +67,14 @@ public class ServiceController {
     }
 
     @PostMapping
-    public ResponseEntity<Resource<Service>> createService(@RequestBody Service newService){
-        if(newService.getDependsOn() == null){
+    public ResponseEntity<Resource<Service>> createService(@RequestBody Service newService) {
+        if (newService.getDependsOn() == null) {
             Service savedService = serviceRepository.save(newService);
 
             return ResponseEntity
                     .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
-                    .body(new Resource<>(newService,getServiceLinks(newService)));
-        }else{
+                    .body(new Resource<>(newService, getServiceLinks(newService)));
+        } else {
             List<DependsOn> dependees = newService.getDependsOn();
             LinkedList<Service> services = getDependentServices(dependees);
             List<DependsOn> newDependees = new LinkedList<>();
@@ -92,17 +92,17 @@ public class ServiceController {
 
             return ResponseEntity
                     .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
-                    .body(new Resource<>(newService,getServiceLinks(newService)));
+                    .body(new Resource<>(newService, getServiceLinks(newService)));
         }
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
     public ResponseEntity<Resources<Resource<Service>>> getDependees(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version){
+                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
 
         Service service = serviceOpt.get();
-        
+
         List<DependsOn> dependees = service.getDependsOn();
         LinkedList<Service> services = getDependentServices(dependees);
 
@@ -110,17 +110,17 @@ public class ServiceController {
 
         return ResponseEntity.ok(
                 new Resources<>(resourceList,
-                        linkTo(methodOn(ServiceController.class).getDependees(shortName,version)).withSelfRel()));
+                        linkTo(methodOn(ServiceController.class).getDependees(shortName, version)).withSelfRel()));
     }
 
-    private LinkedList<Service> getDependentServices(List<DependsOn> dependees){
+    private LinkedList<Service> getDependentServices(List<DependsOn> dependees) {
         LinkedList<Service> services = new LinkedList<>();
 
         dependees.forEach(dependee -> {
             String shortName = dependee.getService().getShortName();
             String version = dependee.getService().getVersion();
 
-            Optional<Service> dependeeServiceOpt = serviceRepository.findByShortNameAndVersion(shortName,version);
+            Optional<Service> dependeeServiceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
             Service dependeeService = dependeeServiceOpt.get();
             services.add(dependeeService);
         });
