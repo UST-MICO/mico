@@ -43,7 +43,11 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
     dataSource;
     selection;
 
-    constructor(public dialogRef: MatDialogRef<ServicePickerComponent>, @Inject(MAT_DIALOG_DATA) public data: any, private apiService: ApiService) {
+    // used for highlighting
+    selectedRowIndex: number = -1;
+
+    constructor(public dialogRef: MatDialogRef<ServicePickerComponent>, @Inject(MAT_DIALOG_DATA) public data: any,
+        private apiService: ApiService) {
 
         if (data.filter === 'internal') {
             this.filter = FilterTypes.Internal;
@@ -100,16 +104,16 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
 
     private filterElement = (element): boolean => {
 
-        var val = false;
+        let val = false;
 
         if (!this.exisitingDependencies.includes(parseInt(element.id, 10))) {
-            if (this.filter == FilterTypes.None) {
+            if (this.filter === FilterTypes.None) {
                 val = true;
-            } else if (this.filter == FilterTypes.Internal) {
+            } else if (this.filter === FilterTypes.Internal) {
                 if (!element.external) {
                     val = true;
                 }
-            } else if (this.filter == FilterTypes.External) {
+            } else if (this.filter === FilterTypes.External) {
                 if (element.external) {
                     val = true;
                 }
@@ -136,8 +140,6 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
             this.selection.clear() :
             this.dataSource.data.forEach(row => this.selection.select(row));
     }
-
-    selectedRowIndex: number = -1;
 
     highlight(row) {
         this.selectedRowIndex = row.id;

@@ -103,8 +103,8 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
         // TODO change back to multi
         const dialogRef = this.dialog.open(ServicePickerComponent, {
             data: {
-                filter: "internal",
-                choice: "multi",
+                filter: 'internal',
+                choice: 'multi',
                 exisitingDependencies: this.internalDependencies,
                 serviceId: this.id,
             }
@@ -118,8 +118,8 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
     addExternalDependency() {
         const dialogRef = this.dialog.open(ServicePickerComponent, {
             data: {
-                filter: "external",
-                choice: "multi",
+                filter: 'external',
+                choice: 'multi',
                 exisitingDependencies: this.externalDependencies,
                 serviceId: this.id,
             }
@@ -141,7 +141,7 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
 
         dialogRef.afterClosed().subscribe(result => {
             if (result) {
-                console.log("delete " + id)
+                console.log('delete ' + id);
                 // TODO really delete the dependency
             }
         });
