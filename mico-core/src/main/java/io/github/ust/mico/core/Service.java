@@ -1,6 +1,5 @@
 package io.github.ust.mico.core;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModelProperty;
 import org.neo4j.ogm.annotation.GeneratedValue;
@@ -18,7 +17,7 @@ public class Service {
     @GeneratedValue
     private Long id;
     @ApiModelProperty(required = true)
-    private String version;
+    private String version; //internal MICO version (Format: X.Y.Z) //TODO: Do we want to rename 'version' to 'micoVersion'?
     @ApiModelProperty(required = true)
     private String shortName;
     @ApiModelProperty(required = true)
@@ -40,6 +39,14 @@ public class Service {
     @Relationship(direction = Relationship.UNDIRECTED)
     private List<ServiceInterface> serviceInterfaces;
 
+    //crawling information
+    private String externalVersion;
+    private CrawlingSource crawlingSource;
+
+    //docker information
+    private String dockerImageName;
+    private String dockerImageUri;
+
     public Service() {
     }
 
@@ -58,7 +65,7 @@ public class Service {
         this.description = description;
     }
 
-    public Long getId(){
+    public Long getId() {
         return id;
     }
 
@@ -181,6 +188,38 @@ public class Service {
 
     public void setServiceInterfaces(List<ServiceInterface> serviceInterfaces) {
         this.serviceInterfaces = serviceInterfaces;
+    }
+
+    public CrawlingSource getCrawlingSource() {
+        return crawlingSource;
+    }
+
+    public void setCrawlingSource(CrawlingSource crawlingSource) {
+        this.crawlingSource = crawlingSource;
+    }
+
+    public String getDockerImageName() {
+        return dockerImageName;
+    }
+
+    public void setDockerImageName(String dockerImageName) {
+        this.dockerImageName = dockerImageName;
+    }
+
+    public String getDockerImageUri() {
+        return dockerImageUri;
+    }
+
+    public void setDockerImageUri(String dockerImageUri) {
+        this.dockerImageUri = dockerImageUri;
+    }
+
+    public String getExternalVersion() {
+        return externalVersion;
+    }
+
+    public void setExternalVersion(String externalVersion) {
+        this.externalVersion = externalVersion;
     }
 
     @Override
