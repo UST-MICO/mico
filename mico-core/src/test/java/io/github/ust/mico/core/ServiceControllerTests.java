@@ -32,6 +32,10 @@ import static org.hamcrest.CoreMatchers.*;
 @OverrideAutoConfiguration(enabled = true) //Needed to override our neo4j config
 public class ServiceControllerTests {
 
+    private static final String JSON_PATH_LINKS_SECTION = "$._links.";
+    private static final String SELF_HREF = "self.href";
+    private static final String INTERFACES_HREF = "interfaces.href";
+    private static final String SERVICE_INTERFACE_SELF_LINK_PART = "services/ShortName/1.0/interfaces";
     @Autowired
     private MockMvc mvc;
 
@@ -54,7 +58,7 @@ public class ServiceControllerTests {
                 .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ShortName1' && @.version == '1.0.0' && @.description == 'Test service' )]", hasSize(1)))
                 .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ShortName1' && @.version == '1.0.1' && @.description == 'Test service' )]", hasSize(1)))
                 .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ShortName2' && @.version == '1.0.0' && @.description == 'Test service2' )]", hasSize(1)))
-                .andExpect(jsonPath("$._links.self.href", is("http://localhost/services")))
+                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "self.href", is("http://localhost/services")))
                 .andReturn();
     }
 
@@ -70,8 +74,8 @@ public class ServiceControllerTests {
                 .andExpect(jsonPath("$.description", is("Test service")))
                 .andExpect(jsonPath("$.shortName", is("ShortName1")))
                 .andExpect(jsonPath("$.version", is("1.0.1")))
-                .andExpect(jsonPath("$._links.self.href", is("http://localhost/services/ShortName1/1.0.1")))
-                .andExpect(jsonPath("$._links.services.href", is("http://localhost/services")))
+                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/services/ShortName1/1.0.1")))
+                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "services.href", is("http://localhost/services")))
                 .andReturn();
     }
 
@@ -86,7 +90,7 @@ public class ServiceControllerTests {
         String linksSelf = "http://localhost" + urlTemplate;
         String linksServices = "http://localhost/services";
 
-        given(serviceRepository.findById(id)).willReturn(Optional.of(new Service(shortName,version,description)));
+        given(serviceRepository.findById(id)).willReturn(Optional.of(new Service(shortName, version, description)));
 
         mvc.perform(get(urlTemplate).accept(MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andDo(print())
@@ -96,22 +100,15 @@ public class ServiceControllerTests {
                 .andExpect(jsonPath("$.description", is(description)))
                 .andExpect(jsonPath("$.shortName", is(shortName)))
                 .andExpect(jsonPath("$.version", is(version)))
-                .andExpect(jsonPath("$._links.self.href", is(linksSelf)))
-                .andExpect(jsonPath("$._links.services.href", is(linksServices)))
+                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is(linksSelf)))
+                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "services.href", is(linksServices)))
                 .andReturn();
     }
 
     @Test
     public void getServiceInterfaces() throws Exception {
-        ServiceInterface serviceInterface1 = new ServiceInterface("ServiceInterfaceName1");
-        serviceInterface1.setDescription("serviceInterfaceDescription1");
-        serviceInterface1.setPort("1024");
-        serviceInterface1.setProtocol("HTTP");
-
-        ServiceInterface serviceInterface2 = new ServiceInterface("ServiceInterfaceName2");
-        serviceInterface2.setDescription("serviceInterfaceDescription2");
-        serviceInterface2.setPort("1025");
-        serviceInterface2.setProtocol("MQTT");
+        ServiceInterface serviceInterface1 = generateServiceInterface("ServiceInterfaceName1", "serviceInterfaceDescription1", "1024", "HTTP");
+        ServiceInterface serviceInterface2 = generateServiceInterface("ServiceInterfaceName2", "serviceInterfaceDescription2", "1025", "MQTT");
 
         String serviceShortName = "ShortName";
         String serviceVersion = "1.0";
@@ -121,7 +118,7 @@ public class ServiceControllerTests {
         given(serviceRepository.findInterfacesOfService(serviceShortName, serviceVersion)).willReturn(
                 serviceInterfaces);
 
-        mvc.perform(get("/services/" + serviceShortName + "/1.0/interfaces").accept(MediaTypes.HAL_JSON_VALUE))
+        mvc.perform(get("/services/" + serviceShortName + "/" + serviceVersion + "/interfaces").accept(MediaTypes.HAL_JSON_VALUE))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
@@ -136,8 +133,36 @@ public class ServiceControllerTests {
                         "&& @.port == '" + serviceInterface2.getPort() + "' " +
                         "&& @.protocol == '" + serviceInterface2.getProtocol() + "' " +
                         "&& @._links.self.href =~ /[\\S]+\\/services\\/" + serviceShortName + "\\/1\\.0\\/interfaces\\/ServiceInterfaceName2/i )]", hasSize(1)))
-                .andExpect(jsonPath("$._links.self.href", endsWith("/services/ShortName/1.0/interfaces")))
+                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, endsWith("/services/ShortName/1.0/interfaces")))
                 .andReturn();
+    }
+
+    @Test
+    public void getServiceInterface() throws Exception {
+        ServiceInterface serviceInterface = generateServiceInterface("ServiceInterfaceName1", "serviceInterfaceDescription1", "1024", "HTTP");
+        String serviceShortName = "ShortName";
+        String serviceVersion = "1.0";
+        given(serviceRepository.findInterfaceOfServiceByName(serviceInterface.getServiceInterfaceName(), serviceShortName, serviceVersion)).willReturn(
+                Optional.of(serviceInterface));
+
+        mvc.perform(get("/services/" + serviceShortName + "/" + serviceVersion + "/interfaces/" + serviceInterface.getServiceInterfaceName()).accept(MediaTypes.HAL_JSON_VALUE))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andExpect(jsonPath("$.description", is(serviceInterface.getDescription())))
+                .andExpect(jsonPath("$.serviceInterfaceName", is(serviceInterface.getServiceInterfaceName())))
+                .andExpect(jsonPath("$.protocol", is(serviceInterface.getProtocol())))
+                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, endsWith(SERVICE_INTERFACE_SELF_LINK_PART + "/ServiceInterfaceName1")))
+                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + INTERFACES_HREF, endsWith(SERVICE_INTERFACE_SELF_LINK_PART)))
+                .andReturn();
+    }
+
+    private ServiceInterface generateServiceInterface(String serviceInterfaceName1, String serviceInterfaceDescription1, String s, String http) {
+        ServiceInterface serviceInterface1 = new ServiceInterface(serviceInterfaceName1);
+        serviceInterface1.setDescription(serviceInterfaceDescription1);
+        serviceInterface1.setPort(s);
+        serviceInterface1.setProtocol(http);
+        return serviceInterface1;
     }
 
 
