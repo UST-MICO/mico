@@ -1,5 +1,6 @@
 package io.github.ust.mico.core.REST;
 
+import io.github.ust.mico.core.DependsOn;
 import io.github.ust.mico.core.Service;
 import io.github.ust.mico.core.ServiceInterface;
 import io.github.ust.mico.core.ServiceRepository;
@@ -9,10 +10,7 @@ import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -26,11 +24,13 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 @RequestMapping(value = "/services", produces = MediaTypes.HAL_JSON_VALUE)
 public class ServiceController {
 
+
     public static final String PATH_VARIABLE_SHORT_NAME = "shortName";
     public static final String PATH_VARIABLE_VERSION = "version";
     public static final String PATH_VARIABLE_ID = "id";
     private static final String PATH_VARIABLE_SERVICE_INTERFACE_NAME = "serviceInterfaceName";
     private static final String PATH_PART_INTERFACES = "/interfaces";
+
 
     @Autowired
     private ServiceRepository serviceRepository;
@@ -92,6 +92,68 @@ public class ServiceController {
                 .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
+    @PostMapping
+    public ResponseEntity<Resource<Service>> createService(@RequestBody Service newService) {
+        if (newService.getDependsOn() == null) {
+            Service savedService = serviceRepository.save(newService);
+
+            return ResponseEntity
+                    .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+                    .body(new Resource<>(newService, getServiceLinks(newService)));
+        } else {
+            List<DependsOn> dependees = newService.getDependsOn();
+            LinkedList<Service> services = getDependentServices(dependees);
+            List<DependsOn> newDependees = new LinkedList<>();
+
+            services.forEach(service -> {
+                Optional<Service> serviceOpt = serviceRepository.findById(service.getId());
+                serviceOpt.isPresent();
+                DependsOn dependsOnService = new DependsOn(serviceOpt.get());
+                newDependees.add(dependsOnService);
+            });
+
+            newService.setDependsOn(newDependees);
+
+            Service savedService = serviceRepository.save(newService);
+
+            return ResponseEntity
+                    .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+                    .body(new Resource<>(newService, getServiceLinks(newService)));
+        }
+    }
+
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
+    public ResponseEntity<Resources<Resource<Service>>> getDependees(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
+
+        Service service = serviceOpt.get();
+
+        List<DependsOn> dependees = service.getDependsOn();
+        LinkedList<Service> services = getDependentServices(dependees);
+
+        List<Resource<Service>> resourceList = getServiceResourcesList(services);
+
+        return ResponseEntity.ok(
+                new Resources<>(resourceList,
+                        linkTo(methodOn(ServiceController.class).getDependees(shortName, version)).withSelfRel()));
+    }
+
+    private LinkedList<Service> getDependentServices(List<DependsOn> dependees) {
+        LinkedList<Service> services = new LinkedList<>();
+
+        dependees.forEach(dependee -> {
+            String shortName = dependee.getService().getShortName();
+            String version = dependee.getService().getVersion();
+
+            Optional<Service> dependeeServiceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
+            Service dependeeService = dependeeServiceOpt.get();
+            services.add(dependeeService);
+        });
+
+        return services;
+    }
+
     private List<Resource<Service>> getServiceResourcesList(List<Service> services) {
         return services.stream().map(service -> new Resource<>(service, getServiceLinks(service)))
                 .collect(Collectors.toList());
@@ -110,6 +172,5 @@ public class ServiceController {
         links.add(linkTo(methodOn(ServiceController.class).getServiceList()).withRel("services"));
         return links;
     }
-
 
 }
