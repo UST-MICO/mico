@@ -49,6 +49,8 @@ public class GitHubCrawler {
             return service;
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (VersionNotSupportedException e) {
+            e.printStackTrace();
         }
         return null;
     }
@@ -58,20 +60,18 @@ public class GitHubCrawler {
     // 1.0.0, 1.0.0-foo, 1.0.0-0.1.1, 1.0.0-rc.1, v1.0.0, v1.0.0-foo, v1.0.0-0.1.1, v1.0.0-rc.1
     // Java Regex: \d+\.\d+\.\d+
     // This Java Regex (Format: X.Y.Z) will be extracted.
-    public String makeExternalVersionInternal(String externalVersion) {
+    public String makeExternalVersionInternal(String externalVersion) throws VersionNotSupportedException {
         Pattern patternSemanticVersioning = Pattern.compile("^v?\\d+\\.\\d+\\.\\d+(-?.+)?$");
         Matcher matcherSemanticVersioning = patternSemanticVersioning.matcher(externalVersion);
         Pattern patternInternalVersioning = Pattern.compile("\\d+\\.\\d+\\.\\d+");
         Matcher matcherInternalVersioning = patternInternalVersioning.matcher(externalVersion);
 
-        if(matcherSemanticVersioning.find()){
+        if (matcherSemanticVersioning.find()) {
             matcherInternalVersioning.find();
             return matcherInternalVersioning.group(0);
-        }else{
-            //TODO: Throw Warning/Exception: 'externalVersion' does not match Java Regex
+        } else {
+            throw new VersionNotSupportedException("Version " + externalVersion + " does not match format 'X.Y.Z' or similar.");
         }
-
-        return null;
     }
 
     //TODO: Change input URI to owner + repo
@@ -105,15 +105,19 @@ public class GitHubCrawler {
             String fullName = basicInfoJson.get("full_name").textValue();
 
             for (JsonNode jsonNode : releaseInfoJson) {
-                Service service = new Service();
-                service.setShortName(shortName);
-                service.setExternalVersion(jsonNode.get("tag_name").textValue());
-                service.setCrawlingSource(CrawlingSource.GITHUB);
-                service.setVersion(makeExternalVersionInternal(service.getExternalVersion()));
-                service.setDescription(description);
-                service.setName(fullName);
-                service.setVcsRoot(jsonNode.get("url").textValue());
-                serviceList.add(service);
+                try {
+                    Service service = new Service();
+                    service.setShortName(shortName);
+                    service.setExternalVersion(jsonNode.get("tag_name").textValue());
+                    service.setCrawlingSource(CrawlingSource.GITHUB);
+                    service.setVersion(makeExternalVersionInternal(service.getExternalVersion()));
+                    service.setDescription(description);
+                    service.setName(fullName);
+                    service.setVcsRoot(jsonNode.get("url").textValue());
+                    serviceList.add(service);
+                } catch (VersionNotSupportedException e) {
+                    e.printStackTrace();
+                }
             }
 
             return serviceList;
