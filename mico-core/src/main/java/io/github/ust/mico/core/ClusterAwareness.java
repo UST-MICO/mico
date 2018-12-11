@@ -14,7 +14,7 @@ import io.kubernetes.client.util.authenticators.GCPAuthenticator;
 import java.io.IOException;
 import java.util.List;
 
-//cluster, node, pod, service
+@Deprecated
 public class ClusterAwareness {
     ApiClient client;
     CoreV1Api api;
