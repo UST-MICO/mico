@@ -88,6 +88,31 @@ public class GitHubCrawlerTests {
     }
 
     @Test
+    public void testMakeExternalVersionInternal() {
+        final String VERSION1 = "1.0.0";
+        final String VERSION2 = "1.0.0-foo";
+        final String VERSION3 = "1.0.0-0.1.1";
+        final String VERSION4 = "1.0.0-rc.1";
+        final String VERSION5 = "v1.0.0";
+        final String VERSION6 = "v1.0.0-foo";
+        final String VERSION7 = "v1.0.0-0.1.1";
+        final String VERSION8 = "v1.0.0-rc.1";
+        final String VERSION_EXPECTED = "1.0.0";
+
+        RestTemplateBuilder restTemplate = new RestTemplateBuilder();
+        GitHubCrawler crawler = new GitHubCrawler(restTemplate);
+
+        assertEquals(VERSION_EXPECTED, crawler.makeExternalVersionInternal(VERSION1));
+        assertEquals(VERSION_EXPECTED, crawler.makeExternalVersionInternal(VERSION2));
+        assertEquals(VERSION_EXPECTED, crawler.makeExternalVersionInternal(VERSION3));
+        assertEquals(VERSION_EXPECTED, crawler.makeExternalVersionInternal(VERSION4));
+        assertEquals(VERSION_EXPECTED, crawler.makeExternalVersionInternal(VERSION5));
+        assertEquals(VERSION_EXPECTED, crawler.makeExternalVersionInternal(VERSION6));
+        assertEquals(VERSION_EXPECTED, crawler.makeExternalVersionInternal(VERSION7));
+        assertEquals(VERSION_EXPECTED, crawler.makeExternalVersionInternal(VERSION8));
+    }
+
+    @Test
     public void cleanupDatabase() {
         serviceRepository.deleteAll();
         dependsOnRepository.deleteAll();
