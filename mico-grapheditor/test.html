@@ -13,6 +13,7 @@
         <network-graph nodes="[{'id': 1, 'title': 'hello world', 'type': 'REST', 'x': 0, 'y': 0}, {'id': 2, 'title': 'HI2', 'type': 'gRPC', 'x': 150, 'y': 100}]"
                 edges="[{'source': 1, 'target': 2}]"
                 mode="layout"
+                onclick="() => console.log('HI')"
                 zoom="both">
             <template template-type="style">
                 <style>
@@ -28,9 +29,70 @@
             <template id="node" template-type="node">
                 <rect width="100" height="60" x="-50" y="-30">
                 </rect>
-                <text class="title text" data-content="title" x="-40" y="-10"></text>
+                <text class="title text" data-content="title" data-click="title" x="-40" y="-10"></text>
                 <text class="text" data-content="type" x="-40" y="10"></text>
             </template>
         </network-graph>
+
+        <script>
+            var graph = document.querySelector('network-graph');
+
+            if (true) {
+                graph.nodeList = [
+                    {id: 1, title: 'hello world2', type: 'REST', x: 0, y: 0},
+                    {id: 2, title: 'HI 3', type: 'gRPC', x: 150, y: 100},
+                    {id: 3, title: 'New', type: 'gRPC', x: 270, y: 50},
+                ];
+                graph.edgeList = [
+                    {source: 1, target: 2},
+                    {source: 2, target: 3},
+                ]
+
+                graph.addNode({id: 4, title: 'NEU', type: 'mqtt', x: 130, y: -50});
+                graph.addEdge({source: 4, target: 1});
+
+                graph.removeNode(3);
+
+                graph.completeRender();
+                graph.zoomToBoundingBox();
+            }
+
+            if (true) {
+                graph.addEventListener('selection', function test(event) {
+                    console.log(event.type, event.detail);
+                });
+                graph.addEventListener('nodeclick', function test(event) {
+                    console.log(event.type, event.detail);
+                    if (event.detail.key === 'title') {
+                        event.preventDefault();
+                    }
+                });
+            }
+            if (false) {
+                graph.addEventListener('nodeenter', function test(event) {
+                    console.log(event.type, event.detail);
+                });
+                graph.addEventListener('nodeleave', function test(event) {
+                    console.log(event.type, event.detail);
+                });
+                graph.addEventListener('nodepositionchange', function test(event) {
+                    console.log(event.type, event.detail);
+                });
+            }
+            if (true) {
+                graph.addEventListener('nodeadd', function test(event) {
+                    console.log(event.type, event.detail);
+                });
+                graph.addEventListener('noderemove', function test(event) {
+                    console.log(event.type, event.detail);
+                });
+                graph.addEventListener('edgeadd', function test(event) {
+                    console.log(event.type, event.detail);
+                });
+                graph.addEventListener('edgeremove', function test(event) {
+                    console.log(event.type, event.detail);
+                });
+            }
+        </script>
     </body>
 </html>
