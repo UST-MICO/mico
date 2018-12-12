@@ -29,26 +29,28 @@ public class Service {
     private String description;
 
     //additional fields
-    private Service predecessor;
-    private String vcsRoot;
-    private String name;
-    private String dockerfile;
-    private String contact;
-    private List<String> tags;
-    private String lifecycle;
-    private List<String> links;
-    private String type;
-    private String owner;
+    private Service predecessor; // -
+    private String vcsRoot; // x
+    private String name; // x
+    private String dockerfile; // x
+    private String contact; // x
+    private List<String> tags; // -
+    private String lifecycle; // -
+    private List<String> links; // -
+    private String type; // -
+    private String owner; // x
     @Relationship(type = "DEPENDS_ON")
-    private List<DependsOn> dependsOn;
+    private List<DependsOn> dependsOn; // service dependencies
     @Relationship(direction = Relationship.UNDIRECTED)
-    private List<ServiceInterface> serviceInterfaces;
+    private List<ServiceInterface> serviceInterfaces; // service interfaces
+
     //crawling information
     private String externalVersion;
     private CrawlingSource crawlingSource;
     //docker information
     private String dockerImageName;
     private String dockerImageUri;
+
     public Service() {
     }
 
