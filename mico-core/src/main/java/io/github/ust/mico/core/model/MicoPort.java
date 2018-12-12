@@ -1,6 +1,4 @@
-package io.github.ust.mico.core.mapping;
-
-import org.neo4j.ogm.annotation.NodeEntity;
+package io.github.ust.mico.core.model;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
@@ -12,7 +10,6 @@ import lombok.Value;
  */
 @Value
 @Builder
-@NodeEntity
 public class MicoPort {
 
 	// ----------------------
@@ -21,11 +18,11 @@ public class MicoPort {
 	
 	// The port number.
 	@ApiModelProperty(required = true)
-	private int number;
+	private final int number;
 	
 	// The type (protocol) of the port.
 	@ApiModelProperty(required = true)
 	@Default
-	private MicoPortType type = MicoPortType.DEFAULT;
+	private final MicoPortType type = MicoPortType.DEFAULT;
 	
 }
