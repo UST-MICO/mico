@@ -129,7 +129,8 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
     addInternalDependency() {
         const dialogRef = this.dialog.open(ServicePickerComponent, {
             data: {
-                filter: "internal",
+                filter: 'internal',
+                choice: 'multi',
                 exisitingDependencies: this.internalDependencies,
                 serviceId: this.id,
             }
@@ -143,7 +144,8 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
     addExternalDependency() {
         const dialogRef = this.dialog.open(ServicePickerComponent, {
             data: {
-                filter: "external",
+                filter: 'external',
+                choice: 'multi',
                 exisitingDependencies: this.externalDependencies,
                 serviceId: this.id,
             }
@@ -165,7 +167,7 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
 
         this.subDeleteDependency = dialogRef.afterClosed().subscribe(result => {
             if (result) {
-                console.log("delete " + id)
+                console.log('delete ' + id);
                 // TODO really delete the dependency
             }
         });
