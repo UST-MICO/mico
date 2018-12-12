@@ -100,7 +100,6 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
     }
 
     addInternalDependency() {
-        // TODO change back to multi
         const dialogRef = this.dialog.open(ServicePickerComponent, {
             data: {
                 filter: 'internal',

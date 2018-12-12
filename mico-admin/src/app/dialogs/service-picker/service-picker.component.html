@@ -8,7 +8,7 @@
     <table mat-table [dataSource]="dataSource" style="width: 100%">
 
         <!-- Checkbox Column -->
-        <div *ngIf="choiceModel==1">
+        <ng-container *ngIf="choiceModel==1">
             <!-- 1: multi
             insert checkboxes
             -->
@@ -24,7 +24,7 @@
                     </mat-checkbox>
                 </td>
             </ng-container>
-        </div>
+        </ng-container>
 
         <!-- Data Columns -->
         <ng-container matColumnDef="id">
@@ -46,22 +46,22 @@
 
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <div *ngIf="choiceModel==1">
+        <ng-container *ngIf="choiceModel==1">
             <!-- 1: multi
             no row highlighting
             -->
             <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selection.toggle(row)" class="table-row"
                 [ngClass]="{'highlight': selectedRowIndex == row.id}">
             </tr>
-        </div>
-        <div *ngIf="choiceModel==0">
+        </ng-container>
+        <ng-container *ngIf="choiceModel==0">
             <!-- 0: single
             selected row is highlighted
             -->
             <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selection.toggle(row)" class="table-row"
                 [ngClass]="{'highlight': selectedRowIndex == row.id}" (click)="highlight(row)">
             </tr>
-        </div>
+        </ng-container>
 
 
     </table>

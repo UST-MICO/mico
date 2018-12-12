@@ -1,6 +1,6 @@
 .highlight{
     background: rgb(219, 75, 87);
-  }
+}
 
 tr.table-row:not(.highlight):hover {
     background: #f5f5f5;
