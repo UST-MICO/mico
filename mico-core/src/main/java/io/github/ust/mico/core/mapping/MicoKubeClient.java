@@ -10,6 +10,9 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.model.MicoServicePort;
 
 /**
  * Provides access to the Kubernetes API.
@@ -65,7 +68,7 @@ public class MicoKubeClient {
 	private List<ContainerPort> createContainerPorts(MicoService service) {
 		List<ContainerPort> ports = new ArrayList<>();
 		
-		for (MicoServiceInterface serviceInterface : service.getInterfaces()) {
+		for (MicoServiceInterface serviceInterface : service.getServiceInterfaces()) {
 			for (MicoServicePort servicePort : serviceInterface.getPorts()) {
 				ports.add(new ContainerPortBuilder()
 						.withContainerPort(servicePort.getTargetPort())

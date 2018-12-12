@@ -1,4 +1,4 @@
-package io.github.ust.mico.core.mapping;
+package io.github.ust.mico.core.model;
 
 /**
  * Enumeration for all port types, e.g., TCP,

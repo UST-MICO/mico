@@ -1,4 +1,4 @@
-package io.github.ust.mico.core.mapping;
+package io.github.ust.mico.core.model;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -20,18 +20,25 @@ public class MicoServiceDependency {
 	
 	@Id
 	@GeneratedValue
-	private long id;
+	private final long id;
 	
 
 	// ----------------------
 	// -> Required fields ---
 	// ----------------------
 	
+	// The id of the depended service.
 	@ApiModelProperty(required = true)
-	private long serviceId;
+	private final long serviceId;
+	
+	// The minimum version of the depended service
+	// that is supported.
 	@ApiModelProperty(required = true)
-	private String minVersion;
+	private final String minVersion;
+	
+	// The maximum version of the depended service
+	// that is supported.
 	@ApiModelProperty(required = true)
-	private String maxVersion;
+	private final String maxVersion;
 
 }

@@ -1,4 +1,4 @@
-package io.github.ust.mico.core.mapping;
+package io.github.ust.mico.core.model;
 
 import java.util.List;
 
@@ -10,6 +10,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Singular;
 
 /**
  * Represents a interface, e.g., REST API, of a {@link MicoService}.
@@ -17,12 +18,12 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 @Builder
-@NodeEntity
+@NodeEntity // TODO: @Jan -> maybe @RelationshipEntity?
 public class MicoServiceInterface {
 	
 	@Id
 	@GeneratedValue
-	private long id;
+	private final long id;
 	
 	
 	// ----------------------
@@ -31,21 +32,30 @@ public class MicoServiceInterface {
 	
 	// The id of the parent service.
 	@ApiModelProperty(required = true)
-	private long serviceId;
+	private final long serviceId;
 	
 	// The list of ports.
 	@ApiModelProperty(required = true)
-	private List<MicoServicePort> ports;
+	@Singular
+	// TODO: @Jan -> maybe Relationship?
+	private final List<MicoServicePort> ports;
+	
 	
 	// ----------------------
 	// -> Optional fields ---
 	// ----------------------
 	
-	// Legacy from initial service model.
+	// The public DNS.
 	private String publicDns;
-	// Legacy from initial service model.
+	
+	// Human readable description of this service interface,
+	// e.g., the functionality provided.
 	private String description;
-	// Legacy from initial service model.
+	
+	// The protocol of this interface, e.g., HTTPS.
 	private String protocol;
+	
+	// The transport protocol, e.g., TCP.
+	private String transportProtocol;
 	
 }

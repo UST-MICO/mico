@@ -1,20 +1,15 @@
-package io.github.ust.mico.core.mapping;
-
-import org.neo4j.ogm.annotation.NodeEntity;
+package io.github.ust.mico.core.model;
 
 import io.swagger.annotations.ApiModelProperty;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
-import lombok.Data;
+import lombok.Value;
 
 /**
  * Represents a basic port with a port number and port type (protocol).
  */
-@Data
-@AllArgsConstructor
+@Value
 @Builder
-@NodeEntity
 public class MicoServicePort {
 
 	// ----------------------
@@ -23,16 +18,16 @@ public class MicoServicePort {
 
 	// The port number of the externally exposed port.
 	@ApiModelProperty(required = true)
-	private int number;
+	private final int number;
 
 	// The type (protocol) of the port
 	// (Pivio -> transport_protocol).
 	@ApiModelProperty(required = true)
 	@Default
-	private MicoPortType type = MicoPortType.DEFAULT;
+	private final MicoPortType type = MicoPortType.DEFAULT;
 
 	// The port of the container.
 	@ApiModelProperty(required = true)
-	private int targetPort;
+	private final int targetPort;
 
 }
