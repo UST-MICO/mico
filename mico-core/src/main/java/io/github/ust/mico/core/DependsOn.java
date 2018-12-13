@@ -59,4 +59,13 @@ public class DependsOn {
     public void setMaxVersion(String maxVersion) {
         this.maxVersion = maxVersion;
     }
+
+    @Override
+    public String toString() {
+        return "DependsOn{" +
+                "service=" + service.toString() +
+                ", minVersion='" + minVersion + '\'' +
+                ", maxVersion='" + maxVersion + '\'' +
+                '}';
+    }
 }
