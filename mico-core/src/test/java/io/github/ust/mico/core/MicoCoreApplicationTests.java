@@ -69,7 +69,7 @@ public class MicoCoreApplicationTests {
         assertEquals(TEST_SERVICE_INTERFACE_DESCRIPTION, serviceInterfaceTest.getDescription());
         assertEquals(TEST_PROTOCOL, serviceInterfaceTest.getProtocol());
         assertEquals(TEST_DNS, serviceInterfaceTest.getPublicDns());
-        assertEquals(TEST_SERVICE_INTERFACE_NAME, serviceInterfaceTest.getServiceName());
+        assertEquals(TEST_SERVICE_INTERFACE_NAME, serviceInterfaceTest.getServiceInterfaceName());
     }
 
     public static Service createServiceInDB() {
@@ -84,7 +84,7 @@ public class MicoCoreApplicationTests {
 		serviceInterface.setDescription(TEST_SERVICE_INTERFACE_DESCRIPTION);
 		serviceInterface.setProtocol(TEST_PROTOCOL);
 		serviceInterface.setPublicDns(TEST_DNS);
-		serviceInterface.setServiceName(TEST_SERVICE_INTERFACE_NAME);
+		serviceInterface.setServiceInterfaceName(TEST_SERVICE_INTERFACE_NAME);
 
 		service.setServiceInterfaces(Collections.singletonList(serviceInterface));
 		return service;
@@ -119,7 +119,7 @@ public class MicoCoreApplicationTests {
         serviceInterface2.setDescription(testsServiceInterface);
         serviceInterface2.setProtocol(TEST_PROTOCOL);
         serviceInterface2.setPublicDns(TEST_DNS);
-        serviceInterface2.setServiceName(testServiceInterfaceName);
+        serviceInterface2.setServiceInterfaceName(testServiceInterfaceName);
         service2.setServiceInterfaces(Collections.singletonList(serviceInterface2));
         DependsOn dependsOn = new DependsOn();
         dependsOn.setMaxVersion("1.0");
