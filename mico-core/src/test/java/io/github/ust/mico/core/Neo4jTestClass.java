@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @Transactional
-abstract class Neo4jTestClass {
+public abstract class Neo4jTestClass {
 
     @Autowired
     ApplicationRepository applicationRepository;
@@ -27,7 +27,7 @@ abstract class Neo4jTestClass {
     ServiceRepository serviceRepository;
 
     @Autowired
-    Session session;
+    Session session; //TODO: Remove Warning 'Could not autowire. No beans of 'Session' type found.'
 
     @Before
     public void setUp() {
