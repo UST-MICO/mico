@@ -1,37 +1,18 @@
 package io.github.ust.mico.core;
 
-import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.test.context.junit4.SpringRunner;
+
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-// TODO: Setup proper integration testing with neo4j
-@Ignore
-@RunWith(SpringRunner.class)
-@SpringBootTest
-public class GitHubCrawlerTests {
+public class GitHubCrawlerTests extends Neo4jTestClass {
     private static final String REPO_URI = "https://api.github.com/repos/octokit/octokit.rb";
     private static final String RELEASE = "v4.12.0";
 
-    @Autowired
-    private ServiceRepository serviceRepository;
-    @Autowired
-    private DependsOnRepository dependsOnRepository;
-    @Autowired
-    private ServiceInterfaceRepository serviceInterfaceRepository;
-
     @Test
     public void testGitHubCrawlerLatestRelease() {
-        serviceRepository.deleteAll();
-        dependsOnRepository.deleteAll();
-        serviceInterfaceRepository.deleteAll();
-
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
         Service service = crawler.crawlGitHubRepoLatestRelease(REPO_URI);
@@ -48,10 +29,6 @@ public class GitHubCrawlerTests {
 
     @Test
     public void testGitHubCrawlerSpecificRelease() {
-        serviceRepository.deleteAll();
-        dependsOnRepository.deleteAll();
-        serviceInterfaceRepository.deleteAll();
-
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
         Service service = crawler.crawlGitHubRepoSpecificRelease(REPO_URI, RELEASE);
@@ -68,10 +45,6 @@ public class GitHubCrawlerTests {
 
     @Test
     public void testGitHubCrawlerAllReleases() {
-        serviceRepository.deleteAll();
-        dependsOnRepository.deleteAll();
-        serviceInterfaceRepository.deleteAll();
-
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
         List<Service> serviceList = crawler.crawlGitHubRepoAllReleases(REPO_URI);
@@ -121,12 +94,5 @@ public class GitHubCrawlerTests {
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
         String version = crawler.makeExternalVersionInternal(VERSION);
-    }
-
-    @Test
-    public void cleanupDatabase() {
-        serviceRepository.deleteAll();
-        dependsOnRepository.deleteAll();
-        serviceInterfaceRepository.deleteAll();
     }
 }

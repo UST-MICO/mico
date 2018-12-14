@@ -1,12 +1,6 @@
 package io.github.ust.mico.core;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.neo4j.ogm.session.Session;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -16,9 +10,7 @@ import java.util.Optional;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.*;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
-public class MicoCoreApplicationTests {
+public class MicoCoreApplicationTests extends Neo4jTestClass {
 
     private static final String TEST_SHORT_NAME = "Test";
     private static final String TEST_SERVICE_DESCRIPTION = "Test Service";
@@ -32,31 +24,8 @@ public class MicoCoreApplicationTests {
     private static final String TEST_LONGER_NAME = "TEST LONGER NAME";
     private static final String TEST_VERSION = "1.0";
 
-    @Autowired
-    private ServiceRepository serviceRepository;
-    @Autowired
-    private DependsOnRepository dependsOnRepository;
-    @Autowired
-    private ServiceInterfaceRepository serviceInterfaceRepository;
-
-    @Autowired
-    Session session;
-
     @Test
-    public void contextLoads() {
-        //TODO: Why is this test needed?
-    }
-
-    @Test
-    @Transactional
     public void testServiceRepository() {
-
-        // Move this into tearDown of an abstracted neo4j test class ;-)
-        session.purgeDatabase();
-
-        serviceRepository.deleteAll();
-        dependsOnRepository.deleteAll();
-        serviceInterfaceRepository.deleteAll();
         serviceRepository.save(createServiceInDB());
 
         Optional<Service> serviceTestOpt = serviceRepository.findByShortNameAndVersion(TEST_SHORT_NAME, TEST_VERSION);
@@ -102,9 +71,6 @@ public class MicoCoreApplicationTests {
 
     @Test
     public void testDependencyServiceRepository() {
-        serviceRepository.deleteAll();
-        dependsOnRepository.deleteAll();
-        serviceInterfaceRepository.deleteAll();
         Service service = createServiceInDB();
 
         String testShortName2 = "ShortName2";
@@ -155,10 +121,6 @@ public class MicoCoreApplicationTests {
 
     @Test
     public void testStoreApplication() {
-        serviceRepository.deleteAll();
-        dependsOnRepository.deleteAll();
-        serviceInterfaceRepository.deleteAll();
-
         Service service1 = new Service("Service1", "0.1");
         Service service2 = new Service("Service2", "0.1");
         Service service3 = new Service("Service3", "0.1");
@@ -198,12 +160,5 @@ public class MicoCoreApplicationTests {
 
         assertNotNull(storedApplication3);
         assertEquals("App3", storedApplication3.getShortName());
-    }
-
-    @Test
-    public void cleanupDatabase() {
-        serviceRepository.deleteAll();
-        dependsOnRepository.deleteAll();
-        serviceInterfaceRepository.deleteAll();
     }
 }
