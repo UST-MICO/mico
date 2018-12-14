@@ -12,22 +12,22 @@ import lombok.Value;
 @Builder
 public class MicoServicePort {
 
-	// ----------------------
-	// -> Required fields ---
-	// ----------------------
+    // ----------------------
+    // -> Required fields ---
+    // ----------------------
 
-	// The port number of the externally exposed port.
-	@ApiModelProperty(required = true)
-	private final int number;
+    // The port number of the externally exposed port.
+    @ApiModelProperty(required = true)
+    private final int number;
 
-	// The type (protocol) of the port
-	// (Pivio -> transport_protocol).
-	@ApiModelProperty(required = true)
-	@Default
-	private final MicoPortType type = MicoPortType.DEFAULT;
+    // The type (protocol) of the port
+    // (Pivio -> transport_protocol).
+    @ApiModelProperty(required = true)
+    @Default
+    private final MicoPortType type = MicoPortType.DEFAULT;
 
-	// The port of the container.
-	@ApiModelProperty(required = true)
-	private final int targetPort;
+    // The port of the container.
+    @ApiModelProperty(required = true)
+    private final int targetPort;
 
 }

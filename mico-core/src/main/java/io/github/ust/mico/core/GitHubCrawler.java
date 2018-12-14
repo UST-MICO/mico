@@ -6,13 +6,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
+
 import java.io.IOException;
 
 public class GitHubCrawler {
 
     private final RestTemplate restTemplate;
 
-    public GitHubCrawler(RestTemplateBuilder restTemplateBuilder){
+    public GitHubCrawler(RestTemplateBuilder restTemplateBuilder) {
         this.restTemplate = restTemplateBuilder.build();
     }
 
@@ -22,7 +23,7 @@ public class GitHubCrawler {
      * @param uri URI for the GitHub Repository
      * @return Service object
      */
-    public Service crawlGitHubRepo(String uri){
+    public Service crawlGitHubRepo(String uri) {
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<String> responseEntity = restTemplate.getForEntity(uri, String.class);
 
@@ -32,10 +33,10 @@ public class GitHubCrawler {
             JsonNode gitHubJson = mapper.readTree(responseEntity.getBody());
             String tagsUrl = gitHubJson.get("tags_url").textValue();
 
-            ResponseEntity<String> tagsResponse = restTemplate.getForEntity(tagsUrl,String.class);
+            ResponseEntity<String> tagsResponse = restTemplate.getForEntity(tagsUrl, String.class);
             JsonNode tagsJson = mapper.readTree(tagsResponse.getBody());
 
-            Service service = new Service(gitHubJson.get("name").textValue(),tagsJson.textValue(),gitHubJson.get("description").textValue());
+            Service service = new Service(gitHubJson.get("name").textValue(), tagsJson.textValue(), gitHubJson.get("description").textValue());
 
             service.setName(gitHubJson.get("full_name").textValue());
             service.setVcsRoot(gitHubJson.get("url").textValue());

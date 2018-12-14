@@ -1,6 +1,5 @@
 package io.github.ust.mico.core;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModelProperty;
 import org.neo4j.ogm.annotation.GeneratedValue;
@@ -58,7 +57,7 @@ public class Service {
         this.description = description;
     }
 
-    public Long getId(){
+    public Long getId() {
         return id;
     }
 

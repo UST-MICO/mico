@@ -20,42 +20,42 @@ import lombok.Singular;
 @Builder
 @NodeEntity // TODO: @Jan -> maybe @RelationshipEntity?
 public class MicoServiceInterface {
-	
-	@Id
-	@GeneratedValue
-	private final long id;
-	
-	
-	// ----------------------
-	// -> Required fields ---
-	// ----------------------
-	
-	// The id of the parent service.
-	@ApiModelProperty(required = true)
-	private final long serviceId;
-	
-	// The list of ports.
-	@ApiModelProperty(required = true)
-	@Singular
-	// TODO: @Jan -> maybe Relationship?
-	private final List<MicoServicePort> ports;
-	
-	
-	// ----------------------
-	// -> Optional fields ---
-	// ----------------------
-	
-	// The public DNS.
-	private String publicDns;
-	
-	// Human readable description of this service interface,
-	// e.g., the functionality provided.
-	private String description;
-	
-	// The protocol of this interface, e.g., HTTPS.
-	private String protocol;
-	
-	// The transport protocol, e.g., TCP.
-	private String transportProtocol;
-	
+
+    @Id
+    @GeneratedValue
+    private final long id;
+
+
+    // ----------------------
+    // -> Required fields ---
+    // ----------------------
+
+    // The id of the parent service.
+    @ApiModelProperty(required = true)
+    private final long serviceId;
+
+    // The list of ports.
+    @ApiModelProperty(required = true)
+    @Singular
+    // TODO: @Jan -> maybe Relationship?
+    private final List<MicoServicePort> ports;
+
+
+    // ----------------------
+    // -> Optional fields ---
+    // ----------------------
+
+    // The public DNS.
+    private String publicDns;
+
+    // Human readable description of this service interface,
+    // e.g., the functionality provided.
+    private String description;
+
+    // The protocol of this interface, e.g., HTTPS.
+    private String protocol;
+
+    // The transport protocol, e.g., TCP.
+    private String transportProtocol;
+
 }

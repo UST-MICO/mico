@@ -12,17 +12,17 @@ import lombok.Value;
 @Builder
 public class MicoPort {
 
-	// ----------------------
-	// -> Required fields ---
-	// ----------------------
-	
-	// The port number.
-	@ApiModelProperty(required = true)
-	private final int number;
-	
-	// The type (protocol) of the port.
-	@ApiModelProperty(required = true)
-	@Default
-	private final MicoPortType type = MicoPortType.DEFAULT;
-	
+    // ----------------------
+    // -> Required fields ---
+    // ----------------------
+
+    // The port number.
+    @ApiModelProperty(required = true)
+    private final int number;
+
+    // The type (protocol) of the port.
+    @ApiModelProperty(required = true)
+    @Default
+    private final MicoPortType type = MicoPortType.DEFAULT;
+
 }
