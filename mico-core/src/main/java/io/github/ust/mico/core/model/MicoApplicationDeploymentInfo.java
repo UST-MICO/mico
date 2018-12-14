@@ -22,21 +22,21 @@ import lombok.Singular;
 @Builder
 @NodeEntity
 public class MicoApplicationDeploymentInfo {
-	
-	@Id
-	@GeneratedValue
-	private final long id;
 
-	
-	// ----------------------
-	// -> Required fields ---
-	// ----------------------
-	
-	// The service deployment info for each service this
-	// application is composed of (service id -> service deployment info).
-	@ApiModelProperty(required = true)
-	@Relationship // TODO: @Jan -> check please.
-	@Singular
-	private final Map<Long, MicoServiceDeploymentInfo> serviceDeploymentInfos;
+    @Id
+    @GeneratedValue
+    private final long id;
+
+
+    // ----------------------
+    // -> Required fields ---
+    // ----------------------
+
+    // The service deployment info for each service this
+    // application is composed of (service id -> service deployment info).
+    @ApiModelProperty(required = true)
+    @Relationship // TODO: @Jan -> check please.
+    @Singular
+    private final Map<Long, MicoServiceDeploymentInfo> serviceDeploymentInfos;
 
 }

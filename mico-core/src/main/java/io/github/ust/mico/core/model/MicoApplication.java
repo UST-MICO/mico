@@ -21,25 +21,25 @@ import lombok.Singular;
 @Builder
 @NodeEntity
 public class MicoApplication {
-	
-	@Id
-	@GeneratedValue
-	private final long id;
 
-	
-	// ----------------------
-	// -> Required fields ---
-	// ----------------------
-	
-	// The ids of the services this application is composed of.
-	// TODO: @Jan -> @Relationship?
-	@ApiModelProperty(required = true)
-	@Singular
-	private final List<Long> services;
-	
-	// The information necessary for deploying this application.
-	// TODO: @Jan -> @Relationship?
-	@ApiModelProperty(required = true)
-	private final MicoApplicationDeploymentInfo deploymentInfo;
+    @Id
+    @GeneratedValue
+    private final long id;
+
+
+    // ----------------------
+    // -> Required fields ---
+    // ----------------------
+
+    // The ids of the services this application is composed of.
+    // TODO: @Jan -> @Relationship?
+    @ApiModelProperty(required = true)
+    @Singular
+    private final List<Long> services;
+
+    // The information necessary for deploying this application.
+    // TODO: @Jan -> @Relationship?
+    @ApiModelProperty(required = true)
+    private final MicoApplicationDeploymentInfo deploymentInfo;
 
 }

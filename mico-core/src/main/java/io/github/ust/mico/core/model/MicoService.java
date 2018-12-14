@@ -23,64 +23,64 @@ import lombok.Singular;
 @Builder
 @NodeEntity
 public class MicoService {
-	
-	@Id
-	@GeneratedValue
-	private final long id;
 
-	
-	// ----------------------
-	// -> Required fields ---
-	// ----------------------
-	
-	// A brief name for the service intended
-	// for use as a unique identifier.
-	@ApiModelProperty(required = true)
-	private final String shortName;
-	
-	// The name of the artifact. Intended for humans. 
-	@ApiModelProperty(required = true)
-	private final String name;
-	
-	// The version of this service.
-	@ApiModelProperty(required = true)
-	private final String version;
-	
-	// Human readable description of this service.
-	@ApiModelProperty(required = true)
-	private final String description;
-	
-	// The list of interfaces this service provides.
-	@ApiModelProperty(required = true)
-	@Relationship // TODO: @Jan -> check please.
-	@Singular
-	private final List<MicoServiceInterface> serviceInterfaces;
-	
-	// The URL to the root directory of, e.g., the
-	// corresponding GitHub repository.
-	@ApiModelProperty(required = true)
-	private final String vcsRoot;
-	
-	// The relative (to vcsRoot) path to the Dockerfile.
-	@ApiModelProperty(required = true)
-	private final String dockerfilePath;
+    @Id
+    @GeneratedValue
+    private final long id;
 
-	
-	// ----------------------
-	// -> Optional fields ---
-	// ----------------------
-	
-	// The list of services that this service requires
-	// in order to run normally.
-	@Relationship // TODO: @Jan -> check please.
-	@Singular
-	private List<MicoServiceDependency> dependencies;
-	
-	// Human readable contact information for support purposes.
-	private String contact;
-	
-	// Human readable information for the service owner
-	// who is responsible for this service.
-	private String owner;
+
+    // ----------------------
+    // -> Required fields ---
+    // ----------------------
+
+    // A brief name for the service intended
+    // for use as a unique identifier.
+    @ApiModelProperty(required = true)
+    private final String shortName;
+
+    // The name of the artifact. Intended for humans.
+    @ApiModelProperty(required = true)
+    private final String name;
+
+    // The version of this service.
+    @ApiModelProperty(required = true)
+    private final String version;
+
+    // Human readable description of this service.
+    @ApiModelProperty(required = true)
+    private final String description;
+
+    // The list of interfaces this service provides.
+    @ApiModelProperty(required = true)
+    @Relationship // TODO: @Jan -> check please.
+    @Singular
+    private final List<MicoServiceInterface> serviceInterfaces;
+
+    // The URL to the root directory of, e.g., the
+    // corresponding GitHub repository.
+    @ApiModelProperty(required = true)
+    private final String vcsRoot;
+
+    // The relative (to vcsRoot) path to the Dockerfile.
+    @ApiModelProperty(required = true)
+    private final String dockerfilePath;
+
+
+    // ----------------------
+    // -> Optional fields ---
+    // ----------------------
+
+    // The list of services that this service requires
+    // in order to run normally.
+    @Relationship // TODO: @Jan -> check please.
+    @Singular
+    private List<MicoServiceDependency> dependencies;
+
+    // Human readable contact information for support purposes.
+    private String contact;
+
+    // Human readable information for the service owner
+    // who is responsible for this service.
+    private String owner;
 
 }

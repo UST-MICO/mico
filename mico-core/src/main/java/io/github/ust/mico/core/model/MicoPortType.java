@@ -5,13 +5,19 @@ package io.github.ust.mico.core.model;
  * supported by MICO.
  */
 public enum MicoPortType {
-	
-	/** Transmission Control Protocol. */
-	TCP,
-	/** User Datagram Protocol. */
-	UDP;
-	
-	/** Default port type is {@link Type#TCP}. */
-	public static MicoPortType DEFAULT = MicoPortType.TCP;
+
+    /**
+     * Transmission Control Protocol.
+     */
+    TCP,
+    /**
+     * User Datagram Protocol.
+     */
+    UDP;
+
+    /**
+     * Default port type is {@link Type#TCP}.
+     */
+    public static MicoPortType DEFAULT = MicoPortType.TCP;
 
 }
