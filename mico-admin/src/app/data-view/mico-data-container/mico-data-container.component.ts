@@ -2,7 +2,7 @@ import { Component, OnInit, Input } from '@angular/core';
 import { ApiModel } from 'src/app/api/apimodel';
 
 @Component({
-    selector: 'mico-mico-data-container',
+    selector: 'mico-data-container',
     templateUrl: './mico-data-container.component.html',
     styleUrls: ['./mico-data-container.component.css']
 })

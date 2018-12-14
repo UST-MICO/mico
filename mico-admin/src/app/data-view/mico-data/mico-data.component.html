@@ -1,5 +1,5 @@
-<div *ngFor="let property of properties;trackBy: trackByFn">
-    <mico-form-question [property]="property" [form]="form"></mico-form-question>
-</div>
-
-<div *ngIf="debug">{{form?.value | json}}</div>
+<mat-list dense>
+    <div *ngFor="let property of properties;trackBy: trackByFn">
+        <mico-data-container [property]="property"></mico-data-container>
+    </div>
+</mat-list>

@@ -5,6 +5,9 @@
 
         <div class="relative w-100">
             <ng-container *ngIf="!edit">
+
+                <mico-data [modelUrl]="'local/micoDataViewTEST'" [startData]="service"></mico-data>
+
                 <!-- display version -->
                 <mat-list dense>
                     <mat-list-item class="mat-list-item mt2">

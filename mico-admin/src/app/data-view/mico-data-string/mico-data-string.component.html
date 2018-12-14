@@ -1,4 +1,8 @@
-<p>
-    mico-data-string works!
-    {{config.title}}: {{config.properties}}
-</p>
+<mat-list-item class="mat-list-item mt2">
+    <b>{{config.title}}</b>
+</mat-list-item>
+<mat-divider></mat-divider>
+<mat-list-item>
+    *insert value*
+</mat-list-item>
+{{config|json}}
