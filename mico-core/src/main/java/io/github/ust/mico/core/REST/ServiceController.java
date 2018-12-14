@@ -137,14 +137,22 @@ public class ServiceController {
     }
 
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
-    public ResponseEntity<Resources<Resource<Service>>> createNewDependee(@RequestBody Service newServiceDependee,
+    public ResponseEntity<Resource<Service>> createNewDependee(@RequestBody Service newServiceDependee,
                                                                           @PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                           @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         Service service = serviceOpt.get();
 
         if (newServiceDependee.getDependsOn() == null) {
+            List<DependsOn> dependees = service.getDependsOn();
+            Service savedDependeeService = serviceRepository.save(newServiceDependee);
+            dependees.add(new DependsOn(service,savedDependeeService));
+            service.setDependsOn(dependees);
+            Service savedService = serviceRepository.save(service);
 
+            return ResponseEntity
+                    .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+                    .body(new Resource<>(savedService, getServiceLinks(savedService)));
         }else{
 
         }
