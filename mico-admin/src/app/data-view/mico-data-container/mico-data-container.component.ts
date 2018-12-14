@@ -9,10 +9,15 @@ import { ApiModel } from 'src/app/api/apimodel';
 export class MicoDataContainerComponent implements OnInit {
 
     @Input() property: ApiModel;
+    @Input() data: any;
+
+    dataValue: any;
 
     constructor() { }
 
     ngOnInit() {
+        this.dataValue = this.data[this.property['x-key']];
+
     }
 
     /**

@@ -11,6 +11,7 @@ export class MicoDataStringComponent implements OnInit {
     constructor() { }
 
     @Input() config: ApiModel;
+    @Input() dataValue: any;
 
     ngOnInit() {
     }

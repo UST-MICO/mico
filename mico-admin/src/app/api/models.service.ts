@@ -160,11 +160,11 @@ export class ModelsService {
         'micoDataViewTEST': {
             'type': 'object',
             'properties': {
-                'Name': {
+                'name': {
                     'type': 'string',
                     'x-order': 10
                 },
-                'Value': {
+                'shortName': {
                     'type': 'string',
                     'x-order': 20
                 },

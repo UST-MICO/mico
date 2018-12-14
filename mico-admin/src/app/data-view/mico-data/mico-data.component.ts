@@ -25,7 +25,7 @@ export class MicoDataComponent implements OnInit, OnChanges {
     model: ApiModel;
     properties: (ApiModel | ApiModelRef)[];
 
-    private _startData: { [prop: string]: any };
+    _startData: { [prop: string]: any };
 
     private formSubscription: Subscription;
 

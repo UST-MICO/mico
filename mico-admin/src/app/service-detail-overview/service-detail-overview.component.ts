@@ -184,7 +184,7 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
 
         this.subDeleteServiceInterface = dialogRef.afterClosed().subscribe(result => {
             if (result) {
-                console.log("delete " + id)
+                console.log('delete ' + id);
                 // TODO really delete the dependency
             }
         });
