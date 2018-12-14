@@ -31,16 +31,16 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
     private static final String TEST_VERSION = "1.0";
 
     @Autowired
-    ApplicationRepository applicationRepository;
+    private ApplicationRepository applicationRepository;
 
     @Autowired
-    DependsOnRepository dependsOnRepository;
+    private DependsOnRepository dependsOnRepository;
 
     @Autowired
-    ServiceInterfaceRepository serviceInterfaceRepository;
+    private ServiceInterfaceRepository serviceInterfaceRepository;
 
     @Autowired
-    ServiceRepository serviceRepository;
+    private ServiceRepository serviceRepository;
 
     @Test
     public void testServiceRepository() {

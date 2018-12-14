@@ -19,16 +19,16 @@ public class GitHubCrawlerTests extends Neo4jTestClass {
     private static final String RELEASE = "v4.12.0";
 
     @Autowired
-    ApplicationRepository applicationRepository;
+    private ApplicationRepository applicationRepository;
 
     @Autowired
-    DependsOnRepository dependsOnRepository;
+    private DependsOnRepository dependsOnRepository;
 
     @Autowired
-    ServiceInterfaceRepository serviceInterfaceRepository;
+    private ServiceInterfaceRepository serviceInterfaceRepository;
 
     @Autowired
-    ServiceRepository serviceRepository;
+    private ServiceRepository serviceRepository;
 
     @Test
     public void testGitHubCrawlerLatestRelease() {
