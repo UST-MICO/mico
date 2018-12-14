@@ -574,28 +574,37 @@ export default class GraphEditor extends HTMLElement {
 
     /**
      * Get templates in this dom-node and render them into defs node of svg or style tags.
+     *
+     * @param nodeTemplateList list of node templates to use instead of html templates
+     * @param styleTemplateList list of style templates to use instead of html templates (not wrapped in style tag!)
      */
-    public updateTemplates = () => {
+    public updateTemplates = (nodeTemplateList?: {id?: string, innerHTML: string, [prop: string]: any}[],
+                              styleTemplateList?: {id: string, innerHTML: string, [prop: string]: any}[]) => {
         const templates = select(this).selectAll('template');
-        const styleTemplates = templates.filter(function() {
-            return this.getAttribute('template-type') === 'style';
-        });
-        const stylehtml = [];
-        styleTemplates.each(function() {
-            // extract style attribute from template
-            select(this.content).selectAll('style').each(function() {stylehtml.push(this)})
-        });
+        const stylehtml = styleTemplateList != null ? styleTemplateList : [];
+        const nodehtml = nodeTemplateList != null ? nodeTemplateList : [];
+
+        if (styleTemplateList == null) {
+            const styleTemplates = templates.filter(function() {
+                return this.getAttribute('template-type') === 'style';
+            });
+            styleTemplates.each(function() {
+                // extract style attribute from template
+                select(this.content).selectAll('style').each(function() {stylehtml.push(this)})
+            });
+        }
         const styles = select(this.root).selectAll('style').data(stylehtml);
         styles.exit().remove();
         styles.enter().merge(styles).html((d) => d.innerHTML);
 
-        const nodeTemplates = templates.filter(function() {
-            return this.getAttribute('template-type') === 'node';
-        });
-        const nodehtml = [];
-        nodeTemplates.each(function() {
-            nodehtml.push(this);
-        });
+        if (nodeTemplateList == null) {
+            const nodeTemplates = templates.filter(function() {
+                return this.getAttribute('template-type') === 'node';
+            });
+            nodeTemplates.each(function() {
+                nodehtml.push(this);
+            });
+        }
         const defs = this.getSvg().select('defs');
         const defTemplates = defs.selectAll('g.template').data(nodehtml, (d) => d.id);
 
