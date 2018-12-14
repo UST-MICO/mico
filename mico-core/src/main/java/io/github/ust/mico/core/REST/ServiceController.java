@@ -31,7 +31,6 @@ public class ServiceController {
     private static final String PATH_VARIABLE_SERVICE_INTERFACE_NAME = "serviceInterfaceName";
     private static final String PATH_PART_INTERFACES = "/interfaces";
 
-
     @Autowired
     private ServiceRepository serviceRepository;
 
@@ -169,8 +168,8 @@ public class ServiceController {
         LinkedList<Service> services = new LinkedList<>();
 
         dependees.forEach(dependee -> {
-            String shortName = dependee.getService().getShortName();
-            String version = dependee.getService().getVersion();
+            String shortName = dependee.getServiceDependee().getShortName();
+            String version = dependee.getServiceDependee().getVersion();
 
             Optional<Service> dependeeServiceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
             Service dependeeService = dependeeServiceOpt.get();

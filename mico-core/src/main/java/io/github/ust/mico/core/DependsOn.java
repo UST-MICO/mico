@@ -12,7 +12,7 @@ public class DependsOn {
     @StartNode
     private Service service;
     @EndNode
-    private Service serviceEnd;
+    private Service serviceDependee;
     private String minVersion;
     private String maxVersion;
 
@@ -25,7 +25,7 @@ public class DependsOn {
 
     public DependsOn(Service serviceStart, Service serviceEnd) {
         this.service = serviceStart;
-        this.serviceEnd = serviceEnd;
+        this.serviceDependee = serviceEnd;
     }
 
     public DependsOn(Service service, String minVersion) {
@@ -71,5 +71,13 @@ public class DependsOn {
                 ", minVersion='" + minVersion + '\'' +
                 ", maxVersion='" + maxVersion + '\'' +
                 '}';
+    }
+
+    public Service getServiceDependee() {
+        return serviceDependee;
+    }
+
+    public void setServiceDependee(Service serviceDependee) {
+        this.serviceDependee = serviceDependee;
     }
 }
