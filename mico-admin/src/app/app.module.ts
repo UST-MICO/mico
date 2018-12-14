@@ -1,8 +1,6 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
-import 'mico-grapheditor/dist/bundle';
-
 // modules
 
 import {
@@ -16,6 +14,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { RoutingModule } from './routing.module';
+
+import { GraphsModule } from './graphs/graphs.module';
 
 // components
 import { AppComponent } from './app.component';
@@ -81,6 +81,8 @@ import { CreateServiceInterfaceComponent } from './dialogs/create-service-interf
         ReactiveFormsModule,
 
         RoutingModule,
+
+        GraphsModule,
 
         // material
         BrowserAnimationsModule,
