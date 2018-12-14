@@ -42,6 +42,9 @@ import { MicoFormNumberComponent } from './forms/mico-form-number/mico-form-numb
 import { ServicePickerComponent } from './dialogs/service-picker/service-picker.component';
 import { YesNoDialogComponent } from './dialogs/yes-no-dialog/yes-no-dialog.component';
 import { CreateServiceInterfaceComponent } from './dialogs/create-service-interface/create-service-interface.component';
+import { MicoDataComponent } from './data-view/mico-data/mico-data.component';
+import { MicoDataStringComponent } from './data-view/mico-data-string/mico-data-string.component';
+import { MicoDataContainerComponent } from './data-view/mico-data-container/mico-data-container.component';
 
 
 @NgModule({
@@ -66,6 +69,9 @@ import { CreateServiceInterfaceComponent } from './dialogs/create-service-interf
         ServicePickerComponent,
         YesNoDialogComponent,
         CreateServiceInterfaceComponent,
+        MicoDataComponent,
+        MicoDataStringComponent,
+        MicoDataContainerComponent,
     ],
     entryComponents: [
         // dialogs
