@@ -1,5 +1,5 @@
 <form class="form-container" *ngIf="form" [formGroup]="form">
-    <div *ngFor="let property of properties">
+    <div *ngFor="let property of properties;trackBy: trackByFn">
         <mico-form-question [property]="property" [form]="form"></mico-form-question>
     </div>
 </form>
