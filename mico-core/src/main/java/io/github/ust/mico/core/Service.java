@@ -1,6 +1,9 @@
 package io.github.ust.mico.core;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import io.swagger.annotations.ApiModelProperty;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -10,6 +13,9 @@ import org.springframework.hateoas.ResourceSupport;
 
 import java.util.List;
 
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NodeEntity
 public class Service {
@@ -35,10 +41,16 @@ public class Service {
     private List<String> links;
     private String type;
     private String owner;
-    @Relationship
+    @Relationship(type = "DEPENDS_ON")
     private List<DependsOn> dependsOn;
     @Relationship(direction = Relationship.UNDIRECTED)
     private List<ServiceInterface> serviceInterfaces;
+
+    public DependsOn dependsOn (Service serviceEnd){
+        DependsOn dependsOnObj = new DependsOn(this,serviceEnd);
+        this.dependsOn.add(dependsOnObj);
+        return dependsOnObj;
+    }
 
     public Service() {
     }

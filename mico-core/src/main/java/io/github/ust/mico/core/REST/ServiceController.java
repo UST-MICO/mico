@@ -62,7 +62,6 @@ public class ServiceController {
                         linkTo(methodOn(ServiceController.class).getVersionsOfService(shortName)).withSelfRel()));
     }
 
-
     //GET| /services/{shortName}/{version}/interface
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + PATH_PART_INTERFACES)
     public ResponseEntity<Resources<Resource<ServiceInterface>>> getInterfacesOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
@@ -103,12 +102,12 @@ public class ServiceController {
         } else {
             List<DependsOn> dependees = newService.getDependsOn();
             LinkedList<Service> services = getDependentServices(dependees);
+
             List<DependsOn> newDependees = new LinkedList<>();
 
             services.forEach(service -> {
                 Optional<Service> serviceOpt = serviceRepository.findById(service.getId());
-                serviceOpt.isPresent();
-                DependsOn dependsOnService = new DependsOn(serviceOpt.get());
+                DependsOn dependsOnService = new DependsOn(serviceOpt.get(),newService);
                 newDependees.add(dependsOnService);
             });
 
@@ -137,6 +136,33 @@ public class ServiceController {
         return ResponseEntity.ok(
                 new Resources<>(resourceList,
                         linkTo(methodOn(ServiceController.class).getDependees(shortName, version)).withSelfRel()));
+    }
+
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependers")
+    public ResponseEntity<Resources<Resource<Service>>> getDependers(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        List<Service> serviceList = serviceRepository.findAll();
+        Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
+        Service serviceToLookFor = serviceOpt.get();
+
+        List<Service> dependers = new LinkedList<>();
+
+        serviceList.forEach(service -> {
+            List<DependsOn> dependees = service.getDependsOn();
+            if (dependees != null) {
+                dependees.forEach(dependee -> {
+                    if (dependee.getService().equals(serviceToLookFor)) {
+                        dependers.add(dependee.getService());
+                    }
+                });
+            }
+        });
+
+        List<Resource<Service>> resourceList = getServiceResourcesList(dependers);
+        return ResponseEntity.ok(
+                new Resources<>(resourceList,
+                        linkTo(methodOn(ServiceController.class).getDependers(shortName, version)).withSelfRel()));
+
     }
 
     private LinkedList<Service> getDependentServices(List<DependsOn> dependees) {

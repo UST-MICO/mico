@@ -1,19 +1,18 @@
 package io.github.ust.mico.core;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.neo4j.ogm.annotation.*;
 
-@NodeEntity
+@RelationshipEntity(type = "DEPENDS_ON")
 public class DependsOn {
 
     @Id
     @GeneratedValue
     private Long id;
 
-    @Relationship
+    @StartNode
     private Service service;
+    @EndNode
+    private Service serviceEnd;
     private String minVersion;
     private String maxVersion;
 
@@ -22,6 +21,11 @@ public class DependsOn {
 
     public DependsOn(Service service) {
         this.service = service;
+    }
+
+    public DependsOn(Service serviceStart, Service serviceEnd) {
+        this.service = serviceStart;
+        this.serviceEnd = serviceEnd;
     }
 
     public DependsOn(Service service, String minVersion) {
