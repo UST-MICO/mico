@@ -1,6 +1,10 @@
 package io.github.ust.mico.core;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -10,6 +14,8 @@ import java.util.Optional;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.*;
 
+@RunWith(SpringRunner.class)
+@SpringBootTest
 public class MicoCoreApplicationTests extends Neo4jTestClass {
 
     private static final String TEST_SHORT_NAME = "Test";
@@ -23,6 +29,18 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
     private static final String TEST_SERVICE_INTERFACE_NAME = "Service interface name";
     private static final String TEST_LONGER_NAME = "TEST LONGER NAME";
     private static final String TEST_VERSION = "1.0";
+
+    @Autowired
+    ApplicationRepository applicationRepository;
+
+    @Autowired
+    DependsOnRepository dependsOnRepository;
+
+    @Autowired
+    ServiceInterfaceRepository serviceInterfaceRepository;
+
+    @Autowired
+    ServiceRepository serviceRepository;
 
     @Test
     public void testServiceRepository() {

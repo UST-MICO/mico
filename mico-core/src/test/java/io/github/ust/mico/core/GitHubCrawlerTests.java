@@ -1,15 +1,34 @@
 package io.github.ust.mico.core;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
+@RunWith(SpringRunner.class)
+@SpringBootTest
 public class GitHubCrawlerTests extends Neo4jTestClass {
+
     private static final String REPO_URI = "https://api.github.com/repos/octokit/octokit.rb";
     private static final String RELEASE = "v4.12.0";
+
+    @Autowired
+    ApplicationRepository applicationRepository;
+
+    @Autowired
+    DependsOnRepository dependsOnRepository;
+
+    @Autowired
+    ServiceInterfaceRepository serviceInterfaceRepository;
+
+    @Autowired
+    ServiceRepository serviceRepository;
 
     @Test
     public void testGitHubCrawlerLatestRelease() {
