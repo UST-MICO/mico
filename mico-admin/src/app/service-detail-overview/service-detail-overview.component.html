@@ -5,7 +5,9 @@
         <div class="relative w-100">
             <ng-container *ngIf="!edit">
                 <!-- display version -->
+                <!-- TODO change to serviceGET (as soon as api is available -->
                 <mico-data [modelUrl]="'local/servicePUT'" [startData]="service"></mico-data>
+                <mico-data [modelUrl]="'local/micoDataViewTEST'" [startData]="testData"></mico-data>
 
                 <!-- TODO hard coded information - not yet part of the domain model-->
                 <mat-list dense>

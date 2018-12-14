@@ -45,6 +45,7 @@ import { CreateServiceInterfaceComponent } from './dialogs/create-service-interf
 import { MicoDataComponent } from './data-view/mico-data/mico-data.component';
 import { MicoDataStringComponent } from './data-view/mico-data-string/mico-data-string.component';
 import { MicoDataContainerComponent } from './data-view/mico-data-container/mico-data-container.component';
+import { MicoDataBooleanComponent } from './data-view/mico-data-boolean/mico-data-boolean.component';
 
 
 @NgModule({
@@ -72,6 +73,7 @@ import { MicoDataContainerComponent } from './data-view/mico-data-container/mico
         MicoDataComponent,
         MicoDataStringComponent,
         MicoDataContainerComponent,
+        MicoDataBooleanComponent,
     ],
     entryComponents: [
         // dialogs
