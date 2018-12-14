@@ -35,13 +35,6 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
     externalDependencies = [];
     serviceInterfaces = [];
 
-    // TODO remove, for development only
-    testData: any = {
-        'micoDataViewTest': 'TestEntries',
-        'numberEntry': '15',
-        'booleanEntry': 'true',
-    };
-    // TODO end of remove
 
     // will be used by the update form
     serviceData;
