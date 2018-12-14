@@ -8,10 +8,11 @@ import io.fabric8.kubernetes.api.model.apps.DeploymentList;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.internal.SerializationUtils;
+import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
 
-
+@Component
 public class ClusterAwarenessFabric8 {
     KubernetesClient client;
 
