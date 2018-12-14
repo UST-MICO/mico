@@ -1,3 +1,6 @@
 <div [ngSwitch]="propertyType()" class="">
     <mico-data-string *ngSwitchCase="'string'" [config]="property" [dataValue]="dataValue"></mico-data-string>
+    <!-- number is displayed similar to strings-->
+    <mico-data-string *ngSwitchCase="'number'" [config]="property" [dataValue]="dataValue"></mico-data-string>
+    <mico-mico-data-boolean *ngSwitchCase="'boolean'" [config]="property" [dataValue]="dataValue"></mico-mico-data-boolean>
 </div>

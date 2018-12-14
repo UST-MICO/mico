@@ -1,0 +1,17 @@
+<mat-list-item class="mat-list-item mt2">
+    <b>{{config.title}}</b>
+</mat-list-item>
+<mat-divider></mat-divider>
+<mat-list-item>
+    <div *ngIf="convertedDataValue;else false_content">
+        <mat-chip-list>
+            <mat-chip color="primary" selected>Yes</mat-chip>
+        </mat-chip-list>
+    </div>
+
+    <ng-template #false_content>
+        <mat-chip-list>
+            <mat-chip color="accent" selected>No</mat-chip>
+        </mat-chip-list>
+    </ng-template>
+</mat-list-item>
