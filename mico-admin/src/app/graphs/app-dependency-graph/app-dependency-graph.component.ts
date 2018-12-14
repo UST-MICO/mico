@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, Input } from '@angular/core';
 import GraphEditor from 'mico-grapheditor/src/mico-graph';
 import { Edge } from 'mico-grapheditor/src/edge';
 import { Node } from 'mico-grapheditor/src/node';
@@ -30,6 +30,11 @@ const NODE_TEMPLATE = {
 export class AppDependencyGraphComponent implements OnInit {
 
     @ViewChild('graph') graph;
+    @Input() nodes: [any];
+    @Input() edges: [any];
+    //TODO @Input definieren
+
+    // TODO Button ZoomToBounding Box
 
     constructor() { }
 
@@ -49,6 +54,8 @@ export class AppDependencyGraphComponent implements OnInit {
         const graph = this.graph.nativeElement;
 
         //console.log(document.importNode(graph.children[1].content, true));
+
+        // TODO aus @Input nodes definieren/erstellen
 
         graph.setNodes([
             {
