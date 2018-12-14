@@ -52,10 +52,10 @@ def analyze_typescript(abs_source_paths, app):
     if app.config.jsdoc_config_path:
         command.add('--tsconfig', app.config.jsdoc_config_path)
 
-    json_path = '../doc/mico-admin/ts/typedoc.json'
+    json_path = '../docs/mico-admin/ts/typedoc.json'
 
     source = abs_source_paths[0]
-    command.add('--json', json_path, '--ignoreCompilerErrors')
+    command.add('--exclude', '**/node_modules/**/*.*', '--json', json_path, '--ignoreCompilerErrors', *abs_source_paths)
     if not on_rtd:
         # only build typedoc json locally as readthedocs build container does not
         # support it natively (and typedoc process takes a while to finish)
@@ -290,7 +290,8 @@ def setup(app):
 
 # -- Options for jsdoc -------------------------------------------------------
 js_language = 'custom_typescript'
-js_source_path = '../mico-admin'
+root_for_relative_js_paths = '.'
+js_source_path = ['../mico-admin', '../mico-grapheditor']
 
 # -- Options for javasphinx --------------------------------------------------
 javadoc_url_map = {

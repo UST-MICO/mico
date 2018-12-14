@@ -47,25 +47,6 @@ export default class GraphEditor extends HTMLElement {
         return (this._mode !== 'display') && !(this._mode === 'select' && this.interactionStateData.fromMode === 'display');
     }
 
-    constructor() {
-        super();
-        this._nodes = [];
-        this._edges = [];
-        this.objectCache = new GraphObjectCache();
-        this.initialized = false;
-        this.edgeGenerator = line().x((d) => d.x).y((d) => d.y).curve(curveStep);
-
-        this.root = this.attachShadow({mode: 'open'});
-
-        select(this.root).html(SHADOW_DOM_TEMPLATE);
-
-        this.mutationObserver = new MutationObserver(() => {
-            this.updateTemplates();
-            this.completeRender(true);
-            this.zoomToBoundingBox(false);
-        });
-    }
-
     get nodeList() {
         return this._nodes;
     }
@@ -89,112 +70,36 @@ export default class GraphEditor extends HTMLElement {
     }
 
     set mode(mode: string) {
-        this.updateMode(mode.toLowerCase());
-        this.setAttribute('mode', mode);
+        this.setMode(mode.toLowerCase());
+        select(this).attr('mode', mode);
     }
 
-    static get observedAttributes() { return ['nodes', 'edges', 'mode', 'zoom']; }
-
-    attributeChangedCallback(name, oldValue, newValue: string) {
-        if (name === 'nodes') {
-            newValue = newValue.replace(/'/g, '"');
-            console.log('Nodes ' + newValue);
-            this.nodeList = JSON.parse(newValue);
-        }
-        if (name === 'edges') {
-            newValue = newValue.replace(/'/g, '"');
-            console.log('Edges ' + newValue);
-            this.edgeList = JSON.parse(newValue);
-        }
-        if (name === 'zoom') {
-            this.updateZoomMode(newValue.toLowerCase());
-            this.completeRender();
-        }
-        if (name === 'mode') {
-            this.updateMode(newValue.toLowerCase());
-        }
-        this.initialize();
-        this.completeRender();
-        this.zoomToBoundingBox(false);
+    get zoomMode() {
+        return this._zoomMode;
     }
 
-    /**
-     * Set the graph interaction mode and cleanup temp data from old interaction mode.
-     *
-     * @param mode interaction mode (one of ["display", "layout", "link", "select"])
-     */
-    updateMode(mode: string) {
-        if (mode === this._mode) {
-            return;
-        }
-        if (mode === 'display') {
-            if (this._mode != 'display') {
-                this.interactionStateData = null;
-                this._mode = 'display';
-                this.completeRender();
-            }
-        } else if (mode === 'layout') {
-            if (this._mode != 'layout') {
-                this.interactionStateData = null;
-                this._mode = 'layout';
-                this.completeRender();
-            }
-        } else if (mode === 'link') {
-            if (this._mode != 'link') {
-                this.interactionStateData = {
-                    source: null,
-                    target: null,
-                    allowedTargets: new Set(),
-                }
-                this._mode = 'link';
-                this.completeRender();
-            }
-        } else if (mode === 'select') {
-            if (this._mode != 'select') {
-                this.interactionStateData = {
-                    selected: new Set(),
-                    fromMode: this._mode,
-                }
-                this._mode = 'select';
-                this.completeRender();
-            }
-        } else {
-            console.log(`Wrong mode "${mode}". Allowed are: ["display", "layout", "link", "select"]`)
-        }
+    set zoomMode(mode: string) {
+        this.setZoomMode(mode.toLowerCase());
+        select(this).attr('zoom', mode);
     }
 
-    /**
-     * Set the graph zoom mode.
-     *
-     * @param mode zoom mode (one of ["none", "manual", "automatic", "both"])
-     */
-    updateZoomMode(mode: string) {
-        if (mode === this._mode) {
-            return;
-        }
-        if (mode === 'none') {
-            if (this._zoomMode != 'none') {
-                this._zoomMode = 'none';
-                this.completeRender();
-            }
-        } else if (mode === 'manual') {
-            if (this._zoomMode != 'manual') {
-                this._zoomMode = 'manual';
-                this.completeRender();
-            }
-        } else if (mode === 'automatic') {
-            if (this._mode != 'automatic') {
-                this._zoomMode = 'automatic';
-                this.completeRender();
-            }
-        } else if (mode === 'both') {
-            if (this._mode != 'both') {
-                this._zoomMode = 'both';
-                this.completeRender();
-            }
-        } else {
-            console.log(`Wrong zoom mode "${mode}". Allowed are: ["none", "manual", "automatic", "both"]`)
-        }
+    constructor() {
+        super();
+        this._nodes = [];
+        this._edges = [];
+        this.objectCache = new GraphObjectCache();
+        this.initialized = false;
+        this.edgeGenerator = line().x((d) => d.x).y((d) => d.y).curve(curveStep);
+
+        this.root = this.attachShadow({mode: 'open'});
+
+        select(this.root).html(SHADOW_DOM_TEMPLATE);
+
+        this.mutationObserver = new MutationObserver(() => {
+            this.updateTemplates();
+            this.completeRender(true);
+            this.zoomToBoundingBox(false);
+        });
     }
 
     connectedCallback() {
@@ -212,10 +117,244 @@ export default class GraphEditor extends HTMLElement {
         });
     }
 
+    static get observedAttributes() { return ['nodes', 'edges', 'mode', 'zoom']; }
+
+    attributeChangedCallback(name, oldValue, newValue: string) {
+        if (name === 'nodes') {
+            newValue = newValue.replace(/'/g, '"');
+            console.log('Nodes ' + newValue);
+            this.nodeList = JSON.parse(newValue);
+        }
+        if (name === 'edges') {
+            newValue = newValue.replace(/'/g, '"');
+            console.log('Edges ' + newValue);
+            this.edgeList = JSON.parse(newValue);
+        }
+        if (name === 'zoom') {
+            this.setZoomMode(newValue.toLowerCase());
+            this.completeRender();
+        }
+        if (name === 'mode') {
+            this.setMode(newValue.toLowerCase());
+        }
+        this.initialize();
+        this.completeRender();
+        this.zoomToBoundingBox(false);
+    }
+
+    /**
+     * Set nodes and redraw graph.
+     *
+     * @param nodes new nodeList
+     * @param redraw if graph should be redrawn
+     */
+    public setNodes(nodes: Node[], redraw: boolean = false) {
+        this.nodeList = nodes;
+        if (redraw) {
+            this.completeRender();
+            this.zoomToBoundingBox(false);
+        }
+    }
+
+    /**
+     * Add a single node to the graph.
+     *
+     * @param node node to add
+     * @param redraw if graph should be redrawn
+     */
+    public addNode(node: Node, redraw: boolean = false) {
+        this._nodes.push(node);
+        this.objectCache.updateNodeCache(this._nodes);
+        this.onNodeCreate(node);
+        if (redraw) {
+            this.completeRender();
+            this.zoomToBoundingBox(false);
+        }
+    }
+
+    /**
+     * Remove a single node from the graph.
+     *
+     * @param node node or id to remove
+     * @param redraw if the graph should be redrawn
+     */
+    public removeNode(node: Node|number|string, redraw: boolean = false) {
+        const id: string|number = (node as Node).id != null ? (node as Node).id : (node as number|string);
+        const index = this._nodes.findIndex(n => n.id === id);
+        if (index >= 0) {
+            this.onNodeRemove(this._nodes[index]);
+            this._nodes.splice(index, 1);
+            this.objectCache.updateNodeCache(this._nodes);
+            const newEdgeList = [];
+            this._edges.forEach(edge => {
+                if (edge.source === id) {
+                    this.onEdgeRemove(edge);
+                    return;
+                }
+                if (edge.target === id) {
+                    this.onEdgeRemove(edge);
+                    return;
+                }
+                newEdgeList.push(edge);
+            });
+            this.edgeList = newEdgeList;
+            if (redraw) {
+                this.completeRender();
+                this.zoomToBoundingBox(false);
+            }
+        }
+    }
+
+    /**
+     * Set edges and redraw graph.
+     *
+     * @param nodes new edgeList
+     * @param redraw if the graph should be redrawn
+     */
+    public setEdges(nodes: Edge[], redraw: boolean = false) {
+        this.edgeList = nodes;
+        if (redraw) {
+            this.completeRender();
+            this.zoomToBoundingBox(false);
+        }
+    }
+
+    /**
+     * Add a single edge to the graph.
+     *
+     * @param edge edge to add
+     * @param redraw if graph should be redrawn
+     */
+    public addEdge(edge: Edge, redraw: boolean = false) {
+        this._edges.push(edge);
+        this.objectCache.updateEdgeCache(this._edges);
+        if (redraw) {
+            this.completeRender();
+            this.zoomToBoundingBox(false);
+        }
+    }
+
+    /**
+     * Remove a single edge from the graph.
+     *
+     * @param edge edge or id to remove
+     * @param redraw if the graph should be redrawn
+     */
+    public removeEdge(edge: Edge, redraw: boolean = false) {
+        const index = this._edges.findIndex((e) => {
+            return (e.source === edge.source) &&
+            (e.target === edge.target);
+        });
+        if (index >= 0) {
+            this.onEdgeRemove(this._edges[index]);
+            this._edges.splice(index, 1);
+            this.objectCache.updateEdgeCache(this._edges);
+            if (redraw) {
+                this.completeRender();
+                this.zoomToBoundingBox(false);
+            }
+        }
+    }
+
+    /**
+     * Set the graph interaction mode and cleanup temp data from old interaction mode.
+     *
+     * @param mode interaction mode (one of ["display", "layout", "link", "select"])
+     */
+    public setMode(mode: string) {
+        if (mode === this._mode) {
+            return;
+        }
+        const oldMode = this._mode;
+        if (mode === 'display') {
+            if (this._mode != 'display') {
+                this.interactionStateData = null;
+                this._mode = 'display';
+            }
+        } else if (mode === 'layout') {
+            if (this._mode != 'layout') {
+                this.interactionStateData = null;
+                this._mode = 'layout';
+            }
+        } else if (mode === 'link') {
+            if (this._mode != 'link') {
+                this.interactionStateData = {
+                    source: null,
+                    target: null,
+                    allowedTargets: new Set(),
+                }
+                this._mode = 'link';
+            }
+        } else if (mode === 'select') {
+            if (this._mode != 'select') {
+                this.interactionStateData = {
+                    selected: new Set(),
+                    fromMode: this._mode,
+                }
+                this._mode = 'select';
+            }
+        } else {
+            console.log(`Wrong mode "${mode}". Allowed are: ["display", "layout", "link", "select"]`);
+            return
+        }
+
+        if (oldMode !== mode) {
+            const ev = new CustomEvent('modechange', {
+                bubbles: true,
+                composed: true,
+                cancelable: false,
+                detail: {oldMode: oldMode, newMode: mode}});
+            this.dispatchEvent(ev);
+            this.completeRender();
+        }
+    }
+
+    /**
+     * Set the graph zoom mode.
+     *
+     * @param mode zoom mode (one of ["none", "manual", "automatic", "both"])
+     */
+    public setZoomMode(mode: string) {
+        if (mode === this._mode) {
+            return;
+        }
+        const oldMode = this._mode;
+        if (mode === 'none') {
+            if (this._zoomMode != 'none') {
+                this._zoomMode = 'none';
+            }
+        } else if (mode === 'manual') {
+            if (this._zoomMode != 'manual') {
+                this._zoomMode = 'manual';
+            }
+        } else if (mode === 'automatic') {
+            if (this._mode != 'automatic') {
+                this._zoomMode = 'automatic';
+            }
+        } else if (mode === 'both') {
+            if (this._mode != 'both') {
+                this._zoomMode = 'both';
+            }
+        } else {
+            console.log(`Wrong zoom mode "${mode}". Allowed are: ["none", "manual", "automatic", "both"]`)
+            return;
+        }
+
+        if (oldMode !== mode) {
+            const ev = new CustomEvent('zoommodechange', {
+                bubbles: true,
+                composed: true,
+                cancelable: false,
+                detail: {oldMode: oldMode, newMode: mode}});
+            this.dispatchEvent(ev);
+            this.completeRender();
+        }
+    }
+
     /**
      * Initialize the shadow dom with a drawing svg.
      */
-    initialize() {
+    private initialize() {
         if (!this.initialized) {
             this.initialized = true;
 
@@ -403,7 +542,7 @@ export default class GraphEditor extends HTMLElement {
      *
      * @param force if false only zooms in zoomMode 'automatic' and 'both' (default=true)
      */
-    private zoomToBoundingBox(force: boolean=true) {
+    public zoomToBoundingBox = (force: boolean=true) => {
         if (! this.initialized || ! this.isConnected) {
             return;
         }
@@ -436,7 +575,7 @@ export default class GraphEditor extends HTMLElement {
     /**
      * Get templates in this dom-node and render them into defs node of svg or style tags.
      */
-    updateTemplates() {
+    public updateTemplates = () => {
         const templates = select(this).selectAll('template');
         const styleTemplates = templates.filter(function() {
             return this.getAttribute('template-type') === 'style';
@@ -471,7 +610,7 @@ export default class GraphEditor extends HTMLElement {
     /**
      * Render all changes of the data to the graph.
      */
-    completeRender(updateTemplates: boolean=false) {
+    public completeRender(updateTemplates: boolean=false) {
         if (! this.initialized || ! this.isConnected) {
             return;
         }
@@ -513,6 +652,7 @@ export default class GraphEditor extends HTMLElement {
             nodeSelection.call(drag().on('drag', (d) => {
                 d.x = event.x;
                 d.y = event.y;
+                this.onNodePositionChange.bind(this)(d);
                 this.updateGraphPositions.bind(this)();
             }));
         } else {
@@ -536,7 +676,8 @@ export default class GraphEditor extends HTMLElement {
             .attr('id', edgeId)
           .merge(edgeSelection)
             .call(this.updateEdges.bind(this))
-            .call(this.updateEdgePaths.bind(this));
+            .call(this.updateEdgePaths.bind(this))
+            .on('click', (d) => {this.onEdgeClick.bind(this)(d);});
     }
 
 
@@ -655,6 +796,95 @@ export default class GraphEditor extends HTMLElement {
     }
 
     /**
+     * Callback for creating edgeadd events.
+     *
+     * @param edge the created edge
+     * @returns false if event was cancelled
+     */
+    private onEdgeCreate(edge: Edge): boolean {
+        const ev = new CustomEvent('edgeadd', {
+            bubbles: true,
+            composed: true,
+            cancelable: true,
+            detail: {edge: edge}});
+        return this.dispatchEvent(ev);
+    }
+
+    /**
+     * Callback for creating edgeremove events.
+     *
+     * @param edge the created edge
+     * @returns false if event was cancelled
+     */
+    private onEdgeRemove(edge: Edge) {
+        const ev = new CustomEvent('edgeremove', {
+            bubbles: true,
+            composed: true,
+            cancelable: true,
+            detail: {edge: edge}});
+        return this.dispatchEvent(ev);
+    }
+
+    /**
+     * Callback on edges for click event.
+     *
+     * @param edgeDatum Corresponding datum of edge
+     */
+    private onEdgeClick(edgeDatum) {
+        const eventDetail: any = {};
+        eventDetail.sourceEvent = event;
+        eventDetail.edge = edgeDatum;
+        const ev = new CustomEvent('edgeclick', {bubbles: true, composed: true, cancelable: true, detail: eventDetail});
+        if (!this.dispatchEvent(ev)) {
+            return; // prevent default / event cancelled
+        }
+    }
+
+    /**
+     * Callback for creating nodeadd events.
+     *
+     * @param node the created node
+     * @returns false if event was cancelled
+     */
+    private onNodeCreate(node: Node): boolean {
+        const ev = new CustomEvent('nodeadd', {
+            bubbles: true,
+            composed: true,
+            cancelable: true,
+            detail: {node: node}});
+        return this.dispatchEvent(ev);
+    }
+
+    /**
+     * Callback for creating noderemove events.
+     *
+     * @param node the created node
+     * @returns false if event was cancelled
+     */
+    private onNodeRemove(node: Node) {
+        const ev = new CustomEvent('noderemove', {
+            bubbles: true,
+            composed: true,
+            cancelable: true,
+            detail: {node: node}});
+        return this.dispatchEvent(ev);
+    }
+
+    /**
+     * Callback for creating nodepositionchange events.
+     *
+     * @param nodes nodes thatchanged
+     */
+    private onNodePositionChange(node: Node) {
+        const ev = new CustomEvent('nodepositionchange', {
+            bubbles: true,
+            composed: true,
+            cancelable: false,
+            detail: {node: node}});
+        this.dispatchEvent(ev);
+    }
+
+    /**
      * Callback on nodes for mouseEnter event.
      *
      * @param nodeDatum Corresponding datum of node
@@ -666,6 +896,12 @@ export default class GraphEditor extends HTMLElement {
         }
         this.updateNodeHighligts();
         this.updateEdgeHighligts();
+        const ev = new CustomEvent('nodeenter', {
+            bubbles: true,
+            composed: true,
+            cancelable: false,
+            detail: {sourceEvent: event, node: nodeDatum}});
+        this.dispatchEvent(ev);
     }
 
     /**
@@ -680,6 +916,12 @@ export default class GraphEditor extends HTMLElement {
         }
         this.updateNodeHighligts();
         this.updateEdgeHighligts();
+        const ev = new CustomEvent('nodeleave', {
+            bubbles: true,
+            composed: true,
+            cancelable: false,
+            detail: {sourceEvent: event, node: nodeDatum}});
+        this.dispatchEvent(ev);
     }
 
     /**
@@ -687,23 +929,49 @@ export default class GraphEditor extends HTMLElement {
      *
      * @param nodeDatum Corresponding datum of node
      */
-    private onNodeClick(nodeDatum) {
+    private onNodeClick = (nodeDatum) => {
+        const eventDetail: any = {};
+        eventDetail.sourceEvent = event;
+        eventDetail.node = nodeDatum;
+        if (event.target != null) {
+            const target = select(event.target);
+            const key = target.attr('data-click');
+            if (key != null) {
+                eventDetail.key = key;
+            }
+        }
+        const ev = new CustomEvent('nodeclick', {bubbles: true, composed: true, cancelable: true, detail: eventDetail});
+        if (!this.dispatchEvent(ev)) {
+            return; // prevent default / event cancelled
+        }
         if (this._mode === 'link') {
             return this.onNodeSelectLink(nodeDatum);
         }
         if (this._mode !== 'select') {
-            this.updateMode('select');
+            this.setMode('select');
             this.interactionStateData.selected.add(nodeDatum.id);
+            this.onSelectionChangeInternal();
         } else if (this.interactionStateData.selected.has(nodeDatum.id)) {
             this.interactionStateData.selected.delete(nodeDatum.id);
+            this.onSelectionChangeInternal();
             if (this.interactionStateData.selected.size <= 0) {
-                this.updateMode(this.interactionStateData.fromMode);
+                this.setMode(this.interactionStateData.fromMode);
             }
         } else {
             this.interactionStateData.selected.add(nodeDatum.id);
+            this.onSelectionChangeInternal();
         }
         this.updateNodeHighligts();
         this.updateEdgeHighligts();
+    }
+
+    private onSelectionChangeInternal() {
+        let selected: Set<number|string> = new Set();
+        if (this.mode === 'select') {
+            selected = this.interactionStateData.selected;
+        }
+        const ev = new CustomEvent('selection', {bubbles: true, composed: true, detail: {selection: selected}});
+        this.dispatchEvent(ev);
     }
 
     /**
@@ -728,12 +996,19 @@ export default class GraphEditor extends HTMLElement {
             (e.target === this.interactionStateData.target);
         });
         if (oldEdge !== -1) {
+            if (!this.onEdgeRemove(this._edges[oldEdge])) {
+                return; // event cancelled
+            }
             this._edges.splice(oldEdge, 1);
         } else {
-            this._edges.push({
+            const newEdge: Edge = {
                 source: this.interactionStateData.source,
                 target: this.interactionStateData.target,
-            });
+            };
+            if (!this.onEdgeCreate(newEdge)) {
+                return; // event cancelled
+            }
+            this._edges.push(newEdge);
         }
         this.objectCache.updateEdgeCache(this._edges);
         this.completeRender();
@@ -801,4 +1076,5 @@ export default class GraphEditor extends HTMLElement {
             .classed('highlight-outgoing', (d) => nodes.has(d.source))
             .classed('highlight-incoming', (d) => nodes.has(d.target));
     }
+
 }
