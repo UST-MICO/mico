@@ -106,7 +106,7 @@ public class ServiceController {
 
             services.forEach(service -> {
                 Optional<Service> serviceOpt = serviceRepository.findById(service.getId());
-                DependsOn dependsOnService = new DependsOn(serviceOpt.get(),newService);
+                DependsOn dependsOnService = new DependsOn(serviceOpt.get(), newService);
                 newDependees.add(dependsOnService);
             });
 
@@ -124,7 +124,6 @@ public class ServiceController {
     public ResponseEntity<Resources<Resource<Service>>> getDependees(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                      @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
-
         Service service = serviceOpt.get();
 
         List<DependsOn> dependees = service.getDependsOn();
@@ -135,6 +134,21 @@ public class ServiceController {
         return ResponseEntity.ok(
                 new Resources<>(resourceList,
                         linkTo(methodOn(ServiceController.class).getDependees(shortName, version)).withSelfRel()));
+    }
+
+    @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
+    public ResponseEntity<Resources<Resource<Service>>> createNewDependee(@RequestBody Service newServiceDependee,
+                                                                          @PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                          @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
+        Service service = serviceOpt.get();
+
+        if (newServiceDependee.getDependsOn() == null) {
+
+        }else{
+
+        }
+        return null;
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependers")

@@ -1,5 +1,6 @@
 package io.github.ust.mico.core;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.neo4j.ogm.annotation.*;
 
 @RelationshipEntity(type = "DEPENDS_ON")
@@ -9,6 +10,7 @@ public class DependsOn {
     @GeneratedValue
     private Long id;
 
+    @JsonIgnore
     @StartNode
     private Service service;
     @EndNode
