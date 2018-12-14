@@ -3,6 +3,7 @@ package io.github.ust.mico.core;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
@@ -10,6 +11,8 @@ import org.springframework.web.client.RestTemplate;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class GitHubCrawler {
 
@@ -36,7 +39,9 @@ public class GitHubCrawler {
 
             Service service = new Service();
             service.setShortName(basicInfoJson.get("name").textValue());
-            service.setVersion(releaseInfoJson.get("tag_name").textValue());
+            service.setExternalVersion(releaseInfoJson.get("tag_name").textValue());
+            service.setCrawlingSource(CrawlingSource.GITHUB);
+            service.setVersion(makeExternalVersionInternal(service.getExternalVersion()));
             service.setDescription(basicInfoJson.get("description").textValue());
             service.setName(basicInfoJson.get("full_name").textValue());
             service.setVcsRoot(releaseInfoJson.get("url").textValue());
@@ -44,8 +49,29 @@ public class GitHubCrawler {
             return service;
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (VersionNotSupportedException e) {
+            e.printStackTrace();
         }
         return null;
+    }
+
+    // Java Regex: ^v?\d+\.\d+\.\d+(-?.+)?$
+    // This Java Regex matches the following semantic versioning:
+    // 1.0.0, 1.0.0-foo, 1.0.0-0.1.1, 1.0.0-rc.1, v1.0.0, v1.0.0-foo, v1.0.0-0.1.1, v1.0.0-rc.1
+    // Java Regex: \d+\.\d+\.\d+
+    // This Java Regex (Format: X.Y.Z) will be extracted.
+    public String makeExternalVersionInternal(String externalVersion) throws VersionNotSupportedException {
+        Pattern patternSemanticVersioning = Pattern.compile("^v?\\d+\\.\\d+\\.\\d+(-?.+)?$");
+        Matcher matcherSemanticVersioning = patternSemanticVersioning.matcher(externalVersion);
+        Pattern patternInternalVersioning = Pattern.compile("\\d+\\.\\d+\\.\\d+");
+        Matcher matcherInternalVersioning = patternInternalVersioning.matcher(externalVersion);
+
+        if (matcherSemanticVersioning.find()) {
+            matcherInternalVersioning.find();
+            return matcherInternalVersioning.group(0);
+        } else {
+            throw new VersionNotSupportedException("Version " + externalVersion + " does not match format 'X.Y.Z' or similar.");
+        }
     }
 
     //TODO: Change input URI to owner + repo
@@ -61,6 +87,7 @@ public class GitHubCrawler {
     }
 
     //TODO: Change input URI to owner + repo
+    //TODO: Rename method - it is not crawling ALL releases
     public List<Service> crawlGitHubRepoAllReleases(String uri) {
         String uriBasicInfo = uri;
         String uriReleases = uri + "/" + RELEASES;
@@ -78,13 +105,19 @@ public class GitHubCrawler {
             String fullName = basicInfoJson.get("full_name").textValue();
 
             for (JsonNode jsonNode : releaseInfoJson) {
-                Service service = new Service();
-                service.setShortName(shortName);
-                service.setVersion(jsonNode.get("tag_name").textValue());
-                service.setDescription(description);
-                service.setName(fullName);
-                service.setVcsRoot(jsonNode.get("url").textValue());
-                serviceList.add(service);
+                try {
+                    Service service = new Service();
+                    service.setShortName(shortName);
+                    service.setExternalVersion(jsonNode.get("tag_name").textValue());
+                    service.setCrawlingSource(CrawlingSource.GITHUB);
+                    service.setVersion(makeExternalVersionInternal(service.getExternalVersion()));
+                    service.setDescription(description);
+                    service.setName(fullName);
+                    service.setVcsRoot(jsonNode.get("url").textValue());
+                    serviceList.add(service);
+                } catch (VersionNotSupportedException e) {
+                    e.printStackTrace();
+                }
             }
 
             return serviceList;
