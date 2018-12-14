@@ -96,7 +96,7 @@ doclets.ANALYZERS['custom_typescript'] = analyze_typescript
 def new_relpath(path, basedir):
     if basedir:
         path = join(basedir, path)
-    return relpath(path)[1:] # grammar for path only allows for paths to start with './' and not '../'
+    return relpath(path, basedir)[1:] # grammar for path only allows for paths to start with './' and not '../'
 
 
 doclets.relpath = new_relpath
