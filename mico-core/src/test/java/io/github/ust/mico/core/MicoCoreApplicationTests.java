@@ -1,11 +1,12 @@
 package io.github.ust.mico.core;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.neo4j.ogm.session.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,8 +16,6 @@ import java.util.Optional;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.*;
 
-// TODO: Setup proper integration testing with neo4j
-@Ignore
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class MicoCoreApplicationTests {
@@ -40,6 +39,30 @@ public class MicoCoreApplicationTests {
     @Autowired
     private ServiceInterfaceRepository serviceInterfaceRepository;
 
+    @Autowired
+    Session session;
+
+    @Test
+    public void contextLoads() {
+        //TODO: Why is this test needed?
+    }
+
+    @Test
+    @Transactional
+    public void testServiceRepository() {
+
+        // Move this into tearDown of an abstracted neo4j test class ;-)
+        session.purgeDatabase();
+
+        serviceRepository.deleteAll();
+        dependsOnRepository.deleteAll();
+        serviceInterfaceRepository.deleteAll();
+        serviceRepository.save(createServiceInDB());
+
+        Optional<Service> serviceTestOpt = serviceRepository.findByShortNameAndVersion(TEST_SHORT_NAME, TEST_VERSION);
+        Service serviceTest = serviceTestOpt.get();
+        checkDefaultService(serviceTest);
+    }
 
     public static void checkDefaultService(Service serviceTest) {
         List<ServiceInterface> serviceInterfacesTest = serviceTest.getServiceInterfaces();
@@ -75,23 +98,6 @@ public class MicoCoreApplicationTests {
 
         service.setServiceInterfaces(Collections.singletonList(serviceInterface));
         return service;
-    }
-
-    @Test
-    public void contextLoads() {
-        //TODO: Why is this test needed?
-    }
-
-    @Test
-    public void testServiceRepository() {
-        serviceRepository.deleteAll();
-        dependsOnRepository.deleteAll();
-        serviceInterfaceRepository.deleteAll();
-        serviceRepository.save(createServiceInDB());
-
-        Optional<Service> serviceTestOpt = serviceRepository.findByShortNameAndVersion(TEST_SHORT_NAME, TEST_VERSION);
-        Service serviceTest = serviceTestOpt.get();
-        checkDefaultService(serviceTest);
     }
 
     @Test
