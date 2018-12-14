@@ -58,6 +58,12 @@
             }
 
             if (true) {
+                graph.addEventListener('modechange', function test(event) {
+                    console.log(event.type, event.detail);
+                });
+                graph.addEventListener('zoommodechange', function test(event) {
+                    console.log(event.type, event.detail);
+                });
                 graph.addEventListener('selection', function test(event) {
                     console.log(event.type, event.detail);
                 });

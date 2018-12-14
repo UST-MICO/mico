@@ -298,13 +298,15 @@ export default class GraphEditor extends HTMLElement {
             return
         }
 
-        const ev = new CustomEvent('edgeclick', {
-            bubbles: true,
-            composed: true,
-            cancelable: false,
-            detail: {oldMode: oldMode, newMode: mode}});
-        this.dispatchEvent(ev);
-        this.completeRender();
+        if (oldMode !== mode) {
+            const ev = new CustomEvent('modechange', {
+                bubbles: true,
+                composed: true,
+                cancelable: false,
+                detail: {oldMode: oldMode, newMode: mode}});
+            this.dispatchEvent(ev);
+            this.completeRender();
+        }
     }
 
     /**
@@ -316,28 +318,36 @@ export default class GraphEditor extends HTMLElement {
         if (mode === this._mode) {
             return;
         }
+        const oldMode = this._mode;
         if (mode === 'none') {
             if (this._zoomMode != 'none') {
                 this._zoomMode = 'none';
-                this.completeRender();
             }
         } else if (mode === 'manual') {
             if (this._zoomMode != 'manual') {
                 this._zoomMode = 'manual';
-                this.completeRender();
             }
         } else if (mode === 'automatic') {
             if (this._mode != 'automatic') {
                 this._zoomMode = 'automatic';
-                this.completeRender();
             }
         } else if (mode === 'both') {
             if (this._mode != 'both') {
                 this._zoomMode = 'both';
-                this.completeRender();
             }
         } else {
             console.log(`Wrong zoom mode "${mode}". Allowed are: ["none", "manual", "automatic", "both"]`)
+            return;
+        }
+
+        if (oldMode !== mode) {
+            const ev = new CustomEvent('zoommodechange', {
+                bubbles: true,
+                composed: true,
+                cancelable: false,
+                detail: {oldMode: oldMode, newMode: mode}});
+            this.dispatchEvent(ev);
+            this.completeRender();
         }
     }
 
@@ -642,7 +652,7 @@ export default class GraphEditor extends HTMLElement {
             nodeSelection.call(drag().on('drag', (d) => {
                 d.x = event.x;
                 d.y = event.y;
-                this.onNodePositionChange.bind(this)(new Set([d,]));
+                this.onNodePositionChange.bind(this)(d);
                 this.updateGraphPositions.bind(this)();
             }));
         } else {
@@ -823,7 +833,7 @@ export default class GraphEditor extends HTMLElement {
     private onEdgeClick(edgeDatum) {
         const eventDetail: any = {};
         eventDetail.sourceEvent = event;
-        eventDetail.node = edgeDatum;
+        eventDetail.edge = edgeDatum;
         const ev = new CustomEvent('edgeclick', {bubbles: true, composed: true, cancelable: true, detail: eventDetail});
         if (!this.dispatchEvent(ev)) {
             return; // prevent default / event cancelled
@@ -865,12 +875,12 @@ export default class GraphEditor extends HTMLElement {
      *
      * @param nodes nodes thatchanged
      */
-    private onNodePositionChange(nodes: Set<Node>) {
+    private onNodePositionChange(node: Node) {
         const ev = new CustomEvent('nodepositionchange', {
             bubbles: true,
             composed: true,
             cancelable: false,
-            detail: {nodes: nodes}});
+            detail: {node: node}});
         this.dispatchEvent(ev);
     }
 
@@ -960,7 +970,7 @@ export default class GraphEditor extends HTMLElement {
         if (this.mode === 'select') {
             selected = this.interactionStateData.selected;
         }
-        const ev = new CustomEvent('selection', {bubbles: true, composed: true, detail: selected});
+        const ev = new CustomEvent('selection', {bubbles: true, composed: true, detail: {selection: selected}});
         this.dispatchEvent(ev);
     }
 
