@@ -191,25 +191,25 @@ public class Service {
         this.serviceInterfaces = serviceInterfaces;
     }
 
-    @Override
-    public String toString() {
-        return "Service{" +
-                "id=" + id +
-                ", version='" + version + '\'' +
-                ", shortName='" + shortName + '\'' +
-                ", description='" + description + '\'' +
-                ", predecessor=" + predecessor +
-                ", vcsRoot='" + vcsRoot + '\'' +
-                ", name='" + name + '\'' +
-                ", dockerfile='" + dockerfile + '\'' +
-                ", contact='" + contact + '\'' +
-                ", tags=" + tags +
-                ", lifecycle='" + lifecycle + '\'' +
-                ", links=" + links +
-                ", type='" + type + '\'' +
-                ", owner='" + owner + '\'' +
-                ", dependsOn=" + dependsOn +
-                ", serviceInterfaces=" + serviceInterfaces +
-                '}';
-    }
+//    @Override
+//    public String toString() {
+//        return "Service{" +
+//                "id=" + id +
+//                ", version='" + version + '\'' +
+//                ", shortName='" + shortName + '\'' +
+//                ", description='" + description + '\'' +
+//                ", predecessor=" + predecessor +
+//                ", vcsRoot='" + vcsRoot + '\'' +
+//                ", name='" + name + '\'' +
+//                ", dockerfile='" + dockerfile + '\'' +
+//                ", contact='" + contact + '\'' +
+//                ", tags=" + tags +
+//                ", lifecycle='" + lifecycle + '\'' +
+//                ", links=" + links +
+//                ", type='" + type + '\'' +
+//                ", owner='" + owner + '\'' +
+//                ", dependsOn=" + dependsOn +
+//                ", serviceInterfaces=" + serviceInterfaces +
+//                '}';
+//    }
 }

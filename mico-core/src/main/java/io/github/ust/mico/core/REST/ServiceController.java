@@ -9,14 +9,11 @@ import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -100,7 +97,9 @@ public class ServiceController {
         Service serviceToCheck = serviceOptional.orElse(null);
 
         if (serviceToCheck != null) {
-            return ResponseEntity.badRequest().header("Bad Request: Service already exists.").body(new Resource<>(newService,getServiceLinks(newService)));
+            return ResponseEntity.badRequest()
+                    .header("Bad Request: Service already exists.")
+                    .body(new Resource<>(newService, getServiceLinks(newService)));
         } else {
             if (newService.getDependsOn() == null) {
                 Service savedService = serviceRepository.save(newService);
@@ -109,20 +108,9 @@ public class ServiceController {
                         .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
                         .body(new Resource<>(newService, getServiceLinks(newService)));
             } else {
-                List<DependsOn> dependees = newService.getDependsOn();
-                LinkedList<Service> services = getDependentServices(dependees);
+                Service serviceWithDependees = setServiceDependees(newService);
 
-                List<DependsOn> newDependees = new LinkedList<>();
-
-                services.forEach(service -> {
-                    Optional<Service> serviceOpt = serviceRepository.findById(service.getId());
-                    DependsOn dependsOnService = new DependsOn(serviceOpt.get(), newService);
-                    newDependees.add(dependsOnService);
-                });
-
-                newService.setDependsOn(newDependees);
-
-                Service savedService = serviceRepository.save(newService);
+                Service savedService = serviceRepository.save(serviceWithDependees);
 
                 return ResponseEntity
                         .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
@@ -170,9 +158,19 @@ public class ServiceController {
         return null;
     }
 
-    //@DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
-    public void deleteAllDependees(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName, @PathVariable(PATH_VARIABLE_VERSION) String version) {
+    @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
+    public ResponseEntity<Resource<Service>> deleteAllDependees(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
+        Service service = serviceOpt.get();
+        List<DependsOn> dependees = new LinkedList<>();
+        service.setDependsOn(dependees);
 
+        Service savedService = serviceRepository.save(service);
+
+        return ResponseEntity
+                .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+                .body(new Resource<>(savedService, getServiceLinks(savedService)));
     }
 
     //TODO: Doublecheck if wanted /services/{shortName}/{version}/dependees/{shortName}/{version}
@@ -206,6 +204,23 @@ public class ServiceController {
                 new Resources<>(resourceList,
                         linkTo(methodOn(ServiceController.class).getDependers(shortName, version)).withSelfRel()));
 
+    }
+
+    //Get the dependees of a service, check if they exists, if true get the ids and set the dependees
+    public Service setServiceDependees(Service newService) {
+        List<DependsOn> dependees = newService.getDependsOn();
+        LinkedList<Service> services = getDependentServices(dependees);
+
+        List<DependsOn> newDependees = new LinkedList<>();
+
+        services.forEach(service -> {
+            DependsOn dependsOnService = new DependsOn(newService, service);
+            newDependees.add(dependsOnService);
+        });
+
+        newService.setDependsOn(newDependees);
+
+        return newService;
     }
 
     private LinkedList<Service> getDependentServices(List<DependsOn> dependees) {

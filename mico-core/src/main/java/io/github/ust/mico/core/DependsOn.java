@@ -1,8 +1,13 @@
 package io.github.ust.mico.core;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import org.neo4j.ogm.annotation.*;
 
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "serviceDependee")
 @RelationshipEntity(type = "DEPENDS_ON")
 public class DependsOn {
 
@@ -66,14 +71,14 @@ public class DependsOn {
         this.maxVersion = maxVersion;
     }
 
-    @Override
+    /*@Override
     public String toString() {
         return "DependsOn{" +
                 "service=" + service.toString() +
                 ", minVersion='" + minVersion + '\'' +
                 ", maxVersion='" + maxVersion + '\'' +
                 '}';
-    }
+    }*/
 
     public Service getServiceDependee() {
         return serviceDependee;
