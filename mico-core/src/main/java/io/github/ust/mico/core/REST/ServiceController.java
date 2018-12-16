@@ -30,6 +30,8 @@ public class ServiceController {
     public static final String PATH_VARIABLE_ID = "id";
     private static final String PATH_VARIABLE_SERVICE_INTERFACE_NAME = "serviceInterfaceName";
     private static final String PATH_PART_INTERFACES = "/interfaces";
+    private static final String PATH_DELETE_SHORT_NAME = "shortNameToDelete";
+    private static final String PATH_DELETE_VERSION = "versionToDelete";
 
     @Autowired
     private ServiceRepository serviceRepository;
@@ -141,21 +143,37 @@ public class ServiceController {
                                                                @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         Service service = serviceOpt.get();
+        Service newService = getService(newServiceDependee);
         List<DependsOn> dependees = service.getDependsOn();
 
-        if (newServiceDependee.getDependsOn() == null) {
-            Service savedDependeeService = serviceRepository.save(newServiceDependee);
-            dependees.add(new DependsOn(service, savedDependeeService));
-            service.setDependsOn(dependees);
+        if (newService == null) {
+            newService = serviceRepository.save(newServiceDependee);
+            dependees.add(new DependsOn(service, newService));
             Service savedService = serviceRepository.save(service);
 
             return ResponseEntity
                     .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
                     .body(new Resource<>(savedService, getServiceLinks(savedService)));
         } else {
+            if (newServiceDependee.getDependsOn() == null) {
+                dependees.add(new DependsOn(service, newService));
+                service.setDependsOn(dependees);
+                Service savedService = serviceRepository.save(service);
 
+                return ResponseEntity
+                        .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+                        .body(new Resource<>(savedService, getServiceLinks(savedService)));
+            } else {
+                //TODO: Fix this part, not working
+                Service serviceWithDependees = setServiceDependees(newServiceDependee);
+
+                Service savedService = serviceRepository.save(serviceWithDependees);
+
+                return ResponseEntity
+                        .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+                        .body(new Resource<>(newService, getServiceLinks(newService)));
+            }
         }
-        return null;
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
@@ -174,9 +192,33 @@ public class ServiceController {
     }
 
     //TODO: Doublecheck if wanted /services/{shortName}/{version}/dependees/{shortName}/{version}
-    //@DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
-    public void deleteDependee(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName, @PathVariable(PATH_VARIABLE_VERSION) String version) {
+    @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees"
+            + "/{" + PATH_DELETE_SHORT_NAME + "}/{" + PATH_DELETE_VERSION + "}")
+    public ResponseEntity<Resource<Service>> deleteDependee(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                            @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                            @PathVariable(PATH_DELETE_SHORT_NAME) String shortNameToDelete,
+                                                            @PathVariable(PATH_DELETE_VERSION) String versionToDelete) {
+        Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
+        Service service = serviceOpt.get();
 
+        Optional<Service> serviceOptToDelete = serviceRepository.findByShortNameAndVersion(shortNameToDelete, versionToDelete);
+        Service serviceToDelete = serviceOptToDelete.get();
+
+        List<DependsOn> newDependees = new LinkedList<>();
+        List<DependsOn> dependees = service.getDependsOn();
+
+        dependees.forEach(dependsOn -> {
+            if (dependsOn.getServiceDependee().getId() != serviceToDelete.getId()) {
+                newDependees.add(dependsOn);
+            }
+        });
+
+        service.setDependsOn(newDependees);
+        Service savedService = serviceRepository.save(service);
+
+        return ResponseEntity
+                .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+                .body(new Resource<>(savedService, getServiceLinks(savedService)));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependers")
@@ -204,6 +246,16 @@ public class ServiceController {
                 new Resources<>(resourceList,
                         linkTo(methodOn(ServiceController.class).getDependers(shortName, version)).withSelfRel()));
 
+    }
+
+    public Service getService(Service newService) {
+        Optional<Service> serviceOptional = serviceRepository.findByShortNameAndVersion(newService.getShortName(), newService.getVersion());
+        Service serviceToCheck = serviceOptional.orElse(null);
+        if (serviceToCheck == null) {
+            return null;
+        } else {
+            return serviceToCheck;
+        }
     }
 
     //Get the dependees of a service, check if they exists, if true get the ids and set the dependees
