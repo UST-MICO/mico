@@ -10,6 +10,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
@@ -53,7 +54,8 @@ public class MicoCoreApplicationTests {
         serviceInterfaceRepository.deleteAll();
         serviceRepository.save(createServiceInDB());
 
-        Service serviceTest = serviceRepository.findByNameAndVersion(TEST_LONGER_NAME, TEST_VERSION);
+        Optional<Service> serviceTestOpt = serviceRepository.findByShortNameAndVersion(TEST_SHORT_NAME, TEST_VERSION);
+        Service serviceTest = serviceTestOpt.get();
         checkDefaultService(serviceTest);
     }
 
@@ -72,26 +74,26 @@ public class MicoCoreApplicationTests {
         assertEquals(TEST_SERVICE_INTERFACE_DESCRIPTION, serviceInterfaceTest.getDescription());
         assertEquals(TEST_PROTOCOL, serviceInterfaceTest.getProtocol());
         assertEquals(TEST_DNS, serviceInterfaceTest.getPublicDns());
-        assertEquals(TEST_SERVICE_INTERFACE_NAME, serviceInterfaceTest.getServiceName());
+        assertEquals(TEST_SERVICE_INTERFACE_NAME, serviceInterfaceTest.getServiceInterfaceName());
     }
 
     public static Service createServiceInDB() {
-        Service service = new Service(TEST_SHORT_NAME, TEST_VERSION);
-        service.setName(TEST_LONGER_NAME);
-        service.setDescription(TEST_SERVICE_DESCRIPTION);
-        service.setVcsRoot(TEST_VCS_ROOT);
-        service.setContact(TEST_CONTACT);
+		Service service = new Service(TEST_SHORT_NAME, TEST_VERSION);
+		service.setName(TEST_LONGER_NAME);
+		service.setDescription(TEST_SERVICE_DESCRIPTION);
+		service.setVcsRoot(TEST_VCS_ROOT);
+		service.setContact(TEST_CONTACT);
 
-        ServiceInterface serviceInterface = new ServiceInterface();
-        serviceInterface.setPort(TEST_PORT_VARIABLE);
-        serviceInterface.setDescription(TEST_SERVICE_INTERFACE_DESCRIPTION);
-        serviceInterface.setProtocol(TEST_PROTOCOL);
-        serviceInterface.setPublicDns(TEST_DNS);
-        serviceInterface.setServiceName(TEST_SERVICE_INTERFACE_NAME);
+		ServiceInterface serviceInterface = new ServiceInterface();
+		serviceInterface.setPort(TEST_PORT_VARIABLE);
+		serviceInterface.setDescription(TEST_SERVICE_INTERFACE_DESCRIPTION);
+		serviceInterface.setProtocol(TEST_PROTOCOL);
+		serviceInterface.setPublicDns(TEST_DNS);
+		serviceInterface.setServiceInterfaceName(TEST_SERVICE_INTERFACE_NAME);
 
-        service.setServiceInterfaces(Collections.singletonList(serviceInterface));
-        return service;
-    }
+		service.setServiceInterfaces(Collections.singletonList(serviceInterface));
+		return service;
+	}
 
     @Test
     public void testDependencyServiceRepository() {
@@ -122,26 +124,25 @@ public class MicoCoreApplicationTests {
         serviceInterface2.setDescription(testsServiceInterface);
         serviceInterface2.setProtocol(TEST_PROTOCOL);
         serviceInterface2.setPublicDns(TEST_DNS);
-        serviceInterface2.setServiceName(testServiceInterfaceName);
+        serviceInterface2.setServiceInterfaceName(testServiceInterfaceName);
         service2.setServiceInterfaces(Collections.singletonList(serviceInterface2));
-        DependsOn dependsOn = new DependsOn();
+        DependsOn dependsOn = new DependsOn(service,service2);
         dependsOn.setMaxVersion("1.0");
         dependsOn.setMinVersion("1.0");
-        dependsOn.setService(service2);
         service.setDependsOn(Collections.singletonList(dependsOn));
         serviceRepository.save(service);
 
-        Service serviceTest = serviceRepository.findByNameAndVersion(TEST_LONGER_NAME, TEST_VERSION, 2);
+        Optional<Service> serviceTestOpt = serviceRepository.findByShortNameAndVersion(TEST_SHORT_NAME, TEST_VERSION, 2);
+        Service serviceTest = serviceTestOpt.get();
         checkDefaultService(serviceTest);
         List<DependsOn> dependsOnList = serviceTest.getDependsOn();
         assertEquals(1, dependsOnList.size());
         DependsOn dependsOn1 = dependsOnList.get(0);
         assertEquals("1.0", dependsOn1.getMinVersion());
         assertEquals("1.0", dependsOn1.getMaxVersion());
-        Service testService2 = dependsOn1.getService();
+        Service testService2 = dependsOn1.getServiceDependee();
         assertNotNull(testService2);
         assertEquals(testVersion2, testService2.getVersion());
-        assertEquals(testLongerName, testService2.getName());
         assertEquals(testServiceInterface, testService2.getDescription());
         assertEquals(testVcsRoot, testService2.getVcsRoot());
         assertEquals(testContact, testService2.getContact());
@@ -157,9 +158,9 @@ public class MicoCoreApplicationTests {
         Service service2 = new Service("Service2", "0.1");
         Service service3 = new Service("Service3", "0.1");
 
-        DependsOn depends1 = new DependsOn(service1);
-        DependsOn depends2 = new DependsOn(service2, "0.1");
-        DependsOn depends3 = new DependsOn(service3, "0.1", "0.3");
+        DependsOn depends1 = new DependsOn(service1,service2);
+        DependsOn depends2 = new DependsOn(service2,service3);
+        DependsOn depends3 = new DependsOn(service3,service1);
 
         Application application1 = new Application();
         application1.setShortName("App1");
@@ -175,17 +176,17 @@ public class MicoCoreApplicationTests {
         Application application3 = new Application("App3", "0.1");
         serviceRepository.save(application3);
 
-        Application storedApplication1 = (Application) serviceRepository.findByNameAndVersion("Application1", "0.1", 2);
+        Application storedApplication1 = (Application) serviceRepository.findByShortNameAndVersion("App1", "0.1", 2).get();
 
-        Application storedApplication2 = (Application) serviceRepository.findByShortNameAndVersion("App2", "0.1", 2);
+        Application storedApplication2 = (Application) serviceRepository.findByShortNameAndVersion("App2", "0.1", 2).get();
 
-        Application storedApplication3 = (Application) serviceRepository.findByShortNameAndVersion("App3", "0.1", 2);
+        Application storedApplication3 = (Application) serviceRepository.findByShortNameAndVersion("App3", "0.1", 2).get();
 
         assertNotNull(storedApplication1);
         assertEquals("App1", storedApplication1.getShortName());
-        assertThat(storedApplication1.getDependsOn().get(0).getService().getShortName(), startsWith("Service"));
-        assertThat(storedApplication1.getDependsOn().get(1).getService().getShortName(), startsWith("Service"));
-        assertThat(storedApplication1.getDependsOn().get(2).getService().getShortName(), startsWith("Service"));
+        assertThat(storedApplication1.getDependsOn().get(0).getService().getShortName(), startsWith("App"));
+        assertThat(storedApplication1.getDependsOn().get(1).getService().getShortName(), startsWith("App"));
+        assertThat(storedApplication1.getDependsOn().get(2).getService().getShortName(), startsWith("App"));
 
         assertNotNull(storedApplication2);
         assertEquals("App2", storedApplication2.getShortName());

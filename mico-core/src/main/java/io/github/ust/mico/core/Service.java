@@ -1,5 +1,6 @@
 package io.github.ust.mico.core;
 
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModelProperty;
 import org.neo4j.ogm.annotation.GeneratedValue;
@@ -9,6 +10,9 @@ import org.neo4j.ogm.annotation.Relationship;
 
 import java.util.List;
 
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NodeEntity
 public class Service {
@@ -34,11 +38,16 @@ public class Service {
     private List<String> links;
     private String type;
     private String owner;
-    @Relationship
+    @Relationship(type = "DEPENDS_ON")
     private List<DependsOn> dependsOn;
     @Relationship(direction = Relationship.UNDIRECTED)
     private List<ServiceInterface> serviceInterfaces;
 
+    public DependsOn dependsOn (Service serviceEnd){
+        DependsOn dependsOnObj = new DependsOn(this,serviceEnd);
+        this.dependsOn.add(dependsOnObj);
+        return dependsOnObj;
+    }
     //crawling information
     private String externalVersion;
     private CrawlingSource crawlingSource;
@@ -150,7 +159,7 @@ public class Service {
         this.lifecycle = lifecycle;
     }
 
-    public List<String> getLinks() {
+    public List<String> getServiceLinks() {
         return links;
     }
 
@@ -188,6 +197,10 @@ public class Service {
 
     public void setServiceInterfaces(List<ServiceInterface> serviceInterfaces) {
         this.serviceInterfaces = serviceInterfaces;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public CrawlingSource getCrawlingSource() {
