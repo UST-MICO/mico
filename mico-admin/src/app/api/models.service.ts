@@ -170,7 +170,8 @@ export class ModelsService {
                 },
                 'booleanEntry': {
                     'type': 'boolean',
-                    'x-order': 20
+                    'x-order': 20,
+                    'x-boolean': 'YesNo',
                 },
             }
         }

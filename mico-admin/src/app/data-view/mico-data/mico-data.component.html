@@ -1,5 +1,7 @@
-<mat-list dense>
+<mat-list>
+    <mat-divider></mat-divider>
     <div *ngFor="let property of properties;trackBy: trackByFn">
-        <mico-data-container [property]="property" [data]="_startData"></mico-data-container>
+        <mico-data-container [property]="property" [data]="startData"></mico-data-container>
+        <mat-divider></mat-divider>
     </div>
 </mat-list>

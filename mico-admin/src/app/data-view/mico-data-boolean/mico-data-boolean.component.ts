@@ -1,12 +1,12 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, Input, OnChanges } from '@angular/core';
 import { ApiModel } from '../../api/apimodel';
 
 @Component({
-    selector: 'mico-mico-data-boolean',
+    selector: 'mico-data-boolean',
     templateUrl: './mico-data-boolean.component.html',
     styleUrls: ['./mico-data-boolean.component.css']
 })
-export class MicoDataBooleanComponent implements OnInit {
+export class MicoDataBooleanComponent implements OnChanges {
 
     constructor() { }
 
@@ -15,7 +15,8 @@ export class MicoDataBooleanComponent implements OnInit {
 
     convertedDataValue: boolean;
 
-    ngOnInit() {
+    ngOnChanges() {
+        console.log('Boolean Config: ', this.config);
         this.convertedDataValue = JSON.parse(this.dataValue);
     }
 

@@ -64,7 +64,6 @@
                     <mat-action-list>
                         <mat-divider></mat-divider>
                         <div class="flex" (click)="addProvides()">
-                            <!-- TODO method not existing yet-->
                             <div class="flex-grow-1">
                                 <mat-list-item>
                                     <span mat-line><b>Provides</b></span>
@@ -77,13 +76,11 @@
                             </div>
                         </div>
                         <mat-divider></mat-divider>
-                        <!-- TODO list provides -->
-                        <!-- TODO update style as soon as branch mico034 is merged in here-->
+                        <!-- Service Interfaces -->
                         <div *ngFor="let interface of serviceInterfaces">
                             <div class="flex">
                                 <div class="flex-grow-1">
                                     <mat-list-item.large style="font-size:small">
-                                        <!-- Todo add delete button-->
                                         <div class="pv2 pl4">
                                             {{interface.Name}}<br>
                                             {{interface.Port}}<br>

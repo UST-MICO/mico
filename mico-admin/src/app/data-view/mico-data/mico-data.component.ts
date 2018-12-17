@@ -14,18 +14,11 @@ export class MicoDataComponent implements OnInit, OnChanges {
     @Input() modelUrl: string;
     @Input() filter: string[] = [];
     @Input() isBlacklist: boolean = false;
-    @Input() debug: boolean = false;
-    @Input() set startData(data: { [prop: string]: any }) {
-        this._startData = data;
-    }
+    @Input() startData: { [prop: string]: any };
 
-    @Output() valid: EventEmitter<boolean> = new EventEmitter<boolean>();
-    @Output() data: EventEmitter<any> = new EventEmitter<any>();
 
     model: ApiModel;
     properties: (ApiModel | ApiModelRef)[];
-
-    _startData: { [prop: string]: any };
 
     private formSubscription: Subscription;
 
