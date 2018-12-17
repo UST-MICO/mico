@@ -31,6 +31,20 @@ export class MetricChartComponent implements OnInit, AfterViewInit {
             }
         });
     }
+    changeLabelCheckbox(event, label) {
+        console.log(event, label);
+        if (event.checked) {
+            this.showData(label);
+        } else {
+            this.hideData(label);
+        }
+    }
+    showData(label) {
+        this.chart.show(label);
+    }
+    hideData(label) {
+        this.chart.hide(label);
+    }
     minmax() {
         const data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
         this.prepareData(this.min, this.max, data);

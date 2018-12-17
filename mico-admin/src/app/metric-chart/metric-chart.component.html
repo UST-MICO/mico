@@ -1,14 +1,14 @@
 <mat-accordion multi="true">
     <mat-expansion-panel>
         <mat-expansion-panel-header>
-            <mat-panel-title>Data </mat-panel-title>
+            <mat-panel-title>Data</mat-panel-title>
             <mat-panel-description>work with data</mat-panel-description>
         </mat-expansion-panel-header>
         <div class="metrics-form-container">
             <button mat-raised-button matInput (click)="dataChange()">Generate Data</button>
-            <mat-form-field> <input matInput placeholder="Name" type="text" [(ngModel)]="lable"/></mat-form-field>
-            <mat-form-field> <input matInput placeholder="Minimum" type="number" [(ngModel)]="min" /> </mat-form-field
-            ><mat-form-field> <input matInput placeholder="Maximum" type="number" [(ngModel)]="max" /> </mat-form-field>
+            <mat-form-field><input matInput placeholder="Name" type="text" [(ngModel)]="lable"/></mat-form-field>
+            <mat-form-field><input matInput placeholder="Minimum" type="number" [(ngModel)]="min"/></mat-form-field>
+            <mat-form-field><input matInput placeholder="Maximum" type="number" [(ngModel)]="max"/></mat-form-field>
             <button mat-raised-button (click)="minmax()">Load Minmax</button>
         </div>
     </mat-expansion-panel>
@@ -20,8 +20,8 @@
         </mat-expansion-panel-header>
         <div class="metrics-form-container">
             <mat-list>
-                <mat-list-item *ngFor="let label of dataLabels"
-                    ><mat-checkbox>{{ label }}</mat-checkbox>
+                <mat-list-item *ngFor="let label of dataLabels">
+                    <mat-checkbox checked="true" (change)="changeLabelCheckbox($event, label)">{{ label }}</mat-checkbox>
                 </mat-list-item>
             </mat-list>
         </div>
