@@ -6,12 +6,25 @@ import 'mico-grapheditor/dist/bundle';
 // modules
 
 import {
-    MatButtonModule, MatButtonToggleModule, MatCardModule, MatMenuModule,
-    MatIconModule, MatListModule, MatSidenavModule, MatDialogModule, MatToolbarModule,
-    MatTooltipModule, MatTableModule, MatInputModule, MatTabsModule, MatChipsModule, MatSlideToggleModule,
+    MatButtonModule,
+    MatButtonToggleModule,
+    MatCardModule,
+    MatMenuModule,
+    MatIconModule,
+    MatListModule,
+    MatSidenavModule,
+    MatDialogModule,
+    MatToolbarModule,
+    MatTooltipModule,
+    MatTableModule,
+    MatInputModule,
+    MatTabsModule,
+    MatChipsModule,
+    MatSlideToggleModule
 } from '@angular/material';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
@@ -42,8 +55,9 @@ import { MicoFormNumberComponent } from './forms/mico-form-number/mico-form-numb
 import { ServicePickerComponent } from './dialogs/service-picker/service-picker.component';
 import { YesNoDialogComponent } from './dialogs/yes-no-dialog/yes-no-dialog.component';
 import { CreateServiceInterfaceComponent } from './dialogs/create-service-interface/create-service-interface.component';
+import { MetricChartComponent } from './metric-chart/metric-chart.component';
 
-
+import { NgxChartsModule } from '@swimlane/ngx-charts';
 @NgModule({
     declarations: [
         AppComponent,
@@ -66,13 +80,14 @@ import { CreateServiceInterfaceComponent } from './dialogs/create-service-interf
         ServicePickerComponent,
         YesNoDialogComponent,
         CreateServiceInterfaceComponent,
+        MetricChartComponent
     ],
     entryComponents: [
         // dialogs
         CreateServiceDialogComponent,
         ServicePickerComponent,
         YesNoDialogComponent,
-        CreateServiceInterfaceComponent,
+        CreateServiceInterfaceComponent
     ],
     imports: [
         BrowserModule,
@@ -101,11 +116,11 @@ import { CreateServiceInterfaceComponent } from './dialogs/create-service-interf
         MatSlideToggleModule,
         MatAutocompleteModule,
         MatCheckboxModule,
+        MatExpansionModule,
+        NgxChartsModule
     ],
     providers: [],
     bootstrap: [AppComponent],
-    schemas: [
-        CUSTOM_ELEMENTS_SCHEMA
-    ]
+    schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export class AppModule { }
+export class AppModule {}
