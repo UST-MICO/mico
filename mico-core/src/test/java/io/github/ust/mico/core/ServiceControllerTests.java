@@ -196,8 +196,7 @@ public class ServiceControllerTests {
         result.andExpect(status().isCreated());
     }
 
-    //TODO: Should probably work with in-memory database
-    @Ignore
+    @Ignore //TODO: Should probably work with in-memory database
     @Test
     public void createServiceWithDependees() throws Exception {
         Service service = new Service(SHORT_NAME,VERSION,DESCRIPTION);
@@ -217,17 +216,12 @@ public class ServiceControllerTests {
         result.andExpect(status().isCreated());
     }
 
-    @Ignore
     @Test
     public void deleteAllServiceDependees() throws Exception {
         Service service = new Service(SHORT_NAME,VERSION,DESCRIPTION);
 
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME,VERSION)).willReturn(Optional.of(service));
         given(serviceRepository.save(any(Service.class))).willReturn(service);
-
-//        ResultActions resultPost = mvc.perform(post(BASE_PATH)
-//                .content(mapper.writeValueAsBytes(service))
-//                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE));
-//                //.andDo(print());
 
         System.out.println(DELETE_ALL_DEPENDEES_PATH);
 
@@ -236,6 +230,16 @@ public class ServiceControllerTests {
                 .andDo(print());
 
         resultDelete.andExpect(status().isCreated());
+    }
+
+    @Test
+    public void deleteSpecificServiceDependee() throws Exception {
+        Service service = new Service(SHORT_NAME,VERSION,DESCRIPTION);
+
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME,VERSION)).willReturn(Optional.of(service));
+        given(serviceRepository.save(any(Service.class))).willReturn(service);
+
+
     }
 
 }
