@@ -33,8 +33,6 @@ export class AppDependencyGraphComponent implements OnInit {
     @Input() nodes: [any];
     @Input() edges: [any];
 
-    // TODO Button ZoomToBounding Box
-
     constructor() { }
 
     ngOnInit() {
@@ -42,9 +40,6 @@ export class AppDependencyGraphComponent implements OnInit {
             this.graph.nativeElement.initialize();
             this.graph.nativeElement.updateTemplates([NODE_TEMPLATE], [STYLE_TEMPLATE]);
         }
-
-        console.log(JSON.stringify(this.nodes));
-        console.log(JSON.stringify(this.edges));
 
         this.updateGraph();
     }
@@ -55,14 +50,11 @@ export class AppDependencyGraphComponent implements OnInit {
         }
         const graph = this.graph.nativeElement;
 
-        //console.log(document.importNode(graph.children[1].content, true));
-
-        // TODO aus @Input nodes definieren/erstellen
         const graphNodes = [];
         let x = 0;
         let y = 0;
-        const xSize = 70;
-        const ySize = 40;
+        const xSize = 110;
+        const ySize = 70;
 
         this.nodes.forEach(node => {
 
@@ -83,7 +75,6 @@ export class AppDependencyGraphComponent implements OnInit {
 
 
         graph.setNodes(graphNodes);
-        console.log(graphNodes);
 
         const graphEdges = [];
         this.edges.forEach(edge => {
@@ -94,28 +85,17 @@ export class AppDependencyGraphComponent implements OnInit {
         });
 
         graph.setEdges(graphEdges);
-        console.log(graphEdges);
 
-        /*
-        graph.setNodes([
-            {
-                id: 1,
-                x: 0,
-                y: 0,
-                title: 'hello world',
-                type: 'rest',
-            },
-            {
-                id: 2,
-                x: 150,
-                y: 100,
-                title: 'HI2',
-                type: 'gRPC',
-            }
-        ]);
-        */
         graph.completeRender();
+        graph.zoomToBoundingBox(false);
+    }
 
+    autozoom() {
+        if (this.graph == null) {
+            return;
+        }
+
+        this.graph.nativeElement.zoomToBoundingBox(false);
     }
 
 }
