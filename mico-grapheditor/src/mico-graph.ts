@@ -578,8 +578,8 @@ export default class GraphEditor extends HTMLElement {
      * @param nodeTemplateList list of node templates to use instead of html templates
      * @param styleTemplateList list of style templates to use instead of html templates (not wrapped in style tag!)
      */
-    public updateTemplates = (nodeTemplateList?: {id?: string, innerHTML: string, [prop: string]: any}[],
-                              styleTemplateList?: {id: string, innerHTML: string, [prop: string]: any}[]) => {
+    public updateTemplates = (nodeTemplateList?: {id: string, innerHTML: string, [prop: string]: any}[],
+                              styleTemplateList?: {id?: string, innerHTML: string, [prop: string]: any}[]) => {
         const templates = select(this).selectAll('template');
         const stylehtml = styleTemplateList != null ? styleTemplateList : [];
         const nodehtml = nodeTemplateList != null ? nodeTemplateList : [];
@@ -605,15 +605,8 @@ export default class GraphEditor extends HTMLElement {
                 nodehtml.push(this);
             });
         }
-        const defs = this.getSvg().select('defs');
-        const defTemplates = defs.selectAll('g.template').data(nodehtml, (d) => d.id);
 
-        defTemplates.exit().remove();
-        defTemplates.enter()
-          .append('g')
-          .merge(defTemplates)
-            .attr('id', (d) => d.id)
-            .html((d) => d.innerHTML);
+        this.objectCache.updateNodeTemplateCache(nodehtml);
     }
 
     /**
@@ -696,14 +689,11 @@ export default class GraphEditor extends HTMLElement {
      * @param nodeSelection d3 selection of nodes to add with bound data
      */
     private createNodes(nodeSelection) {
-        const templateRoot = this.getSvg().select('defs');
-        nodeSelection.html(function(d) {
-            const template = templateRoot.select('#node');
-            if (template.empty()) {
-                return "<circle></circle>";
-            }
-            return template.html();
-        });
+        nodeSelection
+            .attr('data-template', (d) => this.objectCache.getNodeTemplateId(d.type))
+            .html((d) => {
+                return this.objectCache.getNodeTemplate(d.type);
+            });
     }
 
     /**
@@ -715,11 +705,23 @@ export default class GraphEditor extends HTMLElement {
         if (nodeSelection == null) {
             const svg = this.getSvg();
 
-            const graph = svg.select("g.zoom-group");
+            const graph = svg.select('g.zoom-group');
             nodeSelection = graph.select('.nodes')
                 .selectAll('g.node')
                 .data(this._nodes, (d) => {return d.id;});
         }
+
+        // alias for this for use in closures
+        const self = this;
+
+        nodeSelection.each(function(d) {
+            const node = select(this);
+            let templateType = node.attr('data-template');
+            if (templateType !== self.objectCache.getNodeTemplateId(d.type)) {
+                node.selectAll().remove();
+                self.createNodes(node);
+            }
+        });
 
         nodeSelection
             .call(this.updateNodeHighligts.bind(this));
