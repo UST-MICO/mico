@@ -156,6 +156,24 @@ export class ModelsService {
                 },
 
             }
+        },
+        'micoDataViewTEST': {
+            'type': 'object',
+            'properties': {
+                'micoDataViewTest': {
+                    'type': 'string',
+                    'x-order': 10
+                },
+                'numberEntry': {
+                    'type': 'number',
+                    'x-order': 20
+                },
+                'booleanEntry': {
+                    'type': 'boolean',
+                    'x-order': 20,
+                    'x-boolean': 'YesNo',
+                },
+            }
         }
     };
 

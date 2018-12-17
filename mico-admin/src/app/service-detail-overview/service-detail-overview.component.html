@@ -1,4 +1,3 @@
-<!-- TODO: add buttons, TODO check usage...-->
 <div class="flex">
     <!-- Information Grid-->
     <div class="flex-grow-1 ma2 ml0 flex flex-column">
@@ -6,35 +5,19 @@
         <div class="relative w-100">
             <ng-container *ngIf="!edit">
                 <!-- display version -->
+                <!-- TODO change to serviceGET (as soon as api is available -->
+                <mico-data [modelUrl]="'local/servicePUT'" [startData]="service"></mico-data>
+
+                <!-- TODO hard coded information - not yet part of the domain model-->
                 <mat-list dense>
-                    <mat-list-item class="mat-list-item mt2">
-                        <b>VCS Root</b>
-                    </mat-list-item>
-                    <mat-divider></mat-divider>
-                    <mat-list-item>
-                        http://...
-                    </mat-list-item>
-
-                    <mat-list-item class="mat-list-item mt2">
-                        <b>Documentation</b>
-                    </mat-list-item>
-                    <mat-divider></mat-divider>
-                    <mat-list-item>
-                        http://...
-                    </mat-list-item>
-
                     <mat-list-item class="mt2">
                         <b>Info</b>
                     </mat-list-item>
                     <mat-divider></mat-divider>
                     <mat-list-item>
-                        Owner: name
-                    </mat-list-item>
-                    <mat-list-item>
                         Type: service
                     </mat-list-item>
                     <mat-list-item>
-                        <!-- TODO FIX tags (are shown in a strange way...) -->
                         Tags:
                         <mat-chip-list class="ma1">
                             <mat-chip>awesome</mat-chip>
@@ -81,7 +64,6 @@
                     <mat-action-list>
                         <mat-divider></mat-divider>
                         <div class="flex" (click)="addProvides()">
-                            <!-- TODO method not existing yet-->
                             <div class="flex-grow-1">
                                 <mat-list-item>
                                     <span mat-line><b>Provides</b></span>
@@ -94,13 +76,11 @@
                             </div>
                         </div>
                         <mat-divider></mat-divider>
-                        <!-- TODO list provides -->
-                        <!-- TODO update style as soon as branch mico034 is merged in here-->
+                        <!-- Service Interfaces -->
                         <div *ngFor="let interface of serviceInterfaces">
                             <div class="flex">
                                 <div class="flex-grow-1">
                                     <mat-list-item.large style="font-size:small">
-                                        <!-- Todo add delete button-->
                                         <div class="pv2 pl4">
                                             {{interface.Name}}<br>
                                             {{interface.Port}}<br>

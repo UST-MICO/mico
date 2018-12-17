@@ -5,8 +5,8 @@
     <mat-tab-group>
         <mat-tab label="Overview">
             <div class="flex flex-column">
-                App-Detail-Overview
-                <network-graph class="flex-grow-1" [attr.nodes]="nodes|json" [attr.edges]="edges|json"></network-graph>
+                <mico-app-detail-overview [application]="application"></mico-app-detail-overview>
+
             </div>
         </mat-tab>
         <mat-tab label="Deployment">

@@ -35,6 +35,7 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
     externalDependencies = [];
     serviceInterfaces = [];
 
+
     // will be used by the update form
     serviceData;
 
@@ -184,7 +185,7 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
 
         this.subDeleteServiceInterface = dialogRef.afterClosed().subscribe(result => {
             if (result) {
-                console.log("delete " + id)
+                console.log('delete ' + id);
                 // TODO really delete the dependency
             }
         });
