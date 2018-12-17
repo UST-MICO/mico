@@ -1,5 +1,11 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
+# package-lock.json causes maven build to fail because of an npm bug...
+# https://npm.community/t/issue-npm-install-with-local-packages-and-symlinks-enoent/518/14
+# https://github.com/npm/npm/issues/13528
+package-lock.json
+
+
 # compiled output
 /dist
 /tmp

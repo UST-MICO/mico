@@ -1,6 +1,7 @@
 package io.github.ust.mico.core;
 
 import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModelProperty;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -20,7 +21,7 @@ public class Service {
     @GeneratedValue
     private Long id;
     @ApiModelProperty(required = true)
-    private String version;
+    private String version; //internal MICO version (Format: X.Y.Z) //TODO: Do we want to rename 'version' to 'micoVersion'?
     @ApiModelProperty(required = true)
     private String shortName;
     @ApiModelProperty(required = true)
@@ -47,6 +48,13 @@ public class Service {
         this.dependsOn.add(dependsOnObj);
         return dependsOnObj;
     }
+    //crawling information
+    private String externalVersion;
+    private CrawlingSource crawlingSource;
+
+    //docker information
+    private String dockerImageName;
+    private String dockerImageUri;
 
     public Service() {
     }
@@ -66,7 +74,7 @@ public class Service {
         this.description = description;
     }
 
-    public Long getId(){
+    public Long getId() {
         return id;
     }
 
@@ -195,25 +203,57 @@ public class Service {
         this.id = id;
     }
 
-//    @Override
-//    public String toString() {
-//        return "Service{" +
-//                "id=" + id +
-//                ", version='" + version + '\'' +
-//                ", shortName='" + shortName + '\'' +
-//                ", description='" + description + '\'' +
-//                ", predecessor=" + predecessor +
-//                ", vcsRoot='" + vcsRoot + '\'' +
-//                ", name='" + name + '\'' +
-//                ", dockerfile='" + dockerfile + '\'' +
-//                ", contact='" + contact + '\'' +
-//                ", tags=" + tags +
-//                ", lifecycle='" + lifecycle + '\'' +
-//                ", links=" + links +
-//                ", type='" + type + '\'' +
-//                ", owner='" + owner + '\'' +
-//                ", dependsOn=" + dependsOn +
-//                ", serviceInterfaces=" + serviceInterfaces +
-//                '}';
-//    }
+    public CrawlingSource getCrawlingSource() {
+        return crawlingSource;
+    }
+
+    public void setCrawlingSource(CrawlingSource crawlingSource) {
+        this.crawlingSource = crawlingSource;
+    }
+
+    public String getDockerImageName() {
+        return dockerImageName;
+    }
+
+    public void setDockerImageName(String dockerImageName) {
+        this.dockerImageName = dockerImageName;
+    }
+
+    public String getDockerImageUri() {
+        return dockerImageUri;
+    }
+
+    public void setDockerImageUri(String dockerImageUri) {
+        this.dockerImageUri = dockerImageUri;
+    }
+
+    public String getExternalVersion() {
+        return externalVersion;
+    }
+
+    public void setExternalVersion(String externalVersion) {
+        this.externalVersion = externalVersion;
+    }
+
+    @Override
+    public String toString() {
+        return "Service{" +
+                "id=" + id +
+                ", version='" + version + '\'' +
+                ", shortName='" + shortName + '\'' +
+                ", description='" + description + '\'' +
+                ", predecessor=" + predecessor +
+                ", vcsRoot='" + vcsRoot + '\'' +
+                ", name='" + name + '\'' +
+                ", dockerfile='" + dockerfile + '\'' +
+                ", contact='" + contact + '\'' +
+                ", tags=" + tags +
+                ", lifecycle='" + lifecycle + '\'' +
+                ", links=" + links +
+                ", type='" + type + '\'' +
+                ", owner='" + owner + '\'' +
+                ", dependsOn=" + dependsOn +
+                ", serviceInterfaces=" + serviceInterfaces +
+                '}';
+    }
 }

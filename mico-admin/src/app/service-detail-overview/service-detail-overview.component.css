@@ -9,3 +9,7 @@
 .mat-list-item.small {
     height: 16px
 }
+
+.mat-list-item.large {
+    height: 90px;
+}

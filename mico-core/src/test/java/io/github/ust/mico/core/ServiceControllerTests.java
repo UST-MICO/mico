@@ -217,6 +217,7 @@ public class ServiceControllerTests {
         result.andExpect(status().isCreated());
     }
 
+    @Ignore
     @Test
     public void deleteAllServiceDependees() throws Exception {
         Service service = new Service(SHORT_NAME,VERSION,DESCRIPTION);

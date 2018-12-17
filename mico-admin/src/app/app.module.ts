@@ -1,17 +1,21 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
-import 'mico-grapheditor/dist/bundle';
-
 // modules
 
-import { MatButtonModule, MatButtonToggleModule, MatCardModule, MatMenuModule,
+import {
+    MatButtonModule, MatButtonToggleModule, MatCardModule, MatMenuModule,
     MatIconModule, MatListModule, MatSidenavModule, MatDialogModule, MatToolbarModule,
-    MatTooltipModule, MatTableModule, MatInputModule, MatTabsModule, MatChipsModule, MatSlideToggleModule} from '@angular/material';
+    MatTooltipModule, MatTableModule, MatInputModule, MatTabsModule, MatChipsModule, MatSlideToggleModule,
+} from '@angular/material';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { RoutingModule } from './routing.module';
+
+import { GraphsModule } from './graphs/graphs.module';
 
 // components
 import { AppComponent } from './app.component';
@@ -35,6 +39,9 @@ import { ServiceDetailComponent } from './service-detail/service-detail.componen
 import { CreateServiceDialogComponent } from './dialogs/create-service/create-service.component';
 import { MicoFormBooleanComponent } from './forms/mico-form-boolean/mico-form-boolean.component';
 import { MicoFormNumberComponent } from './forms/mico-form-number/mico-form-number.component';
+import { ServicePickerComponent } from './dialogs/service-picker/service-picker.component';
+import { YesNoDialogComponent } from './dialogs/yes-no-dialog/yes-no-dialog.component';
+import { CreateServiceInterfaceComponent } from './dialogs/create-service-interface/create-service-interface.component';
 
 
 @NgModule({
@@ -56,9 +63,16 @@ import { MicoFormNumberComponent } from './forms/mico-form-number/mico-form-numb
         CreateServiceDialogComponent,
         MicoFormBooleanComponent,
         MicoFormNumberComponent,
+        ServicePickerComponent,
+        YesNoDialogComponent,
+        CreateServiceInterfaceComponent,
     ],
     entryComponents: [
+        // dialogs
         CreateServiceDialogComponent,
+        ServicePickerComponent,
+        YesNoDialogComponent,
+        CreateServiceInterfaceComponent,
     ],
     imports: [
         BrowserModule,
@@ -67,6 +81,8 @@ import { MicoFormNumberComponent } from './forms/mico-form-number/mico-form-numb
         ReactiveFormsModule,
 
         RoutingModule,
+
+        GraphsModule,
 
         // material
         BrowserAnimationsModule,
@@ -85,11 +101,13 @@ import { MicoFormNumberComponent } from './forms/mico-form-number/mico-form-numb
         MatTabsModule,
         MatChipsModule,
         MatSlideToggleModule,
+        MatAutocompleteModule,
+        MatCheckboxModule,
     ],
     providers: [],
     bootstrap: [AppComponent],
     schemas: [
-      CUSTOM_ELEMENTS_SCHEMA
+        CUSTOM_ELEMENTS_SCHEMA
     ]
 })
 export class AppModule { }

@@ -1,21 +1,23 @@
 package io.github.ust.mico.core;
 
+import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.kubernetes.client.ApiException;
 import io.kubernetes.client.apis.CoreV1Api;
 import io.kubernetes.client.models.*;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 import java.util.Arrays;
 
-//TODO make real test on a cluster, this gives a rough overview of the functionality
+// TODO: make real test on a cluster, this gives a rough overview of the functionality
+@Ignore
 public class ClusterAwarenessTest {
+    @Rule
+    public KubernetesServer server = new KubernetesServer(true, true);
+
     ClusterAwareness cluster;
     CoreV1Api api;
     //String namespaceName = "unit-testing";
-    String namespaceName = "wursteml-hello";
+    String namespaceName = "hello-f8";
 
     @Before
     public void setUp() throws Exception {
