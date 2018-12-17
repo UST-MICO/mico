@@ -44,7 +44,7 @@ public class ImageBuilder {
         this.config = config;
     }
 
-    @PostConstruct
+    //@PostConstruct
     public void init() throws Exception {
         Optional<CustomResourceDefinition> buildCRD = getBuildCRD();
         if (!buildCRD.isPresent()) {
