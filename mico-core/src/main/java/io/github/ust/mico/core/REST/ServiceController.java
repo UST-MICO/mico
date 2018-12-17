@@ -95,8 +95,6 @@ public class ServiceController {
     public ResponseEntity<Resource<Service>> createService(@RequestBody Service newService) {
         //Check if shortName and version combination already exists
         Optional<Service> serviceOptional = serviceRepository.findByShortNameAndVersion(newService.getShortName(), newService.getVersion());
-        if(!serviceOptional.isPresent())
-            return ResponseEntity.notFound().build();
         Service serviceToCheck = serviceOptional.orElse(null);
 
         if (serviceToCheck != null) {
@@ -281,26 +279,48 @@ public class ServiceController {
     //Get the dependees of a service, check if they exists, if true get the ids and set the dependees
     public Service setServiceDependees(Service newService) {
         Service serviceToGetId = getService(newService);
-        if(newService == null){
-            serviceRepository.save(new Service(newService.getShortName(),newService.getVersion()));
+        if(serviceToGetId == null){
+            Service savedService = serviceRepository.save(new Service(newService.getShortName(),newService.getVersion()));
+
+            List<DependsOn> dependees = savedService.getDependsOn();
+            LinkedList<Service> services = getDependentServices(dependees);
+
+            List<DependsOn> newDependees = new LinkedList<>();
+
+            if(services != null){
+                services.forEach(service -> {
+                    DependsOn dependsOnService = new DependsOn(savedService, service);
+                    newDependees.add(dependsOnService);
+                });
+            }
+
+            savedService.setDependsOn(newDependees);
+
+            return savedService;
+        }else {
+            newService.setId(serviceToGetId.getId());
+            List<DependsOn> dependees = newService.getDependsOn();
+            LinkedList<Service> services = getDependentServices(dependees);
+
+            List<DependsOn> newDependees = new LinkedList<>();
+
+            services.forEach(service -> {
+                DependsOn dependsOnService = new DependsOn(newService, service);
+                newDependees.add(dependsOnService);
+            });
+
+            newService.setDependsOn(newDependees);
+
+            return newService;
         }
-        newService.setId(serviceToGetId.getId());
-        List<DependsOn> dependees = newService.getDependsOn();
-        LinkedList<Service> services = getDependentServices(dependees);
 
-        List<DependsOn> newDependees = new LinkedList<>();
-
-        services.forEach(service -> {
-            DependsOn dependsOnService = new DependsOn(newService, service);
-            newDependees.add(dependsOnService);
-        });
-
-        newService.setDependsOn(newDependees);
-
-        return newService;
     }
 
     private LinkedList<Service> getDependentServices(List<DependsOn> dependees) {
+        if(dependees == null){
+            return null;
+        }
+
         LinkedList<Service> services = new LinkedList<>();
 
         dependees.forEach(dependee -> {

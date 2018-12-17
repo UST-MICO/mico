@@ -2,7 +2,6 @@ package io.github.ust.mico.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ust.mico.core.REST.ServiceController;
-import org.hamcrest.Matchers;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -46,7 +45,7 @@ public class ServiceControllerTests {
     private static final String VERSION = "1.0.0";
     private static final String DESCRIPTION = "Some description";
     private static final String BASE_PATH = "/services/";
-    private static final String DELETE_ALL_DEPENDEES_PATH = "/services/" + SHORT_NAME + "/" + VERSION + "/dependees";
+    private static final String DEPENDEES_BASE_PATH = "/services/" + SHORT_NAME + "/" + VERSION + "/dependees";
     private static final String SHORT_NAME_TO_DELETE = "shortNameToDelete";
     private static final String VERSION_TO_DELETE = "1.0.1";
     private static final String DELETE_SPECIFIC_DEPENDEES_PATH = "/services/" + SHORT_NAME + "/" + VERSION + "/dependees/" + SHORT_NAME_TO_DELETE + "/" + VERSION_TO_DELETE;
@@ -199,16 +198,16 @@ public class ServiceControllerTests {
         result.andExpect(status().isCreated());
     }
 
-    @Ignore //TODO: Should probably work with in-memory database
+    //TODO: Should probably work with in-memory database
     @Test
     public void createServiceWithDependees() throws Exception {
         Service service = new Service(SHORT_NAME, VERSION, DESCRIPTION);
         Service serviceDependee = new Service("DependsOnService", "1.0.1", "Some Depends On Description");
         LinkedList<DependsOn> dependsOn = new LinkedList<DependsOn>();
         dependsOn.add(new DependsOn(service, serviceDependee));
-        //TODO: Test is not working with dependsOn object
         service.setDependsOn(dependsOn);
 
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
         given(serviceRepository.save(any(Service.class))).willReturn(service);
 
         final ResultActions result = mvc.perform(post(BASE_PATH)
@@ -226,7 +225,7 @@ public class ServiceControllerTests {
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
         given(serviceRepository.save(any(Service.class))).willReturn(service);
 
-        ResultActions resultDelete = mvc.perform(delete(DELETE_ALL_DEPENDEES_PATH)
+        ResultActions resultDelete = mvc.perform(delete(DEPENDEES_BASE_PATH)
                 .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andDo(print());
 
