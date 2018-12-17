@@ -26,11 +26,17 @@
                     .edge.highlight-incoming {stroke: green;}
                 </style>
             </template>
-            <template id="node" template-type="node">
+            <template id="REST" template-type="node">
                 <rect width="100" height="60" x="-50" y="-30">
                 </rect>
                 <text class="title text" data-content="title" data-click="title" x="-40" y="-10"></text>
                 <text class="text" data-content="type" x="-40" y="10"></text>
+            </template>
+            <template id="gRPC" template-type="node">
+                <rect width="100" height="40" x="-50" y="-20">
+                </rect>
+                <text class="title text" data-content="title" data-click="title" x="-40" y="-5"></text>
+                <text class="text" data-content="type" x="-40" y="15"></text>
             </template>
         </network-graph>
 

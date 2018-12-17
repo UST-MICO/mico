@@ -16,7 +16,7 @@ const STYLE_TEMPLATE = {
 };
 
 const NODE_TEMPLATE = {
-    id: 'node',
+    id: 'default',
     innerHTML: `<rect width="100" height="60" x="-50" y="-30"></rect>
         <text class="title text" data-content="title" data-click="title" x="-40" y="-10"></text>
         <text class="text" data-content="type" x="-40" y="10"></text>`
