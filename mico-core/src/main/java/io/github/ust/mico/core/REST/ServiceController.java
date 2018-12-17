@@ -164,14 +164,20 @@ public class ServiceController {
                         .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
                         .body(new Resource<>(savedService, getServiceLinks(savedService)));
             } else {
-                //TODO: Fix this part, not working
-                Service serviceWithDependees = setServiceDependees(newServiceDependee);
+                Service serviceDependee = setServiceDependees(newServiceDependee);
+                DependsOn serviceDependsOn = new DependsOn(service,serviceDependee);
+                List<DependsOn> allServiceDependees = service.getDependsOn();
+                if(allServiceDependees == null){
+                    allServiceDependees = new LinkedList<>();
+                }
+                allServiceDependees.add(serviceDependsOn);
+                service.setDependsOn(allServiceDependees);
 
-                Service savedService = serviceRepository.save(serviceWithDependees);
+                Service savedService = serviceRepository.save(service);
 
                 return ResponseEntity
                         .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
-                        .body(new Resource<>(newService, getServiceLinks(newService)));
+                        .body(new Resource<>(service, getServiceLinks(service)));
             }
         }
     }
@@ -191,7 +197,6 @@ public class ServiceController {
                 .body(new Resource<>(savedService, getServiceLinks(savedService)));
     }
 
-    //TODO: Doublecheck if wanted /services/{shortName}/{version}/dependees/{shortName}/{version}
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees"
             + "/{" + PATH_DELETE_SHORT_NAME + "}/{" + PATH_DELETE_VERSION + "}")
     public ResponseEntity<Resource<Service>> deleteDependee(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
@@ -260,6 +265,11 @@ public class ServiceController {
 
     //Get the dependees of a service, check if they exists, if true get the ids and set the dependees
     public Service setServiceDependees(Service newService) {
+        Service serviceToGetId = getService(newService);
+        if(newService == null){
+            serviceRepository.save(new Service(newService.getShortName(),newService.getVersion()));
+        }
+        newService.setId(serviceToGetId.getId());
         List<DependsOn> dependees = newService.getDependsOn();
         LinkedList<Service> services = getDependentServices(dependees);
 
@@ -283,8 +293,13 @@ public class ServiceController {
             String version = dependee.getServiceDependee().getVersion();
 
             Optional<Service> dependeeServiceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
-            Service dependeeService = dependeeServiceOpt.get();
-            services.add(dependeeService);
+            Service dependeeService = dependeeServiceOpt.orElse(null);
+            if(dependeeService == null){
+                Service newService = serviceRepository.save(new Service(shortName,version));
+                services.add(newService);
+            }else {
+                services.add(dependeeService);
+            }
         });
 
         return services;

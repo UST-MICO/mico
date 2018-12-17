@@ -46,6 +46,7 @@ public class ServiceControllerTests {
     private static final String VERSION = "1.0.0";
     private static final String DESCRIPTION = "Some description";
     private static final String BASE_PATH = "/services/";
+    private static final String DELETE_ALL_DEPENDEES_PATH = "/services/" + SHORT_NAME + "/" + VERSION + "/dependees";
     private static final Long TEST_ID = new Long(45325345);
 
     @Autowired
@@ -214,6 +215,26 @@ public class ServiceControllerTests {
                 .andDo(print());
 
         result.andExpect(status().isCreated());
+    }
+
+    @Test
+    public void deleteAllServiceDependees() throws Exception {
+        Service service = new Service(SHORT_NAME,VERSION,DESCRIPTION);
+
+        given(serviceRepository.save(any(Service.class))).willReturn(service);
+
+//        ResultActions resultPost = mvc.perform(post(BASE_PATH)
+//                .content(mapper.writeValueAsBytes(service))
+//                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE));
+//                //.andDo(print());
+
+        System.out.println(DELETE_ALL_DEPENDEES_PATH);
+
+        ResultActions resultDelete = mvc.perform(delete(DELETE_ALL_DEPENDEES_PATH)
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print());
+
+        resultDelete.andExpect(status().isCreated());
     }
 
 }
