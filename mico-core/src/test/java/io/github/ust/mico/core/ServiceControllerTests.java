@@ -47,6 +47,9 @@ public class ServiceControllerTests {
     private static final String DESCRIPTION = "Some description";
     private static final String BASE_PATH = "/services/";
     private static final String DELETE_ALL_DEPENDEES_PATH = "/services/" + SHORT_NAME + "/" + VERSION + "/dependees";
+    private static final String SHORT_NAME_TO_DELETE = "shortNameToDelete";
+    private static final String VERSION_TO_DELETE = "1.0.1";
+    private static final String DELETE_SPECIFIC_DEPENDEES_PATH = "/services/" + SHORT_NAME + "/" + VERSION + "/dependees/" + SHORT_NAME_TO_DELETE + "/" + VERSION_TO_DELETE;
     private static final Long TEST_ID = new Long(45325345);
 
     @Autowired
@@ -184,7 +187,7 @@ public class ServiceControllerTests {
 
     @Test
     public void createService() throws Exception {
-        Service service = new Service(SHORT_NAME,VERSION,DESCRIPTION);
+        Service service = new Service(SHORT_NAME, VERSION, DESCRIPTION);
 
         given(serviceRepository.save(any(Service.class))).willReturn(service);
 
@@ -199,16 +202,16 @@ public class ServiceControllerTests {
     @Ignore //TODO: Should probably work with in-memory database
     @Test
     public void createServiceWithDependees() throws Exception {
-        Service service = new Service(SHORT_NAME,VERSION,DESCRIPTION);
-        Service serviceDependee = new Service("DependsOnService","1.0.1", "Some Depends On Description");
+        Service service = new Service(SHORT_NAME, VERSION, DESCRIPTION);
+        Service serviceDependee = new Service("DependsOnService", "1.0.1", "Some Depends On Description");
         LinkedList<DependsOn> dependsOn = new LinkedList<DependsOn>();
-        dependsOn.add(new DependsOn(service,serviceDependee));
+        dependsOn.add(new DependsOn(service, serviceDependee));
         //TODO: Test is not working with dependsOn object
         service.setDependsOn(dependsOn);
 
         given(serviceRepository.save(any(Service.class))).willReturn(service);
 
-       final ResultActions result = mvc.perform(post(BASE_PATH)
+        final ResultActions result = mvc.perform(post(BASE_PATH)
                 .content(mapper.writeValueAsBytes(service))
                 .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andDo(print());
@@ -218,12 +221,10 @@ public class ServiceControllerTests {
 
     @Test
     public void deleteAllServiceDependees() throws Exception {
-        Service service = new Service(SHORT_NAME,VERSION,DESCRIPTION);
+        Service service = new Service(SHORT_NAME, VERSION, DESCRIPTION);
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME,VERSION)).willReturn(Optional.of(service));
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
         given(serviceRepository.save(any(Service.class))).willReturn(service);
-
-        System.out.println(DELETE_ALL_DEPENDEES_PATH);
 
         ResultActions resultDelete = mvc.perform(delete(DELETE_ALL_DEPENDEES_PATH)
                 .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
@@ -234,12 +235,20 @@ public class ServiceControllerTests {
 
     @Test
     public void deleteSpecificServiceDependee() throws Exception {
-        Service service = new Service(SHORT_NAME,VERSION,DESCRIPTION);
+        Service service = new Service(SHORT_NAME, VERSION, DESCRIPTION);
+        Service serviceToDelete = new Service(SHORT_NAME_TO_DELETE,VERSION_TO_DELETE);
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME,VERSION)).willReturn(Optional.of(service));
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
         given(serviceRepository.save(any(Service.class))).willReturn(service);
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME_TO_DELETE, VERSION_TO_DELETE)).willReturn(Optional.of(serviceToDelete));
 
+        System.out.println(DELETE_SPECIFIC_DEPENDEES_PATH);
 
+        ResultActions resultDelete = mvc.perform(delete(DELETE_SPECIFIC_DEPENDEES_PATH)
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print());
+
+        resultDelete.andExpect(status().isCreated());
     }
 
 }

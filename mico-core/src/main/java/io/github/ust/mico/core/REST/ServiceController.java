@@ -24,7 +24,6 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 @RequestMapping(value = "/services", produces = MediaTypes.HAL_JSON_VALUE)
 public class ServiceController {
 
-
     public static final String PATH_VARIABLE_SHORT_NAME = "shortName";
     public static final String PATH_VARIABLE_VERSION = "version";
     public static final String PATH_VARIABLE_ID = "id";
@@ -212,25 +211,25 @@ public class ServiceController {
                                                             @PathVariable(PATH_DELETE_SHORT_NAME) String shortNameToDelete,
                                                             @PathVariable(PATH_DELETE_VERSION) String versionToDelete) {
         Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
-        Service service = serviceOpt.get();
-
         if(!serviceOpt.isPresent())
             return ResponseEntity.notFound().build();
+        Service service = serviceOpt.get();
 
         Optional<Service> serviceOptToDelete = serviceRepository.findByShortNameAndVersion(shortNameToDelete, versionToDelete);
-        Service serviceToDelete = serviceOptToDelete.get();
-
         if(!serviceOptToDelete.isPresent())
             return ResponseEntity.notFound().build();
+        Service serviceToDelete = serviceOptToDelete.get();
 
         List<DependsOn> newDependees = new LinkedList<>();
         List<DependsOn> dependees = service.getDependsOn();
 
-        dependees.forEach(dependsOn -> {
-            if (dependsOn.getServiceDependee().getId() != serviceToDelete.getId()) {
-                newDependees.add(dependsOn);
-            }
-        });
+        if(dependees != null) {
+            dependees.forEach(dependsOn -> {
+                if (dependsOn.getServiceDependee().getId() != serviceToDelete.getId()) {
+                    newDependees.add(dependsOn);
+                }
+            });
+        }
 
         service.setDependsOn(newDependees);
         Service savedService = serviceRepository.save(service);
