@@ -3,6 +3,7 @@ import {select, scaleLinear, zoom, zoomIdentity, zoomTransform, event, line, cur
 import {Node} from './node';
 import {Edge, edgeId} from './edge';
 import { GraphObjectCache } from "./object-cache";
+import { wrapText } from "./textwrap";
 
 const SHADOW_DOM_TEMPLATE = `
 <style>
@@ -731,16 +732,17 @@ export default class GraphEditor extends HTMLElement {
             const textSelection = singleNodeSelection.selectAll('.text').datum(function() {
                 return this.getAttribute('data-content');
             });
-            textSelection.text(function(attr) {
+            textSelection.each(function(attr) {
+                let newText = '';
                 if (attr != null) {
-                    const text = d[attr];
-                    if (text != null) {
-                        return text;
-                    }
+                    newText = d[attr];
                 }
-                return '';
-            })
-        })
+                if (newText == null) {
+                    newText = '';
+                }
+                wrapText(this, newText);
+            });
+        });
     }
 
     /**
