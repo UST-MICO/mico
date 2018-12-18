@@ -35,8 +35,17 @@ export function wrapText(element: SVGTextElement, newText) {
         const overflow = lTrim(wrapSingleLine(element, width, newText, overflowMode, wordBreak));
         text.attr('data-wrapped', overflow !== '' ? 'true' : 'false');
         console.log('"' + overflow + '"')
+        return;
     }
     // TODO wrap multiline textbox
+    const spanSelection = calculateMultiline(text, height, x, y);
+    const lines = spanSelection.nodes();
+    for (let index = 0; index < lines.length; index++) {
+        const line = lines[index];
+        const last = index < (lines.length-1);
+        newText = lTrim(wrapSingleLine(line, width, newText, last ? 'clip' : overflowMode, last ? wordBreak : 'break-all'))
+    }
+
     //console.log(x, y, width, height, newText)
     //console.log(text.node().getBBox());
 }
@@ -57,6 +66,43 @@ function rTrim(text: string) {
  */
 function lTrim(text: string) {
     return text.replace(/^\s+/, '');
+}
+
+function calculateMultiline(text, height, x, y, linespacing: string='auto') {
+    let lineheight = parseFloat(text.attr('data-lineheight'));
+    if (isNaN(lineheight)) {
+        lineheight = parseFloat(text.style('line-height'));
+        if (isNaN(lineheight)) {
+            text.text('M');
+            lineheight = text.node().getBBox().height;
+            text.text(null);
+        }
+        text.attr('data-lineheight', lineheight);
+    }
+    const lines: number[] = [];
+    if (linespacing === 'auto') {
+        let nrOfLines = Math.floor(height / lineheight);
+        if (nrOfLines <= 0) {
+            nrOfLines = 1;
+        } else {
+            lineheight = height / nrOfLines;
+        }
+        linespacing = '1';
+    }
+    let currentY = 0;
+    let factor = parseFloat(linespacing);
+    if (isNaN(factor)) {
+        factor = 1;
+    }
+    while (currentY < height) {
+        lines.push(y + currentY);
+        currentY += lineheight * factor;
+    }
+
+    const spanSelection = text.selectAll('tspan').data(lines);
+    spanSelection.exit().remove();
+    spanSelection.enter().append('tspan').attr('x', x).attr('y', d => d);
+    return spanSelection;
 }
 
 /**
