@@ -32,6 +32,7 @@ public class Build extends CustomResource {
     private static final String BUILD_KIND_NAME = "Build";
 
     private BuildSpec spec;
+    private BuildStatus status;
 
     @Builder
     public Build(BuildSpec spec) {

@@ -1,9 +1,15 @@
 package io.github.ust.mico.core;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
+import io.github.ust.mico.core.build.Build;
 import io.github.ust.mico.core.build.ImageBuilder;
 import io.github.ust.mico.core.build.ImageBuilderConfig;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -12,20 +18,23 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+// TODO Upgrade to Junit5
 @Category(IntegrationTests.class)
 @Slf4j
 @SpringBootTest
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 public class ImageBuilderIntegrationTests {
 
     @Autowired
@@ -38,41 +47,68 @@ public class ImageBuilderIntegrationTests {
     private ImageBuilderConfig imageBuilderConfig;
 
     @Autowired
-    private IntegrationTestsConfig config;
+    private IntegrationTestsConfig integrationTestsConfig;
 
-    private CountDownLatch lock = new CountDownLatch(1);
+    private ScheduledExecutorService podStatusChecker = Executors.newSingleThreadScheduledExecutor();
+    private ScheduledExecutorService buildPodStatusChecker = Executors.newSingleThreadScheduledExecutor();
 
-    private static boolean setUpFinished = false;
-    private static boolean tearDownFinished = false;
+    private Secret dockerRegistrySecret;
+    private String namespace;
 
+    /**
+     * Set up everything that is required to execute the integration tests for the image builder.
+     */
     @Before
     public void setUp() {
-        if (!setUpFinished) {
-            //Namespaces
-            cluster.createNamespace(config.getNamespaceName());
 
-            // TODO Why works only the `default` namespace?!
-            // Override namespace
-            //imageBuilderConfig.setBuildExecutionNamespace(config.getNamespaceName());
-            setUpFinished = true;
-        }
+        String serviceAccountName = imageBuilderConfig.getServiceAccountName();
+        String usernameBase64Encoded = integrationTestsConfig.getDockerHubUsernameBase64();
+        String passwordBase64Encoded = integrationTestsConfig.getDockerHubPasswordBase64();
+
+        // Integration test namespace, use a random ID as a suffix to prevent errors if concurrent integration tests are executed
+        String shortId = RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+        namespace = integrationTestsConfig.getKubernetesNamespaceName() + "-" + shortId;
+        cluster.createNamespace(namespace);
+        // Override config of the image builder so that it uses also the same namespace
+        imageBuilderConfig.setBuildExecutionNamespace(namespace);
+
+        // Set up connection to Docker Hub
+        dockerRegistrySecret = new SecretBuilder()
+                .withApiVersion("v1")
+                .withType("kubernetes.io/basic-auth")
+                .withNewMetadata().withName("dockerhub-secret").withNamespace(namespace).withAnnotations(
+                        new HashMap<String, String>() {{
+                            put("build.knative.dev/docker-0", "https://index.docker.io/v1/");
+                        }}).endMetadata()
+                .withData(new HashMap<String, String>() {{
+                    put("username", usernameBase64Encoded);
+                    put("password", passwordBase64Encoded);
+                }})
+                .build();
+        cluster.createSecret(dockerRegistrySecret, namespace);
+
+        ServiceAccount buildServiceAccount = new ServiceAccountBuilder()
+                .withApiVersion("v1")
+                .withNewMetadata().withName(serviceAccountName).withNamespace(namespace).endMetadata()
+                .withSecrets(new ObjectReferenceBuilder().withName(dockerRegistrySecret.getMetadata().getName()).build())
+                .build();
+        cluster.createServiceAccount(buildServiceAccount, namespace);
     }
 
+    /**
+     * Delete namespace cleans up everything.
+     */
     @After
     public void tearDown() {
-        if (!tearDownFinished) {
-            //Namespaces
-            cluster.deleteNamespace(config.getNamespaceName());
-            tearDownFinished = true;
-        }
+        cluster.deleteNamespace(namespace);
     }
 
     @Test
     public void checkAvailableCustomResourceDefinitions() {
-        List<CustomResourceDefinition> crdsItems = imageBuilder.getCustomResourceDefinitions();
-        System.out.println("Found " + crdsItems.size() + " CRD(s)");
+        List<CustomResourceDefinition> crds = imageBuilder.getCustomResourceDefinitions();
+        System.out.println("Found " + crds.size() + " CRD(s)");
 
-        assertTrue("There are no Custom Resource Definitions defined", crdsItems.size() > 0);
+        assertTrue("There are no Custom Resource Definitions defined", crds.size() > 0);
     }
 
     @Test
@@ -82,23 +118,110 @@ public class ImageBuilderIntegrationTests {
         assertNotNull("No Build CRD defined", buildCRD);
     }
 
-    @Test(expected = Exception.class)
-    public void withoutInitializingAnErrorIsThrown() throws Exception {
-        imageBuilder.build("service-name", "1.0.0", "Dockerfile", "https://github.com/dgageot/hello.git", "master");
-    }
-
-    @Ignore
     @Test
-    public void createHelloBuildImage() throws Exception {
+    public void buildAndPushImageWorks() throws NotInitializedException, InterruptedException, TimeoutException, ExecutionException {
 
         imageBuilder.init();
-        imageBuilder.build(config.getImageName(), "1.0", "Dockerfile", "https://github.com/dgageot/hello.git", "master");
 
-        // Wait 20 seconds until build finished
-        lock.await(60, TimeUnit.SECONDS);
+        Build build = imageBuilder.build("hello-integration-test", "1.0", "Dockerfile", "https://github.com/dgageot/hello.git", "master");
 
-        // TODO Add proper assertion
+        try {
+            ObjectMapper mapper = new YAMLMapper();
+            mapper.enable(SerializationFeature.INDENT_OUTPUT);
+            StringWriter sw = new StringWriter();
+            mapper.writeValue(sw, build);
+            log.info("Build:" + sw.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-        // TODO Add clean up of `build-pod` the `build` itself (currently both in `default` namespace)
+        String buildName = build.getMetadata().getName();
+        boolean success = checkIfBuildPodIsFinished(buildName);
+        assertTrue("Build failed!", success);
+    }
+
+    // Test if docker image exists is currently not required
+    @Ignore
+    @Test
+    public void dockerImageExists() throws ExecutionException, InterruptedException, TimeoutException {
+        String imageName = imageBuilder.createImageName("hello-integration-test", "1.0");
+        boolean result = checkIfDockerImageExists(imageName);
+        assertTrue("Pod creation failed!", result);
+    }
+
+    private boolean checkIfBuildPodIsFinished(String buildName) throws InterruptedException, ExecutionException, TimeoutException {
+        CompletableFuture<Boolean> buildPodResult = pollForBuildPodFinished(buildName);
+        return buildPodResult.get();
+    }
+
+    private boolean checkIfDockerImageExists(String imagePath) throws ExecutionException, InterruptedException, TimeoutException {
+        Pod pod = new PodBuilder()
+                .withNewMetadata().withName("testpod").withNamespace(namespace).endMetadata()
+                .withSpec(new PodSpecBuilder()
+                        .withContainers(new ContainerBuilder().withName("testpod-container").withImage(imagePath).build())
+                        .withImagePullSecrets(
+                                new LocalObjectReferenceBuilder().withName(dockerRegistrySecret.getMetadata().getName()).build()
+                        ).build())
+                .build();
+        Pod createdPod = cluster.createPod(pod, namespace);
+
+        CompletableFuture<Boolean> podCreationResult = pollForPodCreationCompletion(createdPod.getMetadata().getName());
+        return podCreationResult.get();
+    }
+
+    private CompletableFuture<Boolean> pollForPodCreationCompletion(String podName) throws InterruptedException, ExecutionException, TimeoutException {
+        CompletableFuture<Boolean> completionFuture = new CompletableFuture<>();
+
+        final ScheduledFuture<?> checkFuture = podStatusChecker.scheduleAtFixedRate(() -> {
+            Pod pod = cluster.getPod(podName, namespace);
+            log.info("Current Phase: {}", pod.getStatus().getPhase());
+            if (pod.getStatus().getPhase().equals("Running")) {
+                completionFuture.complete(true);
+            } else {
+                String reason = pod.getStatus().getContainerStatuses().get(0).getState().getWaiting().getReason();
+                log.info("Reason: {}", reason);
+                if (reason.equals("ErrImagePull") || reason.equals("ImagePullBackOff")) {
+                    completionFuture.complete(false);
+                }
+            }
+        }, 500, 500, TimeUnit.MILLISECONDS);
+
+        // Add a timeout: Abort after 20 seconds
+        completionFuture.get(20, TimeUnit.SECONDS);
+
+        // When completed cancel future
+        completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
+
+        return completionFuture;
+    }
+
+    private CompletableFuture<Boolean> pollForBuildPodFinished(String buildName) throws InterruptedException, ExecutionException, TimeoutException {
+        CompletableFuture<Boolean> completionFuture = new CompletableFuture<>();
+
+        final ScheduledFuture<?> checkFuture = buildPodStatusChecker.scheduleAtFixedRate(() -> {
+
+            log.info("Checking pod status...");
+            Build build = imageBuilder.getBuild(buildName);
+            if (build.getStatus() != null && build.getStatus().getCluster() != null) {
+                String buildPodName = build.getStatus().getCluster().getPodName();
+                log.info("Build pod name: {}", buildPodName);
+                Pod buildPod = cluster.getPod(buildPodName, namespace);
+
+                log.info("Current Phase: {}", buildPod.getStatus().getPhase());
+                if (buildPod.getStatus().getPhase().equals("Succeeded")) {
+                    completionFuture.complete(true);
+                } else if (buildPod.getStatus().getPhase().equals("Failed")) {
+                    completionFuture.complete(false);
+                }
+            }
+        }, 5, 1, TimeUnit.SECONDS);
+
+        // Add a timeout: Abort after 30 seconds
+        completionFuture.get(30, TimeUnit.SECONDS);
+
+        // When completed cancel future
+        completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
+
+        return completionFuture;
     }
 }

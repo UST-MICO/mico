@@ -13,27 +13,27 @@ import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.github.ust.mico.core.ClusterAwarenessFabric8;
+import io.github.ust.mico.core.NotInitializedException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.io.InputStream;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
 import java.util.Optional;
 
+// TODO Move package
 @Slf4j
 @Component
 public class ImageBuilder {
 
-    private final String BUILD_CRD_GROUP = "build.knative.dev";
-    private final String BUILD_CRD_NAME = "builds." + BUILD_CRD_GROUP;
-    private final String BUILD_CRD_VERSION = "v1alpha1";
-    // private final String BUILDTEMPLATE_CRD_NAME = "buildtemplates." + BUILD_CRD_GROUP;
+    private static final String BUILD_STEP_NAME = "build-and-push";
+    private static final String BUILD_CRD_GROUP = "build.knative.dev";
+    private static final String BUILD_CRD_NAME = "builds." + BUILD_CRD_GROUP;
 
     private final ImageBuilderConfig config;
-
     private final ClusterAwarenessFabric8 cluster;
 
     private NonNamespaceOperation<Build, BuildList, DoneableBuild, Resource<Build, DoneableBuild>> buildClient;
@@ -44,13 +44,12 @@ public class ImageBuilder {
         this.config = config;
     }
 
-    //@PostConstruct
-    public void init() throws Exception {
+    public void init() throws NotInitializedException {
         Optional<CustomResourceDefinition> buildCRD = getBuildCRD();
         if (!buildCRD.isPresent()) {
             log.error("Custom Resource Definition `{}` is not available!", BUILD_CRD_NAME);
-            // TODO Change to MICO specific Exception
-            throw new Exception("Build resource not available!");
+
+            throw new NotInitializedException("Build resource not available!");
         }
 
         this.buildClient = cluster.getClient().customResources(buildCRD.get(),
@@ -58,6 +57,8 @@ public class ImageBuilder {
 
         String resourceScope = buildCRD.get().getSpec().getScope();
         log.debug("Build CRD has scope `{}`", resourceScope);
+
+        // Resource scope is either 'Namespaced' or 'Cluster'
         boolean resourceNamespaced = false;
         if (resourceScope.equals("Namespaced")) {
             resourceNamespaced = true;
@@ -66,6 +67,8 @@ public class ImageBuilder {
             buildClient = ((MixedOperation<Build, BuildList, DoneableBuild, Resource<Build, DoneableBuild>>)
                     buildClient).inNamespace(config.getBuildExecutionNamespace());
         }
+
+        // TODO Check if required service account is available
     }
 
     public Optional<CustomResourceDefinition> getBuildCRD() {
@@ -84,6 +87,10 @@ public class ImageBuilder {
         return Optional.empty();
     }
 
+    public Build getBuild(String buildName) {
+        return this.buildClient.withName(buildName).get();
+    }
+
     public List<CustomResourceDefinition> getCustomResourceDefinitions() {
         KubernetesClient client = cluster.getClient();
         CustomResourceDefinitionList crds = client.customResourceDefinitions().list();
@@ -91,28 +98,18 @@ public class ImageBuilder {
         return crdsItems;
     }
 
-//    public void createBuildCRD() {
-//        boolean resourceNamespaced = false;
-//        CustomResourceDefinition buildCRD = new CustomResourceDefinitionBuilder().
-//                withApiVersion("apiextensions.k8s.io/v1beta1").
-//                withNewMetadata().withName(BUILD_CRD_NAME).endMetadata().
-//                withNewSpec().withGroup(BUILD_CRD_GROUP).withVersion("v1").withScope(resourceScope(resourceNamespaced)).
-//                withNewNames().withKind("Dummy").withShortNames("dummy").withPlural("dummies").endNames().endSpec().
-//                build();
-//
-//        KubernetesClient client = cluster.getClient();
-//        client.customResourceDefinitions().create(buildCRD);
-//        System.out.println("Created CRD " + buildCRD.getMetadata().getName());
-//    }
+    /**
+     * @param serviceName    the name of the MICO service
+     * @param serviceVersion the version of the MICO service
+     * @param dockerfile     the relative path to the dockerfile
+     * @param gitUrl         the URL to the remote git repository
+     * @param gitRevision    the
+     * @return
+     * @throws NotInitializedException
+     */
+    public Build build(String serviceName, String serviceVersion, String dockerfile, String gitUrl, String gitRevision) throws NotInitializedException {
 
-    @Deprecated
-    public void createBuildWithYaml(InputStream yaml, String namespace) {
-
-        System.out.println("Namespace: " + namespace);
-        cluster.createFromYaml(yaml, namespace);
-    }
-
-    public void build(String serviceName, String serviceVersion, String dockerfile, String gitUrl, String gitRevision) throws Exception {
+        // TODO Add JavaDoc
 
         // TODO Is normalization required?
         String serviceNameNormalized = serviceName.replaceAll("/[^A-Za-z0-9]/", "-");
@@ -122,14 +119,16 @@ public class ImageBuilder {
         String dockerfileNormalized = dockerfile.startsWith("/") ? dockerfile.substring(1) : dockerfile;
         String dockerfilePath = "/workspace/" + dockerfileNormalized;
 
-        createBuild(buildName, destination, dockerfilePath, gitUrl, gitRevision);
+        String namespace = config.getBuildExecutionNamespace();
+
+        return createBuild(buildName, destination, dockerfilePath, gitUrl, gitRevision, namespace);
     }
 
-    private void createBuild(String buildName, String destination, String dockerfile, String gitUrl, String gitRevision) throws Exception {
+    private Build createBuild(String buildName, String destination, String dockerfile, String gitUrl, String gitRevision, String namespace) throws NotInitializedException {
 
         if (buildClient == null) {
-            // TODO Change to MICO specific Exception
-            throw new Exception("ImageBuilder is not initialized.");
+            // TODO Change to MICO specific NotInitializedException
+            throw new NotInitializedException("ImageBuilder is not initialized.");
         }
 
         Build build = Build.builder()
@@ -142,7 +141,7 @@ public class ImageBuilder {
                                         .build())
                                 .build())
                         .step(BuildStep.builder()
-                                .name(config.getBuildStepName())
+                                .name(BUILD_STEP_NAME)
                                 .image(config.getKanikoExecutorImageUrl())
                                 .arg("--dockerfile=" + dockerfile)
                                 .arg("--destination=" + destination)
@@ -152,20 +151,14 @@ public class ImageBuilder {
 
         ObjectMeta metadata = new ObjectMeta();
         metadata.setName(buildName);
+        metadata.setNamespace(namespace);
         build.setMetadata(metadata);
 
-        log.info("Build: " + build.toString());
+        Build createdBuild = buildClient.createOrReplace(build);
+        System.out.println("Upserted " + createdBuild);
 
-        ObjectMapper mapper = new YAMLMapper();
-        mapper.enable(SerializationFeature.INDENT_OUTPUT);
-        StringWriter sw = new StringWriter();
-        mapper.writeValue(sw, build);
-        log.info("Build:" + sw.toString());
-
-        Build created = buildClient.createOrReplace(build);
-        System.out.println("Upserted " + created);
-
-        buildClient.withResourceVersion(created.getMetadata().getResourceVersion()).watch(new Watcher<Build>() {
+        // TODO Check if watcher is required
+        buildClient.withResourceVersion(createdBuild.getMetadata().getResourceVersion()).watch(new Watcher<Build>() {
             @Override
             public void eventReceived(Action action, Build resource) {
                 System.out.println("==> " + action + " for " + resource);
@@ -176,22 +169,26 @@ public class ImageBuilder {
 
             @Override
             public void onClose(KubernetesClientException cause) {
+                log.error("Build failed with cause: " + cause);
             }
         });
+
+        return createdBuild;
+    }
+
+    public void deleteBuild(String buildName) {
+        buildClient.withName(buildName).delete();
+    }
+
+    public void deleteBuild(Build build) {
+        buildClient.delete(build);
+    }
+
+    public String createImageName(String serviceNameNormalized, String serviceVersion) {
+        return config.getImageRepositoryUrl() + "/" + serviceNameNormalized + ":" + serviceVersion;
     }
 
     private String createBuildName(String serviceNameNormalized) {
         return "build-" + serviceNameNormalized;
-    }
-
-    private String createImageName(String serviceNameNormalized, String serviceVersion) {
-        return config.getImageRepositoryUrl() + "/" + serviceNameNormalized + ":" + serviceVersion;
-    }
-
-    private static String resourceScope(boolean resourceNamespaced) {
-        if (resourceNamespaced) {
-            return "Namespaced";
-        }
-        return "Cluster";
     }
 }

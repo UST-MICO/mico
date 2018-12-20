@@ -1,5 +1,6 @@
 package io.github.ust.mico.core.build;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import io.fabric8.kubernetes.api.model.EnvVar;
@@ -11,6 +12,7 @@ import java.util.List;
  * A single application container that you want to run within a pod.
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonPropertyOrder({
         "name",
         "image",

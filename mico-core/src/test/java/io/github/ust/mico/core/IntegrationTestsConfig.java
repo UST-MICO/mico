@@ -15,9 +15,21 @@ import javax.validation.constraints.NotBlank;
 @Setter
 public class IntegrationTestsConfig {
 
+    /**
+     * Kubernetes namespace name that should be used for the integration tests
+     */
     @NotBlank
-    private String namespaceName;
+    private String kubernetesNamespaceName;
 
+    /**
+     * DockerHub username Base64 encoded
+     */
     @NotBlank
-    private String imageName;
+    private String dockerHubUsernameBase64;
+
+    /**
+     * DockerHub password Base64 encoded
+     */
+    @NotBlank
+    private String dockerHubPasswordBase64;
 }

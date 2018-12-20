@@ -15,20 +15,27 @@ import javax.validation.constraints.NotBlank;
 @Setter
 public class ImageBuilderConfig {
 
+    /**
+     * the service account name to access a docker registry
+     */
     @NotBlank
     private String serviceAccountName;
 
-    @NotBlank
-    private String buildStepName;
-
+    /**
+     * the url to the kaniko executor image
+     */
     @NotBlank
     private String kanikoExecutorImageUrl;
 
+    /**
+     * the url to the image destination
+     */
     @NotBlank
     private String imageRepositoryUrl;
 
-    // TODO Currently namespace `default` is used. Appropriate?
+    /**
+     * the namespace in which the build will be executed
+     */
     @NotBlank
-    @Setter
-    private String buildExecutionNamespace = "default";
+    private String buildExecutionNamespace;
 }
