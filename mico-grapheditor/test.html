@@ -18,22 +18,25 @@
             <template template-type="style">
                 <style>
                     .node {fill: aqua;}
+                    .link-handle {display: none; fill: black; opacity: 0.1; transition:r 0.25s ease-out;}
+                    .link-handle:hover {opacity: 0.7; r: 5;}
                     .text {fill: black; font-size: 6pt; text-overflow: ellipsis; word-break: break-word}
                     .text.title {font-size: initial; text-overflow: clip; word-break: break-word;}
                     .node.hovered {fill: red;}
+                    .hovered .link-handle {display: initial;}
                     .node.selected {fill: green; content:attr(class)}
                     .edge.highlight-outgoing {stroke: red;}
                     .edge.highlight-incoming {stroke: green;}
                 </style>
             </template>
             <template id="REST" template-type="node">
-                <rect width="100" height="60" x="-50" y="-30">
+                <rect width="100" height="60" x="-50" y="-30" data-link-handles="edges">
                 </rect>
                 <text class="title text" data-content="title" data-click="title" x="-40" y="-10" width="80"></text>
                 <text class="text" data-content="description" x="-40" y="5" width="80" height="30"></text>
             </template>
             <template id="gRPC" template-type="node">
-                <rect width="100" height="40" x="-50" y="-20">
+                <rect width="100" height="40" x="-50" y="-20" data-link-handles="edges">
                 </rect>
                 <text class="title text" data-content="title" data-click="title" x="-40" y="-5"></text>
                 <text class="text" data-content="type" x="-40" y="15"></text>

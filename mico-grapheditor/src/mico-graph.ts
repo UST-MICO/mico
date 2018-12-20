@@ -2,6 +2,7 @@ import {select, scaleLinear, zoom, zoomIdentity, zoomTransform, event, line, cur
 
 import {Node} from './node';
 import {Edge, edgeId} from './edge';
+import { LinkHandle, handlesForRectangle, handlesForCircle, calculateNormal } from "./link-handle";
 import { GraphObjectCache } from "./object-cache";
 import { wrapText } from "./textwrap";
 
@@ -96,7 +97,8 @@ export default class GraphEditor extends HTMLElement {
 
         select(this.root).html(SHADOW_DOM_TEMPLATE);
 
-        this.mutationObserver = new MutationObserver(() => {
+        this.mutationObserver = new MutationObserver((mutations) => {
+            console.log(mutations)
             this.updateTemplates();
             this.completeRender(true);
             this.zoomToBoundingBox(false);
@@ -113,8 +115,8 @@ export default class GraphEditor extends HTMLElement {
 
         this.mutationObserver.observe(this, {
             childList: true,
-            characterData: true,
-            subtree: true,
+            characterData: false,
+            subtree: false,
         });
     }
 
@@ -694,7 +696,63 @@ export default class GraphEditor extends HTMLElement {
             .attr('data-template', (d) => this.objectCache.getNodeTemplateId(d.type))
             .html((d) => {
                 return this.objectCache.getNodeTemplate(d.type);
-            });
+            })
+            .call(this.updateLinkHandles.bind(this));
+    }
+
+    private updateLinkHandles(nodeSelection) {
+        const self = this;
+        nodeSelection.each(function(d) {
+            if (self.objectCache.getNodeTemplateLinkHandles(d.type) != null) {
+                return;
+            }
+            let backgroundSelection = select(this).select('.outline');
+            if (backgroundSelection.empty()) {
+                backgroundSelection = select(this).select(':first-child');
+            }
+            if (backgroundSelection.empty()) {
+                self.objectCache.setNodeTemplateLinkHandles(d.type, [{
+                    id: 1,
+                    x: 0,
+                    y: 0,
+                }]);
+                return;
+            }
+            let linkHandles = backgroundSelection.attr('data-link-handles');
+            if (linkHandles == null) {
+                linkHandles = 'all';
+            } else {
+                if (linkHandles.startsWith('[')) {
+                    try {
+                        linkHandles = JSON.parse(linkHandles);
+                        linkHandles.forEach((element, index) => element.id = index);
+                        linkHandles.forEach(calculateNormal);
+                        self.objectCache.setNodeTemplateLinkHandles(d.type, linkHandles);
+                        return;
+                    } catch (error) {
+                        linkHandles = 'all';
+                    }
+                }
+                linkHandles = linkHandles.toLowerCase();
+            }
+            if (backgroundSelection.node().tagName === 'circle') {
+                const radius = parseFloat(backgroundSelection.attr('r'));
+                const handles: LinkHandle[] = handlesForCircle(radius, linkHandles);
+                self.objectCache.setNodeTemplateLinkHandles(d.type, handles);
+            } else if (backgroundSelection.node().tagName === 'rect') {
+                console.log(backgroundSelection.node().tagName)
+                const x = parseFloat(backgroundSelection.attr('x'));
+                const y = parseFloat(backgroundSelection.attr('y'));
+                const width = parseFloat(backgroundSelection.attr('width'));
+                const height = parseFloat(backgroundSelection.attr('height'));
+                if (!isNaN(x+y+width+height)) {
+                    const handles: LinkHandle[] = handlesForRectangle(x, y, width, height, linkHandles);
+                    self.objectCache.setNodeTemplateLinkHandles(d.type, handles);
+                }
+            } else {
+                self.objectCache.setNodeTemplateLinkHandles(d.type, []);
+            }
+        });
     }
 
     /**
@@ -723,6 +781,23 @@ export default class GraphEditor extends HTMLElement {
                 self.createNodes(node);
             }
         });
+
+        nodeSelection.each(function (d) {
+            const handles = self.objectCache.getNodeTemplateLinkHandles(d.type);
+            if (handles == null) {
+                return;
+            }
+            const handleSelection = select(this).selectAll('circle.link-handle').data(handles, (handle) => handle.id);
+            handleSelection.exit().remove();
+            handleSelection.enter()
+                .append('circle')
+                .classed('link-handle', true)
+              .merge(handleSelection)
+                .attr('fill', 'black')
+                .attr('cx', (d) => d.x)
+                .attr('cy', (d) => d.y)
+                .attr('r', 3);
+        })
 
         nodeSelection
             .call(this.updateNodeHighligts.bind(this));

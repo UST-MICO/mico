@@ -1,10 +1,12 @@
 import { Node } from "./node";
 import { Edge, edgeId } from "./edge";
 import { DEFAULT_NODE_TEMPLATE } from "./templates";
+import { LinkHandle } from "./link-handle";
 
 export class GraphObjectCache {
 
     private nodeTemplates: Map<string, string>;
+    private nodeTemplateLinkHandles: Map<string, LinkHandle[]>;
     private nodes: Map<number|string, Node>;
     private edges: Map<number|string, Edge>;
     private edgesBySource: Map<number|string, Set<Edge>>;
@@ -12,6 +14,7 @@ export class GraphObjectCache {
 
     constructor() {
         this.nodeTemplates = new Map();
+        this.nodeTemplateLinkHandles = new Map();
         this.nodes = new Map();
         this.edges = new Map();
         this.edgesBySource = new Map();
@@ -22,6 +25,7 @@ export class GraphObjectCache {
         const templateMap = new Map();
         templates.forEach((template) => templateMap.set(template.id, template.innerHTML));
         this.nodeTemplates = templateMap;
+        this.nodeTemplateLinkHandles = new Map();
     }
 
     updateNodeCache(nodes: Node[]) {
@@ -56,6 +60,20 @@ export class GraphObjectCache {
             template = DEFAULT_NODE_TEMPLATE;
         }
         return template;
+    }
+
+    setNodeTemplateLinkHandles(nodeType: string, linkHandles: LinkHandle[]) {
+        nodeType = this.getNodeTemplateId(nodeType);
+        if (this.nodeTemplateLinkHandles.get(nodeType) == null) {
+            console.log('Link Handles for node Type ' + nodeType + ' were already there!');
+        }
+        console.log(nodeType, linkHandles)
+        this.nodeTemplateLinkHandles.set(nodeType, linkHandles);
+    }
+
+    getNodeTemplateLinkHandles(nodeType: string): LinkHandle[] {
+        nodeType = this.getNodeTemplateId(nodeType);
+        return this.nodeTemplateLinkHandles.get(nodeType);
     }
 
     getNode(id: number|string) {
