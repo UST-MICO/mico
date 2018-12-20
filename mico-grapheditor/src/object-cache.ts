@@ -1,7 +1,7 @@
 import { Node } from "./node";
 import { Edge, edgeId } from "./edge";
 import { DEFAULT_NODE_TEMPLATE } from "./templates";
-import { LinkHandle } from "./link-handle";
+import { LinkHandle, calculateNormal } from "./link-handle";
 
 export class GraphObjectCache {
 
@@ -98,5 +98,50 @@ export class GraphObjectCache {
             return new Set();
         }
         return edges;
+    }
+
+    getEdgeLinkHandles(edge: Edge) {
+        const source = this.getNode(edge.source);
+        const target = this.getNode(edge.target);
+        const sourceHandles = edge.sourceHandle != null ? [edge.sourceHandle] : this.getNodeTemplateLinkHandles(source.type);
+        const targetHandles = edge.targetHandle != null ? [edge.targetHandle] : this.getNodeTemplateLinkHandles(target.type);
+        const result = this.calculateNearestHandles(sourceHandles, source, targetHandles, target);
+        return {
+            sourceHandle: result.sourceHandle,
+            sourceCoordinates: {x: (source.x + result.sourceHandle.x), y: (source.y + result.sourceHandle.y)},
+            targetHandle: result.targetHandle,
+            targetCoordinates: {x: (target.x + result.targetHandle.x), y: (target.y + result.targetHandle.y)},
+        };
+    }
+
+    private calculateNearestHandles(sourceHandles: LinkHandle[], source: Node, targetHandles: LinkHandle[], target: Node) {
+        let currentSourceHandle: LinkHandle = {id: 0, x: 0, y: 0, normal: {dx: 1, dy: 1}};
+        if (sourceHandles != null && sourceHandles.length > 0) {
+            currentSourceHandle = sourceHandles[0];
+        } else {
+            calculateNormal(currentSourceHandle);
+        }
+        let currentTargetHandle: LinkHandle = {id: 0, x: 0, y: 0, normal: {dx: 1, dy: 1}};
+        if (targetHandles != null && targetHandles.length > 0) {
+            currentTargetHandle = targetHandles[0];
+        } else {
+            calculateNormal(currentTargetHandle);
+        }
+        let currentDist = Math.pow((source.x + currentSourceHandle.x) - target.x, 2) + Math.pow((source.y + currentSourceHandle.y) - target.y, 2);
+        targetHandles.forEach((targetHandle) => {
+            for (let i = 0; i < sourceHandles.length; i++) {
+                const handle = sourceHandles[i];
+                const dist = Math.pow((source.x + handle.x) - (target.x + targetHandle.x), 2) + Math.pow((source.y + handle.y) - (target.y + targetHandle.y), 2);
+                if (dist <= currentDist) {
+                    currentSourceHandle = handle;
+                    currentTargetHandle = targetHandle;
+                    currentDist = dist;
+                }
+            }
+        });
+        return {
+            sourceHandle: currentSourceHandle,
+            targetHandle: currentTargetHandle,
+        };
     }
 }

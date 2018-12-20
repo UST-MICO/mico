@@ -1,7 +1,11 @@
+import { LinkHandle } from "./link-handle";
+
 export interface Edge {
     id?: number|string,
     source: number|string,
     target: number|string,
+    sourceHandle?: LinkHandle,
+    targetHandle?: LinkHandle,
     type?: any,
     [prop: string]: any,
 }

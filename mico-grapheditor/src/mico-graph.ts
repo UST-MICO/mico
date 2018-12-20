@@ -1,4 +1,4 @@
-import {select, scaleLinear, zoom, zoomIdentity, zoomTransform, event, line, curveStep, drag} from "d3";
+import {select, scaleLinear, zoom, zoomIdentity, zoomTransform, event, line, curveBasis, drag} from "d3";
 
 import {Node} from './node';
 import {Edge, edgeId} from './edge';
@@ -91,7 +91,7 @@ export default class GraphEditor extends HTMLElement {
         this._edges = [];
         this.objectCache = new GraphObjectCache();
         this.initialized = false;
-        this.edgeGenerator = line().x((d) => d.x).y((d) => d.y).curve(curveStep);
+        this.edgeGenerator = line().x((d) => d.x).y((d) => d.y).curve(curveBasis);
 
         this.root = this.attachShadow({mode: 'open'});
 
@@ -860,9 +860,23 @@ export default class GraphEditor extends HTMLElement {
      */
     private updateEdgePaths(edgeSelection) {
         edgeSelection.attr('d', (d) => {
-            const source = this.objectCache.getNode(d.source);
-            const target = this.objectCache.getNode(d.target);
-            return this.edgeGenerator([source, target]);
+            const handles = this.objectCache.getEdgeLinkHandles(d);
+            const points: {x: number, y: number, [prop: string]: any}[] = [];
+            points.push(handles.sourceCoordinates);
+            if (handles.sourceHandle.normal != null) {
+                points.push({
+                    x: handles.sourceCoordinates.x + (handles.sourceHandle.normal.dx * 10),
+                    y: handles.sourceCoordinates.y + (handles.sourceHandle.normal.dy * 10),
+                });
+            }
+            if (handles.targetHandle.normal != null) {
+                points.push({
+                    x: handles.targetCoordinates.x + (handles.targetHandle.normal.dx * 10),
+                    y: handles.targetCoordinates.y + (handles.targetHandle.normal.dy * 10),
+                });
+            }
+            points.push(handles.targetCoordinates);
+            return this.edgeGenerator(points);
         });
     }
 
