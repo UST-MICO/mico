@@ -45,8 +45,8 @@ public class ClusterAwarenessFabric8 {
     /**
      * creates object in kubernetes from a yaml describing it in specified namespace
      *
-     * @param inputStream   of yaml
-     * @param namespace has to exist or
+     * @param inputStream of yaml
+     * @param namespace   has to exist or
      */
     public void createFromYaml(InputStream inputStream, String namespace) {
         client.load(inputStream).inNamespace(namespace).createOrReplace();
