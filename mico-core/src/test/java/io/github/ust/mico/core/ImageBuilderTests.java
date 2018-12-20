@@ -4,12 +4,12 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.github.ust.mico.core.build.ImageBuilder;
+import io.github.ust.mico.core.build.ImageBuilderConfig;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -22,12 +22,19 @@ public class ImageBuilderTests {
     @Rule
     public KubernetesServer mockServer = new KubernetesServer(true, true);
 
-    @Autowired
-    ImageBuilder imageBuilder;
+    private ImageBuilder imageBuilder;
 
     @Before
     public void setUp() {
+        ClusterAwarenessFabric8 cluster = new ClusterAwarenessFabric8(mockServer.getClient());
 
+        ImageBuilderConfig config = new ImageBuilderConfig();
+        config.setBuildExecutionNamespace("build-execution-namespace");
+        config.setImageRepositoryUrl("image-repository-url");
+        config.setKanikoExecutorImageUrl("kaniko-executor-image-url");
+        config.setServiceAccountName("service-account-name");
+
+        imageBuilder = new ImageBuilder(cluster, config);
     }
 
     @After
