@@ -141,7 +141,7 @@ public class ClusterAwarenessFabric8 {
     }
 
     public Service createService(Service service, String namespace) {
-        return client.services().createOrReplace(service);
+        return client.services().inNamespace(namespace).createOrReplace(service);
     }
 
     public Boolean deleteService(String serviceName, String namespace) {
