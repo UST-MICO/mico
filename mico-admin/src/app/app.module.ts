@@ -56,8 +56,9 @@ import { ServicePickerComponent } from './dialogs/service-picker/service-picker.
 import { YesNoDialogComponent } from './dialogs/yes-no-dialog/yes-no-dialog.component';
 import { CreateServiceInterfaceComponent } from './dialogs/create-service-interface/create-service-interface.component';
 import { MetricChartComponent } from './metric-chart/metric-chart.component';
+import { ChartComponent } from './metric-chart/chart/chart.component';
+import { OwlDateTimeModule, OwlNativeDateTimeModule } from 'ng-pick-datetime';
 
-import { NgxChartsModule } from '@swimlane/ngx-charts';
 @NgModule({
     declarations: [
         AppComponent,
@@ -80,7 +81,8 @@ import { NgxChartsModule } from '@swimlane/ngx-charts';
         ServicePickerComponent,
         YesNoDialogComponent,
         CreateServiceInterfaceComponent,
-        MetricChartComponent
+        MetricChartComponent,
+        ChartComponent
     ],
     entryComponents: [
         // dialogs
@@ -117,7 +119,8 @@ import { NgxChartsModule } from '@swimlane/ngx-charts';
         MatAutocompleteModule,
         MatCheckboxModule,
         MatExpansionModule,
-        NgxChartsModule
+        OwlDateTimeModule,
+        OwlNativeDateTimeModule
     ],
     providers: [],
     bootstrap: [AppComponent],

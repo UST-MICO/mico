@@ -2,6 +2,7 @@
 @import 'tachyons-spacing';
 @import 'tachyons-flexbox';
 @import '../node_modules/c3/c3.min.css';
+@import '~ng-pick-datetime/assets/style/picker.min.css';
 
 html,
 body {
