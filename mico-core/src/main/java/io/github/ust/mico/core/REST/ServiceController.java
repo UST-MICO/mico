@@ -124,14 +124,16 @@ public class ServiceController {
     public ResponseEntity<Resources<Resource<Service>>> getDependees(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                      @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
-        if (!serviceOpt.isPresent())
+        if (!serviceOpt.isPresent()) {
             return ResponseEntity.notFound().build();
+        }
 
         Service service = serviceOpt.get();
 
         List<DependsOn> dependees = service.getDependsOn();
-        if (dependees == null)
+        if (dependees == null) {
             return ResponseEntity.notFound().build();
+        }
 
         LinkedList<Service> services = getDependentServices(dependees);
 
@@ -147,23 +149,26 @@ public class ServiceController {
                                                                @PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
-        if (!serviceOpt.isPresent())
+        if (!serviceOpt.isPresent()) {
             return ResponseEntity.notFound().build();
+        }
         Service service = serviceOpt.get();
 
 
         Optional<Service> serviceDependeeOpt = serviceRepository.findByShortNameAndVersion(newServiceDependee.getServiceDependee().getShortName(),
                 newServiceDependee.getServiceDependee().getVersion());
 
-        if(!serviceDependeeOpt.isPresent())
+        if (!serviceDependeeOpt.isPresent()) {
             return ResponseEntity.notFound().build();
+        }
 
         newServiceDependee.setService(service);
         newServiceDependee.setServiceDependee(serviceDependeeOpt.get());
 
         List<DependsOn> dependees = service.getDependsOn();
-        if(dependees == null)
+        if (dependees == null) {
             dependees = new LinkedList<>();
+        }
         dependees.add(newServiceDependee);
         service.setDependsOn(dependees);
 
@@ -179,8 +184,9 @@ public class ServiceController {
     public ResponseEntity<Resource<Service>> deleteAllDependees(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                 @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
-        if (!serviceOpt.isPresent())
+        if (!serviceOpt.isPresent()) {
             return ResponseEntity.notFound().build();
+        }
         Service service = serviceOpt.get();
         List<DependsOn> dependees = new LinkedList<>();
         service.setDependsOn(dependees);
@@ -199,13 +205,15 @@ public class ServiceController {
                                                             @PathVariable(PATH_DELETE_SHORT_NAME) String shortNameToDelete,
                                                             @PathVariable(PATH_DELETE_VERSION) String versionToDelete) {
         Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
-        if (!serviceOpt.isPresent())
+        if (!serviceOpt.isPresent()) {
             return ResponseEntity.notFound().build();
+        }
         Service service = serviceOpt.get();
 
         Optional<Service> serviceOptToDelete = serviceRepository.findByShortNameAndVersion(shortNameToDelete, versionToDelete);
-        if (!serviceOptToDelete.isPresent())
+        if (!serviceOptToDelete.isPresent()) {
             return ResponseEntity.notFound().build();
+        }
         Service serviceToDelete = serviceOptToDelete.get();
 
         List<DependsOn> newDependees = new LinkedList<>();
@@ -232,8 +240,9 @@ public class ServiceController {
                                                                      @PathVariable(PATH_VARIABLE_VERSION) String version) {
         List<Service> serviceList = serviceRepository.findAll();
         Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
-        if (!serviceOpt.isPresent())
+        if (!serviceOpt.isPresent()) {
             return ResponseEntity.notFound().build();
+        }
         Service serviceToLookFor = serviceOpt.get();
 
         List<Service> dependers = new LinkedList<>();
