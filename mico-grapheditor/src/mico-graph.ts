@@ -5,6 +5,7 @@ import {Edge, edgeId} from './edge';
 import { LinkHandle, handlesForRectangle, handlesForCircle, calculateNormal } from "./link-handle";
 import { GraphObjectCache } from "./object-cache";
 import { wrapText } from "./textwrap";
+import { normalizeVector, calculateAngle } from "./rotation-vector";
 
 const SHADOW_DOM_TEMPLATE = `
 <style>
@@ -98,7 +99,6 @@ export default class GraphEditor extends HTMLElement {
         select(this.root).html(SHADOW_DOM_TEMPLATE);
 
         this.mutationObserver = new MutationObserver((mutations) => {
-            console.log(mutations)
             this.updateTemplates();
             this.completeRender(true);
             this.zoomToBoundingBox(false);
@@ -365,6 +365,7 @@ export default class GraphEditor extends HTMLElement {
                 .attr('class', 'graph-editor')
                 .attr('width', '100%')
                 .attr('height', '100%');
+            svg.append('defs');
 
             this.xScale = scaleLinear()
                 .domain([10, 0])
@@ -372,130 +373,6 @@ export default class GraphEditor extends HTMLElement {
             this.yScale = scaleLinear()
                 .domain([10, 0])
                 .range([0, 10]);
-
-            const defs = svg.append('defs');
-
-            // setup filters ///////////////////////////////////////////////////
-
-            // for edges
-            const edgeShadow = defs.append('filter')
-                .attr('id', 'shadow-edge')
-                .attr('height', '130%');
-
-            edgeShadow.append('feGaussianBlur')
-                .attr('in', 'SourceAlpha')
-                .attr('stdDeviation', 5)
-                .attr('result', 'blur');
-
-            edgeShadow.append('feOffset')
-                .attr('in', 'blur')
-                .attr('dx', 3)
-                .attr('dy', 3)
-                .attr('result', 'offsetBlur');
-
-            edgeShadow.append('feComponentTransfer')
-              .append('feFuncA')
-                .attr('type', 'linear')
-                .attr('slope', '0.3');
-
-            const mergeLinkShadow = edgeShadow.append('feMerge');
-
-            mergeLinkShadow.append('feMergeNode');
-
-            mergeLinkShadow.append('feMergeNode')
-                .attr('in', 'SourceGraphic');
-
-            // for normal nodes
-            const smallShadow = defs.append('filter')
-                .attr('id', 'shadow-small')
-                .attr('height', '130%');
-
-            smallShadow.append('feGaussianBlur')
-                .attr('in', 'SourceAlpha')
-                .attr('stdDeviation', 5)
-                .attr('result', 'blur');
-
-            smallShadow.append('feOffset')
-                .attr('in', 'blur')
-                .attr('dx', 3)
-                .attr('dy', 3)
-                .attr('result', 'offsetBlur');
-
-            smallShadow.append('feComponentTransfer')
-              .append('feFuncA')
-                .attr('type', 'linear')
-                .attr('slope', '0.3');
-
-            const mergeSmallShadow = smallShadow.append('feMerge');
-
-            mergeSmallShadow.append('feMergeNode');
-
-            mergeSmallShadow.append('feMergeNode')
-                .attr('in', 'SourceGraphic');
-
-            // for highlighted nodes
-            const largeShadow = defs.append('filter')
-                .attr('id', 'shadow-large')
-                .attr('y', '-20%')
-                .attr('height', '150%');
-
-            largeShadow.append('feGaussianBlur')
-                .attr('in', 'SourceAlpha')
-                .attr('stdDeviation', 8)
-                .attr('result', 'blur');
-
-            largeShadow.append('feOffset')
-                .attr('in', 'blur')
-                .attr('dx', 5)
-                .attr('dy', 5)
-                .attr('result', 'offsetBlur');
-
-            largeShadow.append('feComponentTransfer')
-              .append('feFuncA')
-                .attr('type', 'linear')
-                .attr('slope', '0.6');
-
-            const mergeLargeShadow = largeShadow.append('feMerge');
-
-            mergeLargeShadow.append('feMergeNode');
-
-            mergeLargeShadow.append('feMergeNode')
-                .attr('in', 'SourceGraphic');
-
-
-            // for inactive nodes
-            let inactive = defs.append('filter')
-                .attr('id', 'inactive')
-                .attr('height', '130%');
-
-            inactive.append('feColorMatrix')
-                .attr('in', 'SourceGraphic')
-                .attr('type', 'matrix')
-                .attr('values', '.33 .33 .33 0 0 \n .33 .33 .33 0 0 \n .33 .33 .33 0 0 \n .33 .33 .33 0 0')
-                .attr('result', 'faded');
-
-            inactive.append('feGaussianBlur')
-                .attr('in', 'faded')
-                .attr('stdDeviation', 5)
-                .attr('result', 'blur');
-
-            inactive.append('feOffset')
-                .attr('in', 'blur')
-                .attr('dx', 3)
-                .attr('dy', 3)
-                .attr('result', 'offsetBlur');
-
-            inactive.append('feComponentTransfer')
-              .append('feFuncA')
-                .attr('type', 'linear')
-                .attr('slope', '0.3');
-
-            let mergeInactive = inactive.append('feMerge');
-
-            mergeInactive.append('feMergeNode');
-
-            mergeInactive.append('feMergeNode')
-                .attr('in', 'faded');
 
             // setup graph groups //////////////////////////////////////////////
 
@@ -507,13 +384,7 @@ export default class GraphEditor extends HTMLElement {
             });
 
             graph.append('g')
-                .attr('class', 'edges')
-            //    .attr('filter', 'url(#shadow-edge)') <- performance drain...
-            //  .append('circle')
-            //    .attr('cx', -100)
-            //    .attr('cy', -100)
-            //    .attr('r', 0.1)
-            //    .attr('fill', '#FFFFFF'); // fix for shadow of first line
+                .attr('class', 'edges');
 
             graph.append('g')
                 .attr('class', 'nodes');
@@ -582,15 +453,18 @@ export default class GraphEditor extends HTMLElement {
      * @param styleTemplateList list of style templates to use instead of html templates (not wrapped in style tag!)
      */
     public updateTemplates = (nodeTemplateList?: {id: string, innerHTML: string, [prop: string]: any}[],
-                              styleTemplateList?: {id?: string, innerHTML: string, [prop: string]: any}[]) => {
+                              styleTemplateList?: {id?: string, innerHTML: string, [prop: string]: any}[],
+                              markerTemplateList?: {id: string, innerHTML: string, [prop: string]: any}[]) => {
         const templates = select(this).selectAll('template');
         const stylehtml = styleTemplateList != null ? styleTemplateList : [];
         const nodehtml = nodeTemplateList != null ? nodeTemplateList : [];
+        const markerhtml = markerTemplateList != null ? markerTemplateList : [];
 
         if (styleTemplateList == null) {
             const styleTemplates = templates.filter(function() {
                 return this.getAttribute('template-type') === 'style';
             });
+            const templateTester = select(this.shadowRoot).select('div#template-tester');
             styleTemplates.each(function() {
                 // extract style attribute from template
                 select(this.content).selectAll('style').each(function() {stylehtml.push(this)})
@@ -610,6 +484,17 @@ export default class GraphEditor extends HTMLElement {
         }
 
         this.objectCache.updateNodeTemplateCache(nodehtml);
+
+        if (markerTemplateList == null) {
+            const markerTemplates = templates.filter(function() {
+                return this.getAttribute('template-type') === 'marker';
+            });
+            markerTemplates.each(function() {
+                markerhtml.push(this);
+            });
+        }
+
+        this.objectCache.updateMarkerTemplateCache(markerhtml);
     }
 
     /**
@@ -666,22 +551,26 @@ export default class GraphEditor extends HTMLElement {
 
         // update edges ////////////////////////////////////////////////////////
         if (updateTemplates) {
-            graph.select('.edges').selectAll('g.edge:not(.dragged)').remove();
+            graph.select('.edges').selectAll('path.edge:not(.dragged)').remove();
+            graph.select('.edges').selectAll('g.edge-group').remove();
         }
-
-        let edgeSelection = graph.select('.edges')
-            .selectAll('path.edge:not(.dragged)')
+        const self = this;
+        let edgeGroupSelection = graph.select('.edges')
+            .selectAll('g.edge-group')
             .data(this._edges, edgeId);
-
-        edgeSelection.exit().remove();
-
-        edgeSelection = edgeSelection.enter().append('path')
-            .classed('edge', true)
-            .attr('fill', 'none')
-            .attr('id', edgeId)
-          .merge(edgeSelection)
-            .call(this.updateEdges.bind(this))
-            .call(this.updateEdgePaths.bind(this))
+        edgeGroupSelection.exit().remove();
+        edgeGroupSelection.enter()
+            .append('g')
+            .attr('id', (d) => edgeId(d))
+            .classed('edge-group', true)
+            .each(function (d) {
+                select(this).append('path')
+                    .classed('edge', true)
+                    .attr('fill', 'none');
+            })
+          .merge(edgeGroupSelection)
+            .call(self.updateEdgeGroups.bind(this))
+            .call(self.updateEdgePositions.bind(this))
             .on('click', (d) => {this.onEdgeClick.bind(this)(d);});
     }
 
@@ -740,7 +629,6 @@ export default class GraphEditor extends HTMLElement {
                 const handles: LinkHandle[] = handlesForCircle(radius, linkHandles);
                 self.objectCache.setNodeTemplateLinkHandles(d.type, handles);
             } else if (backgroundSelection.node().tagName === 'rect') {
-                console.log(backgroundSelection.node().tagName)
                 const x = parseFloat(backgroundSelection.attr('x'));
                 const y = parseFloat(backgroundSelection.attr('y'));
                 const width = parseFloat(backgroundSelection.attr('width'));
@@ -833,12 +721,60 @@ export default class GraphEditor extends HTMLElement {
             });
     }
 
+    private updateEdgeGroups(edgeGroupSelection) {
+        if (edgeGroupSelection == null) {
+            const svg = this.getSvg();
+
+            const graph = svg.select("g.zoom-group");
+            const edgeGroupSelection = graph.select('.edges')
+                .selectAll('g.edge')
+                .data(this._edges, edgeId);
+        }
+        const self = this;
+        edgeGroupSelection.each(function (d) {
+                self.updateEdgeGroup(select(this), d);
+            }, this)
+            .call(this.updateEdgeHighligts.bind(this));
+    }
+
+    private updateEdgePositions(edgeGroupSelection) {
+        if (edgeGroupSelection == null) {
+            const svg = this.getSvg();
+
+            const graph = svg.select("g.zoom-group");
+            const edgeGroupSelection = graph.select('.edges')
+                .selectAll('g.edge')
+                .data(this._edges, edgeId);
+        }
+        const self = this;
+        edgeGroupSelection.select('path.edge:not(.dragged)')
+            .call(this.updateEdgePath.bind(this));
+        edgeGroupSelection.each(function (d) {
+            select(this).selectAll('g.marker').data(d.markers != null ? d.markers : [])
+                .call(self.updateMarkerPositions.bind(self));
+        });
+    }
+
+    private updateEdgeGroup(edgeGroupSelection, d) {
+        const pathSelection = edgeGroupSelection.select('path.edge:not(.dragged)').datum(d);
+        pathSelection.call(this.updateEdge.bind(this));
+        const markerSelection = edgeGroupSelection.selectAll('g.marker').data(d.markers != null ? d.markers : []);
+        markerSelection.exit().remove();
+        markerSelection.enter()
+            .append('g')
+            .classed('marker', true)
+            .call(this.createMarker.bind(this))
+          .merge(markerSelection)
+            .call(this.updateMarker.bind(this))
+            .call(this.updateMarkerPositions.bind(this));
+    }
+
     /**
      * Update existing edges.
      *
      * @param edgeSelection d3 selection of edges to update with bound data
      */
-    private updateEdges(edgeSelection) {
+    private updateEdge(edgeSelection) {
         if (edgeSelection == null) {
             const svg = this.getSvg();
 
@@ -849,8 +785,7 @@ export default class GraphEditor extends HTMLElement {
         }
 
         edgeSelection
-            .attr('stroke', 'black')
-            .call(this.updateEdgeHighligts.bind(this));
+            .attr('stroke', 'black');
     }
 
     /**
@@ -858,7 +793,7 @@ export default class GraphEditor extends HTMLElement {
      *
      * @param edgeSelection d3 selection of edges to update with bound data
      */
-    private updateEdgePaths(edgeSelection) {
+    private updateEdgePath(edgeSelection) {
         edgeSelection.attr('d', (d) => {
             const handles = this.objectCache.getEdgeLinkHandles(d);
             const points: {x: number, y: number, [prop: string]: any}[] = [];
@@ -880,6 +815,69 @@ export default class GraphEditor extends HTMLElement {
         });
     }
 
+    private createMarker = (markerSelection) => {
+        markerSelection
+            .attr('data-template', (d) => d.template)
+            .html((d) => {
+                return this.objectCache.getMarkerTemplate(d.template);
+            });
+    }
+
+    private updateMarker(markerSelection) {
+        const self = this;
+        markerSelection.each(function(d) {
+            const marker = select(this);
+            let templateType = marker.attr('data-template');
+            if (templateType !== d.template) {
+                marker.selectAll().remove();
+                self.createMarker(marker);
+            }
+        });
+    }
+
+    private updateMarkerPositions(markerSelection) {
+        markerSelection.each(function (d) {
+            const parent = select(this.parentElement);
+            const marker = select(this);
+            const path = parent.select('path.edge');
+            const length = path.node().getTotalLength();
+            let positionOnLine = d.positionOnLine;
+            if (positionOnLine === 'end') {
+                positionOnLine = 1;
+            }
+            if (positionOnLine === 'start') {
+                positionOnLine = 0;
+            }
+            positionOnLine = parseFloat(positionOnLine);
+            if (isNaN(positionOnLine)) {
+                positionOnLine = 0;
+            }
+            let transform = '';
+            const point = path.node().getPointAtLength(length * (1-positionOnLine));
+            transform += `translate(${point.x},${point.y})`;
+            if (d.scale != null) {
+                transform += `scale(${d.scale})`;
+            }
+            if (d.rotate != null) {
+                let angle = 0;
+                if (d.rotate.normal == null) {
+                    const epsilon = positionOnLine > 0.5 ? -1e-5 : 1e-5;
+                    const point2 = path.node().getPointAtLength(length * (1-(positionOnLine + epsilon)));
+                    let normal = {
+                        dx: positionOnLine > 0.5 ? (point.x - point2.x) : (point2.x - point.x),
+                        dy: positionOnLine > 0.5 ? (point.y - point2.y) : (point2.y - point.y),
+                    }
+                    angle += calculateAngle(normal);
+                } else {
+                    angle += calculateAngle(d.rotate.normal);
+                }
+                angle += d.rotate.relativeAngle != null ? d.rotate.relativeAngle : 0;
+                transform += `rotate(${angle})`;
+            }
+            marker.attr('transform', transform);
+        });
+    }
+
     /**
      * UUpdate all node positions and edge paths.
      */
@@ -892,9 +890,9 @@ export default class GraphEditor extends HTMLElement {
             .data(this._nodes, (d) => {return d.id;})
             .call(this.updateNodePositions.bind(this));
         const edgeSelection = graph.select('.edges')
-            .selectAll('path.edge:not(.dragged)')
+            .selectAll('g.edge-group')
             .data(this._edges, edgeId)
-            .call(this.updateEdgePaths.bind(this));
+            .call(this.updateEdgePositions.bind(this));
     }
 
     /**
@@ -1160,7 +1158,7 @@ export default class GraphEditor extends HTMLElement {
 
             const graph = svg.select("g.zoom-group");
             edgeSelection = graph.select('.edges')
-                .selectAll('path.edge:not(.dragged)')
+                .selectAll('g.edge-group')
                 .data(this._edges, edgeId);
         }
 

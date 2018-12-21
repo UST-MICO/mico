@@ -7,6 +7,7 @@ export class GraphObjectCache {
 
     private nodeTemplates: Map<string, string>;
     private nodeTemplateLinkHandles: Map<string, LinkHandle[]>;
+    private markerTemplates: Map<string, string>;
     private nodes: Map<number|string, Node>;
     private edges: Map<number|string, Edge>;
     private edgesBySource: Map<number|string, Set<Edge>>;
@@ -15,6 +16,7 @@ export class GraphObjectCache {
     constructor() {
         this.nodeTemplates = new Map();
         this.nodeTemplateLinkHandles = new Map();
+        this.markerTemplates = new Map();
         this.nodes = new Map();
         this.edges = new Map();
         this.edgesBySource = new Map();
@@ -28,6 +30,12 @@ export class GraphObjectCache {
         this.nodeTemplateLinkHandles = new Map();
     }
 
+    updateMarkerTemplateCache(templates: {id: string, innerHTML: string, [prop: string]: any}[]) {
+        const templateMap = new Map();
+        templates.forEach((template) => templateMap.set(template.id, template.innerHTML));
+        this.markerTemplates = templateMap;
+    }
+
     updateNodeCache(nodes: Node[]) {
         const nodeMap = new Map();
         nodes.forEach((node) => nodeMap.set(node.id, node));
@@ -38,6 +46,14 @@ export class GraphObjectCache {
         const edgeMap = new Map();
         edges.forEach((edge) => edgeMap.set(edgeId(edge), edge));
         this.edges = edgeMap;
+    }
+
+    getMarkerTemplate(markerType: string) {
+        if (markerType == null) {
+            console.log('Marker type was null!');
+            return;
+        }
+        return this.markerTemplates.get(markerType);
     }
 
     getNodeTemplateId(nodeType: string) {
@@ -64,10 +80,6 @@ export class GraphObjectCache {
 
     setNodeTemplateLinkHandles(nodeType: string, linkHandles: LinkHandle[]) {
         nodeType = this.getNodeTemplateId(nodeType);
-        if (this.nodeTemplateLinkHandles.get(nodeType) == null) {
-            console.log('Link Handles for node Type ' + nodeType + ' were already there!');
-        }
-        console.log(nodeType, linkHandles)
         this.nodeTemplateLinkHandles.set(nodeType, linkHandles);
     }
 

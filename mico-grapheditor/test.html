@@ -25,8 +25,11 @@
                     .node.hovered {fill: red;}
                     .hovered .link-handle {display: initial;}
                     .node.selected {fill: green; content:attr(class)}
-                    .edge.highlight-outgoing {stroke: red;}
-                    .edge.highlight-incoming {stroke: green;}
+                    .edge {marker-end: url(#arrow)}
+                    .highlight-outgoing .edge {stroke: red;}
+                    .highlight-incoming .edge {stroke: green;}
+                    .highlight-outgoing .marker {fill: red;}
+                    .highlight-incoming .marker {fill: green;}
                 </style>
             </template>
             <template id="REST" template-type="node">
@@ -40,6 +43,9 @@
                 </rect>
                 <text class="title text" data-content="title" data-click="title" x="-40" y="-5"></text>
                 <text class="text" data-content="type" x="-40" y="15"></text>
+            </template>
+            <template id="arrow" template-type="marker">
+                <path d="M -9 -5 L 1 0 L -9 5 z" />
             </template>
         </network-graph>
 
@@ -58,7 +64,11 @@
                 ]
 
                 graph.addNode({id: 4, title: 'NEU', type: 'mqtt', x: 130, y: -50});
-                graph.addEdge({source: 4, target: 1});
+                graph.addEdge({source: 4, target: 1, markers: [
+                    {template: 'arrow', positionOnLine: 1, scale: 0.5, rotate: {relativeAngle: 0}},
+                    {template: 'arrow', positionOnLine: 0.3, scale: 0.5, rotate: {normal: {dx: -1, dy: 0}, relativeAngle: 0}},
+                    {template: 'arrow', positionOnLine: 0, scale: 0.5, rotate: {relativeAngle: 0}},
+                ]});
 
                 graph.removeNode(3);
 

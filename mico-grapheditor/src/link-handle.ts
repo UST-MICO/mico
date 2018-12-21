@@ -1,11 +1,10 @@
+import { RotationVector, normalizeVector } from "./rotation-vector";
+
 export interface LinkHandle {
     id: number;
     x: number;
     y: number;
-    normal?: {
-        dx: number;
-        dy: number;
-    }
+    normal?: RotationVector
 }
 
 /**
@@ -16,11 +15,11 @@ export interface LinkHandle {
 export function calculateNormal(handle: LinkHandle) {
     let x = handle.normal != null ? handle.normal.dx : handle.x;
     let y = handle.normal != null ? handle.normal.dy : handle.y;
-    const length = Math.sqrt(x*x + y*y);
-    handle.normal = {
-        dx: x/length,
-        dy: y/length,
-    }
+
+    handle.normal = normalizeVector({
+        dx: x,
+        dy: y,
+    });
 }
 
 /**

@@ -1,4 +1,5 @@
 import { LinkHandle } from "./link-handle";
+import { Marker } from "./marker";
 
 export interface Edge {
     id?: number|string,
@@ -7,6 +8,7 @@ export interface Edge {
     sourceHandle?: LinkHandle,
     targetHandle?: LinkHandle,
     type?: any,
+    markes?: Marker[],
     [prop: string]: any,
 }
 

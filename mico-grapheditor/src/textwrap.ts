@@ -34,10 +34,10 @@ export function wrapText(element: SVGTextElement, newText) {
     if (isNaN(height)) {
         const overflow = lTrim(wrapSingleLine(element, width, newText, overflowMode, wordBreak));
         text.attr('data-wrapped', overflow !== '' ? 'true' : 'false');
-        console.log('"' + overflow + '"')
         return;
     }
-    // TODO wrap multiline textbox
+
+    // wrap multiline
     const spanSelection = calculateMultiline(text, height, x, y);
     const lines = spanSelection.nodes();
     for (let index = 0; index < lines.length; index++) {
@@ -45,9 +45,6 @@ export function wrapText(element: SVGTextElement, newText) {
         const last = index < (lines.length-1);
         newText = lTrim(wrapSingleLine(line, width, newText, last ? 'clip' : overflowMode, last ? wordBreak : 'break-all'))
     }
-
-    //console.log(x, y, width, height, newText)
-    //console.log(text.node().getBBox());
 }
 
 /**
