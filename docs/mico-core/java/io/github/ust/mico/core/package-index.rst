@@ -7,11 +7,18 @@ io.github.ust.mico.core
    :maxdepth: 1
 
    Application
+   ApplicationRepository
+   ClusterAwareness
+   ClusterAwarenessFabric8
+   CrawlingSource
    DependsOn
-   ExampleController
+   DependsOnRepository
+   GitHubCrawler
    MicoCoreApplication
    Service
-   ServiceDescription
+   ServiceInterface
+   ServiceInterfaceRepository
    ServiceRepository
    SwaggerConfig
+   VersionNotSupportedException
 
