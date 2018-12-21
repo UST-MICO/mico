@@ -3,7 +3,7 @@ package io.github.ust.mico.core.model;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo.ImagePullPolicy;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo.RestartPolicy;
 
-public class DomailModelDemo {
+public class DomainModelDemo {
 
     public static void main(String[] args) {
         MicoService service = MicoService.builder()
