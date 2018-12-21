@@ -12,6 +12,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { HttpModule } from '@angular/http';
 
 import { RoutingModule } from './routing.module';
 
@@ -91,6 +92,9 @@ import { MicoDataBooleanComponent } from './data-view/mico-data-boolean/mico-dat
         RoutingModule,
 
         GraphsModule,
+
+        HttpModule,
+
 
         // material
         BrowserAnimationsModule,
