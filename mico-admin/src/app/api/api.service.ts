@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, Subject, BehaviorSubject } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { ApiObject } from './apiobject';
+import { ApiBaseFunctionService } from './api-base-function.service';
 
 
 /**
@@ -36,7 +37,7 @@ export function freezeObject<T>(obj: T): Readonly<T> {
 export class ApiService {
     private streams: Map<string, Subject<Readonly<ApiObject> | Readonly<ApiObject[]>>> = new Map();
 
-    constructor() { }
+    constructor(private rest: ApiBaseFunctionService, ) { }
 
     /**
      * Canonize a resource url.
@@ -77,71 +78,10 @@ export class ApiService {
         const resource = 'services';
         const stream = this.getStreamSource(resource);
 
-        // TODO
-        const mockData: ApiObject[] = [
-            {
-                'id': '1',
-                'name': 'Mock Service',
-                'shortName': 'test.mock-service',
-                'description': 'A generic dummy service',
-                'internalDependencies': [2, 3],
-                'externalDependencies': [4],
-                'status': 'online',
-                'external': false,
-            },
-            {
-                'id': '2',
-                'name': 'Hello World Service',
-                'shortName': 'test.hello-world-service',
-                'description': 'A generic hello world service',
-                'internalDependencies': [],
-                'externalDependencies': [4],
-                'status': 'online',
-                'external': false,
-            },
-            {
-                'id': '3',
-                'name': 'Bye World Service',
-                'shortName': 'test.bye-world-service',
-                'description': 'A generic service',
-                'internalDependencies': [2],
-                'externalDependencies': [],
-                'status': 'offline',
-                'external': false,
-            },
-            {
-                'id': '4',
-                'name': 'External Service',
-                'shortName': 'ext.service',
-                'description': 'A generic service',
-                'internalDependencies': [],
-                'externalDependencies': [],
-                'status': 'problem',
-                'external': true,
-            },
-            {
-                'id': '5',
-                'name': 'Internal Service',
-                'shortName': 'int.service',
-                'description': 'A generic service',
-                'internalDependencies': [],
-                'externalDependencies': [6],
-                'status': 'online',
-                'external': false,
-            },
-            {
-                'id': '6',
-                'name': 'External Service',
-                'shortName': 'ext.service',
-                'description': 'A generic service',
-                'internalDependencies': [5],
-                'externalDependencies': [],
-                'status': 'problem',
-                'external': true,
-            },
-        ];
-
-        stream.next(freezeObject(mockData));
+        this.rest.get(resource).subscribe(val => {
+            // return actual service list
+            stream.next(freezeObject(val._embedded.serviceList));
+        });
 
         return (stream.asObservable() as Observable<Readonly<ApiObject[]>>).pipe(
             filter(data => data !== undefined)
@@ -287,9 +227,28 @@ export class ApiService {
         );
     }
 
+    getTestService() {
+        console.log('getServiceById');
+
+        const resource = 'http://localhost:8080/services/test.service/v1';
+        const stream = this.getStreamSource(resource);
+
+        // TODO close subscription
+        this.rest.get(resource).subscribe(val => {
+            console.log('get', val);
+            stream.next(freezeObject(val));
+        });
+
+        return (stream.asObservable() as Observable<Readonly<ApiObject[]>>).pipe(
+            filter(data => data !== undefined)
+        );
+    }
+
     getServiceInterfaces(serviceId): Observable<ApiObject[]> {
         const resource = 'service/' + serviceId + '/interfaces';
         const stream = this.getStreamSource(resource);
+
+
 
         // TODO
 

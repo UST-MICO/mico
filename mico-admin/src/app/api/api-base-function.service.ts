@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Http, Response, Headers, RequestOptions, ResponseContentType } from '@angular/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, } from 'rxjs/operators';
 
 
 export interface LinkObject {
@@ -36,7 +36,7 @@ function isLinkObject(toTest: any): toTest is LinkObject {
 })
 export class ApiBaseFunctionService {
 
-    private base: string = (window as any).basePath;
+    private base: string = 'http://localhost:8080/'; // (window as any).basePath;
 
     constructor(private http: Http) { }
 
@@ -57,6 +57,7 @@ export class ApiBaseFunctionService {
     }
 
     private prepareRelativeUrl(url: string): string {
+        console.log('prepareRelativeUrl', url);
         if (url.startsWith('http')) {
             return url;
         }
@@ -97,16 +98,10 @@ export class ApiBaseFunctionService {
             options.params = params;
         }
 
-        const request = this.http.get(url, options)
-            .pipe(map((res: Response) => {
-                console.log(res.json());
-                return res.json();
-            }).catch((error: any) => {
-                console.log(error);
-                return Observable.throw(error.json().error() || 'Server error');
-            }));
+        const request = this.http.get(url, options).pipe(map((res: Response) => {
+            return res.json();
+        }));
 
-        request.connect();
         return request;
     }
 
