@@ -23,6 +23,7 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
     private subDeleteDependency: Subscription;
     private subDeleteServiceInterface: Subscription;
     private subServiceInterfaces: Subscription;
+    private subVersion: Subscription;
 
     constructor(
         private apiService: ApiService,
@@ -40,12 +41,28 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
     serviceData;
 
     edit: Boolean = false;
-    id: number;
+    shortName: string;
+    version: string;
 
     ngOnInit() {
 
         this.paramSubscription = this.route.params.subscribe(params => {
-            this.update(parseInt(params['id'], 10));
+
+            const shortName = params['shortName'];
+
+            // get latest version
+            let version = -1;
+            this.subVersion = this.apiService.getServiceVersions(shortName).subscribe(service => {
+                service.array.forEach(element => {
+
+                    // TODO implement comparison for our versioning
+                    if (element.version > version) {
+                        version = element.version;
+                    }
+                });
+            });
+
+            //this.update(shortName, version);
         });
     }
 
@@ -58,6 +75,7 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
         this.unsubscribe(this.subDeleteDependency);
         this.unsubscribe(this.subDeleteServiceInterface);
         this.unsubscribe(this.subServiceInterfaces);
+        this.unsubscribe(this.subVersion);
     }
 
     unsubscribe(subscription: Subscription) {
@@ -66,19 +84,21 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
         }
     }
 
-    update(id) {
-        if (id === this.id) {
+    update(shortName, version) {
+
+        // TODO take care of the version
+        if (shortName === this.shortName) {
             return;
         } else {
 
-            this.id = id;
+            this.shortName = shortName;
 
             if (this.serviceSubscription != null) {
                 this.serviceSubscription.unsubscribe();
             }
         }
 
-        this.serviceSubscription = this.serviceSubscription = this.apiService.getServiceVersions(id)
+        this.serviceSubscription = this.serviceSubscription = this.apiService.getService(shortName, version)
             .subscribe(service => this.service = service);
 
         // get dependencies and their status
@@ -94,9 +114,8 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
         });
         this.externalDependencies = external;
 
-        // TODO group services in service-list by short-name
         // TODO insert dropdown to choose a service
-        this.subServiceInterfaces = this.apiService.getServiceInterfaces(id).subscribe(element => this.serviceInterfaces = element);
+        this.subServiceInterfaces = this.apiService.getServiceInterfaces(shortName).subscribe(element => this.serviceInterfaces = element);
 
 
     }
@@ -120,6 +139,9 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
         return tempObject;
     }
 
+    /**
+     * action triggered in ui
+     */
     addProvides() {
         const dialogRef = this.dialog.open(CreateServiceInterfaceComponent);
         this.subProvide = dialogRef.afterClosed().subscribe(result => {
@@ -129,13 +151,16 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
 
     }
 
+    /**
+     * action triggered in ui
+     */
     addInternalDependency() {
         const dialogRef = this.dialog.open(ServicePickerComponent, {
             data: {
                 filter: 'internal',
                 choice: 'multi',
                 exisitingDependencies: this.internalDependencies,
-                serviceId: this.id,
+                serviceId: this.shortName,
             }
         });
         this.subInternalDependency = dialogRef.afterClosed().subscribe(result => {
@@ -144,13 +169,16 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
         });
     }
 
+    /**
+     * action triggered in ui
+     */
     addExternalDependency() {
         const dialogRef = this.dialog.open(ServicePickerComponent, {
             data: {
                 filter: 'external',
                 choice: 'multi',
                 exisitingDependencies: this.externalDependencies,
-                serviceId: this.id,
+                serviceId: this.shortName,
             }
         });
         this.subExternalDependency = dialogRef.afterClosed().subscribe(result => {
@@ -159,6 +187,9 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
         });
     }
 
+    /**
+     * action triggered in ui
+     */
     deleteDependency(id) {
 
         const dialogRef = this.dialog.open(YesNoDialogComponent, {
@@ -177,6 +208,9 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
 
     }
 
+    /**
+     * action triggered in ui
+     */
     deleteServiceInterface(id) {
         const dialogRef = this.dialog.open(YesNoDialogComponent, {
             data: {
