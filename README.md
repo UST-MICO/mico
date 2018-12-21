@@ -9,12 +9,13 @@ This is the main repository for the development project MICO at the University o
 
 ## Docker Setup
 
-The fastest way to get the backend of our system up and running is to use Docker.
-The docker-compose.yml file includes neo4j and builds our backend. Simply run:
+The fastest way to get the MICO backend up and running is to use Docker.
+The `docker-compose.yml` file includes a Neo4j graph database and builds the backend.
+Simply run:
 ```
 docker-compose up
 ```
-The script `insertTestValues.sh` contains sample values and posts them to our backend.
+The script `insertTestValues.sh` contains sample values and adds them to the database.
 
 ## Documentation
 
