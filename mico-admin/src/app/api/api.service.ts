@@ -138,138 +138,90 @@ export class ApiService {
         );
     }
 
-    getServiceById(id): Observable<ApiObject> {
-        // TODO check if there is a resource for single services
-        const resource = 'service/' + id;
+    /**
+     * Get all versions of a service based on its shortName
+     */
+    getServiceVersions(shortName): Observable<ApiObject> {
+
+        const resource = 'services/' + shortName + '/';
         const stream = this.getStreamSource(resource);
 
-        // TODO
-
-        const mockData: ApiObject[] = [
-            {
-                'id': '1',
-                'name': 'Mock Service',
-                'shortName': 'test.mock-service',
-                'description': 'A generic dummy service',
-                'internalDependencies': [2, 3],
-                'externalDependencies': [4],
-                'status': 'online',
-                'externalService': 'false',
-            },
-            {
-                'id': '2',
-                'name': 'Hello World Service',
-                'shortName': 'test.hello-world-service',
-                'description': 'A generic hello world service',
-                'internalDependencies': [],
-                'externalDependencies': [4],
-                'status': 'online',
-                'externalService': 'false',
-            },
-            {
-                'id': '3',
-                'name': 'Bye World Service',
-                'shortName': 'test.bye-world-service',
-                'description': 'A generic service',
-                'internalDependencies': [2],
-                'externalDependencies': [],
-                'status': 'offline',
-                'externalService': 'false',
-            },
-            {
-                'id': '4',
-                'name': 'External Service',
-                'shortName': 'ext.service',
-                'description': 'A generic service',
-                'internalDependencies': [],
-                'externalDependencies': [],
-                'status': 'problem',
-                'externalService': 'true',
-            },
-            {
-                'id': '5',
-                'name': 'Internal Service',
-                'shortName': 'int.service',
-                'description': 'A generic service',
-                'internalDependencies': [],
-                'externalDependencies': [6],
-                'status': 'online',
-                'externalService': 'false',
-            },
-            {
-                'id': '6',
-                'name': 'External Service',
-                'shortName': 'ext.service',
-                'description': 'A generic service',
-                'internalDependencies': [5],
-                'externalDependencies': [],
-                'status': 'problem',
-                'externalService': 'true',
-            },
-        ];
-
-        const genericMockData: ApiObject = {
-            'id': id,
-            'name': 'Generic World Service id ' + id,
-            'shortName': 'test.' + id + 'service',
-            'description': 'A generic generated service',
-        };
-
-        if (id > 0 && id <= 4) {
-            stream.next(freezeObject(mockData[id - 1]));
-        } else {
-            stream.next(freezeObject(genericMockData));
-        }
-
+        this.rest.get(resource).subscribe(val => {
+            stream.next(freezeObject((val as ApiObject)._embedded.serviceList));
+        });
 
         return (stream.asObservable() as Observable<Readonly<ApiObject[]>>).pipe(
             filter(data => data !== undefined)
         );
     }
 
-    getServiceInterfaces(serviceId): Observable<ApiObject[]> {
-        const resource = 'service/' + serviceId + '/interfaces';
+    /**
+     * Get a specific version of a service
+     *
+     * @param shortName unique short name of the service
+     * @param version service version to be returned
+     */
+    getService(shortName, version): Observable<ApiObject> {
+
+        const resource = 'services/' + shortName + '/' + version;
         const stream = this.getStreamSource(resource);
 
+        this.rest.get(resource).subscribe(val => {
+            stream.next(freezeObject((val as ApiObject)));
+        });
 
+        return (stream.asObservable() as Observable<Readonly<ApiObject[]>>).pipe(
+            filter(data => data !== undefined)
+        );
+    }
 
-        // TODO
+    /**
+     * Get all services a specific service depends on.
+     *
+     * @param shortName unique short name of the service
+     * @param version service version to be returned
+     */
+    getServiceDependees(shortName, version): Observable<ApiObject> {
 
-        const mockData: ApiObject[] = [
-            {
-                'Name': 'test.mock-service.rest',
-                'Description': 'the awesome REST interface for the even more awesome Mock Sertice!',
-                'Port': '0815',
-                'Protocol': 'gRPC',
-                'TransportProtocol': 'HTTP',
-                'Public-DNS': 'to be defined',
-            },
-            {
-                'Name': 'test.mock-service.sth',
-                'Description': 'some interface for test.mock-service',
-                'Port': '12',
-                'Protocol': 'SQL',
-                'TransportProtocol': 'MQTT',
-                'Public-DNS': 'to be defined',
-            },
-        ];
+        const resource = 'services/' + shortName + '/' + version + '/dependees';
+        const stream = this.getStreamSource(resource);
 
+        this.rest.get(resource).subscribe(val => {
+            stream.next(freezeObject((val as ApiObject)));
+        });
 
-        const genericMockData: ApiObject = [{
-            'Name': 'generic' + serviceId,
-            'Description': 'A generic interface for service nr ' + serviceId,
-            'Port': '11833-' + serviceId,
-            'Protocol': 'pigeon5',
-            'TransportProtocol': 'carrier pigeon',
-            'Public-DNS': 'to be defined',
-        }];
+        return (stream.asObservable() as Observable<Readonly<ApiObject[]>>).pipe(
+            filter(data => data !== undefined)
+        );
+    }
 
-        if (serviceId > 0 && serviceId <= 1) {
-            stream.next(freezeObject(mockData));
-        } else {
-            stream.next(freezeObject(genericMockData));
-        }
+    /**
+     * Get all services depending on a specific service
+     *
+     * @param shortName unique short name of the service
+     * @param version service version to be returned
+     */
+    getServiceDependers(shortName, version): Observable<ApiObject> {
 
+        const resource = 'services/' + shortName + '/' + version + '/dependers';
+        const stream = this.getStreamSource(resource);
+
+        this.rest.get(resource).subscribe(val => {
+            stream.next(freezeObject((val as ApiObject)));
+        });
+
+        return (stream.asObservable() as Observable<Readonly<ApiObject[]>>).pipe(
+            filter(data => data !== undefined)
+        );
+    }
+
+    getServiceInterfaces(shortName, version): Observable<ApiObject[]> {
+        const resource = 'services/' + shortName + '/' + version + '/interfaces';
+        const stream = this.getStreamSource(resource);
+
+        this.rest.get(resource).subscribe(val => {
+            stream.next(freezeObject((val as ApiObject)));
+        });
 
         return (stream.asObservable() as Observable<Readonly<ApiObject[]>>).pipe(
             filter(data => data !== undefined)

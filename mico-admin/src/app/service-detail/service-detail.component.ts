@@ -39,8 +39,8 @@ export class ServiceDetailComponent implements OnInit {
             this.serviceSubscription.unsubscribe();
         }
 
-        this.serviceSubscription = this.apiService.getServiceById(id)
-        .subscribe(service => this.service = service);
+        this.serviceSubscription = this.apiService.getServiceVersions(id)
+            .subscribe(service => this.service = service);
     }
 
 }

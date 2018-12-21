@@ -22,7 +22,30 @@ export class DashboardComponent implements OnInit {
 
     displayedColumns: string[] = ['id', 'name', 'shortName'];
 
-    ngOnInit() { }
+    ngOnInit() {
+
+
+        // test calls
+        this.apiService.getServices().subscribe(val => {
+            console.log(val);
+        });
+
+        this.apiService.getServiceVersions('test.service').subscribe(val => {
+            console.log(val);
+        });
+
+        this.apiService.getService('test.service', 'v1').subscribe(val => {
+            console.log(val);
+        });
+
+        this.apiService.getServiceDependees('test.service', 'v1').subscribe(val => {
+            console.log(val);
+        });
+
+        this.apiService.getServiceDependers('test.service', 'v1').subscribe(val => {
+            console.log(val);
+        });
+    }
 
 
     /**
