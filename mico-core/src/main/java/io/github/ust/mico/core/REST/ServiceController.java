@@ -124,13 +124,13 @@ public class ServiceController {
     public ResponseEntity<Resources<Resource<Service>>> getDependees(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                      @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
-        if(!serviceOpt.isPresent())
+        if (!serviceOpt.isPresent())
             return ResponseEntity.notFound().build();
 
         Service service = serviceOpt.get();
 
         List<DependsOn> dependees = service.getDependsOn();
-        if(dependees == null)
+        if (dependees == null)
             return ResponseEntity.notFound().build();
 
         LinkedList<Service> services = getDependentServices(dependees);
@@ -143,57 +143,43 @@ public class ServiceController {
     }
 
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
-    public ResponseEntity<Resource<Service>> createNewDependee(@RequestBody Service newServiceDependee,
+    public ResponseEntity<Resource<Service>> createNewDependee(@RequestBody DependsOn newServiceDependee,
                                                                @PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
-        if(!serviceOpt.isPresent())
+        if (!serviceOpt.isPresent())
             return ResponseEntity.notFound().build();
         Service service = serviceOpt.get();
-        Service newService = getService(newServiceDependee);
+
+
+        Optional<Service> serviceDependeeOpt = serviceRepository.findByShortNameAndVersion(newServiceDependee.getServiceDependee().getShortName(),
+                newServiceDependee.getServiceDependee().getVersion());
+
+        if(!serviceDependeeOpt.isPresent())
+            return ResponseEntity.notFound().build();
+
+        newServiceDependee.setService(service);
+        newServiceDependee.setServiceDependee(serviceDependeeOpt.get());
+
         List<DependsOn> dependees = service.getDependsOn();
+        if(dependees == null)
+            dependees = new LinkedList<>();
+        dependees.add(newServiceDependee);
+        service.setDependsOn(dependees);
 
-        if (newService == null) {
-            newService = serviceRepository.save(newServiceDependee);
-            dependees.add(new DependsOn(service, newService));
-            Service savedService = serviceRepository.save(service);
+        Service savedService = serviceRepository.save(service);
 
-            return ResponseEntity
-                    .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
-                    .body(new Resource<>(savedService, getServiceLinks(savedService)));
-        } else {
-            if (newServiceDependee.getDependsOn() == null) {
-                dependees.add(new DependsOn(service, newService));
-                service.setDependsOn(dependees);
-                Service savedService = serviceRepository.save(service);
+        return ResponseEntity
+                .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+                .body(new Resource<>(service, getServiceLinks(service)));
 
-                return ResponseEntity
-                        .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
-                        .body(new Resource<>(savedService, getServiceLinks(savedService)));
-            } else {
-                Service serviceDependee = setServiceDependees(newServiceDependee);
-                DependsOn serviceDependsOn = new DependsOn(service,serviceDependee);
-                List<DependsOn> allServiceDependees = service.getDependsOn();
-                if(allServiceDependees == null){
-                    allServiceDependees = new LinkedList<>();
-                }
-                allServiceDependees.add(serviceDependsOn);
-                service.setDependsOn(allServiceDependees);
-
-                Service savedService = serviceRepository.save(service);
-
-                return ResponseEntity
-                        .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
-                        .body(new Resource<>(service, getServiceLinks(service)));
-            }
-        }
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
     public ResponseEntity<Resource<Service>> deleteAllDependees(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                 @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
-        if(!serviceOpt.isPresent())
+        if (!serviceOpt.isPresent())
             return ResponseEntity.notFound().build();
         Service service = serviceOpt.get();
         List<DependsOn> dependees = new LinkedList<>();
@@ -213,19 +199,19 @@ public class ServiceController {
                                                             @PathVariable(PATH_DELETE_SHORT_NAME) String shortNameToDelete,
                                                             @PathVariable(PATH_DELETE_VERSION) String versionToDelete) {
         Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
-        if(!serviceOpt.isPresent())
+        if (!serviceOpt.isPresent())
             return ResponseEntity.notFound().build();
         Service service = serviceOpt.get();
 
         Optional<Service> serviceOptToDelete = serviceRepository.findByShortNameAndVersion(shortNameToDelete, versionToDelete);
-        if(!serviceOptToDelete.isPresent())
+        if (!serviceOptToDelete.isPresent())
             return ResponseEntity.notFound().build();
         Service serviceToDelete = serviceOptToDelete.get();
 
         List<DependsOn> newDependees = new LinkedList<>();
         List<DependsOn> dependees = service.getDependsOn();
 
-        if(dependees != null) {
+        if (dependees != null) {
             dependees.forEach(dependsOn -> {
                 if (dependsOn.getServiceDependee().getId() != serviceToDelete.getId()) {
                     newDependees.add(dependsOn);
@@ -246,7 +232,7 @@ public class ServiceController {
                                                                      @PathVariable(PATH_VARIABLE_VERSION) String version) {
         List<Service> serviceList = serviceRepository.findAll();
         Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
-        if(!serviceOpt.isPresent())
+        if (!serviceOpt.isPresent())
             return ResponseEntity.notFound().build();
         Service serviceToLookFor = serviceOpt.get();
 
@@ -283,15 +269,15 @@ public class ServiceController {
     //Get the dependees of a service, check if they exists, if true get the ids and set the dependees
     public Service setServiceDependees(Service newService) {
         Service serviceToGetId = getService(newService);
-        if(serviceToGetId == null){
-            Service savedService = serviceRepository.save(new Service(newService.getShortName(),newService.getVersion()));
+        if (serviceToGetId == null) {
+            Service savedService = serviceRepository.save(new Service(newService.getShortName(), newService.getVersion()));
 
             List<DependsOn> dependees = savedService.getDependsOn();
             LinkedList<Service> services = getDependentServices(dependees);
 
             List<DependsOn> newDependees = new LinkedList<>();
 
-            if(services != null){
+            if (services != null) {
                 services.forEach(service -> {
                     DependsOn dependsOnService = new DependsOn(savedService, service);
                     newDependees.add(dependsOnService);
@@ -301,7 +287,7 @@ public class ServiceController {
             savedService.setDependsOn(newDependees);
 
             return savedService;
-        }else {
+        } else {
             newService.setId(serviceToGetId.getId());
             List<DependsOn> dependees = newService.getDependsOn();
             LinkedList<Service> services = getDependentServices(dependees);
@@ -321,7 +307,7 @@ public class ServiceController {
     }
 
     private LinkedList<Service> getDependentServices(List<DependsOn> dependees) {
-        if(dependees == null){
+        if (dependees == null) {
             return null;
         }
 
@@ -333,10 +319,10 @@ public class ServiceController {
 
             Optional<Service> dependeeServiceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
             Service dependeeService = dependeeServiceOpt.orElse(null);
-            if(dependeeService == null){
-                Service newService = serviceRepository.save(new Service(shortName,version));
+            if (dependeeService == null) {
+                Service newService = serviceRepository.save(new Service(shortName, version));
                 services.add(newService);
-            }else {
+            } else {
                 services.add(dependeeService);
             }
         });
