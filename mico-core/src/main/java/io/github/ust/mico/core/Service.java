@@ -39,8 +39,10 @@ public class Service {
     private List<String> links;
     private String type;
     private String owner;
+    @JsonIgnore
     @Relationship(type = "DEPENDS_ON")
     private List<DependsOn> dependsOn;
+    @JsonIgnore
     @Relationship(direction = Relationship.UNDIRECTED)
     private List<ServiceInterface> serviceInterfaces;
     //crawling information
