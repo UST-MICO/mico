@@ -80,7 +80,7 @@ export class ApiService {
 
         this.rest.get(resource).subscribe(val => {
             // return actual service list
-            stream.next(freezeObject(val._embedded.serviceList));
+            stream.next(freezeObject((val as ApiObject)._embedded.serviceList));
         });
 
         return (stream.asObservable() as Observable<Readonly<ApiObject[]>>).pipe(
