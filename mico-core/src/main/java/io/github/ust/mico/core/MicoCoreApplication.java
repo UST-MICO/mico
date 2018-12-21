@@ -23,23 +23,14 @@ package io.github.ust.mico.core;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Entry point for the MICO core application.
  */
 @SpringBootApplication
 @EnableNeo4jRepositories
-@RestController
 public class MicoCoreApplication {
-
-    @RequestMapping("/test")
-    public String home() {
-        return "Hello Docker World";
-    }
 
     public static void main(String[] args) {
         SpringApplication.run(MicoCoreApplication.class, args);
