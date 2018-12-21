@@ -35,4 +35,5 @@ public class MicoCoreApplication {
     public static void main(String[] args) {
         SpringApplication.run(MicoCoreApplication.class, args);
     }
+
 }
