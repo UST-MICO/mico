@@ -227,23 +227,6 @@ export class ApiService {
         );
     }
 
-    getTestService() {
-        console.log('getServiceById');
-
-        const resource = 'http://localhost:8080/services/test.service/v1';
-        const stream = this.getStreamSource(resource);
-
-        // TODO close subscription
-        this.rest.get(resource).subscribe(val => {
-            console.log('get', val);
-            stream.next(freezeObject(val));
-        });
-
-        return (stream.asObservable() as Observable<Readonly<ApiObject[]>>).pipe(
-            filter(data => data !== undefined)
-        );
-    }
-
     getServiceInterfaces(serviceId): Observable<ApiObject[]> {
         const resource = 'service/' + serviceId + '/interfaces';
         const stream = this.getStreamSource(resource);

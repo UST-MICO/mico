@@ -57,7 +57,6 @@ export class ApiBaseFunctionService {
     }
 
     private prepareRelativeUrl(url: string): string {
-        console.log('prepareRelativeUrl', url);
         if (url.startsWith('http')) {
             return url;
         }

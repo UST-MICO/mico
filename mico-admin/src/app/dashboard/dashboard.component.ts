@@ -20,21 +20,10 @@ export class DashboardComponent implements OnInit {
 
     @Input() applications: ApiObject[];
 
-    service;
-
     displayedColumns: string[] = ['id', 'name', 'shortName'];
 
-    ngOnInit() {
-        this.getTest();
-    }
+    ngOnInit() { }
 
-    getTest(): void {
-        console.log('getTest');
-        this.apiService.getTestService().subscribe(val => {
-            this.service = val;
-            console.log('set Value');
-        });
-    }
 
     /**
      * receives a list of applications from the apiService

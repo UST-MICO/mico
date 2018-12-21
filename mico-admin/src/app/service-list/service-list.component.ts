@@ -26,7 +26,6 @@ export class ServiceListComponent implements OnInit {
         this.apiService.getServices()
             .subscribe(val => {
                 this.services = val;
-                console.log(this.services);
             });
     }
 }
