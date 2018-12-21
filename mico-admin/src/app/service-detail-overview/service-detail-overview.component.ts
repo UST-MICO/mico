@@ -52,7 +52,7 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
 
             // get latest version
             let version = -1;
-            this.subVersion = this.apiService.getServiceVersions(shortName).subscribe(service => {
+            this.subVersion = this.apiService.getService(shortName).subscribe(service => {
                 service.array.forEach(element => {
 
                     // TODO implement comparison for our versioning
@@ -129,7 +129,7 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
 
     getServiceMetaData(id) {
         let service_object;
-        this.apiService.getServiceVersions(id).subscribe(val => service_object = val);
+        this.apiService.getService(id).subscribe(val => service_object = val);
         const tempObject = {
             'id': id,
             'name': service_object.name,
