@@ -7,16 +7,17 @@ import { ApiModel } from 'src/app/api/apimodel';
     selector: 'mico-form-boolean',
     templateUrl: './mico-form-boolean.component.html',
     styleUrls: ['./mico-form-boolean.component.css'],
-    providers: [{
-        provide: NG_VALUE_ACCESSOR,
-        useExisting: forwardRef(() => MicoFormBooleanComponent),
-        multi: true
-        },{provide: MatFormFieldControl, useExisting: Boolean}],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => MicoFormBooleanComponent),
+            multi: true
+        },
+        { provide: MatFormFieldControl, useExisting: Boolean }
+    ]
 })
-
 export class MicoFormBooleanComponent implements OnInit {
-
-    constructor() { }
+    constructor() {}
 
     checked: Boolean = false;
     @Input() config: ApiModel;
@@ -26,7 +27,7 @@ export class MicoFormBooleanComponent implements OnInit {
     onTouched: any = () => {};
 
     get value(): boolean {
-        return !(!this.checked)
+        return !!this.checked;
     }
 
     set value(val: boolean) {
@@ -55,8 +56,5 @@ export class MicoFormBooleanComponent implements OnInit {
         }
     }
 
-
-  ngOnInit() {
-  }
-
+    ngOnInit() {}
 }

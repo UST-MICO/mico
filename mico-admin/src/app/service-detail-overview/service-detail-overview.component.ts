@@ -6,7 +6,7 @@ import { ApiObject } from '../api/apiobject';
 import { ServicePickerComponent } from '../dialogs/service-picker/service-picker.component';
 import { MatDialog } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
-import { CreateServiceInterfaceComponent } from '../dialogs/create-service-interface/create-service-interface.component'
+import { CreateServiceInterfaceComponent } from '../dialogs/create-service-interface/create-service-interface.component';
 
 @Component({
     selector: 'mico-service-detail-overview',
@@ -14,7 +14,6 @@ import { CreateServiceInterfaceComponent } from '../dialogs/create-service-inter
     styleUrls: ['./service-detail-overview.component.css']
 })
 export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
-
     private serviceSubscription: Subscription;
     private paramSubscription: Subscription;
     private subProvide: Subscription;
@@ -24,17 +23,12 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
     private subDeleteServiceInterface: Subscription;
     private subServiceInterfaces: Subscription;
 
-    constructor(
-        private apiService: ApiService,
-        private route: ActivatedRoute,
-        private dialog: MatDialog,
-    ) { }
+    constructor(private apiService: ApiService, private route: ActivatedRoute, private dialog: MatDialog) {}
 
     @Input() service: ApiObject;
     internalDependencies = [];
     externalDependencies = [];
     serviceInterfaces = [];
-
 
     // will be used by the update form
     serviceData;
@@ -43,7 +37,6 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
     id: number;
 
     ngOnInit() {
-
         this.paramSubscription = this.route.params.subscribe(params => {
             this.update(parseInt(params['id'], 10));
         });
@@ -70,7 +63,6 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
         if (id === this.id) {
             return;
         } else {
-
             this.id = id;
 
             if (this.serviceSubscription != null) {
@@ -78,8 +70,9 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
             }
         }
 
-        this.serviceSubscription = this.serviceSubscription = this.apiService.getServiceById(id)
-            .subscribe(service => this.service = service);
+        this.serviceSubscription = this.serviceSubscription = this.apiService
+            .getServiceById(id)
+            .subscribe(service => (this.service = service));
 
         // get dependencies and their status
         const internal = [];
@@ -94,9 +87,7 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
         });
         this.externalDependencies = external;
 
-        this.subServiceInterfaces = this.apiService.getServiceInterfaces(id).subscribe(element => this.serviceInterfaces = element);
-
-
+        this.subServiceInterfaces = this.apiService.getServiceInterfaces(id).subscribe(element => (this.serviceInterfaces = element));
     }
 
     editOrSave() {
@@ -108,12 +99,12 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
 
     getServiceMetaData(id) {
         let service_object;
-        this.apiService.getServiceById(id).subscribe(val => service_object = val);
+        this.apiService.getServiceById(id).subscribe(val => (service_object = val));
         const tempObject = {
-            'id': id,
-            'name': service_object.name,
-            'shortName': service_object.shortName,
-            'status': service_object.status,
+            id: id,
+            name: service_object.name,
+            shortName: service_object.shortName,
+            status: service_object.status
         };
         return tempObject;
     }
@@ -124,7 +115,6 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
             console.log(result);
             // TODO use result in a useful way
         });
-
     }
 
     addInternalDependency() {
@@ -133,7 +123,7 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
                 filter: 'internal',
                 choice: 'multi',
                 exisitingDependencies: this.internalDependencies,
-                serviceId: this.id,
+                serviceId: this.id
             }
         });
         this.subInternalDependency = dialogRef.afterClosed().subscribe(result => {
@@ -148,7 +138,7 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
                 filter: 'external',
                 choice: 'multi',
                 exisitingDependencies: this.externalDependencies,
-                serviceId: this.id,
+                serviceId: this.id
             }
         });
         this.subExternalDependency = dialogRef.afterClosed().subscribe(result => {
@@ -158,11 +148,10 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
     }
 
     deleteDependency(id) {
-
         const dialogRef = this.dialog.open(YesNoDialogComponent, {
             data: {
                 object: this.getServiceMetaData(id).shortName,
-                question: 'deleteDependency',
+                question: 'deleteDependency'
             }
         });
 
@@ -172,14 +161,13 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
                 // TODO really delete the dependency
             }
         });
-
     }
 
     deleteServiceInterface(id) {
         const dialogRef = this.dialog.open(YesNoDialogComponent, {
             data: {
                 object: id,
-                question: 'deleteServiceInterface',
+                question: 'deleteServiceInterface'
             }
         });
 
