@@ -214,6 +214,7 @@ export class ApiService {
                 'internalDependencies': [2, 3],
                 'externalDependencies': [4],
                 'status': 'online',
+                'externalService': 'false',
             },
             {
                 'id': '2',
@@ -223,6 +224,7 @@ export class ApiService {
                 'internalDependencies': [],
                 'externalDependencies': [4],
                 'status': 'online',
+                'externalService': 'false',
             },
             {
                 'id': '3',
@@ -232,6 +234,7 @@ export class ApiService {
                 'internalDependencies': [2],
                 'externalDependencies': [],
                 'status': 'offline',
+                'externalService': 'false',
             },
             {
                 'id': '4',
@@ -240,7 +243,8 @@ export class ApiService {
                 'description': 'A generic service',
                 'internalDependencies': [],
                 'externalDependencies': [],
-                'status': 'problem'
+                'status': 'problem',
+                'externalService': 'true',
             },
             {
                 'id': '5',
@@ -249,7 +253,8 @@ export class ApiService {
                 'description': 'A generic service',
                 'internalDependencies': [],
                 'externalDependencies': [6],
-                'status': 'online'
+                'status': 'online',
+                'externalService': 'false',
             },
             {
                 'id': '6',
@@ -258,7 +263,8 @@ export class ApiService {
                 'description': 'A generic service',
                 'internalDependencies': [5],
                 'externalDependencies': [],
-                'status': 'problem'
+                'status': 'problem',
+                'externalService': 'true',
             },
         ];
 

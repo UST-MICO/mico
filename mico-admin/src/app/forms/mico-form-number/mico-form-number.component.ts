@@ -18,7 +18,7 @@ export class MicoFormNumberComponent implements OnInit {
 
     constructor() { }
 
-    private content: number;
+    content: number;
     @Input() config: ApiModel;
 
     ngOnInit() {
@@ -33,7 +33,7 @@ export class MicoFormNumberComponent implements OnInit {
     }
 
     set value(val: number) {
-        console.log("set value");
+        console.log('set value');
         if (!Number.isNaN(val)) {
             this.content = val;
             this.onChange(val);
@@ -50,7 +50,7 @@ export class MicoFormNumberComponent implements OnInit {
     }
 
     writeValue(value) {
-        const temp: number = Number(value)
+        const temp: number = Number(value);
         if (!Number.isNaN(temp)) {
             this.value = temp;
         }

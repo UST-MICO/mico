@@ -1,6 +1,6 @@
 package io.github.ust.mico.core;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModelProperty;
 import org.neo4j.ogm.annotation.GeneratedValue;
@@ -10,6 +10,9 @@ import org.neo4j.ogm.annotation.Relationship;
 
 import java.util.List;
 
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NodeEntity
 public class Service {
@@ -18,7 +21,7 @@ public class Service {
     @GeneratedValue
     private Long id;
     @ApiModelProperty(required = true)
-    private String version;
+    private String version; //internal MICO version (Format: X.Y.Z) //TODO: Do we want to rename 'version' to 'micoVersion'?
     @ApiModelProperty(required = true)
     private String shortName;
     @ApiModelProperty(required = true)
@@ -35,10 +38,23 @@ public class Service {
     private List<String> links;
     private String type;
     private String owner;
-    @Relationship
+    @Relationship(type = "DEPENDS_ON")
     private List<DependsOn> dependsOn;
     @Relationship(direction = Relationship.UNDIRECTED)
     private List<ServiceInterface> serviceInterfaces;
+
+    public DependsOn dependsOn (Service serviceEnd){
+        DependsOn dependsOnObj = new DependsOn(this,serviceEnd);
+        this.dependsOn.add(dependsOnObj);
+        return dependsOnObj;
+    }
+    //crawling information
+    private String externalVersion;
+    private CrawlingSource crawlingSource;
+
+    //docker information
+    private String dockerImageName;
+    private String dockerImageUri;
 
     public Service() {
     }
@@ -58,7 +74,7 @@ public class Service {
         this.description = description;
     }
 
-    public Long getId(){
+    public Long getId() {
         return id;
     }
 
@@ -143,7 +159,7 @@ public class Service {
         this.lifecycle = lifecycle;
     }
 
-    public List<String> getLinks() {
+    public List<String> getServiceLinks() {
         return links;
     }
 
@@ -181,6 +197,42 @@ public class Service {
 
     public void setServiceInterfaces(List<ServiceInterface> serviceInterfaces) {
         this.serviceInterfaces = serviceInterfaces;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public CrawlingSource getCrawlingSource() {
+        return crawlingSource;
+    }
+
+    public void setCrawlingSource(CrawlingSource crawlingSource) {
+        this.crawlingSource = crawlingSource;
+    }
+
+    public String getDockerImageName() {
+        return dockerImageName;
+    }
+
+    public void setDockerImageName(String dockerImageName) {
+        this.dockerImageName = dockerImageName;
+    }
+
+    public String getDockerImageUri() {
+        return dockerImageUri;
+    }
+
+    public void setDockerImageUri(String dockerImageUri) {
+        this.dockerImageUri = dockerImageUri;
+    }
+
+    public String getExternalVersion() {
+        return externalVersion;
+    }
+
+    public void setExternalVersion(String externalVersion) {
+        this.externalVersion = externalVersion;
     }
 
     @Override

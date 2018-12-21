@@ -1,8 +1,6 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
-import 'mico-grapheditor/dist/bundle';
-
 // modules
 
 import {
@@ -29,6 +27,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { RoutingModule } from './routing.module';
+
+import { GraphsModule } from './graphs/graphs.module';
 
 // components
 import { AppComponent } from './app.component';
@@ -58,6 +58,10 @@ import { CreateServiceInterfaceComponent } from './dialogs/create-service-interf
 import { MetricChartComponent } from './metric-chart/metric-chart.component';
 import { ChartComponent } from './metric-chart/chart/chart.component';
 import { OwlDateTimeModule, OwlNativeDateTimeModule } from 'ng-pick-datetime';
+import { MicoDataComponent } from './data-view/mico-data/mico-data.component';
+import { MicoDataStringComponent } from './data-view/mico-data-string/mico-data-string.component';
+import { MicoDataContainerComponent } from './data-view/mico-data-container/mico-data-container.component';
+import { MicoDataBooleanComponent } from './data-view/mico-data-boolean/mico-data-boolean.component';
 
 @NgModule({
     declarations: [
@@ -82,7 +86,11 @@ import { OwlDateTimeModule, OwlNativeDateTimeModule } from 'ng-pick-datetime';
         YesNoDialogComponent,
         CreateServiceInterfaceComponent,
         MetricChartComponent,
-        ChartComponent
+        ChartComponent,
+        MicoDataComponent,
+        MicoDataStringComponent,
+        MicoDataContainerComponent,
+        MicoDataBooleanComponent
     ],
     entryComponents: [
         // dialogs
@@ -98,6 +106,8 @@ import { OwlDateTimeModule, OwlNativeDateTimeModule } from 'ng-pick-datetime';
         ReactiveFormsModule,
 
         RoutingModule,
+
+        GraphsModule,
 
         // material
         BrowserAnimationsModule,

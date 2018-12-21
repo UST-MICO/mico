@@ -196,7 +196,7 @@ public class ClusterAwarenessFabric8Test {
 
     @Test
     public void deletePod() {
-        cluster.deletePod(namespaceName, "pod2");
+        cluster.deletePod("pod2", namespaceName);
         PodList podList = cluster.getAllPods(namespaceName);
         assertNotNull(podList);
         assertEquals(1, podList.getItems().size());
