@@ -8,10 +8,11 @@ import io.fabric8.kubernetes.api.model.apps.DeploymentList;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.internal.SerializationUtils;
+import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
 
-
+@Component
 public class ClusterAwarenessFabric8 {
     KubernetesClient client;
 
@@ -140,7 +141,7 @@ public class ClusterAwarenessFabric8 {
     }
 
     public Service createService(Service service, String namespace) {
-        return client.services().createOrReplace(service);
+        return client.services().inNamespace(namespace).createOrReplace(service);
     }
 
     public Boolean deleteService(String serviceName, String namespace) {
@@ -157,5 +158,29 @@ public class ClusterAwarenessFabric8 {
 
     public Boolean deletePod(String podName, String namespace) {
         return client.pods().inNamespace(namespace).withName(podName).delete();
+    }
+
+    public Secret createSecret(Secret secret, String namespace) {
+        return client.secrets().inNamespace(namespace).createOrReplace(secret);
+    }
+
+    public SecretList getAllSecrets(String namespace) {
+        return client.secrets().inNamespace(namespace).list();
+    }
+
+    public Secret getSecret(String name, String namespace) {
+        return client.secrets().inNamespace(namespace).withName(name).get();
+    }
+
+    public ServiceAccount createServiceAccount(ServiceAccount serviceAccount, String namespace) {
+        return client.serviceAccounts().inNamespace(namespace).createOrReplace(serviceAccount);
+    }
+
+    public ServiceAccountList getAllServiceAccounts(String namespace) {
+        return client.serviceAccounts().inNamespace(namespace).list();
+    }
+
+    public ServiceAccount getServiceAccount(String name, String namespace) {
+        return client.serviceAccounts().inNamespace(namespace).withName(name).get();
     }
 }
