@@ -196,27 +196,6 @@ public class ServiceControllerTests {
         result.andExpect(status().isCreated());
     }
 
-    //TODO: Should probably work with in-memory database
-    @Ignore
-    @Test
-    public void createServiceWithDependees() throws Exception {
-        Service service = new Service(SHORT_NAME, VERSION, DESCRIPTION);
-        Service serviceDependee = new Service("DependsOnService", "1.0.1", "Some Depends On Description");
-        LinkedList<DependsOn> dependsOn = new LinkedList<DependsOn>();
-        dependsOn.add(new DependsOn(service, serviceDependee));
-        service.setDependsOn(dependsOn);
-
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
-        given(serviceRepository.save(any(Service.class))).willReturn(service);
-
-        final ResultActions result = mvc.perform(post(BASE_PATH)
-            .content(mapper.writeValueAsBytes(service))
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print());
-
-        result.andExpect(status().isCreated());
-    }
-
     @Test
     public void deleteAllServiceDependees() throws Exception {
         Service service = new Service(SHORT_NAME, VERSION, DESCRIPTION);
