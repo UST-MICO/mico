@@ -1,9 +1,13 @@
-package io.github.ust.mico.core.imagebuilder;
+package io.github.ust.mico.core.imagebuilder.buildtypes;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.fabric8.kubernetes.api.model.EnvVar;
+import io.github.ust.mico.core.imagebuilder.buildtypes.ArgumentSpec;
 import lombok.*;
 
+/**
+ * TemplateInstantiationSpec specifies how a BuildTemplate is instantiated into a Build.
+ */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @Getter
 @Builder
@@ -11,7 +15,7 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 @EqualsAndHashCode
-public class Template {
+public class TemplateInstantiationSpec {
 
     /**
      * Optional. The Kind of the template to be used, possible values are BuildTemplate
@@ -36,5 +40,4 @@ public class Template {
      * This will override any of the template's steps environment variables.
      */
     private EnvVar env;
-
 }

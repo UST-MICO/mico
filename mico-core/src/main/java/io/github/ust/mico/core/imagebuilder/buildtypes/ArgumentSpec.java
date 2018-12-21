@@ -1,8 +1,11 @@
-package io.github.ust.mico.core.imagebuilder;
+package io.github.ust.mico.core.imagebuilder.buildtypes;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
+/**
+ * ArgumentSpec defines the actual values to use to populate a template's parameters.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Getter
 @Builder
@@ -13,12 +16,12 @@ import lombok.*;
 public class ArgumentSpec {
 
     /**
-     * Name is the name of the argument.
+     * Name is the name of the argument
      */
     private String name;
 
     /**
-     * Value is the value of the argument.
+     * Value is the value of the argument
      */
     private String value;
 }

@@ -1,4 +1,4 @@
-package io.github.ust.mico.core.imagebuilder;
+package io.github.ust.mico.core.imagebuilder.buildtypes;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -36,16 +36,15 @@ public class BuildStep {
     private String name;
 
     /**
-     * Docker image name.
+     * Optional. Docker image name.
      * More info: https://kubernetes.io/docs/concepts/containers/images
      * This field is optional to allow higher level config management to default or override
      * container images in workload controllers like Deployments and StatefulSets.
-     * +optional
      */
     private String image;
 
     /**
-     * Entrypoint array. Not executed within a shell.
+     * Optional. Entrypoint array. Not executed within a shell.
      * The docker image's ENTRYPOINT is used if this is not provided.
      * Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
      * cannot be resolved, the reference in the input string will be unchanged. The $(VAR_NAME) syntax
@@ -53,13 +52,12 @@ public class BuildStep {
      * regardless of whether the variable exists or not.
      * Cannot be updated.
      * More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
-     * +optional
      */
     @Singular("command")
     private List<String> command;
 
     /**
-     * Arguments to the entrypoint.
+     * Optional. Arguments to the entrypoint.
      * The docker image's CMD is used if this is not provided.
      * Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
      * cannot be resolved, the reference in the input string will be unchanged. The $(VAR_NAME) syntax
@@ -67,17 +65,15 @@ public class BuildStep {
      * regardless of whether the variable exists or not.
      * Cannot be updated.
      * More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
-     * +optional
      */
     @Singular
     private List<String> args;
 
     /**
-     * Container's working directory.
+     * Optional. Container's working directory.
      * If not specified, the container runtime's default will be used, which
      * might be configured in the container image.
      * Cannot be updated.
-     * +optional
      */
     private String workingDir;
 
@@ -86,11 +82,8 @@ public class BuildStep {
     // private EnvForm envForm;
 
     /**
-     * List of environment variables to set in the container.
+     * Optional. List of environment variables to set in the container.
      * Cannot be updated.
-     * +optional
-     * +patchMergeKey=name
-     * +patchStrategy=merge
      */
     @Singular("env")
     private List<EnvVar> env;

@@ -15,6 +15,7 @@ io.github.ust.mico.core
    DependsOnRepository
    GitHubCrawler
    MicoCoreApplication
+   NotInitializedException
    Service
    ServiceInterface
    ServiceInterfaceRepository

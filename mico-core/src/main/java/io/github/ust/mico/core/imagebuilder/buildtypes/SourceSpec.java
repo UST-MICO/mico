@@ -1,8 +1,11 @@
-package io.github.ust.mico.core.imagebuilder;
+package io.github.ust.mico.core.imagebuilder.buildtypes;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
+/**
+ * SourceSpec defines the input to the Build
+ */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @Getter
 @Builder
@@ -10,10 +13,10 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 @EqualsAndHashCode
-public class Source {
+public class SourceSpec {
 
     /**
-     * Git represents source in a Git repository.
+     * Optional. Git represents source in a Git repository.
      */
     private GitSourceSpec git;
 }

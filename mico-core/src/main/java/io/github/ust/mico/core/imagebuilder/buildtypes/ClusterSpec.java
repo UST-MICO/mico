@@ -1,8 +1,11 @@
-package io.github.ust.mico.core.imagebuilder;
+package io.github.ust.mico.core.imagebuilder.buildtypes;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
+/**
+ * ClusterSpec provides information about the on-cluster build, if applicable.
+ */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @Getter
 @Builder

@@ -7,6 +7,9 @@ import org.springframework.stereotype.Component;
 
 import javax.validation.constraints.NotBlank;
 
+/**
+ * Configuration for the Image Builder
+ */
 @Component
 @ConfigurationProperties(prefix = "image-builder")
 @Getter

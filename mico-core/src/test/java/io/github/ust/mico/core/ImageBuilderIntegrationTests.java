@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
-import io.github.ust.mico.core.imagebuilder.Build;
+import io.github.ust.mico.core.imagebuilder.buildtypes.Build;
 import io.github.ust.mico.core.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.imagebuilder.ImageBuilderConfig;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +23,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
 

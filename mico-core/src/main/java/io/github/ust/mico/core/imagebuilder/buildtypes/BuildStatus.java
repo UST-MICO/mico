@@ -1,4 +1,4 @@
-package io.github.ust.mico.core.imagebuilder;
+package io.github.ust.mico.core.imagebuilder.buildtypes;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -6,6 +6,9 @@ import lombok.*;
 
 import java.util.List;
 
+/**
+ * BuildStatus is the status for a Build resource
+ */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
@@ -15,11 +18,9 @@ import java.util.List;
 @ToString
 @EqualsAndHashCode
 public class BuildStatus {
-    // BuildProvider builder;
 
     /**
-     * Cluster provides additional information if the builder is Cluster.
-     * +optional
+     * Optional. Cluster provides additional information if the builder is Cluster.
      */
     ClusterSpec cluster;
     // GoogleSpec google;
@@ -28,9 +29,19 @@ public class BuildStatus {
     // List<ContainerState> stepStatus;
 
     /**
-     * StepsCompleted lists the name of build steps completed.
-     * +optional
+     * Optional. StepsCompleted lists the name of build steps completed.
      */
     List<String> stepsCompleted;
+
+    // BuildProvider builder;
+
+    // GoogleSpec google;
+
+    // time startTime;
+
+    // Time completionTime;
+
+    // StepStates stepStates;
+
     // Conditions conditions;
 }

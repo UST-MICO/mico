@@ -5,21 +5,22 @@ import io.fabric8.kubernetes.api.model.ServiceAccount;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinitionList;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.github.ust.mico.core.ClusterAwarenessFabric8;
 import io.github.ust.mico.core.NotInitializedException;
+import io.github.ust.mico.core.imagebuilder.buildtypes.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.validation.constraints.NotBlank;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Builds container images by using Knative Build and Kaniko
+ */
 @Slf4j
 @Component
 public class ImageBuilder {
@@ -33,12 +34,21 @@ public class ImageBuilder {
 
     private NonNamespaceOperation<Build, BuildList, DoneableBuild, Resource<Build, DoneableBuild>> buildClient;
 
+    /**
+     * @param cluster The Kubernetes cluster object
+     * @param config  The configuration for the image builder
+     */
     @Autowired
     public ImageBuilder(ClusterAwarenessFabric8 cluster, ImageBuilderConfig config) {
         this.cluster = cluster;
         this.config = config;
     }
 
+    /**
+     * Initialize the image builder.
+     *
+     * @throws NotInitializedException if the image builder was not initialized
+     */
     public void init() throws NotInitializedException {
         String namespace = config.getBuildExecutionNamespace();
         String serviceAccountName = config.getServiceAccountName();
@@ -71,6 +81,11 @@ public class ImageBuilder {
         }
     }
 
+    /**
+     * Returns the build CRD if exists
+     *
+     * @return the build CRD
+     */
     public Optional<CustomResourceDefinition> getBuildCRD() {
         List<CustomResourceDefinition> crdsItems = getCustomResourceDefinitions();
 
@@ -87,22 +102,30 @@ public class ImageBuilder {
         return Optional.empty();
     }
 
+    /**
+     * Returns the build object
+     *
+     * @param buildName the name of the build
+     * @return the build object
+     */
     public Build getBuild(String buildName) {
+
         return this.buildClient.withName(buildName).get();
     }
+
 
     /**
      * @param serviceName    the name of the MICO service
      * @param serviceVersion the version of the MICO service
      * @param dockerfile     the relative path to the dockerfile
      * @param gitUrl         the URL to the remote git repository
-     * @param gitRevision    the
-     * @return
-     * @throws NotInitializedException
+     * @param gitRevision    the revision of the git repository. e.g. `master`, commit id or a tag
+     * @return the resulting build
+     * @throws NotInitializedException if the image builder was not initialized
      */
     public Build build(String serviceName, String serviceVersion, String dockerfile, String gitUrl, String gitRevision) throws NotInitializedException {
 
-        // TODO Add JavaDoc
+        String namespace = config.getBuildExecutionNamespace();
 
         // TODO Is normalization required?
         String serviceNameNormalized = serviceName.replaceAll("/[^A-Za-z0-9]/", "-");
@@ -112,11 +135,19 @@ public class ImageBuilder {
         String dockerfileNormalized = dockerfile.startsWith("/") ? dockerfile.substring(1) : dockerfile;
         String dockerfilePath = "/workspace/" + dockerfileNormalized;
 
-        String namespace = config.getBuildExecutionNamespace();
-
         return createBuild(buildName, destination, dockerfilePath, gitUrl, gitRevision, namespace);
     }
 
+    /**
+     * @param buildName   the name of the build
+     * @param destination the url of the image destination
+     * @param dockerfile  the relative path to the dockerfile
+     * @param gitUrl      the URL to the remote git repository
+     * @param gitRevision the revision of the git repository. e.g. `master`, commit id or a tag
+     * @param namespace   the namespace in which the build is executed
+     * @return the resulting build
+     * @throws NotInitializedException if the image builder was not initialized
+     */
     private Build createBuild(String buildName, String destination, String dockerfile, String gitUrl, String gitRevision, String namespace) throws NotInitializedException {
 
         if (buildClient == null) {
@@ -126,7 +157,7 @@ public class ImageBuilder {
         Build build = Build.builder()
             .spec(BuildSpec.builder()
                 .serviceAccountName(config.getServiceAccountName())
-                .source(Source.builder()
+                .source(SourceSpec.builder()
                     .git(GitSourceSpec.builder()
                         .url(gitUrl)
                         .revision(gitRevision)
@@ -153,6 +184,10 @@ public class ImageBuilder {
         return createdBuild;
     }
 
+    /**
+     * Returns a list of custom resource definitions
+     * @return the list of custom resource definitions
+     */
     private List<CustomResourceDefinition> getCustomResourceDefinitions() {
         KubernetesClient client = cluster.getClient();
         CustomResourceDefinitionList crds = client.customResourceDefinitions().list();
@@ -162,19 +197,38 @@ public class ImageBuilder {
         return crdsItems;
     }
 
+    /**
+     * Creates a image name based on the service name and the service version (used as image tag).
+     * @param serviceName the name of the MICO service
+     * @param serviceVersion the version of the MICO service
+     * @return the image name
+     */
+    public String createImageName(String serviceName, String serviceVersion) {
+        return config.getImageRepositoryUrl() + "/" + serviceName + ":" + serviceVersion;
+    }
+
+    /**
+     * Creates a build name based on the service name.
+     * @param serviceName the name of the MICO service
+     * @return the build name
+     */
+    private String createBuildName(String serviceName) {
+        return "build-" + serviceName;
+    }
+
+    /**
+     * Delete the build
+     * @param buildName the name of the build
+     */
     public void deleteBuild(String buildName) {
         buildClient.withName(buildName).delete();
     }
 
+    /**
+     * Delete the build
+     * @param build the build object
+     */
     public void deleteBuild(Build build) {
         buildClient.delete(build);
-    }
-
-    public String createImageName(String serviceNameNormalized, String serviceVersion) {
-        return config.getImageRepositoryUrl() + "/" + serviceNameNormalized + ":" + serviceVersion;
-    }
-
-    private String createBuildName(String serviceNameNormalized) {
-        return "build-" + serviceNameNormalized;
     }
 }

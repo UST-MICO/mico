@@ -1,8 +1,11 @@
-package io.github.ust.mico.core.imagebuilder;
+package io.github.ust.mico.core.imagebuilder.buildtypes;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
+/**
+ * Volume represents a named volume in a pod that may be accessed by any container in the pod.
+ */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @Getter
 @Builder
