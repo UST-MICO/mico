@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { map, } from 'rxjs/operators';
 
 
+// TODO remove API Object ... (use the other one)
 export interface LinkObject {
     readonly href: string;
     readonly templated?: boolean;
@@ -89,7 +90,7 @@ export class ApiBaseFunctionService {
     }
 
 
-    get(url: string | LinkObject | ApiLinksObject | ApiObject, token?: string, params?): Observable<ApiObject | ApiObject[]> {
+    get(url: string | LinkObject | ApiLinksObject | ApiObject, token?: string, params?): Observable<ApiObject> {
         url = this.extractUrl(url);
 
         const options = this.headers(token);

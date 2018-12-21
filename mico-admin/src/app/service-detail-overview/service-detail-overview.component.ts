@@ -78,7 +78,7 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
             }
         }
 
-        this.serviceSubscription = this.serviceSubscription = this.apiService.getServiceById(id)
+        this.serviceSubscription = this.serviceSubscription = this.apiService.getServiceVersions(id)
             .subscribe(service => this.service = service);
 
         // get dependencies and their status
@@ -94,6 +94,8 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
         });
         this.externalDependencies = external;
 
+        // TODO group services in service-list by short-name
+        // TODO insert dropdown to choose a service
         this.subServiceInterfaces = this.apiService.getServiceInterfaces(id).subscribe(element => this.serviceInterfaces = element);
 
 
@@ -108,7 +110,7 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
 
     getServiceMetaData(id) {
         let service_object;
-        this.apiService.getServiceById(id).subscribe(val => service_object = val);
+        this.apiService.getServiceVersions(id).subscribe(val => service_object = val);
         const tempObject = {
             'id': id,
             'name': service_object.name,
