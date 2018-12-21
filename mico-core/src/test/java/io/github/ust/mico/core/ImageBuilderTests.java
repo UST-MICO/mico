@@ -5,6 +5,7 @@ import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.github.ust.mico.core.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.imagebuilder.ImageBuilderConfig;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -15,6 +16,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
 
+@Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class ImageBuilderTests {
@@ -45,20 +47,5 @@ public class ImageBuilderTests {
     @Test(expected = NotInitializedException.class)
     public void withoutInitializingAnErrorIsThrown() throws NotInitializedException {
         imageBuilder.build("service-name", "1.0.0", "Dockerfile", "https://github.com/dgageot/hello.git", "master");
-    }
-
-    @Test
-    public void listCustomResourceDefinitions() {
-
-        List<CustomResourceDefinition> crdsItems = imageBuilder.getCustomResourceDefinitions();
-        System.out.println("Found " + crdsItems.size() + " CRD(s)");
-        CustomResourceDefinition dummyCRD = null;
-        for (CustomResourceDefinition crd : crdsItems) {
-            ObjectMeta metadata = crd.getMetadata();
-            if (metadata != null) {
-                String name = metadata.getName();
-                System.out.println("    " + name + " => " + metadata.getSelfLink());
-            }
-        }
     }
 }

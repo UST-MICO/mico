@@ -16,6 +16,4 @@ public class Source {
      * Git represents source in a Git repository.
      */
     private GitSourceSpec git;
-
-    // TODO GCSSourceSpec, Custom, SubPath, TargetPath
 }

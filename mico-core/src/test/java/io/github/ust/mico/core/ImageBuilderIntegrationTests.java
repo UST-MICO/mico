@@ -104,14 +104,6 @@ public class ImageBuilderIntegrationTests {
     }
 
     @Test
-    public void checkAvailableCustomResourceDefinitions() {
-        List<CustomResourceDefinition> crds = imageBuilder.getCustomResourceDefinitions();
-        System.out.println("Found " + crds.size() + " CRD(s)");
-
-        assertTrue("There are no Custom Resource Definitions defined", crds.size() > 0);
-    }
-
-    @Test
     public void checkBuildCustomResourceDefinition() {
         Optional<CustomResourceDefinition> buildCRD = imageBuilder.getBuildCRD();
         log.info("Build CRD: {}" + buildCRD);
@@ -130,7 +122,7 @@ public class ImageBuilderIntegrationTests {
             mapper.enable(SerializationFeature.INDENT_OUTPUT);
             StringWriter sw = new StringWriter();
             mapper.writeValue(sw, build);
-            log.info("Build:" + sw.toString());
+            log.debug("Build: {}{}", System.lineSeparator(), sw.toString());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -169,6 +161,7 @@ public class ImageBuilderIntegrationTests {
         return podCreationResult.get();
     }
 
+    // Create a future that polls every 500 milliseconds with a delay of 500 milliseconds.
     private CompletableFuture<Boolean> pollForPodCreationCompletion(String podName) throws InterruptedException, ExecutionException, TimeoutException {
         CompletableFuture<Boolean> completionFuture = new CompletableFuture<>();
 
@@ -198,23 +191,22 @@ public class ImageBuilderIntegrationTests {
     private CompletableFuture<Boolean> pollForBuildPodFinished(String buildName) throws InterruptedException, ExecutionException, TimeoutException {
         CompletableFuture<Boolean> completionFuture = new CompletableFuture<>();
 
+        // Create a future that polls every second with a delay of 10 seconds.
         final ScheduledFuture<?> checkFuture = buildPodStatusChecker.scheduleAtFixedRate(() -> {
 
-            log.info("Checking pod status...");
             Build build = imageBuilder.getBuild(buildName);
             if (build.getStatus() != null && build.getStatus().getCluster() != null) {
                 String buildPodName = build.getStatus().getCluster().getPodName();
-                log.info("Build pod name: {}", buildPodName);
                 Pod buildPod = cluster.getPod(buildPodName, namespace);
 
-                log.info("Current Phase: {}", buildPod.getStatus().getPhase());
+                log.debug("Current build phase: {}", buildPod.getStatus().getPhase());
                 if (buildPod.getStatus().getPhase().equals("Succeeded")) {
                     completionFuture.complete(true);
                 } else if (buildPod.getStatus().getPhase().equals("Failed")) {
                     completionFuture.complete(false);
                 }
             }
-        }, 5, 1, TimeUnit.SECONDS);
+        }, 10, 1, TimeUnit.SECONDS);
 
         // Add a timeout: Abort after 30 seconds
         completionFuture.get(30, TimeUnit.SECONDS);

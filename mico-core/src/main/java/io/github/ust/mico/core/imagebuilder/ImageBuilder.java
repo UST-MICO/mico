@@ -1,6 +1,7 @@
 package io.github.ust.mico.core.imagebuilder;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.ServiceAccount;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinitionList;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -15,10 +16,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.validation.constraints.NotBlank;
 import java.util.List;
 import java.util.Optional;
 
-// TODO Move package
 @Slf4j
 @Component
 public class ImageBuilder {
@@ -39,11 +40,18 @@ public class ImageBuilder {
     }
 
     public void init() throws NotInitializedException {
+        String namespace = config.getBuildExecutionNamespace();
+        String serviceAccountName = config.getServiceAccountName();
+
         Optional<CustomResourceDefinition> buildCRD = getBuildCRD();
         if (!buildCRD.isPresent()) {
             log.error("Custom Resource Definition `{}` is not available!", BUILD_CRD_NAME);
-
-            throw new NotInitializedException("Build resource not available!");
+            throw new NotInitializedException("Build CRD not available!");
+        }
+        Optional<ServiceAccount> buildServiceAccount = Optional.of(cluster.getServiceAccount(serviceAccountName, namespace));
+        if (!buildServiceAccount.isPresent()) {
+            log.error("Service account `{}` is not available!", serviceAccountName);
+            throw new NotInitializedException("Service account not available!");
         }
 
         this.buildClient = cluster.getClient().customResources(buildCRD.get(),
@@ -59,10 +67,8 @@ public class ImageBuilder {
         }
         if (resourceNamespaced) {
             buildClient = ((MixedOperation<Build, BuildList, DoneableBuild, Resource<Build, DoneableBuild>>)
-                buildClient).inNamespace(config.getBuildExecutionNamespace());
+                buildClient).inNamespace(namespace);
         }
-
-        // TODO Check if required service account is available
     }
 
     public Optional<CustomResourceDefinition> getBuildCRD() {
@@ -72,8 +78,8 @@ public class ImageBuilder {
             ObjectMeta metadata = crd.getMetadata();
             if (metadata != null) {
                 String name = metadata.getName();
-                System.out.println("    " + name + " => " + metadata.getSelfLink());
                 if (BUILD_CRD_NAME.equals(name)) {
+                    log.debug("Found build CRD => {}", metadata.getSelfLink());
                     return Optional.of(crd);
                 }
             }
@@ -83,13 +89,6 @@ public class ImageBuilder {
 
     public Build getBuild(String buildName) {
         return this.buildClient.withName(buildName).get();
-    }
-
-    public List<CustomResourceDefinition> getCustomResourceDefinitions() {
-        KubernetesClient client = cluster.getClient();
-        CustomResourceDefinitionList crds = client.customResourceDefinitions().list();
-        List<CustomResourceDefinition> crdsItems = crds.getItems();
-        return crdsItems;
     }
 
     /**
@@ -121,7 +120,6 @@ public class ImageBuilder {
     private Build createBuild(String buildName, String destination, String dockerfile, String gitUrl, String gitRevision, String namespace) throws NotInitializedException {
 
         if (buildClient == null) {
-            // TODO Change to MICO specific NotInitializedException
             throw new NotInitializedException("ImageBuilder is not initialized.");
         }
 
@@ -149,25 +147,19 @@ public class ImageBuilder {
         build.setMetadata(metadata);
 
         Build createdBuild = buildClient.createOrReplace(build);
-        System.out.println("Upserted " + createdBuild);
-
-        // TODO Check if watcher is required
-        buildClient.withResourceVersion(createdBuild.getMetadata().getResourceVersion()).watch(new Watcher<Build>() {
-            @Override
-            public void eventReceived(Action action, Build resource) {
-                System.out.println("==> " + action + " for " + resource);
-                if (resource.getSpec() == null) {
-                    log.error("No Spec for resource " + resource);
-                }
-            }
-
-            @Override
-            public void onClose(KubernetesClientException cause) {
-                log.error("Build failed with cause: " + cause);
-            }
-        });
+        log.info("Build created");
+        log.debug("Created build: {} ", createdBuild);
 
         return createdBuild;
+    }
+
+    private List<CustomResourceDefinition> getCustomResourceDefinitions() {
+        KubernetesClient client = cluster.getClient();
+        CustomResourceDefinitionList crds = client.customResourceDefinitions().list();
+        List<CustomResourceDefinition> crdsItems = crds.getItems();
+
+        log.debug("CRDs: {}", crdsItems);
+        return crdsItems;
     }
 
     public void deleteBuild(String buildName) {
