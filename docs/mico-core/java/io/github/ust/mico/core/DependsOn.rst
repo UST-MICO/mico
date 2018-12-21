@@ -1,8 +1,8 @@
-.. java:import:: org.neo4j.ogm.annotation GeneratedValue
+.. java:import:: com.fasterxml.jackson.annotation JsonIdentityInfo
 
-.. java:import:: org.neo4j.ogm.annotation Id
+.. java:import:: com.fasterxml.jackson.annotation JsonIgnore
 
-.. java:import:: org.neo4j.ogm.annotation NodeEntity
+.. java:import:: com.fasterxml.jackson.annotation ObjectIdGenerators
 
 DependsOn
 =========
@@ -10,7 +10,39 @@ DependsOn
 .. java:package:: io.github.ust.mico.core
    :noindex:
 
-.. java:type:: @NodeEntity public class DependsOn
+.. java:type:: @JsonIdentityInfo @RelationshipEntity public class DependsOn
+
+Constructors
+------------
+DependsOn
+^^^^^^^^^
+
+.. java:constructor:: public DependsOn()
+   :outertype: DependsOn
+
+DependsOn
+^^^^^^^^^
+
+.. java:constructor:: public DependsOn(Service service)
+   :outertype: DependsOn
+
+DependsOn
+^^^^^^^^^
+
+.. java:constructor:: public DependsOn(Service serviceStart, Service serviceEnd)
+   :outertype: DependsOn
+
+DependsOn
+^^^^^^^^^
+
+.. java:constructor:: public DependsOn(Service service, String minVersion)
+   :outertype: DependsOn
+
+DependsOn
+^^^^^^^^^
+
+.. java:constructor:: public DependsOn(Service service, String minVersion, String maxVersion)
+   :outertype: DependsOn
 
 Methods
 -------
@@ -32,6 +64,12 @@ getService
 .. java:method:: public Service getService()
    :outertype: DependsOn
 
+getServiceDependee
+^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public Service getServiceDependee()
+   :outertype: DependsOn
+
 setMaxVersion
 ^^^^^^^^^^^^^
 
@@ -48,5 +86,11 @@ setService
 ^^^^^^^^^^
 
 .. java:method:: public void setService(Service service)
+   :outertype: DependsOn
+
+setServiceDependee
+^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public void setServiceDependee(Service serviceDependee)
    :outertype: DependsOn
 
