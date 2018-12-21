@@ -6,8 +6,8 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import org.neo4j.ogm.annotation.*;
 
 @JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "serviceDependee")
+    generator = ObjectIdGenerators.PropertyGenerator.class,
+    property = "serviceDependee")
 @RelationshipEntity(type = "DEPENDS_ON")
 public class DependsOn {
 

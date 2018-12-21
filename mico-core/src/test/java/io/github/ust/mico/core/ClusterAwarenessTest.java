@@ -56,17 +56,17 @@ public class ClusterAwarenessTest {
     public void createPods() throws ApiException {
         V1Namespace ns = cluster.createNamespace(namespaceName);
         V1Pod pod =
-                new V1PodBuilder()
-                        .withNewMetadata()
-                        .withName("testpod")
-                        .endMetadata()
-                        .withNewSpec()
-                        .addNewContainer()
-                        .withName("www")
-                        .withImage("nginx")
-                        .endContainer()
-                        .endSpec()
-                        .build();
+            new V1PodBuilder()
+                .withNewMetadata()
+                .withName("testpod")
+                .endMetadata()
+                .withNewSpec()
+                .addNewContainer()
+                .withName("www")
+                .withImage("nginx")
+                .endContainer()
+                .endSpec()
+                .build();
 
         api.createNamespacedPod(namespaceName, pod, null);
 

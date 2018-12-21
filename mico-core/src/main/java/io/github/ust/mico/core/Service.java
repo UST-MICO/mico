@@ -1,7 +1,8 @@
 package io.github.ust.mico.core;
 
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import io.swagger.annotations.ApiModelProperty;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -11,8 +12,8 @@ import org.neo4j.ogm.annotation.Relationship;
 import java.util.List;
 
 @JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id")
+    generator = ObjectIdGenerators.PropertyGenerator.class,
+    property = "id")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NodeEntity
 public class Service {
@@ -42,20 +43,12 @@ public class Service {
     private List<DependsOn> dependsOn;
     @Relationship(direction = Relationship.UNDIRECTED)
     private List<ServiceInterface> serviceInterfaces;
-
-    public DependsOn dependsOn (Service serviceEnd){
-        DependsOn dependsOnObj = new DependsOn(this,serviceEnd);
-        this.dependsOn.add(dependsOnObj);
-        return dependsOnObj;
-    }
     //crawling information
     private String externalVersion;
     private CrawlingSource crawlingSource;
-
     //docker information
     private String dockerImageName;
     private String dockerImageUri;
-
     public Service() {
     }
 
@@ -74,8 +67,18 @@ public class Service {
         this.description = description;
     }
 
+    public DependsOn dependsOn(Service serviceEnd) {
+        DependsOn dependsOnObj = new DependsOn(this, serviceEnd);
+        this.dependsOn.add(dependsOnObj);
+        return dependsOnObj;
+    }
+
     public Long getId() {
         return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     //TODO: Verify if all are necessary
@@ -199,10 +202,6 @@ public class Service {
         this.serviceInterfaces = serviceInterfaces;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
     public CrawlingSource getCrawlingSource() {
         return crawlingSource;
     }
@@ -238,22 +237,22 @@ public class Service {
     @Override
     public String toString() {
         return "Service{" +
-                "id=" + id +
-                ", version='" + version + '\'' +
-                ", shortName='" + shortName + '\'' +
-                ", description='" + description + '\'' +
-                ", predecessor=" + predecessor +
-                ", vcsRoot='" + vcsRoot + '\'' +
-                ", name='" + name + '\'' +
-                ", dockerfile='" + dockerfile + '\'' +
-                ", contact='" + contact + '\'' +
-                ", tags=" + tags +
-                ", lifecycle='" + lifecycle + '\'' +
-                ", links=" + links +
-                ", type='" + type + '\'' +
-                ", owner='" + owner + '\'' +
-                ", dependsOn=" + dependsOn +
-                ", serviceInterfaces=" + serviceInterfaces +
-                '}';
+            "id=" + id +
+            ", version='" + version + '\'' +
+            ", shortName='" + shortName + '\'' +
+            ", description='" + description + '\'' +
+            ", predecessor=" + predecessor +
+            ", vcsRoot='" + vcsRoot + '\'' +
+            ", name='" + name + '\'' +
+            ", dockerfile='" + dockerfile + '\'' +
+            ", contact='" + contact + '\'' +
+            ", tags=" + tags +
+            ", lifecycle='" + lifecycle + '\'' +
+            ", links=" + links +
+            ", type='" + type + '\'' +
+            ", owner='" + owner + '\'' +
+            ", dependsOn=" + dependsOn +
+            ", serviceInterfaces=" + serviceInterfaces +
+            '}';
     }
 }

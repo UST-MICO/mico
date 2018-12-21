@@ -21,7 +21,8 @@ public class ServiceInterface {
         this.serviceInterfaceName = serviceInterfaceName;
     }
 
-    public ServiceInterface() {}
+    public ServiceInterface() {
+    }
 
     //TODO: Verify if all are necessary
     public String getPort() {
