@@ -12,7 +12,7 @@ import lombok.Value;
 @Builder
 public class MicoResourceConstraint {
 
-    // Measured in CPU units. One Kubernetes CPU (unit) is equivaletnt to:
+    // Measured in CPU units. One Kubernetes CPU (unit) is equivalent to:
     //  - 1 AWS vCPU
     //  - 1 GCP Core
     //  - 1 Azure vCore

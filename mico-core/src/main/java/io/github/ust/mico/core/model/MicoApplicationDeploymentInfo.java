@@ -35,7 +35,7 @@ public class MicoApplicationDeploymentInfo {
     // The service deployment info for each service this
     // application is composed of (service id -> service deployment info).
     @ApiModelProperty(required = true)
-    @Relationship // TODO: @Jan -> check please.
+    @Relationship  //TODO: @Jan -> add more info
     @Singular
     private final Map<Long, MicoServiceDeploymentInfo> serviceDeploymentInfos;
 

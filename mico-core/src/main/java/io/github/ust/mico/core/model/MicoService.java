@@ -52,7 +52,7 @@ public class MicoService {
 
     // The list of interfaces this service provides.
     @ApiModelProperty(required = true)
-    @Relationship // TODO: @Jan -> check please.
+    @Relationship(type = "PROVIDES", direction = Relationship.OUTGOING)
     @Singular
     private final List<MicoServiceInterface> serviceInterfaces;
 
@@ -72,7 +72,7 @@ public class MicoService {
 
     // The list of services that this service requires
     // in order to run normally.
-    @Relationship // TODO: @Jan -> check please.
+    @Relationship(type = "DEPENDS_ON", direction = Relationship.UNDIRECTED)
     @Singular
     private List<MicoServiceDependency> dependencies;
 

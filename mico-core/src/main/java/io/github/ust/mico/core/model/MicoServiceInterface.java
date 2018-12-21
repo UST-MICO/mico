@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
+import org.neo4j.ogm.annotation.Relationship;
 
 /**
  * Represents a interface, e.g., REST API, of a {@link MicoService}.
@@ -18,7 +19,7 @@ import lombok.Singular;
 @Data
 @AllArgsConstructor
 @Builder
-@NodeEntity // TODO: @Jan -> maybe @RelationshipEntity?
+@NodeEntity
 public class MicoServiceInterface {
 
     @Id
@@ -37,7 +38,7 @@ public class MicoServiceInterface {
     // The list of ports.
     @ApiModelProperty(required = true)
     @Singular
-    // TODO: @Jan -> maybe Relationship?
+    @Relationship  //TODO: @Jan -> add more info
     private final List<MicoServicePort> ports;
 
 

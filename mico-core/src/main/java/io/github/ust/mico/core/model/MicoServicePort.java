@@ -8,6 +8,7 @@ import lombok.Value;
 /**
  * Represents a basic port with a port number and port type (protocol).
  */
+// TODO: @Jakob -> How do you want to store these entities in the database? -> @NodeEntity ?
 @Value
 @Builder
 public class MicoServicePort {

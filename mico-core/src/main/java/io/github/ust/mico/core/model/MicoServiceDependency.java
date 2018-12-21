@@ -15,7 +15,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 @Builder
-@RelationshipEntity
+@RelationshipEntity(type = "DEPENDS_ON")
 public class MicoServiceDependency {
 
     @Id
