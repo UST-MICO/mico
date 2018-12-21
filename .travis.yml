@@ -1,8 +1,9 @@
-sudo: required
 language: java
 services:
   - docker
+before_install:
+  # Build only mico-core
+  - cd mico-core
 cache:
-  npm: true
   directories:
     - $HOME/.m2
