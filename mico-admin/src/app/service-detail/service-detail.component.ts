@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
 import { ApiService } from '../api/api.service';
@@ -10,10 +10,10 @@ import { Subscription } from 'rxjs';
     templateUrl: './service-detail.component.html',
     styleUrls: ['./service-detail.component.css']
 })
-export class ServiceDetailComponent implements OnInit {
+export class ServiceDetailComponent implements OnInit, OnDestroy {
 
-    private serviceSubscription: Subscription;
-    private paramSubscription: Subscription;
+    private subService: Subscription;
+    private subParam: Subscription;
 
     constructor(
         private apiService: ApiService,
@@ -25,21 +25,32 @@ export class ServiceDetailComponent implements OnInit {
     id: number;
 
     ngOnInit() {
-        this.paramSubscription = this.route.params.subscribe(params => {
-            this.update(parseInt(params['id'], 10));
+        this.subParam = this.route.params.subscribe(params => {
+
+            // TODO consider moving the code for the latest version from detail-overview to here and passing the data into detail-overview.
+            this.update(params['shortName']);
         });
     }
 
-    update(id) {
-        if (id === this.id) {
+    ngOnDestroy() {
+        if (this.subService != null) {
+            this.subService.unsubscribe();
+        }
+        if (this.subParam != null) {
+            this.subParam.unsubscribe();
+        }
+    }
+
+    update(shortName) {
+        if (shortName === this.id) {
             return;
         }
 
-        if (this.serviceSubscription != null) {
-            this.serviceSubscription.unsubscribe();
+        if (this.subService != null) {
+            this.subService.unsubscribe();
         }
 
-        this.serviceSubscription = this.apiService.getServiceVersions(id)
+        this.subService = this.apiService.getService(shortName)
             .subscribe(service => this.service = service);
     }
 
