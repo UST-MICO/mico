@@ -126,9 +126,13 @@ public class ServiceController {
         Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         if(!serviceOpt.isPresent())
             return ResponseEntity.notFound().build();
+
         Service service = serviceOpt.get();
 
         List<DependsOn> dependees = service.getDependsOn();
+        if(dependees == null)
+            return ResponseEntity.notFound().build();
+
         LinkedList<Service> services = getDependentServices(dependees);
 
         List<Resource<Service>> resourceList = getServiceResourcesList(services);
