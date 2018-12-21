@@ -2,6 +2,7 @@ package io.github.ust.mico.core;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import io.swagger.annotations.ApiModelProperty;
 import org.neo4j.ogm.annotation.GeneratedValue;
@@ -39,8 +40,10 @@ public class Service {
     private List<String> links;
     private String type;
     private String owner;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Relationship(type = "DEPENDS_ON")
     private List<DependsOn> dependsOn;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Relationship(direction = Relationship.UNDIRECTED)
     private List<ServiceInterface> serviceInterfaces;
     //crawling information

@@ -102,21 +102,11 @@ public class ServiceController {
                     .header("Bad Request: Service already exists.")
                     .body(new Resource<>(newService, getServiceLinks(newService)));
         } else {
-            if (newService.getDependsOn() == null) {
-                Service savedService = serviceRepository.save(newService);
+            Service savedService = serviceRepository.save(newService);
 
-                return ResponseEntity
-                        .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
-                        .body(new Resource<>(newService, getServiceLinks(newService)));
-            } else {
-                Service serviceWithDependees = setServiceDependees(newService);
-
-                Service savedService = serviceRepository.save(serviceWithDependees);
-
-                return ResponseEntity
-                        .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
-                        .body(new Resource<>(newService, getServiceLinks(newService)));
-            }
+            return ResponseEntity
+                    .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+                    .body(new Resource<>(newService, getServiceLinks(newService)));
         }
     }
 
