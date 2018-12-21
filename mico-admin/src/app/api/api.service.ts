@@ -141,7 +141,7 @@ export class ApiService {
     /**
      * Get all versions of a service based on its shortName
      */
-    getServiceVersions(shortName): Observable<ApiObject> {
+    getService(shortName): Observable<ApiObject> {
 
         const resource = 'services/' + shortName + '/';
         const stream = this.getStreamSource(resource);

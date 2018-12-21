@@ -30,7 +30,7 @@ export class DashboardComponent implements OnInit {
             console.log(val);
         });
 
-        this.apiService.getServiceVersions('test.service').subscribe(val => {
+        this.apiService.getService('test.service').subscribe(val => {
             console.log(val);
         });
 
