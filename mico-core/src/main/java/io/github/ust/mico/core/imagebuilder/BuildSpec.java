@@ -1,21 +1,18 @@
-package io.github.ust.mico.core.build;
+package io.github.ust.mico.core.imagebuilder;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.*;
 
-import javax.annotation.Generated;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-        "serviceAccountName",
-        "template",
-        "source",
-        "sources",
-        "steps"
+    "serviceAccountName",
+    "template",
+    "source",
+    "sources",
+    "steps"
 })
 @Getter
 @Builder

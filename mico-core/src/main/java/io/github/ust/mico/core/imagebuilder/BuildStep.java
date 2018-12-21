@@ -1,4 +1,4 @@
-package io.github.ust.mico.core.build;
+package io.github.ust.mico.core.imagebuilder;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -14,11 +14,11 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonPropertyOrder({
-        "name",
-        "image",
-        "args",
-        "env",
-        "command"
+    "name",
+    "image",
+    "args",
+    "env",
+    "command"
 })
 @Getter
 @Builder
@@ -29,9 +29,9 @@ import java.util.List;
 public class BuildStep {
 
     /**
-     * 	Name of the container specified as a DNS_LABEL.
-     * 	Each container in a pod must have a unique name (DNS_LABEL).
-     * 	Cannot be updated.
+     * Name of the container specified as a DNS_LABEL.
+     * Each container in a pod must have a unique name (DNS_LABEL).
+     * Cannot be updated.
      */
     private String name;
 

@@ -1,8 +1,5 @@
-package io.github.ust.mico.core.build;
+package io.github.ust.mico.core.imagebuilder;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinitionList;
@@ -18,9 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-import java.io.IOException;
-import java.io.StringWriter;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,7 +47,7 @@ public class ImageBuilder {
         }
 
         this.buildClient = cluster.getClient().customResources(buildCRD.get(),
-                Build.class, BuildList.class, DoneableBuild.class);
+            Build.class, BuildList.class, DoneableBuild.class);
 
         String resourceScope = buildCRD.get().getSpec().getScope();
         log.debug("Build CRD has scope `{}`", resourceScope);
@@ -65,7 +59,7 @@ public class ImageBuilder {
         }
         if (resourceNamespaced) {
             buildClient = ((MixedOperation<Build, BuildList, DoneableBuild, Resource<Build, DoneableBuild>>)
-                    buildClient).inNamespace(config.getBuildExecutionNamespace());
+                buildClient).inNamespace(config.getBuildExecutionNamespace());
         }
 
         // TODO Check if required service account is available
@@ -132,22 +126,22 @@ public class ImageBuilder {
         }
 
         Build build = Build.builder()
-                .spec(BuildSpec.builder()
-                        .serviceAccountName(config.getServiceAccountName())
-                        .source(Source.builder()
-                                .git(GitSourceSpec.builder()
-                                        .url(gitUrl)
-                                        .revision(gitRevision)
-                                        .build())
-                                .build())
-                        .step(BuildStep.builder()
-                                .name(BUILD_STEP_NAME)
-                                .image(config.getKanikoExecutorImageUrl())
-                                .arg("--dockerfile=" + dockerfile)
-                                .arg("--destination=" + destination)
-                                .build())
+            .spec(BuildSpec.builder()
+                .serviceAccountName(config.getServiceAccountName())
+                .source(Source.builder()
+                    .git(GitSourceSpec.builder()
+                        .url(gitUrl)
+                        .revision(gitRevision)
                         .build())
-                .build();
+                    .build())
+                .step(BuildStep.builder()
+                    .name(BUILD_STEP_NAME)
+                    .image(config.getKanikoExecutorImageUrl())
+                    .arg("--dockerfile=" + dockerfile)
+                    .arg("--destination=" + destination)
+                    .build())
+                .build())
+            .build();
 
         ObjectMeta metadata = new ObjectMeta();
         metadata.setName(buildName);

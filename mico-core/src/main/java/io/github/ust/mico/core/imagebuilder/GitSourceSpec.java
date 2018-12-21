@@ -1,4 +1,4 @@
-package io.github.ust.mico.core.build;
+package io.github.ust.mico.core.imagebuilder;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -6,8 +6,8 @@ import lombok.*;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-        "url",
-        "revision"
+    "url",
+    "revision"
 })
 @Getter
 @Builder

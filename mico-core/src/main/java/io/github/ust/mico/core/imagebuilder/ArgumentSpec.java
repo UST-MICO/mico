@@ -1,4 +1,4 @@
-package io.github.ust.mico.core.build;
+package io.github.ust.mico.core.imagebuilder;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;

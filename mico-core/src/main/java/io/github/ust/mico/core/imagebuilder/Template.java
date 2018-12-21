@@ -1,8 +1,6 @@
-package io.github.ust.mico.core.build;
+package io.github.ust.mico.core.imagebuilder;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import lombok.*;
 
@@ -16,8 +14,8 @@ import lombok.*;
 public class Template {
 
     /**
-     * 	Optional. The Kind of the template to be used, possible values are BuildTemplate
-     * 	or ClusterBuildTemplate. If nothing is specified, the default if is BuildTemplate
+     * Optional. The Kind of the template to be used, possible values are BuildTemplate
+     * or ClusterBuildTemplate. If nothing is specified, the default if is BuildTemplate
      */
     private String name;
 

@@ -5,9 +5,9 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
-import io.github.ust.mico.core.build.Build;
-import io.github.ust.mico.core.build.ImageBuilder;
-import io.github.ust.mico.core.build.ImageBuilderConfig;
+import io.github.ust.mico.core.imagebuilder.Build;
+import io.github.ust.mico.core.imagebuilder.ImageBuilder;
+import io.github.ust.mico.core.imagebuilder.ImageBuilderConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
@@ -74,24 +74,24 @@ public class ImageBuilderIntegrationTests {
 
         // Set up connection to Docker Hub
         dockerRegistrySecret = new SecretBuilder()
-                .withApiVersion("v1")
-                .withType("kubernetes.io/basic-auth")
-                .withNewMetadata().withName("dockerhub-secret").withNamespace(namespace).withAnnotations(
-                        new HashMap<String, String>() {{
-                            put("build.knative.dev/docker-0", "https://index.docker.io/v1/");
-                        }}).endMetadata()
-                .withData(new HashMap<String, String>() {{
-                    put("username", usernameBase64Encoded);
-                    put("password", passwordBase64Encoded);
-                }})
-                .build();
+            .withApiVersion("v1")
+            .withType("kubernetes.io/basic-auth")
+            .withNewMetadata().withName("dockerhub-secret").withNamespace(namespace).withAnnotations(
+                new HashMap<String, String>() {{
+                    put("build.knative.dev/docker-0", "https://index.docker.io/v1/");
+                }}).endMetadata()
+            .withData(new HashMap<String, String>() {{
+                put("username", usernameBase64Encoded);
+                put("password", passwordBase64Encoded);
+            }})
+            .build();
         cluster.createSecret(dockerRegistrySecret, namespace);
 
         ServiceAccount buildServiceAccount = new ServiceAccountBuilder()
-                .withApiVersion("v1")
-                .withNewMetadata().withName(serviceAccountName).withNamespace(namespace).endMetadata()
-                .withSecrets(new ObjectReferenceBuilder().withName(dockerRegistrySecret.getMetadata().getName()).build())
-                .build();
+            .withApiVersion("v1")
+            .withNewMetadata().withName(serviceAccountName).withNamespace(namespace).endMetadata()
+            .withSecrets(new ObjectReferenceBuilder().withName(dockerRegistrySecret.getMetadata().getName()).build())
+            .build();
         cluster.createServiceAccount(buildServiceAccount, namespace);
     }
 
@@ -156,13 +156,13 @@ public class ImageBuilderIntegrationTests {
 
     private boolean checkIfDockerImageExists(String imagePath) throws ExecutionException, InterruptedException, TimeoutException {
         Pod pod = new PodBuilder()
-                .withNewMetadata().withName("testpod").withNamespace(namespace).endMetadata()
-                .withSpec(new PodSpecBuilder()
-                        .withContainers(new ContainerBuilder().withName("testpod-container").withImage(imagePath).build())
-                        .withImagePullSecrets(
-                                new LocalObjectReferenceBuilder().withName(dockerRegistrySecret.getMetadata().getName()).build()
-                        ).build())
-                .build();
+            .withNewMetadata().withName("testpod").withNamespace(namespace).endMetadata()
+            .withSpec(new PodSpecBuilder()
+                .withContainers(new ContainerBuilder().withName("testpod-container").withImage(imagePath).build())
+                .withImagePullSecrets(
+                    new LocalObjectReferenceBuilder().withName(dockerRegistrySecret.getMetadata().getName()).build()
+                ).build())
+            .build();
         Pod createdPod = cluster.createPod(pod, namespace);
 
         CompletableFuture<Boolean> podCreationResult = pollForPodCreationCompletion(createdPod.getMetadata().getName());
