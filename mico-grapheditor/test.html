@@ -17,8 +17,10 @@
                 zoom="both">
             <template template-type="style">
                 <style>
+                    .ghost {opacity: 0.5;}
                     .node {fill: aqua;}
                     .link-handle {display: none; fill: black; opacity: 0.1; transition:r 0.25s ease-out;}
+                    .edge-group .link-handle {display: initial}
                     .link-handle:hover {opacity: 0.7; r: 5;}
                     .text {fill: black; font-size: 6pt; text-overflow: ellipsis; word-break: break-word}
                     .text.title {font-size: initial; text-overflow: clip; word-break: break-word;}

@@ -8,8 +8,15 @@ export interface Edge {
     sourceHandle?: LinkHandle,
     targetHandle?: LinkHandle,
     type?: any,
-    markes?: Marker[],
+    markers?: Marker[],
     [prop: string]: any,
+}
+
+export interface DraggedEdge extends Edge {
+    id: string;
+    createdFrom?: number|string;
+    validTargets: Set<string>;
+    currentTarget: {x: Number, y: number};
 }
 
 export function edgeId(edge) {
