@@ -54,6 +54,39 @@
         <script>
             var graph = document.querySelector('network-graph');
 
+            graph.onCreateDraggedEdge = (edge) => {
+                if (edge.createdFrom == null || edge.createdFrom == undefined) {
+                    edge.markers = [{template: 'arrow', positionOnLine: 1, scale: 0.5, rotate: {relativeAngle: 0}},];
+                }
+                return edge
+            }
+
+            graph.onDraggedEdgeTargetChange = (edge, source, target) => {
+                if (target == null || target == undefined) {
+                    // leave edge in last state
+                } else if (target.type === 'gRPC') {
+                    edge.markers = [
+                        {template: 'arrow', positionOnLine: 0.97, scale: 0.5, rotate: {relativeAngle: 0}},
+                        {template: 'arrow', positionOnLine: 1, scale: 0.5, rotate: {relativeAngle: 0}},
+                    ];
+                } else if (target.type === 'REST') {
+                    edge.markers = [
+                        {template: 'arrow', positionOnLine: 1, scale: 0.5, rotate: {relativeAngle: 0}},
+                    ];
+                }
+                return edge
+            }
+
+            graph.onDropDraggedEdge = (edge, source, target) => {
+                if (target.type === 'gRPC') {
+                    edge.markers = [
+                        {template: 'arrow', positionOnLine: 0.99, scale: 0.5, rotate: {relativeAngle: 0}},
+                        {template: 'arrow', positionOnLine: 1, scale: 0.5, rotate: {relativeAngle: 0}},
+                    ];
+                }
+                return edge
+            }
+
             if (true) {
                 graph.nodeList = [
                     {id: 1, title: 'hello world 2 with a very long text', type: 'REST', description: 'This is a really long text that is wrapped in multiple lines.', x: 0, y: 0},
@@ -69,7 +102,7 @@
                 graph.addEdge({source: 4, target: 1, markers: [
                     {template: 'arrow', positionOnLine: 1, scale: 0.5, rotate: {relativeAngle: 0}},
                     {template: 'arrow', positionOnLine: 0.3, scale: 0.5, rotate: {normal: {dx: -1, dy: 0}, relativeAngle: 0}},
-                    {template: 'arrow', positionOnLine: 0, scale: 0.5, rotate: {relativeAngle: 0}},
+                    {template: 'arrow', positionOnLine: 0.1, scale: 0.5, rotate: {relativeAngle: 0}},
                 ]});
 
                 graph.removeNode(3);
