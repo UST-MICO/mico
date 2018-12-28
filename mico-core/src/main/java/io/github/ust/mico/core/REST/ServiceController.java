@@ -220,7 +220,7 @@ public class ServiceController {
             List<DependsOn> dependees = service.getDependsOn();
             if (dependees != null) {
                 dependees.forEach(dependee -> {
-                    if (dependee.getService().equals(serviceToLookFor)) {
+                    if (dependee.getServiceDependee().equals(serviceToLookFor)) {
                         dependers.add(dependee.getService());
                     }
                 });
