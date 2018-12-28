@@ -1,3 +1,4 @@
+import { map as Map } from "d3";
 import { Node } from "./node";
 import { Edge, edgeId } from "./edge";
 import { DEFAULT_NODE_TEMPLATE } from "./templates";
@@ -44,8 +45,26 @@ export class GraphObjectCache {
 
     updateEdgeCache(edges: Edge[]) {
         const edgeMap = new Map();
-        edges.forEach((edge) => edgeMap.set(edgeId(edge), edge));
+        const bySourceMap = new Map();
+        const byTargetMap = new Map();
+        edges.forEach((edge) => {
+            edgeMap.set(edgeId(edge), edge);
+            let bySource: Set<Edge> = bySourceMap.get(edge.source);
+            if (bySource == null) {
+                bySource = new Set();
+                bySourceMap.set(edge.source, bySource)
+            }
+            bySource.add(edge);
+            let byTarget: Set<Edge> = byTargetMap.get(edge.target);
+            if (byTarget == null) {
+                byTarget = new Set();
+                byTargetMap.set(edge.target, byTarget)
+            }
+            bySource.add(edge);
+        });
         this.edges = edgeMap;
+        this.edgesBySource = bySourceMap;
+        this.edgesByTarget = byTargetMap;
     }
 
     getMarkerTemplate(markerType: string) {
@@ -114,9 +133,17 @@ export class GraphObjectCache {
 
     getEdgeLinkHandles(edge: Edge) {
         const source = this.getNode(edge.source);
-        const target = this.getNode(edge.target);
+        const target = edge.target != null ? this.getNode(edge.target) : edge.currentTarget;
         const sourceHandles = edge.sourceHandle != null ? [edge.sourceHandle] : this.getNodeTemplateLinkHandles(source.type);
-        const targetHandles = edge.targetHandle != null ? [edge.targetHandle] : this.getNodeTemplateLinkHandles(target.type);
+        let targetHandles;
+        if (edge.targetHandle != null) {
+            targetHandles = [edge.targetHandle]
+        } else if (edge.target != null) {
+            targetHandles = this.getNodeTemplateLinkHandles(target.type);
+        } else {
+            // target only null for dragged edges
+            targetHandles = [{id: 0, x: 0, y: 0}];
+        }
         const result = this.calculateNearestHandles(sourceHandles, source, targetHandles, target);
         return {
             sourceHandle: result.sourceHandle,
@@ -126,7 +153,7 @@ export class GraphObjectCache {
         };
     }
 
-    private calculateNearestHandles(sourceHandles: LinkHandle[], source: Node, targetHandles: LinkHandle[], target: Node) {
+    private calculateNearestHandles(sourceHandles: LinkHandle[], source: Node, targetHandles: LinkHandle[], target: {x: number, y: number}) {
         let currentSourceHandle: LinkHandle = {id: 0, x: 0, y: 0, normal: {dx: 1, dy: 1}};
         if (sourceHandles != null && sourceHandles.length > 0) {
             currentSourceHandle = sourceHandles[0];

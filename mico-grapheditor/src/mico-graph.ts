@@ -12,6 +12,13 @@ const SHADOW_DOM_TEMPLATE = `
 </style>
 `
 
+interface DraggedEdge extends Edge {
+    id: string;
+    createdFrom?: number|string;
+    validTargets: Set<string>;
+    currentTarget: {x: Number, y: number};
+}
+
 
 export default class GraphEditor extends HTMLElement {
 
@@ -33,6 +40,7 @@ export default class GraphEditor extends HTMLElement {
 
     private _nodes: Node[];
     private _edges: Edge[];
+    private draggedEdges: DraggedEdge[];
     private _mode: string = 'display'; // interaction mode ['display', 'layout', 'link', 'select']
     private _zoomMode: string = 'both'; // ['none', 'manual', 'automatic', 'both']
 
@@ -90,6 +98,7 @@ export default class GraphEditor extends HTMLElement {
         super();
         this._nodes = [];
         this._edges = [];
+        this.draggedEdges = [];
         this.objectCache = new GraphObjectCache();
         this.initialized = false;
         this.edgeGenerator = line().x((d) => d.x).y((d) => d.y).curve(curveBasis);
@@ -551,12 +560,11 @@ export default class GraphEditor extends HTMLElement {
 
         // update edges ////////////////////////////////////////////////////////
         if (updateTemplates) {
-            graph.select('.edges').selectAll('path.edge:not(.dragged)').remove();
-            graph.select('.edges').selectAll('g.edge-group').remove();
+            graph.select('.edges').selectAll('g.edge:not(.dragged)').remove();
         }
         const self = this;
         let edgeGroupSelection = graph.select('.edges')
-            .selectAll('g.edge-group')
+            .selectAll('g.edge-group:not(.dragged)')
             .data(this._edges, edgeId);
         edgeGroupSelection.exit().remove();
         edgeGroupSelection.enter()
@@ -670,14 +678,14 @@ export default class GraphEditor extends HTMLElement {
             }
         });
 
-        nodeSelection.each(function (d) {
-            const handles = self.objectCache.getNodeTemplateLinkHandles(d.type);
+        nodeSelection.each(function (node) {
+            const handles = self.objectCache.getNodeTemplateLinkHandles(node.type);
             if (handles == null) {
                 return;
             }
-            const handleSelection = select(this).selectAll('circle.link-handle').data(handles, (handle) => handle.id);
+            let handleSelection = select(this).selectAll('circle.link-handle').data(handles, (handle) => handle.id);
             handleSelection.exit().remove();
-            handleSelection.enter()
+            handleSelection = handleSelection.enter()
                 .append('circle')
                 .classed('link-handle', true)
               .merge(handleSelection)
@@ -685,6 +693,60 @@ export default class GraphEditor extends HTMLElement {
                 .attr('cx', (d) => d.x)
                 .attr('cy', (d) => d.y)
                 .attr('r', 3);
+
+
+            if (self.isInteractive) {
+                handleSelection.call(
+                    drag()
+                        .subject((handle) => {
+                            return self.createDraggedEdge(node, handle);
+                        })
+                        .container(() => {return self.getSvg().select('g.zoom-group').select('g.edges').node();})
+                        .on('drag', () => {
+                            event.subject.target = null;
+                            event.subject.currentTarget.x = event.x;
+                            event.subject.currentTarget.y = event.y;
+                            const svg = self.getSvg();
+                            let possibleTarget = self.root.elementFromPoint(event.sourceEvent.clientX, event.sourceEvent.clientY);
+                            if (possibleTarget != null) {
+                                let target = select(possibleTarget);
+                                while (!target.empty()) {
+                                    if (target.classed('node')) {
+                                        const id = target.attr('id');
+                                        if (event.subject.source == id) {
+                                            break;
+                                        }
+                                        event.subject.target = id;
+                                        break;
+                                    }
+                                    target = select(target.node().parentElement);
+                                }
+                            }
+                            if (event.subject.target != null) {
+                                if (!event.subject.validTargets.has(event.subject.target)) {
+                                    event.subject.target = null;
+                                }
+                            }
+                            self.updateDraggedEdgeGroups();
+                        })
+                        .on('end', (d) => {
+                            const index = self.draggedEdges.findIndex(edge => edge.id === event.subject.id);
+                            self.draggedEdges.splice(index, 1);
+                            self.updateDraggedEdgeGroups();
+                            if (event.subject.target != null) {
+                                const edge = event.subject;
+                                delete edge.id;
+                                if (self.onEdgeCreate(edge)) {
+                                    self._edges.push(edge);
+                                    self.objectCache.updateEdgeCache(self._edges);
+                                    self.completeRender();
+                                }
+                            }
+                        })
+                );
+            } else {
+                handleSelection.on('.drag', null);
+            }
         })
 
         nodeSelection
@@ -727,7 +789,7 @@ export default class GraphEditor extends HTMLElement {
 
             const graph = svg.select("g.zoom-group");
             const edgeGroupSelection = graph.select('.edges')
-                .selectAll('g.edge')
+                .selectAll('g.edge-group:not(.dragged)')
                 .data(this._edges, edgeId);
         }
         const self = this;
@@ -735,6 +797,33 @@ export default class GraphEditor extends HTMLElement {
                 self.updateEdgeGroup(select(this), d);
             }, this)
             .call(this.updateEdgeHighligts.bind(this));
+    }
+
+    private updateDraggedEdgeGroups() {
+        const svg = this.getSvg();
+
+        const graph = svg.select("g.zoom-group");
+        const edgeGroupSelection = graph.select('.edges')
+            .selectAll('g.edge-group.dragged')
+            .data(this.draggedEdges, edgeId);
+        const nodeSelection = graph.select('.nodes')
+                .selectAll('g.node')
+                .data(this._nodes, (d) => {return d.id;});
+
+        edgeGroupSelection.exit().remove();
+        edgeGroupSelection.enter()
+            .append('g')
+            .attr('id', (d) => edgeId(d))
+            .classed('edge-group', true)
+            .classed('dragged', true)
+            .each(function (d) {
+                select(this).append('path')
+                    .classed('edge', true)
+                    .attr('fill', 'none');
+            })
+          .merge(edgeGroupSelection)
+            .call(this.updateEdgeGroups.bind(this))
+            .call(this.updateEdgePositions.bind(this));
     }
 
     private updateEdgePositions(edgeGroupSelection) {
@@ -747,7 +836,7 @@ export default class GraphEditor extends HTMLElement {
                 .data(this._edges, edgeId);
         }
         const self = this;
-        edgeGroupSelection.select('path.edge:not(.dragged)')
+        edgeGroupSelection.select('path.edge')
             .call(this.updateEdgePath.bind(this));
         edgeGroupSelection.each(function (d) {
             select(this).selectAll('g.marker').data(d.markers != null ? d.markers : [])
@@ -853,7 +942,7 @@ export default class GraphEditor extends HTMLElement {
                 positionOnLine = 0;
             }
             let transform = '';
-            const point = path.node().getPointAtLength(length * (1-positionOnLine));
+            const point = path.node().getPointAtLength(length * positionOnLine);
             transform += `translate(${point.x},${point.y})`;
             if (d.scale != null) {
                 transform += `scale(${d.scale})`;
@@ -862,7 +951,7 @@ export default class GraphEditor extends HTMLElement {
                 let angle = 0;
                 if (d.rotate.normal == null) {
                     const epsilon = positionOnLine > 0.5 ? -1e-5 : 1e-5;
-                    const point2 = path.node().getPointAtLength(length * (1-(positionOnLine + epsilon)));
+                    const point2 = path.node().getPointAtLength(length * (positionOnLine + epsilon));
                     let normal = {
                         dx: positionOnLine > 0.5 ? (point.x - point2.x) : (point2.x - point.x),
                         dy: positionOnLine > 0.5 ? (point.y - point2.y) : (point2.y - point.y),
@@ -893,6 +982,23 @@ export default class GraphEditor extends HTMLElement {
             .selectAll('g.edge-group')
             .data(this._edges, edgeId)
             .call(this.updateEdgePositions.bind(this));
+    }
+
+    private createDraggedEdge(sourceNode: Node, sourceHandle: LinkHandle): DraggedEdge {
+        // TODO add javascript api functions for customization
+        const validTargets = new Set<string>();
+        this._nodes.forEach(node => validTargets.add(node.id.toString()));
+        this.objectCache.getEdgesBySource(sourceNode.id).forEach(edge => validTargets.delete(edge.target.toString()));
+        validTargets.delete(sourceNode.id.toString())
+        const draggedEdge: DraggedEdge = {
+            id: sourceNode.id.toString() + Date.now().toString(),
+            source: sourceNode.id,
+            target: null,
+            validTargets: validTargets,
+            currentTarget: {x: event.x, y: event.y},
+        }
+        this.draggedEdges.push(draggedEdge);
+        return draggedEdge;
     }
 
     /**
