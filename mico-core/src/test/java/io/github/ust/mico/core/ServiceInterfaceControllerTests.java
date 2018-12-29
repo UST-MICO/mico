@@ -90,6 +90,48 @@ public class ServiceInterfaceControllerTests {
             .andReturn();
     }
 
+    @Test
+    public void getSpecificServiceInterface() throws Exception{
+        ServiceInterface serviceInterface = getTestServiceInterface();
+        given(serviceRepository.findInterfaceOfServiceByName(serviceInterface.getServiceInterfaceName(), ServiceControllerTests.SHORT_NAME, ServiceControllerTests.VERSION)).willReturn(
+            Optional.of(serviceInterface));
+
+        mvc.perform(get(INTERFACES_URL + serviceInterface.getServiceInterfaceName()).accept(MediaTypes.HAL_JSON_VALUE))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(getServiceInterfaceMatcher(serviceInterface,INTERFACES_URL,SERVICE_URL))
+            .andReturn();
+
+    }
+
+    @Test
+    public void getSpecificServiceInterfaceNotFound() throws Exception{
+        given(serviceRepository.findInterfaceOfServiceByName(any(), any(), any())).willReturn(
+            Optional.empty());
+
+        mvc.perform(get(INTERFACES_URL + "NotThereInterface").accept(MediaTypes.HAL_JSON_VALUE))
+            .andDo(print())
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    }
+
+    @Test
+    public void getAllServiceInterfacesOfService() throws Exception{
+        ServiceInterface serviceInterface0 = new ServiceInterface("ServiceInterface0");
+        ServiceInterface serviceInterface1 = new ServiceInterface("ServiceInterface1");
+        List<ServiceInterface> serviceInterfaces =  Arrays.asList(serviceInterface0,serviceInterface1);
+        given(serviceRepository.findInterfacesOfService(ServiceControllerTests.SHORT_NAME, ServiceControllerTests.VERSION)).willReturn(
+            serviceInterfaces);
+        mvc.perform(get(INTERFACES_URL).accept(MediaTypes.HAL_JSON_VALUE))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$._embedded.serviceInterfaceList[*]",hasSize(serviceInterfaces.size())))
+            .andExpect(jsonPath("$._embedded.serviceInterfaceList[?(@.serviceInterfaceName =='"+serviceInterface0.getServiceInterfaceName()+"')]",hasSize(1)))
+            .andExpect(jsonPath("$._embedded.serviceInterfaceList[?(@.serviceInterfaceName =='"+serviceInterface1.getServiceInterfaceName()+"')]",hasSize(1)))
+            .andReturn();
+    }
+
 
     private ServiceInterface getTestServiceInterface() {
         ServiceInterface serviceInterface = new ServiceInterface("ServiceInterface");
