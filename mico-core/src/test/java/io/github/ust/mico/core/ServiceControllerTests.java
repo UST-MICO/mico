@@ -123,7 +123,7 @@ public class ServiceControllerTests {
                 .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SERVICES_HREF, is(linksServices)))
                 .andReturn();
     }
-    
+
 
 
     private ServiceInterface generateServiceInterface(String serviceInterfaceName1, String serviceInterfaceDescription1, String s, String http) {
