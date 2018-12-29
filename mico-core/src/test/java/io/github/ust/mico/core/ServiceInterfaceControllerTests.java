@@ -43,30 +43,55 @@ public class ServiceInterfaceControllerTests {
 
     @Autowired
     private RequestMappingHandlerMapping handlerMapping;
+    private static final String SERVICE_URL = "/services/" + ServiceControllerTests.SHORT_NAME + "/" + ServiceControllerTests.VERSION;
+    private static final String INTERFACES_URL = SERVICE_URL + "/interfaces/";
 
     @Test
     public void postServiceInterface() throws Exception {
-        String serviceInterfaceName = "ServiceInterface";
         given(serviceRepository.findByShortNameAndVersion(ServiceControllerTests.SHORT_NAME, ServiceControllerTests.VERSION)).willReturn(
             Optional.of(new Service(ServiceControllerTests.SHORT_NAME, ServiceControllerTests.VERSION))
         );
-        given(serviceRepository.findInterfaceOfServiceByName(serviceInterfaceName, ServiceControllerTests.SHORT_NAME, ServiceControllerTests.VERSION)).willReturn(Optional.empty());
-        String serviceUrl = "/services/" + ServiceControllerTests.SHORT_NAME + "/" + ServiceControllerTests.VERSION;
-        String urlTemplate = serviceUrl + "/interfaces/";
 
         ServiceInterface serviceInterface = getTestServiceInterface();
-        mvc.perform(post(urlTemplate)
+        mvc.perform(post(INTERFACES_URL)
             .content(mapper.writeValueAsBytes(serviceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isCreated())
-            .andExpect(getServiceInterfaceMatcher(serviceInterface,urlTemplate,serviceUrl))
+            .andExpect(getServiceInterfaceMatcher(serviceInterface, INTERFACES_URL, SERVICE_URL))
             .andReturn();
     }
 
     @Test
+    public void postServiceNotFound() throws Exception {
+        given(serviceRepository.findByShortNameAndVersion(any(), any())).willReturn(
+            Optional.empty()
+        );
+        ServiceInterface serviceInterface = getTestServiceInterface();
+        mvc.perform(post(INTERFACES_URL)
+            .content(mapper.writeValueAsBytes(serviceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isNotFound())
+            .andReturn();
+    }
+
+    @Test
+    public void postServiceInterfaceExists() throws Exception {
+        ServiceInterface serviceInterface = getTestServiceInterface();
+        Service service = new Service(ServiceControllerTests.SHORT_NAME, ServiceControllerTests.VERSION);
+        service.getServiceInterfaces().add(serviceInterface);
+        given(serviceRepository.findByShortNameAndVersion(ServiceControllerTests.SHORT_NAME, ServiceControllerTests.VERSION)).willReturn(
+            Optional.of(service)
+        );
+        mvc.perform(post(INTERFACES_URL)
+            .content(mapper.writeValueAsBytes(serviceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(status().reason("An interface with this name is already associated with this service."))
+            .andReturn();
+    }
 
 
-    private ServiceInterface getTestServiceInterface(){
+    private ServiceInterface getTestServiceInterface() {
         ServiceInterface serviceInterface = new ServiceInterface("ServiceInterface");
         serviceInterface.setProtocol("HTTP");
         serviceInterface.setPort("1024");
@@ -76,7 +101,7 @@ public class ServiceInterfaceControllerTests {
         return serviceInterface;
     }
 
-    private ResultMatcher getServiceInterfaceMatcher(ServiceInterface serviceInterface, String selfBaseUrl, String serviceUrl){
+    private ResultMatcher getServiceInterfaceMatcher(ServiceInterface serviceInterface, String selfBaseUrl, String serviceUrl) {
         return ResultMatcher.matchAll(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE),
             jsonPath("$.serviceInterfaceName", is(serviceInterface.getServiceInterfaceName())),
             jsonPath("$.port", is(serviceInterface.getPort())),
@@ -88,7 +113,6 @@ public class ServiceInterfaceControllerTests {
             jsonPath(JSON_PATH_LINKS_SECTION + INTERFACES_HREF, endsWith(selfBaseUrl)),
             jsonPath(JSON_PATH_LINKS_SECTION + "service.href", endsWith(serviceUrl)));
     }
-
 
 
 }
