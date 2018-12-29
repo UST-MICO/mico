@@ -53,6 +53,13 @@ public class ServiceInterfaceController {
             new Resource<>(serviceInterface, getServiceInterfaceLinks(serviceInterface, shortName, version))).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
+    @DeleteMapping(SERVICE_INTERFACE_PATH + "{" + PATH_VARIABLE_SERVICE_INTERFACE_NAME + "}")
+    void deleteServiceInterface(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                        @PathVariable(PATH_VARIABLE_VERSION) String version,
+                        @PathVariable(PATH_VARIABLE_SERVICE_INTERFACE_NAME) String serviceInterfaceName) {
+        serviceRepository.deleteInterfaceOfServiceByName(serviceInterfaceName,shortName,version);
+    }
+
 
     /**
      * This is not transactional. At the moment we have only one user. If this changes transactional support
