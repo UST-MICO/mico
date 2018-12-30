@@ -18,7 +18,7 @@ export class DashboardComponent implements OnInit {
         this.getApplications();
     }
 
-    @Input() applications: ApiObject[];
+    applications: ApiObject;
 
     displayedColumns: string[] = ['id', 'name', 'shortName'];
 
@@ -27,23 +27,26 @@ export class DashboardComponent implements OnInit {
 
         // test calls
         this.apiService.getServices().subscribe(val => {
-            console.log(val);
+            console.log('getServices', val);
         });
 
-        this.apiService.getService('test.service').subscribe(val => {
-            console.log(val);
+        this.apiService.getServiceVersions('test.service').subscribe(val => {
+            console.log('getServiceVersions', val);
         });
 
         this.apiService.getService('test.service', 'v1').subscribe(val => {
-            console.log(val);
+            console.log('getService', val);
         });
 
+        /*
+        // Throws exceptions in the backend
         this.apiService.getServiceDependees('test.service', 'v1').subscribe(val => {
-            console.log(val);
+            console.log('getServiceDependees', val);
         });
+        */
 
         this.apiService.getServiceDependers('test.service', 'v1').subscribe(val => {
-            console.log(val);
+            console.log('getServiceDependers', val);
         });
     }
 

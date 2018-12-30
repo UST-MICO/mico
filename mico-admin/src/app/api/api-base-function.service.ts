@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Http, Response, Headers, RequestOptions, ResponseContentType } from '@angular/http';
 import { Observable } from 'rxjs';
 import { map, } from 'rxjs/operators';
+import { ApiObject } from './apiobject';
 
 
 // TODO remove API Object ... (use the other one)
@@ -15,10 +16,6 @@ export interface ApiLinksObject {
     [propName: string]: LinkObject;
 }
 
-export interface ApiObject {
-    readonly _links: ApiLinksObject;
-    [propName: string]: any;
-}
 
 function isApiObject(toTest: any): toTest is ApiObject {
     return '_links' in toTest;
@@ -54,7 +51,7 @@ export class ApiBaseFunctionService {
         if (isLinkObject(url)) {
             url = url.href;
         }
-        return this.prepareRelativeUrl(url);
+        return this.prepareRelativeUrl(url as string);
     }
 
     private prepareRelativeUrl(url: string): string {

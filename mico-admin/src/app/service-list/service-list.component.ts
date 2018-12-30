@@ -1,9 +1,10 @@
 import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { ApiService } from '../api/api.service';
-import { ApiObject } from '../api/apiobject';
 import { Subscription } from 'rxjs';
 import { from } from 'rxjs';
 import { groupBy, mergeMap, toArray } from 'rxjs/operators';
+import { ApiObject } from '../api/apiobject';
+
 
 @Component({
     selector: 'mico-service-list',
@@ -20,7 +21,7 @@ export class ServiceListComponent implements OnInit, OnDestroy {
         this.getServices();
     }
 
-    @Input() services: ApiObject[];
+    services: ApiService[];
 
     displayedColumns: string[] = ['id', 'name', 'shortName', 'description'];
 
@@ -36,13 +37,16 @@ export class ServiceListComponent implements OnInit, OnDestroy {
     getServices(): void {
 
         // group services by shortName
-        const tempServices: ApiObject[] = [];
+        const tempServices: any[] = [];
         this.subServices = this.apiService.getServices()
             .subscribe(val => {
-                from(val).pipe(groupBy(service => service.shortName), mergeMap(group => group.pipe(toArray())))
+
+                from(val as unknown as ArrayLike<ApiObject>)
+                    .pipe(groupBy(service => service.shortName), mergeMap(group => group.pipe(toArray())))
                     .subscribe(group => {
                         tempServices.push(group[0]);
                     });
+
                 this.services = tempServices;
             });
 

@@ -2,8 +2,11 @@ import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
 import { ApiService } from '../api/api.service';
-import { ApiObject } from '../api/apiobject';
 import { Subscription } from 'rxjs';
+
+export interface Service {
+    name: string;
+}
 
 @Component({
     selector: 'mico-service-detail',
@@ -20,14 +23,13 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
         private route: ActivatedRoute,
     ) { }
 
-    @Input() service: ApiObject;
+    service: Service;
 
     id: number;
 
     ngOnInit() {
         this.subParam = this.route.params.subscribe(params => {
 
-            // TODO consider moving the code for the latest version from detail-overview to here and passing the data into detail-overview.
             this.update(params['shortName']);
         });
     }
@@ -50,8 +52,22 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
             this.subService.unsubscribe();
         }
 
-        this.subService = this.apiService.getService(shortName)
-            .subscribe(service => this.service = service);
+        // get latest version
+        let version = 'a';
+        this.subService = this.apiService.getServiceVersions(shortName)
+            .subscribe(serviceVersions => {
+
+                serviceVersions.forEach(element => {
+
+                    // TODO implement comparison for our versioning
+                    if (element.version > version) {
+                        version = element.version;
+                        this.service = element;
+
+                    }
+
+                });
+            });
     }
 
 }

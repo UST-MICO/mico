@@ -8,6 +8,11 @@ import { MatDialog } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 import { CreateServiceInterfaceComponent } from '../dialogs/create-service-interface/create-service-interface.component'
 
+export interface Dependency {
+    id;
+    version;
+}
+
 @Component({
     selector: 'mico-service-detail-overview',
     templateUrl: './service-detail-overview.component.html',
@@ -34,7 +39,7 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
     @Input() service: ApiObject;
     internalDependencies = [];
     externalDependencies = [];
-    serviceInterfaces = [];
+    serviceInterfaces: any;
 
 
     // will be used by the update form
@@ -49,20 +54,9 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
         this.paramSubscription = this.route.params.subscribe(params => {
 
             const shortName = params['shortName'];
+            console.log('service-detail-overview', this.service);
 
-            // get latest version
-            let version = -1;
-            this.subVersion = this.apiService.getService(shortName).subscribe(service => {
-                service.array.forEach(element => {
-
-                    // TODO implement comparison for our versioning
-                    if (element.version > version) {
-                        version = element.version;
-                    }
-                });
-            });
-
-            //this.update(shortName, version);
+            this.update(shortName, this.service.version);
         });
     }
 
@@ -115,7 +109,8 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
         this.externalDependencies = external;
 
         // TODO insert dropdown to choose a service
-        this.subServiceInterfaces = this.apiService.getServiceInterfaces(shortName).subscribe(element => this.serviceInterfaces = element);
+        this.subServiceInterfaces = this.apiService.getServiceInterfaces(shortName, version)
+            .subscribe(element => this.serviceInterfaces = element);
 
 
     }
@@ -127,11 +122,13 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
         this.edit = !this.edit;
     }
 
-    getServiceMetaData(id) {
+    getServiceMetaData(service) {
+        // TODO change method calls to hold a proper service
         let service_object;
-        this.apiService.getService(id).subscribe(val => service_object = val);
+        this.apiService.getService(service.id, service.version).subscribe(val => service_object = val);
         const tempObject = {
-            'id': id,
+            'id': service.id,
+            'version': service.version,
             'name': service_object.name,
             'shortName': service_object.shortName,
             'status': service_object.status,

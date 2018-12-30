@@ -1,10 +1,10 @@
-<h3 class="ma3">Service {{service.name}}</h3>
+<h3 class="ma3">Service: {{service.name}}</h3>
 <mat-divider></mat-divider>
 
 <mat-card class="ma2">
     <mat-tab-group>
         <mat-tab label="Overview">
-            <mico-service-detail-overview></mico-service-detail-overview>
+            <mico-service-detail-overview [service]="service | async"></mico-service-detail-overview>
         </mat-tab>
         <mat-tab label="Deployment">
             Service-Detail-Deployment...

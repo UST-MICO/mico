@@ -74,16 +74,16 @@ export class ApiService {
     /**
      * Get service list
      */
-    getServices(): Observable<Readonly<ApiObject[]>> {
+    getServices(): Observable<Readonly<ApiObject>> {
         const resource = 'services';
         const stream = this.getStreamSource(resource);
 
         this.rest.get(resource).subscribe(val => {
             // return actual service list
-            stream.next(freezeObject((val as ApiObject)._embedded.serviceList));
+            stream.next(freezeObject((val as ApiObject)._embedded.serviceList as ApiObject));
         });
 
-        return (stream.asObservable() as Observable<Readonly<ApiObject[]>>).pipe(
+        return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
             filter(data => data !== undefined)
         );
     }
@@ -91,19 +91,21 @@ export class ApiService {
     /**
      * Get application list
      */
-    getApplications(): Observable<Readonly<ApiObject[]>> {
+    getApplications(): Observable<Readonly<ApiObject>> {
         const resource = 'applications';
         const stream = this.getStreamSource(resource);
 
         // TODO
         const mockData: ApiObject[] = [
             {
+                '_links': 'self',
                 'id': '2',
                 'name': 'Hello World Service',
                 'shortName': 'test.hello-world-service',
                 'description': 'A generic hello world service',
             },
             {
+                '_links': 'self',
                 'id': '4',
                 'name': 'Bye  Service',
                 'shortName': 'test.bye-service',
@@ -113,7 +115,7 @@ export class ApiService {
 
         stream.next(freezeObject(mockData));
 
-        return (stream.asObservable() as Observable<Readonly<ApiObject[]>>).pipe(
+        return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
             filter(data => data !== undefined)
         );
     }
@@ -125,6 +127,7 @@ export class ApiService {
 
         // TODO
         const mockData: ApiObject = {
+            '_links': 'self',
             'id': id,
             'name': 'Hello World Application id ' + id,
             'shortName': 'test.' + id + 'application',
@@ -133,7 +136,7 @@ export class ApiService {
 
         stream.next(mockData);
 
-        return (stream.asObservable() as Observable<ApiObject[]>).pipe(
+        return (stream.asObservable() as Observable<ApiObject>).pipe(
             filter(data => data !== undefined)
         );
     }
@@ -141,16 +144,16 @@ export class ApiService {
     /**
      * Get all versions of a service based on its shortName
      */
-    getService(shortName): Observable<ApiObject> {
+    getServiceVersions(shortName): Observable<ApiObject> {
 
         const resource = 'services/' + shortName + '/';
         const stream = this.getStreamSource(resource);
 
         this.rest.get(resource).subscribe(val => {
-            stream.next(freezeObject((val as ApiObject)._embedded.serviceList));
+            stream.next(freezeObject((val as ApiObject)._embedded.serviceList as ApiObject));
         });
 
-        return (stream.asObservable() as Observable<Readonly<ApiObject[]>>).pipe(
+        return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
             filter(data => data !== undefined)
         );
     }
@@ -170,7 +173,7 @@ export class ApiService {
             stream.next(freezeObject((val as ApiObject)));
         });
 
-        return (stream.asObservable() as Observable<Readonly<ApiObject[]>>).pipe(
+        return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
             filter(data => data !== undefined)
         );
     }
@@ -190,7 +193,7 @@ export class ApiService {
             stream.next(freezeObject((val as ApiObject)));
         });
 
-        return (stream.asObservable() as Observable<Readonly<ApiObject[]>>).pipe(
+        return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
             filter(data => data !== undefined)
         );
     }
@@ -210,12 +213,12 @@ export class ApiService {
             stream.next(freezeObject((val as ApiObject)));
         });
 
-        return (stream.asObservable() as Observable<Readonly<ApiObject[]>>).pipe(
+        return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
             filter(data => data !== undefined)
         );
     }
 
-    getServiceInterfaces(shortName, version): Observable<ApiObject[]> {
+    getServiceInterfaces(shortName, version): Observable<ApiObject> {
         const resource = 'services/' + shortName + '/' + version + '/interfaces';
         const stream = this.getStreamSource(resource);
 
@@ -223,7 +226,7 @@ export class ApiService {
             stream.next(freezeObject((val as ApiObject)));
         });
 
-        return (stream.asObservable() as Observable<Readonly<ApiObject[]>>).pipe(
+        return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
             filter(data => data !== undefined)
         );
     }
