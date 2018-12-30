@@ -6,6 +6,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -48,6 +49,9 @@ public class ServiceControllerTests {
     private static final String VERSION_TO_DELETE = "1.0.1";
     private static final String DELETE_SPECIFIC_DEPENDEES_PATH = "/services/" + SHORT_NAME + "/" + VERSION + "/dependees/" + SHORT_NAME_TO_DELETE + "/" + VERSION_TO_DELETE;
     private static final Long TEST_ID = new Long(45325345);
+
+    @Value("${cors-policy.allowed-origins}")
+    String[] allowedOrigins;
 
     @Autowired
     private MockMvc mvc;
@@ -226,6 +230,28 @@ public class ServiceControllerTests {
             .andDo(print());
 
         resultDelete.andExpect(status().isCreated());
+    }
+
+
+    @Test
+    public void corsPolicy() throws Exception {
+
+        mvc.perform(get("/services/").accept(MediaTypes.HAL_JSON_VALUE)
+            .header("Origin", allowedOrigins))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, endsWith("/services"))).andReturn();
+    }
+
+    @Test
+    public void corsPolicyNotAllowedOrigin() throws Exception {
+
+        mvc.perform(get("/services/").accept(MediaTypes.HAL_JSON_VALUE)
+            .header("Origin", "http://notAllowedOrigin.com"))
+            .andDo(print())
+            .andExpect(status().isForbidden())
+            .andExpect(content().string(is("Invalid CORS request")))
+            .andReturn();
     }
 
 }
