@@ -99,8 +99,12 @@ public class MicoService {
     private List<MicoServiceDependency> dependencies;
 
     /**
-     * Human readable contact information for support purposes.
+     * Same MicoService with previous version.
      */
+    @Relationship(type = "PREDECESSOR", direction = Relationship.OUTGOING)
+    private MicoService predecessor;
+
+    // Human readable contact information for support purposes.
     private String contact;
 
     /**
