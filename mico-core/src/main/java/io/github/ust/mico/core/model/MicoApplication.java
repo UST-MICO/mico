@@ -32,16 +32,16 @@ public class MicoApplication {
     // -> Required fields ---
     // ----------------------
 
-    // TODO: @Jakob -> Do we want to store the IDs or link the services?
+    // TODO: @Jakob -> Do we want to link the DB object instead of the ID?
     // The ids of the services this application is composed of.
     @ApiModelProperty(required = true)
     @Singular
-    @Relationship //TODO: @Jan -> add more info
+    @Relationship //TODO: @Jan -> add more info / annotation needed?
     private final List<Long> services;
 
     // The information necessary for deploying this application.
     @ApiModelProperty(required = true)
-    @Relationship  //TODO: @Jan -> add more info
+    @Relationship  //TODO: @Jan -> add more info / annotation needed?
     private final MicoApplicationDeploymentInfo deploymentInfo;
 
 }

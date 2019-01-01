@@ -31,6 +31,7 @@ public class MicoServiceInterface {
     // -> Required fields ---
     // ----------------------
 
+    // TODO: serviceId needed? MicoService is already linked via PROVIDES-Relationship.
     // The id of the parent service.
     @ApiModelProperty(required = true)
     private final long serviceId;
@@ -38,7 +39,7 @@ public class MicoServiceInterface {
     // The list of ports.
     @ApiModelProperty(required = true)
     @Singular
-    @Relationship  //TODO: @Jan -> add more info
+    @Relationship  //TODO: @Jan -> add more info / annotation needed?
     private final List<MicoServicePort> ports;
 
 

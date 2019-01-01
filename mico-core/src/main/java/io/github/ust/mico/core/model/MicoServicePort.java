@@ -4,13 +4,14 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Value;
+import org.neo4j.ogm.annotation.NodeEntity;
 
 /**
  * Represents a basic port with a port number and port type (protocol).
  */
-// TODO: @Jakob -> How do you want to store these entities in the database? -> @NodeEntity ?
 @Value
 @Builder
+@NodeEntity
 public class MicoServicePort {
 
     // ----------------------

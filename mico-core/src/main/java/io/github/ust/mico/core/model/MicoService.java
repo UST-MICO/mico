@@ -42,6 +42,7 @@ public class MicoService {
     @ApiModelProperty(required = true)
     private final String name;
 
+    // TODO: add version object instead of String
     // The version of this service.
     @ApiModelProperty(required = true)
     private final String version;
@@ -75,6 +76,11 @@ public class MicoService {
     @Relationship(type = "DEPENDS_ON", direction = Relationship.UNDIRECTED)
     @Singular
     private List<MicoServiceDependency> dependencies;
+
+    // Same MicoService with previous version.
+    @Relationship(type = "PREDECESSOR", direction = Relationship.OUTGOING)
+    // TODO: @Jakob -> annotation @Singular needed?
+    private MicoService predecessor;
 
     // Human readable contact information for support purposes.
     private String contact;

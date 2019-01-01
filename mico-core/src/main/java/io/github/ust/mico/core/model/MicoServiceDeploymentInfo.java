@@ -28,6 +28,7 @@ public class MicoServiceDeploymentInfo {
     @GeneratedValue
     private final long id;
 
+    // TODO: @Jakob -> Do we want to link the DB object instead of the ID?
     // The id of the parent service.
     @ApiModelProperty(required = true)
     private final long serviceId;

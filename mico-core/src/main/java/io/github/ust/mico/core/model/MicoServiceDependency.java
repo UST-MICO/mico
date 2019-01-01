@@ -27,6 +27,7 @@ public class MicoServiceDependency {
     // -> Required fields ---
     // ----------------------
 
+    // TODO: serviceId needed? MicoService is linked via RelationshipEntity.
     // The id of the depended service.
     @ApiModelProperty(required = true)
     private final long serviceId;
