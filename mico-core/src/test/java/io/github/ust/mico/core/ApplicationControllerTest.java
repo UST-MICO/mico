@@ -1,5 +1,6 @@
 package io.github.ust.mico.core;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ust.mico.core.REST.ApplicationController;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -11,12 +12,14 @@ import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.Arrays;
 import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -30,12 +33,20 @@ public class ApplicationControllerTest {
 
     private static final String JSON_PATH_LINKS_SECTION = "$._links.";
     private static final String SELF_HREF = "self.href";
+    private static final String SHORT_NAME = "ApplicationShortName";
+    private static final String VERSION = "1.0.0";
+    private static final String DESCRIPTION = "Some Application description";
+
+    private static final String BASE_PATH = "/applications/";
 
     @Autowired
     private MockMvc mvc;
 
     @MockBean
     private ApplicationRepository applicationRepository;
+
+    @Autowired
+    private ObjectMapper mapper;
 
     @Test
     public void getAllApplications() throws Exception {
@@ -74,6 +85,19 @@ public class ApplicationControllerTest {
                 .andReturn();
     }
 
-    
+    @Test
+    public void createApplication() throws Exception {
+        Application application = new Application(SHORT_NAME, VERSION);
+        application.setDescription(DESCRIPTION);
+
+        given(applicationRepository.save(any(Application.class))).willReturn(application);
+
+        final ResultActions result = mvc.perform(post(BASE_PATH)
+                .content(mapper.writeValueAsBytes(application))
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print());
+
+        result.andExpect(status().isCreated());
+    }
 
 }
