@@ -47,7 +47,8 @@ public class ServiceControllerTests {
     private static final String DEPENDEES_BASE_PATH = "/services/" + SHORT_NAME + "/" + VERSION + "/dependees";
     private static final String SHORT_NAME_TO_DELETE = "shortNameToDelete";
     private static final String VERSION_TO_DELETE = "1.0.1";
-    private static final String DELETE_SPECIFIC_DEPENDEES_PATH = "/services/" + SHORT_NAME + "/" + VERSION + "/dependees/" + SHORT_NAME_TO_DELETE + "/" + VERSION_TO_DELETE;
+    private static final String DELETE_SPECIFIC_DEPENDEES_PATH = "/services/" + SHORT_NAME + "/" + VERSION + "/dependees" + SHORT_NAME_TO_DELETE + "/" + VERSION_TO_DELETE;
+    private static final String DEPENDERS_PATH = "/services/" + SHORT_NAME + "/" + VERSION + "/dependers";
     private static final Long TEST_ID = new Long(45325345);
 
 
@@ -63,38 +64,38 @@ public class ServiceControllerTests {
     @Test
     public void getCompleteServiceList() throws Exception {
         given(serviceRepository.findAll()).willReturn(
-            Arrays.asList(
-                new Service("ShortName1", "1.0.1", "Test service"),
-                new Service("ShortName1", "1.0.0", "Test service"),
-                new Service("ShortName2", "1.0.0", "Test service2")));
+                Arrays.asList(
+                        new Service("ShortName1", "1.0.1", "Test service"),
+                        new Service("ShortName1", "1.0.0", "Test service"),
+                        new Service("ShortName2", "1.0.0", "Test service2")));
 
         mvc.perform(get("/services").accept(MediaTypes.HAL_JSON_VALUE))
-            .andDo(print())
-            .andExpect(status().isOk())
-            .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$._embedded.serviceList[*]", hasSize(3)))
-            .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ShortName1' && @.version == '1.0.0' && @.description == 'Test service' )]", hasSize(1)))
-            .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ShortName1' && @.version == '1.0.1' && @.description == 'Test service' )]", hasSize(1)))
-            .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ShortName2' && @.version == '1.0.0' && @.description == 'Test service2' )]", hasSize(1)))
-            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "self.href", is("http://localhost/services")))
-            .andReturn();
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andExpect(jsonPath("$._embedded.serviceList[*]", hasSize(3)))
+                .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ShortName1' && @.version == '1.0.0' && @.description == 'Test service' )]", hasSize(1)))
+                .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ShortName1' && @.version == '1.0.1' && @.description == 'Test service' )]", hasSize(1)))
+                .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ShortName2' && @.version == '1.0.0' && @.description == 'Test service2' )]", hasSize(1)))
+                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "self.href", is("http://localhost/services")))
+                .andReturn();
     }
 
     @Test
     public void getServiceViaShortNameAndVersion() throws Exception {
         given(serviceRepository.findByShortNameAndVersion("ShortName1", "1.0.1")).willReturn(
-            Optional.of(new Service("ShortName1", "1.0.1", "Test service")));
+                Optional.of(new Service("ShortName1", "1.0.1", "Test service")));
 
         mvc.perform(get("/services/ShortName1/1.0.1").accept(MediaTypes.HAL_JSON_VALUE))
-            .andDo(print())
-            .andExpect(status().isOk())
-            .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.description", is("Test service")))
-            .andExpect(jsonPath("$.shortName", is("ShortName1")))
-            .andExpect(jsonPath("$.version", is("1.0.1")))
-            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/services/ShortName1/1.0.1")))
-            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "services.href", is("http://localhost/services")))
-            .andReturn();
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andExpect(jsonPath("$.description", is("Test service")))
+                .andExpect(jsonPath("$.shortName", is("ShortName1")))
+                .andExpect(jsonPath("$.version", is("1.0.1")))
+                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/services/ShortName1/1.0.1")))
+                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "services.href", is("http://localhost/services")))
+                .andReturn();
     }
 
     //TODO: Verfiy how to test an autogenerated id
@@ -125,7 +126,6 @@ public class ServiceControllerTests {
     }
 
 
-
     private ServiceInterface generateServiceInterface(String serviceInterfaceName1, String serviceInterfaceDescription1, String s, String http) {
         ServiceInterface serviceInterface1 = new ServiceInterface(serviceInterfaceName1);
         serviceInterface1.setDescription(serviceInterfaceDescription1);
@@ -141,9 +141,9 @@ public class ServiceControllerTests {
         given(serviceRepository.save(any(Service.class))).willReturn(service);
 
         final ResultActions result = mvc.perform(post(BASE_PATH)
-            .content(mapper.writeValueAsBytes(service))
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print());
+                .content(mapper.writeValueAsBytes(service))
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print());
 
         result.andExpect(status().isCreated());
     }
@@ -156,8 +156,8 @@ public class ServiceControllerTests {
         given(serviceRepository.save(any(Service.class))).willReturn(service);
 
         ResultActions resultDelete = mvc.perform(delete(DEPENDEES_BASE_PATH)
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print());
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print());
 
         resultDelete.andExpect(status().isCreated());
     }
@@ -174,10 +174,46 @@ public class ServiceControllerTests {
         System.out.println(DELETE_SPECIFIC_DEPENDEES_PATH);
 
         ResultActions resultDelete = mvc.perform(delete(DELETE_SPECIFIC_DEPENDEES_PATH)
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print());
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print());
 
         resultDelete.andExpect(status().isCreated());
+    }
+
+    @Test
+    public void getServiceDependers() throws Exception {
+        Service service = new Service(SHORT_NAME, VERSION, DESCRIPTION);
+        Service serviceOne = new Service("ServiceShortNameOne", "1.0.0", "Some test service description");
+        Service serviceTwo = new Service("ServiceShortNameOne", "2.0.1", "Some test service description");
+        Service serviceThree = new Service("ServiceShortNameTwo", "1.0.0", "Some test service description");
+
+        List<DependsOn> dependsOnOne = new LinkedList<>();
+        List<DependsOn> dependsOnTwo = new LinkedList<>();
+        List<DependsOn> dependsOnThree = new LinkedList<>();
+
+        dependsOnOne.add(new DependsOn(serviceOne,service));
+        dependsOnTwo.add(new DependsOn(serviceTwo,service));
+        dependsOnThree.add(new DependsOn(serviceThree,service));
+
+        serviceOne.setDependsOn(dependsOnOne);
+        serviceTwo.setDependsOn(dependsOnTwo);
+        serviceThree.setDependsOn(dependsOnThree);
+
+        given(serviceRepository.findAll()).willReturn(Arrays.asList(service,serviceOne,serviceTwo,serviceThree));
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
+
+        ResultActions result = mvc.perform(get(DEPENDERS_PATH)
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print())
+                .andExpect(jsonPath("$._embedded.serviceList[*]", hasSize(3)))
+                .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ServiceShortNameOne' && @.version == '1.0.0' && @.description == 'Some test service description' )]", hasSize(1)))
+                .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ServiceShortNameOne' && @.version == '2.0.1' && @.description == 'Some test service description' )]", hasSize(1)))
+                .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ServiceShortNameTwo' && @.version == '1.0.0' && @.description == 'Some test service description' )]", hasSize(1)))
+                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "self.href", is("http://localhost" + DEPENDERS_PATH)));
+
+
+        result.andExpect(status().isOk());
+
     }
 
 }
