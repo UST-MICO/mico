@@ -36,4 +36,4 @@
         </div>
     </mat-expansion-panel>
 </mat-accordion>
-<ng-container *ngIf="x && data"><mico-chart #chart [data]="data" [x]="x"></mico-chart></ng-container>
+<ng-container *ngIf="xLabels && data"><mico-chart #chart [data]="data" [xLabels]="xLabels"></mico-chart></ng-container>

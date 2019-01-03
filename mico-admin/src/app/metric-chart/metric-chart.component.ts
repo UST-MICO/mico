@@ -15,7 +15,7 @@ export class MetricChartComponent implements OnInit {
     min: Date;
     max: Date;
     label: string;
-    x = [
+    xLabels = [
         'x',
         '2018-11-29',
         '2018-11-30',

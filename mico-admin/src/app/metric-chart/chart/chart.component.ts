@@ -10,7 +10,7 @@ import * as c3 from 'c3';
 export class ChartComponent implements OnInit, OnChanges {
     chart: any;
     @Input() data: any;
-    @Input() x: any;
+    @Input() xLabels: any;
     constructor() {}
 
     ngOnInit() {
@@ -20,7 +20,7 @@ export class ChartComponent implements OnInit, OnChanges {
         this.chart = c3.generate({
             data: {
                 x: 'x',
-                columns: [this.x, ...this.data]
+                columns: [this.xLabels, ...this.data]
             },
             axis: {
                 x: {
