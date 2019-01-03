@@ -13,6 +13,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
@@ -28,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class ApplicationControllerTest {
 
     private static final String JSON_PATH_LINKS_SECTION = "$._links.";
+    private static final String SELF_HREF = "self.href";
 
     @Autowired
     private MockMvc mvc;
@@ -36,7 +38,7 @@ public class ApplicationControllerTest {
     private ApplicationRepository applicationRepository;
 
     @Test
-    public void getCompleteApplicationList() throws Exception {
+    public void getAllApplications() throws Exception {
         given(applicationRepository.findAll()).willReturn(
                 Arrays.asList(
                         new Application("ShortName1", "1.0.1"),
@@ -55,4 +57,23 @@ public class ApplicationControllerTest {
                 .andReturn();
 
     }
+
+    @Test
+    public void getApplicationByShortNameAndVersion() throws Exception {
+        given(applicationRepository.findByShortNameAndVersion("ApplicationShortName","1.1.0")).willReturn(
+                Optional.of(new Application("ApplicationShortName","1.1.0")));
+
+        mvc.perform(get("/applications/ApplicationShortName/1.1.0").accept(MediaTypes.HAL_JSON_VALUE))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andExpect(jsonPath("$.shortName", is("ApplicationShortName")))
+                .andExpect(jsonPath("$.version", is("1.1.0")))
+                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/applications/ApplicationShortName/1.1.0")))
+                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "applications.href", is("http://localhost/applications")))
+                .andReturn();
+    }
+
+    
+
 }
