@@ -47,7 +47,7 @@ public class ServiceControllerTests {
     private static final String DEPENDEES_BASE_PATH = "/services/" + SHORT_NAME + "/" + VERSION + "/dependees";
     private static final String SHORT_NAME_TO_DELETE = "shortNameToDelete";
     private static final String VERSION_TO_DELETE = "1.0.1";
-    private static final String DELETE_SPECIFIC_DEPENDEES_PATH = "/services/" + SHORT_NAME + "/" + VERSION + "/dependees" + SHORT_NAME_TO_DELETE + "/" + VERSION_TO_DELETE;
+    private static final String DELETE_SPECIFIC_DEPENDEES_PATH = "/services/" + SHORT_NAME + "/" + VERSION + "/dependees/" + SHORT_NAME_TO_DELETE + "/" + VERSION_TO_DELETE;
     private static final String DEPENDERS_PATH = "/services/" + SHORT_NAME + "/" + VERSION + "/dependers";
     private static final Long TEST_ID = new Long(45325345);
 
