@@ -1,0 +1,42 @@
+<!-- sample component for usage-->
+<mat-accordion multi="true">
+    <mat-expansion-panel class="expansionpanel">
+        <mat-expansion-panel-header>
+            <mat-panel-title>Data</mat-panel-title>
+            <mat-panel-description>work with data</mat-panel-description>
+        </mat-expansion-panel-header>
+        <div class="metrics-form-container">
+            <button mat-raised-button matInput (click)="dataChange()">Fetch Data</button>
+            <mat-form-field>
+                <input
+                    matInput
+                    placeholder="Startdatum"
+                    [(ngModel)]="min"
+                    [owlDateTimeTrigger]="dtStart"
+                    [owlDateTime]="dtStart"
+                /><owl-date-time #dtStart></owl-date-time>
+            </mat-form-field>
+            <mat-form-field>
+                <input matInput placeholder="Enddatum" [(ngModel)]="max" [owlDateTimeTrigger]="dt" [owlDateTime]="dt" />
+                <owl-date-time #dt></owl-date-time>
+            </mat-form-field>
+        </div>
+    </mat-expansion-panel>
+
+    <mat-expansion-panel class="expansionpanel" *ngIf="dataLabels">
+        <mat-expansion-panel-header>
+            <mat-panel-title>Data Labels</mat-panel-title>
+            <mat-panel-description>Select the labels to show</mat-panel-description>
+        </mat-expansion-panel-header>
+        <div class="metrics-form-container">
+            <mat-list>
+                <mat-list-item *ngFor="let label of dataLabels">
+                    <mat-checkbox checked="true" (change)="changeLabelCheckbox($event, label)">{{ label }}</mat-checkbox>
+                </mat-list-item>
+            </mat-list>
+        </div>
+    </mat-expansion-panel>
+</mat-accordion>
+<ng-container *ngIf="xLabels && data">
+    <mico-chart #chart [data]="data" [xLabels]="xLabels" [format]="'%y-%m-%d'"></mico-chart>
+</ng-container>

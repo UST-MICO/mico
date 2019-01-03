@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild, Input } from '@angular/core';
-import GraphEditor from 'mico-grapheditor/src/mico-graph';
+// import GraphEditor from 'mico-grapheditor/src/mico-graph';
 import { Edge } from 'mico-grapheditor/src/edge';
 import { Node } from 'mico-grapheditor/src/node';
 
@@ -28,12 +28,11 @@ const NODE_TEMPLATE = {
     styleUrls: ['./app-dependency-graph.component.css']
 })
 export class AppDependencyGraphComponent implements OnInit {
-
     @ViewChild('graph') graph;
     @Input() nodes: [any];
     @Input() edges: [any];
 
-    constructor() { }
+    constructor() {}
 
     ngOnInit() {
         if (this.graph != null) {
@@ -57,13 +56,12 @@ export class AppDependencyGraphComponent implements OnInit {
         const ySize = 70;
 
         this.nodes.forEach(node => {
-
             graphNodes.push({
                 id: node.id,
                 x: x * xSize,
                 y: y * ySize,
                 title: node.title,
-                type: node.type,
+                type: node.type
             });
 
             x += 1;
@@ -73,14 +71,13 @@ export class AppDependencyGraphComponent implements OnInit {
             }
         });
 
-
         graph.setNodes(graphNodes);
 
         const graphEdges = [];
         this.edges.forEach(edge => {
             graphEdges.push({
                 source: edge.source,
-                target: edge.target,
+                target: edge.target
             });
         });
 
@@ -97,5 +94,4 @@ export class AppDependencyGraphComponent implements OnInit {
 
         this.graph.nativeElement.zoomToBoundingBox(false);
     }
-
 }
