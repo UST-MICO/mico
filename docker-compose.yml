@@ -1,0 +1,17 @@
+version: "3"
+services:
+  neo4j:
+    image: "neo4j"
+    ports:
+     - "7474:7474"
+     - "7687:7687"
+    environment:
+     - NEO4J_AUTH=none
+  mico-backend:
+    build: .
+    ports:
+     - "8080:8080"
+    depends_on:
+     - neo4j
+    environment:
+     - spring.data.neo4j.uri=bolt://neo4j

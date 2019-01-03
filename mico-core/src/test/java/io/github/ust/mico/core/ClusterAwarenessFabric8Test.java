@@ -1,8 +1,8 @@
 package io.github.ust.mico.core;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentList;
@@ -27,7 +27,7 @@ public class ClusterAwarenessFabric8Test {
     public void setUp() {
         cluster = new ClusterAwarenessFabric8(server.getClient());
 
-        //Node
+        //Nodes
         server.getClient().nodes().create(new NodeBuilder().withNewMetadata().withName("node1").endMetadata().build());
         server.getClient().nodes().create(new NodeBuilder().withNewMetadata().withName("node2").endMetadata().build());
 
@@ -43,9 +43,15 @@ public class ClusterAwarenessFabric8Test {
         server.getClient().services().inNamespace(namespaceName).create(new ServiceBuilder().withNewMetadata().withName("service1").endMetadata().build());
         server.getClient().services().inNamespace(namespaceName).create(new ServiceBuilder().withNewMetadata().withName("service2").endMetadata().build());
 
-        //Deployment
+        //Deployments
         server.getClient().apps().deployments().inNamespace(namespaceName).create(new DeploymentBuilder().withNewMetadata().withName("deployment1").endMetadata().build());
         server.getClient().apps().deployments().inNamespace(namespaceName).create(new DeploymentBuilder().withNewMetadata().withName("deployment2").endMetadata().build());
+
+        //Secrets
+        server.getClient().secrets().inNamespace(namespaceName).create(new SecretBuilder().withNewMetadata().withName("secret1").endMetadata().build());
+
+        //ServiceAccounts
+        server.getClient().serviceAccounts().inNamespace(namespaceName).create(new ServiceAccountBuilder().withNewMetadata().withName("service-account1").endMetadata().build());
     }
 
     @Test
@@ -145,6 +151,34 @@ public class ClusterAwarenessFabric8Test {
     }
 
     @Test
+    public void getAllSecrets() {
+        SecretList secretList = cluster.getAllSecrets(namespaceName);
+        assertNotNull(secretList);
+        assertEquals(1, secretList.getItems().size());
+    }
+
+    @Test
+    public void getSecret() {
+        Secret secret = cluster.getSecret("secret1", namespaceName);
+        assertNotNull(secret);
+        assertEquals("secret1", secret.getMetadata().getName());
+    }
+
+    @Test
+    public void getAllServiceAccounts() {
+        ServiceAccountList serviceAccountList = cluster.getAllServiceAccounts(namespaceName);
+        assertNotNull(serviceAccountList);
+        assertEquals(1, serviceAccountList.getItems().size());
+    }
+
+    @Test
+    public void getServiceAccount() {
+        ServiceAccount serviceAccount = cluster.getServiceAccount("service-account1", namespaceName);
+        assertNotNull(serviceAccount);
+        assertEquals("service-account1", serviceAccount.getMetadata().getName());
+    }
+
+    @Test
     public void createNamespace() {
         String nsName = "createnamespace";
         cluster.createNamespace(nsName);
@@ -161,9 +195,11 @@ public class ClusterAwarenessFabric8Test {
         Pod pod = new PodBuilder().withNewMetadata().withName("createpod").endMetadata().build();
         cluster.createPod(pod, namespaceName);
         PodList podList = cluster.getAllPods(namespaceName);
+        Pod createdPod = cluster.getPod("createpod", namespaceName);
 
         assertNotNull(podList);
         assertEquals(3, podList.getItems().size());
+        assertNotNull(createdPod);
     }
 
     @Test
@@ -171,9 +207,11 @@ public class ClusterAwarenessFabric8Test {
         Service service = new ServiceBuilder().withNewMetadata().withName("createservice").endMetadata().build();
         cluster.createService(service, namespaceName);
         ServiceList serviceList = cluster.getAllServices();
+        Service createdService = cluster.getService("createservice", namespaceName);
 
         assertNotNull(serviceList);
         assertEquals(3, serviceList.getItems().size());
+        assertNotNull(createdService);
     }
 
     @Test
@@ -181,9 +219,11 @@ public class ClusterAwarenessFabric8Test {
         Deployment deployment = new DeploymentBuilder().withNewMetadata().withName("createdeployment").endMetadata().build();
         cluster.createDeployment(deployment, namespaceName);
         DeploymentList deploymentList = cluster.getAllDeployments(namespaceName);
+        Deployment createdDeployment = cluster.getDeployment("createdeployment", namespaceName);
 
         assertNotNull(deploymentList);
         assertEquals(3, deploymentList.getItems().size());
+        assertNotNull(createdDeployment);
     }
 
     @Test
@@ -235,6 +275,30 @@ public class ClusterAwarenessFabric8Test {
     @Test
     public void deleteFromYaml() throws IOException {
         cluster.deleteFromYaml(new FileInputStream("src/test/resources/hello-kubernetes-deployment.yaml"), namespaceName);
+    }
+
+    @Test
+    public void createSecret() {
+        Secret secret = new SecretBuilder().withNewMetadata().withName("createsecret").endMetadata().build();
+        cluster.createSecret(secret, namespaceName);
+        SecretList secretList = cluster.getAllSecrets(namespaceName);
+        Secret createdSecret = cluster.getSecret("createsecret", namespaceName);
+
+        assertNotNull(secretList);
+        assertEquals(2, secretList.getItems().size());
+        assertNotNull(createdSecret);
+    }
+
+    @Test
+    public void createServiceAccount() {
+        ServiceAccount serviceAccount = new ServiceAccountBuilder().withNewMetadata().withName("createserviceaccount").endMetadata().build();
+        cluster.createServiceAccount(serviceAccount, namespaceName);
+        ServiceAccountList serviceAccountList = cluster.getAllServiceAccounts(namespaceName);
+        ServiceAccount createServiceAccount = cluster.getServiceAccount("createserviceaccount", namespaceName);
+
+        assertNotNull(serviceAccountList);
+        assertEquals(2, serviceAccountList.getItems().size());
+        assertNotNull(createServiceAccount);
     }
 
 }

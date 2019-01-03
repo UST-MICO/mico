@@ -3,7 +3,6 @@ package io.github.ust.mico.core;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Strings;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
@@ -16,13 +15,12 @@ import java.util.regex.Pattern;
 
 public class GitHubCrawler {
 
-    private final RestTemplate restTemplate;
-
     private static final String GITHUB_API = "https://api.github.com";
     private static final String REPOS = "repos";
     private static final String RELEASES = "releases";
     private static final String TAGS = "tags";
     private static final String LATEST = "latest";
+    private final RestTemplate restTemplate;
 
     public GitHubCrawler(RestTemplateBuilder restTemplateBuilder) {
         this.restTemplate = restTemplateBuilder.build();

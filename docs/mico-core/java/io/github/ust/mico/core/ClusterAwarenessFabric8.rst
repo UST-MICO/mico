@@ -12,6 +12,8 @@
 
 .. java:import:: io.fabric8.kubernetes.client.internal SerializationUtils
 
+.. java:import:: org.springframework.stereotype Component
+
 .. java:import:: java.io InputStream
 
 ClusterAwarenessFabric8
@@ -20,7 +22,7 @@ ClusterAwarenessFabric8
 .. java:package:: io.github.ust.mico.core
    :noindex:
 
-.. java:type:: public class ClusterAwarenessFabric8
+.. java:type:: @Component public class ClusterAwarenessFabric8
 
 Fields
 ------
@@ -91,10 +93,22 @@ createPod
 .. java:method:: public Pod createPod(Pod pod, String namespace)
    :outertype: ClusterAwarenessFabric8
 
+createSecret
+^^^^^^^^^^^^
+
+.. java:method:: public Secret createSecret(Secret secret, String namespace)
+   :outertype: ClusterAwarenessFabric8
+
 createService
 ^^^^^^^^^^^^^
 
 .. java:method:: public Service createService(Service service, String namespace)
+   :outertype: ClusterAwarenessFabric8
+
+createServiceAccount
+^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public ServiceAccount createServiceAccount(ServiceAccount serviceAccount, String namespace)
    :outertype: ClusterAwarenessFabric8
 
 deleteDeployment
@@ -168,6 +182,18 @@ getAllPods
 .. java:method:: public PodList getAllPods(String namespace)
    :outertype: ClusterAwarenessFabric8
 
+getAllSecrets
+^^^^^^^^^^^^^
+
+.. java:method:: public SecretList getAllSecrets(String namespace)
+   :outertype: ClusterAwarenessFabric8
+
+getAllServiceAccounts
+^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public ServiceAccountList getAllServiceAccounts(String namespace)
+   :outertype: ClusterAwarenessFabric8
+
 getAllServices
 ^^^^^^^^^^^^^^
 
@@ -202,10 +228,22 @@ getPod
 .. java:method:: public Pod getPod(String name, String namespace)
    :outertype: ClusterAwarenessFabric8
 
+getSecret
+^^^^^^^^^
+
+.. java:method:: public Secret getSecret(String name, String namespace)
+   :outertype: ClusterAwarenessFabric8
+
 getService
 ^^^^^^^^^^
 
 .. java:method:: public Service getService(String name, String namespace)
+   :outertype: ClusterAwarenessFabric8
+
+getServiceAccount
+^^^^^^^^^^^^^^^^^
+
+.. java:method:: public ServiceAccount getServiceAccount(String name, String namespace)
    :outertype: ClusterAwarenessFabric8
 
 getYaml

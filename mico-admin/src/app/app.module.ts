@@ -25,6 +25,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { HttpModule } from '@angular/http';
 
 import { RoutingModule } from './routing.module';
 
@@ -108,6 +109,9 @@ import { MicoDataBooleanComponent } from './data-view/mico-data-boolean/mico-dat
         RoutingModule,
 
         GraphsModule,
+
+        HttpModule,
+
 
         // material
         BrowserAnimationsModule,

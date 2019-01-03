@@ -4,8 +4,6 @@
 
 .. java:import:: com.fasterxml.jackson.databind ObjectMapper
 
-.. java:import:: com.google.common.base Strings
-
 .. java:import:: org.springframework.boot.web.client RestTemplateBuilder
 
 .. java:import:: org.springframework.http ResponseEntity
