@@ -1,9 +1,20 @@
 import { RotationVector, normalizeVector } from "./rotation-vector";
 
+/**
+ * Start- or End-Point of edge.
+ */
 export interface LinkHandle {
+    /** Normally the index of the LinkHandle. Unique for each template. */
     id: number;
+    /** X coordinate relative to node center */
     x: number;
+    /** Y coordinate relative to node center */
     y: number;
+    /**
+     * Direction vecter pointing in the direction an
+     * edge should come in/out of the handle.
+     * Usually away from the node center.
+     */
     normal?: RotationVector
 }
 
@@ -23,12 +34,12 @@ export function calculateNormal(handle: LinkHandle) {
 }
 
 /**
- * Generate link handles list for rectangle.
+ * Generate link handles list for a rectangle.
  *
- * @param x
- * @param y
- * @param width
- * @param height
+ * @param x x coordinate of the upper left corner of the rectangle
+ * @param y y coordinate of the upper left corner of the rectangle
+ * @param width of the rectangle
+ * @param heightof the rectangle
  * @param linkHandles one of ['all', 'edges', 'corners', 'minimal'] 'minimal' is an alias for 'edges'
  */
 export function handlesForRectangle(x: number, y: number, width: number, height: number, linkHandles: string): LinkHandle[] {
@@ -65,7 +76,7 @@ export function handlesForRectangle(x: number, y: number, width: number, height:
 /**
  * Generate link handles list for circle.
  *
- * @param radius
+ * @param radius of the circle
  * @param linkHandles one of ['all', 'minimal']
  */
 export function handlesForCircle(radius: number, linkHandles: string): LinkHandle[] {

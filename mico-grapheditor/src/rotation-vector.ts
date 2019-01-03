@@ -18,11 +18,17 @@ export function normalizeVector(vector: RotationVector): RotationVector {
     };
 }
 
+
+/**
+ * Calculate the Angle of a rotation vector in degree.
+ *
+ * @param vector vector to normalize
+ */
 export function calculateAngle(vector: RotationVector): number {
     if (vector.dx === 0 && vector.dy === 0) {
         return 0;
     }
-    //vector = normalizeVector(vector);
+    vector = normalizeVector(vector);
     const angle = Math.atan2(vector.dy, vector.dx)
     return angle * 180/Math.PI;
 }

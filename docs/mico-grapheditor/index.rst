@@ -9,11 +9,12 @@ The grapheditor is a `custom web component <https://www.webcomponents.org>`_ tha
     * `d3 <https://github.com/d3/>`_
     * `d3 – select <https://github.com/d3/d3-selection>`_
 
-Documentation of Core Components
---------------------------------
+Documentation
+-------------
 
 .. toctree::
    grapheditor
+   datatypes
 
 
 Design Decisions
