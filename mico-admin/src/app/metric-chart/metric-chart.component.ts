@@ -1,6 +1,4 @@
-import { Component, OnInit, Input, ViewChild } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { ApiService } from '../api/api.service';
+import { Component, Input, ViewChild } from '@angular/core';
 
 import { ChartComponent } from './chart/chart.component';
 
@@ -9,13 +7,10 @@ import { ChartComponent } from './chart/chart.component';
     templateUrl: './metric-chart.component.html',
     styleUrls: ['./metric-chart.component.css']
 })
-export class MetricChartComponent implements OnInit {
-    application: any;
-    @ViewChild('chart') chart: ChartComponent;
-    min: Date;
-    max: Date;
-    label: string;
-    xLabels = [
+export class MetricChartComponent {
+    @Input() data: any;
+    @Input() dataLabels: string[];
+    @Input() xLabels: string[] = [
         'x',
         '2018-11-29',
         '2018-11-30',
@@ -37,31 +32,27 @@ export class MetricChartComponent implements OnInit {
         '2018-12-16',
         '2018-12-17'
     ];
-    @Input() data: any;
-    @Input() dataLabels: string[];
-    constructor(private apiService: ApiService, private route: ActivatedRoute) {}
+    @ViewChild('chart') chart: ChartComponent;
+    min: Date;
+    max: Date;
 
-    ngOnInit() {
-        const id = +this.route.snapshot.paramMap.get('id');
-        this.apiService.getApplicationById(id).subscribe(app => (this.application = app));
-    }
+    constructor() {}
+
     changeLabelCheckbox(event: { checked: any }, label: any) {
-        console.log(event, label);
         if (event.checked) {
             this.chart.showData(label);
         } else {
             this.chart.hideData(label);
         }
     }
+
     // [TODO] call rest api to get required data
     dataChange() {
-        console.log(this.min, this.max);
-        console.log('generating data');
         const nrOfDataLines = this.randomIntFromInterval(2, 5);
-        const dataList = [];
+        const dataList: any[][] = [];
 
         for (let i = 0; i < nrOfDataLines; i++) {
-            const dataPoints = [];
+            const dataPoints: any[] = [];
             dataPoints.push('data' + i);
             const nrOfDataPoints = this.randomIntFromInterval(10, 20);
             for (let j = 0; j < nrOfDataPoints; j++) {

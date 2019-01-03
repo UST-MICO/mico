@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, OnChanges } from '@angular/core';
+import { Component, Input, OnChanges } from '@angular/core';
 
 import * as c3 from 'c3';
 
@@ -7,15 +7,14 @@ import * as c3 from 'c3';
     templateUrl: './chart.component.html',
     styleUrls: ['./chart.component.css']
 })
-export class ChartComponent implements OnInit, OnChanges {
-    chart: any;
-    @Input() data: any;
-    @Input() xLabels: any;
+export class ChartComponent implements OnChanges {
+    @Input() data: (string | number | boolean)[][];
+    @Input() xLabels: string[];
+    @Input() format: string;
+    chart: c3.ChartAPI;
+
     constructor() {}
 
-    ngOnInit() {
-        console.log('loaded');
-    }
     ngOnChanges() {
         this.chart = c3.generate({
             data: {
@@ -26,16 +25,16 @@ export class ChartComponent implements OnInit, OnChanges {
                 x: {
                     type: 'timeseries',
                     tick: {
-                        format: '%y-%m-%d'
+                        format: this.format
                     }
                 }
             }
         });
     }
-    showData(label: any) {
+    showData(label: string) {
         this.chart.show(label);
     }
-    hideData(label: any) {
+    hideData(label: string) {
         this.chart.hide(label);
     }
 }
