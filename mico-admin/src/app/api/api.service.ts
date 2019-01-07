@@ -71,6 +71,21 @@ export class ApiService {
         return stream;
     }
 
+    getModelDefinitions() {
+        const resource = 'models';
+        const stream = this.getStreamSource(resource);
+
+        // TODO replace URL with a generic path
+        this.rest.get('http://localhost:8080/v2/api-docs').subscribe(val => {
+            // return actual service list
+            stream.next((val as ApiObject)._embedded as ApiObject);
+        });
+
+        return (stream.asObservable() as Observable<ApiObject>).pipe(
+            filter(data => data !== undefined)
+        );
+    }
+
 
     // =================
     // APPLICATION CALLS
