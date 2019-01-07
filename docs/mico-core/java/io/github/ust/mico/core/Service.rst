@@ -1,8 +1,20 @@
+.. java:import:: com.fasterxml.jackson.annotation JsonIdentityInfo
+
+.. java:import:: com.fasterxml.jackson.annotation JsonIgnoreProperties
+
+.. java:import:: com.fasterxml.jackson.annotation JsonProperty
+
+.. java:import:: com.fasterxml.jackson.annotation ObjectIdGenerators
+
+.. java:import:: io.swagger.annotations ApiModelProperty
+
 .. java:import:: org.neo4j.ogm.annotation GeneratedValue
 
 .. java:import:: org.neo4j.ogm.annotation Id
 
 .. java:import:: org.neo4j.ogm.annotation NodeEntity
+
+.. java:import:: org.neo4j.ogm.annotation Relationship
 
 .. java:import:: java.util List
 
@@ -12,7 +24,7 @@ Service
 .. java:package:: io.github.ust.mico.core
    :noindex:
 
-.. java:type:: @NodeEntity public class Service
+.. java:type:: @JsonIdentityInfo @JsonIgnoreProperties @NodeEntity public class Service
 
 Constructors
 ------------
@@ -25,15 +37,39 @@ Service
 Service
 ^^^^^^^
 
+.. java:constructor:: public Service(String shortName)
+   :outertype: Service
+
+Service
+^^^^^^^
+
 .. java:constructor:: public Service(String shortName, String version)
+   :outertype: Service
+
+Service
+^^^^^^^
+
+.. java:constructor:: public Service(String shortName, String version, String description)
    :outertype: Service
 
 Methods
 -------
+dependsOn
+^^^^^^^^^
+
+.. java:method:: public DependsOn dependsOn(Service serviceEnd)
+   :outertype: Service
+
 getContact
 ^^^^^^^^^^
 
 .. java:method:: public String getContact()
+   :outertype: Service
+
+getCrawlingSource
+^^^^^^^^^^^^^^^^^
+
+.. java:method:: public CrawlingSource getCrawlingSource()
    :outertype: Service
 
 getDependsOn
@@ -48,22 +84,40 @@ getDescription
 .. java:method:: public String getDescription()
    :outertype: Service
 
+getDockerImageName
+^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public String getDockerImageName()
+   :outertype: Service
+
+getDockerImageUri
+^^^^^^^^^^^^^^^^^
+
+.. java:method:: public String getDockerImageUri()
+   :outertype: Service
+
 getDockerfile
 ^^^^^^^^^^^^^
 
 .. java:method:: public String getDockerfile()
    :outertype: Service
 
+getExternalVersion
+^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public String getExternalVersion()
+   :outertype: Service
+
+getId
+^^^^^
+
+.. java:method:: public Long getId()
+   :outertype: Service
+
 getLifecycle
 ^^^^^^^^^^^^
 
 .. java:method:: public String getLifecycle()
-   :outertype: Service
-
-getLinks
-^^^^^^^^
-
-.. java:method:: public List<String> getLinks()
    :outertype: Service
 
 getName
@@ -84,10 +138,16 @@ getPredecessor
 .. java:method:: public Service getPredecessor()
    :outertype: Service
 
-getServiceDescriptions
-^^^^^^^^^^^^^^^^^^^^^^
+getServiceInterfaces
+^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public List<ServiceDescription> getServiceDescriptions()
+.. java:method:: public List<ServiceInterface> getServiceInterfaces()
+   :outertype: Service
+
+getServiceLinks
+^^^^^^^^^^^^^^^
+
+.. java:method:: public List<String> getServiceLinks()
    :outertype: Service
 
 getShortName
@@ -126,6 +186,12 @@ setContact
 .. java:method:: public void setContact(String contact)
    :outertype: Service
 
+setCrawlingSource
+^^^^^^^^^^^^^^^^^
+
+.. java:method:: public void setCrawlingSource(CrawlingSource crawlingSource)
+   :outertype: Service
+
 setDependsOn
 ^^^^^^^^^^^^
 
@@ -138,10 +204,34 @@ setDescription
 .. java:method:: public void setDescription(String description)
    :outertype: Service
 
+setDockerImageName
+^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public void setDockerImageName(String dockerImageName)
+   :outertype: Service
+
+setDockerImageUri
+^^^^^^^^^^^^^^^^^
+
+.. java:method:: public void setDockerImageUri(String dockerImageUri)
+   :outertype: Service
+
 setDockerfile
 ^^^^^^^^^^^^^
 
 .. java:method:: public void setDockerfile(String dockerfile)
+   :outertype: Service
+
+setExternalVersion
+^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public void setExternalVersion(String externalVersion)
+   :outertype: Service
+
+setId
+^^^^^
+
+.. java:method:: public void setId(Long id)
    :outertype: Service
 
 setLifecycle
@@ -174,10 +264,10 @@ setPredecessor
 .. java:method:: public void setPredecessor(Service predecessor)
    :outertype: Service
 
-setServiceDescriptions
-^^^^^^^^^^^^^^^^^^^^^^
+setServiceInterfaces
+^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public void setServiceDescriptions(List<ServiceDescription> serviceDescriptions)
+.. java:method:: public void setServiceInterfaces(List<ServiceInterface> serviceInterfaces)
    :outertype: Service
 
 setShortName
@@ -208,5 +298,11 @@ setVersion
 ^^^^^^^^^^
 
 .. java:method:: public void setVersion(String version)
+   :outertype: Service
+
+toString
+^^^^^^^^
+
+.. java:method:: @Override public String toString()
    :outertype: Service
 

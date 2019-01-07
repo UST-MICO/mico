@@ -12,10 +12,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.Matchers.startsWith;
+import static org.junit.Assert.*;
 
 // TODO: Setup proper integration testing with neo4j
 @Ignore
@@ -42,23 +40,6 @@ public class MicoCoreApplicationTests {
     @Autowired
     private ServiceInterfaceRepository serviceInterfaceRepository;
 
-    @Test
-    public void contextLoads() {
-        //TODO: Why is this test needed?
-    }
-
-    @Test
-    public void testServiceRepository() {
-        serviceRepository.deleteAll();
-        dependsOnRepository.deleteAll();
-        serviceInterfaceRepository.deleteAll();
-        serviceRepository.save(createServiceInDB());
-
-        Optional<Service> serviceTestOpt = serviceRepository.findByShortNameAndVersion(TEST_SHORT_NAME, TEST_VERSION);
-        Service serviceTest = serviceTestOpt.get();
-        checkDefaultService(serviceTest);
-    }
-
     public static void checkDefaultService(Service serviceTest) {
         List<ServiceInterface> serviceInterfacesTest = serviceTest.getServiceInterfaces();
 
@@ -78,22 +59,39 @@ public class MicoCoreApplicationTests {
     }
 
     public static Service createServiceInDB() {
-		Service service = new Service(TEST_SHORT_NAME, TEST_VERSION);
-		service.setName(TEST_LONGER_NAME);
-		service.setDescription(TEST_SERVICE_DESCRIPTION);
-		service.setVcsRoot(TEST_VCS_ROOT);
-		service.setContact(TEST_CONTACT);
+        Service service = new Service(TEST_SHORT_NAME, TEST_VERSION);
+        service.setName(TEST_LONGER_NAME);
+        service.setDescription(TEST_SERVICE_DESCRIPTION);
+        service.setVcsRoot(TEST_VCS_ROOT);
+        service.setContact(TEST_CONTACT);
 
-		ServiceInterface serviceInterface = new ServiceInterface();
-		serviceInterface.setPort(TEST_PORT_VARIABLE);
-		serviceInterface.setDescription(TEST_SERVICE_INTERFACE_DESCRIPTION);
-		serviceInterface.setProtocol(TEST_PROTOCOL);
-		serviceInterface.setPublicDns(TEST_DNS);
-		serviceInterface.setServiceInterfaceName(TEST_SERVICE_INTERFACE_NAME);
+        ServiceInterface serviceInterface = new ServiceInterface();
+        serviceInterface.setPort(TEST_PORT_VARIABLE);
+        serviceInterface.setDescription(TEST_SERVICE_INTERFACE_DESCRIPTION);
+        serviceInterface.setProtocol(TEST_PROTOCOL);
+        serviceInterface.setPublicDns(TEST_DNS);
+        serviceInterface.setServiceInterfaceName(TEST_SERVICE_INTERFACE_NAME);
 
-		service.setServiceInterfaces(Collections.singletonList(serviceInterface));
-		return service;
-	}
+        service.setServiceInterfaces(Collections.singletonList(serviceInterface));
+        return service;
+    }
+
+    @Test
+    public void contextLoads() {
+        //TODO: Why is this test needed?
+    }
+
+    @Test
+    public void testServiceRepository() {
+        serviceRepository.deleteAll();
+        dependsOnRepository.deleteAll();
+        serviceInterfaceRepository.deleteAll();
+        serviceRepository.save(createServiceInDB());
+
+        Optional<Service> serviceTestOpt = serviceRepository.findByShortNameAndVersion(TEST_SHORT_NAME, TEST_VERSION);
+        Service serviceTest = serviceTestOpt.get();
+        checkDefaultService(serviceTest);
+    }
 
     @Test
     public void testDependencyServiceRepository() {
@@ -126,7 +124,7 @@ public class MicoCoreApplicationTests {
         serviceInterface2.setPublicDns(TEST_DNS);
         serviceInterface2.setServiceInterfaceName(testServiceInterfaceName);
         service2.setServiceInterfaces(Collections.singletonList(serviceInterface2));
-        DependsOn dependsOn = new DependsOn(service,service2);
+        DependsOn dependsOn = new DependsOn(service, service2);
         dependsOn.setMaxVersion("1.0");
         dependsOn.setMinVersion("1.0");
         service.setDependsOn(Collections.singletonList(dependsOn));
@@ -158,9 +156,9 @@ public class MicoCoreApplicationTests {
         Service service2 = new Service("Service2", "0.1");
         Service service3 = new Service("Service3", "0.1");
 
-        DependsOn depends1 = new DependsOn(service1,service2);
-        DependsOn depends2 = new DependsOn(service2,service3);
-        DependsOn depends3 = new DependsOn(service3,service1);
+        DependsOn depends1 = new DependsOn(service1, service2);
+        DependsOn depends2 = new DependsOn(service2, service3);
+        DependsOn depends3 = new DependsOn(service3, service1);
 
         Application application1 = new Application();
         application1.setShortName("App1");

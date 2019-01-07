@@ -123,10 +123,10 @@ public class ClusterAwareness {
 
     public V1Pod buildPod(String podName, List<V1Container> containers) {
         return new V1Pod()
-                .metadata(new V1ObjectMeta().name(podName))
-                .spec(
-                        new V1PodSpec()
-                                .containers(containers));
+            .metadata(new V1ObjectMeta().name(podName))
+            .spec(
+                new V1PodSpec()
+                    .containers(containers));
     }
 
     public V1Pod createPod(V1Pod pod, V1Namespace namespace) throws ApiException {

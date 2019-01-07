@@ -1,17 +1,18 @@
 package io.github.ust.mico.core;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentList;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.internal.SerializationUtils;
+import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
 
-
+@Component
 public class ClusterAwarenessFabric8 {
     KubernetesClient client;
 
@@ -45,11 +46,11 @@ public class ClusterAwarenessFabric8 {
     /**
      * creates object in kubernetes from a yaml describing it in specified namespace
      *
-     * @param inputStream   of yaml
-     * @param namespaceName has to exist or
+     * @param inputStream of yaml
+     * @param namespace   has to exist or
      */
-    public void createFromYaml(InputStream inputStream, String namespaceName) {
-        client.load(inputStream).inNamespace(namespaceName).createOrReplace();
+    public void createFromYaml(InputStream inputStream, String namespace) {
+        client.load(inputStream).inNamespace(namespace).createOrReplace();
     }
 
     /**
@@ -76,30 +77,30 @@ public class ClusterAwarenessFabric8 {
      * deletes resource in yaml from kubernetes cluster
      *
      * @param inputStream
-     * @param namespaceName
+     * @param namespace
      */
-    public void deleteFromYaml(InputStream inputStream, String namespaceName) {
-        client.load(inputStream).inNamespace(namespaceName).delete();
+    public void deleteFromYaml(InputStream inputStream, String namespace) {
+        client.load(inputStream).inNamespace(namespace).delete();
     }
 
-    public Deployment getDeployment(String name, String nameSpaceName) {
-        return client.apps().deployments().inNamespace(nameSpaceName).withName(name).get();
+    public Deployment getDeployment(String name, String namespace) {
+        return client.apps().deployments().inNamespace(namespace).withName(name).get();
     }
 
-    public DeploymentList getAllDeployments(String nameSpaceName) {
-        return client.apps().deployments().inNamespace(nameSpaceName).list();
+    public DeploymentList getAllDeployments(String namespace) {
+        return client.apps().deployments().inNamespace(namespace).list();
     }
 
     public DeploymentList getAllDeployments() {
         return client.apps().deployments().inAnyNamespace().list();
     }
 
-    public Deployment createDeployment(Deployment deployment, String nameSpace) {
-        return client.apps().deployments().inNamespace(nameSpace).createOrReplace(deployment);
+    public Deployment createDeployment(Deployment deployment, String namespace) {
+        return client.apps().deployments().inNamespace(namespace).createOrReplace(deployment);
     }
 
-    public Boolean deleteDeployment(String deploymentName, String namespaceName) {
-        return client.apps().deployments().inNamespace(namespaceName).withName(deploymentName).delete();
+    public Boolean deleteDeployment(String deploymentName, String namespace) {
+        return client.apps().deployments().inNamespace(namespace).withName(deploymentName).delete();
     }
 
     public NamespaceList getAllNamespaces() {
@@ -114,16 +115,16 @@ public class ClusterAwarenessFabric8 {
         return client.pods().inNamespace(namespace).list();
     }
 
-    public Pod getPod(String name, String namespaceName) {
-        return client.pods().inNamespace(namespaceName).withName(name).get();
+    public Pod getPod(String name, String namespace) {
+        return client.pods().inNamespace(namespace).withName(name).get();
     }
 
     public ServiceList getAllServices() {
         return client.services().inAnyNamespace().list();
     }
 
-    public Service getService(String name, String namespaceName) {
-        return client.services().inNamespace(namespaceName).withName(name).get();
+    public Service getService(String name, String namespace) {
+        return client.services().inNamespace(namespace).withName(name).get();
     }
 
     public NodeList getAllNodes() {
@@ -135,12 +136,12 @@ public class ClusterAwarenessFabric8 {
     }
 
 
-    public Namespace createNamespace(String ns) {
-        return client.namespaces().createOrReplace(new NamespaceBuilder().withNewMetadata().withName(ns).endMetadata().build());
+    public Namespace createNamespace(String namespace) {
+        return client.namespaces().createOrReplace(new NamespaceBuilder().withNewMetadata().withName(namespace).endMetadata().build());
     }
 
     public Service createService(Service service, String namespace) {
-        return client.services().createOrReplace(service);
+        return client.services().inNamespace(namespace).createOrReplace(service);
     }
 
     public Boolean deleteService(String serviceName, String namespace) {
@@ -155,7 +156,31 @@ public class ClusterAwarenessFabric8 {
         return client.namespaces().withName(namespace).delete();
     }
 
-    public Boolean deletePod(String namespace, String podName) {
+    public Boolean deletePod(String podName, String namespace) {
         return client.pods().inNamespace(namespace).withName(podName).delete();
+    }
+
+    public Secret createSecret(Secret secret, String namespace) {
+        return client.secrets().inNamespace(namespace).createOrReplace(secret);
+    }
+
+    public SecretList getAllSecrets(String namespace) {
+        return client.secrets().inNamespace(namespace).list();
+    }
+
+    public Secret getSecret(String name, String namespace) {
+        return client.secrets().inNamespace(namespace).withName(name).get();
+    }
+
+    public ServiceAccount createServiceAccount(ServiceAccount serviceAccount, String namespace) {
+        return client.serviceAccounts().inNamespace(namespace).createOrReplace(serviceAccount);
+    }
+
+    public ServiceAccountList getAllServiceAccounts(String namespace) {
+        return client.serviceAccounts().inNamespace(namespace).list();
+    }
+
+    public ServiceAccount getServiceAccount(String name, String namespace) {
+        return client.serviceAccounts().inNamespace(namespace).withName(name).get();
     }
 }

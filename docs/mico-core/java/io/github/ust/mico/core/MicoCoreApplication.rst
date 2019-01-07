@@ -2,9 +2,7 @@
 
 .. java:import:: org.springframework.boot.autoconfigure SpringBootApplication
 
-.. java:import:: org.springframework.web.bind.annotation RequestMapping
-
-.. java:import:: org.springframework.web.bind.annotation RestController
+.. java:import:: org.springframework.data.neo4j.repository.config EnableNeo4jRepositories
 
 MicoCoreApplication
 ===================
@@ -12,20 +10,12 @@ MicoCoreApplication
 .. java:package:: io.github.ust.mico.core
    :noindex:
 
-.. java:type:: @SpringBootApplication @RestController public class MicoCoreApplication
+.. java:type:: @SpringBootApplication @EnableNeo4jRepositories public class MicoCoreApplication
 
    Entry point for the MICO core application.
 
-   :author: Jakob Benz
-
 Methods
 -------
-home
-^^^^
-
-.. java:method:: @RequestMapping public String home()
-   :outertype: MicoCoreApplication
-
 main
 ^^^^
 

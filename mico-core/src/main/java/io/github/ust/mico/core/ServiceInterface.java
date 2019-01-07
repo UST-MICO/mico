@@ -1,10 +1,14 @@
 package io.github.ust.mico.core;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 
+import javax.validation.constraints.NotEmpty;
+
 public class ServiceInterface {
 
+    @JsonIgnore
     @Id
     @GeneratedValue
     public Long id;
@@ -12,6 +16,7 @@ public class ServiceInterface {
     private String port;
     private String type;
     private String description;
+    @NotEmpty
     private String serviceInterfaceName;
     private String protocol;
     private String transportProtocol;
@@ -21,7 +26,10 @@ public class ServiceInterface {
         this.serviceInterfaceName = serviceInterfaceName;
     }
 
-    public ServiceInterface() {}
+    public ServiceInterface() {
+    }
+
+
 
     //TODO: Verify if all are necessary
     public String getPort() {
