@@ -16,7 +16,11 @@ export class MicoDataContainerComponent implements OnInit {
     constructor() { }
 
     ngOnInit() {
-        this.dataValue = this.data[this.property['x-key']];
+        if (this.data != null) {
+            this.dataValue = this.data[this.property['x-key']];
+        } else {
+            this.dataValue = null;
+        }
 
     }
 

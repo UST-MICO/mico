@@ -22,9 +22,9 @@ const routes: Routes = [
     { path: 'app-detail/:id', component: AppDetailComponent },
     { path: 'app-detail/deploystatus', component: AppDetailDeploystatusComponent },
     { path: 'app-detail/deploysettings', component: AppDetailDeploysettingsComponent },
-
     { path: 'service-detail/service-list', component: ServiceListComponent },
     { path: 'service-detail/:shortName', component: ServiceDetailComponent },
+    { path: 'service-detail/:shortName/:version', component: ServiceDetailComponent },
 ];
 
 @NgModule({

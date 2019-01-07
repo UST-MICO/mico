@@ -24,6 +24,8 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
     ) { }
 
     service: Service;
+    selectedVersion;
+    versions: any = [];
 
     id: number;
 
@@ -57,16 +59,25 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
         this.subService = this.apiService.getServiceVersions(shortName)
             .subscribe(serviceVersions => {
 
+                console.log(serviceVersions);
+
+                //  this.versions = serviceVersions;
+                const versionsArray = [];
+
                 serviceVersions.forEach(element => {
 
-                    // TODO implement comparison for our versioning
+                    // TODO implement comparison for semantic versioning
                     if (element.version > version) {
                         version = element.version;
+                        this.selectedVersion = element.version;
                         this.service = element;
 
                     }
+                    versionsArray.push(element);
 
                 });
+
+                this.versions = versionsArray;
             });
     }
 

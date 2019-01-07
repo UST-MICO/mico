@@ -36,7 +36,6 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
         private dialog: MatDialog,
     ) { }
 
-    @Input() service: ApiObject;
     internalDependencies = [];
     externalDependencies = [];
     serviceInterfaces: any;
@@ -54,9 +53,10 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
         this.paramSubscription = this.route.params.subscribe(params => {
 
             const shortName = params['shortName'];
-            console.log('service-detail-overview', this.service);
+            const version = params['version'];
+            console.log('service-detail-overview', shortName, version);
 
-            this.update(shortName, this.service.version);
+            this.update(shortName, version);
         });
     }
 
@@ -82,33 +82,43 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
 
         // TODO take care of the version
         if (shortName === this.shortName) {
-            return;
+            if (version === this.version) {
+                return;
+            }
         } else {
 
             this.shortName = shortName;
 
-            if (this.serviceSubscription != null) {
-                this.serviceSubscription.unsubscribe();
-            }
         }
 
-        this.serviceSubscription = this.serviceSubscription = this.apiService.getService(shortName, version)
-            .subscribe(service => this.service = service);
+        if (this.serviceSubscription != null) {
+            this.serviceSubscription.unsubscribe();
+        }
+        if (this.subServiceInterfaces != null) {
+            this.subServiceInterfaces.unsubscribe();
+        }
+
+        this.serviceSubscription = this.apiService.getService(shortName, version)
+            .subscribe(service => this.serviceData = service);
 
         // get dependencies and their status
         const internal = [];
-        this.service.internalDependencies.forEach(element => {
-            internal.push(this.getServiceMetaData(element));
-        });
+        if (this.serviceData != null && this.serviceData.internalDependencies != null) {
+            this.serviceData.internalDependencies.forEach(element => {
+                internal.push(this.getServiceMetaData(element));
+            });
+        }
         this.internalDependencies = internal;
 
         const external = [];
-        this.service.externalDependencies.forEach(element => {
-            external.push(this.getServiceMetaData(element));
-        });
+        if (this.serviceData != null && this.serviceData.externalDependencies != null) {
+            this.serviceData.externalDependencies.forEach(element => {
+                external.push(this.getServiceMetaData(element));
+            });
+        }
         this.externalDependencies = external;
 
-        // TODO insert dropdown to choose a service
+        // TODO insert dropdown in the frontend to choose a service version
         this.subServiceInterfaces = this.apiService.getServiceInterfaces(shortName, version)
             .subscribe(element => this.serviceInterfaces = element);
 

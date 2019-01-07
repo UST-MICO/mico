@@ -13,6 +13,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpModule } from '@angular/http';
+import { MatSelectModule } from '@angular/material/select';
 
 import { RoutingModule } from './routing.module';
 
@@ -115,6 +116,7 @@ import { MicoDataBooleanComponent } from './data-view/mico-data-boolean/mico-dat
         MatSlideToggleModule,
         MatAutocompleteModule,
         MatCheckboxModule,
+        MatSelectModule,
     ],
     providers: [],
     bootstrap: [AppComponent],

@@ -1,10 +1,26 @@
-<h3 class="ma3">Service: {{service.name}}</h3>
+<div class="flex w100">
+
+    <h3 class="ma3 flex-grow-1">Service: {{service?.name}}</h3>
+
+    <mat-form-field class="w25 ma2">
+        <mat-select placeholder="Service Version" [(value)]="selectedVersion">
+            <mat-option *ngFor="let version of versions" [value]="version.version">
+                {{version?.version}}
+            </mat-option>
+        </mat-select>
+    </mat-form-field>
+</div>
+
+
+
 <mat-divider></mat-divider>
+
+<!-- Drop Down Menu for version selection-->
 
 <mat-card class="ma2">
     <mat-tab-group>
         <mat-tab label="Overview">
-            <mico-service-detail-overview [service]="service | async"></mico-service-detail-overview>
+            <mico-service-detail-overview></mico-service-detail-overview>
         </mat-tab>
         <mat-tab label="Deployment">
             Service-Detail-Deployment...
