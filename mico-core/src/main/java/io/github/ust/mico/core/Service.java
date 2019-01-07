@@ -10,6 +10,7 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
+import java.util.LinkedList;
 import java.util.List;
 
 @JsonIdentityInfo(
@@ -45,7 +46,8 @@ public class Service {
     private List<DependsOn> dependsOn;
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Relationship(direction = Relationship.UNDIRECTED)
-    private List<ServiceInterface> serviceInterfaces;
+    private List<ServiceInterface> serviceInterfaces = new LinkedList<>();
+
     //crawling information
     private String externalVersion;
     private CrawlingSource crawlingSource;

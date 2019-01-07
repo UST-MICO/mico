@@ -6,7 +6,7 @@ import { ApiObject } from '../api/apiobject';
 import { ServicePickerComponent } from '../dialogs/service-picker/service-picker.component';
 import { MatDialog } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
-import { CreateServiceInterfaceComponent } from '../dialogs/create-service-interface/create-service-interface.component'
+import { CreateServiceInterfaceComponent } from '../dialogs/create-service-interface/create-service-interface.component';
 
 export interface Dependency {
     id;
@@ -29,16 +29,11 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
     private subServiceInterfaces: Subscription;
     private subVersion: Subscription;
 
-    constructor(
-        private apiService: ApiService,
-        private route: ActivatedRoute,
-        private dialog: MatDialog,
-    ) { }
+    constructor(private apiService: ApiService, private route: ActivatedRoute, private dialog: MatDialog) { }
 
     internalDependencies = [];
     externalDependencies = [];
     serviceInterfaces: any;
-
 
     // will be used by the update form
     serviceData;
@@ -48,7 +43,6 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
     @Input() version: string;
     oldShortName: string;
     oldVersion: string;
-
 
     ngOnChanges() {
 
@@ -95,7 +89,6 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
 
         this.oldShortName = this.shortName;
         this.oldVersion = this.version;
-
 
 
         if (this.serviceSubscription != null) {
@@ -167,7 +160,6 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
             console.log(result);
             // TODO use result in a useful way
         });
-
     }
 
     /**
@@ -210,11 +202,10 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
      * action triggered in ui
      */
     deleteDependency(id) {
-
         const dialogRef = this.dialog.open(YesNoDialogComponent, {
             data: {
                 object: this.getServiceMetaData(id).shortName,
-                question: 'deleteDependency',
+                question: 'deleteDependency'
             }
         });
 
@@ -224,7 +215,6 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
                 // TODO really delete the dependency
             }
         });
-
     }
 
     /**
@@ -234,7 +224,7 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
         const dialogRef = this.dialog.open(YesNoDialogComponent, {
             data: {
                 object: id,
-                question: 'deleteServiceInterface',
+                question: 'deleteServiceInterface'
             }
         });
 
