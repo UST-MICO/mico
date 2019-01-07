@@ -45,9 +45,7 @@ public class GitHubCrawler {
             service.setVcsRoot(releaseInfoJson.get("url").textValue());
 
             return service;
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (VersionNotSupportedException e) {
+        } catch (IOException|VersionNotSupportedException e) {
             e.printStackTrace();
         }
         return null;

@@ -1,5 +1,6 @@
 package io.github.ust.mico.core;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,7 @@ public class GitHubCrawlerTests extends Neo4jTestClass {
     private ServiceRepository serviceRepository;
 
     @Test
+    @Ignore
     public void testGitHubCrawlerLatestRelease() {
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
@@ -47,6 +49,7 @@ public class GitHubCrawlerTests extends Neo4jTestClass {
     }
 
     @Test
+    @Ignore
     public void testGitHubCrawlerSpecificRelease() {
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
@@ -63,6 +66,7 @@ public class GitHubCrawlerTests extends Neo4jTestClass {
     }
 
     @Test
+    @Ignore
     public void testGitHubCrawlerAllReleases() {
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);

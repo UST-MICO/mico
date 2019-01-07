@@ -169,9 +169,9 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
 
         assertNotNull(storedApplication1);
         assertEquals("App1", storedApplication1.getShortName());
-        assertThat(storedApplication1.getDependsOn().get(0).getService().getShortName(), startsWith("App"));
-        assertThat(storedApplication1.getDependsOn().get(1).getService().getShortName(), startsWith("App"));
-        assertThat(storedApplication1.getDependsOn().get(2).getService().getShortName(), startsWith("App"));
+        assertThat(storedApplication1.getDependsOn().get(0).getService().getShortName(), startsWith("Service"));
+        assertThat(storedApplication1.getDependsOn().get(1).getService().getShortName(), startsWith("Service"));
+        assertThat(storedApplication1.getDependsOn().get(2).getService().getShortName(), startsWith("Service"));
 
         assertNotNull(storedApplication2);
         assertEquals("App2", storedApplication2.getShortName());
