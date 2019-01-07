@@ -57,7 +57,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
         }
 
         // get latest version
-        let version = 'a';
+        let version = '0';
         this.subService = this.apiService.getServiceVersions(shortName)
             .subscribe(serviceVersions => {
 
@@ -73,7 +73,6 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
 
                     }
                 });
-
             });
     }
 

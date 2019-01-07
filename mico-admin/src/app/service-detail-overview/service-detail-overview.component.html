@@ -98,11 +98,11 @@
                             <mat-divider></mat-divider>
                         </div>
 
-                        <!-- INTERNAL DEPENDENCIES-->
-                        <div class="flex" (click)="addInternalDependency()">
+                        <!-- DEPENDEES-->
+                        <div class="flex" (click)="addDependee()">
                             <div class="flex-grow-1">
                                 <mat-list-item>
-                                    <span mat-line><b>Dependencies (internal) </b></span>
+                                    <span mat-line><b>Dependees</b></span>
                                 </mat-list-item>
                             </div>
                             <div class="w-20">
@@ -113,7 +113,7 @@
                         </div>
                         <mat-divider></mat-divider>
                         <!-- list internal dependencies-->
-                        <div *ngFor="let dependencie of internalDependencies">
+                        <div *ngFor="let dependencie of dependees">
                             <div class="flex">
                                 <div class="flex-grow-1">
                                     <mat-list-item [routerLink]="['/service-detail/', dependencie.id]">
@@ -129,11 +129,11 @@
                             <mat-divider></mat-divider>
                         </div>
 
-                        <!-- EXTERNAL DEPENDENCIES-->
+                        <!-- DEPENDERS -->
                         <div class="flex" (click)="addExternalDependency()">
                             <div class="flex-grow-1">
                                 <mat-list-item (click)="addExternalDependency()">
-                                    <span mat-line><b>Dependencies (external) </b></span>
+                                    <span mat-line><b>Dependers</b></span>
                                 </mat-list-item>
                             </div>
                             <div class="w-20">
@@ -144,7 +144,7 @@
                         </div>
                         <mat-divider></mat-divider>
                         <!-- list external dependencies-->
-                        <div *ngFor="let dependencie of externalDependencies">
+                        <div *ngFor="let dependencie of dependers">
                             <div class="flex">
                                 <div class="flex-grow-1">
                                     <mat-list-item [routerLink]="['/service-detail/', dependencie.id]">

@@ -190,7 +190,7 @@ export class ApiService {
         const stream = this.getStreamSource(resource);
 
         this.rest.get(resource).subscribe(val => {
-            stream.next(freezeObject((val as ApiObject)));
+            stream.next(freezeObject((val._embedded.serviceList as ApiObject)));
         });
 
         return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(

@@ -1,5 +1,4 @@
 import { Component, Input, OnInit, OnDestroy, OnChanges } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
@@ -22,18 +21,19 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
 
     private serviceSubscription: Subscription;
     private subProvide: Subscription;
-    private subInternalDependency: Subscription;
-    private subExternalDependency: Subscription;
+    private subDependeesDialog: Subscription;
+    private subDependersDialog: Subscription;
     private subDeleteDependency: Subscription;
     private subDeleteServiceInterface: Subscription;
     private subServiceInterfaces: Subscription;
     private subVersion: Subscription;
+    private subDependeesCall: Subscription;
 
-    constructor(private apiService: ApiService, private route: ActivatedRoute, private dialog: MatDialog) { }
+    constructor(private apiService: ApiService, private dialog: MatDialog) { }
 
-    internalDependencies = [];
-    externalDependencies = [];
-    serviceInterfaces: any;
+    dependees: any = [];
+    dependers: any = [];
+    serviceInterfaces: any = [];
 
     // will be used by the update form
     serviceData;
@@ -63,12 +63,13 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
     handleSubscriptions() {
         this.unsubscribe(this.serviceSubscription);
         this.unsubscribe(this.subProvide);
-        this.unsubscribe(this.subInternalDependency);
-        this.unsubscribe(this.subExternalDependency);
+        this.unsubscribe(this.subDependeesDialog);
+        this.unsubscribe(this.subDependersDialog);
         this.unsubscribe(this.subDeleteDependency);
         this.unsubscribe(this.subDeleteServiceInterface);
         this.unsubscribe(this.subServiceInterfaces);
         this.unsubscribe(this.subVersion);
+        this.unsubscribe(this.subDependeesCall);
     }
 
     unsubscribe(subscription: Subscription) {
@@ -102,30 +103,42 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
             .subscribe(service => {
                 this.serviceData = service;
 
+                console.log(this.serviceData);
 
-                // get dependencies and their status
-                const internal = [];
-                if (this.serviceData != null && this.serviceData.internalDependencies != null) {
-                    this.serviceData.internalDependencies.forEach(element => {
-                        internal.push(this.getServiceMetaData(element));
-                    });
 
-                    this.internalDependencies = internal;
+                // get dependencies
+                if (this.subDependeesCall != null) {
+                    this.subDependeesCall.unsubscribe();
                 }
 
-                const external = [];
-                if (this.serviceData != null && this.serviceData.externalDependencies != null) {
-                    this.serviceData.externalDependencies.forEach(element => {
-                        external.push(this.getServiceMetaData(element));
+                this.subDependeesCall = this.apiService.getServiceDependees(this.shortName, this.version)
+                    .subscribe(val => {
+                        console.log('dependees', val);
+                        this.dependees = val;
                     });
 
-                    this.externalDependencies = external;
+                // TODO insert as soon as get/service/dependers is in master
+                /*
+                if (this.subDependersCall != null) {
+                    this.subDependersCall.unsubscribe();
                 }
 
+                this.subDependeesCall = this.apiService.getServiceDependers(this.shortName, this.version)
+                    .subscribe(val => {
+                        console.log(val);
+                        this.dependers = val;
+                    });
+*/
+
+
+                // TODO insert as soon as there are interfaces in the dummy data
+                /*
                 this.subServiceInterfaces = this.apiService.getServiceInterfaces(this.shortName, this.version)
-                    .subscribe(element => {
-                        this.serviceInterfaces = element;
+                    .subscribe(val => {
+                        console.log('interfaces:', val);
+                        this.serviceInterfaces = val;
                     });
+                */
             });
 
     }
@@ -165,16 +178,16 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
     /**
      * action triggered in ui
      */
-    addInternalDependency() {
+    addDependee() {
         const dialogRef = this.dialog.open(ServicePickerComponent, {
             data: {
                 filter: 'internal',
                 choice: 'multi',
-                exisitingDependencies: this.internalDependencies,
+                exisitingDependencies: this.dependees,
                 serviceId: this.shortName,
             }
         });
-        this.subInternalDependency = dialogRef.afterClosed().subscribe(result => {
+        this.subDependeesDialog = dialogRef.afterClosed().subscribe(result => {
             console.log(result);
             // TODO use result in a useful way
         });
@@ -184,15 +197,18 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
      * action triggered in ui
      */
     addExternalDependency() {
+        // TODO is this method still relevant? There are no internal/external dependencies in the backend.
+        // So the 'External' list was changed to dependers.
+        // Adding dependers is no useful operation at this point of the ui.
         const dialogRef = this.dialog.open(ServicePickerComponent, {
             data: {
                 filter: 'external',
                 choice: 'multi',
-                exisitingDependencies: this.externalDependencies,
+                exisitingDependencies: this.dependers,
                 serviceId: this.shortName,
             }
         });
-        this.subExternalDependency = dialogRef.afterClosed().subscribe(result => {
+        this.subDependersDialog = dialogRef.afterClosed().subscribe(result => {
             console.log(result);
             // TODO use result in a useful way
         });
