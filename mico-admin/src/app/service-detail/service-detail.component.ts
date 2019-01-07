@@ -24,6 +24,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
     ) { }
 
     service: Service;
+    shortName: string;
     selectedVersion;
     versions: any = [];
 
@@ -32,7 +33,8 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
     ngOnInit() {
         this.subParam = this.route.params.subscribe(params => {
 
-            this.update(params['shortName']);
+            this.shortName = params['shortName'];
+            this.update(this.shortName);
         });
     }
 
@@ -59,10 +61,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
         this.subService = this.apiService.getServiceVersions(shortName)
             .subscribe(serviceVersions => {
 
-                console.log(serviceVersions);
-
-                //  this.versions = serviceVersions;
-                const versionsArray = [];
+                this.versions = serviceVersions;
 
                 serviceVersions.forEach(element => {
 
@@ -73,11 +72,8 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
                         this.service = element;
 
                     }
-                    versionsArray.push(element);
-
                 });
 
-                this.versions = versionsArray;
             });
     }
 

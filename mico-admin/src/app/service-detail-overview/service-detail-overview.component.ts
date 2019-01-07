@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, OnChanges } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ApiService } from '../api/api.service';
@@ -18,10 +18,9 @@ export interface Dependency {
     templateUrl: './service-detail-overview.component.html',
     styleUrls: ['./service-detail-overview.component.css']
 })
-export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
+export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
 
     private serviceSubscription: Subscription;
-    private paramSubscription: Subscription;
     private subProvide: Subscription;
     private subInternalDependency: Subscription;
     private subExternalDependency: Subscription;
@@ -45,24 +44,30 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
     serviceData;
 
     edit: Boolean = false;
-    shortName: string;
-    version: string;
+    @Input() shortName: string;
+    @Input() version: string;
+    oldShortName: string;
+    oldVersion: string;
 
-    ngOnInit() {
 
-        this.paramSubscription = this.route.params.subscribe(params => {
+    ngOnChanges() {
 
-            const shortName = params['shortName'];
-            const version = params['version'];
-            console.log('service-detail-overview', shortName, version);
+        console.log('onChanges()', this.shortName, this.version);
 
-            this.update(shortName, version);
-        });
+        if (this.shortName != null && this.version != null) {
+            console.log('if successful');
+            this.handleSubscriptions();
+
+            this.update();
+        }
     }
 
     ngOnDestroy() {
+        this.handleSubscriptions();
+    }
+
+    handleSubscriptions() {
         this.unsubscribe(this.serviceSubscription);
-        this.unsubscribe(this.paramSubscription);
         this.unsubscribe(this.subProvide);
         this.unsubscribe(this.subInternalDependency);
         this.unsubscribe(this.subExternalDependency);
@@ -78,18 +83,20 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
         }
     }
 
-    update(shortName, version) {
+    update() {
 
         // TODO take care of the version
-        if (shortName === this.shortName) {
-            if (version === this.version) {
+        if (this.oldShortName === this.shortName) {
+            if (this.oldVersion === this.version) {
+                console.log('return', this.oldShortName, this.shortName, this.oldVersion, this.version);
                 return;
             }
-        } else {
-
-            this.shortName = shortName;
-
         }
+
+        this.oldShortName = this.shortName;
+        this.oldVersion = this.version;
+
+
 
         if (this.serviceSubscription != null) {
             this.serviceSubscription.unsubscribe();
@@ -98,30 +105,35 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
             this.subServiceInterfaces.unsubscribe();
         }
 
-        this.serviceSubscription = this.apiService.getService(shortName, version)
-            .subscribe(service => this.serviceData = service);
+        this.serviceSubscription = this.apiService.getService(this.shortName, this.version)
+            .subscribe(service => {
+                this.serviceData = service;
 
-        // get dependencies and their status
-        const internal = [];
-        if (this.serviceData != null && this.serviceData.internalDependencies != null) {
-            this.serviceData.internalDependencies.forEach(element => {
-                internal.push(this.getServiceMetaData(element));
+
+                // get dependencies and their status
+                const internal = [];
+                if (this.serviceData != null && this.serviceData.internalDependencies != null) {
+                    this.serviceData.internalDependencies.forEach(element => {
+                        internal.push(this.getServiceMetaData(element));
+                    });
+
+                    this.internalDependencies = internal;
+                }
+
+                const external = [];
+                if (this.serviceData != null && this.serviceData.externalDependencies != null) {
+                    this.serviceData.externalDependencies.forEach(element => {
+                        external.push(this.getServiceMetaData(element));
+                    });
+
+                    this.externalDependencies = external;
+                }
+
+                this.subServiceInterfaces = this.apiService.getServiceInterfaces(this.shortName, this.version)
+                    .subscribe(element => {
+                        this.serviceInterfaces = element;
+                    });
             });
-        }
-        this.internalDependencies = internal;
-
-        const external = [];
-        if (this.serviceData != null && this.serviceData.externalDependencies != null) {
-            this.serviceData.externalDependencies.forEach(element => {
-                external.push(this.getServiceMetaData(element));
-            });
-        }
-        this.externalDependencies = external;
-
-        // TODO insert dropdown in the frontend to choose a service version
-        this.subServiceInterfaces = this.apiService.getServiceInterfaces(shortName, version)
-            .subscribe(element => this.serviceInterfaces = element);
-
 
     }
 
