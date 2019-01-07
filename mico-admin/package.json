@@ -2,7 +2,7 @@
   "name": "mico-admin",
   "version": "0.0.0",
   "scripts": {
-    "grapheditor": "npm install ../mico-grapheditor",
+    "grapheditor": "npm install ../mico-grapheditor --no-package-lock",
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
