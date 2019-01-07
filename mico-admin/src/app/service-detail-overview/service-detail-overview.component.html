@@ -6,9 +6,10 @@
             <ng-container *ngIf="!edit">
                 <!-- display version -->
                 <!-- TODO change to serviceGET (as soon as api is available -->
-                <mico-data [modelUrl]="'local/servicePUT'" [startData]="service"></mico-data>
+                <mico-data [modelUrl]="'local/servicePUT'" [startData]="serviceData"></mico-data>
 
                 <!-- TODO hard coded information - not yet part of the domain model-->
+                <!-- TODO some elements (like) tags are in the domain model now. Check as soon as the modelURLs are loaded dynamically-->
                 <mat-list dense>
                     <mat-list-item class="mt2">
                         <b>Info</b>
@@ -31,7 +32,7 @@
             <!-- editable version -->
 
             <ng-container *ngIf="edit">
-                <mico-form [modelUrl]="'local/servicePUT'" (data)="serviceData = $event" [startData]="service"></mico-form>
+                <mico-form [modelUrl]="'local/servicePUT'" (data)="serviceData = $event" [startData]="serviceData"></mico-form>
                 <div class="ma1 pa1">
                     <span class="ma1">
                         <button mat-raised-button>Save</button>

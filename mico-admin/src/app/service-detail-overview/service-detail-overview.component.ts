@@ -46,12 +46,9 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
 
     ngOnChanges() {
 
-        console.log('onChanges()', this.shortName, this.version);
-
         if (this.shortName != null && this.version != null) {
-            console.log('if successful');
-            this.handleSubscriptions();
 
+            this.handleSubscriptions();
             this.update();
         }
     }
@@ -103,9 +100,6 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
             .subscribe(service => {
                 this.serviceData = service;
 
-                console.log(this.serviceData);
-
-
                 // get dependencies
                 if (this.subDependeesCall != null) {
                     this.subDependeesCall.unsubscribe();
@@ -113,7 +107,6 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
 
                 this.subDependeesCall = this.apiService.getServiceDependees(this.shortName, this.version)
                     .subscribe(val => {
-                        console.log('dependees', val);
                         this.dependees = val;
                     });
 
@@ -125,7 +118,6 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
 
                 this.subDependeesCall = this.apiService.getServiceDependers(this.shortName, this.version)
                     .subscribe(val => {
-                        console.log(val);
                         this.dependers = val;
                     });
 */
@@ -135,7 +127,6 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
                 /*
                 this.subServiceInterfaces = this.apiService.getServiceInterfaces(this.shortName, this.version)
                     .subscribe(val => {
-                        console.log('interfaces:', val);
                         this.serviceInterfaces = val;
                     });
                 */
