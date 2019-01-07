@@ -71,22 +71,10 @@ export class ApiService {
         return stream;
     }
 
-    /**
-     * Get service list
-     */
-    getServices(): Observable<Readonly<ApiObject>> {
-        const resource = 'services';
-        const stream = this.getStreamSource(resource);
 
-        this.rest.get(resource).subscribe(val => {
-            // return actual service list
-            stream.next(freezeObject((val as ApiObject)._embedded.serviceList as ApiObject));
-        });
-
-        return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
-            filter(data => data !== undefined)
-        );
-    }
+    // =================
+    // APPLICATION CALLS
+    // =================
 
     /**
      * Get application list
@@ -137,6 +125,27 @@ export class ApiService {
         stream.next(mockData);
 
         return (stream.asObservable() as Observable<ApiObject>).pipe(
+            filter(data => data !== undefined)
+        );
+    }
+
+    // =============
+    // SERVICE CALLS
+    // =============
+
+    /**
+     * Get service list
+     */
+    getServices(): Observable<Readonly<ApiObject>> {
+        const resource = 'services';
+        const stream = this.getStreamSource(resource);
+
+        this.rest.get(resource).subscribe(val => {
+            // return actual service list
+            stream.next(freezeObject((val as ApiObject)._embedded.serviceList as ApiObject));
+        });
+
+        return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
             filter(data => data !== undefined)
         );
     }

@@ -24,30 +24,6 @@ export class DashboardComponent implements OnInit {
 
     ngOnInit() {
 
-
-        // test calls
-        this.apiService.getServices().subscribe(val => {
-            console.log('getServices', val);
-        });
-
-        this.apiService.getServiceVersions('test.service').subscribe(val => {
-            console.log('getServiceVersions', val);
-        });
-
-        this.apiService.getService('test.service', 'v1').subscribe(val => {
-            console.log('getService', val);
-        });
-
-        /*
-        // Throws exceptions in the backend
-        this.apiService.getServiceDependees('test.service', 'v1').subscribe(val => {
-            console.log('getServiceDependees', val);
-        });
-        */
-
-        this.apiService.getServiceDependers('test.service', 'v1').subscribe(val => {
-            console.log('getServiceDependers', val);
-        });
     }
 
 

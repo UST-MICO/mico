@@ -102,4 +102,12 @@ export class ApiBaseFunctionService {
         return request;
     }
 
+
+    post(url: string | LinkObject | ApiLinksObject | ApiObject, data, token?: string): Observable<ApiObject> {
+        url = this.extractUrl(url);
+        return this.http.post(url, JSON.stringify(data), this.headers(token))
+            .pipe(map((res: Response) => {
+                return res.json();
+            }));
+    }
 }
