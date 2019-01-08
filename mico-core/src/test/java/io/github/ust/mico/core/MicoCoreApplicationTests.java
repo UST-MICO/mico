@@ -70,11 +70,7 @@ public class MicoCoreApplicationTests {
         serviceInterface.setDescription(TEST_SERVICE_INTERFACE_DESCRIPTION);
         serviceInterface.setProtocol(TEST_PROTOCOL);
         serviceInterface.setPublicDns(TEST_DNS);
-<<<<<<< HEAD
-        serviceInterface.setServiceName(TEST_SERVICE_INTERFACE_NAME);
-=======
         serviceInterface.setServiceInterfaceName(TEST_SERVICE_INTERFACE_NAME);
->>>>>>> eb947c77cb5c8c81a6a155299a09b3238faa0126
 
         service.setServiceInterfaces(Collections.singletonList(serviceInterface));
         return service;
