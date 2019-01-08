@@ -19,9 +19,9 @@ public class SwaggerConfig {
     public Docket api() {
         ApiInfo apiInfo = new ApiInfoBuilder().title("MICO").description("A Management System for Microservice Compositions").version("0.1").build();
         return new Docket(DocumentationType.SWAGGER_2).forCodeGeneration(true).apiInfo(apiInfo)
-                .select()
-                .apis(RequestHandlerSelectors.any())
-                .paths(PathSelectors.any())
-                .build();
+            .select()
+            .apis(RequestHandlerSelectors.any())
+            .paths(PathSelectors.any())
+            .build();
     }
 }

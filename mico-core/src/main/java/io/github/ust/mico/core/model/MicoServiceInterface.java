@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
+import org.neo4j.ogm.annotation.Relationship;
 
 /**
  * Represents a interface, e.g., REST API, of a {@link MicoService}.

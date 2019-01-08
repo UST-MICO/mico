@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
+import org.neo4j.ogm.annotation.Relationship;
 
 /**
  * Represents an application as a set of {@link MicoService}s
@@ -31,19 +32,16 @@ public class MicoApplication {
     // -> Required fields ---
     // ----------------------
 
-    /**
-     * The ids of the services this application is composed of.
-     */
-    // TODO: @Jan -> @Relationship?
+    // TODO: @Jakob -> Do we want to link the DB object instead of the ID?
+    // The ids of the services this application is composed of.
     @ApiModelProperty(required = true)
     @Singular
+    @Relationship //TODO: @Jan -> add more info / annotation needed?
     private final List<Long> services;
 
-    /**
-     * The information necessary for deploying this application.
-     */
-    // TODO: @Jan -> @Relationship?
+    // The information necessary for deploying this application.
     @ApiModelProperty(required = true)
+    @Relationship  //TODO: @Jan -> add more info / annotation needed?
     private final MicoApplicationDeploymentInfo deploymentInfo;
 
 }

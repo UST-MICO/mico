@@ -1,6 +1,8 @@
 package io.github.ust.mico.core;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import io.swagger.annotations.ApiModelProperty;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -9,6 +11,9 @@ import org.neo4j.ogm.annotation.Relationship;
 
 import java.util.List;
 
+@JsonIdentityInfo(
+    generator = ObjectIdGenerators.PropertyGenerator.class,
+    property = "id")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NodeEntity
 public class Service {
@@ -17,7 +22,7 @@ public class Service {
     @GeneratedValue
     private Long id;
     @ApiModelProperty(required = true)
-    private String version;
+    private String version; //internal MICO version (Format: X.Y.Z) //TODO: Do we want to rename 'version' to 'micoVersion'?
     @ApiModelProperty(required = true)
     private String shortName;
     @ApiModelProperty(required = true)
@@ -34,10 +39,17 @@ public class Service {
     private List<String> links; // -
     private String type; // -
     private String owner; // x
-    @Relationship
+    @Relationship(type = "DEPENDS_ON")
     private List<DependsOn> dependsOn; // service dependencies
     @Relationship(direction = Relationship.UNDIRECTED)
     private List<ServiceInterface> serviceInterfaces; // service interfaces
+
+    //crawling information
+    private String externalVersion;
+    private CrawlingSource crawlingSource;
+    //docker information
+    private String dockerImageName;
+    private String dockerImageUri;
 
     public Service() {
     }
@@ -57,8 +69,18 @@ public class Service {
         this.description = description;
     }
 
+    public DependsOn dependsOn(Service serviceEnd) {
+        DependsOn dependsOnObj = new DependsOn(this, serviceEnd);
+        this.dependsOn.add(dependsOnObj);
+        return dependsOnObj;
+    }
+
     public Long getId() {
         return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     //TODO: Verify if all are necessary
@@ -142,7 +164,7 @@ public class Service {
         this.lifecycle = lifecycle;
     }
 
-    public List<String> getLinks() {
+    public List<String> getServiceLinks() {
         return links;
     }
 
@@ -182,25 +204,57 @@ public class Service {
         this.serviceInterfaces = serviceInterfaces;
     }
 
+    public CrawlingSource getCrawlingSource() {
+        return crawlingSource;
+    }
+
+    public void setCrawlingSource(CrawlingSource crawlingSource) {
+        this.crawlingSource = crawlingSource;
+    }
+
+    public String getDockerImageName() {
+        return dockerImageName;
+    }
+
+    public void setDockerImageName(String dockerImageName) {
+        this.dockerImageName = dockerImageName;
+    }
+
+    public String getDockerImageUri() {
+        return dockerImageUri;
+    }
+
+    public void setDockerImageUri(String dockerImageUri) {
+        this.dockerImageUri = dockerImageUri;
+    }
+
+    public String getExternalVersion() {
+        return externalVersion;
+    }
+
+    public void setExternalVersion(String externalVersion) {
+        this.externalVersion = externalVersion;
+    }
+
     @Override
     public String toString() {
         return "Service{" +
-                "id=" + id +
-                ", version='" + version + '\'' +
-                ", shortName='" + shortName + '\'' +
-                ", description='" + description + '\'' +
-                ", predecessor=" + predecessor +
-                ", vcsRoot='" + vcsRoot + '\'' +
-                ", name='" + name + '\'' +
-                ", dockerfile='" + dockerfile + '\'' +
-                ", contact='" + contact + '\'' +
-                ", tags=" + tags +
-                ", lifecycle='" + lifecycle + '\'' +
-                ", links=" + links +
-                ", type='" + type + '\'' +
-                ", owner='" + owner + '\'' +
-                ", dependsOn=" + dependsOn +
-                ", serviceInterfaces=" + serviceInterfaces +
-                '}';
+            "id=" + id +
+            ", version='" + version + '\'' +
+            ", shortName='" + shortName + '\'' +
+            ", description='" + description + '\'' +
+            ", predecessor=" + predecessor +
+            ", vcsRoot='" + vcsRoot + '\'' +
+            ", name='" + name + '\'' +
+            ", dockerfile='" + dockerfile + '\'' +
+            ", contact='" + contact + '\'' +
+            ", tags=" + tags +
+            ", lifecycle='" + lifecycle + '\'' +
+            ", links=" + links +
+            ", type='" + type + '\'' +
+            ", owner='" + owner + '\'' +
+            ", dependsOn=" + dependsOn +
+            ", serviceInterfaces=" + serviceInterfaces +
+            '}';
     }
 }

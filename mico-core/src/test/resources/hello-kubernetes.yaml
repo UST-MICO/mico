@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-kubernetes-yaml
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: hello-kubernetes-yaml
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-kubernetes-yaml
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hello-kubernetes-yaml
+  template:
+    metadata:
+      labels:
+        app: hello-kubernetes-yaml
+    spec:
+      containers:
+      - name: hello-kubernetes-yaml
+        image: paulbouwer/hello-kubernetes:1.5
+        ports:
+        - containerPort: 8080

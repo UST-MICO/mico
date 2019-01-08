@@ -1,19 +1,25 @@
 package io.github.ust.mico.core;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import org.neo4j.ogm.annotation.*;
 
-@NodeEntity
+@JsonIdentityInfo(
+    generator = ObjectIdGenerators.PropertyGenerator.class,
+    property = "serviceDependee")
+@RelationshipEntity(type = "DEPENDS_ON")
 public class DependsOn {
 
     @Id
     @GeneratedValue
     private Long id;
 
-    @Relationship
+    @JsonIgnore
+    @StartNode
     private Service service;
+    @EndNode
+    private Service serviceDependee;
     private String minVersion;
     private String maxVersion;
 
@@ -22,6 +28,11 @@ public class DependsOn {
 
     public DependsOn(Service service) {
         this.service = service;
+    }
+
+    public DependsOn(Service serviceStart, Service serviceEnd) {
+        this.service = serviceStart;
+        this.serviceDependee = serviceEnd;
     }
 
     public DependsOn(Service service, String minVersion) {
@@ -58,5 +69,22 @@ public class DependsOn {
 
     public void setMaxVersion(String maxVersion) {
         this.maxVersion = maxVersion;
+    }
+
+    /*@Override
+    public String toString() {
+        return "DependsOn{" +
+                "service=" + service.toString() +
+                ", minVersion='" + minVersion + '\'' +
+                ", maxVersion='" + maxVersion + '\'' +
+                '}';
+    }*/
+
+    public Service getServiceDependee() {
+        return serviceDependee;
+    }
+
+    public void setServiceDependee(Service serviceDependee) {
+        this.serviceDependee = serviceDependee;
     }
 }

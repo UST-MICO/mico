@@ -12,10 +12,17 @@ public class ServiceInterface {
     private String port;
     private String type;
     private String description;
-    private String serviceName;
+    private String serviceInterfaceName;
     private String protocol;
     private String transportProtocol;
     private String publicDns;
+
+    public ServiceInterface(String serviceInterfaceName) {
+        this.serviceInterfaceName = serviceInterfaceName;
+    }
+
+    public ServiceInterface() {
+    }
 
     //TODO: Verify if all are necessary
     public String getPort() {
@@ -42,12 +49,12 @@ public class ServiceInterface {
         this.description = description;
     }
 
-    public String getServiceName() {
-        return serviceName;
+    public String getServiceInterfaceName() {
+        return serviceInterfaceName;
     }
 
-    public void setServiceName(String serviceName) {
-        this.serviceName = serviceName;
+    public void setServiceInterfaceName(String serviceInterfaceName) {
+        this.serviceInterfaceName = serviceInterfaceName;
     }
 
     public String getProtocol() {

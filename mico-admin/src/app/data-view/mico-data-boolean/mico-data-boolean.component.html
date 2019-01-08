@@ -1,0 +1,36 @@
+<mat-list-item class="mat-list-item">
+    <b>{{config.title}}: </b> &nbsp;
+
+    <div [ngSwitch]="config['x-boolean']">
+        <div *ngSwitchCase="'YesNo'">
+            <div *ngIf="convertedDataValue;else false_content">
+                <mat-chip-list>
+                    <mat-chip color="primary" selected>Yes</mat-chip>
+                </mat-chip-list>
+            </div>
+
+            <ng-template #false_content>
+                <mat-chip-list>
+                    <mat-chip color="accent" selected>No</mat-chip>
+                </mat-chip-list>
+            </ng-template>
+        </div>
+
+        <div *ngSwitchDefault>
+            <div *ngIf="convertedDataValue;else false_content">
+                <mat-chip-list>
+                    <mat-chip color="primary" selected>True</mat-chip>
+                </mat-chip-list>
+            </div>
+
+            <ng-template #false_content>
+                <mat-chip-list>
+                    <mat-chip color="accent" selected>False</mat-chip>
+                </mat-chip-list>
+            </ng-template>
+        </div>
+    </div>
+
+
+
+</mat-list-item>

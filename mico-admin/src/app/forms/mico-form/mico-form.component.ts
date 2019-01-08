@@ -10,9 +10,9 @@ import { Subscription } from 'rxjs';
  * Dynamic form component that renders a form from the given modelUrl.
  */
 @Component({
-  selector: 'mico-form',
-  templateUrl: './mico-form.component.html',
-  styleUrls: ['./mico-form.component.css']
+    selector: 'mico-form',
+    templateUrl: './mico-form.component.html',
+    styleUrls: ['./mico-form.component.css']
 })
 export class MicoFormComponent implements OnInit, OnChanges {
 
@@ -20,7 +20,7 @@ export class MicoFormComponent implements OnInit, OnChanges {
     @Input() filter: string[] = [];
     @Input() isBlacklist: boolean = false;
     @Input() debug: boolean = false;
-    @Input() set startData(data: {[prop: string]: any}) {
+    @Input() set startData(data: { [prop: string]: any }) {
         this._startData = data;
         if (this.form != null) {
             this.form.patchValue(data);
@@ -34,13 +34,13 @@ export class MicoFormComponent implements OnInit, OnChanges {
     properties: (ApiModel | ApiModelRef)[];
     form: FormGroup;
 
-    private _startData: {[prop: string]: any};
+    private _startData: { [prop: string]: any };
 
     private formSubscription: Subscription;
 
     constructor(private models: ModelsService, private formGroup: FormGroupService) { }
 
-    ngOnInit() {}
+    ngOnInit() { }
 
     ngOnChanges(changes: SimpleChanges) {
         if (changes.modelUrl != null || changes.filter != null || changes.isBlacklist != null) {
@@ -61,7 +61,7 @@ export class MicoFormComponent implements OnInit, OnChanges {
                 this.properties = props.sort((a, b) => {
                     const orderA = a['x-order'] != null ? a['x-order'] : 0;
                     const orderB = b['x-order'] != null ? b['x-order'] : 0;
-                    return orderA-orderB;
+                    return orderA - orderB;
                 });
                 this.form = this.formGroup.modelToFormGroup(model);
                 if (this.formSubscription != null) {
@@ -76,6 +76,10 @@ export class MicoFormComponent implements OnInit, OnChanges {
                 });
             });
         }
+    }
+
+    trackByFn(index, item) {
+        return item['x-key'];
     }
 
 }
