@@ -21,6 +21,9 @@ import lombok.Singular;
 @NodeEntity // TODO: @Jan -> maybe @RelationshipEntity?
 public class MicoServiceInterface {
 
+    /**
+     * The id of this service interface.
+     */
     @Id
     @GeneratedValue
     private final long id;
@@ -30,11 +33,15 @@ public class MicoServiceInterface {
     // -> Required fields ---
     // ----------------------
 
-    // The id of the parent service.
+    /**
+     * The id of the parent service.
+     */
     @ApiModelProperty(required = true)
     private final long serviceId;
 
-    // The list of ports.
+    /**
+     * The list of ports.
+     */
     @ApiModelProperty(required = true)
     @Singular
     // TODO: @Jan -> maybe Relationship?
@@ -45,17 +52,25 @@ public class MicoServiceInterface {
     // -> Optional fields ---
     // ----------------------
 
-    // The public DNS.
+    /**
+     * The public DNS.
+     */
     private String publicDns;
 
-    // Human readable description of this service interface,
-    // e.g., the functionality provided.
+    /**
+     * Human readable description of this service interface,
+     * e.g., the functionality provided.
+     */
     private String description;
 
-    // The protocol of this interface, e.g., HTTPS.
+    /**
+     * The protocol of this interface, e.g., HTTPS.
+     */
     private String protocol;
 
-    // The transport protocol, e.g., TCP.
+    /**
+     * The transport protocol, e.g., TCP.
+     */
     private String transportProtocol;
 
 }

@@ -18,6 +18,9 @@ import lombok.Data;
 @RelationshipEntity
 public class MicoServiceDependency {
 
+    /**
+     * The id of this service dependency.
+     */
     @Id
     @GeneratedValue
     private final long id;
@@ -27,17 +30,23 @@ public class MicoServiceDependency {
     // -> Required fields ---
     // ----------------------
 
-    // The id of the depended service.
+    /**
+     * The id of the depended service.
+     */
     @ApiModelProperty(required = true)
     private final long serviceId;
 
-    // The minimum version of the depended service
-    // that is supported.
+    /**
+     * The minimum version of the depended service
+     * that is supported.
+     */
     @ApiModelProperty(required = true)
     private final String minVersion;
 
-    // The maximum version of the depended service
-    // that is supported.
+    /**
+     * The maximum version of the depended service
+     * that is supported.
+     */
     @ApiModelProperty(required = true)
     private final String maxVersion;
 
