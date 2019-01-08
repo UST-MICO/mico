@@ -323,6 +323,6 @@ This example uses a node template where one part has the ``data-click="remove"``
 Public API
 ----------
 
-.. js:autoclass:: mico-grapheditor/src/mico-graph~GraphEditor
-   :members: nodeList, edgeList, mode, zoomMode, setMode, setZoomMode, setNodes, setEdges, addNode, removeNode, addEdge, removeEdge, completeRender, zoomToBoundingBox
+.. js:autoclass:: GraphEditor
+   :members: nodeList, edgeList, mode, zoomMode, setMode, setZoomMode, setNodes, setEdges, addNode, removeNode, addEdge, removeEdge, completeRender, zoomToBoundingBox, onCreateDraggedEdge, onDraggedEdgeTargetChange, onDropDraggedEdge
 

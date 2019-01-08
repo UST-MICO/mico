@@ -1,9 +1,11 @@
-import {select, scaleLinear, zoom, zoomIdentity, zoomTransform, event, line, curveStep, drag} from "d3";
+import {select, scaleLinear, zoom, zoomIdentity, zoomTransform, event, line, curveBasis, drag} from "d3";
 
 import {Node} from './node';
-import {Edge, edgeId} from './edge';
+import {Edge, DraggedEdge, edgeId} from './edge';
+import { LinkHandle, handlesForRectangle, handlesForCircle, calculateNormal } from "./link-handle";
 import { GraphObjectCache } from "./object-cache";
 import { wrapText } from "./textwrap";
+import { calculateAngle } from "./rotation-vector";
 
 const SHADOW_DOM_TEMPLATE = `
 <style>
@@ -31,6 +33,7 @@ export default class GraphEditor extends HTMLElement {
 
     private _nodes: Node[];
     private _edges: Edge[];
+    private draggedEdges: DraggedEdge[];
     private _mode: string = 'display'; // interaction mode ['display', 'layout', 'link', 'select']
     private _zoomMode: string = 'both'; // ['none', 'manual', 'automatic', 'both']
 
@@ -47,6 +50,27 @@ export default class GraphEditor extends HTMLElement {
     private get isInteractive(): boolean {
         return (this._mode !== 'display') && !(this._mode === 'select' && this.interactionStateData.fromMode === 'display');
     }
+
+    /**
+     * Callback when a new dragged edge is created.
+     *
+     * Use this callback only to customize the edge attributes like markers or type!
+     */
+    public onCreateDraggedEdge: (edge: DraggedEdge) => DraggedEdge;
+
+    /**
+     * Callback dragged edge has a new target.
+     *
+     * Only modify the existing edge!
+     */
+    public onDraggedEdgeTargetChange: (edge: DraggedEdge, sourceNode?: Node, targetNode?: Node) => void;
+
+    /**
+     * Callback when a existing dragged edge is dropped.
+     *
+     * Use this callback only to customize the edge attributes like markers or type!
+     */
+    public onDropDraggedEdge: (edge: DraggedEdge, sourceNode?: Node, targetNode?: Node) => Edge;
 
     get nodeList() {
         return this._nodes;
@@ -88,15 +112,16 @@ export default class GraphEditor extends HTMLElement {
         super();
         this._nodes = [];
         this._edges = [];
+        this.draggedEdges = [];
         this.objectCache = new GraphObjectCache();
         this.initialized = false;
-        this.edgeGenerator = line().x((d) => d.x).y((d) => d.y).curve(curveStep);
+        this.edgeGenerator = line().x((d) => d.x).y((d) => d.y).curve(curveBasis);
 
         this.root = this.attachShadow({mode: 'open'});
 
         select(this.root).html(SHADOW_DOM_TEMPLATE);
 
-        this.mutationObserver = new MutationObserver(() => {
+        this.mutationObserver = new MutationObserver((mutations) => {
             this.updateTemplates();
             this.completeRender(true);
             this.zoomToBoundingBox(false);
@@ -113,8 +138,8 @@ export default class GraphEditor extends HTMLElement {
 
         this.mutationObserver.observe(this, {
             childList: true,
-            characterData: true,
-            subtree: true,
+            characterData: false,
+            subtree: false,
         });
     }
 
@@ -363,6 +388,7 @@ export default class GraphEditor extends HTMLElement {
                 .attr('class', 'graph-editor')
                 .attr('width', '100%')
                 .attr('height', '100%');
+            svg.append('defs');
 
             this.xScale = scaleLinear()
                 .domain([10, 0])
@@ -370,130 +396,6 @@ export default class GraphEditor extends HTMLElement {
             this.yScale = scaleLinear()
                 .domain([10, 0])
                 .range([0, 10]);
-
-            const defs = svg.append('defs');
-
-            // setup filters ///////////////////////////////////////////////////
-
-            // for edges
-            const edgeShadow = defs.append('filter')
-                .attr('id', 'shadow-edge')
-                .attr('height', '130%');
-
-            edgeShadow.append('feGaussianBlur')
-                .attr('in', 'SourceAlpha')
-                .attr('stdDeviation', 5)
-                .attr('result', 'blur');
-
-            edgeShadow.append('feOffset')
-                .attr('in', 'blur')
-                .attr('dx', 3)
-                .attr('dy', 3)
-                .attr('result', 'offsetBlur');
-
-            edgeShadow.append('feComponentTransfer')
-              .append('feFuncA')
-                .attr('type', 'linear')
-                .attr('slope', '0.3');
-
-            const mergeLinkShadow = edgeShadow.append('feMerge');
-
-            mergeLinkShadow.append('feMergeNode');
-
-            mergeLinkShadow.append('feMergeNode')
-                .attr('in', 'SourceGraphic');
-
-            // for normal nodes
-            const smallShadow = defs.append('filter')
-                .attr('id', 'shadow-small')
-                .attr('height', '130%');
-
-            smallShadow.append('feGaussianBlur')
-                .attr('in', 'SourceAlpha')
-                .attr('stdDeviation', 5)
-                .attr('result', 'blur');
-
-            smallShadow.append('feOffset')
-                .attr('in', 'blur')
-                .attr('dx', 3)
-                .attr('dy', 3)
-                .attr('result', 'offsetBlur');
-
-            smallShadow.append('feComponentTransfer')
-              .append('feFuncA')
-                .attr('type', 'linear')
-                .attr('slope', '0.3');
-
-            const mergeSmallShadow = smallShadow.append('feMerge');
-
-            mergeSmallShadow.append('feMergeNode');
-
-            mergeSmallShadow.append('feMergeNode')
-                .attr('in', 'SourceGraphic');
-
-            // for highlighted nodes
-            const largeShadow = defs.append('filter')
-                .attr('id', 'shadow-large')
-                .attr('y', '-20%')
-                .attr('height', '150%');
-
-            largeShadow.append('feGaussianBlur')
-                .attr('in', 'SourceAlpha')
-                .attr('stdDeviation', 8)
-                .attr('result', 'blur');
-
-            largeShadow.append('feOffset')
-                .attr('in', 'blur')
-                .attr('dx', 5)
-                .attr('dy', 5)
-                .attr('result', 'offsetBlur');
-
-            largeShadow.append('feComponentTransfer')
-              .append('feFuncA')
-                .attr('type', 'linear')
-                .attr('slope', '0.6');
-
-            const mergeLargeShadow = largeShadow.append('feMerge');
-
-            mergeLargeShadow.append('feMergeNode');
-
-            mergeLargeShadow.append('feMergeNode')
-                .attr('in', 'SourceGraphic');
-
-
-            // for inactive nodes
-            let inactive = defs.append('filter')
-                .attr('id', 'inactive')
-                .attr('height', '130%');
-
-            inactive.append('feColorMatrix')
-                .attr('in', 'SourceGraphic')
-                .attr('type', 'matrix')
-                .attr('values', '.33 .33 .33 0 0 \n .33 .33 .33 0 0 \n .33 .33 .33 0 0 \n .33 .33 .33 0 0')
-                .attr('result', 'faded');
-
-            inactive.append('feGaussianBlur')
-                .attr('in', 'faded')
-                .attr('stdDeviation', 5)
-                .attr('result', 'blur');
-
-            inactive.append('feOffset')
-                .attr('in', 'blur')
-                .attr('dx', 3)
-                .attr('dy', 3)
-                .attr('result', 'offsetBlur');
-
-            inactive.append('feComponentTransfer')
-              .append('feFuncA')
-                .attr('type', 'linear')
-                .attr('slope', '0.3');
-
-            let mergeInactive = inactive.append('feMerge');
-
-            mergeInactive.append('feMergeNode');
-
-            mergeInactive.append('feMergeNode')
-                .attr('in', 'faded');
 
             // setup graph groups //////////////////////////////////////////////
 
@@ -505,13 +407,7 @@ export default class GraphEditor extends HTMLElement {
             });
 
             graph.append('g')
-                .attr('class', 'edges')
-            //    .attr('filter', 'url(#shadow-edge)') <- performance drain...
-            //  .append('circle')
-            //    .attr('cx', -100)
-            //    .attr('cy', -100)
-            //    .attr('r', 0.1)
-            //    .attr('fill', '#FFFFFF'); // fix for shadow of first line
+                .attr('class', 'edges');
 
             graph.append('g')
                 .attr('class', 'nodes');
@@ -580,10 +476,12 @@ export default class GraphEditor extends HTMLElement {
      * @param styleTemplateList list of style templates to use instead of html templates (not wrapped in style tag!)
      */
     public updateTemplates = (nodeTemplateList?: {id: string, innerHTML: string, [prop: string]: any}[],
-                              styleTemplateList?: {id?: string, innerHTML: string, [prop: string]: any}[]) => {
+                              styleTemplateList?: {id?: string, innerHTML: string, [prop: string]: any}[],
+                              markerTemplateList?: {id: string, innerHTML: string, [prop: string]: any}[]) => {
         const templates = select(this).selectAll('template');
         const stylehtml = styleTemplateList != null ? styleTemplateList : [];
         const nodehtml = nodeTemplateList != null ? nodeTemplateList : [];
+        const markerhtml = markerTemplateList != null ? markerTemplateList : [];
 
         if (styleTemplateList == null) {
             const styleTemplates = templates.filter(function() {
@@ -608,6 +506,17 @@ export default class GraphEditor extends HTMLElement {
         }
 
         this.objectCache.updateNodeTemplateCache(nodehtml);
+
+        if (markerTemplateList == null) {
+            const markerTemplates = templates.filter(function() {
+                return this.getAttribute('template-type') === 'marker';
+            });
+            markerTemplates.each(function() {
+                markerhtml.push(this);
+            });
+        }
+
+        this.objectCache.updateMarkerTemplateCache(markerhtml);
     }
 
     /**
@@ -666,20 +575,33 @@ export default class GraphEditor extends HTMLElement {
         if (updateTemplates) {
             graph.select('.edges').selectAll('g.edge:not(.dragged)').remove();
         }
-
-        let edgeSelection = graph.select('.edges')
-            .selectAll('path.edge:not(.dragged)')
+        const self = this;
+        let edgeGroupSelection = graph.select('.edges')
+            .selectAll('g.edge-group:not(.dragged)')
             .data(this._edges, edgeId);
+        edgeGroupSelection.exit().remove();
+        edgeGroupSelection.enter()
+            .append('g')
+            .attr('id', (d) => edgeId(d))
+            .classed('edge-group', true)
+            .each(function () {
+                const edgeGroup = select(this);
+                edgeGroup.append('path')
+                    .classed('edge', true)
+                    .attr('fill', 'none');
 
-        edgeSelection.exit().remove();
-
-        edgeSelection = edgeSelection.enter().append('path')
-            .classed('edge', true)
-            .attr('fill', 'none')
-            .attr('id', edgeId)
-          .merge(edgeSelection)
-            .call(this.updateEdges.bind(this))
-            .call(this.updateEdgePaths.bind(this))
+                edgeGroup.append('circle')
+                    .classed('link-handle', true)
+                    .attr('fill', 'black')
+                    .attr('r', 3);
+            })
+          .merge(edgeGroupSelection)
+            .classed('ghost', (d) => {
+                const id = edgeId(d);
+                return this.draggedEdges.some((edge) => edge.createdFrom === id);
+            })
+            .call(self.updateEdgeGroups.bind(this))
+            .call(self.updateEdgePositions.bind(this))
             .on('click', (d) => {this.onEdgeClick.bind(this)(d);});
     }
 
@@ -694,7 +616,62 @@ export default class GraphEditor extends HTMLElement {
             .attr('data-template', (d) => this.objectCache.getNodeTemplateId(d.type))
             .html((d) => {
                 return this.objectCache.getNodeTemplate(d.type);
-            });
+            })
+            .call(this.updateLinkHandles.bind(this));
+    }
+
+    private updateLinkHandles(nodeSelection) {
+        const self = this;
+        nodeSelection.each(function(d) {
+            if (self.objectCache.getNodeTemplateLinkHandles(d.type) != null) {
+                return;
+            }
+            let backgroundSelection = select(this).select('.outline');
+            if (backgroundSelection.empty()) {
+                backgroundSelection = select(this).select(':first-child');
+            }
+            if (backgroundSelection.empty()) {
+                self.objectCache.setNodeTemplateLinkHandles(d.type, [{
+                    id: 1,
+                    x: 0,
+                    y: 0,
+                }]);
+                return;
+            }
+            let linkHandles = backgroundSelection.attr('data-link-handles');
+            if (linkHandles == null) {
+                linkHandles = 'all';
+            } else {
+                if (linkHandles.startsWith('[')) {
+                    try {
+                        linkHandles = JSON.parse(linkHandles);
+                        linkHandles.forEach((element, index) => element.id = index);
+                        linkHandles.forEach(calculateNormal);
+                        self.objectCache.setNodeTemplateLinkHandles(d.type, linkHandles);
+                        return;
+                    } catch (error) {
+                        linkHandles = 'all';
+                    }
+                }
+                linkHandles = linkHandles.toLowerCase();
+            }
+            if (backgroundSelection.node().tagName === 'circle') {
+                const radius = parseFloat(backgroundSelection.attr('r'));
+                const handles: LinkHandle[] = handlesForCircle(radius, linkHandles);
+                self.objectCache.setNodeTemplateLinkHandles(d.type, handles);
+            } else if (backgroundSelection.node().tagName === 'rect') {
+                const x = parseFloat(backgroundSelection.attr('x'));
+                const y = parseFloat(backgroundSelection.attr('y'));
+                const width = parseFloat(backgroundSelection.attr('width'));
+                const height = parseFloat(backgroundSelection.attr('height'));
+                if (!isNaN(x+y+width+height)) {
+                    const handles: LinkHandle[] = handlesForRectangle(x, y, width, height, linkHandles);
+                    self.objectCache.setNodeTemplateLinkHandles(d.type, handles);
+                }
+            } else {
+                self.objectCache.setNodeTemplateLinkHandles(d.type, []);
+            }
+        });
     }
 
     /**
@@ -723,6 +700,41 @@ export default class GraphEditor extends HTMLElement {
                 self.createNodes(node);
             }
         });
+
+        nodeSelection.each(function (node) {
+            const handles = self.objectCache.getNodeTemplateLinkHandles(node.type);
+            if (handles == null) {
+                return;
+            }
+            let handleSelection = select(this).selectAll('circle.link-handle').data(handles, (handle) => handle.id);
+            handleSelection.exit().remove();
+            handleSelection = handleSelection.enter()
+                .append('circle')
+                .classed('link-handle', true)
+              .merge(handleSelection)
+                .attr('fill', 'black')
+                .attr('cx', (d) => d.x)
+                .attr('cy', (d) => d.y)
+                .attr('r', 3);
+
+
+            if (self.isInteractive) {
+                handleSelection.call(
+                    drag()
+                        .subject((handle) => {
+                            return self.createDraggedEdge(node);
+                        })
+                        .container(() => {return self.getSvg().select('g.zoom-group').select('g.edges').node();})
+                        .on('drag', () => {
+                            self.updateDraggedEdge();
+                            self.updateDraggedEdgeGroups();
+                        })
+                        .on('end', self.dropDraggedEdge.bind(self))
+                );
+            } else {
+                handleSelection.on('.drag', null);
+            }
+        })
 
         nodeSelection
             .call(this.updateNodeHighligts.bind(this));
@@ -758,12 +770,105 @@ export default class GraphEditor extends HTMLElement {
             });
     }
 
+    private updateEdgeGroups(edgeGroupSelection) {
+        if (edgeGroupSelection == null) {
+            const svg = this.getSvg();
+
+            const graph = svg.select("g.zoom-group");
+        }
+        const self = this;
+        edgeGroupSelection.each(function (d) {
+                self.updateEdgeGroup(select(this), d);
+            }, this)
+            .call(this.updateEdgeHighligts.bind(this));
+    }
+
+    private updateDraggedEdgeGroups() {
+        const svg = this.getSvg();
+
+        const graph = svg.select("g.zoom-group");
+        const edgeGroupSelection = graph.select('.edges')
+            .selectAll('g.edge-group.dragged')
+            .data(this.draggedEdges, edgeId);
+
+        edgeGroupSelection.exit().remove();
+        edgeGroupSelection.enter()
+            .append('g')
+            .attr('id', (d) => edgeId(d))
+            .classed('edge-group', true)
+            .classed('dragged', true)
+            .each(function () {
+                select(this).append('path')
+                    .classed('edge', true)
+                    .attr('fill', 'none');
+            })
+          .merge(edgeGroupSelection)
+            .call(this.updateEdgeGroups.bind(this))
+            .call(this.updateEdgePositions.bind(this));
+    }
+
+    private updateEdgePositions(edgeGroupSelection) {
+        if (edgeGroupSelection == null) {
+            const svg = this.getSvg();
+
+            const graph = svg.select("g.zoom-group");
+        }
+        const self = this;
+        edgeGroupSelection.select('path.edge')
+            .call(this.updateEdgePath.bind(this));
+        edgeGroupSelection.each(function (d) {
+            select(this).selectAll('g.marker').data(d.markers != null ? d.markers : [])
+                .call(self.updateMarkerPositions.bind(self));
+        }).each(function () {
+            const edgeGroup = select(this);
+            const path = edgeGroup.select('path.edge');
+            const length = path.node().getTotalLength();
+            const linkMarkerOffset = 10;
+            const linkHandlePos = path.node().getPointAtLength(length - linkMarkerOffset);
+            edgeGroup.select('circle.link-handle')
+                .attr('cx', linkHandlePos.x)
+                .attr('cy', linkHandlePos.y)
+                .raise();
+        });
+    }
+
+    private updateEdgeGroup(edgeGroupSelection, d) {
+        const pathSelection = edgeGroupSelection.select('path.edge:not(.dragged)').datum(d);
+        pathSelection.call(this.updateEdge.bind(this));
+        const markerSelection = edgeGroupSelection.selectAll('g.marker').data(d.markers != null ? d.markers : []);
+        markerSelection.exit().remove();
+        markerSelection.enter()
+            .append('g')
+            .classed('marker', true)
+            .call(this.createMarker.bind(this))
+          .merge(markerSelection)
+            .call(this.updateMarker.bind(this))
+            .call(this.updateMarkerPositions.bind(this));
+
+        if (this.isInteractive) {
+            edgeGroupSelection.select('circle.link-handle').call(drag()
+            .subject(() => {
+                return this.createDraggedEdgeFromExistingEdge(d);
+            })
+            .container(() => {return this.getSvg().select('g.zoom-group').select('g.edges').node();})
+            .on('start', () => this.completeRender())
+            .on('drag', () => {
+                this.updateDraggedEdge();
+                this.updateDraggedEdgeGroups();
+            })
+            .on('end', this.dropDraggedEdge.bind(this))
+            );
+        } else {
+            edgeGroupSelection.select('circle.link-handle').on('.drag', null);
+        }
+    }
+
     /**
      * Update existing edges.
      *
      * @param edgeSelection d3 selection of edges to update with bound data
      */
-    private updateEdges(edgeSelection) {
+    private updateEdge(edgeSelection) {
         if (edgeSelection == null) {
             const svg = this.getSvg();
 
@@ -774,8 +879,7 @@ export default class GraphEditor extends HTMLElement {
         }
 
         edgeSelection
-            .attr('stroke', 'black')
-            .call(this.updateEdgeHighligts.bind(this));
+            .attr('stroke', 'black');
     }
 
     /**
@@ -783,29 +887,235 @@ export default class GraphEditor extends HTMLElement {
      *
      * @param edgeSelection d3 selection of edges to update with bound data
      */
-    private updateEdgePaths(edgeSelection) {
+    private updateEdgePath(edgeSelection) {
         edgeSelection.attr('d', (d) => {
-            const source = this.objectCache.getNode(d.source);
-            const target = this.objectCache.getNode(d.target);
-            return this.edgeGenerator([source, target]);
+            const handles = this.objectCache.getEdgeLinkHandles(d);
+            const points: {x: number, y: number, [prop: string]: any}[] = [];
+            points.push(handles.sourceCoordinates);
+            if (handles.sourceHandle.normal != null) {
+                points.push({
+                    x: handles.sourceCoordinates.x + (handles.sourceHandle.normal.dx * 10),
+                    y: handles.sourceCoordinates.y + (handles.sourceHandle.normal.dy * 10),
+                });
+            }
+            if (handles.targetHandle.normal != null) {
+                points.push({
+                    x: handles.targetCoordinates.x + (handles.targetHandle.normal.dx * 10),
+                    y: handles.targetCoordinates.y + (handles.targetHandle.normal.dy * 10),
+                });
+            }
+            points.push(handles.targetCoordinates);
+            return this.edgeGenerator(points);
+        });
+    }
+
+    private createMarker = (markerSelection) => {
+        markerSelection
+            .attr('data-template', (d) => d.template)
+            .html((d) => {
+                return this.objectCache.getMarkerTemplate(d.template);
+            });
+    }
+
+    private updateMarker(markerSelection) {
+        const self = this;
+        markerSelection.each(function(d) {
+            const marker = select(this);
+            let templateType = marker.attr('data-template');
+            if (templateType !== d.template) {
+                marker.selectAll().remove();
+                self.createMarker(marker);
+            }
+        });
+    }
+
+    private updateMarkerPositions(markerSelection) {
+        markerSelection.each(function (d) {
+            const parent = select(this.parentElement);
+            const marker = select(this);
+            const path = parent.select('path.edge');
+            const length = path.node().getTotalLength();
+            let positionOnLine = d.positionOnLine;
+            if (positionOnLine === 'end') {
+                positionOnLine = 1;
+            }
+            if (positionOnLine === 'start') {
+                positionOnLine = 0;
+            }
+            positionOnLine = parseFloat(positionOnLine);
+            if (isNaN(positionOnLine)) {
+                positionOnLine = 0;
+            }
+            let transform = '';
+            const point = path.node().getPointAtLength(length * positionOnLine);
+            transform += `translate(${point.x},${point.y})`;
+            if (d.scale != null) {
+                transform += `scale(${d.scale})`;
+            }
+            if (d.rotate != null) {
+                let angle = 0;
+                if (d.rotate.normal == null) {
+                    const epsilon = positionOnLine > 0.5 ? -1e-5 : 1e-5;
+                    const point2 = path.node().getPointAtLength(length * (positionOnLine + epsilon));
+                    let normal = {
+                        dx: positionOnLine > 0.5 ? (point.x - point2.x) : (point2.x - point.x),
+                        dy: positionOnLine > 0.5 ? (point.y - point2.y) : (point2.y - point.y),
+                    }
+                    angle += calculateAngle(normal);
+                } else {
+                    angle += calculateAngle(d.rotate.normal);
+                }
+                angle += d.rotate.relativeAngle != null ? d.rotate.relativeAngle : 0;
+                transform += `rotate(${angle})`;
+            }
+            marker.attr('transform', transform);
         });
     }
 
     /**
-     * UUpdate all node positions and edge paths.
+     * Update all node positions and edge paths.
      */
     private updateGraphPositions() {
         const svg = this.getSvg();
 
         const graph = svg.select("g.zoom-group");
-        const nodeSelection = graph.select('.nodes')
+        graph.select('.nodes')
             .selectAll('g.node')
             .data(this._nodes, (d) => {return d.id;})
             .call(this.updateNodePositions.bind(this));
-        const edgeSelection = graph.select('.edges')
-            .selectAll('path.edge:not(.dragged)')
+
+        graph.select('.edges')
+            .selectAll('g.edge-group:not(.dragged)')
             .data(this._edges, edgeId)
-            .call(this.updateEdgePaths.bind(this));
+            .call(this.updateEdgePositions.bind(this));
+
+        graph.select('.edges')
+            .selectAll('g.edge-group.dragged')
+            .data(this.draggedEdges, edgeId)
+            .call(this.updateEdgePositions.bind(this));
+    }
+
+    private createDraggedEdge(sourceNode: Node): DraggedEdge {
+        const validTargets = new Set<string>();
+        this._nodes.forEach(node => validTargets.add(node.id.toString()));
+        this.objectCache.getEdgesBySource(sourceNode.id).forEach(edge => validTargets.delete(edge.target.toString()));
+        validTargets.delete(sourceNode.id.toString())
+        let draggedEdge: DraggedEdge = {
+            id: sourceNode.id.toString() + Date.now().toString(),
+            source: sourceNode.id,
+            target: null,
+            validTargets: validTargets,
+            currentTarget: {x: event.x, y: event.y},
+        }
+        if (this.onCreateDraggedEdge != null) {
+            draggedEdge = this.onCreateDraggedEdge(draggedEdge);
+            if (draggedEdge == null) {
+                return null;
+            }
+        }
+        this.draggedEdges.push(draggedEdge);
+        return draggedEdge;
+    }
+
+    private createDraggedEdgeFromExistingEdge(edge: Edge): DraggedEdge {
+        const validTargets = new Set<string>();
+        this._nodes.forEach(node => validTargets.add(node.id.toString()));
+        this.objectCache.getEdgesBySource(edge.source).forEach(edgeOutgoing => {
+            if (edgeId(edge) !== edgeId(edgeOutgoing)) {
+                validTargets.delete(edgeOutgoing.target.toString());
+            }
+        });
+        let draggedEdge: DraggedEdge = {
+            id: edge.source.toString() + Date.now().toString(),
+            createdFrom: edgeId(edge),
+            source: edge.source,
+            target: null,
+            validTargets: validTargets,
+            currentTarget: {x: event.x, y: event.y},
+            markers: [],
+        }
+        if (edge.markers != null) {
+            draggedEdge.markers = JSON.parse(JSON.stringify(edge.markers));
+        }
+        if (this.onCreateDraggedEdge != null) {
+            draggedEdge = this.onCreateDraggedEdge(draggedEdge);
+            if (draggedEdge == null) {
+                return null;
+            }
+        }
+        this.draggedEdges.push(draggedEdge);
+        return draggedEdge;
+    }
+
+    private updateDraggedEdge() {
+        const oldTarget = event.subject.target;
+        event.subject.target = null;
+        event.subject.currentTarget.x = event.x;
+        event.subject.currentTarget.y = event.y;
+        let possibleTarget = this.root.elementFromPoint(event.sourceEvent.clientX, event.sourceEvent.clientY);
+        if (possibleTarget != null) {
+            let target = select(possibleTarget);
+            while (!target.empty()) {
+                if (target.classed('node')) {
+                    const id = target.attr('id');
+                    if (event.subject.source == id) {
+                        break;
+                    }
+                    event.subject.target = id;
+                    break;
+                }
+                target = select(target.node().parentElement);
+            }
+        }
+        if (event.subject.target != null) {
+            if (!event.subject.validTargets.has(event.subject.target)) {
+                event.subject.target = null;
+            }
+        }
+        if (event.subject.target !== oldTarget) {
+            if (this.onDraggedEdgeTargetChange != null) {
+                const source = this.objectCache.getNode(event.subject.source);
+                const target = event.subject.target != null ? this.objectCache.getNode(event.subject.target) : null;
+                this.onDraggedEdgeTargetChange(event.subject, source, target);
+            }
+        }
+    }
+
+    private dropDraggedEdge() {
+        let updateEdgeCache = false;
+        if (event.subject.createdFrom != null) {
+            const edge = this.objectCache.getEdge(event.subject.createdFrom);
+            if (event.subject.target !== edge.target.toString()) {
+                const index = this._edges.findIndex(edge => edgeId(edge) === event.subject.createdFrom);
+                if (!this.onEdgeRemove(this._edges[index])) {
+                    return;
+                }
+                this._edges.splice(index, 1);
+                updateEdgeCache = true;
+            }
+        }
+        const index = this.draggedEdges.findIndex(edge => edge.id === event.subject.id);
+        this.draggedEdges.splice(index, 1);
+        this.updateDraggedEdgeGroups();
+        if (event.subject.target != null) {
+            let edge = event.subject;
+            delete edge.id;
+            if (this.onDropDraggedEdge != null) {
+                edge = this.onDropDraggedEdge(edge, this.objectCache.getNode(edge.source), this.objectCache.getNode(edge.target));
+            }
+            if (event.subject.createdFrom != null && event.subject.target === this.objectCache.getEdge(event.subject.createdFrom).target.toString()) {
+                this.completeRender();
+            } else {
+                if (this.onEdgeCreate(edge)) {
+                    this._edges.push(edge);
+                    updateEdgeCache = true;
+                }
+            }
+        }
+        if (updateEdgeCache) {
+            this.objectCache.updateEdgeCache(this._edges);
+            this.completeRender();
+        }
     }
 
     /**
@@ -1071,7 +1381,7 @@ export default class GraphEditor extends HTMLElement {
 
             const graph = svg.select("g.zoom-group");
             edgeSelection = graph.select('.edges')
-                .selectAll('path.edge:not(.dragged)')
+                .selectAll('g.edge-group:not(.dragged)')
                 .data(this._edges, edgeId);
         }
 

@@ -54,6 +54,7 @@ public class Service {
     //docker information
     private String dockerImageName;
     private String dockerImageUri;
+
     public Service() {
     }
 

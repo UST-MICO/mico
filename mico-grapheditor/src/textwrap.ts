@@ -1,6 +1,20 @@
 import {select, scaleLinear, zoom, zoomIdentity, zoomTransform, event, line, curveStep, drag} from "d3";
 
-
+/**
+ * Wrap text in an svg text element.
+ *
+ * Only wraps text if a 'width' or 'data-width' attribute is
+ * present on text element.
+ *
+ * For multiline wrapping an additional 'height' or 'data-height'
+ * attribute is neccessary.
+ *
+ * Partly uses css attributes 'text-overflow' and 'word-break'
+ * to determine how to wrap text.
+ *
+ * @param element element to wrap text into
+ * @param newText text to wrap
+ */
 export function wrapText(element: SVGTextElement, newText) {
     const text = select(element);
     const x = parseFloat(text.attr('x'));
@@ -34,10 +48,10 @@ export function wrapText(element: SVGTextElement, newText) {
     if (isNaN(height)) {
         const overflow = lTrim(wrapSingleLine(element, width, newText, overflowMode, wordBreak));
         text.attr('data-wrapped', overflow !== '' ? 'true' : 'false');
-        console.log('"' + overflow + '"')
         return;
     }
-    // TODO wrap multiline textbox
+
+    // wrap multiline
     const spanSelection = calculateMultiline(text, height, x, y);
     const lines = spanSelection.nodes();
     for (let index = 0; index < lines.length; index++) {
@@ -45,9 +59,6 @@ export function wrapText(element: SVGTextElement, newText) {
         const last = index < (lines.length-1);
         newText = lTrim(wrapSingleLine(line, width, newText, last ? 'clip' : overflowMode, last ? wordBreak : 'break-all'))
     }
-
-    //console.log(x, y, width, height, newText)
-    //console.log(text.node().getBBox());
 }
 
 /**
@@ -68,12 +79,21 @@ function lTrim(text: string) {
     return text.replace(/^\s+/, '');
 }
 
+/**
+ * Calculate and create a multiline span group.
+ *
+ * @param text parent text element
+ * @param height max height
+ * @param x
+ * @param y
+ * @param linespacing 'auto' or number (default: 'auto')
+ */
 function calculateMultiline(text, height, x, y, linespacing: string='auto') {
     let lineheight = parseFloat(text.attr('data-lineheight'));
     if (isNaN(lineheight)) {
         lineheight = parseFloat(text.style('line-height'));
         if (isNaN(lineheight)) {
-            text.text('M');
+            text.text('M'); // use M as measurement character.
             lineheight = text.node().getBBox().height;
             text.text(null);
         }
@@ -81,6 +101,7 @@ function calculateMultiline(text, height, x, y, linespacing: string='auto') {
     }
     const lines: number[] = [];
     if (linespacing === 'auto') {
+        // ideal linespacing => max number of lines, equal distance, last line at y+height
         let nrOfLines = Math.floor(height / lineheight);
         if (nrOfLines <= 0) {
             nrOfLines = 1;
