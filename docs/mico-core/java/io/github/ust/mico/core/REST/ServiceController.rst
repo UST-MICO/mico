@@ -32,7 +32,7 @@ ServiceController
 .. java:package:: io.github.ust.mico.core.REST
    :noindex:
 
-.. java:type:: @RestController @RequestMapping public class ServiceController
+.. java:type:: @CrossOrigin @RestController @RequestMapping public class ServiceController
 
 Fields
 ------

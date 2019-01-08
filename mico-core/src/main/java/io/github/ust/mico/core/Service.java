@@ -2,6 +2,7 @@ package io.github.ust.mico.core;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import io.swagger.annotations.ApiModelProperty;
 import org.neo4j.ogm.annotation.GeneratedValue;
@@ -9,6 +10,7 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
+import java.util.LinkedList;
 import java.util.List;
 
 @JsonIdentityInfo(
@@ -29,20 +31,22 @@ public class Service {
     private String description;
 
     //additional fields
-    private Service predecessor; // -
-    private String vcsRoot; // x
-    private String name; // x
-    private String dockerfile; // x
-    private String contact; // x
-    private List<String> tags; // -
-    private String lifecycle; // -
-    private List<String> links; // -
-    private String type; // -
-    private String owner; // x
+    private Service predecessor;
+    private String vcsRoot;
+    private String name;
+    private String dockerfile;
+    private String contact;
+    private List<String> tags;
+    private String lifecycle;
+    private List<String> links;
+    private String type;
+    private String owner;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Relationship(type = "DEPENDS_ON")
-    private List<DependsOn> dependsOn; // service dependencies
+    private List<DependsOn> dependsOn;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Relationship(direction = Relationship.UNDIRECTED)
-    private List<ServiceInterface> serviceInterfaces; // service interfaces
+    private List<ServiceInterface> serviceInterfaces = new LinkedList<>();
 
     //crawling information
     private String externalVersion;

@@ -5,9 +5,9 @@ import { MatDialog } from '@angular/material';
 import { CreateServiceDialogComponent } from '../dialogs/create-service/create-service.component';
 
 @Component({
-  selector: 'mico-dashboard',
-  templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.css']
+    selector: 'mico-dashboard',
+    templateUrl: './dashboard.component.html',
+    styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit {
 
@@ -22,14 +22,15 @@ export class DashboardComponent implements OnInit {
 
     displayedColumns: string[] = ['id', 'name', 'shortName'];
 
-    ngOnInit() {    }
+    ngOnInit() { }
+
 
     /**
      * receives a list of applications from the apiService
      */
     getApplications(): void {
         this.apiService.getApplications()
-        .subscribe(applications => this.applications = applications);
+            .subscribe(applications => this.applications = applications);
     }
 
 

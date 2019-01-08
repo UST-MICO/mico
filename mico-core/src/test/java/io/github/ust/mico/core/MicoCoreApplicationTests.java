@@ -40,6 +40,7 @@ public class MicoCoreApplicationTests {
     @Autowired
     private ServiceInterfaceRepository serviceInterfaceRepository;
 
+
     public static void checkDefaultService(Service serviceTest) {
         List<ServiceInterface> serviceInterfacesTest = serviceTest.getServiceInterfaces();
 

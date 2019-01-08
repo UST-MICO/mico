@@ -324,5 +324,5 @@ Public API
 ----------
 
 .. js:autoclass:: GraphEditor
-   :members: nodeList, edgeList, mode, zoomMode, setMode, setZoomMode, setNodes, setEdges, addNode, removeNode, addEdge, removeEdge, completeRender, zoomToBoundingBox
+   :members: nodeList, edgeList, mode, zoomMode, setMode, setZoomMode, setNodes, setEdges, addNode, removeNode, addEdge, removeEdge, completeRender, zoomToBoundingBox, onCreateDraggedEdge, onDraggedEdgeTargetChange, onDropDraggedEdge
 

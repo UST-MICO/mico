@@ -103,7 +103,9 @@ public class MicoService {
     @Relationship(type = "PREDECESSOR", direction = Relationship.OUTGOING)
     private MicoService predecessor;
 
-    // Human readable contact information for support purposes.
+    /**
+     * Human readable contact information for support purposes.
+     */
     private String contact;
 
     /**
