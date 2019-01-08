@@ -55,7 +55,6 @@ public class MicoService {
      * The version of this service.
      */
     @ApiModelProperty(required = true)
-//    private final String version;
     private final Version version;
 
     /**
