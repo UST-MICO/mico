@@ -3,9 +3,9 @@ import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
 
 @Component({
-  selector: 'mico-service-list',
-  templateUrl: './service-list.component.html',
-  styleUrls: ['./service-list.component.css']
+    selector: 'mico-service-list',
+    templateUrl: './service-list.component.html',
+    styleUrls: ['./service-list.component.css']
 })
 export class ServiceListComponent implements OnInit {
 
@@ -22,8 +22,10 @@ export class ServiceListComponent implements OnInit {
     ngOnInit() {
     }
 
-     getServices(): void {
+    getServices(): void {
         this.apiService.getServices()
-        .subscribe(service => this.services = service);
+            .subscribe(val => {
+                this.services = val;
+            });
     }
 }

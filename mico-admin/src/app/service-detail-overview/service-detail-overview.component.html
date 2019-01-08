@@ -1,13 +1,3 @@
-<!-- TODO: add buttons, TODO check usage...-->
-<div class="flex">
-    <h3 class="flex-grow-1">{{service.name}}</h3>
-    <mat-button-toggle class="mv1 inline-flex items-center" value="edit" [checked]="edit" (change)="edit = !edit"><span
-            class="mr2">Edit</span>
-        <mat-icon>edit</mat-icon>
-    </mat-button-toggle>
-</div>
-<mat-divider></mat-divider>
-
 <div class="flex">
     <!-- Information Grid-->
     <div class="flex-grow-1 ma2 ml0 flex flex-column">
@@ -15,35 +5,19 @@
         <div class="relative w-100">
             <ng-container *ngIf="!edit">
                 <!-- display version -->
+                <!-- TODO change to serviceGET (as soon as api is available -->
+                <mico-data [modelUrl]="'local/servicePUT'" [startData]="service"></mico-data>
+
+                <!-- TODO hard coded information - not yet part of the domain model-->
                 <mat-list dense>
-                    <mat-list-item class="mat-list-item mt2">
-                        <b>VCS Root</b>
-                    </mat-list-item>
-                    <mat-divider></mat-divider>
-                    <mat-list-item>
-                        http://...
-                    </mat-list-item>
-
-                    <mat-list-item class="mat-list-item mt2">
-                        <b>Documentation</b>
-                    </mat-list-item>
-                    <mat-divider></mat-divider>
-                    <mat-list-item>
-                        http://...
-                    </mat-list-item>
-
                     <mat-list-item class="mt2">
                         <b>Info</b>
                     </mat-list-item>
                     <mat-divider></mat-divider>
                     <mat-list-item>
-                        Owner: name
-                    </mat-list-item>
-                    <mat-list-item>
                         Type: service
                     </mat-list-item>
                     <mat-list-item>
-                        <!-- TODO FIX tags (are shown in a strange way...) -->
                         Tags:
                         <mat-chip-list class="ma1">
                             <mat-chip>awesome</mat-chip>
@@ -76,6 +50,13 @@
     <!-- Controling Grid-->
     <div class="w-25 ma2 flex-column">
 
+        <div class="w-100" style="display: flex; justify-content: flex-end">
+            <mat-button-toggle class="mt1 mb2 inline-flex items-center" value="edit" [checked]="edit" (change)="edit = !edit"><span
+                    class="mr2">Edit</span>
+                <mat-icon>edit</mat-icon>
+            </mat-button-toggle>
+        </div>
+
         <!-- Provides/Dependencies box-->
         <div class="w-100">
             <mat-card>
@@ -83,7 +64,6 @@
                     <mat-action-list>
                         <mat-divider></mat-divider>
                         <div class="flex" (click)="addProvides()">
-                            <!-- TODO method not existing yet-->
                             <div class="flex-grow-1">
                                 <mat-list-item>
                                     <span mat-line><b>Provides</b></span>
@@ -96,7 +76,27 @@
                             </div>
                         </div>
                         <mat-divider></mat-divider>
-                        <!-- TODO list provides -->
+                        <!-- Service Interfaces -->
+                        <div *ngFor="let interface of serviceInterfaces">
+                            <div class="flex">
+                                <div class="flex-grow-1">
+                                    <mat-list-item.large style="font-size:small">
+                                        <div class="pv2 pl4">
+                                            {{interface.Name}}<br>
+                                            {{interface.Port}}<br>
+                                            {{interface.Protocol}}<br>
+                                            {{interface.TransportProtocol}}
+                                        </div>
+                                    </mat-list-item.large>
+                                </div>
+                                <div class="w-20">
+                                    <mat-list-item>
+                                        <mat-icon (click)="deleteServiceInterface(interface.Name)">delete</mat-icon>
+                                    </mat-list-item>
+                                </div>
+                            </div>
+                            <mat-divider></mat-divider>
+                        </div>
 
                         <!-- INTERNAL DEPENDENCIES-->
                         <div class="flex" (click)="addInternalDependency()">

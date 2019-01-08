@@ -1,21 +1,35 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
-import 'mico-grapheditor/dist/bundle';
-
 // modules
 
 import {
-    MatButtonModule, MatButtonToggleModule, MatCardModule, MatMenuModule,
-    MatIconModule, MatListModule, MatSidenavModule, MatDialogModule, MatToolbarModule,
-    MatTooltipModule, MatTableModule, MatInputModule, MatTabsModule, MatChipsModule, MatSlideToggleModule,
+    MatButtonModule,
+    MatButtonToggleModule,
+    MatCardModule,
+    MatMenuModule,
+    MatIconModule,
+    MatListModule,
+    MatSidenavModule,
+    MatDialogModule,
+    MatToolbarModule,
+    MatTooltipModule,
+    MatTableModule,
+    MatInputModule,
+    MatTabsModule,
+    MatChipsModule,
+    MatSlideToggleModule
 } from '@angular/material';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { HttpModule } from '@angular/http';
 
 import { RoutingModule } from './routing.module';
+
+import { GraphsModule } from './graphs/graphs.module';
 
 // components
 import { AppComponent } from './app.component';
@@ -41,7 +55,14 @@ import { MicoFormBooleanComponent } from './forms/mico-form-boolean/mico-form-bo
 import { MicoFormNumberComponent } from './forms/mico-form-number/mico-form-number.component';
 import { ServicePickerComponent } from './dialogs/service-picker/service-picker.component';
 import { YesNoDialogComponent } from './dialogs/yes-no-dialog/yes-no-dialog.component';
-
+import { CreateServiceInterfaceComponent } from './dialogs/create-service-interface/create-service-interface.component';
+import { MetricChartComponent } from './metric-chart/metric-chart.component';
+import { ChartComponent } from './metric-chart/chart/chart.component';
+import { OwlDateTimeModule, OwlNativeDateTimeModule } from 'ng-pick-datetime';
+import { MicoDataComponent } from './data-view/mico-data/mico-data.component';
+import { MicoDataStringComponent } from './data-view/mico-data-string/mico-data-string.component';
+import { MicoDataContainerComponent } from './data-view/mico-data-container/mico-data-container.component';
+import { MicoDataBooleanComponent } from './data-view/mico-data-boolean/mico-data-boolean.component';
 
 @NgModule({
     declarations: [
@@ -64,12 +85,20 @@ import { YesNoDialogComponent } from './dialogs/yes-no-dialog/yes-no-dialog.comp
         MicoFormNumberComponent,
         ServicePickerComponent,
         YesNoDialogComponent,
+        CreateServiceInterfaceComponent,
+        MetricChartComponent,
+        ChartComponent,
+        MicoDataComponent,
+        MicoDataStringComponent,
+        MicoDataContainerComponent,
+        MicoDataBooleanComponent
     ],
     entryComponents: [
         // dialogs
         CreateServiceDialogComponent,
         ServicePickerComponent,
         YesNoDialogComponent,
+        CreateServiceInterfaceComponent
     ],
     imports: [
         BrowserModule,
@@ -78,6 +107,11 @@ import { YesNoDialogComponent } from './dialogs/yes-no-dialog/yes-no-dialog.comp
         ReactiveFormsModule,
 
         RoutingModule,
+
+        GraphsModule,
+
+        HttpModule,
+
 
         // material
         BrowserAnimationsModule,
@@ -98,11 +132,12 @@ import { YesNoDialogComponent } from './dialogs/yes-no-dialog/yes-no-dialog.comp
         MatSlideToggleModule,
         MatAutocompleteModule,
         MatCheckboxModule,
+        MatExpansionModule,
+        OwlDateTimeModule,
+        OwlNativeDateTimeModule
     ],
     providers: [],
     bootstrap: [AppComponent],
-    schemas: [
-        CUSTOM_ELEMENTS_SCHEMA
-    ]
+    schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export class AppModule { }
+export class AppModule {}

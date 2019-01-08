@@ -6,7 +6,7 @@ import { ApiObject } from '../api/apiobject';
 import { ServicePickerComponent } from '../dialogs/service-picker/service-picker.component';
 import { MatDialog } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
-
+import { CreateServiceInterfaceComponent } from '../dialogs/create-service-interface/create-service-interface.component';
 
 @Component({
     selector: 'mico-service-detail-overview',
@@ -14,19 +14,21 @@ import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.com
     styleUrls: ['./service-detail-overview.component.css']
 })
 export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
-
     private serviceSubscription: Subscription;
     private paramSubscription: Subscription;
+    private subProvide: Subscription;
+    private subInternalDependency: Subscription;
+    private subExternalDependency: Subscription;
+    private subDeleteDependency: Subscription;
+    private subDeleteServiceInterface: Subscription;
+    private subServiceInterfaces: Subscription;
 
-    constructor(
-        private apiService: ApiService,
-        private route: ActivatedRoute,
-        private dialog: MatDialog,
-    ) { }
+    constructor(private apiService: ApiService, private route: ActivatedRoute, private dialog: MatDialog) {}
 
     @Input() service: ApiObject;
-    @Input() internalDependencies = [];
-    @Input() externalDependencies = [];
+    internalDependencies = [];
+    externalDependencies = [];
+    serviceInterfaces = [];
 
     // will be used by the update form
     serviceData;
@@ -35,18 +37,25 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
     id: number;
 
     ngOnInit() {
-
         this.paramSubscription = this.route.params.subscribe(params => {
             this.update(parseInt(params['id'], 10));
         });
     }
 
     ngOnDestroy() {
-        if (this.serviceSubscription != null) {
-            this.serviceSubscription.unsubscribe();
-        }
-        if (this.paramSubscription != null) {
-            this.paramSubscription.unsubscribe();
+        this.unsubscribe(this.serviceSubscription);
+        this.unsubscribe(this.paramSubscription);
+        this.unsubscribe(this.subProvide);
+        this.unsubscribe(this.subInternalDependency);
+        this.unsubscribe(this.subExternalDependency);
+        this.unsubscribe(this.subDeleteDependency);
+        this.unsubscribe(this.subDeleteServiceInterface);
+        this.unsubscribe(this.subServiceInterfaces);
+    }
+
+    unsubscribe(subscription: Subscription) {
+        if (subscription != null) {
+            subscription.unsubscribe();
         }
     }
 
@@ -54,7 +63,6 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
         if (id === this.id) {
             return;
         } else {
-
             this.id = id;
 
             if (this.serviceSubscription != null) {
@@ -62,8 +70,9 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
             }
         }
 
-        this.serviceSubscription = this.serviceSubscription = this.apiService.getServiceById(id)
-            .subscribe(service => this.service = service);
+        this.serviceSubscription = this.serviceSubscription = this.apiService
+            .getServiceById(id)
+            .subscribe(service => (this.service = service));
 
         // get dependencies and their status
         const internal = [];
@@ -77,10 +86,11 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
             external.push(this.getServiceMetaData(element));
         });
         this.externalDependencies = external;
+
+        this.subServiceInterfaces = this.apiService.getServiceInterfaces(id).subscribe(element => (this.serviceInterfaces = element));
     }
 
     editOrSave() {
-        console.log('edit or save');
         if (this.edit) {
             // TODO save content
         }
@@ -89,59 +99,83 @@ export class ServiceDetailOverviewComponent implements OnInit, OnDestroy {
 
     getServiceMetaData(id) {
         let service_object;
-        this.apiService.getServiceById(id).subscribe(val => service_object = val);
-        const return_object = {
-            'id': id,
-            'name': service_object.name,
-            'shortName': service_object.shortName,
-            'status': service_object.status,
+        this.apiService.getServiceById(id).subscribe(val => (service_object = val));
+        const tempObject = {
+            id: id,
+            name: service_object.name,
+            shortName: service_object.shortName,
+            status: service_object.status
         };
-        return return_object;
+        return tempObject;
+    }
+
+    addProvides() {
+        const dialogRef = this.dialog.open(CreateServiceInterfaceComponent);
+        this.subProvide = dialogRef.afterClosed().subscribe(result => {
+            console.log(result);
+            // TODO use result in a useful way
+        });
     }
 
     addInternalDependency() {
         const dialogRef = this.dialog.open(ServicePickerComponent, {
             data: {
-                filter: "internal",
+                filter: 'internal',
+                choice: 'multi',
                 exisitingDependencies: this.internalDependencies,
-                serviceId: this.id,
+                serviceId: this.id
             }
         });
-        dialogRef.afterClosed().subscribe(result => {
+        this.subInternalDependency = dialogRef.afterClosed().subscribe(result => {
             console.log(result);
+            // TODO use result in a useful way
         });
-        // TODO use result in a useful way
     }
 
     addExternalDependency() {
         const dialogRef = this.dialog.open(ServicePickerComponent, {
             data: {
-                filter: "external",
+                filter: 'external',
+                choice: 'multi',
                 exisitingDependencies: this.externalDependencies,
-                serviceId: this.id,
+                serviceId: this.id
             }
         });
-        dialogRef.afterClosed().subscribe(result => {
+        this.subExternalDependency = dialogRef.afterClosed().subscribe(result => {
             console.log(result);
+            // TODO use result in a useful way
         });
-        // TODO use result in a useful way
     }
 
     deleteDependency(id) {
-
         const dialogRef = this.dialog.open(YesNoDialogComponent, {
             data: {
                 object: this.getServiceMetaData(id).shortName,
-                question: 'deleteDependency',
+                question: 'deleteDependency'
             }
         });
 
-        dialogRef.afterClosed().subscribe(result => {
+        this.subDeleteDependency = dialogRef.afterClosed().subscribe(result => {
             if (result) {
-                console.log("delete " + id)
+                console.log('delete ' + id);
                 // TODO really delete the dependency
             }
         });
     }
 
+    deleteServiceInterface(id) {
+        const dialogRef = this.dialog.open(YesNoDialogComponent, {
+            data: {
+                object: id,
+                question: 'deleteServiceInterface'
+            }
+        });
+
+        this.subDeleteServiceInterface = dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+                console.log('delete ' + id);
+                // TODO really delete the dependency
+            }
+        });
+    }
 }

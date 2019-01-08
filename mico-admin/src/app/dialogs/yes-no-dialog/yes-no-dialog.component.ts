@@ -19,7 +19,7 @@ export class YesNoDialogComponent implements OnInit {
     ngOnInit() {
     }
 
-    input() {
+    confirm() {
         return true;
     }
 

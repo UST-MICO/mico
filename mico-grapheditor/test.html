@@ -3,14 +3,156 @@
     <head>
         <meta charset="utf-8" />
         <title>Test</title>
+        <style>
+            html {height: 100%}
+            body {height: 100%}
+        </style>
     </head>
     <body>
         <script src="./dist/bundle.js"></script>
-        <network-graph nodes="[{'id': 1, 'title': 'hello world', 'x': 0, 'y': 0}, {'id': 2, 'title': 'HI2', 'x': 50, 'y': 50}]"
-                edges="[{'source': 1, 'target': 2}]">
-            <template>
-                <h1 data-content="Hello World!"></h1>
+        <network-graph nodes="[{'id': 1, 'title': 'hello world', 'type': 'REST', 'x': 0, 'y': 0}, {'id': 2, 'title': 'HI2', 'type': 'gRPC', 'x': 150, 'y': 100}]"
+                edges="[{'source': 1, 'target': 2}]"
+                mode="layout"
+                onclick="() => console.log('HI')"
+                zoom="both">
+            <template template-type="style">
+                <style>
+                    .ghost {opacity: 0.5;}
+                    .node {fill: aqua;}
+                    .link-handle {display: none; fill: black; opacity: 0.1; transition:r 0.25s ease-out;}
+                    .edge-group .link-handle {display: initial}
+                    .link-handle:hover {opacity: 0.7; r: 5;}
+                    .text {fill: black; font-size: 6pt; text-overflow: ellipsis; word-break: break-word}
+                    .text.title {font-size: initial; text-overflow: clip; word-break: break-word;}
+                    .node.hovered {fill: red;}
+                    .hovered .link-handle {display: initial;}
+                    .node.selected {fill: green; content:attr(class)}
+                    .edge {marker-end: url(#arrow)}
+                    .highlight-outgoing .edge {stroke: red;}
+                    .highlight-incoming .edge {stroke: green;}
+                    .highlight-outgoing .marker {fill: red;}
+                    .highlight-incoming .marker {fill: green;}
+                </style>
+            </template>
+            <template id="REST" template-type="node">
+                <rect width="100" height="60" x="-50" y="-30" data-link-handles="edges">
+                </rect>
+                <text class="title text" data-content="title" data-click="title" x="-40" y="-10" width="80"></text>
+                <text class="text" data-content="description" x="-40" y="5" width="80" height="30"></text>
+            </template>
+            <template id="gRPC" template-type="node">
+                <rect width="100" height="40" x="-50" y="-20" data-link-handles="edges">
+                </rect>
+                <text class="title text" data-content="title" data-click="title" x="-40" y="-5"></text>
+                <text class="text" data-content="type" x="-40" y="15"></text>
+            </template>
+            <template id="arrow" template-type="marker">
+                <path d="M -9 -5 L 1 0 L -9 5 z" />
             </template>
         </network-graph>
+
+        <script>
+            var graph = document.querySelector('network-graph');
+
+            graph.onCreateDraggedEdge = (edge) => {
+                if (edge.createdFrom == null || edge.createdFrom == undefined) {
+                    edge.markers = [{template: 'arrow', positionOnLine: 1, scale: 0.5, rotate: {relativeAngle: 0}},];
+                }
+                return edge
+            }
+
+            graph.onDraggedEdgeTargetChange = (edge, source, target) => {
+                if (target == null || target == undefined) {
+                    // leave edge in last state
+                } else if (target.type === 'gRPC') {
+                    edge.markers = [
+                        {template: 'arrow', positionOnLine: 0.97, scale: 0.5, rotate: {relativeAngle: 0}},
+                        {template: 'arrow', positionOnLine: 1, scale: 0.5, rotate: {relativeAngle: 0}},
+                    ];
+                } else if (target.type === 'REST') {
+                    edge.markers = [
+                        {template: 'arrow', positionOnLine: 1, scale: 0.5, rotate: {relativeAngle: 0}},
+                    ];
+                }
+                return edge
+            }
+
+            graph.onDropDraggedEdge = (edge, source, target) => {
+                if (target.type === 'gRPC') {
+                    edge.markers = [
+                        {template: 'arrow', positionOnLine: 0.99, scale: 0.5, rotate: {relativeAngle: 0}},
+                        {template: 'arrow', positionOnLine: 1, scale: 0.5, rotate: {relativeAngle: 0}},
+                    ];
+                }
+                return edge
+            }
+
+            if (true) {
+                graph.nodeList = [
+                    {id: 1, title: 'hello world 2 with a very long text', type: 'REST', description: 'This is a really long text that is wrapped in multiple lines.', x: 0, y: 0},
+                    {id: 2, title: 'HI 3', type: 'gRPC', x: 150, y: 100},
+                    {id: 3, title: 'New', type: 'gRPC', x: 270, y: 50},
+                ];
+                graph.edgeList = [
+                    {source: 1, target: 2},
+                    {source: 2, target: 3},
+                ]
+
+                graph.addNode({id: 4, title: 'NEU', type: 'mqtt', x: 130, y: -50});
+                graph.addEdge({source: 4, target: 1, markers: [
+                    {template: 'arrow', positionOnLine: 1, scale: 0.5, rotate: {relativeAngle: 0}},
+                    {template: 'arrow', positionOnLine: 0.3, scale: 0.5, rotate: {normal: {dx: -1, dy: 0}, relativeAngle: 0}},
+                    {template: 'arrow', positionOnLine: 0.1, scale: 0.5, rotate: {relativeAngle: 0}},
+                ]});
+
+                graph.removeNode(3);
+
+                graph.completeRender();
+                graph.zoomToBoundingBox();
+            }
+
+            if (true) {
+                graph.addEventListener('modechange', function test(event) {
+                    console.log(event.type, event.detail);
+                });
+                graph.addEventListener('zoommodechange', function test(event) {
+                    console.log(event.type, event.detail);
+                });
+                graph.addEventListener('selection', function test(event) {
+                    console.log(event.type, event.detail);
+                });
+                graph.addEventListener('nodeclick', function test(event) {
+                    console.log(event.type, event.detail);
+                    if (event.detail.key === 'title') {
+                        event.preventDefault();
+                    }
+                });
+            }
+            if (false) {
+                graph.addEventListener('nodeenter', function test(event) {
+                    console.log(event.type, event.detail);
+                });
+                graph.addEventListener('nodeleave', function test(event) {
+                    console.log(event.type, event.detail);
+                });
+                graph.addEventListener('nodepositionchange', function test(event) {
+                    console.log(event.type, event.detail);
+                });
+            }
+            if (true) {
+                graph.addEventListener('nodeadd', function test(event) {
+                    console.log(event.type, event.detail);
+                });
+                graph.addEventListener('noderemove', function test(event) {
+                    console.log(event.type, event.detail);
+                });
+                graph.addEventListener('edgeadd', function test(event) {
+                    console.log(event.type, event.detail);
+                });
+                graph.addEventListener('edgeremove', function test(event) {
+                    console.log(event.type, event.detail);
+                });
+            }
+        </script>
     </body>
 </html>
