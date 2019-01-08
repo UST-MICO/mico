@@ -18,12 +18,9 @@ import lombok.Data;
 @RelationshipEntity
 public class MicoServiceDependency {
 
-<<<<<<< HEAD
     /**
      * The id of this service dependency.
      */
-=======
->>>>>>> master
     @Id
     @GeneratedValue
     private final long id;
