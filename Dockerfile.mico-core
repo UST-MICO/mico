@@ -1,10 +1,14 @@
 FROM maven:3-jdk-8 as builder
 
-COPY . /app
-WORKDIR /app
-RUN mvn -pl mico-core package -DskipTests
+#Cache dependencies
+COPY pom.xml app/
+COPY mico-core/pom.xml app/mico-core/pom.xml
+RUN mvn -f app/mico-core/pom.xml dependency:go-offline
+
+COPY . app/
+RUN mvn -f app/mico-core/pom.xml clean package -Dmaven.test.skip=true
 
 FROM openjdk:8-alpine
 VOLUME /tmp
-COPY --from=builder /app/mico-core/target/mico-core*.jar mico.jar
+COPY --from=builder app/mico-core/target/mico-core*.jar mico.jar
 ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/mico.jar"]
