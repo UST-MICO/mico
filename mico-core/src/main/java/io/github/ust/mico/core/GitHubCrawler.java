@@ -1,17 +1,18 @@
 package io.github.ust.mico.core;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class GitHubCrawler {
 
@@ -45,9 +46,7 @@ public class GitHubCrawler {
             service.setVcsRoot(releaseInfoJson.get("url").textValue());
 
             return service;
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (VersionNotSupportedException e) {
+        } catch (IOException|VersionNotSupportedException e) {
             e.printStackTrace();
         }
         return null;

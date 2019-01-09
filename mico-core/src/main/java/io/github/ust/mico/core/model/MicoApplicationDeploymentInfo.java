@@ -23,6 +23,9 @@ import lombok.Singular;
 @NodeEntity
 public class MicoApplicationDeploymentInfo {
 
+    /**
+     * The id of this application deployment info.
+     */
     @Id
     @GeneratedValue
     private final long id;
@@ -35,7 +38,7 @@ public class MicoApplicationDeploymentInfo {
     // The service deployment info for each service this
     // application is composed of (service id -> service deployment info).
     @ApiModelProperty(required = true)
-    @Relationship // TODO: @Jan -> check please.
+    @Relationship  //TODO: @Jan -> add more info, Annotation needed?
     @Singular
     private final Map<Long, MicoServiceDeploymentInfo> serviceDeploymentInfos;
 

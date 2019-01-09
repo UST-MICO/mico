@@ -291,7 +291,7 @@ def setup(app):
 # -- Options for jsdoc -------------------------------------------------------
 js_language = 'custom_typescript'
 root_for_relative_js_paths = '.'
-js_source_path = ['../mico-admin', '../mico-grapheditor']
+js_source_path = '../mico-admin'
 
 # -- Options for javasphinx --------------------------------------------------
 javadoc_url_map = {
