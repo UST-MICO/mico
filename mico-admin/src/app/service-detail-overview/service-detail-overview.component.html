@@ -6,7 +6,7 @@
             <ng-container *ngIf="!edit">
                 <!-- display version -->
                 <!-- TODO change to serviceGET (as soon as api is available -->
-                <mico-data [modelUrl]="'local/servicePUT'" [startData]="serviceData"></mico-data>
+                <mico-data [modelUrl]="'remote/Service'" [startData]="serviceData"></mico-data>
 
                 <!-- TODO hard coded information - not yet part of the domain model-->
                 <!-- TODO some elements (like) tags are in the domain model now. Check as soon as the modelURLs are loaded dynamically-->
