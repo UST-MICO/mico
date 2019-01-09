@@ -3,10 +3,10 @@ FROM maven:3-jdk-8 as builder
 #Cache dependencies
 COPY pom.xml app/
 COPY mico-core/pom.xml app/mico-core/pom.xml
-RUN mvn -f app/mico-core/pom.xml dependency:go-offline
+RUN mvn -B -f app/mico-core/pom.xml dependency:go-offline
 
 COPY . app/
-RUN mvn -f app/mico-core/pom.xml clean package -Dmaven.test.skip=true
+RUN mvn -B -f app/mico-core/pom.xml clean package -Dmaven.test.skip=true
 
 FROM openjdk:8-alpine
 VOLUME /tmp
