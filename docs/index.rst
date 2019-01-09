@@ -11,7 +11,6 @@ Welcome to MICO Developer Documentation's documentation!
    :caption: Contents:
 
    mico-admin/index
-   mico-grapheditor/index
    mico-core/index
 
 
