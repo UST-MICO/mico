@@ -215,7 +215,7 @@ export class ModelsService {
         } else if (modelUrl.startsWith('remote/')) {
             console.log(this.remoteModels);
             const modelID = modelUrl.substring(7);
-            const model = this.remoteModels[modelID];
+            const model = JSON.parse(JSON.stringify(this.remoteModels[modelID]));
             return of(model);
         }
         return of(null); // TODO load models from openapi definitions
