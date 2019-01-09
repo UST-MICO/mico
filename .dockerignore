@@ -1,17 +1,13 @@
-.editorconfig
-.git
-.gitignore
-.github
-.idea
-.mvn
-.settings
-.vscode
-.project
-.travis.yml
-LICENSE
-README.md
-CHANGELOG.md
-CODE_OF_CONDUCT.md
-CONTRIBUTING.md
-docker-compose.yml
+**/.*
+**/*.md
 docs
+LICENSE
+docker-compose.yml
+readthedocs.yml
+
+# node directory is only used by Maven
+mico-admin/node
+# node_modules will be created with 'npm install' during the Docker build
+mico-admin/node_modules
+# dist will be created with 'npm run build' during the Docker build
+mico-admin/dist
