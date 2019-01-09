@@ -2,7 +2,7 @@ package io.github.ust.mico.core.model;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.RelationshipEntity;
+import org.neo4j.ogm.annotation.NodeEntity;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -15,7 +15,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 @Builder
-@RelationshipEntity
+@NodeEntity
 public class MicoServiceDependency {
 
     @Id
