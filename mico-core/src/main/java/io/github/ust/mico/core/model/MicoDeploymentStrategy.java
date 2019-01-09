@@ -18,9 +18,11 @@ public class MicoDeploymentStrategy {
     // -> Required fields ---
     // ----------------------
 
-    // The type of this deployment strategy, can
-    // RECREATE or ROLLING_UPDATE.
-    // Defaults to Type#ALWAYS.
+    /**
+     * The type of this deployment strategy, can
+     * RECREATE or ROLLING_UPDATE.
+     * Defaults to Type#ALWAYS.
+     */
     private final Type type;
 
 
@@ -28,23 +30,35 @@ public class MicoDeploymentStrategy {
     // -> Optional fields ---
     // ----------------------
 
-    // The maximum number of instances that can be scheduled above the desired number of
-    // instances during the update. Value can be an absolute number or a percentage of
-    // desired instances. This can not be 0 if maxUnavailable is 0. Absolute number is
-    // calculated from percentage by rounding up.
-    // If both fields are specified, the percentage will be used.
-    // Defaults to 25%.
+    /**
+     * The maximum percentage of instances that can be scheduled above the desired number of
+     * instances during the update. This can not be 0 if maxUnavailable is 0.
+     * If the absolute number is also specified, this field will be used prior to the absolute number.
+     * Defaults to 25%. 
+     */
     @Default
     private final double maxInstancesOnTopPercent = 0.25;
+    /**
+     * The maximum (absolute) number of instances that can be scheduled above the desired number of
+     * instances during the update. This can not be 0 if maxUnavailable is 0.
+     * If the percentage is also specified, it will be used prior to this absolute number.
+     */
     private final double maxInstancesOnTopAbsolute;
 
-    // The maximum number of instances that can be unavailable during the update.
-    // Value can be an absolute number or a percentage of desired pods. Absolute number is
-    // calculated from percentage by rounding down. This can not be 0 if MaxSurge is 0.
-    // If both fields are specified, the percentage will be used.
-    // Defaults to 25%.
+     
+    /**
+     * The maximum percentage of instances that can be unavailable during the update.
+     * This can not be 0 if maxSurge is 0.
+     * If the absolute number is also specified, this field will be used prior to the absolute number.
+     * Defaults to 25%.
+     */
     @Default
     private final double maxInstancesBelowPercent = 0.25;
+    /**
+     * The maximum (absolute) number of instances that can be unavailable during the update.
+     * This can not be 0 if maxSurge is 0.
+     * If the percentage is also specified, it will be used prior to this absolute number.
+     */
     private final double maxInstancesBelow;
 
 

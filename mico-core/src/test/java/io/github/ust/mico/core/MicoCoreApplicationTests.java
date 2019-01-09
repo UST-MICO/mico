@@ -129,6 +129,7 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
         DependsOn dependsOn1 = dependsOnList.get(0);
         assertEquals("1.0", dependsOn1.getMinVersion());
         assertEquals("1.0", dependsOn1.getMaxVersion());
+
         Service testService2 = dependsOn1.getServiceDependee();
         assertNotNull(testService2);
         assertEquals(testVersion2, testService2.getVersion());
