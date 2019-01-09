@@ -1,7 +1,7 @@
 import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-import 'mico-grapheditor/dist/bundle';
+import 'grapheditor-webcomponent/lib/index';
 
 import { AppDependencyGraphComponent } from './app-dependency-graph/app-dependency-graph.component';
 import {
