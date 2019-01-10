@@ -1,9 +1,12 @@
 package io.github.ust.mico.core.web;
 
-import io.github.ust.mico.core.service.GitHubCrawler;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
+import io.github.ust.mico.core.service.GitHubCrawler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -39,6 +42,9 @@ public class ServiceController {
 
     @Autowired
     private MicoServiceRepository serviceRepository;
+
+    @Autowired
+    ClusterAwarenessFabric8 cluster;
 
     @GetMapping()
     public ResponseEntity<Resources<Resource<MicoService>>> getServiceList() {
@@ -291,6 +297,21 @@ public class ServiceController {
         });
 
         return dependers;
+    }
+
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/yaml")
+    public String getServiceYamlByShortNameAndVersion(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                      @PathVariable(PATH_VARIABLE_VERSION) String version) {
+
+        // TODO Fix namespace
+        String namespace = "";
+        // TODO Fix get deployment by labels
+        Deployment deployment = cluster.getDeployment(shortName + "." + version, namespace);
+        try {
+            return cluster.getYaml(deployment);
+        } catch (JsonProcessingException e) {
+            return e.toString();
+        }
     }
 
     private MicoService getService(MicoService newService) {
