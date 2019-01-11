@@ -76,9 +76,7 @@ public class ServiceController {
         Service serviceToCheck = serviceOptional.orElse(null);
 
         if (serviceToCheck != null) {
-            return ResponseEntity.badRequest()
-                .header("Bad Request: Service already exists.")
-                .body(new Resource<>(newService, getServiceLinks(newService)));
+            return ResponseEntity.badRequest().build();
         } else {
             Service savedService = serviceRepository.save(newService);
 
