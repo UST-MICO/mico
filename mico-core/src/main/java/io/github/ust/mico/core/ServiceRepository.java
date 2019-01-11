@@ -25,7 +25,7 @@ public interface ServiceRepository extends Neo4jRepository<Service, Long> {
     Optional<ServiceInterface> findInterfaceOfServiceByName(@Param("serviceInterfaceName") String serviceInterfaceName, @Param("shortName") String shortName, @Param("version") String version);
 
     @Query("MATCH (service:Service)-[:SERVICE_INTERFACES]->(interface:ServiceInterface) WHERE service.shortName = {shortName} AND service.version = {version} AND interface.serviceInterfaceName = {serviceInterfaceName} detach delete interface")
-    void deleteInterfaceOfServiceByName(@Param("serviceInterfaceName") String serviceInterfaceName, @Param("shortName") String shortName,@Param("version")  String version);
+    void deleteInterfaceOfServiceByName(@Param("serviceInterfaceName") String serviceInterfaceName, @Param("shortName") String shortName, @Param("version") String version);
 
     @Override
     List<Service> findAll();

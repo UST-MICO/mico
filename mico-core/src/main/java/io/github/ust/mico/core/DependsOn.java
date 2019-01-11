@@ -45,10 +45,10 @@ public class DependsOn {
         this.maxVersion = maxVersion;
     }
 
-    @JsonProperty("dependsOn")
-    private Service getDependee(){
+    @JsonProperty("serviceDependee")
+    private Service getDependee() {
         Service dependee = this.serviceDependee;
-        dependee.setDependsOn(new LinkedList<>());
+        dependee.setDependsOn(null);
         return dependee;
     }
 
