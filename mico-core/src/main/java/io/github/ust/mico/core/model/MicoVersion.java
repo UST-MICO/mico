@@ -1,8 +1,5 @@
 package io.github.ust.mico.core.model;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.neo4j.ogm.annotation.NodeEntity;
 
 import com.github.zafarkhaja.semver.ParseException;
@@ -16,13 +13,13 @@ import lombok.Getter;
  * the functionality for a version prefix, so
  * that versions like, e.g., 'v1.2.3' are possible.
  */
-@Getter
 @NodeEntity // TODO: @Jan -> please check / validate
 public class MicoVersion implements Comparable<MicoVersion> {
     
     /**
      *  String prefix of this version, e.g., 'v'
      */
+    @Getter
     private String prefix;
     
     /**
@@ -56,9 +53,9 @@ public class MicoVersion implements Comparable<MicoVersion> {
      * @throws UnexpectedCharacterException is a special case of {@code ParseException}
      */
     public static MicoVersion valueOf(String version) {
-        Matcher matcher = Pattern.compile("([^\\d]+)(.*)").matcher(version);
-        String prefix = matcher.group(1).trim();
-        Version semanticVersion = Version.valueOf(matcher.group(2).trim());
+        String[] arr = version.split("\\d+", 2);
+        String prefix = arr[0].trim();
+        Version semanticVersion = Version.valueOf(version.substring(prefix.length()).trim());
         return new MicoVersion(prefix, semanticVersion);
     }
     
@@ -140,111 +137,121 @@ public class MicoVersion implements Comparable<MicoVersion> {
     /**
      * Increments the major version.
      *
-     * @return a new instance of the {@code MicoVersion} class.
+     * @return the updated instance of the {@code MicoVersion} class.
      */
     public MicoVersion incrementMajorVersion() {
-        return new MicoVersion(prefix, version.incrementMajorVersion());
+        version = version.incrementMajorVersion();
+        return this;
     }
     
     /**
      * Increments the major version and appends the pre-release version.
      *
      * @param preRelease the pre-release version to append.
-     * @return a new instance of the {@code MicoVersion} class.
+     * @return the updated instance of the {@code MicoVersion} class.
      * @throws IllegalArgumentException if the input string is {@code NULL} or empty.
      * @throws ParseException when invalid version string is provided.
      * @throws UnexpectedCharacterException is a special case of {@code ParseException}.
      */
     public MicoVersion incrementMajorVersion(String preRelease) {
-        return new MicoVersion(prefix, version.incrementMajorVersion(preRelease));
+       version = version.incrementMajorVersion(preRelease);
+       return this;
     }
     
     /**
      * Increments the minor version.
      *
-     * @return a new instance of the {@code MicoVersion} class.
+     * @return the updated instance of the {@code MicoVersion} class.
      */
     public MicoVersion incrementMinorVersion() {
-        return new MicoVersion(prefix, version.incrementMinorVersion());
+        version = version.incrementMinorVersion();
+        return this;
     }
     
     /**
      * Increments the minor version and appends the pre-release version.
      *
      * @param preRelease the pre-release version to append.
-     * @return a new instance of the {@code MicoVersion} class.
+     * @return the updated instance of the {@code MicoVersion} class.
      * @throws IllegalArgumentException if the input string is {@code NULL} or empty.
      * @throws ParseException when invalid version string is provided.
      * @throws UnexpectedCharacterException is a special case of {@code ParseException}.
      */
     public MicoVersion incrementMinorVersion(String preRelease) {
-        return new MicoVersion(prefix, version.incrementMinorVersion(preRelease));
+        version = version.incrementMinorVersion(preRelease);
+        return this;
     }
     
     /**
      * Increments the path version.
      *
-     * @return a new instance of the {@code MicoVersion} class.
+     * @return the updated instance of the {@code MicoVersion} class.
      */
-    public MicoVersion incrementPathVersion() {
-        return new MicoVersion(prefix, version.incrementPatchVersion());
+    public MicoVersion incrementPatchVersion() {
+        version = version.incrementPatchVersion();
+        return this;
     }
     
     /**
      * Increments the patch version and appends the pre-release version.
      *
      * @param preRelease the pre-release version to append.
-     * @return a new instance of the {@code MicoVersion} class.
+     * @return the updated instance of the {@code MicoVersion} class.
      * @throws IllegalArgumentException if the input string is {@code NULL} or empty.
      * @throws ParseException when invalid version string is provided.
      * @throws UnexpectedCharacterException is a special case of {@code ParseException}.
      */
     public MicoVersion incrementPatchVersion(String preRelease) {
-        return new MicoVersion(prefix, version.incrementPatchVersion(preRelease));
+        version = version.incrementPatchVersion(preRelease);
+        return this;
     }
 
     /**
      * Increments the pre-release version.
      *
-     * @return a new instance of the {@code MicoVersion} class.
+     * @return the updated instance of the {@code MicoVersion} class.
      */
     public MicoVersion incrementPreReleaseVersion() {
-        return new MicoVersion(prefix, version.incrementPreReleaseVersion());
+        version = version.incrementPreReleaseVersion();
+        return this;
     }
 
     /**
      * Increments the build metadata.
      *
-     * @return a new instance of the {@code MicoVersion} class.
+     * @return the updated instance of the {@code MicoVersion} class.
      */
     public MicoVersion incrementBuildMetadata() {
-        return new MicoVersion(prefix, version.incrementBuildMetadata());
+        version = version.incrementBuildMetadata();
+        return this;
     }
 
     /**
      * Sets the pre-release version.
      *
      * @param preRelease the pre-release version to set.
-     * @return a new instance of the {@code MicoVersion} class.
+     * @return the updated instance of the {@code MicoVersion} class.
      * @throws IllegalArgumentException if the input string is {@code NULL} or empty.
      * @throws ParseException when invalid version string is provided.
      * @throws UnexpectedCharacterException is a special case of {@code ParseException}.
      */
     public MicoVersion setPreReleaseVersion(String preRelease) {
-        return new MicoVersion(prefix, version.setPreReleaseVersion(preRelease));
+        version = version.setPreReleaseVersion(preRelease);
+        return this;
     }
 
     /**
      * Sets the build metadata.
      *
      * @param build the build metadata to set.
-     * @return a new instance of the {@code MicoVersion} class.
+     * @return the updated instance of the {@code MicoVersion} class.
      * @throws IllegalArgumentException if the input string is {@code NULL} or empty.
      * @throws ParseException when invalid version string is provided.
      * @throws UnexpectedCharacterException is a special case of {@code ParseException}.
      */
     public MicoVersion setBuildMetadata(String build) {
-        return new MicoVersion(prefix, version.setBuildMetadata(build));
+        version = version.setBuildMetadata(build);
+        return this;
     }
     
 
