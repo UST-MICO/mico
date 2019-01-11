@@ -70,6 +70,25 @@ public class ServiceController {
         }
     }
 
+    @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
+    public ResponseEntity deleteService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                        @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
+        if(!serviceOpt.isPresent()){
+            return ResponseEntity.notFound().build();
+        } else {
+            //only allow a deletion if the service has no dependees or depeners
+            Service service = serviceOpt.get();
+            //TODO: && getDependers(shortName,version) == null --> check for dependers missing
+            if(service.getDependsOn() == null){
+                serviceRepository.deleteServiceByShortNameAndVersion(shortName,version);
+                return ResponseEntity.ok().build();
+            } else {
+                return ResponseEntity.badRequest().build();
+            }
+        }
+    }
+
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/")
     public ResponseEntity<Resources<Resource<Service>>> getVersionsOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
         List<Service> services = serviceRepository.findByShortName(shortName);
