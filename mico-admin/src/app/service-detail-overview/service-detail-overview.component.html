@@ -35,7 +35,7 @@
                 <mico-form [modelUrl]="'remote/Service'" (data)="serviceData = $event" [startData]="serviceData"></mico-form>
                 <div class="ma1 pa1">
                     <span class="ma1">
-                        <button mat-raised-button>Save</button>
+                        <button mat-raised-button (click)="save()">Save</button>
                     </span>
                     <span class="ma1">
                         <button mat-raised-button (click)="edit = !edit">Cancel</button>

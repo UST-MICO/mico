@@ -134,11 +134,10 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
 
     }
 
-    editOrSave() {
-        if (this.edit) {
-            // TODO save content
-        }
-        this.edit = !this.edit;
+    save() {
+
+        this.apiService.postService(this.serviceData);
+        this.edit = false;
     }
 
     getServiceMetaData(service) {

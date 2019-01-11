@@ -39,7 +39,7 @@ export class DashboardComponent implements OnInit {
     newService(): void {
         const dialogRef = this.dialog.open(CreateServiceDialogComponent);
         dialogRef.afterClosed().subscribe(result => {
-            console.log(result);
+            this.apiService.postService(result);
         });
     }
 

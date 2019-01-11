@@ -208,6 +208,20 @@ export class ApiService {
         );
     }
 
+    postService(data) {
+
+        if (data != null) {
+
+            console.log(data);
+
+            const resource = 'services/';
+
+            this.rest.post(resource, data).subscribe(val => {
+                console.log(val);
+            });
+        }
+    }
+
     /**
      * Get all services a specific service depends on.
      *
