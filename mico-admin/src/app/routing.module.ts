@@ -20,7 +20,8 @@ const routes: Routes = [
 
     { path: 'app-detail/app-list', component: AppListComponent },
     { path: 'app-detail/overview', component: AppDetailOverviewComponent },
-    { path: 'app-detail/:id', component: AppDetailComponent },
+    { path: 'app-detail/:shortName', component: AppDetailComponent },
+    { path: 'app-detail/:shortName/:version', component: AppDetailComponent },
     { path: 'app-detail/deploystatus', component: AppDetailDeploystatusComponent },
     { path: 'app-detail/deploysettings', component: AppDetailDeploysettingsComponent },
     { path: 'service-detail/service-list', component: ServiceListComponent },

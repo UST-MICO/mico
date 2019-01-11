@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, Subject, BehaviorSubject } from 'rxjs';
-import { filter } from 'rxjs/operators';
+import { filter, flatMap } from 'rxjs/operators';
 import { ApiObject } from './apiobject';
 import { ApiBaseFunctionService } from './api-base-function.service';
 
@@ -47,7 +47,12 @@ export class ApiService {
      * @param streamURL resource url
      */
     private canonizeStreamUrl(streamURL: string): string {
-        // TODO implement
+        try {
+            const x = new URL(streamURL);
+            streamURL = x.pathname;
+        } catch (TypeError) { }
+        streamURL = streamURL.replace(/(^\/)|(\/$)/g, '');
+        console.log(streamURL);
         return streamURL;
     }
 
@@ -101,28 +106,14 @@ export class ApiService {
      * Get application list
      */
     getApplications(): Observable<Readonly<ApiObject>> {
+
         const resource = 'applications';
         const stream = this.getStreamSource(resource);
 
-        // TODO
-        const mockData: ApiObject[] = [
-            {
-                '_links': 'self',
-                'id': '2',
-                'name': 'Hello World Service',
-                'shortName': 'test.hello-world-service',
-                'description': 'A generic hello world service',
-            },
-            {
-                '_links': 'self',
-                'id': '4',
-                'name': 'Bye  Service',
-                'shortName': 'test.bye-service',
-                'description': 'A generic service',
-            },
-        ];
-
-        stream.next(freezeObject(mockData));
+        this.rest.get(resource).subscribe(val => {
+            // return actual application list
+            stream.next(freezeObject((val as ApiObject)._embedded.applicationList as ApiObject));
+        });
 
         return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
             filter(data => data !== undefined)
@@ -146,6 +137,25 @@ export class ApiService {
         stream.next(mockData);
 
         return (stream.asObservable() as Observable<ApiObject>).pipe(
+            filter(data => data !== undefined)
+        );
+    }
+
+    /**
+     * get an application based on its shortName and version
+     *
+     * @param shortName of the application
+     * @param version of the application
+     */
+    getApplication(shortName: string, version: string) {
+        const resource = 'applications/' + shortName + '/' + version;
+        const stream = this.getStreamSource(resource);
+
+        this.rest.get(resource).subscribe(val => {
+            stream.next(freezeObject((val as ApiObject)));
+        });
+
+        return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
             filter(data => data !== undefined)
         );
     }
@@ -180,7 +190,11 @@ export class ApiService {
         const stream = this.getStreamSource(resource);
 
         this.rest.get(resource).subscribe(val => {
-            stream.next(freezeObject((val as ApiObject)._embedded.serviceList as ApiObject));
+            let list = (val as ApiObject)._embedded.serviceList;
+            if (list === undefined) {
+                list = (val as ApiObject)._embedded.applicationList;
+            }
+            stream.next(freezeObject(list as ApiObject));
         });
 
         return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
@@ -208,18 +222,28 @@ export class ApiService {
         );
     }
 
-    postService(data) {
+    postService(data): Observable<Readonly<ApiObject>> {
 
-        if (data != null) {
-
-            console.log(data);
-
-            const resource = 'services/';
-
-            this.rest.post(resource, data).subscribe(val => {
-                console.log(val);
-            });
+        if (data == null) {
+            return;
         }
+
+
+        const resource = 'services/';
+
+        return this.rest.post(resource, data).pipe(flatMap(val => {
+
+            const stream = this.getStreamSource(val._links.self.href);
+            stream.next(val);
+
+            this.getServices();
+            this.getServiceVersions(data.shortName);
+
+            return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
+                filter(service => service !== undefined)
+            );
+        }));
+
     }
 
     /**

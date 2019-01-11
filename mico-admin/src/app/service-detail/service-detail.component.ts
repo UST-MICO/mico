@@ -28,8 +28,6 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
     selectedVersion;
     versions: any = [];
 
-    id: number;
-
     ngOnInit() {
         this.subParam = this.route.params.subscribe(params => {
 
@@ -49,7 +47,8 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
     }
 
     update(shortName, givenVersion) {
-        if (shortName === this.id) {
+
+        if (this.selectedVersion === givenVersion && givenVersion != null) {
             return;
         }
 
@@ -93,6 +92,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
      * this.version is set accoringly
      */
     setLatestVersion(list) {
+
         list.forEach(element => {
 
             let version = '0';
@@ -103,6 +103,8 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
                 this.selectedVersion = element.version;
                 this.service = element;
 
+            } else {
+                console.log(false);
             }
         });
     }

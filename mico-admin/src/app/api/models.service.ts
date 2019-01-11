@@ -206,14 +206,12 @@ export class ModelsService {
      */
     private resolveModel = (modelUrl: string): Observable<ApiModelAllOf | ApiModel> => {
         modelUrl = this.canonizeModelUri(modelUrl);
-        console.log(modelUrl);
         if (modelUrl.startsWith('local/')) {
             const modelID = modelUrl.substring(6);
             // deep clone model because they will be frozen later...
             const model = JSON.parse(JSON.stringify(this.localModels[modelID]));
             return of(model);
         } else if (modelUrl.startsWith('remote/')) {
-            console.log(this.remoteModels);
             const modelID = modelUrl.substring(7);
             const model = JSON.parse(JSON.stringify(this.remoteModels[modelID]));
             return of(model);

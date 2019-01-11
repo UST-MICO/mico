@@ -3,6 +3,7 @@ import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
 import { MatDialog } from '@angular/material';
 import { CreateServiceDialogComponent } from '../dialogs/create-service/create-service.component';
+import { Router } from '@angular/router';
 
 @Component({
     selector: 'mico-dashboard',
@@ -14,6 +15,7 @@ export class DashboardComponent implements OnInit {
     constructor(
         private apiService: ApiService,
         private dialog: MatDialog,
+        private router: Router,
     ) {
         this.getApplications();
     }
@@ -39,7 +41,10 @@ export class DashboardComponent implements OnInit {
     newService(): void {
         const dialogRef = this.dialog.open(CreateServiceDialogComponent);
         dialogRef.afterClosed().subscribe(result => {
-            this.apiService.postService(result);
+            this.apiService.postService(result).subscribe(val => {
+                console.log(val);
+                this.router.navigate(['service-detail', val.shortName, val.version]);
+            });
         });
     }
 

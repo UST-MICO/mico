@@ -16,12 +16,35 @@ export class AppDetailComponent implements OnInit {
         private route: ActivatedRoute,
     ) { }
 
-    @Input() application: ApiObject;
+    application: ApiObject;
+    selectedVersion;
 
     ngOnInit() {
         const id = +this.route.snapshot.paramMap.get('id');
-        this.apiService.getApplicationById(id)
-            .subscribe(app => this.application = app);
+        // getServiceVersions works also for applications
+        this.apiService.getServiceVersions(id)
+            .subscribe(val => {
+                this.setLatestVersion(val);
+                console.log(this.application, this.selectedVersion);
+            });
     }
 
+    /**
+     * takes a list of applications and sets this.application to the application with the latest version
+     * this.version is set accoringly
+     */
+    setLatestVersion(list) {
+        list.forEach(element => {
+
+            let version = '0';
+
+            // TODO implement comparison for semantic versioning
+            if (element.version > version) {
+                version = element.version;
+                this.selectedVersion = element.version;
+                this.application = element;
+
+            }
+        });
+    }
 }
