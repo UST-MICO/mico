@@ -215,4 +215,24 @@ public class ServiceControllerTests {
 
     }
 
+    @Test
+    public void updateService() throws Exception {
+        Service service = new Service(SHORT_NAME, VERSION, DESCRIPTION);
+        Service updatedService = new Service(SHORT_NAME, VERSION, "newDesc");
+
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
+        given(serviceRepository.save(any(Service.class))).willReturn(updatedService);
+
+        ResultActions resultUpdate = mvc.perform(put(BASE_PATH + SHORT_NAME + "/" + VERSION)
+                .content(mapper.writeValueAsBytes(updatedService))
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print())
+                .andExpect(jsonPath("$.id", is(service.getId())))
+                .andExpect(jsonPath("$.description", is(updatedService.getDescription())))
+                .andExpect(jsonPath("$.shortName", is(updatedService.getShortName())))
+                .andExpect(jsonPath("$.version", is(updatedService.getVersion())));
+
+        resultUpdate.andExpect(status().isOk());
+    }
+
 }

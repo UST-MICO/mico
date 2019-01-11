@@ -1,18 +1,17 @@
 package io.github.ust.mico.core;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
-
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class GitHubCrawler {
 
@@ -46,7 +45,7 @@ public class GitHubCrawler {
             service.setVcsRoot(releaseInfoJson.get("url").textValue());
 
             return service;
-        } catch (IOException|VersionNotSupportedException e) {
+        } catch (IOException | VersionNotSupportedException e) {
             e.printStackTrace();
         }
         return null;
@@ -71,21 +70,21 @@ public class GitHubCrawler {
         }
     }
 
-    //TODO: Change input URI to owner + repo
     public Service crawlGitHubRepoLatestRelease(String uri) {
+        uri = makeUriToMatchGitHubApi(uri);
         String releaseUrl = uri + "/" + RELEASES + "/" + LATEST;
         return crawlGitHubRepo(uri, releaseUrl);
     }
 
-    //TODO: Change input URI to owner + repo
     public Service crawlGitHubRepoSpecificRelease(String uri, String version) {
+        uri = makeUriToMatchGitHubApi(uri);
         String releaseUrl = uri + "/" + RELEASES + "/" + TAGS + "/" + version;
         return crawlGitHubRepo(uri, releaseUrl);
     }
 
-    //TODO: Change input URI to owner + repo
     //TODO: Rename method - it is not crawling ALL releases
     public List<Service> crawlGitHubRepoAllReleases(String uri) {
+        uri = makeUriToMatchGitHubApi(uri);
         String uriBasicInfo = uri;
         String uriReleases = uri + "/" + RELEASES;
         ResponseEntity<String> responseBasicInfo = restTemplate.getForEntity(uriBasicInfo, String.class);
@@ -122,5 +121,9 @@ public class GitHubCrawler {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public String makeUriToMatchGitHubApi(String uri) {
+        return uri.replace("https://github.com/", "https://api.github.com/repos/");
     }
 }
