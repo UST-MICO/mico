@@ -38,8 +38,8 @@ public class ServiceController {
         List<Service> services = serviceRepository.findAll();
         List<Resource<Service>> serviceResources = getServiceResourcesList(services);
         return ResponseEntity.ok(
-            new Resources<>(serviceResources,
-                linkTo(methodOn(ServiceController.class).getServiceList()).withSelfRel()));
+                new Resources<>(serviceResources,
+                        linkTo(methodOn(ServiceController.class).getServiceList()).withSelfRel()));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
@@ -48,7 +48,27 @@ public class ServiceController {
                                                                              @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         return serviceOpt.map(service -> new Resource<>(service, getServiceLinks(service)))
-            .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+                .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
+    public ResponseEntity<Resource<Service>> updateService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                           @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                           @RequestBody Service service) {
+        if (!service.getShortName().equals(shortName) || !service.getVersion().equals(version)) {
+            return ResponseEntity.badRequest().build();
+        } else {
+            Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
+            if (!serviceOpt.isPresent()) {
+                return ResponseEntity.notFound().build();
+            } else {
+                service.setId(serviceOpt.get().getId());
+                Service updatedService = serviceRepository.save(service);
+
+                return ResponseEntity.ok(new Resource<>(updatedService,
+                        linkTo(methodOn(ServiceController.class).updateService(shortName, version, service)).withSelfRel()));
+            }
+        }
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/")
@@ -56,8 +76,8 @@ public class ServiceController {
         List<Service> services = serviceRepository.findByShortName(shortName);
         List<Resource<Service>> serviceResources = getServiceResourcesList(services);
         return ResponseEntity.ok(
-            new Resources<>(serviceResources,
-                linkTo(methodOn(ServiceController.class).getVersionsOfService(shortName)).withSelfRel()));
+                new Resources<>(serviceResources,
+                        linkTo(methodOn(ServiceController.class).getVersionsOfService(shortName)).withSelfRel()));
     }
 
     //TODO: Ambiguous endpoint with /services/shortName
@@ -66,7 +86,7 @@ public class ServiceController {
         Optional<Service> serviceOpt = serviceRepository.findById(id);
 
         return serviceOpt.map(service -> new Resource<>(service, getServiceLinks(service)))
-            .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+                .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
@@ -81,8 +101,8 @@ public class ServiceController {
             Service savedService = serviceRepository.save(newService);
 
             return ResponseEntity
-                .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
-                .body(new Resource<>(newService, getServiceLinks(newService)));
+                    .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+                    .body(new Resource<>(newService, getServiceLinks(newService)));
         }
     }
 
@@ -106,8 +126,8 @@ public class ServiceController {
         List<Resource<Service>> resourceList = getServiceResourcesList(services);
 
         return ResponseEntity.ok(
-            new Resources<>(resourceList,
-                linkTo(methodOn(ServiceController.class).getDependees(shortName, version)).withSelfRel()));
+                new Resources<>(resourceList,
+                        linkTo(methodOn(ServiceController.class).getDependees(shortName, version)).withSelfRel()));
     }
 
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
@@ -122,7 +142,7 @@ public class ServiceController {
 
 
         Optional<Service> serviceDependeeOpt = serviceRepository.findByShortNameAndVersion(newServiceDependee.getServiceDependee().getShortName(),
-            newServiceDependee.getServiceDependee().getVersion());
+                newServiceDependee.getServiceDependee().getVersion());
 
         if (!serviceDependeeOpt.isPresent()) {
             return ResponseEntity.notFound().build();
@@ -141,8 +161,8 @@ public class ServiceController {
         Service savedService = serviceRepository.save(service);
 
         return ResponseEntity
-            .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
-            .body(new Resource<>(service, getServiceLinks(service)));
+                .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+                .body(new Resource<>(service, getServiceLinks(service)));
 
     }
 
@@ -160,12 +180,12 @@ public class ServiceController {
         Service savedService = serviceRepository.save(service);
 
         return ResponseEntity
-            .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
-            .body(new Resource<>(savedService, getServiceLinks(savedService)));
+                .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+                .body(new Resource<>(savedService, getServiceLinks(savedService)));
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees"
-        + "/{" + PATH_DELETE_SHORT_NAME + "}/{" + PATH_DELETE_VERSION + "}")
+            + "/{" + PATH_DELETE_SHORT_NAME + "}/{" + PATH_DELETE_VERSION + "}")
     public ResponseEntity<Resource<Service>> deleteDependee(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                             @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                             @PathVariable(PATH_DELETE_SHORT_NAME) String shortNameToDelete,
@@ -197,8 +217,8 @@ public class ServiceController {
         Service savedService = serviceRepository.save(service);
 
         return ResponseEntity
-            .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
-            .body(new Resource<>(savedService, getServiceLinks(savedService)));
+                .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+                .body(new Resource<>(savedService, getServiceLinks(savedService)));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependers")
@@ -226,8 +246,8 @@ public class ServiceController {
 
         List<Resource<Service>> resourceList = getServiceResourcesList(dependers);
         return ResponseEntity.ok(
-            new Resources<>(resourceList,
-                linkTo(methodOn(ServiceController.class).getDependers(shortName, version)).withSelfRel()));
+                new Resources<>(resourceList,
+                        linkTo(methodOn(ServiceController.class).getDependers(shortName, version)).withSelfRel()));
 
     }
 
@@ -307,7 +327,7 @@ public class ServiceController {
 
     private List<Resource<Service>> getServiceResourcesList(List<Service> services) {
         return services.stream().map(service -> new Resource<>(service, getServiceLinks(service)))
-            .collect(Collectors.toList());
+                .collect(Collectors.toList());
     }
 
     private Iterable<Link> getServiceLinks(Service service) {
