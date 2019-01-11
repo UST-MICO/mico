@@ -7,8 +7,6 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
-import com.github.zafarkhaja.semver.Version;
-
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -55,7 +53,7 @@ public class MicoService {
      * The version of this service.
      */
     @ApiModelProperty(required = true)
-    private final Version version;
+    private final MicoVersion version;
 
     /**
      * Human readable description of this service.

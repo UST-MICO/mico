@@ -43,13 +43,13 @@ public class MicoServiceDependency {
      * that is supported.
      */
     @ApiModelProperty(required = true)
-    private final String minVersion;
+    private final MicoVersion minVersion;
 
     /**
      * The maximum version of the depended service
      * that is supported.
      */
     @ApiModelProperty(required = true)
-    private final String maxVersion;
+    private final MicoVersion maxVersion;
 
 }
