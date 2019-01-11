@@ -3,6 +3,8 @@ package io.github.ust.mico.core.model;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.neo4j.ogm.annotation.NodeEntity;
+
 import com.github.zafarkhaja.semver.ParseException;
 import com.github.zafarkhaja.semver.UnexpectedCharacterException;
 import com.github.zafarkhaja.semver.Version;
@@ -14,8 +16,8 @@ import lombok.Getter;
  * the functionality for a version prefix, so
  * that versions like, e.g., 'v1.2.3' are possible.
  */
-// TODO: @Jan -> NodeEntity / RelationshipEntity or whatever ...
 @Getter
+@NodeEntity // TODO: @Jan -> please check / validate
 public class MicoVersion implements Comparable<MicoVersion> {
     
     /**
