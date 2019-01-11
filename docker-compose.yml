@@ -8,7 +8,9 @@ services:
     environment:
      - NEO4J_AUTH=none
   mico-backend:
-    build: .
+    build:
+        context: .
+        dockerfile: Dockerfile.mico-core
     ports:
      - "8080:8080"
     depends_on:

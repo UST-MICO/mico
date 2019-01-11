@@ -66,8 +66,7 @@
                             <goal>npm</goal>
                         </goals>
                         <configuration>
-                            <!-- workaround for npm bug see .gitignore for more info-->
-                            <arguments>install --no-package-lock</arguments>
+                            <arguments>install</arguments>
                         </configuration>
                     </execution>
                     <execution>

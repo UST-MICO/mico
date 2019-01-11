@@ -16,11 +16,15 @@ public class MicoPort {
     // -> Required fields ---
     // ----------------------
 
-    // The port number.
+    /**
+     * The port number.
+     */
     @ApiModelProperty(required = true)
     private final int number;
 
-    // The type (protocol) of the port.
+    /**
+     * The type (protocol) of the port.
+     */
     @ApiModelProperty(required = true)
     @Default
     private final MicoPortType type = MicoPortType.DEFAULT;
