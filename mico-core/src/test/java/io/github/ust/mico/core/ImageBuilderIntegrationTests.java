@@ -215,8 +215,8 @@ public class ImageBuilderIntegrationTests {
             }
         }, 10, 1, TimeUnit.SECONDS);
 
-        // Add a timeout: Abort after 30 seconds
-        completionFuture.get(30, TimeUnit.SECONDS);
+        // Add a timeout: Abort after 60 seconds
+        completionFuture.get(60, TimeUnit.SECONDS);
 
         // When completed cancel future
         completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
