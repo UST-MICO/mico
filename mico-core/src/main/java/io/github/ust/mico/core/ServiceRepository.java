@@ -30,9 +30,6 @@ public interface ServiceRepository extends Neo4jRepository<Service, Long> {
     @Override
     List<Service> findAll();
 
-    @Override
-    List<Service> findAll(@Depth int depth);
-
     Optional<Service> findByShortNameAndVersion(String shortName, String version, @Depth int depth);
 
     Optional<Service> findByShortNameAndVersion(String shortName, String version);

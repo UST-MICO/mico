@@ -45,6 +45,11 @@ public class DependsOn {
         this.maxVersion = maxVersion;
     }
 
+    /**
+     * Set the dependsOn of the service object to null to avoid recursion
+     *
+     * @return Service object with dependsOn set to null
+     */
     @JsonProperty("serviceDependee")
     private Service getDependee() {
         Service dependee = this.serviceDependee;

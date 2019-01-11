@@ -34,7 +34,7 @@ public class ServiceController {
 
     @GetMapping()
     public ResponseEntity<Resources<Resource<Service>>> getServiceList() {
-        List<Service> services = serviceRepository.findAll(1);
+        List<Service> services = serviceRepository.findAll();
         List<Resource<Service>> serviceResources = getServiceResourcesList(services);
         return ResponseEntity.ok(
                 new Resources<>(serviceResources,
@@ -45,7 +45,7 @@ public class ServiceController {
     //TODO Add validation to path variables
     public ResponseEntity<Resource<Service>> getServiceByShortNameAndVersion(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                              @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version, 1);
+        Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         return serviceOpt.map(service -> new Resource<>(service, getServiceLinks(service)))
                 .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
