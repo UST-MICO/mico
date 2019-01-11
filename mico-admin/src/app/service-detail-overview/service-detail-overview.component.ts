@@ -136,7 +136,11 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
 
     save() {
 
-        this.apiService.postService(this.serviceData);
+        this.apiService.putService(this.shortName, this.version, this.serviceData).subscribe(val => {
+            this.serviceData = val;
+            this.shortName = val.shortName;
+            this.version = val.version;
+        });
         this.edit = false;
     }
 

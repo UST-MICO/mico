@@ -52,7 +52,6 @@ export class ApiService {
             streamURL = x.pathname;
         } catch (TypeError) { }
         streamURL = streamURL.replace(/(^\/)|(\/$)/g, '');
-        console.log(streamURL);
         return streamURL;
     }
 
@@ -244,6 +243,26 @@ export class ApiService {
             );
         }));
 
+    }
+
+    putService(shortName, version, data): Observable<Readonly<ApiObject>> {
+
+        if (data == null) {
+            return;
+        }
+
+        const resource = 'services/' + shortName + '/' + version;
+
+        return this.rest.put(resource, data).pipe(flatMap(val => {
+
+            const stream = this.getStreamSource(val._links.self.href);
+            stream.next(val);
+            console.log(val);
+
+            return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
+                filter(service => service !== undefined)
+            );
+        }));
     }
 
     /**
