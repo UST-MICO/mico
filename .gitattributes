@@ -1,0 +1,56 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Source code
+*.bat       text eol=crlf
+*.css       text
+*.html      text diff=html
+*.java      text diff=java
+*.js        text
+*.json      text
+*.py        text diff=python
+*.sh        text eol=lf
+*.ts        text
+*.xml       text
+
+# Docker
+*.dockerignore    text
+Dockerfile    text
+
+# Documents
+*.doc   diff=astextplain
+*.DOC   diff=astextplain
+*.docx  diff=astextplain
+*.DOCX  diff=astextplain
+*.dot   diff=astextplain
+*.DOT   diff=astextplain
+*.pdf   diff=astextplain
+*.PDF   diff=astextplain
+*.md    text
+*.adoc  text
+*.rst   text
+*.txt   text
+LICENSE text
+
+# Configs
+.editorconfig  text
+.gitattributes text
+.gitconfig     text
+*.lock         text
+*.npmignore    text
+*.properties   text
+*.yaml         text
+*.yml          text
+Makefile       text
+makefile       text
+
+# Graphics
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.tif   binary
+*.tiff  binary
+*.ico   binary
+*.svg   binary
+*.eps   binary
