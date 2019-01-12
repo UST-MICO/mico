@@ -2,24 +2,32 @@ package io.github.ust.mico.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ust.mico.core.REST.ServiceController;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
+import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
@@ -31,6 +39,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @WebMvcTest(ServiceController.class)
 @OverrideAutoConfiguration(enabled = true) //Needed to override our neo4j config
+@ContextConfiguration(classes = {MicoCoreApplication.class,WebConfig.class})
+@WebAppConfiguration
 public class ServiceControllerTests {
 
     public static final String JSON_PATH_LINKS_SECTION = "$._links.";
@@ -50,9 +60,20 @@ public class ServiceControllerTests {
     private static final String DEPENDERS_PATH = "/services/" + SHORT_NAME + "/" + VERSION + "/dependers";
     private static final Long TEST_ID = new Long(45325345);
 
+    @Value("${cors-policy.allowed-origins}")
+    String[] allowedOrigins;
+
 
     @Autowired
+    private WebApplicationContext context;
+
     private MockMvc mvc;
+
+    @Before
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
+        this.mvc = MockMvcBuilders.webAppContextSetup(this.context).dispatchOptions(true).build();
+    }
 
     @MockBean
     private ServiceRepository serviceRepository;
@@ -177,6 +198,28 @@ public class ServiceControllerTests {
             .andDo(print());
 
         resultDelete.andExpect(status().isCreated());
+    }
+
+
+    @Test
+    public void corsPolicy() throws Exception {
+
+        mvc.perform(get("/services/").accept(MediaTypes.HAL_JSON_VALUE)
+            .header("Origin", allowedOrigins))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, endsWith("/services"))).andReturn();
+    }
+
+    @Test
+    public void corsPolicyNotAllowedOrigin() throws Exception {
+
+        mvc.perform(get("/services/").accept(MediaTypes.HAL_JSON_VALUE)
+            .header("Origin", "http://notAllowedOrigin.com"))
+            .andDo(print())
+            .andExpect(status().isForbidden())
+            .andExpect(content().string(is("Invalid CORS request")))
+            .andReturn();
     }
 
     @Test
