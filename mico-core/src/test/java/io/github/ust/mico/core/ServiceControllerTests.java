@@ -278,4 +278,17 @@ public class ServiceControllerTests {
         resultUpdate.andExpect(status().isOk());
     }
 
+    @Test
+    public void deleteService() throws Exception {
+        Service service = new Service(SHORT_NAME, VERSION, DESCRIPTION);
+
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
+
+        ResultActions resultDelete = mvc.perform(delete(BASE_PATH + SHORT_NAME + "/" + VERSION)
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print());
+
+        resultDelete.andExpect(status().isOk());
+    }
+
 }
