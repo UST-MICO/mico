@@ -2,9 +2,11 @@ package io.github.ust.mico.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ust.mico.core.REST.ServiceController;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
@@ -12,9 +14,13 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -33,6 +39,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @WebMvcTest(ServiceController.class)
 @OverrideAutoConfiguration(enabled = true) //Needed to override our neo4j config
+@ContextConfiguration(classes = {MicoCoreApplication.class,WebConfig.class})
+@WebAppConfiguration
 public class ServiceControllerTests {
 
     private static final String JSON_PATH_LINKS_SECTION = "$._links.";
@@ -54,7 +62,15 @@ public class ServiceControllerTests {
     String[] allowedOrigins;
 
     @Autowired
+    private WebApplicationContext context;
+
     private MockMvc mvc;
+
+    @Before
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
+        this.mvc = MockMvcBuilders.webAppContextSetup(this.context).dispatchOptions(true).build();
+    }
 
     @MockBean
     private ServiceRepository serviceRepository;
