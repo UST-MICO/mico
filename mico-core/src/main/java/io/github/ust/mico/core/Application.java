@@ -11,6 +11,10 @@ public class Application extends Service {
         super(shortName);
     }
 
+    public Application(String shortName, String version, String description) {
+        super(shortName, version, description);
+    }
+
     public Application(String shortName, String version) {
         super(shortName, version);
     }
