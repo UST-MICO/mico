@@ -1,0 +1,13 @@
+**/.*
+**/*.md
+docs
+LICENSE
+docker-compose.yml
+readthedocs.yml
+
+# node directory is only used by Maven
+mico-admin/node
+# node_modules will be created with 'npm install' during the Docker build
+mico-admin/node_modules
+# dist will be created with 'npm run build' during the Docker build
+mico-admin/dist

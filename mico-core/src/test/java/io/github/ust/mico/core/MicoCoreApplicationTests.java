@@ -1,6 +1,5 @@
 package io.github.ust.mico.core;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,11 +14,9 @@ import java.util.Optional;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.*;
 
-// TODO: Setup proper integration testing with neo4j
-@Ignore
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class MicoCoreApplicationTests {
+public class MicoCoreApplicationTests extends Neo4jTestClass {
 
     private static final String TEST_SHORT_NAME = "Test";
     private static final String TEST_SERVICE_DESCRIPTION = "Test Service";
@@ -34,11 +31,25 @@ public class MicoCoreApplicationTests {
     private static final String TEST_VERSION = "1.0";
 
     @Autowired
-    private ServiceRepository serviceRepository;
+    private ApplicationRepository applicationRepository;
+
     @Autowired
     private DependsOnRepository dependsOnRepository;
+
     @Autowired
     private ServiceInterfaceRepository serviceInterfaceRepository;
+
+    @Autowired
+    private ServiceRepository serviceRepository;
+
+    @Test
+    public void testServiceRepository() {
+        serviceRepository.save(createServiceInDB());
+
+        Optional<Service> serviceTestOpt = serviceRepository.findByShortNameAndVersion(TEST_SHORT_NAME, TEST_VERSION);
+        Service serviceTest = serviceTestOpt.get();
+        checkDefaultService(serviceTest);
+    }
 
     public static void checkDefaultService(Service serviceTest) {
         List<ServiceInterface> serviceInterfacesTest = serviceTest.getServiceInterfaces();
@@ -77,27 +88,7 @@ public class MicoCoreApplicationTests {
     }
 
     @Test
-    public void contextLoads() {
-        //TODO: Why is this test needed?
-    }
-
-    @Test
-    public void testServiceRepository() {
-        serviceRepository.deleteAll();
-        dependsOnRepository.deleteAll();
-        serviceInterfaceRepository.deleteAll();
-        serviceRepository.save(createServiceInDB());
-
-        Optional<Service> serviceTestOpt = serviceRepository.findByShortNameAndVersion(TEST_SHORT_NAME, TEST_VERSION);
-        Service serviceTest = serviceTestOpt.get();
-        checkDefaultService(serviceTest);
-    }
-
-    @Test
     public void testDependencyServiceRepository() {
-        serviceRepository.deleteAll();
-        dependsOnRepository.deleteAll();
-        serviceInterfaceRepository.deleteAll();
         Service service = createServiceInDB();
 
         String testShortName2 = "ShortName2";
@@ -138,6 +129,7 @@ public class MicoCoreApplicationTests {
         DependsOn dependsOn1 = dependsOnList.get(0);
         assertEquals("1.0", dependsOn1.getMinVersion());
         assertEquals("1.0", dependsOn1.getMaxVersion());
+
         Service testService2 = dependsOn1.getServiceDependee();
         assertNotNull(testService2);
         assertEquals(testVersion2, testService2.getVersion());
@@ -148,10 +140,6 @@ public class MicoCoreApplicationTests {
 
     @Test
     public void testStoreApplication() {
-        serviceRepository.deleteAll();
-        dependsOnRepository.deleteAll();
-        serviceInterfaceRepository.deleteAll();
-
         Service service1 = new Service("Service1", "0.1");
         Service service2 = new Service("Service2", "0.1");
         Service service3 = new Service("Service3", "0.1");
@@ -182,21 +170,14 @@ public class MicoCoreApplicationTests {
 
         assertNotNull(storedApplication1);
         assertEquals("App1", storedApplication1.getShortName());
-        assertThat(storedApplication1.getDependsOn().get(0).getService().getShortName(), startsWith("App"));
-        assertThat(storedApplication1.getDependsOn().get(1).getService().getShortName(), startsWith("App"));
-        assertThat(storedApplication1.getDependsOn().get(2).getService().getShortName(), startsWith("App"));
+        assertThat(storedApplication1.getDependsOn().get(0).getService().getShortName(), startsWith("Service"));
+        assertThat(storedApplication1.getDependsOn().get(1).getService().getShortName(), startsWith("Service"));
+        assertThat(storedApplication1.getDependsOn().get(2).getService().getShortName(), startsWith("Service"));
 
         assertNotNull(storedApplication2);
         assertEquals("App2", storedApplication2.getShortName());
 
         assertNotNull(storedApplication3);
         assertEquals("App3", storedApplication3.getShortName());
-    }
-
-    @Test
-    public void cleanupDatabase() {
-        serviceRepository.deleteAll();
-        dependsOnRepository.deleteAll();
-        serviceInterfaceRepository.deleteAll();
     }
 }

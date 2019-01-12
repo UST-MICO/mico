@@ -12,30 +12,32 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-// TODO: Setup proper integration testing with neo4j
-@Ignore
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class GitHubCrawlerTests {
-    private static final String REPO_URI = "https://api.github.com/repos/octokit/octokit.rb";
+public class GitHubCrawlerTests extends Neo4jTestClass {
+
+    private static final String REPO_URI_API = "https://api.github.com/repos/octokit/octokit.rb";
+    private static final String REPO_URI_HTML = "https://github.com/octokit/octokit.rb";
     private static final String RELEASE = "v4.12.0";
 
     @Autowired
-    private ServiceRepository serviceRepository;
+    private ApplicationRepository applicationRepository;
+
     @Autowired
     private DependsOnRepository dependsOnRepository;
+
     @Autowired
     private ServiceInterfaceRepository serviceInterfaceRepository;
 
-    @Test
-    public void testGitHubCrawlerLatestRelease() {
-        serviceRepository.deleteAll();
-        dependsOnRepository.deleteAll();
-        serviceInterfaceRepository.deleteAll();
+    @Autowired
+    private ServiceRepository serviceRepository;
 
+    @Test
+    @Ignore
+    public void testGitHubCrawlerLatestReleaseByApiUri() {
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
-        Service service = crawler.crawlGitHubRepoLatestRelease(REPO_URI);
+        Service service = crawler.crawlGitHubRepoLatestRelease(REPO_URI_API);
         serviceRepository.save(service);
 
         Service readService = serviceRepository.findByShortNameAndVersion(service.getShortName(), service.getVersion()).get();
@@ -48,14 +50,28 @@ public class GitHubCrawlerTests {
     }
 
     @Test
+    @Ignore
+    public void testGitHubCrawlerLatestReleaseByHtmlUri() {
+        RestTemplateBuilder restTemplate = new RestTemplateBuilder();
+        GitHubCrawler crawler = new GitHubCrawler(restTemplate);
+        Service service = crawler.crawlGitHubRepoLatestRelease(REPO_URI_HTML);
+        serviceRepository.save(service);
+
+        Service readService = serviceRepository.findByShortNameAndVersion(service.getShortName(), service.getVersion()).get();
+        assertEquals(service.getShortName(), readService.getShortName());
+        assertEquals(service.getDescription(), readService.getDescription());
+        assertEquals(service.getId(), readService.getId());
+        assertEquals(service.getVersion(), readService.getVersion());
+        assertEquals(service.getVcsRoot(), readService.getVcsRoot());
+        assertEquals(service.getName(), readService.getName());
+    }
+
+    @Test
+    @Ignore
     public void testGitHubCrawlerSpecificRelease() {
-        serviceRepository.deleteAll();
-        dependsOnRepository.deleteAll();
-        serviceInterfaceRepository.deleteAll();
-
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
-        Service service = crawler.crawlGitHubRepoSpecificRelease(REPO_URI, RELEASE);
+        Service service = crawler.crawlGitHubRepoSpecificRelease(REPO_URI_API, RELEASE);
         serviceRepository.save(service);
 
         Service readService = serviceRepository.findByShortNameAndVersion(service.getShortName(), service.getVersion()).get();
@@ -68,14 +84,11 @@ public class GitHubCrawlerTests {
     }
 
     @Test
+    @Ignore
     public void testGitHubCrawlerAllReleases() {
-        serviceRepository.deleteAll();
-        dependsOnRepository.deleteAll();
-        serviceInterfaceRepository.deleteAll();
-
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
-        List<Service> serviceList = crawler.crawlGitHubRepoAllReleases(REPO_URI);
+        List<Service> serviceList = crawler.crawlGitHubRepoAllReleases(REPO_URI_API);
         serviceRepository.saveAll(serviceList);
 
         Service readService = serviceRepository.findByShortNameAndVersion(serviceList.get(0).getShortName(), serviceList.get(0).getVersion()).get();
@@ -125,9 +138,10 @@ public class GitHubCrawlerTests {
     }
 
     @Test
-    public void cleanupDatabase() {
-        serviceRepository.deleteAll();
-        dependsOnRepository.deleteAll();
-        serviceInterfaceRepository.deleteAll();
+    public void testMakeUriToMatchGitHubApi() {
+        RestTemplateBuilder restTemplate = new RestTemplateBuilder();
+        GitHubCrawler crawler = new GitHubCrawler(restTemplate);
+
+        assertEquals(REPO_URI_API, crawler.makeUriToMatchGitHubApi(REPO_URI_HTML));
     }
 }

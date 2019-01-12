@@ -45,9 +45,7 @@ public class GitHubCrawler {
             service.setVcsRoot(releaseInfoJson.get("url").textValue());
 
             return service;
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (VersionNotSupportedException e) {
+        } catch (IOException | VersionNotSupportedException e) {
             e.printStackTrace();
         }
         return null;
@@ -72,21 +70,21 @@ public class GitHubCrawler {
         }
     }
 
-    //TODO: Change input URI to owner + repo
     public Service crawlGitHubRepoLatestRelease(String uri) {
+        uri = makeUriToMatchGitHubApi(uri);
         String releaseUrl = uri + "/" + RELEASES + "/" + LATEST;
         return crawlGitHubRepo(uri, releaseUrl);
     }
 
-    //TODO: Change input URI to owner + repo
     public Service crawlGitHubRepoSpecificRelease(String uri, String version) {
+        uri = makeUriToMatchGitHubApi(uri);
         String releaseUrl = uri + "/" + RELEASES + "/" + TAGS + "/" + version;
         return crawlGitHubRepo(uri, releaseUrl);
     }
 
-    //TODO: Change input URI to owner + repo
     //TODO: Rename method - it is not crawling ALL releases
     public List<Service> crawlGitHubRepoAllReleases(String uri) {
+        uri = makeUriToMatchGitHubApi(uri);
         String uriBasicInfo = uri;
         String uriReleases = uri + "/" + RELEASES;
         ResponseEntity<String> responseBasicInfo = restTemplate.getForEntity(uriBasicInfo, String.class);
@@ -123,5 +121,9 @@ public class GitHubCrawler {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public String makeUriToMatchGitHubApi(String uri) {
+        return uri.replace("https://github.com/", "https://api.github.com/repos/");
     }
 }

@@ -12,6 +12,7 @@ import { AppDetailDeploysettingsComponent } from './app-detail-deploysettings/ap
 import { ServiceListComponent } from './service-list/service-list.component';
 import { ServiceDetailComponent } from './service-detail/service-detail.component';
 
+import { MetricChartComponent } from './metric-chart/metric-chart.component';
 
 const routes: Routes = [
     { path: 'dashboard', component: DashboardComponent },
@@ -19,18 +20,18 @@ const routes: Routes = [
 
     { path: 'app-detail/app-list', component: AppListComponent },
     { path: 'app-detail/overview', component: AppDetailOverviewComponent },
-    { path: 'app-detail/:id', component:  AppDetailComponent},
+    { path: 'app-detail/:id', component: AppDetailComponent },
     { path: 'app-detail/deploystatus', component: AppDetailDeploystatusComponent },
     { path: 'app-detail/deploysettings', component: AppDetailDeploysettingsComponent },
 
     { path: 'service-detail/service-list', component: ServiceListComponent },
-    { path: 'service-detail/:id', component:  ServiceDetailComponent},
-  ];
+    { path: 'service-detail/:id', component: ServiceDetailComponent },
+    { path: 'metrics', component: MetricChartComponent }
+];
 
 @NgModule({
-  declarations: [],
-  exports: [ RouterModule ],
-  imports: [ RouterModule.forRoot(routes),
-  ]
+    declarations: [],
+    exports: [RouterModule],
+    imports: [RouterModule.forRoot(routes)]
 })
-export class RoutingModule { }
+export class RoutingModule {}

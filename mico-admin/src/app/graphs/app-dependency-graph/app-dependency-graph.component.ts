@@ -1,7 +1,6 @@
 import { Component, OnInit, ViewChild, Input } from '@angular/core';
-import GraphEditor from 'mico-grapheditor/src/mico-graph';
-import { Edge } from 'mico-grapheditor/src/edge';
-import { Node } from 'mico-grapheditor/src/node';
+import { Edge } from 'grapheditor-webcomponent/lib/edge';
+import { Node } from 'grapheditor-webcomponent/lib/node';
 
 const STYLE_TEMPLATE = {
     id: 'style',
@@ -28,12 +27,11 @@ const NODE_TEMPLATE = {
     styleUrls: ['./app-dependency-graph.component.css']
 })
 export class AppDependencyGraphComponent implements OnInit {
-
     @ViewChild('graph') graph;
     @Input() nodes: [any];
     @Input() edges: [any];
 
-    constructor() { }
+    constructor() {}
 
     ngOnInit() {
         if (this.graph != null) {
@@ -50,20 +48,19 @@ export class AppDependencyGraphComponent implements OnInit {
         }
         const graph = this.graph.nativeElement;
 
-        const graphNodes = [];
+        const graphNodes: Node[] = [];
         let x = 0;
         let y = 0;
         const xSize = 110;
         const ySize = 70;
 
         this.nodes.forEach(node => {
-
             graphNodes.push({
                 id: node.id,
                 x: x * xSize,
                 y: y * ySize,
                 title: node.title,
-                type: node.type,
+                type: node.type
             });
 
             x += 1;
@@ -73,14 +70,13 @@ export class AppDependencyGraphComponent implements OnInit {
             }
         });
 
-
         graph.setNodes(graphNodes);
 
-        const graphEdges = [];
+        const graphEdges: Edge[] = [];
         this.edges.forEach(edge => {
             graphEdges.push({
                 source: edge.source,
-                target: edge.target,
+                target: edge.target
             });
         });
 
@@ -97,5 +93,4 @@ export class AppDependencyGraphComponent implements OnInit {
 
         this.graph.nativeElement.zoomToBoundingBox(false);
     }
-
 }

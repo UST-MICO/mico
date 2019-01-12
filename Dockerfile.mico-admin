@@ -1,0 +1,15 @@
+FROM node:8.11.2-alpine as builder
+
+WORKDIR /app
+
+RUN apk --no-cache add git
+COPY /mico-admin/package*.json /app/
+RUN npm install
+
+COPY /mico-admin /app
+RUN npm run build
+
+FROM nginx:1.13.12-alpine
+
+COPY --from=builder /app/dist/mico-admin /usr/share/nginx/html
+COPY --from=builder /app/nginx.conf /etc/nginx/

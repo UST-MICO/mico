@@ -2,11 +2,9 @@
   "name": "mico-admin",
   "version": "0.0.0",
   "scripts": {
-    "grapheditor": "npm install ../mico-grapheditor",
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
-    "prebuild": "npm run grapheditor",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"
@@ -24,16 +22,19 @@
     "@angular/platform-browser": "~7.0.3",
     "@angular/platform-browser-dynamic": "~7.0.3",
     "@angular/router": "~7.0.3",
+    "@types/c3": "^0.6.2",
+    "c3": "^0.6.11",
     "core-js": "^2.5.7",
+    "grapheditor-webcomponent": "git+https://github.com/UST-MICO/grapheditor.git",
     "hammerjs": "^2.0.8",
-    "mico-grapheditor": "file:../mico-grapheditor",
+    "ng-pick-datetime": "^7.0.0",
     "rxjs": "~6.3.3",
     "tachyons-flexbox": "^2.1.1",
     "tachyons-spacing": "^6.0.5",
     "zone.js": "~0.8.26"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "~0.10.5",
+    "@angular-devkit/build-angular": "^0.12.1",
     "@angular/cli": "~7.0.5",
     "@angular/compiler-cli": "~7.0.3",
     "@angular/language-service": "~7.0.3",
@@ -51,7 +52,6 @@
     "protractor": "~5.4.0",
     "ts-node": "~7.0.0",
     "tslint": "~5.11.0",
-    "typescript": "~3.1.1",
-    "webpack-cli": "^3.1.2"
+    "typescript": "~3.1.1"
   }
 }
