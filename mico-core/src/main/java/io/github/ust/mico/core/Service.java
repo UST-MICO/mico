@@ -13,6 +13,7 @@ import org.neo4j.ogm.annotation.Relationship;
 import java.util.LinkedList;
 import java.util.List;
 
+@Deprecated
 @JsonIdentityInfo(
     generator = ObjectIdGenerators.PropertyGenerator.class,
     property = "id")

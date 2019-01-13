@@ -1,5 +1,6 @@
 package io.github.ust.mico.core;
 
+@Deprecated
 public class Application extends Service {
     private String deployInformation;
     private String visualizationData;
