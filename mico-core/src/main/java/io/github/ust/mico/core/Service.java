@@ -29,11 +29,12 @@ public class Service {
     private String shortName;
     @ApiModelProperty(required = true)
     private String description;
+    @ApiModelProperty(required = true)
+    private String name;
 
     //additional fields
     private Service predecessor;
     private String vcsRoot;
-    private String name;
     private String dockerfile;
     private String contact;
     private List<String> tags;
