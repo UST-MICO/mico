@@ -76,4 +76,23 @@ public class ApplicationController {
 
     }
 
+    @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
+    public ResponseEntity deleteApplication (@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                             @PathVariable(PATH_VARIABLE_VERSION) String version){
+        Optional<Application> applicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
+        if(!applicationOptional.isPresent()){
+            return ResponseEntity.notFound().build();
+        } else {
+            //only allow a deletion if the service has no dependees or dependers
+            Application application = applicationOptional.get();
+            //TODO: && getDependers(shortName,version) == null --> check for dependers missing
+            if(application.getDependsOn() == null){
+                applicationRepository.deleteApplicationByShortNameAndVersion(shortName,version);
+                return ResponseEntity.ok().build();
+            } else {
+                return ResponseEntity.badRequest().build();
+            }
+        }
+    }
+
 }
