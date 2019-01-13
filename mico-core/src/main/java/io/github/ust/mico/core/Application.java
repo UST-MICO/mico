@@ -15,6 +15,10 @@ public class Application extends Service {
         super(shortName, version);
     }
 
+    public Application(String shortName, String version, String description) {
+        super(shortName, version, description);
+    }
+
     //TODO: Verify if all are necessary
     public String getDeployInformation() {
         return deployInformation;
