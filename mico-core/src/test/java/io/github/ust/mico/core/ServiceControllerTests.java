@@ -2,24 +2,32 @@ package io.github.ust.mico.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ust.mico.core.REST.ServiceController;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
+import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
@@ -31,6 +39,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @WebMvcTest(ServiceController.class)
 @OverrideAutoConfiguration(enabled = true) //Needed to override our neo4j config
+@ContextConfiguration(classes = {MicoCoreApplication.class,WebConfig.class})
+@WebAppConfiguration
 public class ServiceControllerTests {
 
     public static final String JSON_PATH_LINKS_SECTION = "$._links.";
@@ -50,9 +60,20 @@ public class ServiceControllerTests {
     private static final String DEPENDERS_PATH = "/services/" + SHORT_NAME + "/" + VERSION + "/dependers";
     private static final Long TEST_ID = new Long(45325345);
 
+    @Value("${cors-policy.allowed-origins}")
+    String[] allowedOrigins;
+
 
     @Autowired
+    private WebApplicationContext context;
+
     private MockMvc mvc;
+
+    @Before
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
+        this.mvc = MockMvcBuilders.webAppContextSetup(this.context).dispatchOptions(true).build();
+    }
 
     @MockBean
     private ServiceRepository serviceRepository;
@@ -63,38 +84,38 @@ public class ServiceControllerTests {
     @Test
     public void getCompleteServiceList() throws Exception {
         given(serviceRepository.findAll()).willReturn(
-            Arrays.asList(
-                new Service("ShortName1", "1.0.1", "Test service"),
-                new Service("ShortName1", "1.0.0", "Test service"),
-                new Service("ShortName2", "1.0.0", "Test service2")));
+                Arrays.asList(
+                        new Service("ShortName1", "1.0.1", "Test service"),
+                        new Service("ShortName1", "1.0.0", "Test service"),
+                        new Service("ShortName2", "1.0.0", "Test service2")));
 
         mvc.perform(get("/services").accept(MediaTypes.HAL_JSON_VALUE))
-            .andDo(print())
-            .andExpect(status().isOk())
-            .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$._embedded.serviceList[*]", hasSize(3)))
-            .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ShortName1' && @.version == '1.0.0' && @.description == 'Test service' )]", hasSize(1)))
-            .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ShortName1' && @.version == '1.0.1' && @.description == 'Test service' )]", hasSize(1)))
-            .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ShortName2' && @.version == '1.0.0' && @.description == 'Test service2' )]", hasSize(1)))
-            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "self.href", is("http://localhost/services")))
-            .andReturn();
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andExpect(jsonPath("$._embedded.serviceList[*]", hasSize(3)))
+                .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ShortName1' && @.version == '1.0.0' && @.description == 'Test service' )]", hasSize(1)))
+                .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ShortName1' && @.version == '1.0.1' && @.description == 'Test service' )]", hasSize(1)))
+                .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ShortName2' && @.version == '1.0.0' && @.description == 'Test service2' )]", hasSize(1)))
+                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "self.href", is("http://localhost/services")))
+                .andReturn();
     }
 
     @Test
     public void getServiceViaShortNameAndVersion() throws Exception {
         given(serviceRepository.findByShortNameAndVersion("ShortName1", "1.0.1")).willReturn(
-            Optional.of(new Service("ShortName1", "1.0.1", "Test service")));
+                Optional.of(new Service("ShortName1", "1.0.1", "Test service")));
 
         mvc.perform(get("/services/ShortName1/1.0.1").accept(MediaTypes.HAL_JSON_VALUE))
-            .andDo(print())
-            .andExpect(status().isOk())
-            .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.description", is("Test service")))
-            .andExpect(jsonPath("$.shortName", is("ShortName1")))
-            .andExpect(jsonPath("$.version", is("1.0.1")))
-            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/services/ShortName1/1.0.1")))
-            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "services.href", is("http://localhost/services")))
-            .andReturn();
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andExpect(jsonPath("$.description", is("Test service")))
+                .andExpect(jsonPath("$.shortName", is("ShortName1")))
+                .andExpect(jsonPath("$.version", is("1.0.1")))
+                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/services/ShortName1/1.0.1")))
+                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "services.href", is("http://localhost/services")))
+                .andReturn();
     }
 
     //TODO: Verfiy how to test an autogenerated id
@@ -112,16 +133,16 @@ public class ServiceControllerTests {
         given(serviceRepository.findById(id)).willReturn(Optional.of(new Service(shortName, version, description)));
 
         mvc.perform(get(urlTemplate).accept(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print())
-            .andExpect(status().isOk())
-            .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.id", is(id)))
-            .andExpect(jsonPath("$.description", is(description)))
-            .andExpect(jsonPath("$.shortName", is(shortName)))
-            .andExpect(jsonPath("$.version", is(version)))
-            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is(linksSelf)))
-            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SERVICES_HREF, is(linksServices)))
-            .andReturn();
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andExpect(jsonPath("$.id", is(id)))
+                .andExpect(jsonPath("$.description", is(description)))
+                .andExpect(jsonPath("$.shortName", is(shortName)))
+                .andExpect(jsonPath("$.version", is(version)))
+                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is(linksSelf)))
+                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SERVICES_HREF, is(linksServices)))
+                .andReturn();
     }
 
 
@@ -140,9 +161,9 @@ public class ServiceControllerTests {
         given(serviceRepository.save(any(Service.class))).willReturn(service);
 
         final ResultActions result = mvc.perform(post(BASE_PATH)
-            .content(mapper.writeValueAsBytes(service))
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print());
+                .content(mapper.writeValueAsBytes(service))
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print());
 
         result.andExpect(status().isCreated());
     }
@@ -155,8 +176,8 @@ public class ServiceControllerTests {
         given(serviceRepository.save(any(Service.class))).willReturn(service);
 
         ResultActions resultDelete = mvc.perform(delete(DEPENDEES_BASE_PATH)
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print());
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print());
 
         resultDelete.andExpect(status().isCreated());
     }
@@ -173,10 +194,32 @@ public class ServiceControllerTests {
         System.out.println(DELETE_SPECIFIC_DEPENDEES_PATH);
 
         ResultActions resultDelete = mvc.perform(delete(DELETE_SPECIFIC_DEPENDEES_PATH)
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print());
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print());
 
         resultDelete.andExpect(status().isCreated());
+    }
+
+
+    @Test
+    public void corsPolicy() throws Exception {
+
+        mvc.perform(get("/services/").accept(MediaTypes.HAL_JSON_VALUE)
+            .header("Origin", allowedOrigins))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, endsWith("/services"))).andReturn();
+    }
+
+    @Test
+    public void corsPolicyNotAllowedOrigin() throws Exception {
+
+        mvc.perform(get("/services/").accept(MediaTypes.HAL_JSON_VALUE)
+            .header("Origin", "http://notAllowedOrigin.com"))
+            .andDo(print())
+            .andExpect(status().isForbidden())
+            .andExpect(content().string(is("Invalid CORS request")))
+            .andReturn();
     }
 
     @Test
@@ -202,13 +245,13 @@ public class ServiceControllerTests {
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
 
         ResultActions result = mvc.perform(get(DEPENDERS_PATH)
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print())
-            .andExpect(jsonPath("$._embedded.serviceList[*]", hasSize(3)))
-            .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ServiceShortNameOne' && @.version == '1.0.0' && @.description == 'Some test service description' )]", hasSize(1)))
-            .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ServiceShortNameOne' && @.version == '2.0.1' && @.description == 'Some test service description' )]", hasSize(1)))
-            .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ServiceShortNameTwo' && @.version == '1.0.0' && @.description == 'Some test service description' )]", hasSize(1)))
-            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "self.href", is("http://localhost" + DEPENDERS_PATH)));
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print())
+                .andExpect(jsonPath("$._embedded.serviceList[*]", hasSize(3)))
+                .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ServiceShortNameOne' && @.version == '1.0.0' && @.description == 'Some test service description' )]", hasSize(1)))
+                .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ServiceShortNameOne' && @.version == '2.0.1' && @.description == 'Some test service description' )]", hasSize(1)))
+                .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ServiceShortNameTwo' && @.version == '1.0.0' && @.description == 'Some test service description' )]", hasSize(1)))
+                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "self.href", is("http://localhost" + DEPENDERS_PATH)));
 
 
         result.andExpect(status().isOk());
@@ -233,6 +276,19 @@ public class ServiceControllerTests {
                 .andExpect(jsonPath("$.version", is(updatedService.getVersion())));
 
         resultUpdate.andExpect(status().isOk());
+    }
+
+    @Test
+    public void deleteService() throws Exception {
+        Service service = new Service(SHORT_NAME, VERSION, DESCRIPTION);
+
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
+
+        ResultActions resultDelete = mvc.perform(delete(BASE_PATH + SHORT_NAME + "/" + VERSION)
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print());
+
+        resultDelete.andExpect(status().isOk());
     }
 
 }

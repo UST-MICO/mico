@@ -2,6 +2,7 @@ Integration Tests
 =================
 
 Integration Tests are implemented with JUnit 4.
+
 .. todo:: Update to JUnit 5
 
 .. hint:: CI/CD pipeline
@@ -31,3 +32,12 @@ To encode the username and the password with base64 you could use
 
     echo -n "username" | base64 -w 0
     echo -n "password" | base64 -w 0
+
+Run locally
+-----------
+
+To run the integration tests locally execute
+
+.. code:: bash
+
+    mvn failsafe:integration-test

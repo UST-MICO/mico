@@ -19,6 +19,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -58,11 +59,18 @@ public class ImageBuilderIntegrationTests {
      * Set up everything that is required to execute the integration tests for the image builder.
      */
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
 
         String serviceAccountName = imageBuilderConfig.getServiceAccountName();
         String usernameBase64Encoded = integrationTestsConfig.getDockerHubUsernameBase64();
         String passwordBase64Encoded = integrationTestsConfig.getDockerHubPasswordBase64();
+
+        if (StringUtils.isEmpty(usernameBase64Encoded)) {
+            throw new Exception("Environment variable 'DOCKERHUB_USERNAME_BASE64' is missing");
+        }
+        if (StringUtils.isEmpty(passwordBase64Encoded)) {
+            throw new Exception("Environment variable 'DOCKERHUB_PASSWORD_BASE64' is missing");
+        }
 
         // Integration test namespace, use a random ID as a suffix to prevent errors if concurrent integration tests are executed
         String shortId = RandomStringUtils.randomAlphanumeric(8).toLowerCase();
@@ -207,8 +215,8 @@ public class ImageBuilderIntegrationTests {
             }
         }, 10, 1, TimeUnit.SECONDS);
 
-        // Add a timeout: Abort after 30 seconds
-        completionFuture.get(30, TimeUnit.SECONDS);
+        // Add a timeout: Abort after 60 seconds
+        completionFuture.get(60, TimeUnit.SECONDS);
 
         // When completed cancel future
         completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
