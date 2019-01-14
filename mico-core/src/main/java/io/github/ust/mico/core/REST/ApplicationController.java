@@ -73,7 +73,24 @@ public class ApplicationController {
                 .getApplicationByShortNameAndVersion(savedApplication.getShortName(), savedApplication.getVersion())).toUri())
                 .body(new Resource<>(savedApplication, getApplicationLinks(savedApplication)));
         }
-
     }
 
+    @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
+    public ResponseEntity<Resource<Application>> updateApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                   @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                                   @RequestBody Application application) {
+        if (!application.getShortName().equals(shortName) || !application.getVersion().equals(version)) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Optional<Application> applicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
+        if (!applicationOptional.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        application.setId(applicationOptional.get().getId());
+        Application updatedApplication = applicationRepository.save(application);
+
+        return ResponseEntity.ok(new Resource<>(updatedApplication, linkTo(methodOn(ApplicationController.class).updateApplication(shortName, version, application)).withSelfRel()));
+    }
 }

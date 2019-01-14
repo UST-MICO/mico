@@ -13,6 +13,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import scala.App;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -21,8 +22,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -98,6 +98,26 @@ public class ApplicationControllerTest {
             .andDo(print());
 
         result.andExpect(status().isCreated());
+    }
+
+    @Test
+    public void updateApplication() throws Exception {
+        Application application = new Application(SHORT_NAME, VERSION, DESCRIPTION);
+        Application updatedApplication = new Application(SHORT_NAME, VERSION, "newDesc");
+
+        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
+        given(applicationRepository.save(any(Application.class))).willReturn(updatedApplication);
+
+        ResultActions resultUpdate = mvc.perform(put(BASE_PATH + SHORT_NAME + "/" + VERSION)
+                .content(mapper.writeValueAsBytes(updatedApplication))
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print())
+                .andExpect(jsonPath("$.id", is(application.getId())))
+                .andExpect(jsonPath("$.description", is(updatedApplication.getDescription())))
+                .andExpect(jsonPath("$.shortName", is(updatedApplication.getShortName())))
+                .andExpect(jsonPath("$.version", is(updatedApplication.getVersion())));
+
+        resultUpdate.andExpect(status().isOk());
     }
 
 }
