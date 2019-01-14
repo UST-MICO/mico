@@ -70,6 +70,23 @@ public class ServiceController {
         }
     }
 
+    @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
+    public ResponseEntity deleteService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                        @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
+        if (!serviceOpt.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+        Service service = serviceOpt.get();
+
+        if (getDependers(service).isEmpty()) {
+            serviceRepository.deleteServiceByShortNameAndVersion(shortName, version);
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/")
     public ResponseEntity<Resources<Resource<Service>>> getVersionsOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
         List<Service> services = serviceRepository.findByShortName(shortName);
@@ -162,7 +179,6 @@ public class ServiceController {
         return ResponseEntity
                 .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
                 .body(new Resource<>(service, getServiceLinks(service)));
-
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
@@ -223,12 +239,22 @@ public class ServiceController {
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependers")
     public ResponseEntity<Resources<Resource<Service>>> getDependers(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                      @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        List<Service> serviceList = serviceRepository.findAll();
         Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (!serviceOpt.isPresent()) {
             return ResponseEntity.notFound().build();
         }
         Service serviceToLookFor = serviceOpt.get();
+
+        List<Service> dependers = getDependers(serviceToLookFor);
+
+        List<Resource<Service>> resourceList = getServiceResourcesList(dependers);
+        return ResponseEntity.ok(
+                new Resources<>(resourceList,
+                        linkTo(methodOn(ServiceController.class).getDependers(shortName, version)).withSelfRel()));
+    }
+
+    public List<Service> getDependers(Service serviceToLookFor) {
+        List<Service> serviceList = serviceRepository.findAll();
 
         List<Service> dependers = new LinkedList<>();
 
@@ -243,11 +269,7 @@ public class ServiceController {
             }
         });
 
-        List<Resource<Service>> resourceList = getServiceResourcesList(dependers);
-        return ResponseEntity.ok(
-                new Resources<>(resourceList,
-                        linkTo(methodOn(ServiceController.class).getDependers(shortName, version)).withSelfRel()));
-
+        return dependers;
     }
 
     public Service getService(Service newService) {
@@ -297,7 +319,6 @@ public class ServiceController {
 
             return newService;
         }
-
     }
 
     private LinkedList<Service> getDependentServices(List<DependsOn> dependees) {
