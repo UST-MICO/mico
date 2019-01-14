@@ -1,13 +1,11 @@
 package io.github.ust.mico.core;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.neo4j.ogm.annotation.*;
 
-@JsonIdentityInfo(
-    generator = ObjectIdGenerators.PropertyGenerator.class,
-    property = "serviceDependee")
+import java.util.LinkedList;
+
 @RelationshipEntity(type = "DEPENDS_ON")
 public class DependsOn {
 
@@ -18,6 +16,7 @@ public class DependsOn {
     @JsonIgnore
     @StartNode
     private Service service;
+    @JsonIgnore
     @EndNode
     private Service serviceDependee;
     private String minVersion;
@@ -44,6 +43,18 @@ public class DependsOn {
         this.service = service;
         this.minVersion = minVersion;
         this.maxVersion = maxVersion;
+    }
+
+    /**
+     * Set the dependsOn of the service object to null to avoid recursion
+     *
+     * @return Service object with dependsOn set to null
+     */
+    @JsonProperty("serviceDependee")
+    private Service getDependee() {
+        Service dependee = this.serviceDependee;
+        dependee.setDependsOn(null);
+        return dependee;
     }
 
     //TODO: Verify if all are necessary
