@@ -33,8 +33,8 @@ public class ApplicationController {
         List<Resource<Application>> applicationResources = getApplicationResourceList(allApplications);
 
         return ResponseEntity.ok(
-                new Resources<>(applicationResources,
-                        linkTo(methodOn(ApplicationController.class).getAllApplications()).withSelfRel()));
+            new Resources<>(applicationResources,
+                linkTo(methodOn(ApplicationController.class).getAllApplications()).withSelfRel()));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
@@ -45,12 +45,12 @@ public class ApplicationController {
             return ResponseEntity.notFound().build();
         }
         return applicationOptional.map(application -> new Resource<>(application, getApplicationLinks(application)))
-                .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+            .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     private List<Resource<Application>> getApplicationResourceList(List<Application> applications) {
         return applications.stream().map(application -> new Resource<>(application, getApplicationLinks(application)))
-                .collect(Collectors.toList());
+            .collect(Collectors.toList());
     }
 
     private Iterable<Link> getApplicationLinks(Application application) {
@@ -63,15 +63,15 @@ public class ApplicationController {
     @PostMapping
     public ResponseEntity<Resource<Application>> createApplication(@RequestBody Application newApplication) {
         Optional<Application> applicationOptional = applicationRepository.
-                findByShortNameAndVersion(newApplication.getShortName(), newApplication.getVersion());
+            findByShortNameAndVersion(newApplication.getShortName(), newApplication.getVersion());
         if (applicationOptional.isPresent()) {
             return ResponseEntity.badRequest().build();
         } else {
             Application savedApplication = applicationRepository.save(newApplication);
 
             return ResponseEntity.created(linkTo(methodOn(ApplicationController.class)
-                    .getApplicationByShortNameAndVersion(savedApplication.getShortName(), savedApplication.getVersion())).toUri())
-                    .body(new Resource<>(savedApplication, getApplicationLinks(savedApplication)));
+                .getApplicationByShortNameAndVersion(savedApplication.getShortName(), savedApplication.getVersion())).toUri())
+                .body(new Resource<>(savedApplication, getApplicationLinks(savedApplication)));
         }
     }
 
@@ -81,18 +81,16 @@ public class ApplicationController {
                                                                    @RequestBody Application application) {
         if (!application.getShortName().equals(shortName) || !application.getVersion().equals(version)) {
             return ResponseEntity.badRequest().build();
-        } else {
-            Optional<Application> applicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
-            if (!applicationOptional.isPresent()) {
-                return ResponseEntity.notFound().build();
-            } else {
-                application.setId(applicationOptional.get().getId());
-                Application updatedApplication = applicationRepository.save(application);
-
-                return ResponseEntity.ok(new Resource<>(updatedApplication,
-                        linkTo(methodOn(ApplicationController.class).updateApplication(shortName, version, application)).withSelfRel()));
-            }
         }
-    }
 
+        Optional<Application> applicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
+        if (!applicationOptional.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        application.setId(applicationOptional.get().getId());
+        Application updatedApplication = applicationRepository.save(application);
+
+        return ResponseEntity.ok(new Resource<>(updatedApplication, linkTo(methodOn(ApplicationController.class).updateApplication(shortName, version, application)).withSelfRel()));
+    }
 }
