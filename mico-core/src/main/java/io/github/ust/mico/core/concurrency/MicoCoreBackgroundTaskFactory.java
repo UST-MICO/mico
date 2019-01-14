@@ -7,10 +7,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import lombok.Getter;
 import lombok.experimental.UtilityClass;
 
 /**
@@ -22,12 +20,11 @@ import lombok.experimental.UtilityClass;
 public class MicoCoreBackgroundTaskFactory {
     
     // The configuration for this background task factory.
-    @Autowired
-    private MicoCoreBackgroundTaskFactoryConfig config;
+    private MicoCoreBackgroundTaskFactoryConfig config = new MicoCoreBackgroundTaskFactoryConfig();
     
     // Executor service handling all background tasks with a fixed number of threads.
-    @Getter
     private ExecutorService executorService = Executors.newFixedThreadPool(config.getThreadPoolSize());
+    
     
     /**
      * Returns a new CompletableFuture that is asynchronously completed
