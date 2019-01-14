@@ -179,7 +179,6 @@ public class ServiceController {
         return ResponseEntity
                 .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
                 .body(new Resource<>(service, getServiceLinks(service)));
-
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
@@ -252,7 +251,6 @@ public class ServiceController {
         return ResponseEntity.ok(
                 new Resources<>(resourceList,
                         linkTo(methodOn(ServiceController.class).getDependers(shortName, version)).withSelfRel()));
-
     }
 
     public List<Service> getDependers(Service serviceToLookFor) {
@@ -321,7 +319,6 @@ public class ServiceController {
 
             return newService;
         }
-
     }
 
     private LinkedList<Service> getDependentServices(List<DependsOn> dependees) {
