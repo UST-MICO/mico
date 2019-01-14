@@ -74,18 +74,16 @@ public class ServiceController {
     public ResponseEntity deleteService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                         @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
-        if(!serviceOpt.isPresent()){
+        if (!serviceOpt.isPresent()) {
             return ResponseEntity.notFound().build();
+        }
+        Service service = serviceOpt.get();
+
+        if (getDependers(service).isEmpty()) {
+            serviceRepository.deleteServiceByShortNameAndVersion(shortName, version);
+            return ResponseEntity.ok().build();
         } else {
-            //only allow a deletion if the service has no dependees or depeners
-            Service service = serviceOpt.get();
-            //TODO: && getDependers(shortName,version) == null --> check for dependers missing
-            if(service.getDependsOn() == null){
-                serviceRepository.deleteServiceByShortNameAndVersion(shortName,version);
-                return ResponseEntity.ok().build();
-            } else {
-                return ResponseEntity.badRequest().build();
-            }
+            return ResponseEntity.badRequest().build();
         }
     }
 
@@ -242,12 +240,23 @@ public class ServiceController {
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependers")
     public ResponseEntity<Resources<Resource<Service>>> getDependers(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                      @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        List<Service> serviceList = serviceRepository.findAll();
         Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (!serviceOpt.isPresent()) {
             return ResponseEntity.notFound().build();
         }
         Service serviceToLookFor = serviceOpt.get();
+
+        List<Service> dependers = getDependers(serviceToLookFor);
+
+        List<Resource<Service>> resourceList = getServiceResourcesList(dependers);
+        return ResponseEntity.ok(
+                new Resources<>(resourceList,
+                        linkTo(methodOn(ServiceController.class).getDependers(shortName, version)).withSelfRel()));
+
+    }
+
+    public List<Service> getDependers(Service serviceToLookFor) {
+        List<Service> serviceList = serviceRepository.findAll();
 
         List<Service> dependers = new LinkedList<>();
 
@@ -262,11 +271,7 @@ public class ServiceController {
             }
         });
 
-        List<Resource<Service>> resourceList = getServiceResourcesList(dependers);
-        return ResponseEntity.ok(
-                new Resources<>(resourceList,
-                        linkTo(methodOn(ServiceController.class).getDependers(shortName, version)).withSelfRel()));
-
+        return dependers;
     }
 
     public Service getService(Service newService) {
