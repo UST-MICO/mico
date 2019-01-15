@@ -76,7 +76,9 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                 });
         });
 
-        this.getTextFile('http://localhost:8080/services/testyaml/1.4/yaml').subscribe(res => (this.deployment = res._body));
+        this.getTextFile('http://localhost:8080/services/testyaml/1.4/yaml').subscribe(
+            res => (this.deployment = this.removeStartingDashes(res['_body']))
+        );
     }
 
     /**
@@ -242,5 +244,8 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     }
     getTextFile(filename: string) {
         return this.http.get(filename).pipe();
+    }
+    removeStartingDashes(yaml: String) {
+        return yaml.substring(3).trim();
     }
 }

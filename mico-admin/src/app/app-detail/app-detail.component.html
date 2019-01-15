@@ -97,10 +97,8 @@
                 <mico-data [modelUrl]="'remote/MicoApplication'" [startData]="application"></mico-data>
             </ng-container>
         </mat-tab>
-        <mat-tab label="Deployment">
-            App-Detail-Deployment...
-            <div class="deploy-yaml" [innerHTML]="deployment"></div>
-        </mat-tab>
+        <mat-tab label="Deployment"> App-Detail-Deployment... </mat-tab>
+        <mat-tab label="Yaml"> <div class="deploy-yaml" [innerHTML]="deployment"></div> </mat-tab>
     </mat-tab-group>
 </mat-card>
 
