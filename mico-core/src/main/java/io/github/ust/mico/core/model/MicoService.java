@@ -65,7 +65,7 @@ public class MicoService {
      */
     @ApiModelProperty(required = true)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    @Relationship(direction = Relationship.UNDIRECTED)
+    @Relationship(type = "PROVIDES", direction = Relationship.UNDIRECTED)
     @Singular
     private final List<MicoServiceInterface> serviceInterfaces;
 
