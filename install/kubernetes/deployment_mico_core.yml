@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mico-core
+  #namespace: mico-system
+  labels:
+    run: mico-core
+spec:
+  ports:
+  - port: 8080
+    targetPort: 8080
+  selector:
+    run: mico-core
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mico-core
+  #namespace: mico-system
+spec:
+  selector:
+    matchLabels:
+      run: mico-core
+  replicas: 1
+  template:
+    metadata:
+      #namespace: mico-system
+      labels:
+        run: mico-core
+    spec:
+      containers:
+      - name: mico-core
+        image: ustmico/mico-core:localbuild
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
