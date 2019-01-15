@@ -3,6 +3,7 @@ package io.github.ust.mico.core;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.ust.mico.core.model.MicoServiceCrawlingOrigin;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
@@ -38,7 +39,7 @@ public class GitHubCrawler {
             Service service = new Service();
             service.setShortName(basicInfoJson.get("name").textValue());
             service.setExternalVersion(releaseInfoJson.get("tag_name").textValue());
-            service.setCrawlingSource(Origin.GITHUB);
+            //service.setCrawlingSource(MicoServiceCrawlingOrigin.GITHUB); //TODO
             service.setVersion(makeExternalVersionInternal(service.getExternalVersion()));
             service.setDescription(basicInfoJson.get("description").textValue());
             service.setName(basicInfoJson.get("full_name").textValue());
@@ -105,7 +106,7 @@ public class GitHubCrawler {
                     Service service = new Service();
                     service.setShortName(shortName);
                     service.setExternalVersion(jsonNode.get("tag_name").textValue());
-                    service.setCrawlingSource(Origin.GITHUB);
+                    //service.setCrawlingSource(MicoServiceCrawlingOrigin.GITHUB); //TODO
                     service.setVersion(makeExternalVersionInternal(service.getExternalVersion()));
                     service.setDescription(description);
                     service.setName(fullName);
