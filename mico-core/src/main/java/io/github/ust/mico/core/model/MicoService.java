@@ -1,9 +1,7 @@
 package io.github.ust.mico.core.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModelProperty;
-import lombok.*;
+import java.util.List;
+
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
@@ -90,7 +88,9 @@ public class MicoService {
     private final String dockerfilePath;
 
     /**
-     *
+     * Indicates where this service originates from, e.g., 
+     * GitHub (downloaded and built by MICO) or DockerHub
+     * (ready-to-use image).
      */
     @ApiModelProperty(required = true)
     private MicoServiceCrawlingOrigin serviceCrawlingOrigin;
@@ -126,6 +126,12 @@ public class MicoService {
      */
     private String owner;
 
+    /**
+     * The fully qualified URI to the image on DockerHub.
+     * Either set after the image has been built by MICO
+     * (if the service originates from GitHub) or set by the
+     * user directly.
+     */
     private String dockerImageUri;
 
 }
