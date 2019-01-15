@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Http, ResponseType } from '@angular/http';
 
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
@@ -75,6 +76,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                 });
         });
 
+        this.getTextFile('http://localhost:8080/services/testyaml/1.4/yaml').subscribe(res => (this.deployment = res._body));
     }
 
     /**
@@ -237,5 +239,8 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                 console.log(val);
             });
         this.edit = false;
+    }
+    getTextFile(filename: string) {
+        return this.http.get(filename).pipe();
     }
 }

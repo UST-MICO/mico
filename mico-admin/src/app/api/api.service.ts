@@ -5,7 +5,6 @@ import { ApiObject } from './apiobject';
 import { ApiBaseFunctionService } from './api-base-function.service';
 import { ApiModel, ApiModelAllOf } from './apimodel';
 
-
 /**
  * Recursively freeze object.
  *
@@ -14,7 +13,9 @@ import { ApiModel, ApiModelAllOf } from './apimodel';
  * @param obj the object to freeze
  */
 export function freezeObject<T>(obj: T): Readonly<T> {
-    if (Object.isFrozen(obj)) { return; }
+    if (Object.isFrozen(obj)) {
+        return;
+    }
     const propNames = Object.getOwnPropertyNames(obj);
     // Freeze properties before freezing self
     for (const key of propNames) {
@@ -40,7 +41,7 @@ type ApiModelMap = { [prop: string]: ApiModel | ApiModelAllOf };
 export class ApiService {
     private streams: Map<string, Subject<Readonly<any>>> = new Map();
 
-    constructor(private rest: ApiBaseFunctionService, ) { }
+    constructor(private rest: ApiBaseFunctionService) {}
 
     /**
      * Canonize a resource url.

@@ -72,10 +72,11 @@ export class ApiBaseFunctionService {
             options.params = params;
         }
 
-        const request = this.http.get(url, options).pipe(map((res: Response) => {
-            return res.json();
-        }));
-
+        const request = this.http.get(url, options).pipe(
+            map((res: Response) => {
+                return res.json();
+            })
+        );
         return request;
     }
 
