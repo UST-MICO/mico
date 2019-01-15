@@ -117,13 +117,13 @@
                         <div *ngFor="let dependencie of dependees">
                             <div class="flex">
                                 <div class="flex-grow-1">
-                                    <mat-list-item [routerLink]="['/service-detail/', dependencie.id]">
-                                        <span mat-line [routerLink]="['/service-detail/', dependencie.id]">{{dependencie.name}}</span>
+                                    <mat-list-item [routerLink]="['/service-detail/', dependencie.shortName, dependencie.version]">
+                                        <span mat-line [routerLink]="['/service-detail/', dependencie.shortName, dependencie.version]">{{dependencie.name}}</span>
                                     </mat-list-item>
                                 </div>
                                 <div class="w-20">
                                     <mat-list-item>
-                                        <mat-icon (click)="deleteDependency(dependencie.id)">delete</mat-icon>
+                                        <mat-icon (click)="deleteDependency(dependencie.shortName)">delete</mat-icon>
                                     </mat-list-item>
                                 </div>
                             </div>
@@ -148,13 +148,13 @@
                         <div *ngFor="let dependencie of dependers">
                             <div class="flex">
                                 <div class="flex-grow-1">
-                                    <mat-list-item [routerLink]="['/service-detail/', dependencie.id]">
-                                        <span mat-line [routerLink]="['/service-detail/', dependencie.id]">{{dependencie.name}}</span>
+                                    <mat-list-item [routerLink]="['/service-detail/', dependencie.shortName, dependencie.version]">
+                                        <span mat-line [routerLink]="['/service-detail/', dependencie.shortName, dependencie.version]">{{dependencie.name}}</span>
                                     </mat-list-item>
                                 </div>
                                 <div class="w-20">
                                     <mat-list-item>
-                                        <mat-icon (click)="deleteDependency(dependencie.id)">delete</mat-icon>
+                                        <mat-icon (click)="deleteDependency(dependencie.shortName)">delete</mat-icon>
                                     </mat-list-item>
                                 </div>
                             </div>
