@@ -30,6 +30,7 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
     }
 
     input() {
+        console.log(this.serviceData);
         return this.serviceData;
     }
 

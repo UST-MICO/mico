@@ -174,7 +174,6 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
      */
     addDependee() {
 
-        console.log(this.dependees);
         const dialogRef = this.dialog.open(ServicePickerComponent, {
             data: {
                 filter: '',

@@ -68,7 +68,9 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
         data.existingDependencies.forEach(element => {
             this.existingDependencies.push(parseInt(element.id, 10));
         });
-        this.existingDependencies.push(data.serviceId);
+        if (data.serviceId != null && data.serviceId !== '') {
+            this.existingDependencies.push(data.serviceId);
+        }
     }
 
     ngOnInit() {

@@ -4,6 +4,7 @@ import { ApiObject } from '../api/apiobject';
 import { MatDialog } from '@angular/material';
 import { CreateServiceDialogComponent } from '../dialogs/create-service/create-service.component';
 import { Router } from '@angular/router';
+import { CreateApplicationComponent } from '../dialogs/create-application/create-application.component';
 
 @Component({
     selector: 'mico-dashboard',
@@ -44,6 +45,17 @@ export class DashboardComponent implements OnInit {
             this.apiService.postService(result).subscribe(val => {
                 console.log(val);
                 this.router.navigate(['service-detail', val.shortName, val.version]);
+            });
+        });
+    }
+
+    newApplication() {
+        const dialogRef = this.dialog.open(CreateApplicationComponent);
+        dialogRef.afterClosed().subscribe(result => {
+            this.apiService.postService(result).subscribe(val => {
+                console.log(val);
+                // TODO navigate to application page
+                //this.router.navigate(['service-detail', val.shortName, val.version]);
             });
         });
     }

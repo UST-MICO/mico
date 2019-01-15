@@ -64,6 +64,7 @@ import { MicoDataComponent } from './data-view/mico-data/mico-data.component';
 import { MicoDataStringComponent } from './data-view/mico-data-string/mico-data-string.component';
 import { MicoDataContainerComponent } from './data-view/mico-data-container/mico-data-container.component';
 import { MicoDataBooleanComponent } from './data-view/mico-data-boolean/mico-data-boolean.component';
+import { CreateApplicationComponent } from './dialogs/create-application/create-application.component';
 
 @NgModule({
     declarations: [
@@ -92,14 +93,16 @@ import { MicoDataBooleanComponent } from './data-view/mico-data-boolean/mico-dat
         MicoDataComponent,
         MicoDataStringComponent,
         MicoDataContainerComponent,
-        MicoDataBooleanComponent
+        MicoDataBooleanComponent,
+        CreateApplicationComponent
     ],
     entryComponents: [
         // dialogs
         CreateServiceDialogComponent,
         ServicePickerComponent,
         YesNoDialogComponent,
-        CreateServiceInterfaceComponent
+        CreateServiceInterfaceComponent,
+        CreateApplicationComponent,
     ],
     imports: [
         BrowserModule,
