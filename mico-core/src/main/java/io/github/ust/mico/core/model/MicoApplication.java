@@ -14,9 +14,9 @@ import java.util.List;
  * in the context of MICO.
  */
 @Data
-@Builder
-//@RequiredArgsConstructor
 //@AllArgsConstructor
+//@RequiredArgsConstructor
+@Builder
 @NodeEntity
 public class MicoApplication extends MicoService {
 
@@ -27,7 +27,7 @@ public class MicoApplication extends MicoService {
     // The ids of the services this application is composed of.
     @ApiModelProperty(required = true)
     @Singular
-    @Relationship
+    @Relationship(type = "INCLUDES")
     private final List<MicoService> services;
 
     // The information necessary for deploying this application.
