@@ -2,7 +2,8 @@ package io.github.ust.mico.core.REST;
 
 import io.github.ust.mico.core.DependsOn;
 import io.github.ust.mico.core.Service;
-import io.github.ust.mico.core.ServiceRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
@@ -30,7 +31,7 @@ public class ServiceController {
     public static final String PATH_DELETE_VERSION = "versionToDelete";
 
     @Autowired
-    private ServiceRepository serviceRepository;
+    private MicoServiceRepository serviceRepository;
 
     @GetMapping()
     public ResponseEntity<Resources<Resource<Service>>> getServiceList() {

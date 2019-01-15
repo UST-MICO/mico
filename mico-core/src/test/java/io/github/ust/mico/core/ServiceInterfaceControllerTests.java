@@ -1,6 +1,9 @@
 package io.github.ust.mico.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +39,7 @@ public class ServiceInterfaceControllerTests {
     private MockMvc mvc;
 
     @MockBean
-    private ServiceRepository serviceRepository;
+    private MicoServiceRepository serviceRepository;
 
     @Autowired
     private ObjectMapper mapper;

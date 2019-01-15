@@ -1,4 +1,4 @@
-package io.github.ust.mico.core;
+package io.github.ust.mico.core.persistence;
 
 import org.springframework.data.neo4j.annotation.Depth;
 import org.springframework.data.neo4j.annotation.Query;
@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface ServiceRepository extends Neo4jRepository<Service, Long> {
+public interface MicoServiceRepository extends Neo4jRepository<Service, Long> {
 
     List<Service> findByName(@Param("name") String name);
 

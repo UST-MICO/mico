@@ -2,7 +2,8 @@ package io.github.ust.mico.core.REST;
 
 import io.github.ust.mico.core.Service;
 import io.github.ust.mico.core.ServiceInterface;
-import io.github.ust.mico.core.ServiceRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
@@ -32,7 +33,7 @@ public class ServiceInterfaceController {
     public static final String SERVICE_INTERFACE_PATH = "/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + PATH_PART_INTERFACES + "/";
 
     @Autowired
-    private ServiceRepository serviceRepository;
+    private MicoServiceRepository serviceRepository;
 
     @GetMapping(SERVICE_INTERFACE_PATH)
     public ResponseEntity<Resources<Resource<ServiceInterface>>> getInterfacesOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,

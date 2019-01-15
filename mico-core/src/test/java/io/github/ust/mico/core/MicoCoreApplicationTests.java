@@ -6,6 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceDependencyRepository;
+import io.github.ust.mico.core.persistence.MicoServiceInterfaceRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -31,16 +36,16 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
     private static final String TEST_VERSION = "1.0";
 
     @Autowired
-    private ApplicationRepository applicationRepository;
+    private MicoApplicationRepository applicationRepository;
 
     @Autowired
-    private DependsOnRepository dependsOnRepository;
+    private MicoServiceDependencyRepository dependsOnRepository;
 
     @Autowired
-    private ServiceInterfaceRepository serviceInterfaceRepository;
+    private MicoServiceInterfaceRepository serviceInterfaceRepository;
 
     @Autowired
-    private ServiceRepository serviceRepository;
+    private MicoServiceRepository serviceRepository;
 
     @Test
     public void testServiceRepository() {

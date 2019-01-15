@@ -2,6 +2,8 @@ package io.github.ust.mico.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ust.mico.core.REST.ApplicationController;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +45,7 @@ public class ApplicationControllerTest {
     private MockMvc mvc;
 
     @MockBean
-    private ApplicationRepository applicationRepository;
+    private MicoApplicationRepository applicationRepository;
 
     @Autowired
     private ObjectMapper mapper;

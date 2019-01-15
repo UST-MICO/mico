@@ -1,7 +1,8 @@
 package io.github.ust.mico.core.REST;
 
 import io.github.ust.mico.core.Application;
-import io.github.ust.mico.core.ApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
@@ -25,7 +26,7 @@ public class ApplicationController {
     private static final String PATH_VARIABLE_VERSION = "version";
 
     @Autowired
-    private ApplicationRepository applicationRepository;
+    private MicoApplicationRepository applicationRepository;
 
     @GetMapping()
     public ResponseEntity<Resources<Resource<Application>>> getAllApplications() {

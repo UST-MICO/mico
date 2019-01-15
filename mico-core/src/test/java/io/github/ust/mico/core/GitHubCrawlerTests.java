@@ -8,6 +8,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceDependencyRepository;
+import io.github.ust.mico.core.persistence.MicoServiceInterfaceRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -21,16 +26,16 @@ public class GitHubCrawlerTests extends Neo4jTestClass {
     private static final String RELEASE = "v4.12.0";
 
     @Autowired
-    private ApplicationRepository applicationRepository;
+    private MicoApplicationRepository applicationRepository;
 
     @Autowired
-    private DependsOnRepository dependsOnRepository;
+    private MicoServiceDependencyRepository dependsOnRepository;
 
     @Autowired
-    private ServiceInterfaceRepository serviceInterfaceRepository;
+    private MicoServiceInterfaceRepository serviceInterfaceRepository;
 
     @Autowired
-    private ServiceRepository serviceRepository;
+    private MicoServiceRepository serviceRepository;
 
     @Test
     @Ignore

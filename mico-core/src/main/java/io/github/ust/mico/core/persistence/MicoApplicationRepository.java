@@ -1,4 +1,4 @@
-package io.github.ust.mico.core;
+package io.github.ust.mico.core.persistence;
 
 import org.springframework.data.neo4j.annotation.Depth;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
@@ -6,7 +6,7 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import java.util.List;
 import java.util.Optional;
 
-public interface ApplicationRepository extends Neo4jRepository<Application, Long> {
+public interface MicoApplicationRepository extends Neo4jRepository<Application, Long> {
     @Override
     List<Application> findAll();
 

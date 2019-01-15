@@ -2,6 +2,8 @@ package io.github.ust.mico.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ust.mico.core.REST.ServiceController;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -76,7 +78,7 @@ public class ServiceControllerTests {
     }
 
     @MockBean
-    private ServiceRepository serviceRepository;
+    private MicoServiceRepository serviceRepository;
 
     @Autowired
     private ObjectMapper mapper;
