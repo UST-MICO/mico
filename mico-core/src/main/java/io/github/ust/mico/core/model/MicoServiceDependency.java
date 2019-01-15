@@ -1,13 +1,11 @@
 package io.github.ust.mico.core.model;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import org.neo4j.ogm.annotation.*;
 
 /**
  * Represents a dependency of a {@link MicoService}.
@@ -15,7 +13,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 @Builder
-@NodeEntity
+@RelationshipEntity(type = "DEPENDS_ON")
 public class MicoServiceDependency {
 
     /**
@@ -31,12 +29,19 @@ public class MicoServiceDependency {
     // ----------------------
 
     /**
-     * The id of the depended service.
+     *
      */
-    // TODO: serviceId needed? MicoService is linked via RelationshipEntity.
-    // The id of the depended service.
+    @JsonIgnore
+    @StartNode
+    private MicoService service;
+
+    /**
+     *
+     */
     @ApiModelProperty(required = true)
-    private final long serviceId;
+    @JsonIgnore
+    @EndNode
+    private MicoService serviceDependee;
 
     /**
      * The minimum version of the depended service
