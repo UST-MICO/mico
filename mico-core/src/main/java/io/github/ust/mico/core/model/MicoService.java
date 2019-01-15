@@ -9,7 +9,15 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import lombok.Singular;
 
 /**
  * Represents a service in the context of MICO.
@@ -118,9 +126,6 @@ public class MicoService {
      */
     private String owner;
 
-    /**
-     *
-     */
     private String dockerImageUri;
 
 }
