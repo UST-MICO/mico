@@ -13,7 +13,7 @@ import lombok.Getter;
  * the functionality for a version prefix, so
  * that versions like, e.g., 'v1.2.3' are possible.
  */
-@NodeEntity // TODO: @Jan -> please check / validate
+@NodeEntity
 public class MicoVersion implements Comparable<MicoVersion> {
     
     /**
@@ -26,7 +26,6 @@ public class MicoVersion implements Comparable<MicoVersion> {
      *  The actual semantic version
      */
     private Version version;
-    
     
     /**
      * Private constructor.
@@ -253,8 +252,6 @@ public class MicoVersion implements Comparable<MicoVersion> {
         version = version.setBuildMetadata(build);
         return this;
     }
-    
-
 
     /**
      * Checks if this version is greater than the other version.
