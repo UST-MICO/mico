@@ -22,6 +22,7 @@ export interface Service {
     shortName: string;
     description: string;
     id: number;
+    version: string;
 }
 
 @Component({
@@ -35,11 +36,11 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
     serviceList;
     filter = FilterTypes.None;
     choiceModel = ChoiceTypes.multi;
-    exisitingDependencies: number[] = [];
+    existingDependencies: number[] = [];
 
     private serviceSubscription: Subscription;
 
-    displayedColumns: string[] = ['name', 'shortName', 'description'];
+    displayedColumns: string[] = ['name', 'shortName', 'version', 'description'];
     dataSource;
     selection;
 
@@ -60,36 +61,39 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
             this.selection = new SelectionModel<Service>(false, []);
         } else if (data.choice === 'multi') {
             this.choiceModel = ChoiceTypes.multi;
-            this.displayedColumns = ['select', 'name', 'shortName', 'description'];
+            this.displayedColumns = ['select', 'name', 'shortName', 'version', 'description'];
             this.selection = new SelectionModel<Service>(true, []);
         }
 
-        data.exisitingDependencies.forEach(element => {
-            this.exisitingDependencies.push(parseInt(element.id, 10));
+        data.existingDependencies.forEach(element => {
+            this.existingDependencies.push(parseInt(element.id, 10));
         });
-        this.exisitingDependencies.push(data.serviceId);
+        this.existingDependencies.push(data.serviceId);
     }
 
     ngOnInit() {
 
         // get the list of services
         this.serviceSubscription = this.apiService.getServices()
-            .subscribe(services => this.serviceList = services);
+            .subscribe(services => {
+                this.serviceList = services;
 
-        // fill options with the service names
-        const tempList: Service[] = [];
-        this.serviceList.forEach(element => {
-            if (this.filterElement(element)) {
-                tempList.push({
-                    name: element.name,
-                    shortName: element.shortName,
-                    description: element.description,
-                    id: element.id,
+                // fill options with the service names
+                const tempList: Service[] = [];
+                this.serviceList.forEach(element => {
+                    if (this.filterElement(element)) {
+                        tempList.push({
+                            name: element.name,
+                            shortName: element.shortName,
+                            description: element.description,
+                            id: element.id,
+                            version: element.version,
+                        });
+                    }
                 });
-            }
 
-        });
-        this.dataSource = new MatTableDataSource(tempList);
+                this.dataSource = new MatTableDataSource(tempList);
+            });
     }
 
     ngOnDestroy() {
@@ -106,7 +110,7 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
 
         let val = false;
 
-        if (!this.exisitingDependencies.includes(parseInt(element.id, 10))) {
+        if (!this.existingDependencies.includes(parseInt(element.id, 10))) {
             if (this.filter === FilterTypes.None) {
                 val = true;
             } else if (this.filter === FilterTypes.Internal) {

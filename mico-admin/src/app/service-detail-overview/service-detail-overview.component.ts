@@ -173,11 +173,13 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
      * action triggered in ui
      */
     addDependee() {
+
+        console.log(this.dependees);
         const dialogRef = this.dialog.open(ServicePickerComponent, {
             data: {
-                filter: 'internal',
+                filter: '',
                 choice: 'multi',
-                exisitingDependencies: this.dependees,
+                existingDependencies: this.dependees,
                 serviceId: this.shortName,
             }
         });
@@ -198,7 +200,7 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
             data: {
                 filter: 'external',
                 choice: 'multi',
-                exisitingDependencies: this.dependers,
+                existingDependencies: this.dependers,
                 serviceId: this.shortName,
             }
         });
