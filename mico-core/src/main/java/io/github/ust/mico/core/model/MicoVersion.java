@@ -3,15 +3,14 @@ package io.github.ust.mico.core.model;
 import com.github.zafarkhaja.semver.ParseException;
 import com.github.zafarkhaja.semver.UnexpectedCharacterException;
 import com.github.zafarkhaja.semver.Version;
+
 import lombok.Getter;
-import org.neo4j.ogm.annotation.NodeEntity;
 
 /**
  * Wrapper for a {@link Version} that adds
  * the functionality for a version prefix, so
  * that versions like, e.g., 'v1.2.3' are possible.
  */
-@NodeEntity
 public class MicoVersion implements Comparable<MicoVersion> {
 
     /**

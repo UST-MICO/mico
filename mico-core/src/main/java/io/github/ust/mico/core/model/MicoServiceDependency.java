@@ -29,7 +29,7 @@ public class MicoServiceDependency {
     // ----------------------
 
     /**
-     *
+     * 
      */
     @JsonIgnore
     @StartNode
@@ -41,7 +41,7 @@ public class MicoServiceDependency {
     @ApiModelProperty(required = true)
     @JsonIgnore
     @EndNode
-    private MicoService serviceDependee;
+    private MicoService dependedService;
 
     /**
      * The minimum version of the depended service
