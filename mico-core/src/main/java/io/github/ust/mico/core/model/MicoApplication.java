@@ -1,6 +1,7 @@
 package io.github.ust.mico.core.model;
 
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
@@ -14,8 +15,7 @@ import java.util.List;
  * in the context of MICO.
  */
 @Data
-//@AllArgsConstructor
-//@RequiredArgsConstructor
+@AllArgsConstructor
 @Builder
 @NodeEntity
 public class MicoApplication extends MicoService {
