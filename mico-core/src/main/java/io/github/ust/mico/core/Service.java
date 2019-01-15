@@ -2,6 +2,7 @@ package io.github.ust.mico.core;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.github.ust.mico.core.model.MicoServiceCrawlingOrigin;
 import io.swagger.annotations.ApiModelProperty;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -47,7 +48,7 @@ public class Service {
 
     //crawling information
     private String externalVersion;
-    private Origin crawlingSource;
+    private MicoServiceCrawlingOrigin crawlingSource;
     //docker information
     private String dockerImageName;
     private String dockerImageUri;
@@ -205,11 +206,11 @@ public class Service {
         this.serviceInterfaces = serviceInterfaces;
     }
 
-    public Origin getCrawlingSource() {
+    public MicoServiceCrawlingOrigin getCrawlingSource() {
         return crawlingSource;
     }
 
-    public void setCrawlingSource(Origin crawlingSource) {
+    public void setCrawlingSource(MicoServiceCrawlingOrigin crawlingSource) {
         this.crawlingSource = crawlingSource;
     }
 
