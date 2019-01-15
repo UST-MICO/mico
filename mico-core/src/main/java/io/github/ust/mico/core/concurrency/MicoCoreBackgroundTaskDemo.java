@@ -1,22 +1,31 @@
 package io.github.ust.mico.core.concurrency;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 /**
  * Demo class for {@link MicoCoreBackgroundTaskFactory}.
  */
+@Component
 public class MicoCoreBackgroundTaskDemo {
     
-    public static void main(String[] args) {
-        MicoCoreBackgroundTaskDemo demo = new MicoCoreBackgroundTaskDemo();
-        
+    @Autowired
+    private MicoCoreBackgroundTaskFactory factory;
+    
+    public MicoCoreBackgroundTaskDemo(MicoCoreBackgroundTaskFactory factory) {
+        this.factory = factory;
+    }
+    
+    public void demo() {
         // Fire-and-forget
-        MicoCoreBackgroundTaskFactory.runAsync(() -> demo.veryLongLastingTask("MICO"));
+        factory.runAsync(() -> veryLongLastingTask("MICO"));
         
         // Run and only proceed workflow on success
-        MicoCoreBackgroundTaskFactory.runAsync(() -> demo.veryLongLastingTask("MICO"), result -> demo.successHandler(result));
+        factory.runAsync(() -> veryLongLastingTask("MICO"), result -> successHandler(result));
         
         // Full result handling - success and error
-        MicoCoreBackgroundTaskFactory.runAsync(() -> demo.veryLongLastingTask("MICO"), result -> demo.successHandler(result), e -> { e.printStackTrace(); return null; });
-        MicoCoreBackgroundTaskFactory.runAsync(() -> demo.veryLongLastingTask("MICO"), result -> demo.successHandler(result), e -> demo.exceptionHandler(e));
+        factory.runAsync(() -> veryLongLastingTask("MICO"), result -> successHandler(result), e -> { e.printStackTrace(); return null; });
+        factory.runAsync(() -> veryLongLastingTask("MICO"), result -> successHandler(result), e -> exceptionHandler(e));
     }
     
     private void successHandler(String s) {

@@ -7,24 +7,28 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import lombok.experimental.UtilityClass;
-
 /**
- * Utility class for background jobs providing factory methods
+ * Helper class for background task with the functionality
+ * to attach callbacks for successful termination or failure.
  * for {@link CompletableFuture}.
  */
-@UtilityClass
 @Component
 public class MicoCoreBackgroundTaskFactory {
     
     // The configuration for this background task factory.
-    private MicoCoreBackgroundTaskFactoryConfig config = new MicoCoreBackgroundTaskFactoryConfig();
+    private MicoCoreBackgroundTaskFactoryConfig config;
     
     // Executor service handling all background tasks with a fixed number of threads.
-    private ExecutorService executorService = Executors.newFixedThreadPool(config.getThreadPoolSize());
+    private ExecutorService executorService;
     
+    @Autowired
+    public MicoCoreBackgroundTaskFactory(MicoCoreBackgroundTaskFactoryConfig config) {
+        this.config = config;
+        executorService = Executors.newFixedThreadPool(this.config.getThreadPoolSize());
+    }
     
     /**
      * Returns a new CompletableFuture that is asynchronously completed
@@ -71,7 +75,6 @@ public class MicoCoreBackgroundTaskFactory {
      * @return a new {@link CompletableFuture}.
      */
     public <T> CompletableFuture<Void> runAsync(Supplier<T> task, Consumer<? super T> onSuccess, Function<Throwable, ? extends Void> onError) {
-//        return CompletableFuture.supplyAsync(task, executorService).exceptionally(onError).thenAccept(onSuccess);
         return CompletableFuture.supplyAsync(task, executorService).thenAccept(onSuccess).exceptionally(onError);
     }
     
