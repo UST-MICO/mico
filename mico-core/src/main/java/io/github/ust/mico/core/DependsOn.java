@@ -4,8 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.neo4j.ogm.annotation.*;
 
-import java.util.LinkedList;
-
+@Deprecated
 @RelationshipEntity(type = "DEPENDS_ON")
 public class DependsOn {
 

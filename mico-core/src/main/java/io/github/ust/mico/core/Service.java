@@ -1,9 +1,7 @@
 package io.github.ust.mico.core;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import io.swagger.annotations.ApiModelProperty;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -13,6 +11,7 @@ import org.neo4j.ogm.annotation.Relationship;
 import java.util.LinkedList;
 import java.util.List;
 
+@Deprecated
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NodeEntity
 public class Service {
