@@ -75,19 +75,6 @@ public class MicoService {
     private final List<MicoServiceInterface> serviceInterfaces;
 
     /**
-     * The URL to the root directory of, e.g., the
-     * corresponding GitHub repository.
-     */
-    @ApiModelProperty(required = true)
-    private final String vcsRoot;
-
-    /**
-     * The relative (to vcsRoot) path to the Dockerfile.
-     */
-    @ApiModelProperty(required = true)
-    private final String dockerfilePath;
-
-    /**
      * Indicates where this service originates from, e.g., 
      * GitHub (downloaded and built by MICO) or DockerHub
      * (ready-to-use image).
@@ -125,6 +112,17 @@ public class MicoService {
      * who is responsible for this service.
      */
     private String owner;
+
+    /**
+     * The URL to the root directory of, e.g., the
+     * corresponding GitHub repository.
+     */
+    private final String vcsRoot;
+
+    /**
+     * The relative (to vcsRoot) path to the Dockerfile.
+     */
+    private final String dockerfilePath;
 
     /**
      * The fully qualified URI to the image on DockerHub.
