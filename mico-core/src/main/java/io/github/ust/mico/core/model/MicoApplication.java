@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
@@ -18,7 +20,16 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @NodeEntity
-public class MicoApplication extends MicoService {
+public class MicoApplication {
+
+    //TODO: add additional attributes
+
+    /**
+     * The id of this service.
+     */
+    @Id
+    @GeneratedValue
+    private final Long id;
 
     // ----------------------
     // -> Required fields ---

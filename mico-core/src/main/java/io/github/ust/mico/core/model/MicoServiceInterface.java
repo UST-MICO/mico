@@ -26,7 +26,7 @@ public class MicoServiceInterface {
     @JsonIgnore
     @Id
     @GeneratedValue
-    private final long id;
+    private final Long id;
 
 
     // ----------------------

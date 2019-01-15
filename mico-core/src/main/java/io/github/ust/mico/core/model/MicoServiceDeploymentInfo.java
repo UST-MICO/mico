@@ -28,7 +28,7 @@ public class MicoServiceDeploymentInfo {
      */
     @Id
     @GeneratedValue
-    private final long id;
+    private final Long id;
 
     /**
      * The id of the parent service.

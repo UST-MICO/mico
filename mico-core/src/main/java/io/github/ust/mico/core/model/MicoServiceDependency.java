@@ -21,7 +21,7 @@ public class MicoServiceDependency {
      */
     @Id
     @GeneratedValue
-    private final long id;
+    private final Long id;
 
 
     // ----------------------

@@ -27,7 +27,7 @@ public class MicoApplicationDeploymentInfo {
      */
     @Id
     @GeneratedValue
-    private final long id;
+    private final Long id;
 
 
     // ----------------------

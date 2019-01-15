@@ -38,7 +38,7 @@ public class GitHubCrawler {
             Service service = new Service();
             service.setShortName(basicInfoJson.get("name").textValue());
             service.setExternalVersion(releaseInfoJson.get("tag_name").textValue());
-            service.setCrawlingSource(CrawlingSource.GITHUB);
+            service.setCrawlingSource(Origin.GITHUB);
             service.setVersion(makeExternalVersionInternal(service.getExternalVersion()));
             service.setDescription(basicInfoJson.get("description").textValue());
             service.setName(basicInfoJson.get("full_name").textValue());
@@ -105,7 +105,7 @@ public class GitHubCrawler {
                     Service service = new Service();
                     service.setShortName(shortName);
                     service.setExternalVersion(jsonNode.get("tag_name").textValue());
-                    service.setCrawlingSource(CrawlingSource.GITHUB);
+                    service.setCrawlingSource(Origin.GITHUB);
                     service.setVersion(makeExternalVersionInternal(service.getExternalVersion()));
                     service.setDescription(description);
                     service.setName(fullName);

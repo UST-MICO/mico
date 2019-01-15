@@ -2,7 +2,6 @@ package io.github.ust.mico.core.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.github.ust.mico.core.CrawlingSource;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.*;
 import org.neo4j.ogm.annotation.GeneratedValue;
@@ -49,7 +48,7 @@ public class MicoService {
     private final String name;
 
     /**
-     * The version of this service.
+     * The version of this service. Refers to GitHub release tag.
      */
     @ApiModelProperty(required = true)
     private final MicoVersion version;
@@ -82,6 +81,12 @@ public class MicoService {
     @ApiModelProperty(required = true)
     private final String dockerfilePath;
 
+    /**
+     *
+     */
+    @ApiModelProperty(required = true)
+    private MicoServiceCrawlingOrigin serviceCrawlingOrigin;
+
 
     // ----------------------
     // -> Optional fields ---
@@ -112,41 +117,6 @@ public class MicoService {
      * who is responsible for this service.
      */
     private String owner;
-
-    /**
-     *
-     */
-    private List<String> tags;
-
-    /**
-     *
-     */
-    private String lifecycle;
-
-    /**
-     *
-     */
-    private List<String> links;
-
-    /**
-     *
-     */
-    private String type;
-
-    /**
-     *
-     */
-    private String externalVersion;
-
-    /**
-     *
-     */
-    private CrawlingSource crawlingSource;
-
-    /**
-     *
-     */
-    private String dockerImageName;
 
     /**
      *

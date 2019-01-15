@@ -47,7 +47,7 @@ public class Service {
 
     //crawling information
     private String externalVersion;
-    private CrawlingSource crawlingSource;
+    private Origin crawlingSource;
     //docker information
     private String dockerImageName;
     private String dockerImageUri;
@@ -205,11 +205,11 @@ public class Service {
         this.serviceInterfaces = serviceInterfaces;
     }
 
-    public CrawlingSource getCrawlingSource() {
+    public Origin getCrawlingSource() {
         return crawlingSource;
     }
 
-    public void setCrawlingSource(CrawlingSource crawlingSource) {
+    public void setCrawlingSource(Origin crawlingSource) {
         this.crawlingSource = crawlingSource;
     }
 
