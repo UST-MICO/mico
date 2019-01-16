@@ -1,21 +1,15 @@
 package io.github.ust.mico.core.model;
 
-import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.*;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import io.swagger.annotations.ApiModelProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
-import lombok.Singular;
+import java.util.List;
 
 /**
  * Represents a service in the context of MICO.
@@ -75,7 +69,7 @@ public class MicoService {
     private final List<MicoServiceInterface> serviceInterfaces;
 
     /**
-     * Indicates where this service originates from, e.g., 
+     * Indicates where this service originates from, e.g.,
      * GitHub (downloaded and built by MICO) or DockerHub
      * (ready-to-use image).
      */

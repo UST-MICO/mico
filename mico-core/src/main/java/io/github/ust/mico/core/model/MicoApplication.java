@@ -24,11 +24,12 @@ import lombok.Singular;
 public class MicoApplication {
 
     /**
-     * The id of this service.
+     * The id of this application.
      */
     @Id
     @GeneratedValue
     private Long id;
+
 
     // ----------------------
     // -> Required fields ---
