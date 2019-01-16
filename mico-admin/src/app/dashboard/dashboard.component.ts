@@ -61,10 +61,9 @@ export class DashboardComponent implements OnInit {
     newApplication() {
         const dialogRef = this.dialog.open(CreateApplicationComponent);
         dialogRef.afterClosed().subscribe(result => {
-            console.log(result);
 
             // filter empty results (when dialog is aborted)
-            if (JSON.stringify(result) !== JSON.stringify('')) {
+            if (result === '') {
 
                 // check if returned object is complete
                 for (const property in result.applicationProperties) {
@@ -80,7 +79,7 @@ export class DashboardComponent implements OnInit {
 
                 this.apiService.postApplication(result).subscribe(val => {
                     // TODO navigate to application page
-                    //this.router.navigate(['service-detail', val.shortName, val.version]);
+                    // this.router.navigate(['service-detail', val.shortName, val.version]);
                 });
             }
         });
