@@ -1,18 +1,20 @@
 package io.github.ust.mico.core;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.ust.mico.core.model.MicoServiceCrawlingOrigin;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceCrawlingOrigin;
+import io.github.ust.mico.core.model.MicoVersion;
 
 public class GitHubCrawler {
 
@@ -27,7 +29,7 @@ public class GitHubCrawler {
         this.restTemplate = restTemplateBuilder.build();
     }
 
-    private Service crawlGitHubRepo(String uriBasicInfo, String uriReleaseInfo) {
+    private MicoService crawlGitHubRepo(String uriBasicInfo, String uriReleaseInfo) {
         ResponseEntity<String> responseBasicInfo = restTemplate.getForEntity(uriBasicInfo, String.class);
         ResponseEntity<String> responseReleaseInfo = restTemplate.getForEntity(uriReleaseInfo, String.class);
         ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -35,63 +37,43 @@ public class GitHubCrawler {
         try {
             JsonNode basicInfoJson = mapper.readTree(responseBasicInfo.getBody());
             JsonNode releaseInfoJson = mapper.readTree(responseReleaseInfo.getBody());
-
-            Service service = new Service();
-            service.setShortName(basicInfoJson.get("name").textValue());
-            service.setExternalVersion(releaseInfoJson.get("tag_name").textValue());
-            //service.setCrawlingSource(MicoServiceCrawlingOrigin.GITHUB); //TODO
-            service.setVersion(makeExternalVersionInternal(service.getExternalVersion()));
-            service.setDescription(basicInfoJson.get("description").textValue());
-            service.setName(basicInfoJson.get("full_name").textValue());
-            service.setVcsRoot(releaseInfoJson.get("url").textValue());
-
-            return service;
+            
+            return MicoService.builder()
+                    .shortName(basicInfoJson.get("name").textValue())
+                    .name(basicInfoJson.get("full_name").textValue())
+                    .version(MicoVersion.valueOf(releaseInfoJson.get("tag_name").textValue()))
+                    .description(basicInfoJson.get("description").textValue())
+                    .serviceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
+                    .vcsRoot(releaseInfoJson.get("url").textValue())
+                    .build();
         } catch (IOException | VersionNotSupportedException e) {
+            // TODO: Better exception handling
             e.printStackTrace();
-        }
-        return null;
-    }
-
-    // Java Regex: ^v?\d+\.\d+\.\d+(-?.+)?$
-    // This Java Regex matches the following semantic versioning:
-    // 1.0.0, 1.0.0-foo, 1.0.0-0.1.1, 1.0.0-rc.1, v1.0.0, v1.0.0-foo, v1.0.0-0.1.1, v1.0.0-rc.1
-    // Java Regex: \d+\.\d+\.\d+
-    // This Java Regex (Format: X.Y.Z) will be extracted.
-    public String makeExternalVersionInternal(String externalVersion) throws VersionNotSupportedException {
-        Pattern patternSemanticVersioning = Pattern.compile("^v?\\d+\\.\\d+\\.\\d+(-?.+)?$");
-        Matcher matcherSemanticVersioning = patternSemanticVersioning.matcher(externalVersion);
-        Pattern patternInternalVersioning = Pattern.compile("\\d+\\.\\d+\\.\\d+");
-        Matcher matcherInternalVersioning = patternInternalVersioning.matcher(externalVersion);
-
-        if (matcherSemanticVersioning.find()) {
-            matcherInternalVersioning.find();
-            return matcherInternalVersioning.group(0);
-        } else {
-            throw new VersionNotSupportedException("Version " + externalVersion + " does not match format 'X.Y.Z' or similar.");
+            return null;
         }
     }
 
-    public Service crawlGitHubRepoLatestRelease(String uri) {
+    public MicoService crawlGitHubRepoLatestRelease(String uri) {
         uri = makeUriToMatchGitHubApi(uri);
         String releaseUrl = uri + "/" + RELEASES + "/" + LATEST;
         return crawlGitHubRepo(uri, releaseUrl);
     }
 
-    public Service crawlGitHubRepoSpecificRelease(String uri, String version) {
+    public MicoService crawlGitHubRepoSpecificRelease(String uri, String version) {
         uri = makeUriToMatchGitHubApi(uri);
         String releaseUrl = uri + "/" + RELEASES + "/" + TAGS + "/" + version;
         return crawlGitHubRepo(uri, releaseUrl);
     }
 
     //TODO: Rename method - it is not crawling ALL releases
-    public List<Service> crawlGitHubRepoAllReleases(String uri) {
+    public List<MicoService> crawlGitHubRepoAllReleases(String uri) {
         uri = makeUriToMatchGitHubApi(uri);
         String uriBasicInfo = uri;
         String uriReleases = uri + "/" + RELEASES;
         ResponseEntity<String> responseBasicInfo = restTemplate.getForEntity(uriBasicInfo, String.class);
         ResponseEntity<String> responseReleaseInfo = restTemplate.getForEntity(uriReleases, String.class); //TODO: If LINK(next) exists in header, we need to do another Request
         ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        ArrayList<Service> serviceList = new ArrayList<>();
+        ArrayList<MicoService> serviceList = new ArrayList<>();
 
         try {
             JsonNode basicInfoJson = mapper.readTree(responseBasicInfo.getBody());
@@ -103,28 +85,29 @@ public class GitHubCrawler {
 
             for (JsonNode jsonNode : releaseInfoJson) {
                 try {
-                    Service service = new Service();
-                    service.setShortName(shortName);
-                    service.setExternalVersion(jsonNode.get("tag_name").textValue());
-                    //service.setCrawlingSource(MicoServiceCrawlingOrigin.GITHUB); //TODO
-                    service.setVersion(makeExternalVersionInternal(service.getExternalVersion()));
-                    service.setDescription(description);
-                    service.setName(fullName);
-                    service.setVcsRoot(jsonNode.get("url").textValue());
-                    serviceList.add(service);
+                    serviceList.add(MicoService.builder()
+                            .shortName(shortName)
+                            .name(fullName)
+                            .version(MicoVersion.valueOf(jsonNode.get("tag_name").textValue()))
+                            .description(description)
+                            .serviceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
+                            .vcsRoot(jsonNode.get("url").textValue())
+                            .build());
                 } catch (VersionNotSupportedException e) {
+                    // TODO: Better exception handling
                     e.printStackTrace();
                 }
             }
-
             return serviceList;
         } catch (IOException e) {
             e.printStackTrace();
         }
+        
         return null;
     }
 
     public String makeUriToMatchGitHubApi(String uri) {
         return uri.replace("https://github.com/", "https://api.github.com/repos/");
     }
+    
 }
