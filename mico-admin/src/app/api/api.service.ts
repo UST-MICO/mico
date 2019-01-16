@@ -159,6 +159,27 @@ export class ApiService {
         );
     }
 
+    postApplication(data) {
+        if (data == null) {
+            return;
+        }
+
+
+        const resource = 'applications/';
+
+        return this.rest.post(resource, data).pipe(flatMap(val => {
+
+            const stream = this.getStreamSource(val._links.self.href);
+            stream.next(val);
+
+            this.getApplications();
+
+            return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
+                filter(service => service !== undefined)
+            );
+        }));
+    }
+
     // =============
     // SERVICE CALLS
     // =============

@@ -42,21 +42,47 @@ export class DashboardComponent implements OnInit {
     newService(): void {
         const dialogRef = this.dialog.open(CreateServiceDialogComponent);
         dialogRef.afterClosed().subscribe(result => {
-            this.apiService.postService(result).subscribe(val => {
-                console.log(val);
-                this.router.navigate(['service-detail', val.shortName, val.version]);
-            });
+            // filter empty results (when dialog is aborted)
+            if (JSON.stringify(result) !== JSON.stringify('')) {
+
+                // check if returned object is complete
+                for (const property in result) {
+                    if (result[property] == null) {
+                        return;
+                    }
+                }
+                this.apiService.postService(result).subscribe(val => {
+                    this.router.navigate(['service-detail', val.shortName, val.version]);
+                });
+            }
         });
     }
 
     newApplication() {
         const dialogRef = this.dialog.open(CreateApplicationComponent);
         dialogRef.afterClosed().subscribe(result => {
-            this.apiService.postService(result).subscribe(val => {
-                console.log(val);
-                // TODO navigate to application page
-                //this.router.navigate(['service-detail', val.shortName, val.version]);
-            });
+            console.log(result);
+
+            // filter empty results (when dialog is aborted)
+            if (JSON.stringify(result) !== JSON.stringify('')) {
+
+                // check if returned object is complete
+                for (const property in result.applicationProperties) {
+                    if (result.applicationProperties[property] == null) {
+                        return;
+                    }
+                }
+
+                // check if returned object has services
+                if (result.services.length <= 0) {
+                    return;
+                }
+
+                this.apiService.postApplication(result).subscribe(val => {
+                    // TODO navigate to application page
+                    //this.router.navigate(['service-detail', val.shortName, val.version]);
+                });
+            }
         });
     }
 
