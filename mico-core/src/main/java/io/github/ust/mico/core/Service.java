@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.ust.mico.core.model.MicoServiceCrawlingOrigin;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.Extension;
+import io.swagger.annotations.ExtensionProperty;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
@@ -26,7 +28,15 @@ public class Service {
     private String shortName;
     @ApiModelProperty(required = true)
     private String description;
-    @ApiModelProperty(required = true)
+
+    @ApiModelProperty(required = true, extensions = {
+        @Extension(
+            name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+            properties = {
+                @ExtensionProperty(name = "x-order", value = "1")
+            }
+        )
+    })
     private String name;
 
     //additional fields
