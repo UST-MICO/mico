@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface MicoApplicationRepository extends Neo4jRepository<MicoApplication, Long> {
+    
     @Override
     List<MicoApplication> findAll();
 
@@ -19,4 +20,5 @@ public interface MicoApplicationRepository extends Neo4jRepository<MicoApplicati
     // TODO: Adapt to new domain model
     @Deprecated
     Optional<MicoApplication> findByShortNameAndVersion(String shortName, String version);
+    
 }

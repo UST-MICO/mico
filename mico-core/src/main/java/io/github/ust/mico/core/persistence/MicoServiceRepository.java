@@ -8,8 +8,8 @@ import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
-import io.github.ust.mico.core.ServiceInterface;
 import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceInterface;
 
 public interface MicoServiceRepository extends Neo4jRepository<MicoService, Long> {
 
@@ -33,13 +33,13 @@ public interface MicoServiceRepository extends Neo4jRepository<MicoService, Long
     // TODO: probably move to MicoServiceInterfaceRepository
     @Deprecated
     @Query("MATCH (service:Service)-[:SERVICE_INTERFACES]->(interface:ServiceInterface) WHERE service.shortName = {shortName} AND service.version = {version} return interface")
-    List<ServiceInterface> findInterfacesOfService(@Param("shortName") String shortName, @Param("version") String version);
+    List<MicoServiceInterface> findInterfacesOfService(@Param("shortName") String shortName, @Param("version") String version);
 
     // TODO: Adapt to new domain model
     // TODO: probably move to MicoServiceInterfaceRepository
     @Deprecated
     @Query("MATCH (service:Service)-[:SERVICE_INTERFACES]->(interface:ServiceInterface) WHERE service.shortName = {shortName} AND service.version = {version} AND interface.serviceInterfaceName = {serviceInterfaceName} return interface")
-    Optional<ServiceInterface> findInterfaceOfServiceByName(@Param("serviceInterfaceName") String serviceInterfaceName, @Param("shortName") String shortName, @Param("version") String version);
+    Optional<MicoServiceInterface> findInterfaceOfServiceByName(@Param("serviceInterfaceName") String serviceInterfaceName, @Param("shortName") String shortName, @Param("version") String version);
 
     // TODO: Adapt to new domain model
     // TODO: probably move to MicoServiceInterfaceRepository
