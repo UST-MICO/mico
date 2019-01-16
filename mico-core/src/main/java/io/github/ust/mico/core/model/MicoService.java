@@ -33,7 +33,7 @@ public class MicoService {
      */
     @Id
     @GeneratedValue
-    private final Long id;
+    private Long id;
 
 
     // ----------------------

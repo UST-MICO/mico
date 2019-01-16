@@ -21,7 +21,7 @@ public class MicoServiceDependency {
      */
     @Id
     @GeneratedValue
-    private final Long id;
+    private Long id;
 
 
     // ----------------------
@@ -29,14 +29,16 @@ public class MicoServiceDependency {
     // ----------------------
 
     /**
-     * 
+     * This is the {@link MicoService} that requires (depends on)
+     * the {@link MicoServiceDependency#dependedService}.
      */
     @JsonIgnore
     @StartNode
     private MicoService service;
 
     /**
-     *
+     * This is the {@link MicoService} dependend by
+     * {@link MicoServiceDependency#service}.
      */
     @ApiModelProperty(required = true)
     @JsonIgnore

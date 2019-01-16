@@ -1,16 +1,17 @@
 package io.github.ust.mico.core.model;
 
-import io.swagger.annotations.ApiModelProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Singular;
+import java.util.List;
+
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
-import java.util.List;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Singular;
 
 /**
  * Represents an application as a set of {@link MicoService}s
@@ -27,7 +28,7 @@ public class MicoApplication {
      */
     @Id
     @GeneratedValue
-    private final Long id;
+    private Long id;
 
     // ----------------------
     // -> Required fields ---

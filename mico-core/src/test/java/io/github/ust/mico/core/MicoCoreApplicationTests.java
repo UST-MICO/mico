@@ -1,23 +1,28 @@
 package io.github.ust.mico.core;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoPortType;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceCrawlingOrigin;
+import io.github.ust.mico.core.model.MicoServiceDependency;
+import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.model.MicoServicePort;
+import io.github.ust.mico.core.model.MicoVersion;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoServiceDependencyRepository;
-import io.github.ust.mico.core.persistence.MicoServiceInterfaceRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
-import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -27,7 +32,8 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
     private static final String TEST_SERVICE_DESCRIPTION = "Test Service";
     private static final String TEST_VCS_ROOT = "http://test.org/test";
     private static final String TEST_CONTACT = "Test Person";
-    private static final String TEST_PORT_VARIABLE = "<PORT_VARIABLE>";
+    private static final String TEST_PORT = "8080";
+    private static final String TEST_TARGET_PORT = "8081";
     private static final String TEST_SERVICE_INTERFACE_DESCRIPTION = "This is an interface of an service";
     private static final String TEST_PROTOCOL = "http";
     private static final String TEST_DNS = "DNS";
@@ -39,25 +45,19 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
     private MicoApplicationRepository applicationRepository;
 
     @Autowired
-    private MicoServiceDependencyRepository dependsOnRepository;
-
-    @Autowired
-    private MicoServiceInterfaceRepository serviceInterfaceRepository;
-
-    @Autowired
     private MicoServiceRepository serviceRepository;
 
     @Test
-    public void testServiceRepository() {
+    public void testServiceRepository() throws VersionNotSupportedException {
         serviceRepository.save(createServiceInDB());
 
-        Optional<Service> serviceTestOpt = serviceRepository.findByShortNameAndVersion(TEST_SHORT_NAME, TEST_VERSION);
-        Service serviceTest = serviceTestOpt.get();
+        Optional<MicoService> serviceTestOpt = serviceRepository.findByShortNameAndVersion(TEST_SHORT_NAME, TEST_VERSION);
+        MicoService serviceTest = serviceTestOpt.get();
         checkDefaultService(serviceTest);
     }
 
-    public static void checkDefaultService(Service serviceTest) {
-        List<ServiceInterface> serviceInterfacesTest = serviceTest.getServiceInterfaces();
+    public static void checkDefaultService(MicoService serviceTest) {
+        List<MicoServiceInterface> serviceInterfacesTest = serviceTest.getServiceInterfaces();
 
         assertEquals(TEST_VERSION, serviceTest.getVersion());
         assertEquals(TEST_LONGER_NAME, serviceTest.getName());
@@ -66,118 +66,132 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
         assertEquals(TEST_CONTACT, serviceTest.getContact());
 
         assertEquals(1, serviceInterfacesTest.size());
-        ServiceInterface serviceInterfaceTest = serviceInterfacesTest.get(0);
-        assertEquals(TEST_PORT_VARIABLE, serviceInterfaceTest.getPort());
+        MicoServiceInterface serviceInterfaceTest = serviceInterfacesTest.get(0);
+        assertEquals(TEST_PORT, serviceInterfaceTest.getPorts().get(0).getNumber());
+        assertEquals(TEST_TARGET_PORT, serviceInterfaceTest.getPorts().get(0).getTargetPort());
         assertEquals(TEST_SERVICE_INTERFACE_DESCRIPTION, serviceInterfaceTest.getDescription());
         assertEquals(TEST_PROTOCOL, serviceInterfaceTest.getProtocol());
         assertEquals(TEST_DNS, serviceInterfaceTest.getPublicDns());
         assertEquals(TEST_SERVICE_INTERFACE_NAME, serviceInterfaceTest.getServiceInterfaceName());
     }
 
-    public static Service createServiceInDB() {
-        Service service = new Service(TEST_SHORT_NAME, TEST_VERSION);
-        service.setName(TEST_LONGER_NAME);
-        service.setDescription(TEST_SERVICE_DESCRIPTION);
-        service.setVcsRoot(TEST_VCS_ROOT);
-        service.setContact(TEST_CONTACT);
-
-        ServiceInterface serviceInterface = new ServiceInterface();
-        serviceInterface.setPort(TEST_PORT_VARIABLE);
-        serviceInterface.setDescription(TEST_SERVICE_INTERFACE_DESCRIPTION);
-        serviceInterface.setProtocol(TEST_PROTOCOL);
-        serviceInterface.setPublicDns(TEST_DNS);
-        serviceInterface.setServiceInterfaceName(TEST_SERVICE_INTERFACE_NAME);
-
-        service.setServiceInterfaces(Collections.singletonList(serviceInterface));
-        return service;
+    public static MicoService createServiceInDB() throws VersionNotSupportedException {
+        return MicoService.builder()
+                .shortName(TEST_SHORT_NAME)
+                .name(TEST_LONGER_NAME)
+                .version(MicoVersion.valueOf(TEST_VERSION))
+                .description(TEST_SERVICE_DESCRIPTION)
+                .serviceInterface(MicoServiceInterface.builder()
+                        .serviceInterfaceName(TEST_SERVICE_INTERFACE_NAME)
+                        .port(MicoServicePort.builder()
+                                .number(8080)
+                                .type(MicoPortType.TCP)
+                                .targetPort(8081)
+                                .build())
+                        .publicDns(TEST_DNS)
+                        .description(TEST_SERVICE_INTERFACE_DESCRIPTION)
+                        .protocol(TEST_PROTOCOL)
+                        .build())
+                .serviceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
+                .vcsRoot(TEST_VCS_ROOT)
+                .contact(TEST_CONTACT)
+                .build();
     }
 
     @Test
-    public void testDependencyServiceRepository() {
-        Service service = createServiceInDB();
+    public void testDependencyServiceRepository() throws VersionNotSupportedException {
+        MicoService service1 = createServiceInDB();
 
-        String testShortName2 = "ShortName2";
-        String testVersion2 = "1.0";
-        String testLongerName = "Longer Name2";
-        String testServiceInterface = "test Service2";
-        String testVcsRoot = "http://test.org/test2";
-        String testContact = "Test Person 2";
-        String testPort = "<PORT_VARIABLE2>";
-        String testsServiceInterface = "This is an interface of an service2";
-        String testServiceInterfaceName = "Interface2";
+        String testServivce2ShortName = "S2";
+        String testServivce2Name = "Service 2";
+        String testService2Version = "1.2.3";
+        String testServivce2Description = "This is service 2.";
+        String testServivce2VscRoot = "Some GitHub root.";
+        String testServivce2Contact = "Me";
 
-        //2. service
-        Service service2 = new Service(testShortName2, testVersion2);
-        service2.setName(testLongerName);
-        service2.setDescription(testServiceInterface);
-        service2.setVcsRoot(testVcsRoot);
-        service2.setContact(testContact);
+        String testInterface2Name = "Service Interface 2";
+        int testInterface2Port = 9000;
+        int testInterface2TargetPort = 9001;
+        String testInterface2PublicDns = "DNS 2";
+        String testInterface2Description = "This is service interface 2";
+        String testInterface2Protocol = "TCP";
 
-        ServiceInterface serviceInterface2 = new ServiceInterface();
-        serviceInterface2.setPort(testPort);
-        serviceInterface2.setDescription(testsServiceInterface);
-        serviceInterface2.setProtocol(TEST_PROTOCOL);
-        serviceInterface2.setPublicDns(TEST_DNS);
-        serviceInterface2.setServiceInterfaceName(testServiceInterfaceName);
-        service2.setServiceInterfaces(Collections.singletonList(serviceInterface2));
-        DependsOn dependsOn = new DependsOn(service, service2);
-        dependsOn.setMaxVersion("1.0");
-        dependsOn.setMinVersion("1.0");
-        service.setDependsOn(Collections.singletonList(dependsOn));
-        serviceRepository.save(service);
+        MicoService service2 = MicoService.builder()
+        .shortName(testServivce2ShortName)
+        .name(testServivce2Name)
+        .version(MicoVersion.valueOf(testService2Version))
+        .description(testServivce2Description)
+        .serviceInterface(MicoServiceInterface.builder()
+                .serviceInterfaceName(testInterface2Name)
+                .port(MicoServicePort.builder()
+                        .number(testInterface2Port)
+                        .type(MicoPortType.TCP)
+                        .targetPort(testInterface2TargetPort)
+                        .build())
+                .publicDns(testInterface2PublicDns)
+                .description(testInterface2Description)
+                .protocol(testInterface2Protocol)
+                .build())
+        .serviceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
+        .vcsRoot(testServivce2VscRoot)
+        .contact(testServivce2Contact)
+        .build();
+        
+        service1.setDependencies(Collections.singletonList(MicoServiceDependency.builder()
+                .service(service1)
+                .dependedService(service2)
+                .minVersion(MicoVersion.forIntegers(1, 0, 0))
+                .maxVersion(MicoVersion.forIntegers(2, 0, 0))
+                .build()));
 
-        Optional<Service> serviceTestOpt = serviceRepository.findByShortNameAndVersion(TEST_SHORT_NAME, TEST_VERSION, 2);
-        Service serviceTest = serviceTestOpt.get();
+        serviceRepository.save(service1);
+
+        Optional<MicoService> serviceTestOpt = serviceRepository.findByShortNameAndVersion(TEST_SHORT_NAME, TEST_VERSION, 2);
+        MicoService serviceTest = serviceTestOpt.get();
         checkDefaultService(serviceTest);
-        List<DependsOn> dependsOnList = serviceTest.getDependsOn();
+        List<MicoServiceDependency> dependsOnList = serviceTest.getDependencies();
         assertEquals(1, dependsOnList.size());
-        DependsOn dependsOn1 = dependsOnList.get(0);
-        assertEquals("1.0", dependsOn1.getMinVersion());
-        assertEquals("1.0", dependsOn1.getMaxVersion());
+        MicoServiceDependency dependency1 = dependsOnList.get(0);
+        assertEquals("1.0.0", dependency1.getMinVersion().toString());
+        assertEquals("2.0.0", dependency1.getMaxVersion().toString());
 
-        Service testService2 = dependsOn1.getServiceDependee();
+        MicoService testService2 = dependency1.getDependedService();
         assertNotNull(testService2);
-        assertEquals(testVersion2, testService2.getVersion());
-        assertEquals(testServiceInterface, testService2.getDescription());
-        assertEquals(testVcsRoot, testService2.getVcsRoot());
-        assertEquals(testContact, testService2.getContact());
+        assertEquals(testService2, testService2.getVersion());
+        assertEquals(testServivce2Description, testService2.getDescription());
+        assertEquals(testServivce2VscRoot, testService2.getVcsRoot());
+        assertEquals(testServivce2Contact, testService2.getContact());
     }
 
     @Test
     public void testStoreApplication() {
-        Service service1 = new Service("Service1", "0.1");
-        Service service2 = new Service("Service2", "0.1");
-        Service service3 = new Service("Service3", "0.1");
+        MicoApplication application1 = MicoApplication.builder()
+                .shortName("App1")
+                .name("Application1")
+                .version(MicoVersion.forIntegers(1, 0, 0))
+                .build();
+        applicationRepository.save(application1);
 
-        DependsOn depends1 = new DependsOn(service1, service2);
-        DependsOn depends2 = new DependsOn(service2, service3);
-        DependsOn depends3 = new DependsOn(service3, service1);
+        MicoApplication application2 = MicoApplication.builder()
+                .shortName("App2")
+                .name("Application2")
+                .version(MicoVersion.forIntegers(1, 0, 0))
+                .build();
+        applicationRepository.save(application2);
+        
+        MicoApplication application3 = MicoApplication.builder()
+                .shortName("App3")
+                .name("Application3")
+                .version(MicoVersion.forIntegers(1, 0, 0))
+                .build();
+        applicationRepository.save(application3);
 
-        Application application1 = new Application();
-        application1.setShortName("App1");
-        application1.setName("Application1");
-        application1.setVersion("0.1");
-        application1.setDependsOn(Arrays.asList(depends1, depends2, depends3));
-        serviceRepository.save(application1);
-
-        Application application2 = new Application("App2");
-        application2.setVersion("0.1");
-        serviceRepository.save(application2);
-
-        Application application3 = new Application("App3", "0.1");
-        serviceRepository.save(application3);
-
-        Application storedApplication1 = (Application) serviceRepository.findByShortNameAndVersion("App1", "0.1", 2).get();
-
-        Application storedApplication2 = (Application) serviceRepository.findByShortNameAndVersion("App2", "0.1", 2).get();
-
-        Application storedApplication3 = (Application) serviceRepository.findByShortNameAndVersion("App3", "0.1", 2).get();
+        MicoApplication storedApplication1 = applicationRepository.findByShortNameAndVersion("App1", "1.0.0", 2).get();
+        MicoApplication storedApplication2 = applicationRepository.findByShortNameAndVersion("App2", "1.0.0", 2).get();
+        MicoApplication storedApplication3 = applicationRepository.findByShortNameAndVersion("App3", "1.0.0", 2).get();
 
         assertNotNull(storedApplication1);
         assertEquals("App1", storedApplication1.getShortName());
-        assertThat(storedApplication1.getDependsOn().get(0).getService().getShortName(), startsWith("Service"));
-        assertThat(storedApplication1.getDependsOn().get(1).getService().getShortName(), startsWith("Service"));
-        assertThat(storedApplication1.getDependsOn().get(2).getService().getShortName(), startsWith("Service"));
 
         assertNotNull(storedApplication2);
         assertEquals("App2", storedApplication2.getShortName());

@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
+import io.github.ust.mico.core.model.MicoVersion;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 
 @RestController
@@ -62,7 +63,7 @@ public class ServiceController {
     public ResponseEntity<Resource<MicoService>> updateService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                            @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                            @RequestBody MicoService service) {
-        if (!service.getShortName().equals(shortName) || !service.getVersion().equals(version)) {
+        if (!service.getShortName().equals(shortName) || !service.getVersion().toString().equals(version)) {
             return ResponseEntity.badRequest().build();
         } else {
             Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
@@ -116,7 +117,7 @@ public class ServiceController {
     @PostMapping
     public ResponseEntity<Resource<MicoService>> createService(@RequestBody MicoService newService) {
         //Check if shortName and version combination already exists
-        Optional<MicoService> serviceOptional = serviceRepository.findByShortNameAndVersion(newService.getShortName(), newService.getVersion());
+        Optional<MicoService> serviceOptional = serviceRepository.findByShortNameAndVersion(newService.getShortName(), newService.getVersion().toString());
         MicoService serviceToCheck = serviceOptional.orElse(null);
 
         if (serviceToCheck != null) {
@@ -140,7 +141,7 @@ public class ServiceController {
 
         MicoService service = serviceOpt.get();
 
-        List<MicoServiceDependency> dependees = service.getDependsOn();
+        List<MicoServiceDependency> dependees = service.getDependencies();
         if (dependees == null) {
             return ResponseEntity.notFound().build();
         }
@@ -165,22 +166,22 @@ public class ServiceController {
         MicoService service = serviceOpt.get();
 
 
-        Optional<MicoService> serviceDependeeOpt = serviceRepository.findByShortNameAndVersion(newServiceDependee.getServiceDependee().getShortName(),
-                newServiceDependee.getServiceDependee().getVersion());
+        Optional<MicoService> serviceDependeeOpt = serviceRepository.findByShortNameAndVersion(newServiceDependee.getDependedService().getShortName(),
+                newServiceDependee.getDependedService().getVersion().toString());
 
         if (!serviceDependeeOpt.isPresent()) {
             return ResponseEntity.notFound().build();
         }
 
         newServiceDependee.setService(service);
-        newServiceDependee.setServiceDependee(serviceDependeeOpt.get());
+        newServiceDependee.setDependedService(serviceDependeeOpt.get());
 
-        List<MicoServiceDependency> dependees = service.getDependsOn();
+        List<MicoServiceDependency> dependees = service.getDependencies();
         if (dependees == null) {
             dependees = new LinkedList<>();
         }
         dependees.add(newServiceDependee);
-        service.setDependsOn(dependees);
+        service.setDependencies(dependees);
 
         MicoService savedService = serviceRepository.save(service);
 
@@ -198,7 +199,7 @@ public class ServiceController {
         }
         MicoService service = serviceOpt.get();
         List<MicoServiceDependency> dependees = new LinkedList<>();
-        service.setDependsOn(dependees);
+        service.setDependencies(dependees);
 
         MicoService savedService = serviceRepository.save(service);
 
@@ -226,17 +227,17 @@ public class ServiceController {
         MicoService serviceToDelete = serviceOptToDelete.get();
 
         List<MicoServiceDependency> newDependees = new LinkedList<>();
-        List<MicoServiceDependency> dependees = service.getDependsOn();
+        List<MicoServiceDependency> dependees = service.getDependencies();
 
         if (dependees != null) {
             dependees.forEach(dependsOn -> {
-                if (dependsOn.getServiceDependee().getId() != serviceToDelete.getId()) {
+                if (dependsOn.getDependedService().getId() != serviceToDelete.getId()) {
                     newDependees.add(dependsOn);
                 }
             });
         }
 
-        service.setDependsOn(newDependees);
+        service.setDependencies(newDependees);
         MicoService savedService = serviceRepository.save(service);
 
         return ResponseEntity
@@ -267,10 +268,10 @@ public class ServiceController {
         List<MicoService> dependers = new LinkedList<>();
 
         serviceList.forEach(service -> {
-            List<MicoServiceDependency> dependees = service.getDependsOn();
+            List<MicoServiceDependency> dependees = service.getDependencies();
             if (dependees != null) {
                 dependees.forEach(dependee -> {
-                    if (dependee.getServiceDependee().equals(serviceToLookFor)) {
+                    if (dependee.getDependedService().equals(serviceToLookFor)) {
                         dependers.add(dependee.getService());
                     }
                 });
@@ -281,7 +282,7 @@ public class ServiceController {
     }
 
     public MicoService getService(MicoService newService) {
-        Optional<MicoService> serviceOptional = serviceRepository.findByShortNameAndVersion(newService.getShortName(), newService.getVersion());
+        Optional<MicoService> serviceOptional = serviceRepository.findByShortNameAndVersion(newService.getShortName(), newService.getVersion().toString());
         MicoService serviceToCheck = serviceOptional.orElse(null);
         if (serviceToCheck == null) {
             return null;
@@ -294,36 +295,30 @@ public class ServiceController {
     public MicoService setServiceDependees(MicoService newService) {
         MicoService serviceToGetId = getService(newService);
         if (serviceToGetId == null) {
-            MicoService savedService = serviceRepository.save(new MicoService(newService.getShortName(), newService.getVersion()));
+            MicoService savedService = serviceRepository.save(MicoService.builder().shortName(newService.getShortName()).version(newService.getVersion()).build());
 
-            List<MicoServiceDependency> dependees = savedService.getDependsOn();
+            List<MicoServiceDependency> dependees = savedService.getDependencies();
             LinkedList<MicoService> services = getDependentServices(dependees);
-
+            
             List<MicoServiceDependency> newDependees = new LinkedList<>();
 
             if (services != null) {
-                services.forEach(service -> {
-                    MicoServiceDependency dependsOnService = new MicoServiceDependency(savedService, service);
-                    newDependees.add(dependsOnService);
-                });
+                services.forEach(service -> newDependees.add(MicoServiceDependency.builder().service(savedService).dependedService(service).build()));
             }
 
-            savedService.setDependsOn(newDependees);
+            savedService.setDependencies(newDependees);
 
             return savedService;
         } else {
             newService.setId(serviceToGetId.getId());
-            List<MicoServiceDependency> dependees = newService.getDependsOn();
+            List<MicoServiceDependency> dependees = newService.getDependencies();
             LinkedList<MicoService> services = getDependentServices(dependees);
 
             List<MicoServiceDependency> newDependees = new LinkedList<>();
 
-            services.forEach(service -> {
-                MicoServiceDependency dependsOnService = new MicoServiceDependency(newService, service);
-                newDependees.add(dependsOnService);
-            });
+            services.forEach(service -> newDependees.add(MicoServiceDependency.builder().service(newService).dependedService(service).build()));
 
-            newService.setDependsOn(newDependees);
+            newService.setDependencies(newDependees);
 
             return newService;
         }
@@ -337,13 +332,13 @@ public class ServiceController {
         LinkedList<MicoService> services = new LinkedList<>();
 
         dependees.forEach(dependee -> {
-            String shortName = dependee.getServiceDependee().getShortName();
-            String version = dependee.getServiceDependee().getVersion();
+            String shortName = dependee.getDependedService().getShortName();
+            MicoVersion version = dependee.getDependedService().getVersion();
 
-            Optional<MicoService> dependeeServiceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
+            Optional<MicoService> dependeeServiceOpt = serviceRepository.findByShortNameAndVersion(shortName, version.toString());
             MicoService dependeeService = dependeeServiceOpt.orElse(null);
             if (dependeeService == null) {
-                MicoService newService = serviceRepository.save(new MicoService(shortName, version));
+                MicoService newService = serviceRepository.save(MicoService.builder().shortName(shortName).version(version).build());
                 services.add(newService);
             } else {
                 services.add(dependeeService);
@@ -360,7 +355,7 @@ public class ServiceController {
 
     private Iterable<Link> getServiceLinks(MicoService service) {
         LinkedList<Link> links = new LinkedList<>();
-        links.add(linkTo(methodOn(ServiceController.class).getServiceByShortNameAndVersion(service.getShortName(), service.getVersion())).withSelfRel());
+        links.add(linkTo(methodOn(ServiceController.class).getServiceByShortNameAndVersion(service.getShortName(), service.getVersion().toString())).withSelfRel());
         links.add(linkTo(methodOn(ServiceController.class).getServiceList()).withRel("services"));
         return links;
     }

@@ -63,7 +63,7 @@ public class ApplicationController {
 
     private Iterable<Link> getApplicationLinks(MicoApplication application) {
         LinkedList<Link> links = new LinkedList<>();
-        links.add(linkTo(methodOn(ApplicationController.class).getApplicationByShortNameAndVersion(application.getShortName(), application.getVersion())).withSelfRel());
+        links.add(linkTo(methodOn(ApplicationController.class).getApplicationByShortNameAndVersion(application.getShortName(), application.getVersion().toString())).withSelfRel());
         links.add(linkTo(methodOn(ApplicationController.class).getAllApplications()).withRel("applications"));
         return links;
     }
@@ -71,14 +71,14 @@ public class ApplicationController {
     @PostMapping
     public ResponseEntity<Resource<MicoApplication>> createApplication(@RequestBody MicoApplication newApplication) {
         Optional<MicoApplication> applicationOptional = applicationRepository.
-            findByShortNameAndVersion(newApplication.getShortName(), newApplication.getVersion());
+            findByShortNameAndVersion(newApplication.getShortName(), newApplication.getVersion().toString());
         if (applicationOptional.isPresent()) {
             return ResponseEntity.badRequest().build();
         } else {
             MicoApplication savedApplication = applicationRepository.save(newApplication);
 
             return ResponseEntity.created(linkTo(methodOn(ApplicationController.class)
-                .getApplicationByShortNameAndVersion(savedApplication.getShortName(), savedApplication.getVersion())).toUri())
+                .getApplicationByShortNameAndVersion(savedApplication.getShortName(), savedApplication.getVersion().toString())).toUri())
                 .body(new Resource<>(savedApplication, getApplicationLinks(savedApplication)));
         }
     }
@@ -87,7 +87,7 @@ public class ApplicationController {
     public ResponseEntity<Resource<MicoApplication>> updateApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                    @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                    @RequestBody MicoApplication application) {
-        if (!application.getShortName().equals(shortName) || !application.getVersion().equals(version)) {
+        if (!application.getShortName().equals(shortName) || !application.getVersion().toString().equals(version)) {
             return ResponseEntity.badRequest().build();
         }
 

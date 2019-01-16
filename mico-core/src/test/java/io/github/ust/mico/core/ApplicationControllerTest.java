@@ -1,8 +1,19 @@
 package io.github.ust.mico.core;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.ust.mico.core.REST.ApplicationController;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.Arrays;
+import java.util.Optional;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,18 +26,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-import scala.App;
 
-import java.util.Arrays;
-import java.util.Optional;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import io.github.ust.mico.core.REST.ApplicationController;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoVersion;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(ApplicationController.class)
@@ -53,10 +59,9 @@ public class ApplicationControllerTest {
     @Test
     public void getAllApplications() throws Exception {
         given(applicationRepository.findAll()).willReturn(
-            Arrays.asList(
-                new Application("ShortName1", "1.0.1"),
-                new Application("ShortName1", "1.0.0"),
-                new Application("ShortName2", "1.0.0")));
+            Arrays.asList(MicoApplication.builder().shortName("ShortName1").version(MicoVersion.forIntegers(1, 0, 1)).build(),
+                    MicoApplication.builder().shortName("ShortName1").version(MicoVersion.forIntegers(1, 0, 0)).build(),
+                    MicoApplication.builder().shortName("ShortName2").version(MicoVersion.forIntegers(1, 0, 0)).build()));
 
         mvc.perform(get("/applications").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -74,7 +79,7 @@ public class ApplicationControllerTest {
     @Test
     public void getApplicationByShortNameAndVersion() throws Exception {
         given(applicationRepository.findByShortNameAndVersion("ApplicationShortName", "1.1.0")).willReturn(
-            Optional.of(new Application("ApplicationShortName", "1.1.0")));
+            Optional.of(MicoApplication.builder().shortName("ApplicationShortName").version(MicoVersion.forIntegers(1, 1, 0)).build()));
 
         mvc.perform(get("/applications/ApplicationShortName/1.1.0").accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
@@ -89,10 +94,13 @@ public class ApplicationControllerTest {
 
     @Test
     public void createApplication() throws Exception {
-        Application application = new Application(SHORT_NAME, VERSION);
-        application.setDescription(DESCRIPTION);
+        MicoApplication application = MicoApplication.builder()
+                .shortName(SHORT_NAME)
+                .version(MicoVersion.valueOf(VERSION))
+                .description(DESCRIPTION)
+                .build();
 
-        given(applicationRepository.save(any(Application.class))).willReturn(application);
+        given(applicationRepository.save(any(MicoApplication.class))).willReturn(application);
 
         final ResultActions result = mvc.perform(post(BASE_PATH)
             .content(mapper.writeValueAsBytes(application))
@@ -104,11 +112,20 @@ public class ApplicationControllerTest {
 
     @Test
     public void updateApplication() throws Exception {
-        Application application = new Application(SHORT_NAME, VERSION, DESCRIPTION);
-        Application updatedApplication = new Application(SHORT_NAME, VERSION, "newDesc");
+        MicoApplication application = MicoApplication.builder()
+                .shortName(SHORT_NAME)
+                .version(MicoVersion.valueOf(VERSION))
+                .description(DESCRIPTION)
+                .build();
+        
+        MicoApplication updatedApplication = MicoApplication.builder()
+                .shortName(SHORT_NAME)
+                .version(MicoVersion.valueOf(VERSION))
+                .description("newDesc")
+                .build();
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
-        given(applicationRepository.save(any(Application.class))).willReturn(updatedApplication);
+        given(applicationRepository.save(any(MicoApplication.class))).willReturn(updatedApplication);
 
         ResultActions resultUpdate = mvc.perform(put(BASE_PATH + SHORT_NAME + "/" + VERSION)
                 .content(mapper.writeValueAsBytes(updatedApplication))

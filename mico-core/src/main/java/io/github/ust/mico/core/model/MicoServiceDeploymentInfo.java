@@ -28,7 +28,7 @@ public class MicoServiceDeploymentInfo {
      */
     @Id
     @GeneratedValue
-    private final Long id;
+    private Long id;
 
 
     // ----------------------
