@@ -89,8 +89,8 @@ public class MicoApplication {
     private String contact;
 
     /**
-     * Human readable information for the service owner
-     * who is responsible for this service.
+     * Human readable information for the application owner
+     * who is responsible for this application.
      */
     private String owner;
 
