@@ -167,7 +167,7 @@ public class MicoVersionTests {
         
     }
     
-    @Test(expected = VersionNotSupportedException.class)
+    @Test(expected = NullPointerException.class)
     public void createNullVersion() throws VersionNotSupportedException {
         MicoVersion.valueOf(null);
     }
