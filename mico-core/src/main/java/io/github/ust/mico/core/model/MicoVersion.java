@@ -4,6 +4,7 @@ import com.github.zafarkhaja.semver.ParseException;
 import com.github.zafarkhaja.semver.UnexpectedCharacterException;
 import com.github.zafarkhaja.semver.Version;
 
+import io.github.ust.mico.core.VersionNotSupportedException;
 import lombok.Getter;
 
 /**
@@ -44,15 +45,20 @@ public class MicoVersion implements Comparable<MicoVersion> {
      *
      * @param version the version string to parse (may include a prefix).
      * @return a new instance of the {@code MicoVersion} class.
-     * @throws IllegalArgumentException     if the input string is {@code NULL} or empty
-     * @throws ParseException               when invalid version string is provided
-     * @throws UnexpectedCharacterException is a special case of {@code ParseException}
+     * @throws VersionNotSupportedException if the version is not a semantic version
+     *                                      with a string prefix.
      */
-    public static MicoVersion valueOf(String version) {
+    public static MicoVersion valueOf(String version) throws VersionNotSupportedException {
         String[] arr = version.split("\\d+", 2);
         String prefix = arr[0].trim();
-        Version semanticVersion = Version.valueOf(version.substring(prefix.length()).trim());
-        return new MicoVersion(prefix, semanticVersion);
+        Version semanticVersion;
+        try {
+            semanticVersion = Version.valueOf(version.substring(prefix.length()).trim());
+            return new MicoVersion(prefix, semanticVersion);
+        } catch (IllegalArgumentException | ParseException e) {
+            throw new VersionNotSupportedException("Version " + version
+                    + " can not be processed. Only semantic version formats with a string prefix are allowed.");
+        }
     }
 
     /**
