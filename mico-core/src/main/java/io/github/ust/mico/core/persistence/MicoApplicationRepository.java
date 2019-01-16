@@ -13,12 +13,8 @@ public interface MicoApplicationRepository extends Neo4jRepository<MicoApplicati
     @Override
     List<MicoApplication> findAll();
 
-    // TODO: Adapt to new domain model
-    @Deprecated
     Optional<MicoApplication> findByShortNameAndVersion(String shortName, String version, @Depth int depth);
 
-    // TODO: Adapt to new domain model
-    @Deprecated
     Optional<MicoApplication> findByShortNameAndVersion(String shortName, String version);
     
 }
