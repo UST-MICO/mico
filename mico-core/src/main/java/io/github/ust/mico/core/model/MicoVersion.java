@@ -3,7 +3,6 @@ package io.github.ust.mico.core.model;
 import com.github.zafarkhaja.semver.ParseException;
 import com.github.zafarkhaja.semver.UnexpectedCharacterException;
 import com.github.zafarkhaja.semver.Version;
-
 import io.github.ust.mico.core.VersionNotSupportedException;
 import lombok.Getter;
 
@@ -57,7 +56,7 @@ public class MicoVersion implements Comparable<MicoVersion> {
             return new MicoVersion(prefix, semanticVersion);
         } catch (IllegalArgumentException | ParseException e) {
             throw new VersionNotSupportedException("Version " + version
-                    + " can not be processed. Only semantic version formats with a string prefix are allowed.");
+                + " can not be processed. Only semantic version formats with a string prefix are allowed.");
         }
     }
 

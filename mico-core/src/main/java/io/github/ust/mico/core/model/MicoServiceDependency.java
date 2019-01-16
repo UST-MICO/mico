@@ -29,14 +29,14 @@ public class MicoServiceDependency {
     // ----------------------
 
     /**
-     * 
+     * TODO: add comment
      */
     @JsonIgnore
     @StartNode
     private MicoService service;
 
     /**
-     *
+     * TODO: add comment
      */
     @ApiModelProperty(required = true)
     @JsonIgnore

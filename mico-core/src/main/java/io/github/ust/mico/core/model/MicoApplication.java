@@ -23,11 +23,12 @@ import java.util.List;
 public class MicoApplication {
 
     /**
-     * The id of this service.
+     * The id of this application.
      */
     @Id
     @GeneratedValue
     private final Long id;
+
 
     // ----------------------
     // -> Required fields ---
