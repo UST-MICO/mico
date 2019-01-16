@@ -13,28 +13,18 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.model.MicoServicePort;
+import lombok.AllArgsConstructor;
 
 /**
  * Provides access to the Kubernetes API.
  */
+@AllArgsConstructor
 public class MicoKubeClient {
 
     private static final String DEFAULT_NAMESPACE = "default";
     private static final String DEFAULT_REGISTRY = "ustmicoregistry.azurecr.io";
 
-    private static MicoKubeClient theInstance;
-
     private KubernetesClient client = new DefaultKubernetesClient();
-
-    private MicoKubeClient() {
-    }
-
-    public static synchronized MicoKubeClient getInstance() {
-        if (theInstance == null) {
-            theInstance = new MicoKubeClient();
-        }
-        return theInstance;
-    }
 
     public Deployment createMicoService(MicoService service, int replicas) {
         Deployment deployment = new DeploymentBuilder()
