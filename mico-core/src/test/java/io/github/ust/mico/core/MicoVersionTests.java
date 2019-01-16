@@ -14,7 +14,7 @@ import io.github.ust.mico.core.model.MicoVersion;
 public class MicoVersionTests {
 
     @Test
-    public void createVersionForString() {
+    public void createVersionForString() throws VersionNotSupportedException {
         MicoVersion version = MicoVersion.valueOf("1.0.0");
         assertEquals(version.getMajorVersion(), 1);
         assertEquals(version.getMinorVersion(), 0);
@@ -40,7 +40,7 @@ public class MicoVersionTests {
     }
     
     @Test
-    public void createVersionForStringWithPrefix() {
+    public void createVersionForStringWithPrefix() throws VersionNotSupportedException {
         MicoVersion version = MicoVersion.valueOf("v1.0.0");
         assertEquals(version.getPrefix(), "v");
         assertEquals(version.getMajorVersion(), 1);
@@ -168,12 +168,12 @@ public class MicoVersionTests {
     }
     
     @Test(expected = NullPointerException.class)
-    public void createNullVersion() {
+    public void createNullVersion() throws VersionNotSupportedException {
         MicoVersion.valueOf(null);
     }
     
-    @Test(expected = IllegalArgumentException.class)
-    public void createEmptyVersion() {
+    @Test(expected = VersionNotSupportedException.class)
+    public void createEmptyVersion() throws VersionNotSupportedException {
         MicoVersion.valueOf("");
     }
     

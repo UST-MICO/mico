@@ -14,11 +14,11 @@ public class MicoResourceConstraint {
 
     /**
      * Measured in CPU units. One Kubernetes CPU (unit) is equivaletnt to:
-     *  - 1 AWS vCPU
-     *  - 1 GCP Core
-     *  - 1 Azure vCore
-     *  - 1 IBM vCPU
-     *  - 1 Hyperthread on a bare-metal Intel processor with Hyperthreading
+     * - 1 AWS vCPU
+     * - 1 GCP Core
+     * - 1 Azure vCore
+     * - 1 IBM vCPU
+     * - 1 Hyperthread on a bare-metal Intel processor with Hyperthreading
      * Can also be specified as a fraction up to precision 0.001.
      */
     private final double cpuUnits;
