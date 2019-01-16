@@ -78,12 +78,6 @@ public class MicoApplication {
     // ----------------------
 
     /**
-     * Same MicoApplication with previous version.
-     */
-    @Relationship(type = "PREDECESSOR")
-    private MicoService predecessor;
-
-    /**
      * Human readable contact information for support purposes.
      */
     private String contact;
