@@ -88,6 +88,7 @@ public class MicoService {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Relationship(type = "DEPENDS_ON")
     @Singular
+    @Setter
     private List<MicoServiceDependency> dependencies;
 
     /**
