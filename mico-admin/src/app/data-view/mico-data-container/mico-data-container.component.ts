@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnChanges, Input } from '@angular/core';
 import { ApiModel } from 'src/app/api/apimodel';
 
 @Component({
@@ -6,7 +6,7 @@ import { ApiModel } from 'src/app/api/apimodel';
     templateUrl: './mico-data-container.component.html',
     styleUrls: ['./mico-data-container.component.css']
 })
-export class MicoDataContainerComponent implements OnInit {
+export class MicoDataContainerComponent implements OnChanges {
 
     @Input() property: ApiModel;
     @Input() data: any;
@@ -15,8 +15,14 @@ export class MicoDataContainerComponent implements OnInit {
 
     constructor() { }
 
-    ngOnInit() {
-        this.dataValue = this.data[this.property['x-key']];
+    ngOnChanges() {
+        if (this.data != null) {
+            if (this.data.hasOwnProperty(this.property['x-key'])) {
+                this.dataValue = this.data[this.property['x-key']];
+            }
+        } else {
+            this.dataValue = null;
+        }
 
     }
 

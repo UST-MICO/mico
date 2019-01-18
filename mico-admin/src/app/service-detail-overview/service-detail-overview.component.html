@@ -6,9 +6,10 @@
             <ng-container *ngIf="!edit">
                 <!-- display version -->
                 <!-- TODO change to serviceGET (as soon as api is available -->
-                <mico-data [modelUrl]="'local/servicePUT'" [startData]="service"></mico-data>
+                <mico-data [modelUrl]="'remote/Service'" [startData]="serviceData"></mico-data>
 
                 <!-- TODO hard coded information - not yet part of the domain model-->
+                <!-- TODO some elements (like) tags are in the domain model now. Check as soon as the modelURLs are loaded dynamically-->
                 <mat-list dense>
                     <mat-list-item class="mt2">
                         <b>Info</b>
@@ -31,10 +32,10 @@
             <!-- editable version -->
 
             <ng-container *ngIf="edit">
-                <mico-form [modelUrl]="'local/servicePUT'" (data)="serviceData = $event" [startData]="service"></mico-form>
+                <mico-form [modelUrl]="'remote/Service'" (data)="serviceData = $event" [startData]="serviceData"></mico-form>
                 <div class="ma1 pa1">
                     <span class="ma1">
-                        <button mat-raised-button>Save</button>
+                        <button mat-raised-button (click)="save()">Save</button>
                     </span>
                     <span class="ma1">
                         <button mat-raised-button (click)="edit = !edit">Cancel</button>
@@ -98,11 +99,11 @@
                             <mat-divider></mat-divider>
                         </div>
 
-                        <!-- INTERNAL DEPENDENCIES-->
-                        <div class="flex" (click)="addInternalDependency()">
+                        <!-- DEPENDEES-->
+                        <div class="flex" (click)="addDependee()">
                             <div class="flex-grow-1">
                                 <mat-list-item>
-                                    <span mat-line><b>Dependencies (internal) </b></span>
+                                    <span mat-line><b>Dependees</b></span>
                                 </mat-list-item>
                             </div>
                             <div class="w-20">
@@ -113,47 +114,37 @@
                         </div>
                         <mat-divider></mat-divider>
                         <!-- list internal dependencies-->
-                        <div *ngFor="let dependencie of internalDependencies">
+                        <div *ngFor="let dependencie of dependees">
                             <div class="flex">
                                 <div class="flex-grow-1">
-                                    <mat-list-item [routerLink]="['/service-detail/', dependencie.id]">
-                                        <span mat-line [routerLink]="['/service-detail/', dependencie.id]">{{dependencie.name}}</span>
+                                    <mat-list-item [routerLink]="['/service-detail/', dependencie.shortName, dependencie.version]">
+                                        <span mat-line [routerLink]="['/service-detail/', dependencie.shortName, dependencie.version]">{{dependencie.name}}</span>
                                     </mat-list-item>
                                 </div>
                                 <div class="w-20">
                                     <mat-list-item>
-                                        <mat-icon (click)="deleteDependency(dependencie.id)">delete</mat-icon>
+                                        <mat-icon (click)="deleteDependency(dependencie.shortName)">delete</mat-icon>
                                     </mat-list-item>
                                 </div>
                             </div>
                             <mat-divider></mat-divider>
                         </div>
 
-                        <!-- EXTERNAL DEPENDENCIES-->
-                        <div class="flex" (click)="addExternalDependency()">
+                        <!-- DEPENDERS -->
+                        <div class="flex">
                             <div class="flex-grow-1">
-                                <mat-list-item (click)="addExternalDependency()">
-                                    <span mat-line><b>Dependencies (external) </b></span>
-                                </mat-list-item>
-                            </div>
-                            <div class="w-20">
                                 <mat-list-item>
-                                    <mat-icon>add</mat-icon>
+                                    <span mat-line><b>Dependers</b></span>
                                 </mat-list-item>
                             </div>
                         </div>
                         <mat-divider></mat-divider>
                         <!-- list external dependencies-->
-                        <div *ngFor="let dependencie of externalDependencies">
+                        <div *ngFor="let dependencie of dependers">
                             <div class="flex">
                                 <div class="flex-grow-1">
-                                    <mat-list-item [routerLink]="['/service-detail/', dependencie.id]">
-                                        <span mat-line [routerLink]="['/service-detail/', dependencie.id]">{{dependencie.name}}</span>
-                                    </mat-list-item>
-                                </div>
-                                <div class="w-20">
-                                    <mat-list-item>
-                                        <mat-icon (click)="deleteDependency(dependencie.id)">delete</mat-icon>
+                                    <mat-list-item [routerLink]="['/service-detail/', dependencie.shortName, dependencie.version]">
+                                        <span mat-line [routerLink]="['/service-detail/', dependencie.shortName, dependencie.version]">{{dependencie.name}}</span>
                                     </mat-list-item>
                                 </div>
                             </div>

@@ -16,7 +16,9 @@ export class MicoDataBooleanComponent implements OnChanges {
     convertedDataValue: boolean;
 
     ngOnChanges() {
-        this.convertedDataValue = JSON.parse(this.dataValue);
+        if (this.dataValue != null) {
+            this.convertedDataValue = JSON.parse(this.dataValue);
+        }
     }
 
 }

@@ -2,12 +2,25 @@ import { Injectable } from '@angular/core';
 import { AsyncSubject, Observable, of, from } from 'rxjs';
 import { ApiModel, ApiModelAllOf, ApiModelRef } from './apimodel';
 import { concatMap, reduce, first, timeout, map } from 'rxjs/operators';
-import { freezeObject } from './api.service';
+import { ApiService, freezeObject } from './api.service';
 
 @Injectable({
     providedIn: 'root'
 })
 export class ModelsService {
+
+    private remoteModels;
+
+    constructor(private apiService: ApiService, ) {
+        // TODO consider unsubscribing
+        /* TODO Consider using the Observable directly instead of storing the provided value to avoid cases,
+        * where remoteModels is still null but a model is already requested by the ui.
+        * TBD after the UI for the minimal example is done
+        */
+        apiService.getModelDefinitions().subscribe(val => {
+            this.remoteModels = val;
+        });
+    }
 
     private modelCache: Map<string, AsyncSubject<ApiModel>> = new Map<string, AsyncSubject<ApiModel>>();
 
@@ -177,7 +190,6 @@ export class ModelsService {
         }
     };
 
-    constructor() { }
 
     /**
      * Canonize a resource url.
@@ -202,6 +214,10 @@ export class ModelsService {
             const modelID = modelUrl.substring(6);
             // deep clone model because they will be frozen later...
             const model = JSON.parse(JSON.stringify(this.localModels[modelID]));
+            return of(model);
+        } else if (modelUrl.startsWith('remote/')) {
+            const modelID = modelUrl.substring(7);
+            const model = JSON.parse(JSON.stringify(this.remoteModels[modelID]));
             return of(model);
         }
         return of(null); // TODO load models from openapi definitions
