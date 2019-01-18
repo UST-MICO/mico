@@ -15,7 +15,7 @@ export class ModelsService {
         // TODO consider unsubscribing
         /* TODO Consider using the Observable directly instead of storing the provided value to avoid cases,
         * where remoteModels is still null but a model is already requested by the ui.
-        * TBD in #42
+        * TBD after the UI for the minimal example is done
         */
         apiService.getModelDefinitions().subscribe(val => {
             this.remoteModels = val;
