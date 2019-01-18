@@ -18,10 +18,10 @@ public class ClusterSpec {
     /**
      * Namespace is the namespace in which the pod is running.
      */
-    String namespace;
+    private String namespace;
 
     /**
      * PodName is the name of the pod responsible for executing this build's steps.
      */
-    String podName;
+    private String podName;
 }

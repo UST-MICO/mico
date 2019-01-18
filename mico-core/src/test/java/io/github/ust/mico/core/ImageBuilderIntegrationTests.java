@@ -8,6 +8,8 @@ import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.github.ust.mico.core.imagebuilder.buildtypes.Build;
 import io.github.ust.mico.core.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.imagebuilder.ImageBuilderConfig;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoVersion;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
@@ -36,6 +38,9 @@ import static org.junit.Assert.assertTrue;
 @SpringBootTest
 @RunWith(SpringRunner.class)
 public class ImageBuilderIntegrationTests {
+
+    private static final String GIT_URI = "https://github.com/UST-MICO/hello.git";
+    private static final String RELEASE = "v1.0.0";
 
     @Autowired
     private ClusterAwarenessFabric8 cluster;
@@ -118,11 +123,18 @@ public class ImageBuilderIntegrationTests {
     }
 
     @Test
-    public void buildAndPushImageWorks() throws NotInitializedException, InterruptedException, TimeoutException, ExecutionException {
+    public void buildAndPushImageWorks() throws NotInitializedException, InterruptedException, TimeoutException, ExecutionException, VersionNotSupportedException {
 
         imageBuilder.init();
 
-        Build build = imageBuilder.build("hello-integration-test", "1.0", "Dockerfile", "https://github.com/dgageot/hello.git", "master");
+        MicoService micoService = MicoService.builder()
+            .shortName("hello-integration-test")
+            .version(MicoVersion.valueOf(RELEASE))
+            .vcsRoot(GIT_URI)
+            .dockerfilePath("Dockerfile")
+            .build();
+
+        Build build = imageBuilder.build(micoService);
 
         try {
             ObjectMapper mapper = new YAMLMapper();
@@ -142,8 +154,8 @@ public class ImageBuilderIntegrationTests {
     // Test if docker image exists is currently not required
     @Ignore
     @Test
-    public void dockerImageExists() throws ExecutionException, InterruptedException, TimeoutException {
-        String imageName = imageBuilder.createImageName("hello-integration-test", "1.0");
+    public void dockerImageExists() throws ExecutionException, InterruptedException, TimeoutException, VersionNotSupportedException {
+        String imageName = imageBuilder.createImageName("hello-integration-test", MicoVersion.valueOf("v1.0"));
         boolean result = checkIfDockerImageExists(imageName);
         assertTrue("Pod creation failed!", result);
     }
