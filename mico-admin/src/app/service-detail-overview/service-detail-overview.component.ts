@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, OnChanges } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
@@ -31,7 +31,9 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
 
     constructor(private apiService: ApiService, private dialog: MatDialog) { }
 
+    // dependees: services the current service depends on
     dependees: any = [];
+    // dependers: services depending on the current service
     dependers: any = [];
     serviceInterfaces: any = [];
 
@@ -41,8 +43,6 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
     edit: Boolean = false;
     @Input() shortName: string;
     @Input() version: string;
-    oldShortName: string;
-    oldVersion: string;
 
     ngOnChanges() {
 
@@ -76,18 +76,6 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
     }
 
     update() {
-
-        // TODO take care of the version
-        if (this.oldShortName === this.shortName) {
-            if (this.oldVersion === this.version) {
-                console.log('return', this.oldShortName, this.shortName, this.oldVersion, this.version);
-                return;
-            }
-        }
-
-        this.oldShortName = this.shortName;
-        this.oldVersion = this.version;
-
 
         if (this.serviceSubscription != null) {
             this.serviceSubscription.unsubscribe();
@@ -171,6 +159,7 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
 
     /**
      * action triggered in ui
+     * opens an dialog to select a new service the current service depends on.
      */
     addDependee() {
 
@@ -188,29 +177,10 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
         });
     }
 
-    /**
-     * action triggered in ui
-     */
-    addExternalDependency() {
-        // TODO is this method still relevant? There are no internal/external dependencies in the backend.
-        // So the 'External' list was changed to dependers.
-        // Adding dependers is no useful operation at this point of the ui.
-        const dialogRef = this.dialog.open(ServicePickerComponent, {
-            data: {
-                filter: 'external',
-                choice: 'multi',
-                existingDependencies: this.dependers,
-                serviceId: this.shortName,
-            }
-        });
-        this.subDependersDialog = dialogRef.afterClosed().subscribe(result => {
-            console.log(result);
-            // TODO use result in a useful way
-        });
-    }
 
     /**
      * action triggered in ui
+     * Opens a dialog to remove the dependency from the current service to the selected service.
      */
     deleteDependency(id) {
         const dialogRef = this.dialog.open(YesNoDialogComponent, {

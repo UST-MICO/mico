@@ -12,7 +12,11 @@ export class ModelsService {
     private remoteModels;
 
     constructor(private apiService: ApiService, ) {
-
+        // TODO consider unsubscribing
+        /* TODO Consider using the Observable directly instead of storing the provided value to avoid cases,
+        * where remoteModels is still null but a model is already requested by the ui.
+        * TBD after the UI for the minimal example is done
+        */
         apiService.getModelDefinitions().subscribe(val => {
             this.remoteModels = val;
         });

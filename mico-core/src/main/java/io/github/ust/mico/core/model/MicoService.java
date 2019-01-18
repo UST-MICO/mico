@@ -1,18 +1,15 @@
 package io.github.ust.mico.core.model;
 
-import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.*;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
-import io.swagger.annotations.ApiModelProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
-import lombok.Singular;
+import java.util.List;
 
 /**
  * Represents a service in the context of MICO.
@@ -21,6 +18,7 @@ import lombok.Singular;
 @RequiredArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 @NodeEntity
 public class MicoService {
 
@@ -29,7 +27,7 @@ public class MicoService {
      */
     @Id
     @GeneratedValue
-    private final long id;
+    private final Long id;
 
 
     // ----------------------
@@ -50,7 +48,7 @@ public class MicoService {
     private final String name;
 
     /**
-     * The version of this service.
+     * The version of this service. Refers to GitHub release tag.
      */
     @ApiModelProperty(required = true)
     private final MicoVersion version;
@@ -65,22 +63,18 @@ public class MicoService {
      * The list of interfaces this service provides.
      */
     @ApiModelProperty(required = true)
-    @Relationship // TODO: @Jan -> check please.
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @Relationship(type = "PROVIDES", direction = Relationship.UNDIRECTED)
     @Singular
     private final List<MicoServiceInterface> serviceInterfaces;
 
     /**
-     * The URL to the root directory of, e.g., the
-     * corresponding GitHub repository.
+     * Indicates where this service originates from, e.g.,
+     * GitHub (downloaded and built by MICO) or DockerHub
+     * (ready-to-use image).
      */
     @ApiModelProperty(required = true)
-    private final String vcsRoot;
-
-    /**
-     * The relative (to vcsRoot) path to the Dockerfile.
-     */
-    @ApiModelProperty(required = true)
-    private final String dockerfilePath;
+    private MicoServiceCrawlingOrigin serviceCrawlingOrigin;
 
 
     // ----------------------
@@ -91,14 +85,15 @@ public class MicoService {
      * The list of services that this service requires
      * in order to run normally.
      */
-    @Relationship // TODO: @Jan -> check please.
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @Relationship(type = "DEPENDS_ON")
     @Singular
     private List<MicoServiceDependency> dependencies;
 
     /**
      * Same MicoService with previous version.
      */
-    @Relationship(type = "PREDECESSOR", direction = Relationship.OUTGOING)
+    @Relationship(type = "PREDECESSOR")
     private MicoService predecessor;
 
     /**
@@ -111,5 +106,24 @@ public class MicoService {
      * who is responsible for this service.
      */
     private String owner;
+
+    /**
+     * The URL to the root directory of, e.g., the
+     * corresponding GitHub repository.
+     */
+    private final String vcsRoot;
+
+    /**
+     * The relative (to vcsRoot) path to the Dockerfile.
+     */
+    private final String dockerfilePath;
+
+    /**
+     * The fully qualified URI to the image on DockerHub.
+     * Either set after the image has been built by MICO
+     * (if the service originates from GitHub) or set by the
+     * user directly.
+     */
+    private String dockerImageUri;
 
 }

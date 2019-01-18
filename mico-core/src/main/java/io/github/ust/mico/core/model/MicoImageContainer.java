@@ -1,13 +1,13 @@
 package io.github.ust.mico.core.model;
 
-import java.util.List;
-
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.Singular;
+
+import java.util.List;
 
 /**
  * Represents a container running in a Kubernetes Pod.

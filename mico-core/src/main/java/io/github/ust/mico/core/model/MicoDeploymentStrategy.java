@@ -34,7 +34,7 @@ public class MicoDeploymentStrategy {
      * The maximum percentage of instances that can be scheduled above the desired number of
      * instances during the update. This can not be 0 if maxUnavailable is 0.
      * If the absolute number is also specified, this field will be used prior to the absolute number.
-     * Defaults to 25%. 
+     * Defaults to 25%.
      */
     @Default
     private final double maxInstancesOnTopPercent = 0.25;
@@ -45,7 +45,7 @@ public class MicoDeploymentStrategy {
      */
     private final double maxInstancesOnTopAbsolute;
 
-     
+
     /**
      * The maximum percentage of instances that can be unavailable during the update.
      * This can not be 0 if maxSurge is 0.

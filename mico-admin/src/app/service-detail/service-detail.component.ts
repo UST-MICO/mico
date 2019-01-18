@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, Input } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { ApiService } from '../api/api.service';
 import { Subscription } from 'rxjs';
@@ -21,6 +21,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
     constructor(
         private apiService: ApiService,
         private route: ActivatedRoute,
+        private router: Router,
     ) { }
 
     service: Service;
@@ -33,6 +34,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
 
             this.shortName = params['shortName'];
             const version = params['version'];
+            console.log(this.shortName, version);
             this.update(this.shortName, version);
         });
     }
@@ -49,6 +51,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
     update(shortName, givenVersion) {
 
         if (this.selectedVersion === givenVersion && givenVersion != null) {
+            // no version change
             return;
         }
 
@@ -57,9 +60,6 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
         }
 
         // get latest version
-
-        // TODO change url path according to the current version
-
         this.subService = this.apiService.getServiceVersions(shortName)
             .subscribe(serviceVersions => {
 
@@ -69,11 +69,12 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
                     this.setLatestVersion(serviceVersions);
                 } else {
                     let found = false;
-                    found = serviceVersions.forEach(element => {
+                    found = serviceVersions.some(element => {
 
                         if (element.version === givenVersion) {
                             this.selectedVersion = givenVersion;
                             this.service = element;
+                            this.updateVersion(givenVersion);
                             return true;
                         }
                     });
@@ -100,13 +101,22 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
             // TODO implement comparison for semantic versioning
             if (element.version > version) {
                 version = element.version;
-                this.selectedVersion = element.version;
                 this.service = element;
 
             } else {
                 console.log(false);
             }
+            this.updateVersion(version);
         });
+    }
+
+
+    /**
+     * call-back from the version picker
+     */
+    updateVersion(version) {
+        this.selectedVersion = version;
+        this.router.navigate(['service-detail', this.shortName, version]);
     }
 
 }

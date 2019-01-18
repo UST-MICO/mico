@@ -1,10 +1,11 @@
 package io.github.ust.mico.core;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import io.github.ust.mico.core.model.MicoServiceCrawlingOrigin;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.Extension;
+import io.swagger.annotations.ExtensionProperty;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
@@ -13,6 +14,7 @@ import org.neo4j.ogm.annotation.Relationship;
 import java.util.LinkedList;
 import java.util.List;
 
+@Deprecated
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NodeEntity
 public class Service {
@@ -26,7 +28,15 @@ public class Service {
     private String shortName;
     @ApiModelProperty(required = true)
     private String description;
-    @ApiModelProperty(required = true)
+
+    @ApiModelProperty(required = true, extensions = {
+        @Extension(
+            name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+            properties = {
+                @ExtensionProperty(name = "x-order", value = "1")
+            }
+        )
+    })
     private String name;
 
     //additional fields
@@ -48,7 +58,7 @@ public class Service {
 
     //crawling information
     private String externalVersion;
-    private CrawlingSource crawlingSource;
+    private MicoServiceCrawlingOrigin crawlingSource;
     //docker information
     private String dockerImageName;
     private String dockerImageUri;
@@ -206,11 +216,11 @@ public class Service {
         this.serviceInterfaces = serviceInterfaces;
     }
 
-    public CrawlingSource getCrawlingSource() {
+    public MicoServiceCrawlingOrigin getCrawlingSource() {
         return crawlingSource;
     }
 
-    public void setCrawlingSource(CrawlingSource crawlingSource) {
+    public void setCrawlingSource(MicoServiceCrawlingOrigin crawlingSource) {
         this.crawlingSource = crawlingSource;
     }
 

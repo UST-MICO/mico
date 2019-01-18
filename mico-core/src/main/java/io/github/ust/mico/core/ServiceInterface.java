@@ -6,6 +6,7 @@ import org.neo4j.ogm.annotation.Id;
 
 import javax.validation.constraints.NotEmpty;
 
+@Deprecated
 public class ServiceInterface {
 
     @JsonIgnore
@@ -28,7 +29,6 @@ public class ServiceInterface {
 
     public ServiceInterface() {
     }
-
 
 
     //TODO: Verify if all are necessary
