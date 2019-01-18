@@ -1,4 +1,6 @@
 package io.github.ust.mico.core;
+import static io.github.ust.mico.core.TestConstants.*;
+import static io.github.ust.mico.core.JsonPathBuilder.*;
 
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.is;
@@ -54,21 +56,21 @@ import io.github.ust.mico.core.persistence.MicoServiceRepository;
 @WebAppConfiguration
 public class ServiceControllerTests {
 
-    public static final String JSON_PATH_LINKS_SECTION = "$._links.";
-    public static final String SELF_HREF = "self.href";
-    public static final String INTERFACES_HREF = "interfaces.href";
-    public static final String SERVICES_HREF = "services.href";
-    public static final String SERVICE_INTERFACE_SELF_LINK_PART = "services/ShortName/1.0/interfaces";
+    public static final String JSON_PATH_LINKS_SECTION = buildPath(ROOT, LINKS);
+    public static final String SELF_HREF = buildPath(JSON_PATH_LINKS_SECTION, SELF, HREF);
+    public static final String INTERFACES_HREF = buildPath(JSON_PATH_LINKS_SECTION, "interfaces", HREF);
+    public static final String SERVICES_HREF = buildPath(JSON_PATH_LINKS_SECTION, "services", HREF);
+    public static final String EMBEDDED = buildPath(ROOT, JsonPathBuilder.EMBEDDED);
+    public static final String SERVICE_LIST = buildPath(EMBEDDED, "micoServiceList");
+    public static final String ID_PATH = buildPath(ROOT, "id");
+    public static final String SHORT_NAME_PATH = buildPath(ROOT, "shortName");
+    public static final String DESCRIPTION_PATH = buildPath(ROOT, "description");
+    public static final String VERSION_MAJOR_PATH = buildPath(ROOT, "version", "majorVersion");
+    public static final String VERSION_MINOR_PATH = buildPath(ROOT, "version", "minorVersion");
+    public static final String VERSION_PATCH_PATH = buildPath(ROOT, "version", "patchVersion");
+
+
     //TODO: Use these variables inside the tests instead of the local variables
-    public static final String SHORT_NAME = "ServiceShortName";
-    public static final String VERSION = "1.0.0";
-    private static final String DESCRIPTION = "Some description";
-    private static final String BASE_PATH = "/services/";
-    private static final String DEPENDEES_BASE_PATH = "/services/" + SHORT_NAME + "/" + VERSION + "/dependees";
-    private static final String SHORT_NAME_TO_DELETE = "shortNameToDelete";
-    private static final String VERSION_TO_DELETE = "1.0.1";
-    private static final String DELETE_SPECIFIC_DEPENDEES_PATH = "/services/" + SHORT_NAME + "/" + VERSION + "/dependees/" + SHORT_NAME_TO_DELETE + "/" + VERSION_TO_DELETE;
-    private static final String DEPENDERS_PATH = "/services/" + SHORT_NAME + "/" + VERSION + "/dependers";
 
     @Value("${cors-policy.allowed-origins}")
     String[] allowedOrigins;
@@ -95,36 +97,46 @@ public class ServiceControllerTests {
     public void getCompleteServiceList() throws Exception {
         given(serviceRepository.findAll()).willReturn(
                 Arrays.asList(
-                        MicoService.builder().shortName("ShortName1").version(MicoVersion.forIntegers(1, 0, 1)).description("Service 1").build(),
-                        MicoService.builder().shortName("ShortName2").version(MicoVersion.forIntegers(1, 0, 2)).description("Service 2").build(),
-                        MicoService.builder().shortName("ShortName3").version(MicoVersion.forIntegers(1, 0, 3)).description("Service 3").build()));
+                        MicoService.builder().shortName(SHORT_NAME_1).version(VERSION_1_0_1).description(DESCRIPTION_1).build(),
+                        MicoService.builder().shortName(SHORT_NAME_2).version(VERSION_1_0_2).description(DESCRIPTION_2).build(),
+                        MicoService.builder().shortName(SHORT_NAME_3).version(VERSION_1_0_3).description(DESCRIPTION_3).build()));
 
         mvc.perform(get("/services").accept(MediaTypes.HAL_JSON_VALUE))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andExpect(jsonPath("$._embedded.serviceList[*]", hasSize(3)))
-                .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ShortName1' && @.version == '1.0.1' && @.description == 'Service 1' )]", hasSize(1)))
-                .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ShortName2' && @.version == '1.0.2' && @.description == 'Service 2' )]", hasSize(1)))
-                .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ShortName3' && @.version == '1.0.3' && @.description == 'Service 3' )]", hasSize(1)))
-                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "self.href", is("http://localhost/services")))
+                .andExpect(jsonPath(SERVICE_LIST + "[*]", hasSize(3)))
+                .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_1_MATCHER + " && " + VERSION_1_0_1_MATCHER + " && " + DESCRIPTION_1_MATCHER + ")]", hasSize(1)))
+                .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_2_MATCHER + " && " + VERSION_1_0_2_MATCHER + " && " + DESCRIPTION_2_MATCHER + ")]", hasSize(1)))
+                .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_3_MATCHER + " && " + VERSION_1_0_3_MATCHER + " && " + DESCRIPTION_3_MATCHER + ")]", hasSize(1)))
+                .andExpect(jsonPath(SELF_HREF, is(BASE_URL + SERVICES_PATH)))
                 .andReturn();
     }
 
     @Test
     public void getServiceViaShortNameAndVersion() throws Exception {
-        given(serviceRepository.findByShortNameAndVersion("ShortName1", "1.0.1")).willReturn(
-                Optional.of(MicoService.builder().shortName("ShortName1").version(MicoVersion.forIntegers(1, 0, 1)).description("Service 1").build()));
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION.toString())).willReturn(
+                Optional.of(MicoService.builder().shortName(SHORT_NAME).version(VERSION).description(DESCRIPTION).build()));
 
-        mvc.perform(get("/services/ShortName1/1.0.1").accept(MediaTypes.HAL_JSON_VALUE))
+        StringBuilder urlPathBuilder = new StringBuilder(300);
+        urlPathBuilder.append(SERVICES_PATH);
+        urlPathBuilder.append("/");
+        urlPathBuilder.append(SHORT_NAME);
+        urlPathBuilder.append("/");
+        urlPathBuilder.append(VERSION);
+        String urlPath = urlPathBuilder.toString();
+
+        mvc.perform(get(urlPath).accept(MediaTypes.HAL_JSON_VALUE))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andExpect(jsonPath("$.shortName", is("ShortName1")))
-                .andExpect(jsonPath("$.version", is("1.0.1")))
-                .andExpect(jsonPath("$.description", is("Service 1")))
-                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/services/ShortName1/1.0.1")))
-                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "services.href", is("http://localhost/services")))
+                .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
+                .andExpect(jsonPath(VERSION_MAJOR_PATH, is(Integer.valueOf(VERSION.getMajorVersion()))))
+                .andExpect(jsonPath(VERSION_MINOR_PATH, is(Integer.valueOf(VERSION.getMinorVersion()))))
+                .andExpect(jsonPath(VERSION_PATCH_PATH, is(Integer.valueOf(VERSION.getPatchVersion()))))
+                .andExpect(jsonPath(DESCRIPTION_PATH, is(DESCRIPTION)))
+                .andExpect(jsonPath(SELF_HREF, is(BASE_URL + urlPath)))
+                .andExpect(jsonPath(SERVICES_HREF, is(BASE_URL + SERVICES_PATH)))
                 .andReturn();
     }
 
@@ -132,36 +144,44 @@ public class ServiceControllerTests {
     @Ignore
     @Test
     public void getServiceById() throws Exception {
-        Long id = new Long(45325345);
-        String shortName = "ServiceShortName";
-        String version = "1.0.0";
-        String description = "Some description";
-        String urlTemplate = BASE_PATH + id;
-        String linksSelf = "http://localhost" + urlTemplate;
-        String linksServices = "http://localhost/services";
+        StringBuilder urlPathBuilder = new StringBuilder(300);
+        urlPathBuilder.append(SERVICES_PATH);
+        urlPathBuilder.append("/");
+        urlPathBuilder.append(SHORT_NAME);
+        urlPathBuilder.append("/");
+        urlPathBuilder.append(VERSION);
+        urlPathBuilder.append("/");
+        urlPathBuilder.append(ID);
+        String urlPath = urlPathBuilder.toString();
 
-        given(serviceRepository.findById(id)).willReturn(Optional.of(MicoService.builder().shortName(shortName).version(MicoVersion.valueOf(version)).description(description).build()));
+        given(serviceRepository.findById(ID_1))
+                .willReturn(Optional.of(MicoService.builder().shortName(SHORT_NAME).version(VERSION).description(DESCRIPTION).build()));
 
-        mvc.perform(get(urlTemplate).accept(MediaTypes.HAL_JSON_UTF8_VALUE))
+        mvc.perform(get(urlPath).accept(MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andExpect(jsonPath("$.id", is(id)))
-                .andExpect(jsonPath("$.description", is(description)))
-                .andExpect(jsonPath("$.shortName", is(shortName)))
-                .andExpect(jsonPath("$.version", is(version)))
-                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is(linksSelf)))
-                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SERVICES_HREF, is(linksServices)))
+                .andExpect(jsonPath(ID_PATH, is(ID)))
+                .andExpect(jsonPath(DESCRIPTION_PATH, is(DESCRIPTION)))
+                .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
+                .andExpect(jsonPath(VERSION_MAJOR_PATH, is(Integer.valueOf(VERSION.getMajorVersion()))))
+                .andExpect(jsonPath(VERSION_MINOR_PATH, is(Integer.valueOf(VERSION.getMinorVersion()))))
+                .andExpect(jsonPath(VERSION_PATCH_PATH, is(Integer.valueOf(VERSION.getPatchVersion()))))
+                .andExpect(jsonPath(SELF_HREF, is(BASE_URL + urlPath)))
+                .andExpect(jsonPath(SERVICES_HREF, is(BASE_URL + SERVICES_PATH)))
                 .andReturn();
     }
 
     @Test
     public void createService() throws Exception {
-        MicoService service = MicoService.builder().shortName(SHORT_NAME).version(MicoVersion.valueOf(VERSION)).description(DESCRIPTION).build();
+        MicoService service = MicoService.builder()
+            .shortName(SHORT_NAME)
+            .version(VERSION)
+            .description(DESCRIPTION).build();
 
         given(serviceRepository.save(any(MicoService.class))).willReturn(service);
 
-        final ResultActions result = mvc.perform(post(BASE_PATH)
+        final ResultActions result = mvc.perform(post(SERVICES_PATH)
                 .content(mapper.writeValueAsBytes(service))
                 .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andDo(print());
@@ -171,12 +191,25 @@ public class ServiceControllerTests {
 
     @Test
     public void deleteAllServiceDependees() throws Exception {
-        MicoService service = MicoService.builder().shortName(SHORT_NAME).version(MicoVersion.valueOf(VERSION)).description(DESCRIPTION).build();
+        MicoService service = MicoService.builder()
+            .shortName(SHORT_NAME)
+            .version(VERSION)
+            .description(DESCRIPTION).build();
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION.toString())).willReturn(Optional.of(service));
         given(serviceRepository.save(any(MicoService.class))).willReturn(service);
 
-        ResultActions resultDelete = mvc.perform(delete(DEPENDEES_BASE_PATH)
+        StringBuilder urlPathBuilder = new StringBuilder(300);
+        urlPathBuilder.append(SERVICES_PATH);
+        urlPathBuilder.append("/");
+        urlPathBuilder.append(SHORT_NAME);
+        urlPathBuilder.append("/");
+        urlPathBuilder.append(VERSION);
+        urlPathBuilder.append(DEPENDEES_SUBPATH);
+
+        String urlPath = urlPathBuilder.toString();
+
+        ResultActions resultDelete = mvc.perform(delete(urlPath)
                 .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andDo(print());
 
@@ -185,16 +218,33 @@ public class ServiceControllerTests {
 
     @Test
     public void deleteSpecificServiceDependee() throws Exception {
-        MicoService service = MicoService.builder().shortName(SHORT_NAME).version(MicoVersion.valueOf(VERSION)).description(DESCRIPTION).build();
-        MicoService serviceToDelete = MicoService.builder().shortName(SHORT_NAME_TO_DELETE).version(MicoVersion.valueOf(VERSION_TO_DELETE)).build();
+        String shortName = SHORT_NAME_1;
+        String version = VERSION_1_0_1.toString();
+        String description = DESCRIPTION_1;
+        String shortNameToDelete = SHORT_NAME_2;
+        String versionToDelete = VERSION_1_0_2.toString();
+        MicoService service = MicoService.builder().shortName(shortName).version(MicoVersion.valueOf(version)).description(description).build();
+        MicoService serviceToDelete = MicoService.builder().shortName(shortNameToDelete).version(MicoVersion.valueOf(versionToDelete)).build();
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
+        given(serviceRepository.findByShortNameAndVersion(shortName, version)).willReturn(Optional.of(service));
         given(serviceRepository.save(any(MicoService.class))).willReturn(service);
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME_TO_DELETE, VERSION_TO_DELETE)).willReturn(Optional.of(serviceToDelete));
+        given(serviceRepository.findByShortNameAndVersion(shortNameToDelete, versionToDelete)).willReturn(Optional.of(serviceToDelete));
 
-        System.out.println(DELETE_SPECIFIC_DEPENDEES_PATH);
+        StringBuilder urlPathBuilder = new StringBuilder(300);
+        urlPathBuilder.append(SERVICES_PATH);
+        urlPathBuilder.append("/");
+        urlPathBuilder.append(shortName);
+        urlPathBuilder.append("/");
+        urlPathBuilder.append(version);
+        urlPathBuilder.append(DEPENDEES_SUBPATH);
+        urlPathBuilder.append("/");
+        urlPathBuilder.append(shortNameToDelete);
+        urlPathBuilder.append("/");
+        urlPathBuilder.append(versionToDelete);
 
-        ResultActions resultDelete = mvc.perform(delete(DELETE_SPECIFIC_DEPENDEES_PATH)
+        String urlPath = urlPathBuilder.toString();
+
+        ResultActions resultDelete = mvc.perform(delete(urlPath)
                 .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andDo(print());
 
@@ -204,16 +254,16 @@ public class ServiceControllerTests {
 
     @Test
     public void corsPolicy() throws Exception {
-        mvc.perform(get("/services/").accept(MediaTypes.HAL_JSON_VALUE)
-            .header("Origin", allowedOrigins))
+        mvc.perform(get(SERVICES_PATH).accept(MediaTypes.HAL_JSON_VALUE)
+            .header("Origin", (Object[]) allowedOrigins))
             .andDo(print())
             .andExpect(status().isOk())
-            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, endsWith("/services"))).andReturn();
+            .andExpect(jsonPath(SELF_HREF, endsWith(SERVICES_PATH))).andReturn();
     }
 
     @Test
     public void corsPolicyNotAllowedOrigin() throws Exception {
-        mvc.perform(get("/services/").accept(MediaTypes.HAL_JSON_VALUE)
+        mvc.perform(get(SERVICES_PATH).accept(MediaTypes.HAL_JSON_VALUE)
             .header("Origin", "http://notAllowedOrigin.com"))
             .andDo(print())
             .andExpect(status().isForbidden())
@@ -223,24 +273,27 @@ public class ServiceControllerTests {
 
     @Test
     public void getServiceDependers() throws Exception {
-        MicoService service = MicoService.builder().shortName(SHORT_NAME).version(MicoVersion.valueOf(VERSION)).description(DESCRIPTION).build();
-        
+        MicoService service = MicoService.builder()
+            .shortName(SHORT_NAME)
+            .version(VERSION)
+            .description(DESCRIPTION).build();
+
         MicoService service1 = MicoService.builder()
-                .shortName("ShortName1")
-                .version(MicoVersion.forIntegers(1, 0, 1))
-                .description("Service 1")
+                .shortName(SHORT_NAME_1)
+                .version(VERSION_1_0_1)
+                .description(DESCRIPTION_1)
                 .build();
         MicoService service2 = MicoService.builder()
-                .shortName("ShortName2")
-                .version(MicoVersion.forIntegers(1, 0, 2))
-                .description("Service 2")
+                .shortName(SHORT_NAME_2)
+                .version(VERSION_1_0_2)
+                .description(DESCRIPTION_2)
                 .build();
         MicoService service3 = MicoService.builder()
-                .shortName("ShortName3")
-                .version(MicoVersion.forIntegers(1, 0, 3))
-                .description("Service 3")
+                .shortName(SHORT_NAME_3)
+                .version(VERSION_1_0_3)
+                .description(DESCRIPTION_3)
                 .build();
-        
+
         MicoServiceDependency dependency1 = MicoServiceDependency.builder().service(service1).dependedService(service).build();
         MicoServiceDependency dependency2 = MicoServiceDependency.builder().service(service2).dependedService(service).build();
         MicoServiceDependency dependency3 = MicoServiceDependency.builder().service(service3).dependedService(service).build();
@@ -250,16 +303,26 @@ public class ServiceControllerTests {
         service3.setDependencies(Collections.singletonList(dependency3));
 
         given(serviceRepository.findAll()).willReturn(Arrays.asList(service, service1, service2, service3));
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION.toString())).willReturn(Optional.of(service));
 
-        ResultActions result = mvc.perform(get(DEPENDERS_PATH)
+        StringBuilder urlPathBuilder = new StringBuilder(300);
+        urlPathBuilder.append(SERVICES_PATH);
+        urlPathBuilder.append("/");
+        urlPathBuilder.append(SHORT_NAME);
+        urlPathBuilder.append("/");
+        urlPathBuilder.append(VERSION);
+        urlPathBuilder.append(DEPENDERS_SUBPATH);
+
+        String urlPath = urlPathBuilder.toString();
+
+        ResultActions result = mvc.perform(get(urlPath)
                 .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andDo(print())
-                .andExpect(jsonPath("$._embedded.serviceList[*]", hasSize(3)))
-                .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ShortName1' && @.version == '1.0.1' && @.description == 'Service 1' )]", hasSize(1)))
-                .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ShortName2' && @.version == '1.0.2' && @.description == 'Service 2' )]", hasSize(1)))
-                .andExpect(jsonPath("$._embedded.serviceList[?(@.shortName =='ShortName3' && @.version == '1.0.3' && @.description == 'Service 3' )]", hasSize(1)))
-                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "self.href", is("http://localhost" + DEPENDERS_PATH)));
+                .andExpect(jsonPath(SERVICE_LIST + "[*]", hasSize(3)))
+                .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_1_MATCHER + " && " + VERSION_1_0_1_MATCHER + " && " + DESCRIPTION_1_MATCHER + ")]", hasSize(1)))
+                .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_2_MATCHER + " && " + VERSION_1_0_2_MATCHER + " && " + DESCRIPTION_2_MATCHER + ")]", hasSize(1)))
+                .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_3_MATCHER + " && " + VERSION_1_0_3_MATCHER + " && " + DESCRIPTION_3_MATCHER + ")]", hasSize(1)))
+                .andExpect(jsonPath(SELF_HREF, is(BASE_URL + urlPath)));
 
 
         result.andExpect(status().isOk());
@@ -268,31 +331,61 @@ public class ServiceControllerTests {
 
     @Test
     public void updateService() throws Exception {
-        MicoService service = MicoService.builder().shortName(SHORT_NAME).version(MicoVersion.valueOf(VERSION)).description(DESCRIPTION).build();
-        MicoService updatedService = MicoService.builder().shortName(SHORT_NAME).version(MicoVersion.valueOf(VERSION)).description("newDesc").build();
+        String updatedDescription = "updated description.";
+        MicoService service = MicoService.builder()
+            .shortName(SHORT_NAME)
+            .version(VERSION)
+            .description(DESCRIPTION).build();
+        MicoService updatedService = MicoService.builder()
+            .shortName(SHORT_NAME)
+            .version(VERSION)
+            .description(updatedDescription).build();
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION.toString())).willReturn(Optional.of(service));
         given(serviceRepository.save(any(MicoService.class))).willReturn(updatedService);
 
-        ResultActions resultUpdate = mvc.perform(put(BASE_PATH + SHORT_NAME + "/" + VERSION)
+        StringBuilder urlPathBuilder = new StringBuilder(300);
+        urlPathBuilder.append(SERVICES_PATH);
+        urlPathBuilder.append("/");
+        urlPathBuilder.append(SHORT_NAME);
+        urlPathBuilder.append("/");
+        urlPathBuilder.append(VERSION);
+
+        String urlPath = urlPathBuilder.toString();
+
+        ResultActions resultUpdate = mvc.perform(put(urlPath)
                 .content(mapper.writeValueAsBytes(updatedService))
                 .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andDo(print())
-                .andExpect(jsonPath("$.id", is(service.getId())))
-                .andExpect(jsonPath("$.description", is(updatedService.getDescription())))
-                .andExpect(jsonPath("$.shortName", is(updatedService.getShortName())))
-                .andExpect(jsonPath("$.version", is(updatedService.getVersion())));
+                .andExpect(jsonPath(ID_PATH, is(service.getId())))
+                .andExpect(jsonPath(DESCRIPTION_PATH, is(updatedDescription)))
+                .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
+                .andExpect(jsonPath(VERSION_MAJOR_PATH, is(Integer.valueOf(VERSION.getMajorVersion()))))
+                .andExpect(jsonPath(VERSION_MINOR_PATH, is(Integer.valueOf(VERSION.getMinorVersion()))))
+                .andExpect(jsonPath(VERSION_PATCH_PATH, is(Integer.valueOf(VERSION.getPatchVersion()))));
 
         resultUpdate.andExpect(status().isOk());
     }
 
     @Test
     public void deleteService() throws Exception {
-        MicoService service = MicoService.builder().shortName(SHORT_NAME).version(MicoVersion.valueOf(VERSION)).description(DESCRIPTION).build();
+        MicoService service = MicoService.builder()
+            .shortName(SHORT_NAME)
+            .version(VERSION)
+            .description(DESCRIPTION).build();
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION.toString())).willReturn(Optional.of(service));
 
-        ResultActions resultDelete = mvc.perform(delete(BASE_PATH + SHORT_NAME + "/" + VERSION)
+        StringBuilder urlPathBuilder = new StringBuilder(300);
+        urlPathBuilder.append(SERVICES_PATH);
+        urlPathBuilder.append("/");
+        urlPathBuilder.append(SHORT_NAME);
+        urlPathBuilder.append("/");
+        urlPathBuilder.append(VERSION);
+
+        String urlPath = urlPathBuilder.toString();
+
+        ResultActions resultDelete = mvc.perform(delete(urlPath)
                 .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andDo(print());
 
