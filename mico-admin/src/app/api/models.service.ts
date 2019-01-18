@@ -9,7 +9,14 @@ import { ApiService, freezeObject } from './api.service';
 })
 export class ModelsService {
 
-    constructor(private apiService: ApiService, ) { }
+    private remoteModels;
+
+    constructor(private apiService: ApiService, ) {
+
+        apiService.getModelDefinitions().subscribe(val => {
+            this.remoteModels = val;
+        });
+    }
 
     private modelCache: Map<string, AsyncSubject<ApiModel>> = new Map<string, AsyncSubject<ApiModel>>();
 
@@ -209,9 +216,8 @@ export class ModelsService {
 
             const modelID = modelUrl.substring(7);
 
-            return this.apiService.getModelDefinitions().pipe(map(remoteModels => {
-                return JSON.parse(JSON.stringify(remoteModels[modelID]));
-            }));
+            const model = JSON.parse(JSON.stringify(this.remoteModels[modelID]));
+            return of(model);
 
         }
         return of(null); // TODO load models from openapi definitions

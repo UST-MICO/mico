@@ -44,7 +44,7 @@ export class MicoFormComponent implements OnInit, OnChanges {
 
     ngOnChanges(changes: SimpleChanges) {
         if (changes.modelUrl != null || changes.filter != null || changes.isBlacklist != null) {
-            console.log(this.modelUrl, changes.modelUrl, changes);
+
             this.models.getModel(this.modelUrl).pipe(
                 map(this.models.filterModel(this.filter, this.isBlacklist)),
                 first(),
