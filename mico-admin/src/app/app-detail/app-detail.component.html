@@ -4,9 +4,57 @@
 <mat-card class="ma2">
     <mat-tab-group>
         <mat-tab label="Overview">
-            <div class="flex flex-column">
-                <mico-app-detail-overview [application]="application"></mico-app-detail-overview>
+            <div class="flex">
+                <div class="flex-grow-1" style="border:3px solid #000;">
 
+                    {{application|json}}
+                    <!--
+                        <mico-app-detail-overview [application]="application"></mico-app-detail-overview>
+                    -->
+
+                </div>
+                <div class="w-25 pa2 flex-column">
+                    <mat-card class="w-100">
+                        <mat-card-content>
+                            <mat-action-list>
+                                <mat-divider></mat-divider>
+                                <div class="flex" (click)="addService()">
+                                    <div class="flex-grow-1">
+                                        <mat-list-item>
+                                            <span mat-line><b>Services</b></span>
+                                        </mat-list-item>
+                                    </div>
+                                    <div class="w-20">
+                                        <mat-list-item>
+                                            <mat-icon>add</mat-icon>
+                                        </mat-list-item>
+                                    </div>
+                                </div>
+
+                                <mat-divider></mat-divider>
+                                <!-- Service Interfaces -->
+                                <div *ngFor="let dependee of application?.dependsOn">
+                                    <div class="flex">
+                                        <div class="flex-grow-1">
+                                            <mat-list-item.large style="font-size:small">
+                                                <div class="pv2 pl4">
+                                                    content
+                                                </div>
+                                            </mat-list-item.large>
+                                        </div>
+                                        <div class="w-20">
+                                            <mat-list-item>
+                                                <mat-icon (click)="deleteServicec()">delete</mat-icon>
+                                            </mat-list-item>
+                                        </div>
+                                    </div>
+                                    <mat-divider></mat-divider>
+                                </div>
+                            </mat-action-list>
+                        </mat-card-content>
+
+                    </mat-card>
+                </div>
             </div>
         </mat-tab>
         <mat-tab label="Deployment">
