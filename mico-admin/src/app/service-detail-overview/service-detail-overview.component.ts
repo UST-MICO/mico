@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, OnChanges } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
@@ -43,14 +43,11 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
     edit: Boolean = false;
     @Input() shortName: string;
     @Input() version: string;
-    oldShortName: string;
-    oldVersion: string;
 
     ngOnChanges() {
 
         if (this.shortName != null && this.version != null) {
 
-            console.log('update overview', this.shortName, this.version);
             this.handleSubscriptions();
             this.update();
         }
@@ -79,18 +76,6 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
     }
 
     update() {
-
-        // TODO take care of the version
-        if (this.oldShortName === this.shortName) {
-            if (this.oldVersion === this.version) {
-                // we are on the same service (and version) as before
-                return;
-            }
-        }
-
-        this.oldShortName = this.shortName;
-        this.oldVersion = this.version;
-
 
         if (this.serviceSubscription != null) {
             this.serviceSubscription.unsubscribe();

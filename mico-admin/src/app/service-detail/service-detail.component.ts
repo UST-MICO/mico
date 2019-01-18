@@ -52,7 +52,6 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
 
         if (this.selectedVersion === givenVersion && givenVersion != null) {
             // no version change
-            console.log('return!', givenVersion);
             return;
         }
 
@@ -70,12 +69,11 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
                     this.setLatestVersion(serviceVersions);
                 } else {
                     let found = false;
-                    found = serviceVersions.forEach(element => {
+                    found = serviceVersions.some(element => {
 
                         if (element.version === givenVersion) {
                             this.selectedVersion = givenVersion;
                             this.service = element;
-                            console.log('found version', givenVersion);
                             this.updateVersion(givenVersion);
                             return true;
                         }
