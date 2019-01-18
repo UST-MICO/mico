@@ -25,7 +25,6 @@ export class AppDetailComponent implements OnInit {
         this.apiService.getServiceVersions(id)
             .subscribe(val => {
                 this.setLatestVersion(val);
-                console.log(this.application, this.selectedVersion);
             });
     }
 

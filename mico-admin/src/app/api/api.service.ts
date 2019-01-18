@@ -279,7 +279,6 @@ export class ApiService {
 
             const stream = this.getStreamSource(val._links.self.href);
             stream.next(val);
-            console.log(val);
 
             return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
                 filter(service => service !== undefined)

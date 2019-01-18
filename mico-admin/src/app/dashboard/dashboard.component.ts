@@ -43,7 +43,9 @@ export class DashboardComponent implements OnInit {
         const dialogRef = this.dialog.open(CreateServiceDialogComponent);
         dialogRef.afterClosed().subscribe(result => {
             // filter empty results (when dialog is aborted)
-            if (JSON.stringify(result) !== JSON.stringify('')) {
+            if (result !== '') {
+
+                console.log(result);
 
                 // check if returned object is complete
                 for (const property in result) {
@@ -63,7 +65,7 @@ export class DashboardComponent implements OnInit {
         dialogRef.afterClosed().subscribe(result => {
 
             // filter empty results (when dialog is aborted)
-            if (result === '') {
+            if (result !== '') {
 
                 // check if returned object is complete
                 for (const property in result.applicationProperties) {
@@ -77,9 +79,11 @@ export class DashboardComponent implements OnInit {
                     return;
                 }
 
-                this.apiService.postApplication(result).subscribe(val => {
-                    // TODO navigate to application page
-                    // this.router.navigate(['service-detail', val.shortName, val.version]);
+                const data = result.applicationProperties;
+                data.dependsOn = result.services;
+
+                this.apiService.postApplication(data).subscribe(val => {
+                    this.router.navigate(['app-detail', val.shortName, val.version]);
                 });
             }
         });

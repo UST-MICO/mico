@@ -2,12 +2,12 @@
 <mat-dialog-content style="min-width: 35rem">
     <mico-form [modelUrl]="'remote/Application'" [filter]="filterList" (data)="applicationData = $event"></mico-form>
 
-    <mat-divider></mat-divider>
-
+    <!-- Service Picker-->
     <div class="pa2" style="display: flex; justify-content: flex-end">
 
         <button mat-raised-button (click)="pickServices()">pick Services</button>
     </div>
+    <mat-divider></mat-divider>
 
     <mat-list>
         <mat-list-item class="flex" *ngFor="let element of services">

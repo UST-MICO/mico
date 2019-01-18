@@ -49,7 +49,6 @@ export class MicoFormComponent implements OnInit, OnChanges {
                 map(this.models.filterModel(this.filter, this.isBlacklist)),
                 first(),
             ).subscribe(model => {
-                console.log('CALL BACK', model);
                 const props = [];
                 if (model.properties != null) {
                     for (const key in model.properties) {
