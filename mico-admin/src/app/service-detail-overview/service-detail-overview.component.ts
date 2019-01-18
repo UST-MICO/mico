@@ -31,7 +31,9 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
 
     constructor(private apiService: ApiService, private dialog: MatDialog) { }
 
+    // dependees: services the current service depends on
     dependees: any = [];
+    // dependers: services depending on the current service
     dependers: any = [];
     serviceInterfaces: any = [];
 
@@ -48,6 +50,7 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
 
         if (this.shortName != null && this.version != null) {
 
+            console.log('update overview', this.shortName, this.version);
             this.handleSubscriptions();
             this.update();
         }
@@ -80,7 +83,7 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
         // TODO take care of the version
         if (this.oldShortName === this.shortName) {
             if (this.oldVersion === this.version) {
-                console.log('return', this.oldShortName, this.shortName, this.oldVersion, this.version);
+                // we are on the same service (and version) as before
                 return;
             }
         }
@@ -171,6 +174,7 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
 
     /**
      * action triggered in ui
+     * opens an dialog to select a new service the current service depends on.
      */
     addDependee() {
         const dialogRef = this.dialog.open(ServicePickerComponent, {
@@ -187,29 +191,10 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
         });
     }
 
-    /**
-     * action triggered in ui
-     */
-    addExternalDependency() {
-        // TODO is this method still relevant? There are no internal/external dependencies in the backend.
-        // So the 'External' list was changed to dependers.
-        // Adding dependers is no useful operation at this point of the ui.
-        const dialogRef = this.dialog.open(ServicePickerComponent, {
-            data: {
-                filter: 'external',
-                choice: 'multi',
-                exisitingDependencies: this.dependers,
-                serviceId: this.shortName,
-            }
-        });
-        this.subDependersDialog = dialogRef.afterClosed().subscribe(result => {
-            console.log(result);
-            // TODO use result in a useful way
-        });
-    }
 
     /**
      * action triggered in ui
+     * Opens a dialog to remove the dependency from the current service to the selected service.
      */
     deleteDependency(id) {
         const dialogRef = this.dialog.open(YesNoDialogComponent, {

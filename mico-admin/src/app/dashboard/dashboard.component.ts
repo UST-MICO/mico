@@ -42,7 +42,6 @@ export class DashboardComponent implements OnInit {
         const dialogRef = this.dialog.open(CreateServiceDialogComponent);
         dialogRef.afterClosed().subscribe(result => {
             this.apiService.postService(result).subscribe(val => {
-                console.log(val);
                 this.router.navigate(['service-detail', val.shortName, val.version]);
             });
         });

@@ -2,8 +2,9 @@
 
     <h3 class="ma3 flex-grow-1">Service: {{service?.name}}</h3>
 
+    <!-- Drop Down Menu for version selection-->
     <mat-form-field class="w25 ma2">
-        <mat-select placeholder="Service Version" [(value)]="selectedVersion">
+        <mat-select placeholder="Service Version" (ngModelChange)="updateVersion($event)" [ngModel]="selectedVersion">
             <mat-option *ngFor="let version of versions" [value]="version.version">
                 {{version?.version}}
             </mat-option>
@@ -15,7 +16,6 @@
 
 <mat-divider></mat-divider>
 
-<!-- Drop Down Menu for version selection-->
 
 <mat-card class="ma2">
     <mat-tab-group>

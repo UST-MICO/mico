@@ -131,15 +131,10 @@
                         </div>
 
                         <!-- DEPENDERS -->
-                        <div class="flex" (click)="addExternalDependency()">
+                        <div class="flex">
                             <div class="flex-grow-1">
-                                <mat-list-item (click)="addExternalDependency()">
-                                    <span mat-line><b>Dependers</b></span>
-                                </mat-list-item>
-                            </div>
-                            <div class="w-20">
                                 <mat-list-item>
-                                    <mat-icon>add</mat-icon>
+                                    <span mat-line><b>Dependers</b></span>
                                 </mat-list-item>
                             </div>
                         </div>
@@ -150,11 +145,6 @@
                                 <div class="flex-grow-1">
                                     <mat-list-item [routerLink]="['/service-detail/', dependencie.shortName, dependencie.version]">
                                         <span mat-line [routerLink]="['/service-detail/', dependencie.shortName, dependencie.version]">{{dependencie.name}}</span>
-                                    </mat-list-item>
-                                </div>
-                                <div class="w-20">
-                                    <mat-list-item>
-                                        <mat-icon (click)="deleteDependency(dependencie.shortName)">delete</mat-icon>
                                     </mat-list-item>
                                 </div>
                             </div>
