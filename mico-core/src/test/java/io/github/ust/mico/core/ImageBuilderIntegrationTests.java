@@ -39,7 +39,20 @@ import static org.junit.Assert.assertTrue;
 @RunWith(SpringRunner.class)
 public class ImageBuilderIntegrationTests {
 
+    /**
+     * Git repository that is used for testing.
+     * It must contain a Dockerfile and at least one release.
+     */
     private static final String GIT_URI = "https://github.com/UST-MICO/hello.git";
+    /**
+     * Path to the Dockerfile.
+     * It must be relative to the root of the Git repository.
+     */
+    private static final String DOCKERFILE = "Dockerfile";
+    /**
+     * Release tag of the release that should be used for testing.
+     * Must be in in supported version format (semantic version).
+     */
     private static final String RELEASE = "v1.0.0";
 
     @Autowired
@@ -115,6 +128,9 @@ public class ImageBuilderIntegrationTests {
         cluster.deleteNamespace(namespace);
     }
 
+    /**
+     * Test if the connected Kubernetes cluster has the required Build CRD defined.
+     */
     @Test
     public void checkBuildCustomResourceDefinition() {
         Optional<CustomResourceDefinition> buildCRD = imageBuilder.getBuildCRD();
@@ -122,6 +138,17 @@ public class ImageBuilderIntegrationTests {
         assertNotNull("No Build CRD defined", buildCRD);
     }
 
+    /**
+     * Test the ImageBuilder if the build and push of an image works.
+     * It uses the provided Git repository that contains a Dockerfile to build a Docker image.
+     * Afterwards it pushes it to the provided Docker registry (e.g. DockerHub).
+     *
+     * @throws NotInitializedException if ImageBuilder was not initialized
+     * @throws InterruptedException if the build process is interrupted unexpectedly
+     * @throws TimeoutException if the build does not finish or fail in the expected time
+     * @throws ExecutionException if the build process fails unexpectedly
+     * @throws VersionNotSupportedException if the provided Git release tag is not supported as a MICO version
+     */
     @Test
     public void buildAndPushImageWorks() throws NotInitializedException, InterruptedException, TimeoutException, ExecutionException, VersionNotSupportedException {
 
@@ -131,7 +158,7 @@ public class ImageBuilderIntegrationTests {
             .shortName("hello-integration-test")
             .version(MicoVersion.valueOf(RELEASE))
             .vcsRoot(GIT_URI)
-            .dockerfilePath("Dockerfile")
+            .dockerfilePath(DOCKERFILE)
             .build();
 
         Build build = imageBuilder.build(micoService);
