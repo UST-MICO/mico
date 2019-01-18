@@ -1,10 +1,14 @@
 package io.github.ust.mico.core;
 
 import static io.github.ust.mico.core.ServiceControllerTests.INTERFACES_HREF;
-import static io.github.ust.mico.core.ServiceControllerTests.JSON_PATH_LINKS_SECTION;
 import static io.github.ust.mico.core.ServiceControllerTests.SELF_HREF;
-import static io.github.ust.mico.core.ServiceControllerTests.SHORT_NAME;
-import static io.github.ust.mico.core.ServiceControllerTests.VERSION;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.VERSION;
+import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
+import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
+import static io.github.ust.mico.core.JsonPathBuilder.LINKS;
+import static io.github.ust.mico.core.JsonPathBuilder.HREF;
+import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
@@ -65,13 +69,14 @@ public class ServiceInterfaceControllerTests {
     @Autowired
     private ObjectMapper mapper;
 
-    private static final String SERVICE_URL = "/services/" + ServiceControllerTests.SHORT_NAME + "/" + ServiceControllerTests.VERSION;
+    public static final String SERVICES_HREF = buildPath(ROOT, LINKS, "service", HREF);
+    private static final String SERVICE_URL = "/services/" + SHORT_NAME + "/" + VERSION;
     private static final String INTERFACES_URL = SERVICE_URL + "/interfaces/";
 
     @Test
     public void postServiceInterface() throws Exception {
-        given(serviceRepository.findByShortNameAndVersion(ServiceControllerTests.SHORT_NAME, ServiceControllerTests.VERSION)).willReturn(
-            Optional.of(MicoService.builder().shortName(SHORT_NAME).version(MicoVersion.valueOf(VERSION)).build())
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION.toString())).willReturn(
+            Optional.of(MicoService.builder().shortName(SHORT_NAME).version(VERSION).build())
         );
 
         MicoServiceInterface serviceInterface = getTestServiceInterface();
@@ -99,9 +104,9 @@ public class ServiceInterfaceControllerTests {
     @Test
     public void postServiceInterfaceExists() throws Exception {
         MicoServiceInterface serviceInterface = getTestServiceInterface();
-        MicoService service = MicoService.builder().shortName(ServiceControllerTests.SHORT_NAME).version(MicoVersion.valueOf(ServiceControllerTests.VERSION)).build();
+        MicoService service = MicoService.builder().shortName(SHORT_NAME).version(VERSION).build();
         service.getServiceInterfaces().add(serviceInterface);
-        given(serviceRepository.findByShortNameAndVersion(ServiceControllerTests.SHORT_NAME, ServiceControllerTests.VERSION)).willReturn(
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION.toString())).willReturn(
             Optional.of(service)
         );
         mvc.perform(post(INTERFACES_URL)
@@ -115,7 +120,7 @@ public class ServiceInterfaceControllerTests {
     @Test
     public void getSpecificServiceInterface() throws Exception {
         MicoServiceInterface serviceInterface = getTestServiceInterface();
-        given(serviceRepository.findInterfaceOfServiceByName(serviceInterface.getServiceInterfaceName(), ServiceControllerTests.SHORT_NAME, ServiceControllerTests.VERSION)).willReturn(
+        given(serviceRepository.findInterfaceOfServiceByName(serviceInterface.getServiceInterfaceName(), SHORT_NAME, VERSION.toString())).willReturn(
             Optional.of(serviceInterface));
 
         mvc.perform(get(INTERFACES_URL + serviceInterface.getServiceInterfaceName()).accept(MediaTypes.HAL_JSON_VALUE))
@@ -143,7 +148,7 @@ public class ServiceInterfaceControllerTests {
         MicoServiceInterface serviceInterface0 = MicoServiceInterface.builder().serviceInterfaceName("ServiceInterface0").build();
         MicoServiceInterface serviceInterface1 = MicoServiceInterface.builder().serviceInterfaceName("ServiceInterface1").build();
         List<MicoServiceInterface> serviceInterfaces = Arrays.asList(serviceInterface0, serviceInterface1);
-        given(serviceRepository.findInterfacesOfService(ServiceControllerTests.SHORT_NAME, ServiceControllerTests.VERSION)).willReturn(
+        given(serviceRepository.findInterfacesOfService(SHORT_NAME, VERSION.toString())).willReturn(
             serviceInterfaces);
         mvc.perform(get(INTERFACES_URL).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
@@ -178,9 +183,9 @@ public class ServiceInterfaceControllerTests {
             jsonPath("$.description", is(serviceInterface.getDescription())),
             jsonPath("$.publicDns", is(serviceInterface.getPublicDns())),
             jsonPath("$.transportProtocol", is(serviceInterface.getTransportProtocol())),
-            jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, endsWith(selfHrefEnding.toString())),
-            jsonPath(JSON_PATH_LINKS_SECTION + INTERFACES_HREF, endsWith(selfBaseUrl)),
-            jsonPath(JSON_PATH_LINKS_SECTION + "service.href", endsWith(serviceUrl)));
+            jsonPath(SELF_HREF, endsWith(selfHrefEnding.toString())),
+            jsonPath(INTERFACES_HREF, endsWith(selfBaseUrl)),
+            jsonPath(SERVICES_HREF, endsWith(serviceUrl)));
     }
 
 
