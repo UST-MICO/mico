@@ -146,9 +146,9 @@ public class ServiceInterfaceControllerTests {
         mvc.perform(get(INTERFACES_URL).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$._embedded.serviceInterfaceList[*]",hasSize(serviceInterfaces.size())))
-            .andExpect(jsonPath("$._embedded.serviceInterfaceList[?(@.serviceInterfaceName =='"+serviceInterface0.getServiceInterfaceName()+"')]",hasSize(1)))
-            .andExpect(jsonPath("$._embedded.serviceInterfaceList[?(@.serviceInterfaceName =='"+serviceInterface1.getServiceInterfaceName()+"')]",hasSize(1)))
+            .andExpect(jsonPath("$._embedded.micoServiceInterfaceList[*]",hasSize(serviceInterfaces.size())))
+            .andExpect(jsonPath("$._embedded.micoServiceInterfaceList[?(@.serviceInterfaceName =='"+serviceInterface0.getServiceInterfaceName()+"')]",hasSize(1)))
+            .andExpect(jsonPath("$._embedded.micoServiceInterfaceList[?(@.serviceInterfaceName =='"+serviceInterface1.getServiceInterfaceName()+"')]",hasSize(1)))
             .andReturn();
     }
 
