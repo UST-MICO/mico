@@ -1,33 +1,32 @@
 package io.github.ust.mico.core.model;
 
-import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.*;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
-import io.swagger.annotations.ApiModelProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Singular;
-import org.neo4j.ogm.annotation.Relationship;
+import javax.validation.constraints.NotEmpty;
+import java.util.List;
 
 /**
  * Represents a interface, e.g., REST API, of a {@link MicoService}.
  */
 @Data
 @AllArgsConstructor
+@RequiredArgsConstructor
 @Builder
-@NodeEntity // TODO: @Jan -> maybe @RelationshipEntity?
+@NodeEntity
 public class MicoServiceInterface {
 
     /**
      * The id of this service interface.
      */
+    @JsonIgnore
     @Id
     @GeneratedValue
-    private final long id;
+    private final Long id;
 
 
     // ----------------------
@@ -35,21 +34,17 @@ public class MicoServiceInterface {
     // ----------------------
 
     /**
-     * The id of the parent service.
+     *
      */
-    // TODO: serviceId needed? MicoService is already linked via PROVIDES-Relationship.
-    // The id of the parent service.
     @ApiModelProperty(required = true)
-    private final long serviceId;
+    @NotEmpty
+    private final String serviceInterfaceName;
 
     /**
      * The list of ports.
      */
     @ApiModelProperty(required = true)
     @Singular
-    @Relationship
-    // TODO: @Jan -> maybe Relationship?
-    //TODO: @Jan -> add more info / annotation needed?
     private final List<MicoServicePort> ports;
 
 
