@@ -51,7 +51,7 @@ public class CustomOpenApiExtentionsPlugin implements ModelPropertyBuilderPlugin
                         List<ExtensionProperty> extensionProperties = Arrays.asList(e.properties());
                         extensionProperties.forEach(extensionProperty -> {
                             vendorExtensions.add(new StringVendorExtension(extensionProperty.name(), extensionProperty.value()));
-                            logger.info("Processed mico extension for:" + name + " and added " + extensionProperty.name());
+                            logger.debug("Processed mico extension for:" + name + " and added " + extensionProperty.name());
                         });
                     }
                 });
