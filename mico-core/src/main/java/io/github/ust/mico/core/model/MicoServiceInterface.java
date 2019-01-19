@@ -15,7 +15,7 @@ import java.util.List;
  */
 @Data
 @AllArgsConstructor
-@RequiredArgsConstructor
+@NoArgsConstructor
 @Builder
 @NodeEntity
 public class MicoServiceInterface {
@@ -38,14 +38,14 @@ public class MicoServiceInterface {
      */
     @ApiModelProperty(required = true)
     @NotEmpty
-    private final String serviceInterfaceName;
+    private String serviceInterfaceName;
 
     /**
      * The list of ports.
      */
     @ApiModelProperty(required = true)
     @Singular
-    private final List<MicoServicePort> ports;
+    private List<MicoServicePort> ports;
 
 
     // ----------------------
