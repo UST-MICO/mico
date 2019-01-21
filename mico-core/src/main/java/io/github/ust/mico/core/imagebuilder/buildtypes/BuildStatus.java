@@ -22,26 +22,26 @@ public class BuildStatus {
     /**
      * Optional. Cluster provides additional information if the builder is Cluster.
      */
-    ClusterSpec cluster;
-    // GoogleSpec google;
-    // Time startTime;
-    // Time completionTime;
-    // List<ContainerState> stepStatus;
+    private ClusterSpec cluster;
+    // private GoogleSpec google;
+    // private Time startTime;
+    // private Time completionTime;
+    // private List<ContainerState> stepStatus;
 
     /**
      * Optional. StepsCompleted lists the name of build steps completed.
      */
-    List<String> stepsCompleted;
+    private List<String> stepsCompleted;
 
-    // BuildProvider builder;
+    // private BuildProvider builder;
 
-    // GoogleSpec google;
+    // private GoogleSpec google;
 
-    // time startTime;
+    // private Time startTime;
 
-    // Time completionTime;
+    // private Time completionTime;
 
-    // StepStates stepStates;
+    // private StepStates stepStates;
 
-    // Conditions conditions;
+    // private Conditions conditions;
 }

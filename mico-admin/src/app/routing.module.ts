@@ -20,18 +20,20 @@ const routes: Routes = [
 
     { path: 'app-detail/app-list', component: AppListComponent },
     { path: 'app-detail/overview', component: AppDetailOverviewComponent },
-    { path: 'app-detail/:id', component: AppDetailComponent },
+    { path: 'app-detail/:shortName', component: AppDetailComponent },
+    { path: 'app-detail/:shortName/:version', component: AppDetailComponent },
     { path: 'app-detail/deploystatus', component: AppDetailDeploystatusComponent },
     { path: 'app-detail/deploysettings', component: AppDetailDeploysettingsComponent },
-
     { path: 'service-detail/service-list', component: ServiceListComponent },
-    { path: 'service-detail/:id', component: ServiceDetailComponent },
+    { path: 'service-detail/:shortName', component: ServiceDetailComponent },
+    { path: 'service-detail/:shortName/:version', component: ServiceDetailComponent },
     { path: 'metrics', component: MetricChartComponent }
 ];
 
 @NgModule({
     declarations: [],
     exports: [RouterModule],
-    imports: [RouterModule.forRoot(routes)]
+    imports: [RouterModule.forRoot(routes),
+    ]
 })
-export class RoutingModule {}
+export class RoutingModule { }

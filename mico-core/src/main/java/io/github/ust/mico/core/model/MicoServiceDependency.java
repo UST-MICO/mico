@@ -1,13 +1,13 @@
 package io.github.ust.mico.core.model;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Setter;
+import org.neo4j.ogm.annotation.*;
 
 /**
  * Represents a dependency of a {@link MicoService}.
@@ -15,7 +15,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 @Builder
-@NodeEntity
+@RelationshipEntity(type = "DEPENDS_ON")
 public class MicoServiceDependency {
 
     /**
@@ -23,7 +23,7 @@ public class MicoServiceDependency {
      */
     @Id
     @GeneratedValue
-    private final long id;
+    private Long id;
 
 
     // ----------------------
@@ -31,12 +31,21 @@ public class MicoServiceDependency {
     // ----------------------
 
     /**
-     * The id of the depended service.
+     * This is the {@link MicoService} that requires (depends on)
+     * the {@link MicoServiceDependency#dependedService}.
      */
-    // TODO: serviceId needed? MicoService is linked via RelationshipEntity.
-    // The id of the depended service.
+    @JsonIgnore
+    @StartNode
+    private MicoService service;
+
+    /**
+     * This is the {@link MicoService} dependend by
+     * {@link MicoServiceDependency#service}.
+     */
     @ApiModelProperty(required = true)
-    private final long serviceId;
+    @JsonIgnore
+    @EndNode
+    private MicoService dependedService;
 
     /**
      * The minimum version of the depended service
@@ -51,5 +60,12 @@ public class MicoServiceDependency {
      */
     @ApiModelProperty(required = true)
     private final MicoVersion maxVersion;
+
+    @JsonProperty("serviceDependee")
+    private MicoService getDependee() {
+        MicoService dependee = this.dependedService;
+        dependee.setDependencies(null);
+        return dependee;
+    }
 
 }

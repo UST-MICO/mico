@@ -1,26 +1,27 @@
 package io.github.ust.mico.core.model;
 
-import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.github.ust.mico.core.VersionNotSupportedException;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.*;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
-import io.swagger.annotations.ApiModelProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
-import lombok.Singular;
+import javax.validation.constraints.Pattern;
+import java.util.List;
 
 /**
  * Represents a service in the context of MICO.
  */
 @Data
-@RequiredArgsConstructor
+@NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @NodeEntity
 public class MicoService {
 
@@ -29,7 +30,7 @@ public class MicoService {
      */
     @Id
     @GeneratedValue
-    private final long id;
+    private Long id;
 
 
     // ----------------------
@@ -41,46 +42,42 @@ public class MicoService {
      * for use as a unique identifier.
      */
     @ApiModelProperty(required = true)
-    private final String shortName;
+    private String shortName;
 
     /**
      * The name of the artifact. Intended for humans.
      */
     @ApiModelProperty(required = true)
-    private final String name;
+    private String name;
 
     /**
-     * The version of this service.
+     * The version of this service. Refers to GitHub release tag.
      */
     @ApiModelProperty(required = true)
-    private final MicoVersion version;
+    private String version;
 
     /**
      * Human readable description of this service.
      */
     @ApiModelProperty(required = true)
-    private final String description;
+    private String description;
 
     /**
      * The list of interfaces this service provides.
      */
     @ApiModelProperty(required = true)
-    @Relationship // TODO: @Jan -> check please.
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @Relationship(type = "PROVIDES", direction = Relationship.UNDIRECTED)
     @Singular
-    private final List<MicoServiceInterface> serviceInterfaces;
+    private List<MicoServiceInterface> serviceInterfaces;
 
     /**
-     * The URL to the root directory of, e.g., the
-     * corresponding GitHub repository.
+     * Indicates where this service originates from, e.g.,
+     * GitHub (downloaded and built by MICO) or DockerHub
+     * (ready-to-use image).
      */
     @ApiModelProperty(required = true)
-    private final String vcsRoot;
-
-    /**
-     * The relative (to vcsRoot) path to the Dockerfile.
-     */
-    @ApiModelProperty(required = true)
-    private final String dockerfilePath;
+    private MicoServiceCrawlingOrigin serviceCrawlingOrigin;
 
 
     // ----------------------
@@ -91,14 +88,16 @@ public class MicoService {
      * The list of services that this service requires
      * in order to run normally.
      */
-    @Relationship // TODO: @Jan -> check please.
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @Relationship(type = "DEPENDS_ON")
     @Singular
+    @Setter
     private List<MicoServiceDependency> dependencies;
 
     /**
      * Same MicoService with previous version.
      */
-    @Relationship(type = "PREDECESSOR", direction = Relationship.OUTGOING)
+    @Relationship(type = "PREDECESSOR")
     private MicoService predecessor;
 
     /**
@@ -111,5 +110,32 @@ public class MicoService {
      * who is responsible for this service.
      */
     private String owner;
+
+    /**
+     * The URL to the root directory of, e.g., the
+     * corresponding GitHub repository.
+     */
+    private String vcsRoot;
+
+    /**
+     * The relative (to vcsRoot) path to the Dockerfile.
+     */
+    @Pattern(regexp = "^(?!/.*$).*", message = "Path must be relative to vcsRoot")
+    private String dockerfilePath;
+
+    /**
+     * The fully qualified URI to the image on DockerHub.
+     * Either set after the image has been built by MICO
+     * (if the service originates from GitHub) or set by the
+     * user directly.
+     */
+    private String dockerImageUri;
+
+
+    @JsonIgnore
+    public MicoVersion getMicoVersion() throws VersionNotSupportedException {
+        MicoVersion micoVersion = MicoVersion.valueOf(this.version);
+        return micoVersion;
+    }
 
 }

@@ -1,18 +1,17 @@
 package io.github.ust.mico.core.model;
 
-import java.util.List;
-import java.util.Map;
-
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
-
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.Singular;
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * Represents the information necessary for deploying
@@ -29,15 +28,7 @@ public class MicoServiceDeploymentInfo {
      */
     @Id
     @GeneratedValue
-    private final long id;
-
-    /**
-     * The id of the parent service.
-     */
-    // TODO: @Jakob -> Do we want to link the DB object instead of the ID?
-    // The id of the parent service.
-    @ApiModelProperty(required = true)
-    private final long serviceId;
+    private Long id;
 
 
     // ----------------------

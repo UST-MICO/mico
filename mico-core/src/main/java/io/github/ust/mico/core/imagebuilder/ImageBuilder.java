@@ -11,9 +11,13 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 import io.github.ust.mico.core.ClusterAwarenessFabric8;
 import io.github.ust.mico.core.NotInitializedException;
 import io.github.ust.mico.core.imagebuilder.buildtypes.*;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoVersion;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,7 +26,7 @@ import java.util.Optional;
  * Builds container images by using Knative Build and Kaniko
  */
 @Slf4j
-@Component
+@Service
 public class ImageBuilder {
 
     private static final String BUILD_STEP_NAME = "build-and-push";
@@ -115,25 +119,29 @@ public class ImageBuilder {
 
 
     /**
-     * @param serviceName    the name of the MICO service
-     * @param serviceVersion the version of the MICO service
-     * @param dockerfile     the relative path to the dockerfile
-     * @param gitUrl         the URL to the remote git repository
-     * @param gitRevision    the revision of the git repository. e.g. `master`, commit id or a tag
+     * @param micoService the MICO service for which the image should be build
      * @return the resulting build
      * @throws NotInitializedException if the image builder was not initialized
      */
-    public Build build(String serviceName, String serviceVersion, String dockerfile, String gitUrl, String gitRevision) throws NotInitializedException {
+    public Build build(MicoService micoService) throws NotInitializedException, IllegalArgumentException {
+
+        if (StringUtils.isEmpty(micoService.getVcsRoot())) {
+            throw new IllegalArgumentException("VcsRoot is missing");
+        }
 
         String namespace = config.getBuildExecutionNamespace();
 
-        // TODO Is normalization required?
-        String serviceNameNormalized = serviceName.replaceAll("/[^A-Za-z0-9]/", "-");
-        String buildName = createBuildName(serviceNameNormalized);
-        String destination = createImageName(serviceNameNormalized, serviceVersion);
-
-        String dockerfileNormalized = dockerfile.startsWith("/") ? dockerfile.substring(1) : dockerfile;
-        String dockerfilePath = "/workspace/" + dockerfileNormalized;
+        String buildName = createBuildName(micoService.getShortName());
+        String destination = createImageName(micoService.getShortName(), micoService.getVersion());
+        String dockerfilePath;
+        if (!StringUtils.isEmpty(micoService.getDockerfilePath())) {
+            dockerfilePath = "/workspace/" + micoService.getDockerfilePath();
+        } else {
+            log.debug("MicoService {} does not have a Dockerfile path set. Assume it is placed in the root directory.", micoService.getShortName());
+            dockerfilePath = "/workspace/Dockerfile";
+        }
+        String gitUrl = micoService.getVcsRoot();
+        String gitRevision = micoService.getVersion().toString();
 
         return createBuild(buildName, destination, dockerfilePath, gitUrl, gitRevision, namespace);
     }
@@ -186,6 +194,7 @@ public class ImageBuilder {
 
     /**
      * Returns a list of custom resource definitions
+     *
      * @return the list of custom resource definitions
      */
     private List<CustomResourceDefinition> getCustomResourceDefinitions() {
@@ -199,7 +208,8 @@ public class ImageBuilder {
 
     /**
      * Creates a image name based on the service name and the service version (used as image tag).
-     * @param serviceName the name of the MICO service
+     *
+     * @param serviceName    the name of the MICO service
      * @param serviceVersion the version of the MICO service
      * @return the image name
      */
@@ -209,6 +219,7 @@ public class ImageBuilder {
 
     /**
      * Creates a build name based on the service name.
+     *
      * @param serviceName the name of the MICO service
      * @return the build name
      */
@@ -218,6 +229,7 @@ public class ImageBuilder {
 
     /**
      * Delete the build
+     *
      * @param buildName the name of the build
      */
     public void deleteBuild(String buildName) {
@@ -226,6 +238,7 @@ public class ImageBuilder {
 
     /**
      * Delete the build
+     *
      * @param build the build object
      */
     public void deleteBuild(Build build) {

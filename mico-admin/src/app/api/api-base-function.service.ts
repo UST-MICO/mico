@@ -2,8 +2,10 @@ import { Injectable } from '@angular/core';
 import { Http, Response, Headers, RequestOptions, ResponseContentType } from '@angular/http';
 import { Observable } from 'rxjs';
 import { map, } from 'rxjs/operators';
+import { ApiObject } from './apiobject';
 
 
+// TODO remove API Object ... (use the other one)
 export interface LinkObject {
     readonly href: string;
     readonly templated?: boolean;
@@ -14,10 +16,6 @@ export interface ApiLinksObject {
     [propName: string]: LinkObject;
 }
 
-export interface ApiObject {
-    readonly _links: ApiLinksObject;
-    [propName: string]: any;
-}
 
 function isApiObject(toTest: any): toTest is ApiObject {
     return '_links' in toTest;
@@ -53,7 +51,7 @@ export class ApiBaseFunctionService {
         if (isLinkObject(url)) {
             url = url.href;
         }
-        return this.prepareRelativeUrl(url);
+        return this.prepareRelativeUrl(url as string);
     }
 
     private prepareRelativeUrl(url: string): string {
@@ -89,7 +87,7 @@ export class ApiBaseFunctionService {
     }
 
 
-    get(url: string | LinkObject | ApiLinksObject | ApiObject, token?: string, params?): Observable<ApiObject | ApiObject[]> {
+    get(url: string | LinkObject | ApiLinksObject | ApiObject, token?: string, params?): Observable<ApiObject> {
         url = this.extractUrl(url);
 
         const options = this.headers(token);
@@ -104,4 +102,20 @@ export class ApiBaseFunctionService {
         return request;
     }
 
+
+    post(url: string | LinkObject | ApiLinksObject | ApiObject, data, token?: string): Observable<ApiObject> {
+        url = this.extractUrl(url);
+        return this.http.post(url, JSON.stringify(data), this.headers(token))
+            .pipe(map((res: Response) => {
+                return res.json();
+            }));
+    }
+
+    put(url: string | LinkObject | ApiLinksObject | ApiObject, data, token?: string): Observable<ApiObject> {
+        url = this.extractUrl(url);
+        return this.http.put(url, JSON.stringify(data), this.headers(token))
+            .pipe(map((res: Response) => {
+                return res.json();
+            }));
+    }
 }
