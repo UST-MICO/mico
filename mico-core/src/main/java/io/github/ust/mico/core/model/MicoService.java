@@ -15,7 +15,7 @@ import java.util.List;
  * Represents a service in the context of MICO.
  */
 @Data
-@RequiredArgsConstructor
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -39,25 +39,25 @@ public class MicoService {
      * for use as a unique identifier.
      */
     @ApiModelProperty(required = true)
-    private final String shortName;
+    private String shortName;
 
     /**
      * The name of the artifact. Intended for humans.
      */
     @ApiModelProperty(required = true)
-    private final String name;
+    private String name;
 
     /**
      * The version of this service. Refers to GitHub release tag.
      */
     @ApiModelProperty(required = true)
-    private final MicoVersion version;
+    private MicoVersion version;
 
     /**
      * Human readable description of this service.
      */
     @ApiModelProperty(required = true)
-    private final String description;
+    private String description;
 
     /**
      * The list of interfaces this service provides.
@@ -66,7 +66,7 @@ public class MicoService {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Relationship(type = "PROVIDES", direction = Relationship.UNDIRECTED)
     @Singular
-    private final List<MicoServiceInterface> serviceInterfaces;
+    private List<MicoServiceInterface> serviceInterfaces;
 
     /**
      * Indicates where this service originates from, e.g.,
@@ -112,12 +112,12 @@ public class MicoService {
      * The URL to the root directory of, e.g., the
      * corresponding GitHub repository.
      */
-    private final String vcsRoot;
+    private String vcsRoot;
 
     /**
      * The relative (to vcsRoot) path to the Dockerfile.
      */
-    private final String dockerfilePath;
+    private String dockerfilePath;
 
     /**
      * The fully qualified URI to the image on DockerHub.
