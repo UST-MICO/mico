@@ -105,7 +105,7 @@ public class ServiceInterfaceControllerTests {
     public void postServiceInterfaceExists() throws Exception {
         MicoServiceInterface serviceInterface = getTestServiceInterface();
         MicoService service = MicoService.builder().shortName(SHORT_NAME).version(VERSION).build();
-        service.getServiceInterfaces().add(serviceInterface);
+        service = service.toBuilder().serviceInterface(serviceInterface).build();
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION.toString())).willReturn(
             Optional.of(service)
         );
