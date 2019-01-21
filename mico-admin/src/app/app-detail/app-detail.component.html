@@ -1,19 +1,22 @@
-<h3 class="ma3">Application {{application?.name}}</h3>
+<div class="pb2 pl2">
+    <h3>Application {{application?.name}}</h3>
+    <button mat-raised-button>deploy</button>
+</div>
 <mat-divider></mat-divider>
 
 <mat-card class="ma2">
     <mat-tab-group>
         <mat-tab label="Overview">
             <div class="flex">
-                <div class="flex-grow-1" style="border:3px solid #000;">
-
-                    {{application|json}}
+                <div class="flex-grow-1 ma2 ml0 flex flex-column">
+                    Content
                     <!--
+                            {{application|json}}
                         <mico-app-detail-overview [application]="application"></mico-app-detail-overview>
                     -->
 
                 </div>
-                <div class="w-25 pa2 flex-column">
+                <div class="w-25 ma2 flex flex-column">
                     <mat-card class="w-100">
                         <mat-card-content>
                             <mat-action-list>
