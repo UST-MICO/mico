@@ -249,7 +249,6 @@ export class ApiService {
             return;
         }
 
-
         const resource = 'services/';
 
         return this.rest.post(resource, data).pipe(flatMap(val => {
@@ -266,6 +265,30 @@ export class ApiService {
         }));
 
     }
+
+    postServiceViaGithub(data): Observable<Readonly<ApiObject>> {
+        if (data == null) {
+            return;
+        }
+
+        // TODO change resource
+        const resource = 'services/';
+
+        // TODO insert proper url (or use resource if possible)
+        return this.rest.post('URL', data).pipe(flatMap(val => {
+
+            const stream = this.getStreamSource(val._links.self.href);
+            stream.next(val);
+
+            this.getServices();
+            this.getServiceVersions(data.shortName);
+
+            return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
+                filter(service => service !== undefined)
+            );
+        }));
+    }
+
 
     putService(shortName, version, data): Observable<Readonly<ApiObject>> {
 

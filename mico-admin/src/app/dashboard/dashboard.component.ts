@@ -45,22 +45,23 @@ export class DashboardComponent implements OnInit {
             // filter empty results (when dialog is aborted)
             if (result !== '') {
 
+                // check if returned object is complete
+                for (const property in result.data) {
+                    if (result.data[property] == null) {
+                        // TODO add some user feed back
+                        return;
+                    }
+                }
+
                 // decide if the service was created manually or is to be created via github crawler
                 if (result.tab === 'manual') {
-                    // check if returned object is complete
-                    for (const property in result.data) {
-                        if (result.data[property] == null) {
-                            // TODO add some user feed back
-                            return;
-                        }
-                    }
-                    console.log('call api');
                     this.apiService.postService(result.data).subscribe(val => {
                         this.router.navigate(['service-detail', val.shortName, val.version]);
                     });
                 } else if (result.tab === 'github') {
-                    // TODO implement, remove log
-                    console.log('call github crawler');
+                    this.apiService.postServiceViaGithub(result.data).subscribe(val => {
+                        this.router.navigate(['service-detail', val.shortName, val.version]);
+                    });
                 }
 
             }
