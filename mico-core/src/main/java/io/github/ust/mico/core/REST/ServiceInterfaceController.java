@@ -86,8 +86,8 @@ public class ServiceInterfaceController {
             MicoService service = serviceOptional.get();
             if (!serviceInterfaceExists(serviceInterface, service)) {
                 List<MicoServiceInterface> serviceInterfaceList = service.getServiceInterfaces();
-                serviceInterfaceList.add(serviceInterface);
-                serviceRepository.save(service);
+                MicoService serviceWithInterface = service.toBuilder().serviceInterface(serviceInterface).build();
+                serviceRepository.save(serviceWithInterface);
                 return ResponseEntity.created(
                     linkTo(methodOn(ServiceInterfaceController.class).getInterfaceByName(shortName, version, serviceInterface.getServiceInterfaceName())).toUri()).body(new Resource<>(serviceInterface, getServiceInterfaceLinks(serviceInterface, shortName, version)));
             }
@@ -100,6 +100,9 @@ public class ServiceInterfaceController {
     }
 
     private boolean serviceInterfaceExists(@RequestBody MicoServiceInterface serviceInterface, MicoService service) {
+        if(service.getServiceInterfaces() == null){
+            return false;
+        }
         return service.getServiceInterfaces().stream().anyMatch(existingServiceInterface -> existingServiceInterface.getServiceInterfaceName().equals(serviceInterface.getServiceInterfaceName()));
     }
 
