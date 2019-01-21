@@ -39,8 +39,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @WebMvcTest(ServiceController.class)
 @OverrideAutoConfiguration(enabled = true) //Needed to override our neo4j config
-@ContextConfiguration(classes = {MicoCoreApplication.class,WebConfig.class})
-@WebAppConfiguration
 public class ServiceControllerTests {
 
     public static final String JSON_PATH_LINKS_SECTION = "$._links.";
@@ -67,13 +65,8 @@ public class ServiceControllerTests {
     @Autowired
     private WebApplicationContext context;
 
+    @Autowired
     private MockMvc mvc;
-
-    @Before
-    public void setup() {
-        MockitoAnnotations.initMocks(this);
-        this.mvc = MockMvcBuilders.webAppContextSetup(this.context).dispatchOptions(true).build();
-    }
 
     @MockBean
     private ServiceRepository serviceRepository;

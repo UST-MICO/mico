@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { AsyncSubject, Observable, of, from } from 'rxjs';
+import { AsyncSubject, Observable, of, from, Subscription } from 'rxjs';
 import { ApiModel, ApiModelAllOf, ApiModelRef } from './apimodel';
 import { concatMap, reduce, first, timeout, map } from 'rxjs/operators';
 import { ApiService, freezeObject } from './api.service';
@@ -191,6 +191,7 @@ export class ModelsService {
     };
 
 
+
     /**
      * Canonize a resource url.
      *
@@ -216,9 +217,12 @@ export class ModelsService {
             const model = JSON.parse(JSON.stringify(this.localModels[modelID]));
             return of(model);
         } else if (modelUrl.startsWith('remote/')) {
+
             const modelID = modelUrl.substring(7);
+
             const model = JSON.parse(JSON.stringify(this.remoteModels[modelID]));
             return of(model);
+
         }
         return of(null); // TODO load models from openapi definitions
     }
@@ -262,7 +266,7 @@ export class ModelsService {
                     // merge reqired attributes list
                     if (targetModel[key] != null) {
                         const required = new Set<string>(targetModel[key]);
-                        sourceModel[key].forEach(required.add);
+                        sourceModel[key].forEach(required.add.bind(required));
                         targetModel[key] = Array.from(required);
                     }
                 } else if (key === 'properties') {

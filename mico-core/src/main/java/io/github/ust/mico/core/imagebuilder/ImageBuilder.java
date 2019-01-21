@@ -1,6 +1,7 @@
 package io.github.ust.mico.core.imagebuilder;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.ServiceAccount;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinitionList;
@@ -9,6 +10,7 @@ import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.github.ust.mico.core.ClusterAwarenessFabric8;
+import io.github.ust.mico.core.ImageBuildException;
 import io.github.ust.mico.core.NotInitializedException;
 import io.github.ust.mico.core.imagebuilder.buildtypes.*;
 import io.github.ust.mico.core.model.MicoService;
@@ -21,6 +23,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.*;
 
 /**
  * Builds container images by using Knative Build and Kaniko
@@ -37,6 +40,7 @@ public class ImageBuilder {
     private final ClusterAwarenessFabric8 cluster;
 
     private NonNamespaceOperation<Build, BuildList, DoneableBuild, Resource<Build, DoneableBuild>> buildClient;
+    private ScheduledExecutorService buildPodStatusChecker = Executors.newSingleThreadScheduledExecutor();
 
     /**
      * @param cluster The Kubernetes cluster object
@@ -190,6 +194,40 @@ public class ImageBuilder {
         log.debug("Created build: {} ", createdBuild);
 
         return createdBuild;
+    }
+
+    public CompletableFuture<Boolean> waitUntilBuildIsFinished(Build build) throws InterruptedException, ExecutionException, TimeoutException {
+        CompletableFuture<Boolean> completionFuture = new CompletableFuture<>();
+
+        // Create a future that polls every second with a delay of 10 seconds.
+        final ScheduledFuture<?> checkFuture = buildPodStatusChecker.scheduleAtFixedRate(() -> {
+
+            if (build.getStatus() != null && build.getStatus().getCluster() != null) {
+                String buildPodName = build.getStatus().getCluster().getPodName();
+                String buildNamespace = build.getStatus().getCluster().getNamespace();
+                log.debug("Build is executed with pod '{}' in namespace '{}'", buildPodName, buildNamespace);
+
+                Pod buildPod = this.cluster.getPod(buildPodName, config.getBuildExecutionNamespace());
+
+                log.debug("Current build phase: {}", buildPod.getStatus().getPhase());
+                if (buildPod.getStatus().getPhase().equals("Succeeded")) {
+                    completionFuture.complete(true);
+                } else if (buildPod.getStatus().getPhase().equals("Failed")) {
+                    completionFuture.complete(false);
+                }
+            } else {
+                log.error("Build was not started!");
+                completionFuture.complete(false);
+            }
+        }, 10, 1, TimeUnit.SECONDS);
+
+        // TODO Add a proper timeout
+        completionFuture.get(60, TimeUnit.SECONDS);
+
+        // When completed cancel future
+        completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
+
+        return completionFuture;
     }
 
     /**

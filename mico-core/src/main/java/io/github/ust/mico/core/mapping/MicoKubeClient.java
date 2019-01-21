@@ -10,21 +10,26 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.github.ust.mico.core.ClusterAwarenessFabric8;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.model.MicoServicePort;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 /**
  * Provides access to the Kubernetes API.
  */
 @AllArgsConstructor
+@Component
 public class MicoKubeClient {
 
     private static final String DEFAULT_NAMESPACE = "default";
     private static final String DEFAULT_REGISTRY = "ustmicoregistry.azurecr.io";
 
-    private KubernetesClient client = new DefaultKubernetesClient();
+    @Autowired
+    private ClusterAwarenessFabric8 cluster;
 
     public Deployment createMicoService(MicoService service, int replicas) {
         Deployment deployment = new DeploymentBuilder()
@@ -53,6 +58,8 @@ public class MicoKubeClient {
                 .endTemplate()
                 .endSpec()
                 .build();
+
+        KubernetesClient client = cluster.getClient();
         return client.apps().deployments().inNamespace(DEFAULT_NAMESPACE).create(deployment);
     }
 
