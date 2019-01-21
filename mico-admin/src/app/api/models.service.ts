@@ -9,18 +9,7 @@ import { ApiService, freezeObject } from './api.service';
 })
 export class ModelsService {
 
-    private remoteModels;
-
-    constructor(private apiService: ApiService, ) {
-        // TODO consider unsubscribing
-        /* TODO Consider using the Observable directly instead of storing the provided value to avoid cases,
-        * where remoteModels is still null but a model is already requested by the ui.
-        * TBD after the UI for the minimal example is done
-        */
-        apiService.getModelDefinitions().subscribe(val => {
-            this.remoteModels = val;
-        });
-    }
+    constructor(private apiService: ApiService, ) { }
 
     private modelCache: Map<string, AsyncSubject<ApiModel>> = new Map<string, AsyncSubject<ApiModel>>();
 
@@ -220,9 +209,11 @@ export class ModelsService {
 
             const modelID = modelUrl.substring(7);
 
-            const model = JSON.parse(JSON.stringify(this.remoteModels[modelID]));
-            return of(model);
-
+            return this.apiService.getModelDefinitions().pipe(
+                map(remoteModels => {
+                    return JSON.parse(JSON.stringify(remoteModels[modelID]));
+                })
+            );
         }
         return of(null); // TODO load models from openapi definitions
     }
