@@ -1,16 +1,19 @@
 package io.github.ust.mico.core.model;
 
-import io.swagger.annotations.ApiModelProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Singular;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.github.ust.mico.core.VersionNotSupportedException;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
-import java.util.List;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Singular;
 
 /**
  * Represents an application as a set of {@link MicoService}s
@@ -18,7 +21,7 @@ import java.util.List;
  */
 @Data
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 @NodeEntity
 public class MicoApplication {
 
@@ -27,7 +30,7 @@ public class MicoApplication {
      */
     @Id
     @GeneratedValue
-    private final Long id;
+    private Long id;
 
 
     // ----------------------
@@ -51,7 +54,7 @@ public class MicoApplication {
      * The version of this application.
      */
     @ApiModelProperty(required = true)
-    private final MicoVersion version;
+    private final String version;
 
     /**
      * Human readable description of this application.
@@ -88,5 +91,12 @@ public class MicoApplication {
      * who is responsible for this application.
      */
     private String owner;
+
+
+    @JsonIgnore
+    public MicoVersion getMicoVersion() throws VersionNotSupportedException {
+        MicoVersion micoVersion = MicoVersion.valueOf(this.version);
+        return micoVersion;
+    }
 
 }

@@ -1,10 +1,12 @@
 package io.github.ust.mico.core.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Setter;
 import org.neo4j.ogm.annotation.*;
 
 /**
@@ -21,7 +23,7 @@ public class MicoServiceDependency {
      */
     @Id
     @GeneratedValue
-    private final Long id;
+    private Long id;
 
 
     // ----------------------
@@ -29,14 +31,16 @@ public class MicoServiceDependency {
     // ----------------------
 
     /**
-     * TODO: add comment
+     * This is the {@link MicoService} that requires (depends on)
+     * the {@link MicoServiceDependency#dependedService}.
      */
     @JsonIgnore
     @StartNode
     private MicoService service;
 
     /**
-     * TODO: add comment
+     * This is the {@link MicoService} dependend by
+     * {@link MicoServiceDependency#service}.
      */
     @ApiModelProperty(required = true)
     @JsonIgnore
@@ -56,5 +60,12 @@ public class MicoServiceDependency {
      */
     @ApiModelProperty(required = true)
     private final MicoVersion maxVersion;
+
+    @JsonProperty("serviceDependee")
+    private MicoService getDependee() {
+        MicoService dependee = this.dependedService;
+        dependee.setDependencies(null);
+        return dependee;
+    }
 
 }

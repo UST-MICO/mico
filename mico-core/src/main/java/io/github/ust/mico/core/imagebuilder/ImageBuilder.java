@@ -213,8 +213,8 @@ public class ImageBuilder {
      * @param serviceVersion the version of the MICO service
      * @return the image name
      */
-    public String createImageName(String serviceName, MicoVersion serviceVersion) {
-        return config.getImageRepositoryUrl() + "/" + serviceName + ":" + serviceVersion.toString();
+    public String createImageName(String serviceName, String serviceVersion) {
+        return config.getImageRepositoryUrl() + "/" + serviceName + ":" + serviceVersion;
     }
 
     /**

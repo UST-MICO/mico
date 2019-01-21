@@ -1,7 +1,23 @@
 package io.github.ust.mico.core;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.ust.mico.core.REST.ApplicationController;
+import static io.github.ust.mico.core.JsonPathBuilder.*;
+import static io.github.ust.mico.core.TestConstants.*;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.Arrays;
+import java.util.Optional;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,18 +29,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-import scala.App;
 
-import java.util.Arrays;
-import java.util.Optional;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import io.github.ust.mico.core.REST.ApplicationController;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(ApplicationController.class)
@@ -33,17 +43,23 @@ public class ApplicationControllerTest {
 
     private static final String JSON_PATH_LINKS_SECTION = "$._links.";
     private static final String SELF_HREF = "self.href";
-    private static final String SHORT_NAME = "ApplicationShortName";
-    private static final String VERSION = "1.0.0";
-    private static final String DESCRIPTION = "Some Application description";
 
-    private static final String BASE_PATH = "/applications/";
+    public static final String APPLICATION_LIST = buildPath(EMBEDDED, "micoApplicationList");
+    public static final String SHORT_NAME_PATH = buildPath(ROOT, "shortName");
+    public static final String VERSION_PATH = buildPath(ROOT, "version");
+    public static final String DESCRIPTION_PATH = buildPath(ROOT, "description");
+    public static final String ID_PATH = buildPath(ROOT, "id");
+    public static final String VERSION_MAJOR_PATH = buildPath(ROOT, "version", "majorVersion");
+    public static final String VERSION_MINOR_PATH = buildPath(ROOT, "version", "minorVersion");
+    public static final String VERSION_PATCH_PATH = buildPath(ROOT, "version", "patchVersion");
+
+    private static final String BASE_PATH = "/applications";
 
     @Autowired
     private MockMvc mvc;
 
     @MockBean
-    private ApplicationRepository applicationRepository;
+    private MicoApplicationRepository applicationRepository;
 
     @Autowired
     private ObjectMapper mapper;
@@ -51,71 +67,81 @@ public class ApplicationControllerTest {
     @Test
     public void getAllApplications() throws Exception {
         given(applicationRepository.findAll()).willReturn(
-            Arrays.asList(
-                new Application("ShortName1", "1.0.1"),
-                new Application("ShortName1", "1.0.0"),
-                new Application("ShortName2", "1.0.0")));
+                Arrays.asList(MicoApplication.builder().shortName(SHORT_NAME).version(VERSION_1_0_1).build(),
+                        MicoApplication.builder().shortName(SHORT_NAME).version(VERSION).build(),
+                        MicoApplication.builder().shortName(SHORT_NAME_1).version(VERSION).build()));
 
         mvc.perform(get("/applications").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print())
-            .andExpect(status().isOk())
-            .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$._embedded.applicationList[*]", hasSize(3)))
-            .andExpect(jsonPath("$._embedded.applicationList[?(@.shortName =='ShortName1' && @.version == '1.0.0' )]", hasSize(1)))
-            .andExpect(jsonPath("$._embedded.applicationList[?(@.shortName =='ShortName1' && @.version == '1.0.1' )]", hasSize(1)))
-            .andExpect(jsonPath("$._embedded.applicationList[?(@.shortName =='ShortName2' && @.version == '1.0.0' )]", hasSize(1)))
-            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "self.href", is("http://localhost/applications")))
-            .andReturn();
-
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andExpect(jsonPath(APPLICATION_LIST + "[*]", hasSize(3)))
+                .andExpect(jsonPath(APPLICATION_LIST + "[?(" + SHORT_NAME_MATCHER + "&& @.version=='" + VERSION_1_0_1 + "')]", hasSize(1)))
+                .andExpect(jsonPath(APPLICATION_LIST + "[?(" + SHORT_NAME_MATCHER + "&& @.version=='" + VERSION + "')]", hasSize(1)))
+                .andExpect(jsonPath(APPLICATION_LIST + "[?(" + SHORT_NAME_1_MATCHER + "&& @.version=='" + VERSION + "')]", hasSize(1)))
+                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "self.href", is("http://localhost/applications")))
+                .andReturn();
     }
 
     @Test
     public void getApplicationByShortNameAndVersion() throws Exception {
-        given(applicationRepository.findByShortNameAndVersion("ApplicationShortName", "1.1.0")).willReturn(
-            Optional.of(new Application("ApplicationShortName", "1.1.0")));
+        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
+                Optional.of(MicoApplication.builder().shortName(SHORT_NAME).version(VERSION).build()));
 
-        mvc.perform(get("/applications/ApplicationShortName/1.1.0").accept(MediaTypes.HAL_JSON_VALUE))
-            .andDo(print())
-            .andExpect(status().isOk())
-            .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.shortName", is("ApplicationShortName")))
-            .andExpect(jsonPath("$.version", is("1.1.0")))
-            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/applications/ApplicationShortName/1.1.0")))
-            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "applications.href", is("http://localhost/applications")))
-            .andReturn();
+        mvc.perform(get("/applications/" + SHORT_NAME + "/" + VERSION.toString()).accept(MediaTypes.HAL_JSON_VALUE))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
+                .andExpect(jsonPath(VERSION_PATH, is(VERSION)))
+                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/applications/" + SHORT_NAME + "/" + VERSION)))
+                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "applications.href", is("http://localhost/applications")))
+                .andReturn();
     }
 
     @Test
     public void createApplication() throws Exception {
-        Application application = new Application(SHORT_NAME, VERSION);
-        application.setDescription(DESCRIPTION);
+        MicoApplication application = MicoApplication.builder()
+                .shortName(SHORT_NAME)
+                .version(VERSION)
+                .description(DESCRIPTION)
+                .build();
 
-        given(applicationRepository.save(any(Application.class))).willReturn(application);
+        given(applicationRepository.save(any(MicoApplication.class))).willReturn(application);
 
         final ResultActions result = mvc.perform(post(BASE_PATH)
-            .content(mapper.writeValueAsBytes(application))
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print());
+                .content(mapper.writeValueAsBytes(application))
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print());
 
         result.andExpect(status().isCreated());
     }
 
     @Test
     public void updateApplication() throws Exception {
-        Application application = new Application(SHORT_NAME, VERSION, DESCRIPTION);
-        Application updatedApplication = new Application(SHORT_NAME, VERSION, "newDesc");
+        MicoApplication application = MicoApplication.builder()
+                .shortName(SHORT_NAME)
+                .version(VERSION)
+                .description(DESCRIPTION)
+                .build();
+
+        MicoApplication updatedApplication = MicoApplication.builder()
+                .shortName(SHORT_NAME)
+                .version(VERSION)
+                .description("newDesc")
+                .build();
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
-        given(applicationRepository.save(any(Application.class))).willReturn(updatedApplication);
+        given(applicationRepository.save(any(MicoApplication.class))).willReturn(updatedApplication);
 
-        ResultActions resultUpdate = mvc.perform(put(BASE_PATH + SHORT_NAME + "/" + VERSION)
+        ResultActions resultUpdate = mvc.perform(put(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION)
                 .content(mapper.writeValueAsBytes(updatedApplication))
                 .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andDo(print())
-                .andExpect(jsonPath("$.id", is(application.getId())))
-                .andExpect(jsonPath("$.description", is(updatedApplication.getDescription())))
-                .andExpect(jsonPath("$.shortName", is(updatedApplication.getShortName())))
-                .andExpect(jsonPath("$.version", is(updatedApplication.getVersion())));
+                .andExpect(jsonPath(ID_PATH, is(application.getId())))
+                .andExpect(jsonPath(DESCRIPTION_PATH, is(updatedApplication.getDescription())))
+                .andExpect(jsonPath(SHORT_NAME_PATH, is(updatedApplication.getShortName())))
+                .andExpect(jsonPath(VERSION_PATH, is(updatedApplication.getVersion())));
 
         resultUpdate.andExpect(status().isOk());
     }

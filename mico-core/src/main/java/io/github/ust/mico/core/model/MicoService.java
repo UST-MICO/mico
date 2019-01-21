@@ -1,7 +1,9 @@
 package io.github.ust.mico.core.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.github.ust.mico.core.VersionNotSupportedException;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.*;
 import org.neo4j.ogm.annotation.GeneratedValue;
@@ -16,9 +18,9 @@ import java.util.List;
  * Represents a service in the context of MICO.
  */
 @Data
-@RequiredArgsConstructor
+@NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NodeEntity
 public class MicoService {
@@ -28,7 +30,7 @@ public class MicoService {
      */
     @Id
     @GeneratedValue
-    private final Long id;
+    private Long id;
 
 
     // ----------------------
@@ -40,25 +42,25 @@ public class MicoService {
      * for use as a unique identifier.
      */
     @ApiModelProperty(required = true)
-    private final String shortName;
+    private String shortName;
 
     /**
      * The name of the artifact. Intended for humans.
      */
     @ApiModelProperty(required = true)
-    private final String name;
+    private String name;
 
     /**
      * The version of this service. Refers to GitHub release tag.
      */
     @ApiModelProperty(required = true)
-    private final MicoVersion version;
+    private String version;
 
     /**
      * Human readable description of this service.
      */
     @ApiModelProperty(required = true)
-    private final String description;
+    private String description;
 
     /**
      * The list of interfaces this service provides.
@@ -67,7 +69,7 @@ public class MicoService {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Relationship(type = "PROVIDES", direction = Relationship.UNDIRECTED)
     @Singular
-    private final List<MicoServiceInterface> serviceInterfaces;
+    private List<MicoServiceInterface> serviceInterfaces;
 
     /**
      * Indicates where this service originates from, e.g.,
@@ -89,6 +91,7 @@ public class MicoService {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Relationship(type = "DEPENDS_ON")
     @Singular
+    @Setter
     private List<MicoServiceDependency> dependencies;
 
     /**
@@ -112,13 +115,13 @@ public class MicoService {
      * The URL to the root directory of, e.g., the
      * corresponding GitHub repository.
      */
-    private final String vcsRoot;
+    private String vcsRoot;
 
     /**
      * The relative (to vcsRoot) path to the Dockerfile.
      */
     @Pattern(regexp = "^(?!/.*$).*", message = "Path must be relative to vcsRoot")
-    private final String dockerfilePath;
+    private String dockerfilePath;
 
     /**
      * The fully qualified URI to the image on DockerHub.
@@ -127,5 +130,12 @@ public class MicoService {
      * user directly.
      */
     private String dockerImageUri;
+
+
+    @JsonIgnore
+    public MicoVersion getMicoVersion() throws VersionNotSupportedException {
+        MicoVersion micoVersion = MicoVersion.valueOf(this.version);
+        return micoVersion;
+    }
 
 }

@@ -1,23 +1,32 @@
 package io.github.ust.mico.core.REST;
 
-import io.github.ust.mico.core.DependsOn;
-import io.github.ust.mico.core.Service;
-import io.github.ust.mico.core.ServiceRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Link;
-import org.springframework.hateoas.MediaTypes;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.Resources;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.Resources;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDependency;
+import io.github.ust.mico.core.model.MicoVersion;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
 
 @RestController
 @RequestMapping(value = "/services", produces = MediaTypes.HAL_JSON_VALUE)
@@ -30,12 +39,12 @@ public class ServiceController {
     public static final String PATH_DELETE_VERSION = "versionToDelete";
 
     @Autowired
-    private ServiceRepository serviceRepository;
+    private MicoServiceRepository serviceRepository;
 
     @GetMapping()
-    public ResponseEntity<Resources<Resource<Service>>> getServiceList() {
-        List<Service> services = serviceRepository.findAll();
-        List<Resource<Service>> serviceResources = getServiceResourcesList(services);
+    public ResponseEntity<Resources<Resource<MicoService>>> getServiceList() {
+        List<MicoService> services = serviceRepository.findAll();
+        List<Resource<MicoService>> serviceResources = getServiceResourcesList(services);
         return ResponseEntity.ok(
                 new Resources<>(serviceResources,
                         linkTo(methodOn(ServiceController.class).getServiceList()).withSelfRel()));
@@ -43,26 +52,26 @@ public class ServiceController {
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     //TODO Add validation to path variables
-    public ResponseEntity<Resource<Service>> getServiceByShortNameAndVersion(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                             @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
+    public ResponseEntity<Resource<MicoService>> getServiceByShortNameAndVersion(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                                 @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         return serviceOpt.map(service -> new Resource<>(service, getServiceLinks(service)))
                 .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
-    public ResponseEntity<Resource<Service>> updateService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                           @PathVariable(PATH_VARIABLE_VERSION) String version,
-                                                           @RequestBody Service service) {
+    public ResponseEntity<Resource<MicoService>> updateService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                               @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                               @RequestBody MicoService service) {
         if (!service.getShortName().equals(shortName) || !service.getVersion().equals(version)) {
             return ResponseEntity.badRequest().build();
         } else {
-            Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
+            Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
             if (!serviceOpt.isPresent()) {
                 return ResponseEntity.notFound().build();
             } else {
                 service.setId(serviceOpt.get().getId());
-                Service updatedService = serviceRepository.save(service);
+                MicoService updatedService = serviceRepository.save(service);
 
                 return ResponseEntity.ok(new Resource<>(updatedService,
                         linkTo(methodOn(ServiceController.class).updateService(shortName, version, service)).withSelfRel()));
@@ -73,11 +82,11 @@ public class ServiceController {
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     public ResponseEntity deleteService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                         @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
+        Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (!serviceOpt.isPresent()) {
             return ResponseEntity.notFound().build();
         }
-        Service service = serviceOpt.get();
+        MicoService service = serviceOpt.get();
 
         if (getDependers(service).isEmpty()) {
             serviceRepository.deleteServiceByShortNameAndVersion(shortName, version);
@@ -88,9 +97,9 @@ public class ServiceController {
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/")
-    public ResponseEntity<Resources<Resource<Service>>> getVersionsOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
-        List<Service> services = serviceRepository.findByShortName(shortName);
-        List<Resource<Service>> serviceResources = getServiceResourcesList(services);
+    public ResponseEntity<Resources<Resource<MicoService>>> getVersionsOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
+        List<MicoService> services = serviceRepository.findByShortName(shortName);
+        List<Resource<MicoService>> serviceResources = getServiceResourcesList(services);
         return ResponseEntity.ok(
                 new Resources<>(serviceResources,
                         linkTo(methodOn(ServiceController.class).getVersionsOfService(shortName)).withSelfRel()));
@@ -98,23 +107,23 @@ public class ServiceController {
 
     //TODO: Ambiguous endpoint with /services/shortName
     //@GetMapping("/{" + PATH_VARIABLE_ID + "}/")
-    public ResponseEntity<Resource<Service>> getServiceById(@PathVariable(PATH_VARIABLE_ID) Long id) {
-        Optional<Service> serviceOpt = serviceRepository.findById(id);
+    public ResponseEntity<Resource<MicoService>> getServiceById(@PathVariable(PATH_VARIABLE_ID) Long id) {
+        Optional<MicoService> serviceOpt = serviceRepository.findById(id);
 
         return serviceOpt.map(service -> new Resource<>(service, getServiceLinks(service)))
                 .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public ResponseEntity<Resource<Service>> createService(@RequestBody Service newService) {
+    public ResponseEntity<Resource<MicoService>> createService(@RequestBody MicoService newService) {
         //Check if shortName and version combination already exists
-        Optional<Service> serviceOptional = serviceRepository.findByShortNameAndVersion(newService.getShortName(), newService.getVersion());
-        Service serviceToCheck = serviceOptional.orElse(null);
+        Optional<MicoService> serviceOptional = serviceRepository.findByShortNameAndVersion(newService.getShortName(), newService.getVersion().toString());
+        MicoService serviceToCheck = serviceOptional.orElse(null);
 
         if (serviceToCheck != null) {
             return ResponseEntity.badRequest().build();
         } else {
-            Service savedService = serviceRepository.save(newService);
+            MicoService savedService = serviceRepository.save(newService);
 
             return ResponseEntity
                     .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
@@ -123,23 +132,23 @@ public class ServiceController {
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
-    public ResponseEntity<Resources<Resource<Service>>> getDependees(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
+    public ResponseEntity<Resources<Resource<MicoService>>> getDependees(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                         @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (!serviceOpt.isPresent()) {
             return ResponseEntity.notFound().build();
         }
 
-        Service service = serviceOpt.get();
+        MicoService service = serviceOpt.get();
 
-        List<DependsOn> dependees = service.getDependsOn();
+        List<MicoServiceDependency> dependees = service.getDependencies();
         if (dependees == null) {
             return ResponseEntity.notFound().build();
         }
 
-        LinkedList<Service> services = getDependentServices(dependees);
+        LinkedList<MicoService> services = getDependentServices(dependees);
 
-        List<Resource<Service>> resourceList = getServiceResourcesList(services);
+        List<Resource<MicoService>> resourceList = getServiceResourcesList(services);
 
         return ResponseEntity.ok(
                 new Resources<>(resourceList,
@@ -147,34 +156,34 @@ public class ServiceController {
     }
 
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
-    public ResponseEntity<Resource<Service>> createNewDependee(@RequestBody DependsOn newServiceDependee,
-                                                               @PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                               @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
+    public ResponseEntity<Resource<MicoService>> createNewDependee(@RequestBody MicoServiceDependency newServiceDependee,
+                                                                   @PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                   @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (!serviceOpt.isPresent()) {
             return ResponseEntity.notFound().build();
         }
-        Service service = serviceOpt.get();
+        MicoService service = serviceOpt.get();
 
 
-        Optional<Service> serviceDependeeOpt = serviceRepository.findByShortNameAndVersion(newServiceDependee.getServiceDependee().getShortName(),
-                newServiceDependee.getServiceDependee().getVersion());
+        Optional<MicoService> serviceDependeeOpt = serviceRepository.findByShortNameAndVersion(newServiceDependee.getDependedService().getShortName(),
+                newServiceDependee.getDependedService().getVersion().toString());
 
         if (!serviceDependeeOpt.isPresent()) {
             return ResponseEntity.notFound().build();
         }
 
         newServiceDependee.setService(service);
-        newServiceDependee.setServiceDependee(serviceDependeeOpt.get());
+        newServiceDependee.setDependedService(serviceDependeeOpt.get());
 
-        List<DependsOn> dependees = service.getDependsOn();
+        List<MicoServiceDependency> dependees = service.getDependencies();
         if (dependees == null) {
             dependees = new LinkedList<>();
         }
         dependees.add(newServiceDependee);
-        service.setDependsOn(dependees);
+        service.setDependencies(dependees);
 
-        Service savedService = serviceRepository.save(service);
+        MicoService savedService = serviceRepository.save(service);
 
         return ResponseEntity
                 .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
@@ -182,17 +191,17 @@ public class ServiceController {
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
-    public ResponseEntity<Resource<Service>> deleteAllDependees(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
+    public ResponseEntity<Resource<MicoService>> deleteAllDependees(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                    @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (!serviceOpt.isPresent()) {
             return ResponseEntity.notFound().build();
         }
-        Service service = serviceOpt.get();
-        List<DependsOn> dependees = new LinkedList<>();
-        service.setDependsOn(dependees);
+        MicoService service = serviceOpt.get();
+        List<MicoServiceDependency> dependees = new LinkedList<>();
+        service.setDependencies(dependees);
 
-        Service savedService = serviceRepository.save(service);
+        MicoService savedService = serviceRepository.save(service);
 
         return ResponseEntity
                 .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
@@ -201,35 +210,35 @@ public class ServiceController {
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees"
             + "/{" + PATH_DELETE_SHORT_NAME + "}/{" + PATH_DELETE_VERSION + "}")
-    public ResponseEntity<Resource<Service>> deleteDependee(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                            @PathVariable(PATH_VARIABLE_VERSION) String version,
-                                                            @PathVariable(PATH_DELETE_SHORT_NAME) String shortNameToDelete,
-                                                            @PathVariable(PATH_DELETE_VERSION) String versionToDelete) {
-        Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
+    public ResponseEntity<Resource<MicoService>> deleteDependee(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                                @PathVariable(PATH_DELETE_SHORT_NAME) String shortNameToDelete,
+                                                                @PathVariable(PATH_DELETE_VERSION) String versionToDelete) {
+        Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (!serviceOpt.isPresent()) {
             return ResponseEntity.notFound().build();
         }
-        Service service = serviceOpt.get();
+        MicoService service = serviceOpt.get();
 
-        Optional<Service> serviceOptToDelete = serviceRepository.findByShortNameAndVersion(shortNameToDelete, versionToDelete);
+        Optional<MicoService> serviceOptToDelete = serviceRepository.findByShortNameAndVersion(shortNameToDelete, versionToDelete);
         if (!serviceOptToDelete.isPresent()) {
             return ResponseEntity.notFound().build();
         }
-        Service serviceToDelete = serviceOptToDelete.get();
+        MicoService serviceToDelete = serviceOptToDelete.get();
 
-        List<DependsOn> newDependees = new LinkedList<>();
-        List<DependsOn> dependees = service.getDependsOn();
+        List<MicoServiceDependency> newDependees = new LinkedList<>();
+        List<MicoServiceDependency> dependees = service.getDependencies();
 
         if (dependees != null) {
             dependees.forEach(dependsOn -> {
-                if (dependsOn.getServiceDependee().getId() != serviceToDelete.getId()) {
+                if (dependsOn.getDependedService().getId() != serviceToDelete.getId()) {
                     newDependees.add(dependsOn);
                 }
             });
         }
 
-        service.setDependsOn(newDependees);
-        Service savedService = serviceRepository.save(service);
+        service.setDependencies(newDependees);
+        MicoService savedService = serviceRepository.save(service);
 
         return ResponseEntity
                 .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
@@ -237,32 +246,32 @@ public class ServiceController {
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependers")
-    public ResponseEntity<Resources<Resource<Service>>> getDependers(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        Optional<Service> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
+    public ResponseEntity<Resources<Resource<MicoService>>> getDependers(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                         @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (!serviceOpt.isPresent()) {
             return ResponseEntity.notFound().build();
         }
-        Service serviceToLookFor = serviceOpt.get();
+        MicoService serviceToLookFor = serviceOpt.get();
 
-        List<Service> dependers = getDependers(serviceToLookFor);
+        List<MicoService> dependers = getDependers(serviceToLookFor);
 
-        List<Resource<Service>> resourceList = getServiceResourcesList(dependers);
+        List<Resource<MicoService>> resourceList = getServiceResourcesList(dependers);
         return ResponseEntity.ok(
                 new Resources<>(resourceList,
                         linkTo(methodOn(ServiceController.class).getDependers(shortName, version)).withSelfRel()));
     }
 
-    public List<Service> getDependers(Service serviceToLookFor) {
-        List<Service> serviceList = serviceRepository.findAll();
+    public List<MicoService> getDependers(MicoService serviceToLookFor) {
+        List<MicoService> serviceList = serviceRepository.findAll();
 
-        List<Service> dependers = new LinkedList<>();
+        List<MicoService> dependers = new LinkedList<>();
 
         serviceList.forEach(service -> {
-            List<DependsOn> dependees = service.getDependsOn();
+            List<MicoServiceDependency> dependees = service.getDependencies();
             if (dependees != null) {
                 dependees.forEach(dependee -> {
-                    if (dependee.getServiceDependee().equals(serviceToLookFor)) {
+                    if (dependee.getDependedService().equals(serviceToLookFor)) {
                         dependers.add(dependee.getService());
                     }
                 });
@@ -272,9 +281,9 @@ public class ServiceController {
         return dependers;
     }
 
-    public Service getService(Service newService) {
-        Optional<Service> serviceOptional = serviceRepository.findByShortNameAndVersion(newService.getShortName(), newService.getVersion());
-        Service serviceToCheck = serviceOptional.orElse(null);
+    public MicoService getService(MicoService newService) {
+        Optional<MicoService> serviceOptional = serviceRepository.findByShortNameAndVersion(newService.getShortName(), newService.getVersion().toString());
+        MicoService serviceToCheck = serviceOptional.orElse(null);
         if (serviceToCheck == null) {
             return null;
         } else {
@@ -283,59 +292,53 @@ public class ServiceController {
     }
 
     //Get the dependees of a service, check if they exists, if true get the ids and set the dependees
-    public Service setServiceDependees(Service newService) {
-        Service serviceToGetId = getService(newService);
+    public MicoService setServiceDependees(MicoService newService) {
+        MicoService serviceToGetId = getService(newService);
         if (serviceToGetId == null) {
-            Service savedService = serviceRepository.save(new Service(newService.getShortName(), newService.getVersion()));
+            MicoService savedService = serviceRepository.save(MicoService.builder().shortName(newService.getShortName()).version(newService.getVersion()).build());
 
-            List<DependsOn> dependees = savedService.getDependsOn();
-            LinkedList<Service> services = getDependentServices(dependees);
+            List<MicoServiceDependency> dependees = savedService.getDependencies();
+            LinkedList<MicoService> services = getDependentServices(dependees);
 
-            List<DependsOn> newDependees = new LinkedList<>();
+            List<MicoServiceDependency> newDependees = new LinkedList<>();
 
             if (services != null) {
-                services.forEach(service -> {
-                    DependsOn dependsOnService = new DependsOn(savedService, service);
-                    newDependees.add(dependsOnService);
-                });
+                services.forEach(service -> newDependees.add(MicoServiceDependency.builder().service(savedService).dependedService(service).build()));
             }
 
-            savedService.setDependsOn(newDependees);
+            savedService.setDependencies(newDependees);
 
             return savedService;
         } else {
             newService.setId(serviceToGetId.getId());
-            List<DependsOn> dependees = newService.getDependsOn();
-            LinkedList<Service> services = getDependentServices(dependees);
+            List<MicoServiceDependency> dependees = newService.getDependencies();
+            LinkedList<MicoService> services = getDependentServices(dependees);
 
-            List<DependsOn> newDependees = new LinkedList<>();
+            List<MicoServiceDependency> newDependees = new LinkedList<>();
 
-            services.forEach(service -> {
-                DependsOn dependsOnService = new DependsOn(newService, service);
-                newDependees.add(dependsOnService);
-            });
+            services.forEach(service -> newDependees.add(MicoServiceDependency.builder().service(newService).dependedService(service).build()));
 
-            newService.setDependsOn(newDependees);
+            newService.setDependencies(newDependees);
 
             return newService;
         }
     }
 
-    private LinkedList<Service> getDependentServices(List<DependsOn> dependees) {
+    private LinkedList<MicoService> getDependentServices(List<MicoServiceDependency> dependees) {
         if (dependees == null) {
             return null;
         }
 
-        LinkedList<Service> services = new LinkedList<>();
+        LinkedList<MicoService> services = new LinkedList<>();
 
         dependees.forEach(dependee -> {
-            String shortName = dependee.getServiceDependee().getShortName();
-            String version = dependee.getServiceDependee().getVersion();
+            String shortName = dependee.getDependedService().getShortName();
+            String version = dependee.getDependedService().getVersion();
 
-            Optional<Service> dependeeServiceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
-            Service dependeeService = dependeeServiceOpt.orElse(null);
+            Optional<MicoService> dependeeServiceOpt = serviceRepository.findByShortNameAndVersion(shortName, version.toString());
+            MicoService dependeeService = dependeeServiceOpt.orElse(null);
             if (dependeeService == null) {
-                Service newService = serviceRepository.save(new Service(shortName, version));
+                MicoService newService = serviceRepository.save(MicoService.builder().shortName(shortName).version(version).build());
                 services.add(newService);
             } else {
                 services.add(dependeeService);
@@ -345,14 +348,14 @@ public class ServiceController {
         return services;
     }
 
-    private List<Resource<Service>> getServiceResourcesList(List<Service> services) {
+    private List<Resource<MicoService>> getServiceResourcesList(List<MicoService> services) {
         return services.stream().map(service -> new Resource<>(service, getServiceLinks(service)))
                 .collect(Collectors.toList());
     }
 
-    private Iterable<Link> getServiceLinks(Service service) {
+    private Iterable<Link> getServiceLinks(MicoService service) {
         LinkedList<Link> links = new LinkedList<>();
-        links.add(linkTo(methodOn(ServiceController.class).getServiceByShortNameAndVersion(service.getShortName(), service.getVersion())).withSelfRel());
+        links.add(linkTo(methodOn(ServiceController.class).getServiceByShortNameAndVersion(service.getShortName(), service.getVersion().toString())).withSelfRel());
         links.add(linkTo(methodOn(ServiceController.class).getServiceList()).withRel("services"));
         return links;
     }
