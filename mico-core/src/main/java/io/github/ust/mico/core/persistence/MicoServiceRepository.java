@@ -20,10 +20,6 @@ public interface MicoServiceRepository extends Neo4jRepository<MicoService, Long
 
     List<MicoService> findByShortName(@Param("shortName") String shortName, @Depth int depth);
 
-    List<MicoService> findByName(@Param("name") String name);
-    
-    List<MicoService> findByName(@Param("name") String name, @Depth int depth);
-
     Optional<MicoService> findByShortNameAndVersion(String shortName, String version);
 
     Optional<MicoService> findByShortNameAndVersion(String shortName, String version, @Depth int depth);
