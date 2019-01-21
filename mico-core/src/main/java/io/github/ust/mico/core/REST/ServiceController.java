@@ -53,7 +53,7 @@ public class ServiceController {
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     //TODO Add validation to path variables
     public ResponseEntity<Resource<MicoService>> getServiceByShortNameAndVersion(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                             @PathVariable(PATH_VARIABLE_VERSION) String version) {
+                                                                                 @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         return serviceOpt.map(service -> new Resource<>(service, getServiceLinks(service)))
                 .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
@@ -61,9 +61,9 @@ public class ServiceController {
 
     @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     public ResponseEntity<Resource<MicoService>> updateService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                           @PathVariable(PATH_VARIABLE_VERSION) String version,
-                                                           @RequestBody MicoService service) {
-        if (!service.getShortName().equals(shortName) || !service.getVersion().toString().equals(version)) {
+                                                               @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                               @RequestBody MicoService service) {
+        if (!service.getShortName().equals(shortName) || !service.getVersion().equals(version)) {
             return ResponseEntity.badRequest().build();
         } else {
             Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
@@ -133,7 +133,7 @@ public class ServiceController {
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
     public ResponseEntity<Resources<Resource<MicoService>>> getDependees(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version) {
+                                                                         @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (!serviceOpt.isPresent()) {
             return ResponseEntity.notFound().build();
@@ -157,8 +157,8 @@ public class ServiceController {
 
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
     public ResponseEntity<Resource<MicoService>> createNewDependee(@RequestBody MicoServiceDependency newServiceDependee,
-                                                               @PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                               @PathVariable(PATH_VARIABLE_VERSION) String version) {
+                                                                   @PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                   @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (!serviceOpt.isPresent()) {
             return ResponseEntity.notFound().build();
@@ -192,7 +192,7 @@ public class ServiceController {
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
     public ResponseEntity<Resource<MicoService>> deleteAllDependees(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                @PathVariable(PATH_VARIABLE_VERSION) String version) {
+                                                                    @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (!serviceOpt.isPresent()) {
             return ResponseEntity.notFound().build();
@@ -211,9 +211,9 @@ public class ServiceController {
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees"
             + "/{" + PATH_DELETE_SHORT_NAME + "}/{" + PATH_DELETE_VERSION + "}")
     public ResponseEntity<Resource<MicoService>> deleteDependee(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                            @PathVariable(PATH_VARIABLE_VERSION) String version,
-                                                            @PathVariable(PATH_DELETE_SHORT_NAME) String shortNameToDelete,
-                                                            @PathVariable(PATH_DELETE_VERSION) String versionToDelete) {
+                                                                @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                                @PathVariable(PATH_DELETE_SHORT_NAME) String shortNameToDelete,
+                                                                @PathVariable(PATH_DELETE_VERSION) String versionToDelete) {
         Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (!serviceOpt.isPresent()) {
             return ResponseEntity.notFound().build();
@@ -247,7 +247,7 @@ public class ServiceController {
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependers")
     public ResponseEntity<Resources<Resource<MicoService>>> getDependers(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version) {
+                                                                         @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (!serviceOpt.isPresent()) {
             return ResponseEntity.notFound().build();
@@ -299,7 +299,7 @@ public class ServiceController {
 
             List<MicoServiceDependency> dependees = savedService.getDependencies();
             LinkedList<MicoService> services = getDependentServices(dependees);
-            
+
             List<MicoServiceDependency> newDependees = new LinkedList<>();
 
             if (services != null) {
