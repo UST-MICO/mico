@@ -34,7 +34,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.github.ust.mico.core.REST.ApplicationController;
 import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoVersion;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 
 @RunWith(SpringRunner.class)
@@ -47,7 +46,9 @@ public class ApplicationControllerTest {
 
     public static final String APPLICATION_LIST = buildPath(EMBEDDED, "micoApplicationList");
     public static final String SHORT_NAME_PATH = buildPath(ROOT, "shortName");
-    public static final String VERSION_NAME_PATH = buildPath(ROOT, "version");
+    public static final String VERSION_PATH = buildPath(ROOT, "version");
+    public static final String DESCRIPTION_PATH = buildPath(ROOT, "description");
+    public static final String ID_PATH = buildPath(ROOT, "id");
     public static final String VERSION_MAJOR_PATH = buildPath(ROOT, "version", "majorVersion");
     public static final String VERSION_MINOR_PATH = buildPath(ROOT, "version", "minorVersion");
     public static final String VERSION_PATCH_PATH = buildPath(ROOT, "version", "patchVersion");
@@ -92,7 +93,7 @@ public class ApplicationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
-                .andExpect(jsonPath(VERSION_NAME_PATH, is(VERSION)))
+                .andExpect(jsonPath(VERSION_PATH, is(VERSION)))
                 .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/applications/" + SHORT_NAME + "/" + VERSION)))
                 .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "applications.href", is("http://localhost/applications")))
                 .andReturn();
@@ -130,17 +131,17 @@ public class ApplicationControllerTest {
                 .description("newDesc")
                 .build();
 
-        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION.toString())).willReturn(Optional.of(application));
+        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(applicationRepository.save(any(MicoApplication.class))).willReturn(updatedApplication);
 
-        ResultActions resultUpdate = mvc.perform(put(BASE_PATH + SHORT_NAME + "/" + VERSION)
+        ResultActions resultUpdate = mvc.perform(put(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION)
                 .content(mapper.writeValueAsBytes(updatedApplication))
                 .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andDo(print())
-                .andExpect(jsonPath("$.id", is(application.getId())))
-                .andExpect(jsonPath("$.description", is(updatedApplication.getDescription())))
-                .andExpect(jsonPath("$.shortName", is(updatedApplication.getShortName())))
-                .andExpect(jsonPath("$.version", is(updatedApplication.getVersion())));
+                .andExpect(jsonPath(ID_PATH, is(application.getId())))
+                .andExpect(jsonPath(DESCRIPTION_PATH, is(updatedApplication.getDescription())))
+                .andExpect(jsonPath(SHORT_NAME_PATH, is(updatedApplication.getShortName())))
+                .andExpect(jsonPath(VERSION_PATH, is(updatedApplication.getVersion())));
 
         resultUpdate.andExpect(status().isOk());
     }

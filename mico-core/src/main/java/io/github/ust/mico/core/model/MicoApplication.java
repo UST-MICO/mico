@@ -21,7 +21,7 @@ import lombok.Singular;
  */
 @Data
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 @NodeEntity
 public class MicoApplication {
 
