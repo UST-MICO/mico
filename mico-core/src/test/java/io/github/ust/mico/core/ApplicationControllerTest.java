@@ -1,5 +1,9 @@
 package io.github.ust.mico.core;
 
+import static io.github.ust.mico.core.TestConstants.*;
+
+import static io.github.ust.mico.core.JsonPathBuilder.EMBEDDED;
+import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
@@ -41,11 +45,13 @@ public class ApplicationControllerTest {
 
     private static final String JSON_PATH_LINKS_SECTION = "$._links.";
     private static final String SELF_HREF = "self.href";
-    private static final String SHORT_NAME = "ApplicationShortName";
-    private static final String VERSION = "1.0.0";
-    private static final String DESCRIPTION = "Some Application description";
+    //private static final String SHORT_NAME = "ApplicationShortName";
+    //private static final String VERSION = "1.0.0";
+    //private static final String DESCRIPTION = "Some Application description";
 
-    private static final String BASE_PATH = "/applications/";
+    public static final String APPLICATION_LIST = buildPath(EMBEDDED, "micoApplicationList");
+
+    private static final String BASE_PATH = "/applications";
 
     @Autowired
     private MockMvc mvc;
@@ -59,18 +65,18 @@ public class ApplicationControllerTest {
     @Test
     public void getAllApplications() throws Exception {
         given(applicationRepository.findAll()).willReturn(
-            Arrays.asList(MicoApplication.builder().shortName("ShortName1").version(MicoVersion.forIntegers(1, 0, 1)).build(),
-                    MicoApplication.builder().shortName("ShortName1").version(MicoVersion.forIntegers(1, 0, 0)).build(),
-                    MicoApplication.builder().shortName("ShortName2").version(MicoVersion.forIntegers(1, 0, 0)).build()));
+            Arrays.asList(MicoApplication.builder().shortName(SHORT_NAME).version(VERSION_1_0_1).build(),
+                    MicoApplication.builder().shortName(SHORT_NAME).version(VERSION).build(),
+                    MicoApplication.builder().shortName(SHORT_NAME_1).version(VERSION).build()));
 
         mvc.perform(get("/applications").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$._embedded.applicationList[*]", hasSize(3)))
-            .andExpect(jsonPath("$._embedded.applicationList[?(@.shortName =='ShortName1' && @.version == '1.0.0' )]", hasSize(1)))
-            .andExpect(jsonPath("$._embedded.applicationList[?(@.shortName =='ShortName1' && @.version == '1.0.1' )]", hasSize(1)))
-            .andExpect(jsonPath("$._embedded.applicationList[?(@.shortName =='ShortName2' && @.version == '1.0.0' )]", hasSize(1)))
+            .andExpect(jsonPath(APPLICATION_LIST + "[*]", hasSize(3)))
+            .andExpect(jsonPath(APPLICATION_LIST + "[?(" + SHORT_NAME_MATCHER + "&&" +  VERSION_1_0_1_MATCHER + ")]", hasSize(1)))
+            .andExpect(jsonPath(APPLICATION_LIST + "[?(" + SHORT_NAME_MATCHER + "&&" +  VERSION_MATCHER + ")]", hasSize(1)))
+            .andExpect(jsonPath(APPLICATION_LIST + "[?(" + SHORT_NAME_1_MATCHER + "&&" +  VERSION_MATCHER + ")]", hasSize(1)))
             .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "self.href", is("http://localhost/applications")))
             .andReturn();
 
@@ -96,7 +102,7 @@ public class ApplicationControllerTest {
     public void createApplication() throws Exception {
         MicoApplication application = MicoApplication.builder()
                 .shortName(SHORT_NAME)
-                .version(MicoVersion.valueOf(VERSION))
+                .version(VERSION)
                 .description(DESCRIPTION)
                 .build();
 
@@ -114,17 +120,17 @@ public class ApplicationControllerTest {
     public void updateApplication() throws Exception {
         MicoApplication application = MicoApplication.builder()
                 .shortName(SHORT_NAME)
-                .version(MicoVersion.valueOf(VERSION))
+                .version(VERSION)
                 .description(DESCRIPTION)
                 .build();
         
         MicoApplication updatedApplication = MicoApplication.builder()
                 .shortName(SHORT_NAME)
-                .version(MicoVersion.valueOf(VERSION))
+                .version(VERSION)
                 .description("newDesc")
                 .build();
 
-        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
+        //given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(applicationRepository.save(any(MicoApplication.class))).willReturn(updatedApplication);
 
         ResultActions resultUpdate = mvc.perform(put(BASE_PATH + SHORT_NAME + "/" + VERSION)
