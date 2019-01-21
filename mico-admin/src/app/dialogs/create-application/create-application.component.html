@@ -1,0 +1,40 @@
+<h2 mat-dialog-title>Create a new Application</h2>
+<mat-dialog-content style="min-width: 35rem">
+    <mico-form [modelUrl]="'remote/Application'" [filter]="filterList" (data)="applicationData = $event"></mico-form>
+
+    <!-- Service Picker-->
+    <div class="pa2" style="display: flex; justify-content: flex-end">
+
+        <button mat-raised-button (click)="pickServices()">pick Services</button>
+    </div>
+    <mat-divider></mat-divider>
+
+    <mat-list>
+        <mat-list-item class="flex" *ngFor="let element of services">
+            <div class="flex-grow-1">
+
+                <span class="pa2">
+                    {{element.name}}
+                </span>
+                <span class="pa2">
+                    {{element.shortName}}
+                </span>
+                <span class="pa2">
+                    {{element.version}}
+                </span>
+            </div>
+            <div class="w-25" style="display: flex; justify-content: flex-end">
+                <span class="pa2">
+                    <mat-icon (click)="deleteDependency(element)" style="cursor: pointer">delete</mat-icon>
+                </span>
+            </div>
+            <mat-divider></mat-divider>
+        </mat-list-item>
+
+    </mat-list>
+</mat-dialog-content>
+<mat-dialog-actions>
+    <button mat-button mat-dialog-close>Cancel</button>
+    <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
+    <button mat-button [mat-dialog-close]="save()">Yes</button>
+</mat-dialog-actions>

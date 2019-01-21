@@ -162,11 +162,12 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
      * opens an dialog to select a new service the current service depends on.
      */
     addDependee() {
+
         const dialogRef = this.dialog.open(ServicePickerComponent, {
             data: {
-                filter: 'internal',
+                filter: '',
                 choice: 'multi',
-                exisitingDependencies: this.dependees,
+                existingDependencies: this.dependees,
                 serviceId: this.shortName,
             }
         });
