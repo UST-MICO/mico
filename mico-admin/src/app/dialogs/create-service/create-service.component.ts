@@ -10,6 +10,11 @@ import { Subscription } from 'rxjs';
 export class CreateServiceDialogComponent implements OnInit, OnDestroy {
 
     serviceData;
+    // TODO link with form as soon as the according endpoint exists.
+    githubData;
+
+    // manual: 0, github: 1
+    selectedTab = 0;
 
     subModelDefinitions: Subscription;
     filterList: [string];
@@ -29,8 +34,32 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
         }
     }
 
+    mapTabIndexToString(index) {
+        if (index === 0) {
+            return 'manual';
+        } else if (index === 1) {
+            return 'github';
+        } else {
+            return 'unknown';
+        }
+    }
+
     input() {
-        return this.serviceData;
+        // return information based on selected tab
+        if (this.selectedTab === 0) {
+            // manual
+            return { tab: this.mapTabIndexToString(this.selectedTab), data: this.serviceData };
+        } else if (this.selectedTab === 1) {
+            // github
+            return { tab: this.mapTabIndexToString(this.selectedTab), data: this.githubData };
+        } else {
+            // error case
+            return { tab: this.mapTabIndexToString(this.selectedTab), data: undefined };
+        }
+    }
+
+    tabChange(event) {
+        this.selectedTab = event.index;
     }
 
 }
