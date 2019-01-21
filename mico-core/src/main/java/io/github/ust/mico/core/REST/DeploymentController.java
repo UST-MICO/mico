@@ -6,6 +6,8 @@ import io.github.ust.mico.core.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.imagebuilder.buildtypes.Build;
 import io.github.ust.mico.core.mapping.MicoKubeClient;
 import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.MediaTypes;
@@ -30,10 +32,10 @@ public class DeploymentController {
     private static final String PATH_VARIABLE_VERSION = "version";
 
     @Autowired
-    private ApplicationRepository applicationRepository;
+    private MicoApplicationRepository applicationRepository;
 
     @Autowired
-    private ServiceRepository serviceRepository;
+    private MicoServiceRepository serviceRepository;
 
     @Autowired
     private ImageBuilder imageBuilder;
@@ -57,7 +59,7 @@ public class DeploymentController {
         // TODO
         // Optional<MicoApplication> application = applicationRepository.findByShortNameAndVersion(shortName, version);
         Long serviceId = 1337L;
-        Optional<MicoApplication> micoApplication = Optional.of(MicoApplication.builder()
+        Optional<MicoApplication> micoApplicationOptional = Optional.of(MicoApplication.builder()
             .shortName("MicoApplication")
             .deploymentInfo(MicoApplicationDeploymentInfo.builder()
                 .serviceDeploymentInfo(serviceId, MicoServiceDeploymentInfo.builder()
@@ -67,31 +69,33 @@ public class DeploymentController {
             .service(MicoService.builder()
                 .id(serviceId)
                 .shortName("hello")
-                .name("hello-mico-service")
-                .version(MicoVersion.valueOf("v1.0.0"))
+                .version("v1.0.0")
                 .vcsRoot("https://github.com/UST-MICO/hello.git")
                 .dockerfilePath("Dockerfile")
                 .build())
             .build());
 
-        if (!micoApplication.isPresent()) {
+        if (!micoApplicationOptional.isPresent()) {
             return ResponseEntity.notFound().build();
         }
+        MicoApplication micoApplication = micoApplicationOptional.get();
 
-        List<MicoService> micoServices = micoApplication.get().getServices();
+        List<MicoService> micoServices = micoApplication.getServices();
         micoServices.forEach(micoService -> {
             // TODO Check if image was already built -> no build required
             factory.runAsync(() -> buildImage(micoService), result -> {
                 log.info("Build of image for service '{}' finished", micoService.getShortName());
 
-                // TODO Set docker image uri
-                // micoService.setDockerImageUri();
-                // TODO save it to database
-                //serviceRepository.save(micoService);
+                micoService.toBuilder()
+                    .dockerImageUri(imageBuilder.createImageName(
+                        micoService.getShortName(), micoService.getVersion()))
+                    .build();
+                serviceRepository.save(micoService);
 
                 log.debug("Create Kubernetes resources for MICO service '{}'", micoService.getShortName());
-                int replicas = micoApplication.get().getDeploymentInfo().getServiceDeploymentInfos().get(micoService.getId()).getReplicas();
-                micoKubeClient.createMicoService(micoService, replicas);
+                String applicationName = micoApplication.getShortName();
+                int replicas = micoApplication.getDeploymentInfo().getServiceDeploymentInfos().get(micoService.getId()).getReplicas();
+                micoKubeClient.createMicoService(micoService, applicationName, replicas);
                 log.info("Created Kubernetes resources for MICO service '{}'", micoService.getShortName());
 
             }, e -> exceptionHandler(e));
