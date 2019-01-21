@@ -65,9 +65,7 @@ public class ServiceControllerTests {
     public static final String ID_PATH = buildPath(ROOT, "id");
     public static final String SHORT_NAME_PATH = buildPath(ROOT, "shortName");
     public static final String DESCRIPTION_PATH = buildPath(ROOT, "description");
-    public static final String VERSION_MAJOR_PATH = buildPath(ROOT, "version", "majorVersion");
-    public static final String VERSION_MINOR_PATH = buildPath(ROOT, "version", "minorVersion");
-    public static final String VERSION_PATCH_PATH = buildPath(ROOT, "version", "patchVersion");
+    public static final String VERSION_PATH = buildPath(ROOT, "version");
 
 
     //TODO: Use these variables inside the tests instead of the local variables
@@ -115,7 +113,7 @@ public class ServiceControllerTests {
 
     @Test
     public void getServiceViaShortNameAndVersion() throws Exception {
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION.toString())).willReturn(
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
                 Optional.of(MicoService.builder().shortName(SHORT_NAME).version(VERSION).description(DESCRIPTION).build()));
 
         StringBuilder urlPathBuilder = new StringBuilder(300);
@@ -131,9 +129,7 @@ public class ServiceControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
-                .andExpect(jsonPath(VERSION_MAJOR_PATH, is(VERSION)))
-                .andExpect(jsonPath(VERSION_MINOR_PATH, is(VERSION)))
-                .andExpect(jsonPath(VERSION_PATCH_PATH, is(VERSION)))
+                .andExpect(jsonPath(VERSION_PATH, is(VERSION)))
                 .andExpect(jsonPath(DESCRIPTION_PATH, is(DESCRIPTION)))
                 .andExpect(jsonPath(SELF_HREF, is(BASE_URL + urlPath)))
                 .andExpect(jsonPath(SERVICES_HREF, is(BASE_URL + SERVICES_PATH)))
@@ -164,9 +160,7 @@ public class ServiceControllerTests {
                 .andExpect(jsonPath(ID_PATH, is(ID)))
                 .andExpect(jsonPath(DESCRIPTION_PATH, is(DESCRIPTION)))
                 .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
-                .andExpect(jsonPath(VERSION_MAJOR_PATH, is(VERSION)))
-                .andExpect(jsonPath(VERSION_MINOR_PATH, is(VERSION)))
-                .andExpect(jsonPath(VERSION_PATCH_PATH, is(VERSION)))
+                .andExpect(jsonPath(VERSION_PATH, is(VERSION)))
                 .andExpect(jsonPath(SELF_HREF, is(BASE_URL + urlPath)))
                 .andExpect(jsonPath(SERVICES_HREF, is(BASE_URL + SERVICES_PATH)))
                 .andReturn();
@@ -196,7 +190,7 @@ public class ServiceControllerTests {
             .version(VERSION)
             .description(DESCRIPTION).build();
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION.toString())).willReturn(Optional.of(service));
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
         given(serviceRepository.save(any(MicoService.class))).willReturn(service);
 
         StringBuilder urlPathBuilder = new StringBuilder(300);
@@ -219,10 +213,10 @@ public class ServiceControllerTests {
     @Test
     public void deleteSpecificServiceDependee() throws Exception {
         String shortName = SHORT_NAME_1;
-        String version = VERSION_1_0_1.toString();
+        String version = VERSION_1_0_1;
         String description = DESCRIPTION_1;
         String shortNameToDelete = SHORT_NAME_2;
-        String versionToDelete = VERSION_1_0_2.toString();
+        String versionToDelete = VERSION_1_0_2;
         MicoService service = MicoService.builder().shortName(shortName).version(version).description(description).build();
         MicoService serviceToDelete = MicoService.builder().shortName(shortNameToDelete).version(versionToDelete).build();
 
@@ -303,7 +297,7 @@ public class ServiceControllerTests {
         service3.setDependencies(Collections.singletonList(dependency3));
 
         given(serviceRepository.findAll()).willReturn(Arrays.asList(service, service1, service2, service3));
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION.toString())).willReturn(Optional.of(service));
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
 
         StringBuilder urlPathBuilder = new StringBuilder(300);
         urlPathBuilder.append(SERVICES_PATH);
@@ -341,7 +335,7 @@ public class ServiceControllerTests {
             .version(VERSION)
             .description(updatedDescription).build();
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION.toString())).willReturn(Optional.of(service));
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
         given(serviceRepository.save(any(MicoService.class))).willReturn(updatedService);
 
         StringBuilder urlPathBuilder = new StringBuilder(300);
@@ -360,9 +354,7 @@ public class ServiceControllerTests {
                 .andExpect(jsonPath(ID_PATH, is(service.getId())))
                 .andExpect(jsonPath(DESCRIPTION_PATH, is(updatedDescription)))
                 .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
-                .andExpect(jsonPath(VERSION_MAJOR_PATH, is(VERSION)))
-                .andExpect(jsonPath(VERSION_MINOR_PATH, is(VERSION)))
-                .andExpect(jsonPath(VERSION_PATCH_PATH, is(VERSION)));
+                .andExpect(jsonPath(VERSION_PATH, is(VERSION)));
 
         resultUpdate.andExpect(status().isOk());
     }
@@ -374,7 +366,7 @@ public class ServiceControllerTests {
             .version(VERSION)
             .description(DESCRIPTION).build();
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION.toString())).willReturn(Optional.of(service));
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
 
         StringBuilder urlPathBuilder = new StringBuilder(300);
         urlPathBuilder.append(SERVICES_PATH);
