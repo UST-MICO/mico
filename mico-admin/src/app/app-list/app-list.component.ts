@@ -3,9 +3,9 @@ import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
 
 @Component({
-  selector: 'mico-app-list',
-  templateUrl: './app-list.component.html',
-  styleUrls: ['./app-list.component.css']
+    selector: 'mico-app-list',
+    templateUrl: './app-list.component.html',
+    styleUrls: ['./app-list.component.css']
 })
 export class AppListComponent implements OnInit {
 
@@ -15,15 +15,15 @@ export class AppListComponent implements OnInit {
         this.getApplications();
     }
 
-    @Input() applications: ApiObject[];
+    applications: Readonly<ApiObject>;
 
     displayedColumns: string[] = ['id', 'name', 'shortName', 'description'];
 
     ngOnInit() {
     }
 
-     getApplications(): void {
+    getApplications(): void {
         this.apiService.getApplications()
-        .subscribe(applications => this.applications = applications);
+            .subscribe(applications => this.applications = applications);
     }
 }

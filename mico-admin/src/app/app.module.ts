@@ -26,6 +26,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpModule } from '@angular/http';
+import { MatSelectModule } from '@angular/material/select';
 
 import { RoutingModule } from './routing.module';
 
@@ -63,6 +64,7 @@ import { MicoDataComponent } from './data-view/mico-data/mico-data.component';
 import { MicoDataStringComponent } from './data-view/mico-data-string/mico-data-string.component';
 import { MicoDataContainerComponent } from './data-view/mico-data-container/mico-data-container.component';
 import { MicoDataBooleanComponent } from './data-view/mico-data-boolean/mico-data-boolean.component';
+import { CreateApplicationComponent } from './dialogs/create-application/create-application.component';
 
 @NgModule({
     declarations: [
@@ -91,14 +93,16 @@ import { MicoDataBooleanComponent } from './data-view/mico-data-boolean/mico-dat
         MicoDataComponent,
         MicoDataStringComponent,
         MicoDataContainerComponent,
-        MicoDataBooleanComponent
+        MicoDataBooleanComponent,
+        CreateApplicationComponent
     ],
     entryComponents: [
         // dialogs
         CreateServiceDialogComponent,
         ServicePickerComponent,
         YesNoDialogComponent,
-        CreateServiceInterfaceComponent
+        CreateServiceInterfaceComponent,
+        CreateApplicationComponent,
     ],
     imports: [
         BrowserModule,
@@ -132,6 +136,7 @@ import { MicoDataBooleanComponent } from './data-view/mico-data-boolean/mico-dat
         MatSlideToggleModule,
         MatAutocompleteModule,
         MatCheckboxModule,
+        MatSelectModule,
         MatExpansionModule,
         OwlDateTimeModule,
         OwlNativeDateTimeModule
@@ -140,4 +145,4 @@ import { MicoDataBooleanComponent } from './data-view/mico-data-boolean/mico-dat
     bootstrap: [AppComponent],
     schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export class AppModule {}
+export class AppModule { }

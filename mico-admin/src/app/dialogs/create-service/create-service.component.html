@@ -1,11 +1,11 @@
 <h2 mat-dialog-title>Create a new Service</h2>
 <mat-dialog-content style="min-width: 35rem">
-    <mico-form [modelUrl]="'local/servicePOST'" (data)="serviceData = $event"></mico-form>
+    <mico-form [modelUrl]="'remote/Service'" [filter]="filterList" (data)="serviceData = $event"></mico-form>
     <div class="w100 flex justify-center">OR</div>
     <mico-form [modelUrl]="'local/serviceFromGitPOST'"></mico-form>
 </mat-dialog-content>
 <mat-dialog-actions>
-  <button mat-button mat-dialog-close>Cancel</button>
-  <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
-  <button mat-button [mat-dialog-close]="input()">Yes</button>
+    <button mat-button mat-dialog-close>Cancel</button>
+    <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
+    <button mat-button [mat-dialog-close]="input()">Yes</button>
 </mat-dialog-actions>

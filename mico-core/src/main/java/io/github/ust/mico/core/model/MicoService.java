@@ -11,6 +11,7 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
+import javax.validation.constraints.Pattern;
 import java.util.List;
 
 /**
@@ -119,6 +120,7 @@ public class MicoService {
     /**
      * The relative (to vcsRoot) path to the Dockerfile.
      */
+    @Pattern(regexp = "^(?!/.*$).*", message = "Path must be relative to vcsRoot")
     private String dockerfilePath;
 
     /**
