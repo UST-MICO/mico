@@ -45,11 +45,10 @@ export class DashboardComponent implements OnInit {
             // filter empty results (when dialog is aborted)
             if (result !== '') {
 
-                console.log(result);
-
                 // check if returned object is complete
                 for (const property in result) {
                     if (result[property] == null) {
+                        // TODO add some user feed back
                         return;
                     }
                 }
@@ -70,6 +69,7 @@ export class DashboardComponent implements OnInit {
                 // check if returned object is complete
                 for (const property in result.applicationProperties) {
                     if (result.applicationProperties[property] == null) {
+                        // TODO add some user feed back
                         return;
                     }
                 }
