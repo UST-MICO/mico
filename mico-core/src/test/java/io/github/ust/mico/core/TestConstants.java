@@ -14,10 +14,10 @@ public class TestConstants {
     public static final Long ID_2 = Long.valueOf(1002);
     public static final Long ID_3 = Long.valueOf(1003);
 
-    public static final MicoVersion VERSION = MicoVersion.forIntegers(1, 0, 0);
-    public static final MicoVersion VERSION_1_0_1 = MicoVersion.forIntegers(1, 0, 1);
-    public static final MicoVersion VERSION_1_0_2 = MicoVersion.forIntegers(1, 0, 2);
-    public static final MicoVersion VERSION_1_0_3 = MicoVersion.forIntegers(1, 0, 3);
+    public static final String VERSION = MicoVersion.forIntegers(1, 0, 0).toString();
+    public static final String VERSION_1_0_1 = MicoVersion.forIntegers(1, 0, 1).toString();
+    public static final String VERSION_1_0_2 = MicoVersion.forIntegers(1, 0, 2).toString();
+    public static final String VERSION_1_0_3 = MicoVersion.forIntegers(1, 0, 3).toString();
     public static final String VERSION_MATCHER = JsonPathBuilder.buildVersionMatcher(VERSION);
     public static final String VERSION_1_0_1_MATCHER = JsonPathBuilder.buildVersionMatcher(VERSION_1_0_1);
     public static final String VERSION_1_0_2_MATCHER = JsonPathBuilder.buildVersionMatcher(VERSION_1_0_2);

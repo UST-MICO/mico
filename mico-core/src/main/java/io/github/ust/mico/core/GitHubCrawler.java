@@ -41,12 +41,12 @@ public class GitHubCrawler {
             return MicoService.builder()
                     .shortName(basicInfoJson.get("name").textValue())
                     .name(basicInfoJson.get("full_name").textValue())
-                    .version(MicoVersion.valueOf(releaseInfoJson.get("tag_name").textValue()))
+                    .version(releaseInfoJson.get("tag_name").textValue())
                     .description(basicInfoJson.get("description").textValue())
                     .serviceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
                     .vcsRoot(releaseInfoJson.get("url").textValue())
                     .build();
-        } catch (IOException | VersionNotSupportedException e) {
+        } catch (IOException e) {
             // TODO: Better exception handling
             e.printStackTrace();
             return null;
@@ -84,19 +84,16 @@ public class GitHubCrawler {
             String fullName = basicInfoJson.get("full_name").textValue();
 
             for (JsonNode jsonNode : releaseInfoJson) {
-                try {
+
                     serviceList.add(MicoService.builder()
                             .shortName(shortName)
                             .name(fullName)
-                            .version(MicoVersion.valueOf(jsonNode.get("tag_name").textValue()))
+                            .version(jsonNode.get("tag_name").textValue())
                             .description(description)
                             .serviceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
                             .vcsRoot(jsonNode.get("url").textValue())
                             .build());
-                } catch (VersionNotSupportedException e) {
-                    // TODO: Better exception handling
-                    e.printStackTrace();
-                }
+                
             }
             return serviceList;
         } catch (IOException e) {

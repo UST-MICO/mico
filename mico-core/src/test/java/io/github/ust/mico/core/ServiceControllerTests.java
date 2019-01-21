@@ -131,9 +131,9 @@ public class ServiceControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
-                .andExpect(jsonPath(VERSION_MAJOR_PATH, is(Integer.valueOf(VERSION.getMajorVersion()))))
-                .andExpect(jsonPath(VERSION_MINOR_PATH, is(Integer.valueOf(VERSION.getMinorVersion()))))
-                .andExpect(jsonPath(VERSION_PATCH_PATH, is(Integer.valueOf(VERSION.getPatchVersion()))))
+                .andExpect(jsonPath(VERSION_MAJOR_PATH, is(VERSION)))
+                .andExpect(jsonPath(VERSION_MINOR_PATH, is(VERSION)))
+                .andExpect(jsonPath(VERSION_PATCH_PATH, is(VERSION)))
                 .andExpect(jsonPath(DESCRIPTION_PATH, is(DESCRIPTION)))
                 .andExpect(jsonPath(SELF_HREF, is(BASE_URL + urlPath)))
                 .andExpect(jsonPath(SERVICES_HREF, is(BASE_URL + SERVICES_PATH)))
@@ -164,9 +164,9 @@ public class ServiceControllerTests {
                 .andExpect(jsonPath(ID_PATH, is(ID)))
                 .andExpect(jsonPath(DESCRIPTION_PATH, is(DESCRIPTION)))
                 .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
-                .andExpect(jsonPath(VERSION_MAJOR_PATH, is(Integer.valueOf(VERSION.getMajorVersion()))))
-                .andExpect(jsonPath(VERSION_MINOR_PATH, is(Integer.valueOf(VERSION.getMinorVersion()))))
-                .andExpect(jsonPath(VERSION_PATCH_PATH, is(Integer.valueOf(VERSION.getPatchVersion()))))
+                .andExpect(jsonPath(VERSION_MAJOR_PATH, is(VERSION)))
+                .andExpect(jsonPath(VERSION_MINOR_PATH, is(VERSION)))
+                .andExpect(jsonPath(VERSION_PATCH_PATH, is(VERSION)))
                 .andExpect(jsonPath(SELF_HREF, is(BASE_URL + urlPath)))
                 .andExpect(jsonPath(SERVICES_HREF, is(BASE_URL + SERVICES_PATH)))
                 .andReturn();
@@ -223,8 +223,8 @@ public class ServiceControllerTests {
         String description = DESCRIPTION_1;
         String shortNameToDelete = SHORT_NAME_2;
         String versionToDelete = VERSION_1_0_2.toString();
-        MicoService service = MicoService.builder().shortName(shortName).version(MicoVersion.valueOf(version)).description(description).build();
-        MicoService serviceToDelete = MicoService.builder().shortName(shortNameToDelete).version(MicoVersion.valueOf(versionToDelete)).build();
+        MicoService service = MicoService.builder().shortName(shortName).version(version).description(description).build();
+        MicoService serviceToDelete = MicoService.builder().shortName(shortNameToDelete).version(versionToDelete).build();
 
         given(serviceRepository.findByShortNameAndVersion(shortName, version)).willReturn(Optional.of(service));
         given(serviceRepository.save(any(MicoService.class))).willReturn(service);
@@ -360,9 +360,9 @@ public class ServiceControllerTests {
                 .andExpect(jsonPath(ID_PATH, is(service.getId())))
                 .andExpect(jsonPath(DESCRIPTION_PATH, is(updatedDescription)))
                 .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
-                .andExpect(jsonPath(VERSION_MAJOR_PATH, is(Integer.valueOf(VERSION.getMajorVersion()))))
-                .andExpect(jsonPath(VERSION_MINOR_PATH, is(Integer.valueOf(VERSION.getMinorVersion()))))
-                .andExpect(jsonPath(VERSION_PATCH_PATH, is(Integer.valueOf(VERSION.getPatchVersion()))));
+                .andExpect(jsonPath(VERSION_MAJOR_PATH, is(VERSION)))
+                .andExpect(jsonPath(VERSION_MINOR_PATH, is(VERSION)))
+                .andExpect(jsonPath(VERSION_PATCH_PATH, is(VERSION)));
 
         resultUpdate.andExpect(status().isOk());
     }

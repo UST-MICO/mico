@@ -333,7 +333,7 @@ public class ServiceController {
 
         dependees.forEach(dependee -> {
             String shortName = dependee.getDependedService().getShortName();
-            MicoVersion version = dependee.getDependedService().getVersion();
+            String version = dependee.getDependedService().getVersion();
 
             Optional<MicoService> dependeeServiceOpt = serviceRepository.findByShortNameAndVersion(shortName, version.toString());
             MicoService dependeeService = dependeeServiceOpt.orElse(null);

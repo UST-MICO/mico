@@ -79,7 +79,7 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
         return MicoService.builder()
                 .shortName(TEST_SHORT_NAME)
                 .name(TEST_LONGER_NAME)
-                .version(MicoVersion.valueOf(TEST_VERSION))
+                .version(TEST_VERSION)
                 .description(TEST_SERVICE_DESCRIPTION)
                 .serviceInterface(MicoServiceInterface.builder()
                         .serviceInterfaceName(TEST_SERVICE_INTERFACE_NAME)
@@ -119,7 +119,7 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
         MicoService service2 = MicoService.builder()
         .shortName(testServivce2ShortName)
         .name(testServivce2Name)
-        .version(MicoVersion.valueOf(testService2Version))
+        .version(testService2Version)
         .description(testServivce2Description)
         .serviceInterface(MicoServiceInterface.builder()
                 .serviceInterfaceName(testInterface2Name)
@@ -168,21 +168,21 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
         MicoApplication application1 = MicoApplication.builder()
                 .shortName("App1")
                 .name("Application1")
-                .version(MicoVersion.forIntegers(1, 0, 0))
+                .version("1.0.0")
                 .build();
         applicationRepository.save(application1);
 
         MicoApplication application2 = MicoApplication.builder()
                 .shortName("App2")
                 .name("Application2")
-                .version(MicoVersion.forIntegers(1, 0, 0))
+                .version("1.0.0")
                 .build();
         applicationRepository.save(application2);
         
         MicoApplication application3 = MicoApplication.builder()
                 .shortName("App3")
                 .name("Application3")
-                .version(MicoVersion.forIntegers(1, 0, 0))
+                .version("1.0.0")
                 .build();
         applicationRepository.save(application3);
 

@@ -85,7 +85,7 @@ public class ApplicationControllerTest {
     @Test
     public void getApplicationByShortNameAndVersion() throws Exception {
         given(applicationRepository.findByShortNameAndVersion("ApplicationShortName", "1.1.0")).willReturn(
-            Optional.of(MicoApplication.builder().shortName("ApplicationShortName").version(MicoVersion.forIntegers(1, 1, 0)).build()));
+            Optional.of(MicoApplication.builder().shortName("ApplicationShortName").version("1.1.0").build()));
 
         mvc.perform(get("/applications/ApplicationShortName/1.1.0").accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
