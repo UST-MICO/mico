@@ -43,7 +43,7 @@ export class DashboardComponent implements OnInit {
         const dialogRef = this.dialog.open(CreateServiceDialogComponent);
         dialogRef.afterClosed().subscribe(result => {
             // filter empty results (when dialog is aborted)
-            if (result !== '') {
+            if (result !== '' && result != null && result.data != null) {
 
                 // check if returned object is complete
                 for (const property in result.data) {
