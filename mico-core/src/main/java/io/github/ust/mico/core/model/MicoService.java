@@ -1,7 +1,9 @@
 package io.github.ust.mico.core.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.github.ust.mico.core.VersionNotSupportedException;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.*;
 import org.neo4j.ogm.annotation.GeneratedValue;
@@ -51,7 +53,7 @@ public class MicoService {
      * The version of this service. Refers to GitHub release tag.
      */
     @ApiModelProperty(required = true)
-    private MicoVersion version;
+    private String version;
 
     /**
      * Human readable description of this service.
@@ -126,5 +128,12 @@ public class MicoService {
      * user directly.
      */
     private String dockerImageUri;
+
+
+    @JsonIgnore
+    public MicoVersion getMicoVersion() throws VersionNotSupportedException {
+        MicoVersion micoVersion = MicoVersion.valueOf(this.version);
+        return micoVersion;
+    }
 
 }
