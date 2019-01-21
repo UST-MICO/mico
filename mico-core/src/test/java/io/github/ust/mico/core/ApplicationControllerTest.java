@@ -47,6 +47,7 @@ public class ApplicationControllerTest {
 
     public static final String APPLICATION_LIST = buildPath(EMBEDDED, "micoApplicationList");
     public static final String SHORT_NAME_PATH = buildPath(ROOT, "shortName");
+    public static final String VERSION_NAME_PATH = buildPath(ROOT, "version");
     public static final String VERSION_MAJOR_PATH = buildPath(ROOT, "version", "majorVersion");
     public static final String VERSION_MINOR_PATH = buildPath(ROOT, "version", "minorVersion");
     public static final String VERSION_PATCH_PATH = buildPath(ROOT, "version", "patchVersion");
@@ -91,9 +92,7 @@ public class ApplicationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
-                .andExpect(jsonPath(VERSION_MAJOR_PATH, is(VERSION)))
-                .andExpect(jsonPath(VERSION_MINOR_PATH, is(VERSION)))
-                .andExpect(jsonPath(VERSION_PATCH_PATH, is(VERSION)))
+                .andExpect(jsonPath(VERSION_NAME_PATH, is(VERSION)))
                 .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/applications/" + SHORT_NAME + "/" + VERSION)))
                 .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "applications.href", is("http://localhost/applications")))
                 .andReturn();
