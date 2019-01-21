@@ -113,5 +113,5 @@ public class ServiceInterfaceController {
         links.add(linkTo(methodOn(ServiceController.class).getServiceByShortNameAndVersion(shortName, version)).withRel("service"));
         return links;
     }
-    
+
 }

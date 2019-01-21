@@ -156,7 +156,7 @@ public class ImageBuilderIntegrationTests {
 
         MicoService micoService = MicoService.builder()
             .shortName("hello-integration-test")
-            .version(MicoVersion.valueOf(RELEASE))
+            .version(MicoVersion.valueOf(RELEASE).toString())
             .vcsRoot(GIT_URI)
             .dockerfilePath(DOCKERFILE)
             .build();
@@ -182,7 +182,7 @@ public class ImageBuilderIntegrationTests {
     @Ignore
     @Test
     public void dockerImageExists() throws ExecutionException, InterruptedException, TimeoutException, VersionNotSupportedException {
-        String imageName = imageBuilder.createImageName("hello-integration-test", MicoVersion.valueOf("v1.0"));
+        String imageName = imageBuilder.createImageName("hello-integration-test", MicoVersion.valueOf("v1.0").toString());
         boolean result = checkIfDockerImageExists(imageName);
         assertTrue("Pod creation failed!", result);
     }
