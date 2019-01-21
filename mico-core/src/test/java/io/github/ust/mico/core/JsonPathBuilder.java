@@ -61,33 +61,10 @@ public class JsonPathBuilder {
     }
 
     public static String buildVersionMatcher(MicoVersion version) {
-        return buildVersionMatcher(
-            String.valueOf(version.getMajorVersion()),
-            String.valueOf(version.getMinorVersion()),
-            String.valueOf(version.getPatchVersion())
-        );
+        return buildVersionMatcher(version.toString());
     }
 
     public static String buildVersionMatcher(String version) {
-        String[] splitVersion = version.split("\\.");
-        return buildVersionMatcher(
-            splitVersion[0],
-            splitVersion.length > 1 ? splitVersion[1] : null,
-            splitVersion.length > 2 ? splitVersion[2] : null
-        );
-    }
-
-    public static String buildVersionMatcher(String major, String minor, String patch) {
-        StringBuilder resultMatcher = new StringBuilder(500);
-        resultMatcher.append(buildSingleMatcher(buildPath(LOCAL_ROOT, "version", "majorVersion"), major, false));
-        if (minor != null) {
-            resultMatcher.append(" && ");
-            resultMatcher.append(buildSingleMatcher(buildPath(LOCAL_ROOT, "version", "minorVersion"), minor, false));
-        }
-        if (patch != null) {
-            resultMatcher.append(" && ");
-            resultMatcher.append(buildSingleMatcher(buildPath(LOCAL_ROOT, "version", "patchVersion"), patch, false));
-        }
-        return resultMatcher.toString();
+        return buildSingleMatcher(buildPath(LOCAL_ROOT, "version"), version);
     }
 }
