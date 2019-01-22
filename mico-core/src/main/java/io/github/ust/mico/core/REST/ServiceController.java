@@ -261,7 +261,7 @@ public class ServiceController {
                 linkTo(methodOn(ServiceController.class).getDependers(shortName, version)).withSelfRel()));
     }
 
-    @PostMapping("/{" + PATH_VARIABLE_IMPORT + "}/{" + PATH_VARIABLE_GITHUB + "}")
+    @PostMapping("/" + PATH_VARIABLE_IMPORT + "/" + PATH_VARIABLE_GITHUB)
     public ResponseEntity<Resource<MicoService>> importMicoServiceFromGitHub(@RequestBody String url) {
         // Crawl information from GitHub and create new MicoService
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
