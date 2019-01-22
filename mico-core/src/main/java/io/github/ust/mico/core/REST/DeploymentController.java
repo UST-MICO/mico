@@ -1,11 +1,13 @@
 package io.github.ust.mico.core.REST;
 
-import io.github.ust.mico.core.*;
+import io.github.ust.mico.core.ImageBuildException;
+import io.github.ust.mico.core.NotInitializedException;
 import io.github.ust.mico.core.concurrency.MicoCoreBackgroundTaskFactory;
 import io.github.ust.mico.core.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.imagebuilder.buildtypes.Build;
 import io.github.ust.mico.core.mapping.MicoKubernetesClient;
-import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -24,9 +26,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
+@Slf4j
 @RestController
 @RequestMapping(value = "/applications/{shortName}/{version}/deploy", produces = MediaTypes.HAL_JSON_VALUE)
-@Slf4j
 public class DeploymentController {
     private static final String PATH_VARIABLE_SHORT_NAME = "shortName";
     private static final String PATH_VARIABLE_VERSION = "version";
@@ -48,7 +50,7 @@ public class DeploymentController {
 
     @PostMapping
     public ResponseEntity<Void> deploy(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                       @PathVariable(PATH_VARIABLE_VERSION) String version) throws VersionNotSupportedException {
+                                       @PathVariable(PATH_VARIABLE_VERSION) String version) {
         try {
             imageBuilder.init();
         } catch (NotInitializedException e) {
@@ -56,9 +58,10 @@ public class DeploymentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 
-        // TODO
-        // Optional<MicoApplication> application = applicationRepository.findByShortNameAndVersion(shortName, version);
-        Long serviceId = 1337L;
+        Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
+
+        // TODO Clean up
+        /*Long serviceId = 1337L;
         Optional<MicoApplication> micoApplicationOptional = Optional.of(MicoApplication.builder()
             .shortName("MicoApplication")
             .deploymentInfo(MicoApplicationDeploymentInfo.builder()
@@ -73,9 +76,10 @@ public class DeploymentController {
                 .vcsRoot("https://github.com/UST-MICO/hello.git")
                 .dockerfilePath("Dockerfile")
                 .build())
-            .build());
+            .build());*/
 
         if (!micoApplicationOptional.isPresent()) {
+            log.debug("MICO application with short name {} and version {} does not exist", shortName, version);
             return ResponseEntity.notFound().build();
         }
         MicoApplication micoApplication = micoApplicationOptional.get();

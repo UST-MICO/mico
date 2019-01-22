@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Optional;
 import java.util.concurrent.*;
 
+import static io.github.ust.mico.core.TestConstants.*;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -38,21 +39,7 @@ import static org.junit.Assert.assertTrue;
 @RunWith(SpringRunner.class)
 public class ImageBuilderIntegrationTests {
 
-    /**
-     * Git repository that is used for testing.
-     * It must contain a Dockerfile and at least one release.
-     */
-    private static final String GIT_URI = "https://github.com/UST-MICO/hello.git";
-    /**
-     * Path to the Dockerfile.
-     * It must be relative to the root of the Git repository.
-     */
-    private static final String DOCKERFILE = "Dockerfile";
-    /**
-     * Release tag of the release that should be used for testing.
-     * Must be in in supported version format (semantic version).
-     */
-    private static final String RELEASE = "v1.0.0";
+
 
     @Autowired
     private ClusterAwarenessFabric8 cluster;
@@ -156,7 +143,7 @@ public class ImageBuilderIntegrationTests {
         MicoService micoService = MicoService.builder()
             .shortName("hello-integration-test")
             .version(MicoVersion.valueOf(RELEASE).toString())
-            .vcsRoot(GIT_URI)
+            .vcsRoot(GIT_TEST_REPO_URL)
             .dockerfilePath(DOCKERFILE)
             .build();
 

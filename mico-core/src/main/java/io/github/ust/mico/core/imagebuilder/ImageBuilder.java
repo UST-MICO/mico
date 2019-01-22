@@ -42,9 +42,11 @@ public class ImageBuilder {
     private NonNamespaceOperation<Build, BuildList, DoneableBuild, Resource<Build, DoneableBuild>> buildClient;
     private ScheduledExecutorService scheduledBuildStatusCheckService;
 
+
     /**
      * @param cluster        The Kubernetes cluster object
-     * @param buildBotConfig The configuration for the image builder
+     * @param buildBotConfig The build bot configuration for the image builder
+     * @param micoKubernetesConfig The Kubernetes configuration
      */
     @Autowired
     public ImageBuilder(ClusterAwarenessFabric8 cluster, MicoKubernetesBuildBotConfig buildBotConfig, MicoKubernetesConfig micoKubernetesConfig) {
@@ -215,6 +217,7 @@ public class ImageBuilder {
                 log.debug("Current build phase: {}", buildPod.getStatus().getPhase());
                 if (buildPod.getStatus().getPhase().equals("Succeeded")) {
                     completionFuture.complete(true);
+                    // TODO Clean up build (delete build pod)
                 } else if (buildPod.getStatus().getPhase().equals("Failed")) {
                     completionFuture.complete(false);
                 }
