@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import io.github.ust.mico.core.REST.ServiceInterfaceController;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +50,7 @@ import static org.hamcrest.Matchers.empty;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
-@WebMvcTest()
+@WebMvcTest(ServiceInterfaceController.class)
 @OverrideAutoConfiguration(enabled = true) //Needed to override our neo4j config
 public class ServiceInterfaceControllerTests {
 
