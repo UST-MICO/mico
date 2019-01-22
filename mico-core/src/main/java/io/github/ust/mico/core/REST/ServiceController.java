@@ -263,24 +263,11 @@ public class ServiceController {
 
     @PostMapping("/" + PATH_VARIABLE_IMPORT + "/" + PATH_VARIABLE_GITHUB)
     public ResponseEntity<Resource<MicoService>> importMicoServiceFromGitHub(@RequestBody String url) {
-        // Crawl information from GitHub and create new MicoService
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
         MicoService newService = crawler.crawlGitHubRepoLatestRelease(url);
 
-        //Check if shortName and version combination already exists
-        Optional<MicoService> serviceOptional = serviceRepository.findByShortNameAndVersion(newService.getShortName(), newService.getVersion().toString());
-        MicoService serviceToCheck = serviceOptional.orElse(null);
-
-        if (serviceToCheck != null) {
-            return ResponseEntity.badRequest().build();
-        } else {
-            MicoService savedService = serviceRepository.save(newService);
-
-            return ResponseEntity
-                .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
-                .body(new Resource<>(newService, getServiceLinks(newService)));
-        }
+        return createService(newService);
     }
 
     public List<MicoService> getDependers(MicoService serviceToLookFor) {
