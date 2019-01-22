@@ -10,14 +10,13 @@ import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.github.ust.mico.core.ClusterAwarenessFabric8;
-import io.github.ust.mico.core.ImageBuildException;
+import io.github.ust.mico.core.MicoKubernetesBuildBotConfig;
+import io.github.ust.mico.core.MicoKubernetesConfig;
 import io.github.ust.mico.core.NotInitializedException;
 import io.github.ust.mico.core.imagebuilder.buildtypes.*;
 import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoVersion;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -36,20 +35,22 @@ public class ImageBuilder {
     private static final String BUILD_CRD_GROUP = "build.knative.dev";
     private static final String BUILD_CRD_NAME = "builds." + BUILD_CRD_GROUP;
 
-    private final ImageBuilderConfig config;
+    private final MicoKubernetesBuildBotConfig buildBotConfig;
+    private final MicoKubernetesConfig micoKubernetesConfig;
     private final ClusterAwarenessFabric8 cluster;
 
     private NonNamespaceOperation<Build, BuildList, DoneableBuild, Resource<Build, DoneableBuild>> buildClient;
-    private ScheduledExecutorService buildPodStatusChecker = Executors.newSingleThreadScheduledExecutor();
+    private ScheduledExecutorService scheduledBuildStatusCheckService;
 
     /**
-     * @param cluster The Kubernetes cluster object
-     * @param config  The configuration for the image builder
+     * @param cluster        The Kubernetes cluster object
+     * @param buildBotConfig The configuration for the image builder
      */
     @Autowired
-    public ImageBuilder(ClusterAwarenessFabric8 cluster, ImageBuilderConfig config) {
+    public ImageBuilder(ClusterAwarenessFabric8 cluster, MicoKubernetesBuildBotConfig buildBotConfig, MicoKubernetesConfig micoKubernetesConfig) {
         this.cluster = cluster;
-        this.config = config;
+        this.buildBotConfig = buildBotConfig;
+        this.micoKubernetesConfig = micoKubernetesConfig;
     }
 
     /**
@@ -58,8 +59,8 @@ public class ImageBuilder {
      * @throws NotInitializedException if the image builder was not initialized
      */
     public void init() throws NotInitializedException {
-        String namespace = config.getBuildExecutionNamespace();
-        String serviceAccountName = config.getServiceAccountName();
+        String namespace = buildBotConfig.getNamespaceBuildExecution();
+        String serviceAccountName = buildBotConfig.getServiceAccountName();
 
         Optional<CustomResourceDefinition> buildCRD = getBuildCRD();
         if (!buildCRD.isPresent()) {
@@ -87,6 +88,8 @@ public class ImageBuilder {
             buildClient = ((MixedOperation<Build, BuildList, DoneableBuild, Resource<Build, DoneableBuild>>)
                 buildClient).inNamespace(namespace);
         }
+
+        scheduledBuildStatusCheckService = Executors.newSingleThreadScheduledExecutor();
     }
 
     /**
@@ -133,7 +136,7 @@ public class ImageBuilder {
             throw new IllegalArgumentException("VcsRoot is missing");
         }
 
-        String namespace = config.getBuildExecutionNamespace();
+        String namespace = buildBotConfig.getNamespaceBuildExecution();
 
         String buildName = createBuildName(micoService.getShortName());
         String destination = createImageName(micoService.getShortName(), micoService.getVersion());
@@ -145,7 +148,7 @@ public class ImageBuilder {
             dockerfilePath = "/workspace/Dockerfile";
         }
         String gitUrl = micoService.getVcsRoot();
-        String gitRevision = micoService.getVersion().toString();
+        String gitRevision = micoService.getVersion();
 
         return createBuild(buildName, destination, dockerfilePath, gitUrl, gitRevision, namespace);
     }
@@ -168,7 +171,7 @@ public class ImageBuilder {
 
         Build build = Build.builder()
             .spec(BuildSpec.builder()
-                .serviceAccountName(config.getServiceAccountName())
+                .serviceAccountName(buildBotConfig.getServiceAccountName())
                 .source(SourceSpec.builder()
                     .git(GitSourceSpec.builder()
                         .url(gitUrl)
@@ -177,7 +180,7 @@ public class ImageBuilder {
                     .build())
                 .step(BuildStep.builder()
                     .name(BUILD_STEP_NAME)
-                    .image(config.getKanikoExecutorImageUrl())
+                    .image(buildBotConfig.getKanikoExecutorImageUrl())
                     .arg("--dockerfile=" + dockerfile)
                     .arg("--destination=" + destination)
                     .build())
@@ -200,14 +203,14 @@ public class ImageBuilder {
         CompletableFuture<Boolean> completionFuture = new CompletableFuture<>();
 
         // Create a future that polls every second with a delay of 10 seconds.
-        final ScheduledFuture<?> checkFuture = buildPodStatusChecker.scheduleAtFixedRate(() -> {
+        final ScheduledFuture<?> checkFuture = scheduledBuildStatusCheckService.scheduleAtFixedRate(() -> {
 
             if (build.getStatus() != null && build.getStatus().getCluster() != null) {
                 String buildPodName = build.getStatus().getCluster().getPodName();
                 String buildNamespace = build.getStatus().getCluster().getNamespace();
                 log.debug("Build is executed with pod '{}' in namespace '{}'", buildPodName, buildNamespace);
 
-                Pod buildPod = this.cluster.getPod(buildPodName, config.getBuildExecutionNamespace());
+                Pod buildPod = this.cluster.getPod(buildPodName, buildBotConfig.getNamespaceBuildExecution());
 
                 log.debug("Current build phase: {}", buildPod.getStatus().getPhase());
                 if (buildPod.getStatus().getPhase().equals("Succeeded")) {
@@ -252,7 +255,7 @@ public class ImageBuilder {
      * @return the image name
      */
     public String createImageName(String serviceName, String serviceVersion) {
-        return config.getImageRepositoryUrl() + "/" + serviceName + ":" + serviceVersion;
+        return micoKubernetesConfig.getImageRepositoryUrl() + "/" + serviceName + ":" + serviceVersion;
     }
 
     /**

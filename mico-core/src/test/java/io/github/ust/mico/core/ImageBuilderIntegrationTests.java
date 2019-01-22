@@ -7,7 +7,6 @@ import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.github.ust.mico.core.imagebuilder.buildtypes.Build;
 import io.github.ust.mico.core.imagebuilder.ImageBuilder;
-import io.github.ust.mico.core.imagebuilder.ImageBuilderConfig;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoVersion;
 import lombok.extern.slf4j.Slf4j;
@@ -62,7 +61,7 @@ public class ImageBuilderIntegrationTests {
     private ImageBuilder imageBuilder;
 
     @Autowired
-    private ImageBuilderConfig imageBuilderConfig;
+    private MicoKubernetesBuildBotConfig buildBotConfig;
 
     @Autowired
     private IntegrationTestsConfig integrationTestsConfig;
@@ -79,7 +78,7 @@ public class ImageBuilderIntegrationTests {
     @Before
     public void setUp() throws Exception {
 
-        String serviceAccountName = imageBuilderConfig.getServiceAccountName();
+        String serviceAccountName = buildBotConfig.getServiceAccountName();
         String usernameBase64Encoded = integrationTestsConfig.getDockerHubUsernameBase64();
         String passwordBase64Encoded = integrationTestsConfig.getDockerHubPasswordBase64();
 
@@ -95,7 +94,7 @@ public class ImageBuilderIntegrationTests {
         namespace = integrationTestsConfig.getKubernetesNamespaceName() + "-" + shortId;
         cluster.createNamespace(namespace);
         // Override config of the image builder so that it uses also the same namespace
-        imageBuilderConfig.setBuildExecutionNamespace(namespace);
+        buildBotConfig.setNamespaceBuildExecution(namespace);
 
         // Set up connection to Docker Hub
         dockerRegistrySecret = new SecretBuilder()

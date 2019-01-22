@@ -12,31 +12,29 @@ import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.github.ust.mico.core.ClusterAwarenessFabric8;
+import io.github.ust.mico.core.MicoKubernetesConfig;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.model.MicoServicePort;
-import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
  * Provides access to the Kubernetes API.
  */
 @Component
-public class MicoKubeClient {
+public class MicoKubernetesClient {
 
-    private final KubernetesMappingConfig kubernetesMappingConfig;
+    private final MicoKubernetesConfig micoKubernetesConfig;
 
     private final ClusterAwarenessFabric8 cluster;
 
     @Autowired
-    public MicoKubeClient(KubernetesMappingConfig kubernetesMappingConfig, ClusterAwarenessFabric8 cluster) {
-        this.kubernetesMappingConfig = kubernetesMappingConfig;
+    public MicoKubernetesClient(MicoKubernetesConfig micoKubernetesConfig, ClusterAwarenessFabric8 cluster) {
+        this.micoKubernetesConfig = micoKubernetesConfig;
         this.cluster = cluster;
     }
 
@@ -53,7 +51,7 @@ public class MicoKubeClient {
         Deployment deployment = new DeploymentBuilder()
                 .withNewMetadata()
                     .withName(service.getShortName())
-                    .withNamespace(kubernetesMappingConfig.getNamespaceMicoWorkspace())
+                    .withNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace())
                     .addToLabels("app", applicationName)
                 .endMetadata()
                 .withNewSpec()
@@ -69,7 +67,7 @@ public class MicoKubeClient {
                              .withContainers(
                                  new ContainerBuilder()
                                      .withName(service.getShortName())
-                                     .withImage(kubernetesMappingConfig.getDefaultImageRegistry() + "/" + service.getShortName() + ":" + service.getVersion())
+                                     .withImage(micoKubernetesConfig.getImageRepositoryUrl() + "/" + service.getShortName() + ":" + service.getVersion())
                                      .withPorts(createContainerPorts(service))
                                      .build())
                          .endSpec()
@@ -78,7 +76,7 @@ public class MicoKubeClient {
                 .build();
 
         KubernetesClient client = cluster.getClient();
-        return client.apps().deployments().inNamespace(kubernetesMappingConfig.getNamespaceMicoWorkspace()).create(deployment);
+        return client.apps().deployments().inNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace()).create(deployment);
     }
 
     /**
@@ -103,7 +101,7 @@ public class MicoKubeClient {
         // (publicDns, description, protocol, transportProtocol)
 
         KubernetesClient client = cluster.getClient();
-        return client.services().inNamespace(kubernetesMappingConfig.getNamespaceMicoSystem()).create(service);
+        return client.services().inNamespace(micoKubernetesConfig.getNamespaceMicoSystem()).create(service);
     }
 
     private List<ContainerPort> createContainerPorts(MicoService service) {

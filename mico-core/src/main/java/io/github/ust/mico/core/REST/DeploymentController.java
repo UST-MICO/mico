@@ -4,7 +4,7 @@ import io.github.ust.mico.core.*;
 import io.github.ust.mico.core.concurrency.MicoCoreBackgroundTaskFactory;
 import io.github.ust.mico.core.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.imagebuilder.buildtypes.Build;
-import io.github.ust.mico.core.mapping.MicoKubeClient;
+import io.github.ust.mico.core.mapping.MicoKubernetesClient;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
@@ -44,7 +44,7 @@ public class DeploymentController {
     private MicoCoreBackgroundTaskFactory factory;
 
     @Autowired
-    private MicoKubeClient micoKubeClient;
+    private MicoKubernetesClient micoKubernetesClient;
 
     @PostMapping
     public ResponseEntity<Void> deploy(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
@@ -95,7 +95,7 @@ public class DeploymentController {
                 log.debug("Create Kubernetes resources for MICO service '{}'", micoService.getShortName());
                 String applicationName = micoApplication.getShortName();
                 int replicas = micoApplication.getDeploymentInfo().getServiceDeploymentInfos().get(micoService.getId()).getReplicas();
-                micoKubeClient.createMicoService(micoService, applicationName, replicas);
+                micoKubernetesClient.createMicoService(micoService, applicationName, replicas);
                 log.info("Created Kubernetes resources for MICO service '{}'", micoService.getShortName());
 
             }, e -> exceptionHandler(e));
