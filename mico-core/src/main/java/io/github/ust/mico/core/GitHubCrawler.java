@@ -1,19 +1,18 @@
 package io.github.ust.mico.core;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceCrawlingOrigin;
 
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceCrawlingOrigin;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GitHubCrawler {
 
@@ -24,6 +23,8 @@ public class GitHubCrawler {
     private static final String RELEASES = "releases";
     private static final String TAGS = "tags";
     private static final String LATEST = "latest";
+    private static final String GITHUB_HTML_URL = "https://github.com/";
+    private static final String GITHUB_API_URL = "https://api.github.com/repos/";
     private final RestTemplate restTemplate;
 
     public GitHubCrawler(RestTemplateBuilder restTemplateBuilder) {
@@ -38,15 +39,15 @@ public class GitHubCrawler {
         try {
             JsonNode basicInfoJson = mapper.readTree(responseBasicInfo.getBody());
             JsonNode releaseInfoJson = mapper.readTree(responseReleaseInfo.getBody());
-            
+
             return MicoService.builder()
-                    .shortName(basicInfoJson.get("name").textValue())
-                    .name(basicInfoJson.get("full_name").textValue())
-                    .version(releaseInfoJson.get("tag_name").textValue())
-                    .description(basicInfoJson.get("description").textValue())
-                    .serviceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
-                    .vcsRoot(releaseInfoJson.get("url").textValue())
-                    .build();
+                .shortName(basicInfoJson.get("name").textValue())
+                .name(basicInfoJson.get("full_name").textValue())
+                .version(releaseInfoJson.get("tag_name").textValue())
+                .description(basicInfoJson.get("description").textValue())
+                .serviceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
+                .vcsRoot(releaseInfoJson.get("url").textValue())
+                .build();
         } catch (IOException e) {
             // TODO: Better exception handling
             e.printStackTrace();
@@ -86,26 +87,26 @@ public class GitHubCrawler {
 
             for (JsonNode jsonNode : releaseInfoJson) {
 
-                    serviceList.add(MicoService.builder()
-                            .shortName(shortName)
-                            .name(fullName)
-                            .version(jsonNode.get("tag_name").textValue())
-                            .description(description)
-                            .serviceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
-                            .vcsRoot(jsonNode.get("url").textValue())
-                            .build());
-                
+                serviceList.add(MicoService.builder()
+                    .shortName(shortName)
+                    .name(fullName)
+                    .version(jsonNode.get("tag_name").textValue())
+                    .description(description)
+                    .serviceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
+                    .vcsRoot(jsonNode.get("url").textValue())
+                    .build());
+
             }
             return serviceList;
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
+
         return null;
     }
 
     public String makeUriToMatchGitHubApi(String uri) {
-        return uri.replace("https://github.com/", "https://api.github.com/repos/");
+        return uri.replace(GITHUB_HTML_URL, GITHUB_API_URL);
     }
-    
+
 }
