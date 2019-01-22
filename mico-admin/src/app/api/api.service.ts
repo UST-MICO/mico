@@ -3,6 +3,7 @@ import { Observable, Subject, BehaviorSubject, AsyncSubject } from 'rxjs';
 import { filter, flatMap } from 'rxjs/operators';
 import { ApiObject } from './apiobject';
 import { ApiBaseFunctionService } from './api-base-function.service';
+import { ApiModel, ApiModelAllOf } from './apimodel';
 
 
 /**
@@ -27,6 +28,8 @@ export function freezeObject<T>(obj: T): Readonly<T> {
     return Object.freeze(obj);
 }
 
+type ApiModelMap = {[prop: string]: ApiModel|ApiModelAllOf};
+
 
 /**
  * Service to interact with the mico api.
@@ -35,7 +38,7 @@ export function freezeObject<T>(obj: T): Readonly<T> {
     providedIn: 'root'
 })
 export class ApiService {
-    private streams: Map<string, Subject<Readonly<ApiObject>>> = new Map();
+    private streams: Map<string, Subject<Readonly<any>>> = new Map();
 
     constructor(private rest: ApiBaseFunctionService, ) { }
 
@@ -61,9 +64,9 @@ export class ApiService {
      * @param streamURL resource url
      * @param defaultSubject function to create a new streamSource if needed (default: BehaviourSubject)
      */
-    private getStreamSource(streamURL: string, defaultSubject: () => Subject<Readonly<ApiObject>> =
-        () => new BehaviorSubject<Readonly<ApiObject>>(undefined)
-    ): Subject<Readonly<ApiObject>> {
+    private getStreamSource<T>(streamURL: string, defaultSubject: () => Subject<Readonly<T>> =
+        () => new BehaviorSubject<Readonly<T>>(undefined)
+    ): Subject<Readonly<T>> {
         streamURL = this.canonizeStreamUrl(streamURL);
         let stream = this.streams.get(streamURL);
         if (stream == null) {
@@ -72,20 +75,20 @@ export class ApiService {
                 this.streams.set(streamURL, stream);
             }
         }
-        return stream;
+        return stream as Subject<Readonly<T>>;
     }
 
-    getModelDefinitions() {
+    getModelDefinitions(): Observable<Readonly<ApiModelMap>> {
         const resource = 'models';
-        const stream = this.getStreamSource(resource, () => new AsyncSubject<Readonly<ApiObject>>());
+        const stream = this.getStreamSource<ApiModelMap>(resource, () => new AsyncSubject<Readonly<ApiModelMap>>());
 
         // TODO replace URL with a generic path
-        this.rest.get('http://localhost:8080/v2/api-docs').subscribe(val => {
-            stream.next(freezeObject((val as any).definitions));
+        this.rest.get<{definitions: ApiModelMap, [prop: string]: any}>('http://localhost:8080/v2/api-docs').subscribe(val => {
+            stream.next(freezeObject(val.definitions));
             stream.complete();
         });
 
-        return (stream.asObservable() as Observable<ApiObject>).pipe(
+        return stream.asObservable().pipe(
             filter(data => data !== undefined)
         );
     }
@@ -98,17 +101,17 @@ export class ApiService {
     /**
      * Get application list
      */
-    getApplications(): Observable<Readonly<ApiObject>> {
+    getApplications(): Observable<Readonly<ApiObject[]>> {
 
         const resource = 'applications';
-        const stream = this.getStreamSource(resource);
+        const stream = this.getStreamSource<ApiObject[]>(resource);
 
-        this.rest.get(resource).subscribe(val => {
+        this.rest.get<ApiObject>(resource).subscribe(val => {
             // return actual application list
-            stream.next(freezeObject((val as ApiObject)._embedded.applicationList as ApiObject));
+            stream.next(freezeObject(val._embedded.applicationList));
         });
 
-        return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
+        return stream.asObservable().pipe(
             filter(data => data !== undefined)
         );
     }
@@ -116,11 +119,11 @@ export class ApiService {
     getApplicationById(id): Observable<Readonly<ApiObject>> {
         // TODO check if there is a resource for single applications
         const resource = 'applications';
-        const stream = this.getStreamSource(resource);
+        const stream = this.getStreamSource<ApiObject>(resource);
 
         // TODO
         const mockData: ApiObject = {
-            '_links': 'self',
+            '_links': {'self': {'href': ''}},
             'id': id,
             'name': 'Hello World Application id ' + id,
             'shortName': 'test.' + id + 'application',
@@ -129,7 +132,7 @@ export class ApiService {
 
         stream.next(mockData);
 
-        return (stream.asObservable() as Observable<ApiObject>).pipe(
+        return stream.asObservable().pipe(
             filter(data => data !== undefined)
         );
     }
@@ -142,13 +145,13 @@ export class ApiService {
      */
     getApplication(shortName: string, version: string) {
         const resource = 'applications/' + shortName + '/' + version;
-        const stream = this.getStreamSource(resource);
+        const stream = this.getStreamSource<ApiObject>(resource);
 
-        this.rest.get(resource).subscribe(val => {
-            stream.next(freezeObject((val as ApiObject)));
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+            stream.next(freezeObject(val));
         });
 
-        return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
+        return stream.asObservable().pipe(
             filter(data => data !== undefined)
         );
     }
@@ -161,14 +164,14 @@ export class ApiService {
 
         const resource = 'applications/';
 
-        return this.rest.post(resource, data).pipe(flatMap(val => {
+        return this.rest.post<ApiObject>(resource, data).pipe(flatMap(val => {
 
-            const stream = this.getStreamSource(val._links.self.href);
+            const stream = this.getStreamSource<ApiObject>(val._links.self.href);
             stream.next(val);
 
             this.getApplications();
 
-            return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
+            return stream.asObservable().pipe(
                 filter(service => service !== undefined)
             );
         }));
@@ -181,16 +184,16 @@ export class ApiService {
     /**
      * Get service list
      */
-    getServices(): Observable<Readonly<ApiObject>> {
+    getServices(): Observable<Readonly<ApiObject[]>> {
         const resource = 'services';
-        const stream = this.getStreamSource(resource);
+        const stream = this.getStreamSource<ApiObject[]>(resource);
 
-        this.rest.get(resource).subscribe(val => {
+        this.rest.get<ApiObject>(resource).subscribe(val => {
             // return actual service list
-            stream.next(freezeObject((val as ApiObject)._embedded.serviceList as ApiObject));
+            stream.next(freezeObject(val._embedded.serviceList));
         });
 
-        return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
+        return stream.asObservable().pipe(
             filter(data => data !== undefined)
         );
     }
@@ -198,20 +201,20 @@ export class ApiService {
     /**
      * Get all versions of a service based on its shortName
      */
-    getServiceVersions(shortName): Observable<ApiObject> {
+    getServiceVersions(shortName): Observable<ApiObject[]> {
 
         const resource = 'services/' + shortName + '/';
-        const stream = this.getStreamSource(resource);
+        const stream = this.getStreamSource<ApiObject[]>(resource);
 
-        this.rest.get(resource).subscribe(val => {
-            let list = (val as ApiObject)._embedded.serviceList;
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+            let list = val._embedded.serviceList;
             if (list === undefined) {
-                list = (val as ApiObject)._embedded.applicationList;
+                list = val._embedded.applicationList;
             }
-            stream.next(freezeObject(list as ApiObject));
+            stream.next(freezeObject(list));
         });
 
-        return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
+        return stream.asObservable().pipe(
             filter(data => data !== undefined)
         );
     }
@@ -225,13 +228,13 @@ export class ApiService {
     getService(shortName, version): Observable<ApiObject> {
 
         const resource = 'services/' + shortName + '/' + version;
-        const stream = this.getStreamSource(resource);
+        const stream = this.getStreamSource<ApiObject>(resource);
 
-        this.rest.get(resource).subscribe(val => {
-            stream.next(freezeObject((val as ApiObject)));
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+            stream.next(freezeObject(val));
         });
 
-        return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
+        return stream.asObservable().pipe(
             filter(data => data !== undefined)
         );
     }
@@ -244,15 +247,15 @@ export class ApiService {
 
         const resource = 'services/';
 
-        return this.rest.post(resource, data).pipe(flatMap(val => {
+        return this.rest.post<ApiObject>(resource, data).pipe(flatMap(val => {
 
-            const stream = this.getStreamSource(val._links.self.href);
+            const stream = this.getStreamSource<ApiObject>(val._links.self.href);
             stream.next(val);
 
             this.getServices();
             this.getServiceVersions(data.shortName);
 
-            return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
+            return stream.asObservable().pipe(
                 filter(service => service !== undefined)
             );
         }));
@@ -268,15 +271,15 @@ export class ApiService {
         const resource = 'services/';
 
         // TODO insert proper url (or use resource if possible)
-        return this.rest.post('URL', data).pipe(flatMap(val => {
+        return this.rest.post<ApiObject>('URL', data).pipe(flatMap(val => {
 
-            const stream = this.getStreamSource(val._links.self.href);
+            const stream = this.getStreamSource<ApiObject>(val._links.self.href);
             stream.next(val);
 
             this.getServices();
             this.getServiceVersions(data.shortName);
 
-            return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
+            return stream.asObservable().pipe(
                 filter(service => service !== undefined)
             );
         }));
@@ -291,12 +294,12 @@ export class ApiService {
 
         const resource = 'services/' + shortName + '/' + version;
 
-        return this.rest.put(resource, data).pipe(flatMap(val => {
+        return this.rest.put<ApiObject>(resource, data).pipe(flatMap(val => {
 
-            const stream = this.getStreamSource(val._links.self.href);
+            const stream = this.getStreamSource<ApiObject>(val._links.self.href);
             stream.next(val);
 
-            return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
+            return stream.asObservable().pipe(
                 filter(service => service !== undefined)
             );
         }));
@@ -308,16 +311,16 @@ export class ApiService {
      * @param shortName unique short name of the service
      * @param version service version to be returned
      */
-    getServiceDependees(shortName, version): Observable<ApiObject> {
+    getServiceDependees(shortName, version): Observable<ApiObject[]> {
 
         const resource = 'services/' + shortName + '/' + version + '/dependees';
-        const stream = this.getStreamSource(resource);
+        const stream = this.getStreamSource<ApiObject[]>(resource);
 
-        this.rest.get(resource).subscribe(val => {
-            stream.next(freezeObject((val._embedded.serviceList as ApiObject)));
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+            stream.next(freezeObject(val._embedded.serviceList));
         });
 
-        return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
+        return stream.asObservable().pipe(
             filter(data => data !== undefined)
         );
     }
@@ -331,26 +334,26 @@ export class ApiService {
     getServiceDependers(shortName, version): Observable<ApiObject> {
 
         const resource = 'services/' + shortName + '/' + version + '/dependers';
-        const stream = this.getStreamSource(resource);
+        const stream = this.getStreamSource<ApiObject>(resource);
 
-        this.rest.get(resource).subscribe(val => {
-            stream.next(freezeObject((val as ApiObject)));
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+            stream.next(freezeObject(val));
         });
 
-        return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
+        return stream.asObservable().pipe(
             filter(data => data !== undefined)
         );
     }
 
     getServiceInterfaces(shortName, version): Observable<ApiObject> {
         const resource = 'services/' + shortName + '/' + version + '/interfaces';
-        const stream = this.getStreamSource(resource);
+        const stream = this.getStreamSource<ApiObject>(resource);
 
-        this.rest.get(resource).subscribe(val => {
+        this.rest.get<ApiObject>(resource).subscribe(val => {
             stream.next(freezeObject((val as ApiObject)));
         });
 
-        return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
+        return stream.asObservable().pipe(
             filter(data => data !== undefined)
         );
     }

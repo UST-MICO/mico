@@ -21,7 +21,7 @@ export class DashboardComponent implements OnInit {
         this.getApplications();
     }
 
-    applications: ApiObject;
+    applications: Readonly<ApiObject[]>;
 
     displayedColumns: string[] = ['id', 'name', 'shortName'];
 

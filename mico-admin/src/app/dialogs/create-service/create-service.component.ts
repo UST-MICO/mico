@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ApiService } from 'src/app/api/api.service';
 import { Subscription } from 'rxjs';
+import { ApiModel } from 'src/app/api/apimodel';
 
 @Component({
     selector: 'mico-create-service',
@@ -17,11 +18,11 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
     selectedTab = 0;
 
     subModelDefinitions: Subscription;
-    filterList: [string];
+    filterList: string[];
 
     constructor(private apiService: ApiService) {
         this.subModelDefinitions = this.apiService.getModelDefinitions().subscribe(val => {
-            this.filterList = val['Service'].required;
+            this.filterList = (val['Service'] as ApiModel).required;
         });
     }
 
