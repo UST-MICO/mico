@@ -43,7 +43,7 @@ public class DeploymentController {
     private ImageBuilder imageBuilder;
 
     @Autowired
-    private MicoCoreBackgroundTaskFactory factory;
+    private MicoCoreBackgroundTaskFactory backgroundTaskFactory;
 
     @Autowired
     private MicoKubernetesClient micoKubernetesClient;
@@ -60,24 +60,6 @@ public class DeploymentController {
 
         Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
 
-        // TODO Clean up
-        /*Long serviceId = 1337L;
-        Optional<MicoApplication> micoApplicationOptional = Optional.of(MicoApplication.builder()
-            .shortName("MicoApplication")
-            .deploymentInfo(MicoApplicationDeploymentInfo.builder()
-                .serviceDeploymentInfo(serviceId, MicoServiceDeploymentInfo.builder()
-                    .replicas(1)
-                    .build())
-                .build())
-            .service(MicoService.builder()
-                .id(serviceId)
-                .shortName("hello")
-                .version("v1.0.0")
-                .vcsRoot("https://github.com/UST-MICO/hello.git")
-                .dockerfilePath("Dockerfile")
-                .build())
-            .build());*/
-
         if (!micoApplicationOptional.isPresent()) {
             log.debug("MICO application with short name {} and version {} does not exist", shortName, version);
             return ResponseEntity.notFound().build();
@@ -87,28 +69,16 @@ public class DeploymentController {
         List<MicoService> micoServices = micoApplication.getServices();
         micoServices.forEach(micoService -> {
             // TODO Check if image was already built -> no build required
-            factory.runAsync(() -> buildImage(micoService), result -> {
-                log.info("Build of image for service '{}' finished", micoService.getShortName());
-
-                micoService.toBuilder()
-                    .dockerImageUri(imageBuilder.createImageName(
-                        micoService.getShortName(), micoService.getVersion()))
-                    .build();
-                serviceRepository.save(micoService);
-
-                log.debug("Create Kubernetes resources for MICO service '{}'", micoService.getShortName());
-                String applicationName = micoApplication.getShortName();
-                int replicas = micoApplication.getDeploymentInfo().getServiceDeploymentInfos().get(micoService.getId()).getReplicas();
-                micoKubernetesClient.createMicoService(micoService, applicationName, replicas);
-                log.info("Created Kubernetes resources for MICO service '{}'", micoService.getShortName());
-
-            }, e -> exceptionHandler(e));
+            backgroundTaskFactory.runAsync(() -> buildImageAndWait(micoService), service -> {
+                saveImageNameToDatabase(service);
+                createKubernetesResources(micoApplication, service);
+            }, this::exceptionHandler);
         });
 
         return ResponseEntity.ok().build();
     }
 
-    private MicoService buildImage(MicoService micoService) {
+    private MicoService buildImageAndWait(MicoService micoService) {
         try {
             Build build = imageBuilder.build(micoService);
 
@@ -124,6 +94,24 @@ public class DeploymentController {
             // TODO Handle NotInitializedException in async task properly
             return null;
         }
+    }
+
+    private void saveImageNameToDatabase(MicoService micoService) {
+        log.info("Build of image for service '{}' finished", micoService.getShortName());
+        String dockerImageUri = imageBuilder.createImageName(
+            micoService.getShortName(), micoService.getVersion());
+
+        serviceRepository.save(micoService.toBuilder()
+            .dockerImageUri(dockerImageUri)
+            .build());
+    }
+
+    private void createKubernetesResources(MicoApplication micoApplication, MicoService micoService) {
+        log.debug("Create Kubernetes resources for MICO service '{}'", micoService.getShortName());
+        String applicationName = micoApplication.getShortName();
+        int replicas = micoApplication.getDeploymentInfo().getServiceDeploymentInfos().get(micoService.getId()).getReplicas();
+        micoKubernetesClient.createMicoService(micoService, applicationName, replicas);
+        log.info("Created Kubernetes resources for MICO service '{}'", micoService.getShortName());
     }
 
     private Void exceptionHandler(Throwable e) {

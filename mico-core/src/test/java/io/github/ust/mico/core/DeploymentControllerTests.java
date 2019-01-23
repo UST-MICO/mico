@@ -5,7 +5,6 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.github.ust.mico.core.REST.DeploymentController;
 import io.github.ust.mico.core.concurrency.MicoCoreBackgroundTaskFactory;
 import io.github.ust.mico.core.imagebuilder.ImageBuilder;
-import io.github.ust.mico.core.imagebuilder.buildtypes.Build;
 import io.github.ust.mico.core.mapping.MicoKubernetesClient;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoApplicationDeploymentInfo;
@@ -16,27 +15,30 @@ import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.hateoas.MediaTypes;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static io.github.ust.mico.core.JsonPathBuilder.*;
 import static io.github.ust.mico.core.TestConstants.*;
-import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
@@ -83,12 +85,11 @@ public class DeploymentControllerTests {
     private ObjectMapper mapper;
 
     @Before
-    public void setUp() throws NotInitializedException {
-        MicoService service = getTestService();
-        Build build = Build.builder().build();
-        given(imageBuilder.build(service)).willReturn(build);
+    public void setUp() {
+        given(imageBuilder.createImageName(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).willReturn(DOCKER_IMAGE_URI);
+
         Deployment deployment = new Deployment();
-        given(micoKubernetesClient.createMicoService(service, SHORT_NAME, 1)).willReturn(deployment);
+        given(micoKubernetesClient.createMicoService(ArgumentMatchers.any(MicoService.class), ArgumentMatchers.eq(SHORT_NAME), ArgumentMatchers.anyInt())).willReturn(deployment);
     }
 
     @Test
@@ -97,20 +98,32 @@ public class DeploymentControllerTests {
         MicoApplication application = getTestApplication(service);
 
         MicoService serviceWithImage = service.toBuilder().dockerImageUri(DOCKER_IMAGE_URI).build();
-        MicoApplication applicationWithImage = application.toBuilder()
-            .service(serviceWithImage)
-            .build();
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(serviceRepository.save(any(MicoService.class))).willReturn(serviceWithImage);
 
+        ArgumentCaptor<Consumer<MicoService>> onSuccessCaptor = ArgumentCaptor.forClass(Consumer.class);
+        ArgumentCaptor<Function<Throwable, Void>> onErrorCaptor = ArgumentCaptor.forClass(Function.class);
+
+        given(factory.runAsync(ArgumentMatchers.any(), onSuccessCaptor.capture(), onErrorCaptor.capture()))
+            .willReturn(CompletableFuture.completedFuture(service));
+
         mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/deploy"))
-            //.content(mapper.writeValueAsBytes(application))
-            //.contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isOk());
 
-        verify(serviceRepository).save(argThat((storedService) -> storedService.getDockerfilePath().equals(DOCKER_IMAGE_URI)));
+        // Assume asynchronous image build operation was successful -> invoke onSuccess function
+        onSuccessCaptor.getValue().accept(service);
+
+        ArgumentCaptor<MicoService> saveCaptor = ArgumentCaptor.forClass(MicoService.class);
+        //verify(serviceRepository, times(1)).save(argThat((storedService) -> storedService.getDockerImageUri().equals(DOCKER_IMAGE_URI)));
+        verify(serviceRepository, times(1)).save(saveCaptor.capture());
+        assertNotNull(saveCaptor.getValue());
+        MicoService storedMicoService = saveCaptor.getValue();
+        assertNotNull("DockerImageUri was not set", storedMicoService.getDockerImageUri());
+        assertEquals(DOCKER_IMAGE_URI, storedMicoService.getDockerImageUri());
+
+        // TODO Assert micoKubernetesClient.createMicoService
     }
 
     private MicoApplication getTestApplication(MicoService service) {
