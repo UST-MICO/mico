@@ -9,4 +9,5 @@ public class UiPodInfo {
 
     String podName;
     String phase;
+    String hostIp;
 }

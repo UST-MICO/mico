@@ -8,10 +8,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentList;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.github.ust.mico.core.ClusterAwarenessFabric8;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
@@ -30,6 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping(value = "/applications", produces = MediaTypes.HAL_JSON_VALUE)
@@ -37,6 +41,17 @@ public class ApplicationController {
 
     private static final String PATH_VARIABLE_SHORT_NAME = "shortName";
     private static final String PATH_VARIABLE_VERSION = "version";
+    /**
+     * Used by deployments
+     */
+    private static final String LABLE_APP_KEY = "app";
+
+    /**
+     * Used by services (MicoInterfaces)
+     */
+    private static final String LABLE_RUN_KEY = "run";
+
+    private static final int MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT = 1;
 
     @Autowired
     private MicoApplicationRepository applicationRepository;
@@ -109,14 +124,54 @@ public class ApplicationController {
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/deploymentInformation")
-    public ResponseEntity<Resource<MicoApplication>> getApplicationDeploymentInformation(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                      @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName,version);
-        if(micoApplicationOptional.isPresent()){
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
-        }else{
+    public ResponseEntity<Resource<UiDeploymentInformation>> getApplicationDeploymentInformation(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                                         @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
+        if (micoApplicationOptional.isPresent()) {
+            ClusterAwarenessFabric8 client = new ClusterAwarenessFabric8();
+            KubernetesClient kubernetesClient = client.getClient();
+            DeploymentList deploymentList = kubernetesClient.apps().deployments().withLabel(LABLE_APP_KEY, shortName).list();
+            if (deploymentList.getItems().size() == 1) {
+                Deployment deployment = deploymentList.getItems().get(0);
+                UiDeploymentInformation uiDeploymentInformation = new UiDeploymentInformation();
+                int requestedReplicas = deployment.getSpec().getReplicas();
+                int availableReplicas = deployment.getStatus().getAvailableReplicas();
+                uiDeploymentInformation.setAvailableReplicas(availableReplicas);
+                uiDeploymentInformation.setRequestedReplicas(requestedReplicas);
+
+                ServiceList serviceList = kubernetesClient.services().withLabel(LABLE_RUN_KEY, shortName).list(); //MicoServiceInterface maps to Service
+                List<UiExternalMicoInterfaceInformation> interfacesInformation = new LinkedList<>();
+                if (serviceList.getItems().size() >= MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT) {
+                    for (Service service : serviceList.getItems()) {
+                        String name = service.getMetadata().getName();
+                        String ip = service.getSpec().getLoadBalancerIP();
+                        UiExternalMicoInterfaceInformation interfaceInformation = UiExternalMicoInterfaceInformation.builder()
+                            .name(name).externalIp(ip).build();
+                        interfacesInformation.add(interfaceInformation);
+                    }
+                    uiDeploymentInformation.setInterfacesInformation(interfacesInformation);
+
+                    PodList podList = kubernetesClient.pods().withLabel(LABLE_APP_KEY, shortName).list();
+                    List<UiPodInfo> podInfos = new LinkedList<>();
+                    for (Pod pod : podList.getItems()) {
+                        String name = pod.getSpec().getNodeName();
+                        String phase = pod.getStatus().getPhase();
+                        String hostIp = pod.getStatus().getHostIP();
+                        UiPodInfo uiPodInfo = UiPodInfo.builder().podName(name).phase(phase).hostIp(hostIp).build();
+                        podInfos.add(uiPodInfo);
+                    }
+                    uiDeploymentInformation.setPodInfo(podInfos);
+                    return ResponseEntity.ok(new Resource<>(uiDeploymentInformation));
+                } else {
+                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "There are not at least " + MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT + " service interface");
+                }
+            } else {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "The application is running zero or multiple times");
+            }
+        } else {
             return ResponseEntity.notFound().build();
         }
     }
+
 
 }
