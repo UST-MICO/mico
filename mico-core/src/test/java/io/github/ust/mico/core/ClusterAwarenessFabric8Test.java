@@ -2,7 +2,6 @@ package io.github.ust.mico.core;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentList;
@@ -11,8 +10,8 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.springframework.core.io.ClassPathResource;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 
 import static org.junit.Assert.*;
@@ -264,17 +263,17 @@ public class ClusterAwarenessFabric8Test {
 
     @Test
     public void createFromYaml() throws IOException {
-        cluster.createFromYaml(new FileInputStream("src/test/resources/hello-kubernetes-w-namespace.yaml"));
+        cluster.createFromYaml(new ClassPathResource("hello-kubernetes-w-namespace.yaml").getInputStream());
     }
 
     @Test
     public void createFromYaml1() throws IOException {
-        cluster.createFromYaml(new FileInputStream("src/test/resources/hello-kubernetes-deployment.yaml"), namespaceName);
+        cluster.createFromYaml(new ClassPathResource("hello-kubernetes-deployment.yaml").getInputStream(), namespaceName);
     }
 
     @Test
     public void deleteFromYaml() throws IOException {
-        cluster.deleteFromYaml(new FileInputStream("src/test/resources/hello-kubernetes-deployment.yaml"), namespaceName);
+        cluster.deleteFromYaml(new ClassPathResource("hello-kubernetes-deployment.yaml").getInputStream(), namespaceName);
     }
 
     @Test
