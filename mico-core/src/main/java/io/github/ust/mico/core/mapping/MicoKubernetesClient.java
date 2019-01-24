@@ -51,16 +51,18 @@ public class MicoKubernetesClient {
                     .withName(service.getShortName())
                     .withNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace())
                     .addToLabels("app", applicationName)
-                    
+                    // TODO: Which version do we add here: application version or service version or both?
                 .endMetadata()
                 .withNewSpec()
                     .withNewReplicas(replicas)
                     .withNewSelector()
                         .addToMatchLabels("app", service.getShortName())
+                        // TODO: Which version do we add here: application version or service version or both?
                      .endSelector()
                      .withNewTemplate()
                          .withNewMetadata()
                              .addToLabels("app", service.getShortName())
+                             // TODO: Which version do we add here: application version or service version or both?
                          .endMetadata()
                          .withNewSpec()
                              .withContainers(
