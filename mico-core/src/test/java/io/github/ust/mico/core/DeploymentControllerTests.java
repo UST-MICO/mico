@@ -17,6 +17,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
+import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -29,7 +30,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static io.github.ust.mico.core.JsonPathBuilder.*;
 import static io.github.ust.mico.core.TestConstants.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -46,41 +46,31 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @OverrideAutoConfiguration(enabled = true) //Needed to override our neo4j config
 public class DeploymentControllerTests {
 
-    public static final String APPLICATION_LIST = buildPath(EMBEDDED, "micoApplicationList");
-    public static final String SHORT_NAME_PATH = buildPath(ROOT, "shortName");
-    public static final String VERSION_PATH = buildPath(ROOT, "version");
-    public static final String DOCKER_IMAGE_URI_PATH = buildPath(ROOT, "dockerImageUri");
-    public static final String DESCRIPTION_PATH = buildPath(ROOT, "description");
-    public static final String ID_PATH = buildPath(ROOT, "id");
-    public static final String VERSION_MAJOR_PATH = buildPath(ROOT, "version", "majorVersion");
-    public static final String VERSION_MINOR_PATH = buildPath(ROOT, "version", "minorVersion");
-    public static final String VERSION_PATCH_PATH = buildPath(ROOT, "version", "patchVersion");
-    private static final String JSON_PATH_LINKS_SECTION = "$._links.";
-    private static final String SELF_HREF = "self.href";
     private static final String BASE_PATH = "/applications";
 
-    // TODO Rename
-    private static final String SERVICE_NAME = "hello"; // is used for image name
-    private static final String DOCKER_IMAGE_URI = "ustmico/" + SERVICE_NAME + ":" + RELEASE;
+    @Captor
+    ArgumentCaptor<Consumer<String>> onSuccessArgumentCaptor;
+    @Captor
+    ArgumentCaptor<Function<Throwable, Void>> onErrorArgumentCaptor;
+    @Captor
+    ArgumentCaptor<MicoService> micoServiceArgumentCaptor;
+    @Captor
+    ArgumentCaptor<String> applicationNameArgumentCaptor;
+    @Captor
+    ArgumentCaptor<Integer> replicasArgumentCaptor;
 
     @Autowired
     private MockMvc mvc;
-
     @MockBean
     private MicoApplicationRepository applicationRepository;
-
     @MockBean
     private MicoServiceRepository serviceRepository;
-
     @MockBean
     private ImageBuilder imageBuilder;
-
     @MockBean
     private MicoCoreBackgroundTaskFactory factory;
-
     @MockBean
     private MicoKubernetesClient micoKubernetesClient;
-
     @Autowired
     private ObjectMapper mapper;
 
@@ -89,7 +79,7 @@ public class DeploymentControllerTests {
         given(imageBuilder.createImageName(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).willReturn(DOCKER_IMAGE_URI);
 
         Deployment deployment = new Deployment();
-        given(micoKubernetesClient.createMicoService(ArgumentMatchers.any(MicoService.class), ArgumentMatchers.eq(SHORT_NAME), ArgumentMatchers.anyInt())).willReturn(deployment);
+        given(micoKubernetesClient.createMicoService(ArgumentMatchers.any(MicoService.class), ArgumentMatchers.eq(TestConstants.SHORT_NAME), ArgumentMatchers.anyInt())).willReturn(deployment);
     }
 
     @Test
@@ -99,36 +89,46 @@ public class DeploymentControllerTests {
 
         MicoService serviceWithImage = service.toBuilder().dockerImageUri(DOCKER_IMAGE_URI).build();
 
-        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
+        given(applicationRepository.findByShortNameAndVersion(TestConstants.SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(serviceRepository.save(any(MicoService.class))).willReturn(serviceWithImage);
 
-        ArgumentCaptor<Consumer<MicoService>> onSuccessCaptor = ArgumentCaptor.forClass(Consumer.class);
-        ArgumentCaptor<Function<Throwable, Void>> onErrorCaptor = ArgumentCaptor.forClass(Function.class);
-
-        given(factory.runAsync(ArgumentMatchers.any(), onSuccessCaptor.capture(), onErrorCaptor.capture()))
+        given(factory.runAsync(ArgumentMatchers.any(), onSuccessArgumentCaptor.capture(), onErrorArgumentCaptor.capture()))
             .willReturn(CompletableFuture.completedFuture(service));
 
-        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/deploy"))
+        mvc.perform(post(BASE_PATH + "/" + TestConstants.SHORT_NAME + "/" + VERSION + "/deploy"))
             .andDo(print())
             .andExpect(status().isOk());
 
         // Assume asynchronous image build operation was successful -> invoke onSuccess function
-        onSuccessCaptor.getValue().accept(service);
+        onSuccessArgumentCaptor.getValue().accept(DOCKER_IMAGE_URI);
 
-        ArgumentCaptor<MicoService> saveCaptor = ArgumentCaptor.forClass(MicoService.class);
-        //verify(serviceRepository, times(1)).save(argThat((storedService) -> storedService.getDockerImageUri().equals(DOCKER_IMAGE_URI)));
-        verify(serviceRepository, times(1)).save(saveCaptor.capture());
-        assertNotNull(saveCaptor.getValue());
-        MicoService storedMicoService = saveCaptor.getValue();
+        verify(serviceRepository, times(1)).save(micoServiceArgumentCaptor.capture());
+
+        MicoService storedMicoService = micoServiceArgumentCaptor.getValue();
+        assertNotNull(storedMicoService);
         assertNotNull("DockerImageUri was not set", storedMicoService.getDockerImageUri());
         assertEquals(DOCKER_IMAGE_URI, storedMicoService.getDockerImageUri());
 
-        // TODO Assert micoKubernetesClient.createMicoService
+        verify(micoKubernetesClient, times(1)).createMicoService(
+            micoServiceArgumentCaptor.capture(), applicationNameArgumentCaptor.capture(), replicasArgumentCaptor.capture());
+
+        MicoService micoServiceToCreate = micoServiceArgumentCaptor.getValue();
+        assertNotNull(micoServiceToCreate);
+        assertEquals("MicoService that will be created as Kubernetes resources does not match", serviceWithImage, micoServiceToCreate);
+
+        String actualApplicationName = applicationNameArgumentCaptor.getValue();
+        assertNotNull(actualApplicationName);
+        String expectedApplicationName = application.getShortName();
+        assertEquals("Application name is not the expected short name", expectedApplicationName, actualApplicationName);
+
+        int actualReplicas = replicasArgumentCaptor.getValue();
+        int expectedReplicas = application.getDeploymentInfo().getServiceDeploymentInfos().get(service.getId()).getReplicas();
+        assertEquals("Replicas does not match the definition in the deployment info", expectedReplicas, actualReplicas);
     }
 
     private MicoApplication getTestApplication(MicoService service) {
         return MicoApplication.builder()
-            .shortName(SHORT_NAME)
+            .shortName(TestConstants.SHORT_NAME)
             .version(VERSION)
             .description(DESCRIPTION)
             .deploymentInfo(MicoApplicationDeploymentInfo.builder()
@@ -143,7 +143,7 @@ public class DeploymentControllerTests {
     private MicoService getTestService() {
         return MicoService.builder()
             .id(ID)
-            .shortName(SERVICE_NAME)
+            .shortName(SHORT_NAME)
             .version(RELEASE)
             .vcsRoot(GIT_TEST_REPO_URL)
             .dockerfilePath(DOCKERFILE)
