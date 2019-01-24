@@ -142,7 +142,8 @@ public class ImageBuilder {
         if (!StringUtils.isEmpty(micoService.getDockerfilePath())) {
             dockerfilePath = "/workspace/" + micoService.getDockerfilePath();
         } else {
-            log.debug("MicoService {} does not have a Dockerfile path set. Assume it is placed in the root directory.", micoService.getShortName());
+            // TODO check if a Dockerfile is placed in the root directory of the Git repository
+            log.warn("Path to Dockerfile of MicoService '{}' is unknown. Try to use 'Dockerfile' in the root directory.", micoService.getShortName());
             dockerfilePath = "/workspace/Dockerfile";
         }
         String gitUrl = micoService.getVcsRoot();
