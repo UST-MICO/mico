@@ -23,13 +23,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
- * Provides access to the Kubernetes API.
+ * Provides accessor methods for creating deployment and services in Kubernetes.
  */
 @Component
 public class MicoKubernetesClient {
 
     private final MicoKubernetesConfig micoKubernetesConfig;
-
     private final ClusterAwarenessFabric8 cluster;
 
     @Autowired
@@ -47,12 +46,12 @@ public class MicoKubernetesClient {
      * @return the Kubernetes {@link Deployment} resource object
      */
     public Deployment createMicoService(MicoService service, String applicationName, int replicas) {
-
         Deployment deployment = new DeploymentBuilder()
                 .withNewMetadata()
                     .withName(service.getShortName())
                     .withNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace())
                     .addToLabels("app", applicationName)
+                    
                 .endMetadata()
                 .withNewSpec()
                     .withNewReplicas(replicas)
@@ -104,6 +103,15 @@ public class MicoKubernetesClient {
         return client.services().inNamespace(micoKubernetesConfig.getNamespaceMicoSystem()).create(service);
     }
 
+    
+    
+    /**
+     * Creates a list of ports based on a MICO service. This list of ports
+     * is intended for use with a container inside a Kubernetes deployment.
+     * 
+     * @param service the {@link MicoService}.
+     * @return an {@link ArrayList} with the {@link ContainerPort} instances.
+     */
     private List<ContainerPort> createContainerPorts(MicoService service) {
         List<ContainerPort> ports = new ArrayList<>();
 
@@ -119,6 +127,14 @@ public class MicoKubernetesClient {
         return ports;
     }
 
+    /**
+     * Creates a list of service ports (port, target port and type) based on a MICO
+     * service interface. This list of service ports is intended for use with a
+     * Kubernetes service.
+     * 
+     * @param serviceInterface the {@link MicoServiceInterface}.
+     * @return an {@link ArrayList} with the {@link ServicePort} instances.
+     */
     private List<ServicePort> createServicePorts(MicoServiceInterface serviceInterface) {
         List<ServicePort> ports = new ArrayList<>();
 
