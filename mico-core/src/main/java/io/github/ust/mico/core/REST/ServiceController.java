@@ -25,7 +25,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
-import io.github.ust.mico.core.model.MicoVersion;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 
 @RestController
