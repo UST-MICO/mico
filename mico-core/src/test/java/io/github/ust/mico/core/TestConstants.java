@@ -43,6 +43,7 @@ public class TestConstants {
     public static final String DESCRIPTION_2_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION_2);
     public static final String DESCRIPTION_3_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION_3);
 
+
     /**
      * Git repository that is used for testing.
      * It must contain a Dockerfile and at least one release.
@@ -59,4 +60,8 @@ public class TestConstants {
      */
     public static final String RELEASE = "v1.0.0";
 
+    /**
+     * Docker image URI that is created based on the short name and the version of a service.
+     */
+    public static final String DOCKER_IMAGE_URI = "ustmico/" + SHORT_NAME + ":" + RELEASE;
 }

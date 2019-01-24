@@ -69,23 +69,30 @@ public class DeploymentController {
         List<MicoService> micoServices = micoApplication.getServices();
         micoServices.forEach(micoService -> {
             // TODO Check if image was already built -> no build required
-            backgroundTaskFactory.runAsync(() -> buildImageAndWait(micoService), service -> {
-                saveImageNameToDatabase(service);
-                createKubernetesResources(micoApplication, service);
+            backgroundTaskFactory.runAsync(() -> buildImageAndWait(micoService), dockerImageUri -> {
+                log.info("Build of image '{}' for service '{}' in version '{}' finished",
+                    dockerImageUri, micoService.getShortName(), micoService.getVersion());
+
+                MicoService micoServiceUpdatedWithImageName = micoService.toBuilder()
+                    .dockerImageUri(dockerImageUri)
+                    .build();
+
+                serviceRepository.save(micoServiceUpdatedWithImageName);
+                createKubernetesResources(micoApplication, micoServiceUpdatedWithImageName);
             }, this::exceptionHandler);
         });
 
         return ResponseEntity.ok().build();
     }
 
-    private MicoService buildImageAndWait(MicoService micoService) {
+    private String buildImageAndWait(MicoService micoService) {
         try {
             Build build = imageBuilder.build(micoService);
 
             // Blocks this thread until build is finished, failed or TimeoutException is thrown
             CompletableFuture<Boolean> booleanCompletableFuture = imageBuilder.waitUntilBuildIsFinished(build);
             if (booleanCompletableFuture.get()) {
-                return micoService;
+                return imageBuilder.createImageName(micoService.getShortName(), micoService.getVersion());
             } else {
                 throw new ImageBuildException("Build for service " + micoService.getShortName() + " failed");
             }
@@ -94,16 +101,6 @@ public class DeploymentController {
             // TODO Handle NotInitializedException in async task properly
             return null;
         }
-    }
-
-    private void saveImageNameToDatabase(MicoService micoService) {
-        log.info("Build of image for service '{}' finished", micoService.getShortName());
-        String dockerImageUri = imageBuilder.createImageName(
-            micoService.getShortName(), micoService.getVersion());
-
-        serviceRepository.save(micoService.toBuilder()
-            .dockerImageUri(dockerImageUri)
-            .build());
     }
 
     private void createKubernetesResources(MicoApplication micoApplication, MicoService micoService) {
