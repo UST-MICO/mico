@@ -1,5 +1,12 @@
 package io.github.ust.mico.core.imagebuilder;
 
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ServiceAccount;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
@@ -10,17 +17,13 @@ import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.github.ust.mico.core.ClusterAwarenessFabric8;
 import io.github.ust.mico.core.NotInitializedException;
-import io.github.ust.mico.core.imagebuilder.buildtypes.*;
+import io.github.ust.mico.core.imagebuilder.buildtypes.Build;
+import io.github.ust.mico.core.imagebuilder.buildtypes.BuildSpec;
+import io.github.ust.mico.core.imagebuilder.buildtypes.BuildStep;
+import io.github.ust.mico.core.imagebuilder.buildtypes.GitSourceSpec;
+import io.github.ust.mico.core.imagebuilder.buildtypes.SourceSpec;
 import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoVersion;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-
-import java.util.List;
-import java.util.Optional;
 
 /**
  * Builds container images by using Knative Build and Kaniko
