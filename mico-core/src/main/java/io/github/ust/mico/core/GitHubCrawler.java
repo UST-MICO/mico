@@ -14,11 +14,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceCrawlingOrigin;
-import io.github.ust.mico.core.model.MicoVersion;
 
 public class GitHubCrawler {
 
+    // TODO: Remove if not needed
     private static final String GITHUB_API = "https://api.github.com";
+    // TODO: Remove if not needed
     private static final String REPOS = "repos";
     private static final String RELEASES = "releases";
     private static final String TAGS = "tags";

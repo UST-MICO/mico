@@ -25,7 +25,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
-import io.github.ust.mico.core.model.MicoVersion;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 
 @RestController
@@ -80,7 +79,7 @@ public class ServiceController {
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
-    public ResponseEntity deleteService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+    public ResponseEntity<Void> deleteService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                         @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (!serviceOpt.isPresent()) {
