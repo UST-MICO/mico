@@ -6,6 +6,8 @@ NotInitializedException
 
 .. java:type:: public class NotInitializedException extends Exception
 
+   TODO: Class comment.
+
 Constructors
 ------------
 NotInitializedException

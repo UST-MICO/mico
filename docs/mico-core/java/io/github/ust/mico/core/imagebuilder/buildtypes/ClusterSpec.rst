@@ -10,21 +10,3 @@ ClusterSpec
 
    ClusterSpec provides information about the on-cluster build, if applicable.
 
-Fields
-------
-namespace
-^^^^^^^^^
-
-.. java:field::  String namespace
-   :outertype: ClusterSpec
-
-   Namespace is the namespace in which the pod is running.
-
-podName
-^^^^^^^
-
-.. java:field::  String podName
-   :outertype: ClusterSpec
-
-   PodName is the name of the pod responsible for executing this build's steps.
-

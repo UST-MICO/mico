@@ -6,6 +6,8 @@ VersionNotSupportedException
 
 .. java:type:: public class VersionNotSupportedException extends Exception
 
+   Indicates that a certain version is not supported.
+
 Constructors
 ------------
 VersionNotSupportedException

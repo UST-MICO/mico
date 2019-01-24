@@ -6,5 +6,8 @@ io.github.ust.mico.core.REST
 .. toctree::
    :maxdepth: 1
 
+   ApplicationController
+   DeploymentController
    ServiceController
+   ServiceInterfaceController
 
