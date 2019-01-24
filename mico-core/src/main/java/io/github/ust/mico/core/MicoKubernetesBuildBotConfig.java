@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import javax.validation.constraints.NotBlank;
 
 /**
- * Configuration that includes information about the MICO Kubernetes cluster
+ * Configuration of the build bot ({@link io.github.ust.mico.core.imagebuilder.ImageBuilder})
  */
 @Component
 @Setter
@@ -24,15 +24,27 @@ public class MicoKubernetesBuildBotConfig {
     private String namespaceBuildExecution;
 
     /**
-     * the service account name to access a docker registry
+     * The Docker image repository that is used by MICO to store the images
+     * that are build by {@link io.github.ust.mico.core.imagebuilder.ImageBuilder}.
      */
     @NotBlank
-    private String serviceAccountName;
+    private String dockerImageRepositoryUrl;
 
     /**
-     * the url to the kaniko executor image
+     * The service account name to have write access to the specified docker image repository.
+     */
+    @NotBlank
+    private String dockerRegistryServiceAccountName;
+
+    /**
+     * The url to the kaniko executor image that is used by
+     * {@link io.github.ust.mico.core.imagebuilder.ImageBuilder}
      */
     @NotBlank
     private String kanikoExecutorImageUrl;
 
+    /**
+     * The timeout in seconds after which the build is stopped.
+     */
+    private int buildTimeout;
 }

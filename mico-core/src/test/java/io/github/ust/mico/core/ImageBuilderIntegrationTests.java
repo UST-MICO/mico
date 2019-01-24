@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
-import io.github.ust.mico.core.imagebuilder.buildtypes.Build;
 import io.github.ust.mico.core.imagebuilder.ImageBuilder;
+import io.github.ust.mico.core.imagebuilder.buildtypes.Build;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoVersion;
 import lombok.extern.slf4j.Slf4j;
@@ -37,9 +37,8 @@ import static org.junit.Assert.assertTrue;
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
+@Ignore
 public class ImageBuilderIntegrationTests {
-
-
 
     @Autowired
     private ClusterAwarenessFabric8 cluster;
@@ -65,7 +64,7 @@ public class ImageBuilderIntegrationTests {
     @Before
     public void setUp() throws Exception {
 
-        String serviceAccountName = buildBotConfig.getServiceAccountName();
+        String serviceAccountName = buildBotConfig.getDockerRegistryServiceAccountName();
         String usernameBase64Encoded = integrationTestsConfig.getDockerHubUsernameBase64();
         String passwordBase64Encoded = integrationTestsConfig.getDockerHubPasswordBase64();
 
@@ -129,10 +128,10 @@ public class ImageBuilderIntegrationTests {
      * It uses the provided Git repository that contains a Dockerfile to build a Docker image.
      * Afterwards it pushes it to the provided Docker registry (e.g. DockerHub).
      *
-     * @throws NotInitializedException if ImageBuilder was not initialized
-     * @throws InterruptedException if the build process is interrupted unexpectedly
-     * @throws TimeoutException if the build does not finish or fail in the expected time
-     * @throws ExecutionException if the build process fails unexpectedly
+     * @throws NotInitializedException      if ImageBuilder was not initialized
+     * @throws InterruptedException         if the build process is interrupted unexpectedly
+     * @throws TimeoutException             if the build does not finish or fail in the expected time
+     * @throws ExecutionException           if the build process fails unexpectedly
      * @throws VersionNotSupportedException if the provided Git release tag is not supported as a MICO version
      */
     @Test

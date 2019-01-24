@@ -29,10 +29,4 @@ public class MicoKubernetesConfig {
     @NotBlank
     private String namespaceMicoWorkspace;
 
-    /**
-     * The default image registry used by MICO.
-     */
-    @NotBlank
-    private String imageRepositoryUrl;
-
 }

@@ -33,12 +33,10 @@ public class ImageBuilderTests {
         MicoKubernetesBuildBotConfig buildBotConfig = new MicoKubernetesBuildBotConfig();
         buildBotConfig.setNamespaceBuildExecution("build-execution-namespace");
         buildBotConfig.setKanikoExecutorImageUrl("kaniko-executor-image-url");
-        buildBotConfig.setServiceAccountName("service-account-name");
+        buildBotConfig.setDockerRegistryServiceAccountName("service-account-name");
+        buildBotConfig.setDockerImageRepositoryUrl("image-repository-url");
 
-        MicoKubernetesConfig micoKubernetesConfig = new MicoKubernetesConfig();
-        micoKubernetesConfig.setImageRepositoryUrl("image-repository-url");
-
-        imageBuilder = new ImageBuilder(cluster, buildBotConfig, micoKubernetesConfig);
+        imageBuilder = new ImageBuilder(cluster, buildBotConfig);
     }
 
     @After

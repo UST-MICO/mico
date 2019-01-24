@@ -11,7 +11,6 @@ import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.github.ust.mico.core.ClusterAwarenessFabric8;
 import io.github.ust.mico.core.MicoKubernetesBuildBotConfig;
-import io.github.ust.mico.core.MicoKubernetesConfig;
 import io.github.ust.mico.core.NotInitializedException;
 import io.github.ust.mico.core.imagebuilder.buildtypes.*;
 import io.github.ust.mico.core.model.MicoService;
@@ -36,7 +35,6 @@ public class ImageBuilder {
     private static final String BUILD_CRD_NAME = "builds." + BUILD_CRD_GROUP;
 
     private final MicoKubernetesBuildBotConfig buildBotConfig;
-    private final MicoKubernetesConfig micoKubernetesConfig;
     private final ClusterAwarenessFabric8 cluster;
 
     private NonNamespaceOperation<Build, BuildList, DoneableBuild, Resource<Build, DoneableBuild>> buildClient;
@@ -46,13 +44,11 @@ public class ImageBuilder {
     /**
      * @param cluster        The Kubernetes cluster object
      * @param buildBotConfig The build bot configuration for the image builder
-     * @param micoKubernetesConfig The Kubernetes configuration
      */
     @Autowired
-    public ImageBuilder(ClusterAwarenessFabric8 cluster, MicoKubernetesBuildBotConfig buildBotConfig, MicoKubernetesConfig micoKubernetesConfig) {
+    public ImageBuilder(ClusterAwarenessFabric8 cluster, MicoKubernetesBuildBotConfig buildBotConfig) {
         this.cluster = cluster;
         this.buildBotConfig = buildBotConfig;
-        this.micoKubernetesConfig = micoKubernetesConfig;
     }
 
     /**
@@ -62,7 +58,7 @@ public class ImageBuilder {
      */
     public void init() throws NotInitializedException {
         String namespace = buildBotConfig.getNamespaceBuildExecution();
-        String serviceAccountName = buildBotConfig.getServiceAccountName();
+        String serviceAccountName = buildBotConfig.getDockerRegistryServiceAccountName();
 
         Optional<CustomResourceDefinition> buildCRD = getBuildCRD();
         if (!buildCRD.isPresent()) {
@@ -173,7 +169,7 @@ public class ImageBuilder {
 
         Build build = Build.builder()
             .spec(BuildSpec.builder()
-                .serviceAccountName(buildBotConfig.getServiceAccountName())
+                .serviceAccountName(buildBotConfig.getDockerRegistryServiceAccountName())
                 .source(SourceSpec.builder()
                     .git(GitSourceSpec.builder()
                         .url(gitUrl)
@@ -227,8 +223,8 @@ public class ImageBuilder {
             }
         }, 10, 1, TimeUnit.SECONDS);
 
-        // TODO Add a proper timeout
-        completionFuture.get(60, TimeUnit.SECONDS);
+        // Add a timeout. This is synchronous and blocks the execution.
+        completionFuture.get(buildBotConfig.getBuildTimeout(), TimeUnit.SECONDS);
 
         // When completed cancel future
         completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
@@ -258,7 +254,7 @@ public class ImageBuilder {
      * @return the image name
      */
     public String createImageName(String serviceName, String serviceVersion) {
-        return micoKubernetesConfig.getImageRepositoryUrl() + "/" + serviceName + ":" + serviceVersion;
+        return buildBotConfig.getDockerImageRepositoryUrl() + "/" + serviceName + ":" + serviceVersion;
     }
 
     /**

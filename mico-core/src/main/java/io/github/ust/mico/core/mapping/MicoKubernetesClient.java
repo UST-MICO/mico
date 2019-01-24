@@ -68,7 +68,7 @@ public class MicoKubernetesClient {
                              .withContainers(
                                  new ContainerBuilder()
                                      .withName(service.getShortName())
-                                     .withImage(micoKubernetesConfig.getImageRepositoryUrl() + "/" + service.getShortName() + ":" + service.getVersion())
+                                     .withImage(service.getDockerImageUri())
                                      .withPorts(createContainerPorts(service))
                                      .build())
                          .endSpec()
