@@ -34,7 +34,7 @@ public class MicoServiceInterface {
     // ----------------------
 
     /**
-     *
+     * The name of this {@link MicoServiceInterface}.
      */
     @ApiModelProperty(required = true)
     @NotEmpty

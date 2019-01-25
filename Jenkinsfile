@@ -1,59 +1,74 @@
 pipeline {
+  environment {
+    micoAdminRegistry = "ustmico/mico-admin"
+    micoCoreRegistry = "ustmico/mico-core"
+    registryCredential = 'dockerhub'
+    micoAdminDockerImage = ''
+    micoCoreDockerImage = ''
+  }
   agent any
   stages {
-    stage('Maven Build') {
-      steps {
-        sh 'mvn clean compile package -B -DskipTests'
-      }
+    stage('Docker build') {
+        parallel {
+            stage('mico-core') {
+                steps {
+                    script {
+                        micoCoreDockerImage = docker.build(micoCoreRegistry, "-f Dockerfile.mico-core .")
+                    }
+                }
+            }
+            stage('mico-admin') {
+                steps {
+                    script {
+                        micoAdminDockerImage = docker.build(micoAdminRegistry, "-f Dockerfile.mico-admin .")
+                    }
+                }
+            }
+        }
     }
-    stage('Maven Test') {
-      steps {
-        sh 'mvn test'
-      }
+    stage('Push images') {
+        steps {
+            script{
+                docker.withRegistry('', 'dockerhub') {
+                    micoCoreDockerImage.push("kube$BUILD_NUMBER")
+                    micoAdminDockerImage.push("kube$BUILD_NUMBER")
+                    micoCoreDockerImage.push("latest")
+                    micoAdminDockerImage.push("latest")
+                }
+            }
+        }
     }
-    stage('Docker Registry') {
-      parallel {
-        stage('mico-core') {
-          steps {
-            sh '''ACR_IMAGE_NAME="${ACR_LOGINSERVER}/mico-core:kube${BUILD_NUMBER}"
-docker build -t $ACR_IMAGE_NAME -f Dockerfile.mico-core .
-docker login ${ACR_LOGINSERVER} -u ${ACR_ID} -p ${ACR_PASSWORD}
-docker push $ACR_IMAGE_NAME
-DOCKERHUB_IMAGE_NAME="ustmico/mico-core:latest"
-docker tag $ACR_IMAGE_NAME $DOCKERHUB_IMAGE_NAME
-docker login -u ${DOCKERHUB_USERNAME} -p ${DOCKERHUB_PASSWORD}
-docker push $DOCKERHUB_IMAGE_NAME'''
-          }
+    stage('Deploy on kubernetes') {
+        parallel {
+            stage('mico-core') {
+                steps{
+                    sh '''ACR_IMAGE_NAME="ustmico/mico-core:kube${BUILD_NUMBER}"
+                    kubectl set image deployment/mico-core mico-core=$ACR_IMAGE_NAME --kubeconfig /var/lib/jenkins/config'''
+                }
+            }
+            stage('mico-admin') {
+                steps{
+                    sh '''ACR_IMAGE_NAME="ustmico/mico-admin:kube${BUILD_NUMBER}"
+                    kubectl set image deployment/mico-admin mico-admin=$ACR_IMAGE_NAME --kubeconfig /var/lib/jenkins/config'''
+                }
+            }
         }
-        stage('mico-admin') {
-          steps {
-            sh '''ACR_IMAGE_NAME="${ACR_LOGINSERVER}/mico-admin:kube${BUILD_NUMBER}"
-docker build -t $ACR_IMAGE_NAME -f Dockerfile.mico-admin .
-docker login ${ACR_LOGINSERVER} -u ${ACR_ID} -p ${ACR_PASSWORD}
-docker push $ACR_IMAGE_NAME
-DOCKERHUB_IMAGE_NAME="ustmico/mico-admin:latest"
-docker tag $ACR_IMAGE_NAME $DOCKERHUB_IMAGE_NAME
-docker login -u ${DOCKERHUB_USERNAME} -p ${DOCKERHUB_PASSWORD}
-docker push $DOCKERHUB_IMAGE_NAME'''
-          }
-        }
-      }
     }
-    stage('Deploy') {
-      parallel {
-        stage('kubectl mico-core') {
-          steps {
-            sh '''ACR_IMAGE_NAME="${ACR_LOGINSERVER}/mico-core:kube${BUILD_NUMBER}"
-kubectl set image deployment/mico-core mico-core=$ACR_IMAGE_NAME --kubeconfig /var/lib/jenkins/config'''
-          }
+    stage('Remove unused docker images') {
+        parallel {
+            stage('mico-core') {
+                steps{
+                    sh "docker rmi $micoCoreRegistry:latest"
+                    sh "docker rmi $micoCoreRegistry:kube${BUILD_NUMBER}"
+                }
+            }
+            stage('mico-admin') {
+                steps{
+                    sh "docker rmi $micoAdminRegistry:latest"
+                    sh "docker rmi $micoAdminRegistry:kube${BUILD_NUMBER}"
+                }
+            }
         }
-        stage('kubectl mico-admin') {
-          steps {
-            sh '''ACR_IMAGE_NAME="${ACR_LOGINSERVER}/mico-admin:kube${BUILD_NUMBER}"
-kubectl set image deployment/mico-admin mico-admin=$ACR_IMAGE_NAME --kubeconfig /var/lib/jenkins/config'''
-          }
-        }
-      }
     }
   }
 }
