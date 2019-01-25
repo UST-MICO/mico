@@ -121,18 +121,22 @@ public class ApplicationController {
                 linkTo(methodOn(ApplicationController.class).getApplicationsByShortName(shortName)).withSelfRel()));
     }
 
-    @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/services")
-    public ResponseEntity addServiceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String _shortName,
-                                                                         @PathVariable(PATH_VARIABLE_VERSION) String _version,
-                                                                         @RequestBody MicoService _service) {
-        Optional<MicoService> serviceOptional = serviceRepository.findByShortNameAndVersion(_service.getShortName(), _service.getVersion());
-        Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(_shortName, _version);
+    @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/services")
+    public ResponseEntity addServiceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
+                                                  @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
+                                                  @RequestBody MicoService serviceFromBody) {
+        Optional<MicoService> serviceOptional = serviceRepository.findByShortNameAndVersion(serviceFromBody.getShortName(), serviceFromBody.getVersion());
+        Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(applicationShortName, applicationVersion);
         if (serviceOptional.isPresent() && applicationOptional.isPresent()) {
-            MicoService newService = serviceOptional.get();
+            MicoService service = serviceOptional.get();
             MicoApplication application = applicationOptional.get();
-            MicoApplication applicationWithService = application.toBuilder().service(newService).build();
-            applicationRepository.save(applicationWithService);
-            return ResponseEntity.noContent().build();
+            if (!application.getServices().contains(service)) {
+                MicoApplication applicationWithService = application.toBuilder().service(service).build();
+                applicationRepository.save(applicationWithService);
+                return ResponseEntity.noContent().build();
+            } else {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The application already contains this service");
+            }
         } else {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is no such application/service");
         }
