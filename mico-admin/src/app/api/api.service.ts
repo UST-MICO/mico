@@ -117,23 +117,31 @@ export class ApiService {
         );
     }
 
-    getApplicationById(id): Observable<Readonly<ApiObject>> {
-        // TODO check if there is a resource for single applications
-        const resource = 'applications';
-        const stream = this.getStreamSource<ApiObject>(resource);
+    /**
+     * Get all versions of an application based on its shortName
+     * @param shortName the shortName of the applicaton
+     */
+    getApplicationVersions(shortName: string) {
+        const resource = 'services/' + shortName + '/';
+        const stream = this.getStreamSource<ApiObject[]>(resource);
 
-        // TODO
-        const mockData: ApiObject = {
-            '_links': { 'self': { 'href': '' } },
-            'id': id,
-            'name': 'Hello World Application id ' + id,
-            'shortName': 'test.' + id + 'application',
-            'description': 'A generic application',
-        };
+        this.rest.get<ApiObject>(resource).subscribe(val => {
 
-        stream.next(mockData);
+            let list: ApiObject[];
 
-        return stream.asObservable().pipe(
+            if (val['_embedded'] != null) {
+
+                list = val._embedded.micoApplicationList;
+            }
+
+            if (list === undefined) {
+                list = [];
+            }
+
+            stream.next(freezeObject(list));
+        });
+
+        return (stream.asObservable()).pipe(
             filter(data => data !== undefined)
         );
     }
@@ -198,6 +206,20 @@ export class ApiService {
         }));
     }
 
+    // TODO doc comment as soon as the endpoint is in this branch
+    getApplicationDeploymentInformation(shortName: string, version: string) {
+        const resource = 'applications/' + shortName + '/' + version + '/deploymentInformation';
+        const stream = this.getStreamSource(resource);
+
+        this.rest.get(resource).subscribe(val => {
+            stream.next(freezeObject((val as ApiObject)));
+        });
+
+        return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
+            filter(data => data !== undefined)
+        );
+    }
+
     // =============
     // SERVICE CALLS
     // =============
@@ -234,9 +256,6 @@ export class ApiService {
             if (val['_embedded'] != null) {
 
                 list = val._embedded.micoServiceList;
-                if (list === undefined) {
-                    list = val._embedded.micoApplicationList;
-                }
             }
 
             if (list === undefined) {

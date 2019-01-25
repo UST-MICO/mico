@@ -30,10 +30,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
             const shortName = params['shortName'];
             const givenVersion = params['version'];
 
-            // getServiceVersions works also for applications
-            // TODO with the new model getServiceVersions is not applicable anymore.
-            // change to getApplicationVersions as soon as the endpoint exists.
-            this.subApplicationVersions = this.apiService.getServiceVersions(shortName)
+            this.subApplicationVersions = this.apiService.getApplicationVersions(shortName)
                 .subscribe(versions => {
                     if (givenVersion == null) {
                         this.setLatestVersion(versions);
