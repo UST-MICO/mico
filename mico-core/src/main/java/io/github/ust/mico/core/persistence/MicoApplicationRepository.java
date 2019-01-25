@@ -4,6 +4,7 @@ import org.springframework.data.neo4j.annotation.Depth;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 
 import io.github.ust.mico.core.model.MicoApplication;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,5 +17,7 @@ public interface MicoApplicationRepository extends Neo4jRepository<MicoApplicati
     Optional<MicoApplication> findByShortNameAndVersion(String shortName, String version, @Depth int depth);
 
     Optional<MicoApplication> findByShortNameAndVersion(String shortName, String version);
+
+    List<MicoApplication> findByShortName(@Param("shortName") String shortName);
     
 }

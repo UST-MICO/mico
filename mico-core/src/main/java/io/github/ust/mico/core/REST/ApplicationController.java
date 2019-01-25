@@ -71,16 +71,17 @@ public class ApplicationController {
     @PostMapping
     public ResponseEntity<Resource<MicoApplication>> createApplication(@RequestBody MicoApplication newApplication) {
         Optional<MicoApplication> applicationOptional = applicationRepository.
-                findByShortNameAndVersion(newApplication.getShortName(), newApplication.getVersion().toString());
+                findByShortNameAndVersion(newApplication.getShortName(), newApplication.getVersion());
         if (applicationOptional.isPresent()) {
             return ResponseEntity.badRequest().build();
-        } else {
-            MicoApplication savedApplication = applicationRepository.save(newApplication);
-
-            return ResponseEntity.created(linkTo(methodOn(ApplicationController.class)
-                    .getApplicationByShortNameAndVersion(savedApplication.getShortName(), savedApplication.getVersion().toString())).toUri())
-                    .body(new Resource<>(savedApplication, getApplicationLinks(savedApplication)));
         }
+
+        MicoApplication savedApplication = applicationRepository.save(newApplication);
+
+        return ResponseEntity
+                .created(linkTo(methodOn(ApplicationController.class)
+                .getApplicationByShortNameAndVersion(savedApplication.getShortName(), savedApplication.getVersion())).toUri())
+                .body(new Resource<>(savedApplication, getApplicationLinks(savedApplication)));
     }
 
     @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
@@ -100,6 +101,17 @@ public class ApplicationController {
         MicoApplication updatedApplication = applicationRepository.save(application);
 
         return ResponseEntity.ok(new Resource<>(updatedApplication, linkTo(methodOn(ApplicationController.class).updateApplication(shortName, version, application)).withSelfRel()));
+    }
+
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/")
+    public ResponseEntity<Resources<Resource<MicoApplication>>> getVersionsOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName){
+        List<MicoApplication> micoApplicationList = applicationRepository.findByShortName(shortName);
+
+        List<Resource<MicoApplication>> applicationResourceList = getApplicationResourceList(micoApplicationList);
+
+        return ResponseEntity.ok(
+                new Resources<>(applicationResourceList,
+                        linkTo(methodOn(ApplicationController.class).getVersionsOfApplication(shortName)).withSelfRel()));
     }
 
 }
