@@ -80,17 +80,25 @@ export class ApiBaseFunctionService {
     }
 
 
-    post<T>(url: string | LinkObject | ApiLinksObject | ApiObject, data, token?: string): Observable<T> {
+    post<T>(url: string | LinkObject | ApiLinksObject | ApiObject, data, token?: string, isJson = true): Observable<T> {
         url = this.extractUrl(url);
-        return this.http.post(url, JSON.stringify(data), this.headers(token))
+        let tempData = data;
+        if (isJson) {
+            tempData = JSON.stringify(tempData);
+        }
+        return this.http.post(url, tempData, this.headers(token))
             .pipe(map((res: Response) => {
                 return res.json();
             }));
     }
 
-    put<T>(url: string | LinkObject | ApiLinksObject | ApiObject, data, token?: string): Observable<T> {
+    put<T>(url: string | LinkObject | ApiLinksObject | ApiObject, data, token?: string, isJson = true): Observable<T> {
         url = this.extractUrl(url);
-        return this.http.put(url, JSON.stringify(data), this.headers(token))
+        let tempData = data;
+        if (isJson) {
+            tempData = JSON.stringify(tempData);
+        }
+        return this.http.put(url, tempData, this.headers(token))
             .pipe(map((res: Response) => {
                 return res.json();
             }));

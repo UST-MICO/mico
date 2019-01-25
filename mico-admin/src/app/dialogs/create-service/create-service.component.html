@@ -3,10 +3,11 @@
 
     <mat-tab-group (selectedTabChange)="tabChange($event)">
         <mat-tab label="Manual">
-            <mico-form [modelUrl]="'remote/Service'" [filter]="filterList" (data)="serviceData = $event"></mico-form>
+            <mico-form [modelUrl]="'remote/MicoService'" [filter]="filterList" (data)="serviceData = $event"></mico-form>
         </mat-tab>
         <mat-tab label="GitHub">
-            <mico-form [modelUrl]="'local/serviceFromGitPOST'"></mico-form>
+            <!-- TODO replace with mico-form-question-->
+            <mico-form [modelUrl]="'local/serviceFromGitPOST'" (data)="githubData = $event"></mico-form>
         </mat-tab>
     </mat-tab-group>
 </mat-dialog-content>

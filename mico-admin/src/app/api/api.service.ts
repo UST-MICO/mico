@@ -84,6 +84,8 @@ export class ApiService {
 
         // TODO replace URL with a generic path
         this.rest.get<{ definitions: ApiModelMap, [prop: string]: any }>('http://localhost:8080/v2/api-docs').subscribe(val => {
+            // TODO remove debug output
+            console.log(val);
             stream.next(freezeObject(val.definitions));
             stream.complete();
         });
@@ -108,7 +110,7 @@ export class ApiService {
 
         this.rest.get<ApiObject>(resource).subscribe(val => {
             // return actual application list
-            stream.next(freezeObject(val._embedded.applicationList));
+            stream.next(freezeObject(val._embedded.micoApplicationList));
         });
 
         return stream.asObservable().pipe(
@@ -190,7 +192,7 @@ export class ApiService {
 
         this.rest.get<ApiObject>(resource).subscribe(val => {
             // return actual service list
-            stream.next(freezeObject(val._embedded.serviceList));
+            stream.next(freezeObject(val._embedded.micoServiceList));
         });
 
         return stream.asObservable().pipe(
@@ -269,7 +271,9 @@ export class ApiService {
 
         const resource = 'services/import/github';
 
-        return this.rest.post<ApiObject>(resource, data).pipe(flatMap(val => {
+        console.log(data);
+
+        return this.rest.post<ApiObject>(resource, data, undefined, false).pipe(flatMap(val => {
 
             const stream = this.getStreamSource<ApiObject>(val._links.self.href);
             stream.next(val);

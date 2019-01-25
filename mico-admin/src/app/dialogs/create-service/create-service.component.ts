@@ -14,6 +14,7 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
     // TODO link with form as soon as the according endpoint exists.
     githubData;
 
+
     // manual: 0, github: 1
     selectedTab = 0;
 
@@ -22,7 +23,7 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
 
     constructor(private apiService: ApiService) {
         this.subModelDefinitions = this.apiService.getModelDefinitions().subscribe(val => {
-            this.filterList = (val['Service'] as ApiModel).required;
+            this.filterList = (val['MicoService'] as ApiModel).required;
         });
     }
 

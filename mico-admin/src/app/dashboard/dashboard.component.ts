@@ -42,6 +42,10 @@ export class DashboardComponent implements OnInit {
     newService(): void {
         const dialogRef = this.dialog.open(CreateServiceDialogComponent);
         dialogRef.afterClosed().subscribe(result => {
+
+            // TODO REMOVE
+            console.log(result);
+
             // filter empty results (when dialog is aborted)
             if (result !== '' && result != null && result.data != null) {
 
@@ -59,7 +63,8 @@ export class DashboardComponent implements OnInit {
                         this.router.navigate(['service-detail', val.shortName, val.version]);
                     });
                 } else if (result.tab === 'github') {
-                    this.apiService.postServiceViaGithub(result.data).subscribe(val => {
+                    // TODO replace result.data.vcsroot when the inpuf form field is changed
+                    this.apiService.postServiceViaGithub(result.data.vcsroot).subscribe(val => {
                         this.router.navigate(['service-detail', val.shortName, val.version]);
                     });
                 }
