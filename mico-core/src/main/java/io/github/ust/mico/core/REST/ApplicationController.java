@@ -80,7 +80,7 @@ public class ApplicationController {
 
         return ResponseEntity
                 .created(linkTo(methodOn(ApplicationController.class)
-                .getApplicationByShortNameAndVersion(savedApplication.getShortName(), savedApplication.getVersion())).toUri())
+                        .getApplicationByShortNameAndVersion(savedApplication.getShortName(), savedApplication.getVersion())).toUri())
                 .body(new Resource<>(savedApplication, getApplicationLinks(savedApplication)));
     }
 
@@ -104,7 +104,7 @@ public class ApplicationController {
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/")
-    public ResponseEntity<Resources<Resource<MicoApplication>>> getVersionsOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName){
+    public ResponseEntity<Resources<Resource<MicoApplication>>> getVersionsOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
         List<MicoApplication> micoApplicationList = applicationRepository.findByShortName(shortName);
 
         List<Resource<MicoApplication>> applicationResourceList = getApplicationResourceList(micoApplicationList);
