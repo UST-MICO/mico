@@ -9,5 +9,4 @@ io.github.ust.mico.core.imagebuilder
    BuildList
    DoneableBuild
    ImageBuilder
-   ImageBuilderConfig
 

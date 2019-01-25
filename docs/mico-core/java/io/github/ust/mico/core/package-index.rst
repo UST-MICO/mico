@@ -6,20 +6,15 @@ io.github.ust.mico.core
 .. toctree::
    :maxdepth: 1
 
-   Application
-   ApplicationRepository
-   ClusterAwareness
    ClusterAwarenessFabric8
-   CrawlingSource
-   DependsOn
-   DependsOnRepository
+   CustomOpenApiExtentionsPlugin
    GitHubCrawler
+   ImageBuildException
    MicoCoreApplication
+   MicoKubernetesBuildBotConfig
+   MicoKubernetesConfig
    NotInitializedException
-   Service
-   ServiceInterface
-   ServiceInterfaceRepository
-   ServiceRepository
    SwaggerConfig
    VersionNotSupportedException
+   WebConfig
 

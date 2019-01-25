@@ -85,7 +85,6 @@ public class ServiceInterfaceController {
         if (serviceOptional.isPresent()) {
             MicoService service = serviceOptional.get();
             if (!serviceInterfaceExists(serviceInterface, service)) {
-                List<MicoServiceInterface> serviceInterfaceList = service.getServiceInterfaces();
                 MicoService serviceWithInterface = service.toBuilder().serviceInterface(serviceInterface).build();
                 serviceRepository.save(serviceWithInterface);
                 return ResponseEntity.created(

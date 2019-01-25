@@ -2,7 +2,6 @@ package io.github.ust.mico.core;
 
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.github.ust.mico.core.imagebuilder.ImageBuilder;
-import io.github.ust.mico.core.imagebuilder.ImageBuilderConfig;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoVersion;
 import lombok.extern.slf4j.Slf4j;
@@ -31,16 +30,13 @@ public class ImageBuilderTests {
     public void setUp() {
         ClusterAwarenessFabric8 cluster = new ClusterAwarenessFabric8(mockServer.getClient());
 
-        // cluster.getClient().customResources(buildCRD.get(),
+        MicoKubernetesBuildBotConfig buildBotConfig = new MicoKubernetesBuildBotConfig();
+        buildBotConfig.setNamespaceBuildExecution("build-execution-namespace");
+        buildBotConfig.setKanikoExecutorImageUrl("kaniko-executor-image-url");
+        buildBotConfig.setDockerRegistryServiceAccountName("service-account-name");
+        buildBotConfig.setDockerImageRepositoryUrl("image-repository-url");
 
-
-        ImageBuilderConfig config = new ImageBuilderConfig();
-        config.setBuildExecutionNamespace("build-execution-namespace");
-        config.setImageRepositoryUrl("image-repository-url");
-        config.setKanikoExecutorImageUrl("kaniko-executor-image-url");
-        config.setServiceAccountName("service-account-name");
-
-        imageBuilder = new ImageBuilder(cluster, config);
+        imageBuilder = new ImageBuilder(cluster, buildBotConfig);
     }
 
     @After

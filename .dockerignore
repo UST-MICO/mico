@@ -4,6 +4,7 @@ docs
 LICENSE
 docker-compose.yml
 readthedocs.yml
+Jenkinsfile
 
 # node directory is only used by Maven
 mico-admin/node
