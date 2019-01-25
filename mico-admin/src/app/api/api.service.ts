@@ -28,7 +28,7 @@ export function freezeObject<T>(obj: T): Readonly<T> {
     return Object.freeze(obj);
 }
 
-type ApiModelMap = {[prop: string]: ApiModel|ApiModelAllOf};
+type ApiModelMap = { [prop: string]: ApiModel | ApiModelAllOf };
 
 
 /**
@@ -83,7 +83,7 @@ export class ApiService {
         const stream = this.getStreamSource<ApiModelMap>(resource, () => new AsyncSubject<Readonly<ApiModelMap>>());
 
         // TODO replace URL with a generic path
-        this.rest.get<{definitions: ApiModelMap, [prop: string]: any}>('http://localhost:8080/v2/api-docs').subscribe(val => {
+        this.rest.get<{ definitions: ApiModelMap, [prop: string]: any }>('http://localhost:8080/v2/api-docs').subscribe(val => {
             stream.next(freezeObject(val.definitions));
             stream.complete();
         });
@@ -123,7 +123,7 @@ export class ApiService {
 
         // TODO
         const mockData: ApiObject = {
-            '_links': {'self': {'href': ''}},
+            '_links': { 'self': { 'href': '' } },
             'id': id,
             'name': 'Hello World Application id ' + id,
             'shortName': 'test.' + id + 'application',
@@ -267,11 +267,9 @@ export class ApiService {
             return;
         }
 
-        // TODO change resource
-        const resource = 'services/';
+        const resource = 'services/import/github';
 
-        // TODO insert proper url (or use resource if possible)
-        return this.rest.post<ApiObject>('URL', data).pipe(flatMap(val => {
+        return this.rest.post<ApiObject>(resource, data).pipe(flatMap(val => {
 
             const stream = this.getStreamSource<ApiObject>(val._links.self.href);
             stream.next(val);
