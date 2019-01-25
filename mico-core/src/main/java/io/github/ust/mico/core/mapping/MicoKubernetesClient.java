@@ -15,10 +15,7 @@ import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.github.ust.mico.core.ClusterAwarenessFabric8;
 import io.github.ust.mico.core.MicoKubernetesConfig;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.model.MicoServicePort;
+import io.github.ust.mico.core.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -41,11 +38,10 @@ public class MicoKubernetesClient {
      * Create a Kubernetes deployment based on a MICO service.
      *
      * @param service the {@link MicoService}
-     * @param applicationName the {@link MicoApplication} short name
-     * @param replicas the number of replicas
+     * @param deploymentInfo the {@link MicoServiceDeploymentInfo}
      * @return the Kubernetes {@link Deployment} resource object
      */
-    public Deployment createMicoService(MicoService service, String applicationName, int replicas) {
+    public Deployment createMicoService(MicoService service, MicoServiceDeploymentInfo deploymentInfo) {
         Deployment deployment = new DeploymentBuilder()
                 .withNewMetadata()
                     .withName(service.getShortName())
@@ -54,7 +50,7 @@ public class MicoKubernetesClient {
                     .addToLabels("version", service.getVersion())
                 .endMetadata()
                 .withNewSpec()
-                    .withNewReplicas(replicas)
+                    .withNewReplicas(deploymentInfo.getReplicas())
                     .withNewSelector()
                         .addToMatchLabels("app", service.getShortName())
                         .addToMatchLabels("version", service.getVersion())
@@ -84,15 +80,17 @@ public class MicoKubernetesClient {
      * Create a Kubernetes service based on a MICO service interface.
      *
      * @param serviceInterface the {@link MicoServiceInterface}
-     * @param applicationName the application name
+     * @param micoServiceName the name of the {@link MicoService}
+     * @param micoServiceVersion the version of the {@link MicoService}
      * @return the Kubernetes {@link Service} resource
      */
-    public Service createMicoServiceInterface(MicoServiceInterface serviceInterface, String applicationName, String version) {
+    public Service createMicoServiceInterface(MicoServiceInterface serviceInterface, String micoServiceName, String micoServiceVersion) {
         Service service = new ServiceBuilder()
-                . withNewMetadata()
+                .withNewMetadata()
                     .withName(serviceInterface.getServiceInterfaceName())
-                    .addToLabels("app", applicationName)
-                    .addToLabels("version", version)
+                    .withNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace())
+                    .addToLabels("app", micoServiceName)
+                    .addToLabels("version", micoServiceVersion)
                 .endMetadata()
                 .withNewSpec()
                     .withPorts(createServicePorts(serviceInterface))
@@ -103,15 +101,15 @@ public class MicoKubernetesClient {
         // (publicDns, description, protocol, transportProtocol)
 
         KubernetesClient client = cluster.getClient();
-        return client.services().inNamespace(micoKubernetesConfig.getNamespaceMicoSystem()).create(service);
+        return client.services().inNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace()).create(service);
     }
 
-    
-    
+
+
     /**
      * Creates a list of ports based on a MICO service. This list of ports
      * is intended for use with a container inside a Kubernetes deployment.
-     * 
+     *
      * @param service the {@link MicoService}.
      * @return an {@link ArrayList} with the {@link ContainerPort} instances.
      */
@@ -134,7 +132,7 @@ public class MicoKubernetesClient {
      * Creates a list of service ports (port, target port and type) based on a MICO
      * service interface. This list of service ports is intended for use with a
      * Kubernetes service.
-     * 
+     *
      * @param serviceInterface the {@link MicoServiceInterface}.
      * @return an {@link ArrayList} with the {@link ServicePort} instances.
      */

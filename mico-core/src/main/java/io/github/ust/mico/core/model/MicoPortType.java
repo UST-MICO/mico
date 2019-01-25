@@ -16,7 +16,7 @@ public enum MicoPortType {
     UDP;
 
     /**
-     * Default port type is {@link Type#TCP}.
+     * Default port type is {@link MicoPortType#TCP}.
      */
     public static MicoPortType DEFAULT = MicoPortType.TCP;
 
