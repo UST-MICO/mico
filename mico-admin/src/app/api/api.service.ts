@@ -279,11 +279,7 @@ export class ApiService {
             return;
         }
 
-        const resource = 'services/import/github';
-
-        console.log(data);
-
-        return this.rest.post<ApiObject>(resource, data, undefined, false).pipe(flatMap(val => {
+        return this.rest.post<ApiObject>('services/import/github', data, undefined, false).pipe(flatMap(val => {
 
             const stream = this.getStreamSource<ApiObject>(val._links.self.href);
             stream.next(val);

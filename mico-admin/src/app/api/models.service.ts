@@ -215,7 +215,7 @@ export class ModelsService {
                 })
             );
         }
-        return of(null); // TODO load models from openapi definitions
+        return of(null);
     }
 
     /**
