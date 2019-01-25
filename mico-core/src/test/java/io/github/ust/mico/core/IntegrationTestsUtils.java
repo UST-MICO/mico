@@ -1,6 +1,7 @@
 package io.github.ust.mico.core;
 
 import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.github.ust.mico.core.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.imagebuilder.buildtypes.Build;
 import lombok.Getter;
@@ -11,7 +12,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Component
@@ -19,6 +22,9 @@ public class IntegrationTestsUtils {
 
     @Autowired
     private ClusterAwarenessFabric8 cluster;
+
+    @Autowired
+    private MicoKubernetesConfig kubernetesConfig;
 
     @Autowired
     private MicoKubernetesBuildBotConfig buildBotConfig;
@@ -32,13 +38,19 @@ public class IntegrationTestsUtils {
     private ScheduledExecutorService podStatusChecker = Executors.newSingleThreadScheduledExecutor();
     private ScheduledExecutorService buildPodStatusChecker = Executors.newSingleThreadScheduledExecutor();
 
+    /**
+     * Set up the Kubernetes environment.
+     *
+     * @return The Kubernetes namespace that is used for the integration test
+     */
     String setUpEnvironment() {
         // Integration test namespace, use a random ID as a suffix to prevent errors if concurrent integration tests are executed
         String shortId = RandomStringUtils.randomAlphanumeric(8).toLowerCase();
         String namespace = integrationTestsConfig.getKubernetesNamespaceName() + "-" + shortId;
         cluster.createNamespace(namespace);
-        // Override config of the image builder so that it uses also the same namespace
+        // Override config so all the Kubernetes objects will be created in the integration test namespace
         buildBotConfig.setNamespaceBuildExecution(namespace);
+        kubernetesConfig.setNamespaceMicoWorkspace(namespace);
         return namespace;
     }
 
@@ -46,6 +58,12 @@ public class IntegrationTestsUtils {
         cluster.deleteNamespace(namespace);
     }
 
+    /**
+     * Set up the connection to the docker registry.
+     * Docker registry is required for pushing the images that are build by {@link ImageBuilder}.
+     *
+     * @param namespace the Kubernetes namespace
+     */
     void setUpDockerRegistryConnection(String namespace) {
         String serviceAccountName = buildBotConfig.getDockerRegistryServiceAccountName();
         String usernameBase64Encoded = integrationTestsConfig.getDockerHubUsernameBase64();
@@ -84,7 +102,64 @@ public class IntegrationTestsUtils {
     }
 
     /**
-     * Create a future that polls  the pod until it is running.
+     * Create a future that polls for all pods in the specified namespace until all are running.
+     *
+     * @param namespace    the Kubernetes namespace
+     * @param initialDelay the initial delay in seconds
+     * @param period       the period in seconds
+     * @param timeout      the timeout in seconds
+     * @return CompletableFuture with a boolean. True indicates that it finished successful.
+     * @throws InterruptedException if the build process is interrupted unexpectedly
+     * @throws TimeoutException     if the build does not finish or fail in the expected time
+     * @throws ExecutionException   if the build process fails unexpectedly
+     */
+    CompletableFuture<Boolean> waitUntilAllPodsInNamespaceAreRunning(String namespace, int initialDelay, int period, int timeout) throws InterruptedException, ExecutionException, TimeoutException {
+        CompletableFuture<Boolean> completionFuture = new CompletableFuture<>();
+
+        final ScheduledFuture<?> checkFuture = podStatusChecker.scheduleAtFixedRate(() -> {
+
+            PodList podList = cluster.getAllPods(namespace);
+            List<Pod> pods = podList.getItems();
+            int numberOfPodsInNamespace = pods.size();
+            log.debug("Number of pods in namespace '{}': {}", namespace, numberOfPodsInNamespace);
+            if (pods.isEmpty()) {
+                log.error("No pods found in namespace '" + namespace + "'");
+                completionFuture.cancel(true);
+            }
+
+            AtomicInteger runningPods = new AtomicInteger();
+            for (Pod pod : pods) {
+                String podName = pod.getMetadata().getName();
+                try {
+                    Boolean running = checkIfPodIsRunning(podName, namespace);
+                    if (running) {
+                        int currentlyRunningPods = runningPods.incrementAndGet();
+
+                        log.debug("Pod '{}' in namespace '{}' is now running", podName, namespace);
+                        log.info("Currently {} out of {} pods in namespace '{}' are running",
+                            currentlyRunningPods, numberOfPodsInNamespace, namespace);
+                    }
+                } catch (DeploymentException e) {
+                    completionFuture.cancel(true);
+                }
+            }
+
+            if (runningPods.get() == numberOfPodsInNamespace) {
+                completionFuture.complete(true);
+            }
+        }, initialDelay, period, TimeUnit.SECONDS);
+
+        // Waits until timeout is reached or the future completes.
+        completionFuture.get(timeout, TimeUnit.SECONDS);
+
+        // When completed cancel future
+        completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
+
+        return completionFuture;
+    }
+
+    /**
+     * Create a future that polls the pod until it is running.
      *
      * @param podName      the name of the pod
      * @param namespace    the Kubernetes namespace
@@ -100,20 +175,82 @@ public class IntegrationTestsUtils {
         CompletableFuture<Boolean> completionFuture = new CompletableFuture<>();
 
         final ScheduledFuture<?> checkFuture = podStatusChecker.scheduleAtFixedRate(() -> {
-            Pod pod = cluster.getPod(podName, namespace);
-            log.info("Current Phase: {}", pod.getStatus().getPhase());
-            if (pod.getStatus().getPhase().equals("Running")) {
-                completionFuture.complete(true);
-            } else {
-                String reason = pod.getStatus().getContainerStatuses().get(0).getState().getWaiting().getReason();
-                log.info("Reason: {}", reason);
-                if (reason.equals("ErrImagePull") || reason.equals("ImagePullBackOff")) {
-                    completionFuture.complete(false);
+            try {
+                Boolean running = checkIfPodIsRunning(podName, namespace);
+                if (running) {
+                    completionFuture.complete(true);
                 }
+            } catch (DeploymentException e) {
+                completionFuture.cancel(true);
+            }
+
+        }, initialDelay, period, TimeUnit.SECONDS);
+
+        // Waits until timeout is reached or the future completes.
+        completionFuture.get(timeout, TimeUnit.SECONDS);
+
+        // When completed cancel future
+        completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
+
+        return completionFuture;
+    }
+
+    /**
+     * Create a future that polls the deployment until it is created.
+     *
+     * @param deploymentName the name of the deployment
+     * @param namespace      the Kubernetes namespace
+     * @param initialDelay   the initial delay in seconds
+     * @param period         the period in seconds
+     * @param timeout        the timeout in seconds
+     * @return CompletableFuture with a boolean. True indicates that it finished successful.
+     * @throws InterruptedException if the build process is interrupted unexpectedly
+     * @throws TimeoutException     if the build does not finish or fail in the expected time
+     * @throws ExecutionException   if the build process fails unexpectedly
+     */
+    CompletableFuture<Deployment> waitUntilDeploymentIsCreated(String deploymentName, String namespace, int initialDelay, int period, int timeout) throws InterruptedException, ExecutionException, TimeoutException {
+        CompletableFuture<Deployment> completionFuture = new CompletableFuture<>();
+
+        final ScheduledFuture<?> checkFuture = podStatusChecker.scheduleAtFixedRate(() -> {
+            Deployment deployment = cluster.getDeployment(deploymentName, namespace);
+            if (deployment != null) {
+                completionFuture.complete(deployment);
             }
         }, initialDelay, period, TimeUnit.SECONDS);
 
-        // Add a timeout: Abort after 20 seconds
+        // Waits until timeout is reached or the future completes.
+        completionFuture.get(timeout, TimeUnit.SECONDS);
+
+        // When completed cancel future
+        completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
+
+        return completionFuture;
+    }
+
+    /**
+     * Create a future that polls the deployment until it is created.
+     *
+     * @param serviceName  the name of the service
+     * @param namespace    the Kubernetes namespace
+     * @param initialDelay the initial delay in seconds
+     * @param period       the period in seconds
+     * @param timeout      the timeout in seconds
+     * @return CompletableFuture with a boolean. True indicates that it finished successful.
+     * @throws InterruptedException if the build process is interrupted unexpectedly
+     * @throws TimeoutException     if the build does not finish or fail in the expected time
+     * @throws ExecutionException   if the build process fails unexpectedly
+     */
+    CompletableFuture<Service> waitUntilServiceIsCreated(String serviceName, String namespace, int initialDelay, int period, int timeout) throws InterruptedException, ExecutionException, TimeoutException {
+        CompletableFuture<Service> completionFuture = new CompletableFuture<>();
+
+        final ScheduledFuture<?> checkFuture = podStatusChecker.scheduleAtFixedRate(() -> {
+            Service service = cluster.getService(serviceName, namespace);
+            if (service != null) {
+                completionFuture.complete(service);
+            }
+        }, initialDelay, period, TimeUnit.SECONDS);
+
+        // Waits until timeout is reached or the future completes.
         completionFuture.get(timeout, TimeUnit.SECONDS);
 
         // When completed cancel future
@@ -163,4 +300,33 @@ public class IntegrationTestsUtils {
 
         return completionFuture;
     }
+
+    /**
+     * Checks if the specified pod is running
+     *
+     * @param podName   the pod name
+     * @param namespace the Kubernetes namespace
+     * @return boolean flag that indicates the success of the deployment
+     * @throws DeploymentException if error occurs during deployment of pod
+     */
+    private Boolean checkIfPodIsRunning(String podName, String namespace) throws DeploymentException {
+        Pod pod = cluster.getPod(podName, namespace);
+        String phase = pod.getStatus().getPhase();
+        log.debug("Pod '{}' is currently in phase: {}", podName, phase);
+
+        // Pod is in phase 'Succeeded' if it is a build pod, otherwise we wait until it is running.
+        if (phase.equals("Running") || phase.equals("Succeeded")) {
+            return true;
+        } else {
+            List<ContainerStatus> containerStatuses = pod.getStatus().getContainerStatuses();
+            for (ContainerStatus status : containerStatuses) {
+                String reason = status.getState().getWaiting().getReason();
+                if (reason.equals("ErrImagePull") || reason.equals("ImagePullBackOff")) {
+                    throw new DeploymentException("Deployment failed: " + reason);
+                }
+            }
+        }
+        return false;
+    }
+
 }

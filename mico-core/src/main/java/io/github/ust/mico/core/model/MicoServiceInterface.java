@@ -8,6 +8,7 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Pattern;
 import java.util.List;
 
 /**
@@ -35,9 +36,11 @@ public class MicoServiceInterface {
 
     /**
      * The name of this {@link MicoServiceInterface}.
+     * Pattern is the same than the one for Kubernetes Service names.
      */
     @ApiModelProperty(required = true)
     @NotEmpty
+    @Pattern(regexp="^[a-z]([-a-z0-9]*[a-z0-9])?$")
     private String serviceInterfaceName;
 
     /**
