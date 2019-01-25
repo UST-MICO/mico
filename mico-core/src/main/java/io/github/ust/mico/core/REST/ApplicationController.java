@@ -122,7 +122,7 @@ public class ApplicationController {
     }
 
     @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/services")
-    public ResponseEntity<Resource<MicoService>> addServiceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String _shortName,
+    public ResponseEntity addServiceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String _shortName,
                                                                          @PathVariable(PATH_VARIABLE_VERSION) String _version,
                                                                          @RequestBody MicoService _service) {
         Optional<MicoService> serviceOptional = serviceRepository.findByShortNameAndVersion(_service.getShortName(), _service.getVersion());
@@ -132,7 +132,6 @@ public class ApplicationController {
             MicoApplication application = applicationOptional.get();
             MicoApplication applicationWithService = application.toBuilder().service(newService).build();
             applicationRepository.save(applicationWithService);
-            //TODO: add location when 'GET /{shortName}/{version}/services/' is implemented
             return ResponseEntity.noContent().build();
         } else {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is no such application/service");
