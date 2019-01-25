@@ -130,8 +130,8 @@ public class ImageBuilder {
      */
     public Build build(MicoService micoService) throws NotInitializedException, IllegalArgumentException {
 
-        if (StringUtils.isEmpty(micoService.getVcsRoot())) {
-            throw new IllegalArgumentException("VcsRoot is missing");
+        if (StringUtils.isEmpty(micoService.getGitCloneUrl())) {
+            throw new IllegalArgumentException("Git clone url is missing");
         }
 
         String namespace = buildBotConfig.getNamespaceBuildExecution();
@@ -146,7 +146,7 @@ public class ImageBuilder {
             log.warn("Path to Dockerfile of MicoService '{}' is unknown. Try to use 'Dockerfile' in the root directory.", micoService.getShortName());
             dockerfilePath = "/workspace/Dockerfile";
         }
-        String gitUrl = micoService.getVcsRoot();
+        String gitUrl = micoService.getGitCloneUrl();
         String gitRevision = micoService.getVersion();
 
         return createBuild(buildName, destination, dockerfilePath, gitUrl, gitRevision, namespace);
