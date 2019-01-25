@@ -1,7 +1,20 @@
-<div class="pb2 pl2">
-    <h3>Application {{application?.name}}</h3>
-    <button mat-raised-button (click)="deployApplication()">deploy</button>
+<div class="flex w100">
+    <div class="ma3 flex-grow-1">
+        <h3>Application {{application?.name}}</h3>
+        <button mat-raised-button (click)="deployApplication()">deploy</button>
+    </div>
+
+    <!-- Drop Down Menu for version selection-->
+    <mat-form-field class="w25 ma2">
+        <mat-select placeholder="Application Version" (ngModelChange)="updateVersion($event)" [ngModel]="selectedVersion">
+            <mat-option *ngFor="let version of allVersions" [value]="version.version">
+                {{version?.version}}
+            </mat-option>
+        </mat-select>
+    </mat-form-field>
 </div>
+
+
 <mat-divider></mat-divider>
 
 <mat-card class="ma2">
@@ -47,7 +60,7 @@
                                         </div>
                                         <div class="w-20">
                                             <mat-list-item>
-                                                <mat-icon (click)="deleteService()">delete</mat-icon>
+                                                <mat-icon (click)="deleteService(dependee.shortName, dependee.version)">delete</mat-icon>
                                             </mat-list-item>
                                         </div>
                                     </div>

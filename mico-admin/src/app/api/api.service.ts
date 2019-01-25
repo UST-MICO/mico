@@ -122,7 +122,7 @@ export class ApiService {
      * @param shortName the shortName of the applicaton
      */
     getApplicationVersions(shortName: string) {
-        const resource = 'services/' + shortName + '/';
+        const resource = 'applications/' + shortName + '/';
         const stream = this.getStreamSource<ApiObject[]>(resource);
 
         this.rest.get<ApiObject>(resource).subscribe(val => {

@@ -1,9 +1,11 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
 import { Subscription } from 'rxjs';
+import { MatDialog } from '@angular/material';
+import { ServicePickerComponent } from '../dialogs/service-picker/service-picker.component';
 
 @Component({
     selector: 'mico-app-detail',
@@ -15,14 +17,18 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     constructor(
         private apiService: ApiService,
         private route: ActivatedRoute,
+        private dialog: MatDialog,
+        private router: Router,
     ) { }
 
     subRouteParams: Subscription;
     subApplicationVersions: Subscription;
     subDeploy: Subscription;
+    subDependeesDialog: Subscription;
 
     application: ApiObject;
     selectedVersion;
+    allVersions;
 
     ngOnInit() {
 
@@ -32,6 +38,9 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
             this.subApplicationVersions = this.apiService.getApplicationVersions(shortName)
                 .subscribe(versions => {
+
+                    this.allVersions = versions;
+
                     if (givenVersion == null) {
                         this.setLatestVersion(versions);
                     } else {
@@ -58,6 +67,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         this.unsubscribe(this.subRouteParams);
         this.unsubscribe(this.subApplicationVersions);
         this.unsubscribe(this.subDeploy);
+        this.unsubscribe(this.subDependeesDialog);
     }
 
     unsubscribe(subscription: Subscription) {
@@ -90,5 +100,39 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
             }
         });
+    }
+
+    addService() {
+
+        console.log(this.application);
+        // TODO fix implementation
+
+        const dialogRef = this.dialog.open(ServicePickerComponent, {
+            data: {
+                filter: '',
+                choice: 'multi',
+                existingDependencies: this.application.dependsOn,
+                serviceId: '',
+            }
+        });
+        this.subDependeesDialog = dialogRef.afterClosed().subscribe(result => {
+            console.log(result);
+            result.forEach(element => {
+                // this.services.push(element);
+            });
+        });
+
+    }
+
+    deleteService(shortName: string, version: string) {
+        // TODO implement as soon as there are working dummy values and application endpoints
+    }
+
+    /**
+    * call-back from the version picker
+    */
+    updateVersion(version) {
+        this.selectedVersion = version;
+        this.router.navigate(['app-detail', this.application.shortName, version]);
     }
 }
