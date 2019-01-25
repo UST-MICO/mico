@@ -1,5 +1,20 @@
 package io.github.ust.mico.core.REST;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import io.github.ust.mico.core.ImageBuildException;
 import io.github.ust.mico.core.NotInitializedException;
 import io.github.ust.mico.core.concurrency.MicoCoreBackgroundTaskFactory;
@@ -11,20 +26,6 @@ import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.MediaTypes;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 @Slf4j
 @RestController
@@ -106,8 +107,16 @@ public class DeploymentController {
     private void createKubernetesResources(MicoApplication micoApplication, MicoService micoService) {
         log.debug("Create Kubernetes resources for MICO service '{}'", micoService.getShortName());
         String applicationName = micoApplication.getShortName();
+        
+        // Kubernetes Deployment
         int replicas = micoApplication.getDeploymentInfo().getServiceDeploymentInfos().get(micoService.getId()).getReplicas();
         micoKubernetesClient.createMicoService(micoService, applicationName, replicas);
+        
+        // Kubernetes Service(s)
+        micoService.getServiceInterfaces().forEach(serviceInterface -> {
+            micoKubernetesClient.createMicoServiceInterface(serviceInterface, applicationName, micoService.getVersion());
+        });
+        
         log.info("Created Kubernetes resources for MICO service '{}'", micoService.getShortName());
     }
 

@@ -50,19 +50,19 @@ public class MicoKubernetesClient {
                 .withNewMetadata()
                     .withName(service.getShortName())
                     .withNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace())
-                    .addToLabels("app", applicationName)
-                    // TODO: Which version do we add here: application version or service version or both?
+                    .addToLabels("app", service.getShortName())
+                    .addToLabels("version", service.getVersion())
                 .endMetadata()
                 .withNewSpec()
                     .withNewReplicas(replicas)
                     .withNewSelector()
                         .addToMatchLabels("app", service.getShortName())
-                        // TODO: Which version do we add here: application version or service version or both?
+                        .addToMatchLabels("version", service.getVersion())
                      .endSelector()
                      .withNewTemplate()
                          .withNewMetadata()
                              .addToLabels("app", service.getShortName())
-                             // TODO: Which version do we add here: application version or service version or both?
+                             .addToLabels("version", service.getVersion())
                          .endMetadata()
                          .withNewSpec()
                              .withContainers(
@@ -87,11 +87,12 @@ public class MicoKubernetesClient {
      * @param applicationName the application name
      * @return the Kubernetes {@link Service} resource
      */
-    public Service createMicoServiceInterface(MicoServiceInterface serviceInterface, String applicationName) {
+    public Service createMicoServiceInterface(MicoServiceInterface serviceInterface, String applicationName, String version) {
         Service service = new ServiceBuilder()
                 . withNewMetadata()
                     .withName(serviceInterface.getServiceInterfaceName())
                     .addToLabels("app", applicationName)
+                    .addToLabels("version", version)
                 .endMetadata()
                 .withNewSpec()
                     .withPorts(createServicePorts(serviceInterface))
