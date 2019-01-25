@@ -8,11 +8,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping(value = "/applications", produces = MediaTypes.HAL_JSON_VALUE)
@@ -34,6 +38,9 @@ public class ApplicationController {
 
     @Autowired
     private MicoApplicationRepository applicationRepository;
+
+    @Autowired
+    private MicoServiceRepository serviceRepository;
 
     @GetMapping()
     public ResponseEntity<Resources<Resource<MicoApplication>>> getAllApplications() {
@@ -110,8 +117,28 @@ public class ApplicationController {
         List<Resource<MicoApplication>> applicationResourceList = getApplicationResourceList(micoApplicationList);
 
         return ResponseEntity.ok(
-                new Resources<>(applicationResourceList,
-                        linkTo(methodOn(ApplicationController.class).getApplicationsByShortName(shortName)).withSelfRel()));
+            new Resources<>(applicationResourceList,
+                linkTo(methodOn(ApplicationController.class).getApplicationsByShortName(shortName)).withSelfRel()));
+    }
+
+    @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/services")
+    public ResponseEntity<Resource<MicoService>> addService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
+                                                            @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
+                                                            @RequestBody MicoService serviceParameter) {
+        Optional<MicoService> serviceOptional = serviceRepository.
+            findByShortNameAndVersion(serviceParameter.getShortName(), serviceParameter.getVersion());
+        Optional<MicoApplication> applicationOptional = applicationRepository.
+            findByShortNameAndVersion(applicationShortName, applicationVersion);
+        if (serviceOptional.isPresent() && applicationOptional.isPresent()) {
+            MicoService service = serviceOptional.get();
+            MicoApplication application = applicationOptional.get();
+            MicoApplication applicationWithService = application.toBuilder().service(service).build();
+            applicationRepository.save(applicationWithService);
+            //TODO add location when  GET /{shortName}/{version]/services/ is there.
+            return ResponseEntity.noContent().build();
+        } else {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is no such application/service");
+        }
     }
 
 }
