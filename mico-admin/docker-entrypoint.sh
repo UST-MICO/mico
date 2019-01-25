@@ -1,6 +1,7 @@
-#!/usr/bin/env sh
-set -eu
+#!/bin/bash
+set -e
 
-envsubst '${MICO_REST_API}' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf
-
+echo "starting" >&2
+envsubst '${MICO_REST_API}' < /etc/nginx/nginx.conf > /etc/nginx/nginx.conf
+echo "replaced" >&2
 exec "$@"
