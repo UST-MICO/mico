@@ -111,7 +111,7 @@ public class ApplicationController {
 
         return ResponseEntity.ok(
                 new Resources<>(applicationResourceList,
-                        linkTo(methodOn(ApplicationController.class).getVersionsOfApplication(shortName)).withSelfRel()));
+                        linkTo(methodOn(ApplicationController.class).getApplicationsByShortName(shortName)).withSelfRel()));
     }
 
 }
