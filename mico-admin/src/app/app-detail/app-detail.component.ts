@@ -19,6 +19,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
     subRouteParams: Subscription;
     subApplicationVersions: Subscription;
+    subDeploy: Subscription;
 
     application: ApiObject;
     selectedVersion;
@@ -59,12 +60,20 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     ngOnDestroy() {
         this.unsubscribe(this.subRouteParams);
         this.unsubscribe(this.subApplicationVersions);
+        this.unsubscribe(this.subDeploy);
     }
 
     unsubscribe(subscription: Subscription) {
         if (subscription != null) {
             subscription.unsubscribe();
         }
+    }
+
+    deployApplication() {
+        this.subDeploy = this.apiService.postApplicationDeployCommand(this.application.shortName, this.application.version)
+            .subscribe(val => {
+                console.log(val);
+            });
     }
 
     /**

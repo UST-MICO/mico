@@ -1,6 +1,6 @@
 <div class="pb2 pl2">
     <h3>Application {{application?.name}}</h3>
-    <button mat-raised-button>deploy</button>
+    <button mat-raised-button (click)="deployApplication()">deploy</button>
 </div>
 <mat-divider></mat-divider>
 
@@ -47,7 +47,7 @@
                                         </div>
                                         <div class="w-20">
                                             <mat-list-item>
-                                                <mat-icon (click)="deleteServicec()">delete</mat-icon>
+                                                <mat-icon (click)="deleteService()">delete</mat-icon>
                                             </mat-list-item>
                                         </div>
                                     </div>

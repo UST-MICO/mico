@@ -166,11 +166,31 @@ export class ApiService {
         const resource = 'applications/';
 
         return this.rest.post<ApiObject>(resource, data).pipe(flatMap(val => {
+            this.getApplications();
 
             const stream = this.getStreamSource<ApiObject>(val._links.self.href);
             stream.next(val);
 
-            this.getApplications();
+            return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
+                filter(service => service !== undefined)
+            );
+        }));
+    }
+
+    /**
+     * commands the mico-core application to deploy application {shortName}, {version}
+     * @param shortName the applications shortName
+     * @param version the applications version
+     */
+    postApplicationDeployCommand(shortName: string, version: string) {
+        const resource = 'applications/' + shortName + '/' + version + '/deploy';
+
+        return this.rest.post<ApiObject>(resource, null).pipe(flatMap(val => {
+
+            const stream = this.getStreamSource<ApiObject>(val._links.self.href);
+            stream.next(val);
+
+            // TODO call API endpoints like application status
 
             return stream.asObservable().pipe(
                 filter(service => service !== undefined)
