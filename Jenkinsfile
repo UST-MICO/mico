@@ -1,3 +1,6 @@
+/* import shared library */
+@Library('jenkins-shared-library')_
+
 pipeline {
   environment {
     micoAdminRegistry = "ustmico/mico-admin"
@@ -69,6 +72,13 @@ pipeline {
                 }
             }
         }
+    }
+  }
+  post {
+    always {
+	    /* Use slackNotifier.groovy from shared library and provide current build result as parameter */
+        slackNotifier(currentBuild.currentResult)
+        cleanWs()
     }
   }
 }
