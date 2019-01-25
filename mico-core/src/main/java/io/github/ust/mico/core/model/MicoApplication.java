@@ -60,24 +60,22 @@ public class MicoApplication {
     @ApiModelProperty(required = true)
     private String description;
 
-    /**
-     * The services this application is composed of.
-     */
-    @ApiModelProperty(required = true)
-    @Singular
-    @Relationship(type = "INCLUDES")
-    private List<MicoService> services;
-
-    /**
-     * The information necessary for deploying this application.
-     */
-    @ApiModelProperty(required = true)
-    private MicoApplicationDeploymentInfo deploymentInfo;
-
 
     // ----------------------
     // -> Optional fields ---
     // ----------------------
+
+    /**
+     * The services this application is composed of.
+     */
+    @Singular
+    @Relationship(type = "INCLUDES")
+    private List<MicoService> services;
+    
+    /**
+     * The information necessary for deploying this application.
+     */
+    private MicoApplicationDeploymentInfo deploymentInfo;
 
     /**
      * Human readable contact information for support purposes.
