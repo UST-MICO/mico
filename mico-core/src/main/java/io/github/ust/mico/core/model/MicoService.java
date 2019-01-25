@@ -76,7 +76,6 @@ public class MicoService {
      * GitHub (downloaded and built by MICO) or DockerHub
      * (ready-to-use image).
      */
-    @ApiModelProperty(required = true)
     private MicoServiceCrawlingOrigin serviceCrawlingOrigin;
 
 

@@ -1,8 +1,15 @@
 <h2 mat-dialog-title>Create a new Service</h2>
 <mat-dialog-content style="min-width: 35rem">
-    <mico-form [modelUrl]="'remote/Service'" [filter]="filterList" (data)="serviceData = $event"></mico-form>
-    <div class="w100 flex justify-center">OR</div>
-    <mico-form [modelUrl]="'local/serviceFromGitPOST'"></mico-form>
+
+    <mat-tab-group (selectedTabChange)="tabChange($event)">
+        <mat-tab label="Manual">
+            <mico-form [modelUrl]="'remote/MicoService'" [filter]="filterList" (data)="serviceData = $event"></mico-form>
+        </mat-tab>
+        <mat-tab label="GitHub">
+            <!-- TODO replace with mico-form-question-->
+            <mico-form [modelUrl]="'local/serviceFromGitPOST'" (data)="githubData = $event"></mico-form>
+        </mat-tab>
+    </mat-tab-group>
 </mat-dialog-content>
 <mat-dialog-actions>
     <button mat-button mat-dialog-close>Cancel</button>

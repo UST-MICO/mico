@@ -2,32 +2,9 @@ import { Injectable } from '@angular/core';
 import { Http, Response, Headers, RequestOptions, ResponseContentType } from '@angular/http';
 import { Observable } from 'rxjs';
 import { map, } from 'rxjs/operators';
-import { ApiObject } from './apiobject';
+import { ApiObject, ApiLinksObject, LinkObject, isApiObject, isApiLinksObject, isLinkObject } from './apiobject';
 
 
-// TODO remove API Object ... (use the other one)
-export interface LinkObject {
-    readonly href: string;
-    readonly templated?: boolean;
-}
-
-export interface ApiLinksObject {
-    readonly self: LinkObject;
-    [propName: string]: LinkObject;
-}
-
-
-function isApiObject(toTest: any): toTest is ApiObject {
-    return '_links' in toTest;
-}
-
-function isApiLinksObject(toTest: any): toTest is ApiLinksObject {
-    return 'self' in toTest;
-}
-
-function isLinkObject(toTest: any): toTest is LinkObject {
-    return 'href' in toTest;
-}
 
 @Injectable({
     providedIn: 'root'
@@ -87,7 +64,7 @@ export class ApiBaseFunctionService {
     }
 
 
-    get(url: string | LinkObject | ApiLinksObject | ApiObject, token?: string, params?): Observable<ApiObject> {
+    get<T>(url: string | LinkObject | ApiLinksObject | ApiObject, token?: string, params?): Observable<T> {
         url = this.extractUrl(url);
 
         const options = this.headers(token);
@@ -103,17 +80,25 @@ export class ApiBaseFunctionService {
     }
 
 
-    post(url: string | LinkObject | ApiLinksObject | ApiObject, data, token?: string): Observable<ApiObject> {
+    post<T>(url: string | LinkObject | ApiLinksObject | ApiObject, data, token?: string, isJson = true): Observable<T> {
         url = this.extractUrl(url);
-        return this.http.post(url, JSON.stringify(data), this.headers(token))
+        let tempData = data;
+        if (isJson) {
+            tempData = JSON.stringify(tempData);
+        }
+        return this.http.post(url, tempData, this.headers(token))
             .pipe(map((res: Response) => {
                 return res.json();
             }));
     }
 
-    put(url: string | LinkObject | ApiLinksObject | ApiObject, data, token?: string): Observable<ApiObject> {
+    put<T>(url: string | LinkObject | ApiLinksObject | ApiObject, data, token?: string, isJson = true): Observable<T> {
         url = this.extractUrl(url);
-        return this.http.put(url, JSON.stringify(data), this.headers(token))
+        let tempData = data;
+        if (isJson) {
+            tempData = JSON.stringify(tempData);
+        }
+        return this.http.put(url, tempData, this.headers(token))
             .pipe(map((res: Response) => {
                 return res.json();
             }));
