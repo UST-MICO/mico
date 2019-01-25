@@ -1,3 +1,4 @@
+import { environment } from '../../environments/environment';
 import { Injectable } from '@angular/core';
 import { Http, Response, Headers, RequestOptions, ResponseContentType } from '@angular/http';
 import { Observable } from 'rxjs';
@@ -34,8 +35,6 @@ function isLinkObject(toTest: any): toTest is LinkObject {
 })
 export class ApiBaseFunctionService {
 
-    private base: string = 'http://localhost:8080/'; // (window as any).basePath;
-
     constructor(private http: Http) { }
 
     private extractUrl(url: string | LinkObject | ApiLinksObject | ApiObject): string {
@@ -58,7 +57,7 @@ export class ApiBaseFunctionService {
         if (url.startsWith('http')) {
             return url;
         }
-        let url_string: string = this.base;
+        let url_string: string = environment.settings.api;
         if (url_string.endsWith('/')) {
             url_string = url_string.slice(0, url_string.length - 1);
         }
