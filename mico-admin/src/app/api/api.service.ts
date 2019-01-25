@@ -84,8 +84,7 @@ export class ApiService {
 
         // TODO replace URL with a generic path
         this.rest.get<{ definitions: ApiModelMap, [prop: string]: any }>('http://localhost:8080/v2/api-docs').subscribe(val => {
-            // TODO remove debug output
-            console.log(val);
+
             stream.next(freezeObject(val.definitions));
             stream.complete();
         });
