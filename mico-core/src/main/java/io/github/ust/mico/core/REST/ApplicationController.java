@@ -122,19 +122,17 @@ public class ApplicationController {
     }
 
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/services")
-    public ResponseEntity<Resource<MicoService>> addService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
-                                                            @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
-                                                            @RequestBody MicoService serviceParameter) {
-        Optional<MicoService> serviceOptional = serviceRepository.
-            findByShortNameAndVersion(serviceParameter.getShortName(), serviceParameter.getVersion());
-        Optional<MicoApplication> applicationOptional = applicationRepository.
-            findByShortNameAndVersion(applicationShortName, applicationVersion);
+    public ResponseEntity<Resource<MicoService>> addServiceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String _shortName,
+                                                                         @PathVariable(PATH_VARIABLE_VERSION) String _version,
+                                                                         @RequestBody MicoService _service) {
+        Optional<MicoService> serviceOptional = serviceRepository.findByShortNameAndVersion(_service.getShortName(), _service.getVersion());
+        Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(_shortName, _version);
         if (serviceOptional.isPresent() && applicationOptional.isPresent()) {
-            MicoService service = serviceOptional.get();
+            MicoService newService = serviceOptional.get();
             MicoApplication application = applicationOptional.get();
-            MicoApplication applicationWithService = application.toBuilder().service(service).build();
+            MicoApplication applicationWithService = application.toBuilder().service(newService).build();
             applicationRepository.save(applicationWithService);
-            //TODO add location when  GET /{shortName}/{version]/services/ is there.
+            //TODO: add location when 'GET /{shortName}/{version}/services/' is implemented
             return ResponseEntity.noContent().build();
         } else {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is no such application/service");
