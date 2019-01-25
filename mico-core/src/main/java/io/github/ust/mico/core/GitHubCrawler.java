@@ -46,7 +46,8 @@ public class GitHubCrawler {
                 .version(releaseInfoJson.get("tag_name").textValue())
                 .description(basicInfoJson.get("description").textValue())
                 .serviceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
-                .vcsRoot(releaseInfoJson.get("url").textValue())
+                .gitCloneUrl(basicInfoJson.get("clone_url").textValue())
+                .gitReleaseInfoUrl(releaseInfoJson.get("url").textValue())
                 .build();
         } catch (IOException e) {
             // TODO: Better exception handling
@@ -84,6 +85,7 @@ public class GitHubCrawler {
             String shortName = basicInfoJson.get("name").textValue();
             String description = basicInfoJson.get("description").textValue();
             String fullName = basicInfoJson.get("full_name").textValue();
+            String gitCloneUrl = basicInfoJson.get("clone_url").textValue();
 
             for (JsonNode jsonNode : releaseInfoJson) {
 
@@ -93,7 +95,8 @@ public class GitHubCrawler {
                     .version(jsonNode.get("tag_name").textValue())
                     .description(description)
                     .serviceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
-                    .vcsRoot(jsonNode.get("url").textValue())
+                    .gitCloneUrl(gitCloneUrl)
+                    .gitReleaseInfoUrl(jsonNode.get("url").textValue())
                     .build());
 
             }

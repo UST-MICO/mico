@@ -98,7 +98,7 @@ public class ImageBuilderIntegrationTests {
         MicoService micoService = MicoService.builder()
             .shortName("hello-integration-test")
             .version(MicoVersion.valueOf(RELEASE).toString())
-            .vcsRoot(GIT_TEST_REPO_URL)
+            .gitCloneUrl(GIT_TEST_REPO_URL)
             .dockerfilePath(DOCKERFILE)
             .build();
 

@@ -145,7 +145,7 @@ public class DeploymentControllerTests {
             .id(ID)
             .shortName(SHORT_NAME)
             .version(RELEASE)
-            .vcsRoot(GIT_TEST_REPO_URL)
+            .gitCloneUrl(GIT_TEST_REPO_URL)
             .dockerfilePath(DOCKERFILE)
             .build();
     }

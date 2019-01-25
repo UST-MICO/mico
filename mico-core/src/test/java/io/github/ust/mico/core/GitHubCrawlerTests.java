@@ -15,6 +15,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 
+// TODO Run as integration tests
+@Ignore
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class GitHubCrawlerTests extends Neo4jTestClass {
@@ -27,7 +29,6 @@ public class GitHubCrawlerTests extends Neo4jTestClass {
     private MicoServiceRepository serviceRepository;
 
     @Test
-    @Ignore
     public void testGitHubCrawlerLatestReleaseByApiUri() {
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
@@ -39,12 +40,12 @@ public class GitHubCrawlerTests extends Neo4jTestClass {
         assertEquals(service.getDescription(), readService.getDescription());
         assertEquals(service.getId(), readService.getId());
         assertEquals(service.getVersion(), readService.getVersion());
-        assertEquals(service.getVcsRoot(), readService.getVcsRoot());
+        assertEquals(service.getGitCloneUrl(), readService.getGitCloneUrl());
+        assertEquals(service.getGitReleaseInfoUrl(), readService.getGitReleaseInfoUrl());
         assertEquals(service.getName(), readService.getName());
     }
 
     @Test
-    @Ignore
     public void testGitHubCrawlerLatestReleaseByHtmlUri() {
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
@@ -56,12 +57,12 @@ public class GitHubCrawlerTests extends Neo4jTestClass {
         assertEquals(service.getDescription(), readService.getDescription());
         assertEquals(service.getId(), readService.getId());
         assertEquals(service.getVersion(), readService.getVersion());
-        assertEquals(service.getVcsRoot(), readService.getVcsRoot());
+        assertEquals(service.getGitCloneUrl(), readService.getGitCloneUrl());
+        assertEquals(service.getGitReleaseInfoUrl(), readService.getGitReleaseInfoUrl());
         assertEquals(service.getName(), readService.getName());
     }
 
     @Test
-    @Ignore
     public void testGitHubCrawlerSpecificRelease() {
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
@@ -73,12 +74,12 @@ public class GitHubCrawlerTests extends Neo4jTestClass {
         assertEquals(service.getDescription(), readService.getDescription());
         assertEquals(service.getId(), readService.getId());
         assertEquals(service.getVersion(), readService.getVersion());
-        assertEquals(service.getVcsRoot(), readService.getVcsRoot());
+        assertEquals(service.getGitCloneUrl(), readService.getGitCloneUrl());
+        assertEquals(service.getGitReleaseInfoUrl(), readService.getGitReleaseInfoUrl());
         assertEquals(service.getName(), readService.getName());
     }
 
     @Test
-    @Ignore
     public void testGitHubCrawlerAllReleases() {
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
@@ -90,7 +91,8 @@ public class GitHubCrawlerTests extends Neo4jTestClass {
         assertEquals(serviceList.get(0).getDescription(), readService.getDescription());
         assertEquals(serviceList.get(0).getId(), readService.getId());
         assertEquals(serviceList.get(0).getVersion(), readService.getVersion());
-        assertEquals(serviceList.get(0).getVcsRoot(), readService.getVcsRoot());
+        assertEquals(serviceList.get(0).getGitCloneUrl(), readService.getGitCloneUrl());
+        assertEquals(serviceList.get(0).getGitReleaseInfoUrl(), readService.getGitReleaseInfoUrl());
         assertEquals(serviceList.get(0).getName(), readService.getName());
     }
 
