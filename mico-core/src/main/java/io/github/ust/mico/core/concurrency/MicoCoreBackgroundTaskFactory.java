@@ -56,17 +56,17 @@ public class MicoCoreBackgroundTaskFactory {
      * @param onSuccess a {@link Consumer} in case the task succeeds.
      * @return a new {@link CompletableFuture}.
      */
-    public <T> CompletableFuture<Void> runAsync(Supplier<T> task, Consumer<? super T> onSuccess) {
+    public <T> CompletableFuture runAsync(Supplier<T> task, Consumer<? super T> onSuccess) {
         return CompletableFuture.supplyAsync(task, executorService).thenAccept(onSuccess);
     }
-    
+
     /**
      * Returns a new CompletableFuture that is asynchronously completed
      * by a task running in the {@link ExecutorService} defined in this class
      * with the value obtained by calling the given supplier. In case the task
      * succeeds, the given Consumer is executed, otherwise (on failure) the given
      * Function is executed.
-     * 
+     *
      * @param <T> the task's return type.
      * @param task a {@link Supplier} returning the value to be used
      *        to complete the returned CompletableFuture.
@@ -74,8 +74,8 @@ public class MicoCoreBackgroundTaskFactory {
      * @param onError a {@link Function} in case the task fails.
      * @return a new {@link CompletableFuture}.
      */
-    public <T> CompletableFuture<Void> runAsync(Supplier<T> task, Consumer<? super T> onSuccess, Function<Throwable, ? extends Void> onError) {
+    public <T> CompletableFuture runAsync(Supplier<T> task, Consumer<? super T> onSuccess, Function<Throwable, ? extends Void> onError) {
         return CompletableFuture.supplyAsync(task, executorService).thenAccept(onSuccess).exceptionally(onError);
     }
-    
+
 }

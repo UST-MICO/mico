@@ -1,8 +1,8 @@
-.. java:import:: com.fasterxml.jackson.databind DeserializationFeature
+.. java:import:: java.io IOException
 
-.. java:import:: com.fasterxml.jackson.databind JsonNode
+.. java:import:: java.util ArrayList
 
-.. java:import:: com.fasterxml.jackson.databind ObjectMapper
+.. java:import:: java.util List
 
 .. java:import:: org.springframework.boot.web.client RestTemplateBuilder
 
@@ -10,15 +10,15 @@
 
 .. java:import:: org.springframework.web.client RestTemplate
 
-.. java:import:: java.io IOException
+.. java:import:: com.fasterxml.jackson.databind DeserializationFeature
 
-.. java:import:: java.util ArrayList
+.. java:import:: com.fasterxml.jackson.databind JsonNode
 
-.. java:import:: java.util List
+.. java:import:: com.fasterxml.jackson.databind ObjectMapper
 
-.. java:import:: java.util.regex Matcher
+.. java:import:: io.github.ust.mico.core.model MicoService
 
-.. java:import:: java.util.regex Pattern
+.. java:import:: io.github.ust.mico.core.model MicoServiceCrawlingOrigin
 
 GitHubCrawler
 =============
@@ -41,24 +41,24 @@ Methods
 crawlGitHubRepoAllReleases
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public List<Service> crawlGitHubRepoAllReleases(String uri)
+.. java:method:: public List<MicoService> crawlGitHubRepoAllReleases(String uri)
    :outertype: GitHubCrawler
 
 crawlGitHubRepoLatestRelease
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public Service crawlGitHubRepoLatestRelease(String uri)
+.. java:method:: public MicoService crawlGitHubRepoLatestRelease(String uri)
    :outertype: GitHubCrawler
 
 crawlGitHubRepoSpecificRelease
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public Service crawlGitHubRepoSpecificRelease(String uri, String version)
+.. java:method:: public MicoService crawlGitHubRepoSpecificRelease(String uri, String version)
    :outertype: GitHubCrawler
 
-makeExternalVersionInternal
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+makeUriToMatchGitHubApi
+^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public String makeExternalVersionInternal(String externalVersion) throws VersionNotSupportedException
+.. java:method:: public String makeUriToMatchGitHubApi(String uri)
    :outertype: GitHubCrawler
 

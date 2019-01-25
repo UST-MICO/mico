@@ -43,4 +43,25 @@ public class TestConstants {
     public static final String DESCRIPTION_2_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION_2);
     public static final String DESCRIPTION_3_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION_3);
 
+
+    /**
+     * Git repository that is used for testing.
+     * It must contain a Dockerfile and at least one release.
+     */
+    public static final String GIT_TEST_REPO_URL = "https://github.com/UST-MICO/hello.git";
+    /**
+     * Path to the Dockerfile.
+     * It must be relative to the root of the Git repository.
+     */
+    public static final String DOCKERFILE = "Dockerfile";
+    /**
+     * Release tag of the release that should be used for testing.
+     * Must be in in supported version format (semantic version).
+     */
+    public static final String RELEASE = "v1.0.0";
+
+    /**
+     * Docker image URI that is created based on the short name and the version of a service.
+     */
+    public static final String DOCKER_IMAGE_URI = "ustmico/" + SHORT_NAME + ":" + RELEASE;
 }

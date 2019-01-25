@@ -1,32 +1,29 @@
 package io.github.ust.mico.core.REST;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+import io.github.ust.mico.core.GitHubCrawler;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDependency;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.Resources;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDependency;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Link;
-import org.springframework.hateoas.MediaTypes;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.Resources;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDependency;
-import io.github.ust.mico.core.model.MicoVersion;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping(value = "/services", produces = MediaTypes.HAL_JSON_VALUE)
@@ -37,6 +34,8 @@ public class ServiceController {
     public static final String PATH_VARIABLE_ID = "id";
     public static final String PATH_DELETE_SHORT_NAME = "shortNameToDelete";
     public static final String PATH_DELETE_VERSION = "versionToDelete";
+    public static final String PATH_VARIABLE_IMPORT = "import";
+    public static final String PATH_VARIABLE_GITHUB = "github";
 
     @Autowired
     private MicoServiceRepository serviceRepository;
@@ -46,8 +45,8 @@ public class ServiceController {
         List<MicoService> services = serviceRepository.findAll();
         List<Resource<MicoService>> serviceResources = getServiceResourcesList(services);
         return ResponseEntity.ok(
-                new Resources<>(serviceResources,
-                        linkTo(methodOn(ServiceController.class).getServiceList()).withSelfRel()));
+            new Resources<>(serviceResources,
+                linkTo(methodOn(ServiceController.class).getServiceList()).withSelfRel()));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
@@ -56,7 +55,7 @@ public class ServiceController {
                                                                                  @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         return serviceOpt.map(service -> new Resource<>(service, getServiceLinks(service)))
-                .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+            .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
@@ -74,13 +73,13 @@ public class ServiceController {
                 MicoService updatedService = serviceRepository.save(service);
 
                 return ResponseEntity.ok(new Resource<>(updatedService,
-                        linkTo(methodOn(ServiceController.class).updateService(shortName, version, service)).withSelfRel()));
+                    linkTo(methodOn(ServiceController.class).updateService(shortName, version, service)).withSelfRel()));
             }
         }
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
-    public ResponseEntity deleteService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+    public ResponseEntity<Void> deleteService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                         @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (!serviceOpt.isPresent()) {
@@ -101,8 +100,8 @@ public class ServiceController {
         List<MicoService> services = serviceRepository.findByShortName(shortName);
         List<Resource<MicoService>> serviceResources = getServiceResourcesList(services);
         return ResponseEntity.ok(
-                new Resources<>(serviceResources,
-                        linkTo(methodOn(ServiceController.class).getVersionsOfService(shortName)).withSelfRel()));
+            new Resources<>(serviceResources,
+                linkTo(methodOn(ServiceController.class).getVersionsOfService(shortName)).withSelfRel()));
     }
 
     //TODO: Ambiguous endpoint with /services/shortName
@@ -111,7 +110,7 @@ public class ServiceController {
         Optional<MicoService> serviceOpt = serviceRepository.findById(id);
 
         return serviceOpt.map(service -> new Resource<>(service, getServiceLinks(service)))
-                .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+            .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
@@ -126,8 +125,8 @@ public class ServiceController {
             MicoService savedService = serviceRepository.save(newService);
 
             return ResponseEntity
-                    .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
-                    .body(new Resource<>(newService, getServiceLinks(newService)));
+                .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+                .body(new Resource<>(newService, getServiceLinks(newService)));
         }
     }
 
@@ -151,8 +150,8 @@ public class ServiceController {
         List<Resource<MicoService>> resourceList = getServiceResourcesList(services);
 
         return ResponseEntity.ok(
-                new Resources<>(resourceList,
-                        linkTo(methodOn(ServiceController.class).getDependees(shortName, version)).withSelfRel()));
+            new Resources<>(resourceList,
+                linkTo(methodOn(ServiceController.class).getDependees(shortName, version)).withSelfRel()));
     }
 
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
@@ -167,7 +166,7 @@ public class ServiceController {
 
 
         Optional<MicoService> serviceDependeeOpt = serviceRepository.findByShortNameAndVersion(newServiceDependee.getDependedService().getShortName(),
-                newServiceDependee.getDependedService().getVersion().toString());
+            newServiceDependee.getDependedService().getVersion().toString());
 
         if (!serviceDependeeOpt.isPresent()) {
             return ResponseEntity.notFound().build();
@@ -186,8 +185,8 @@ public class ServiceController {
         MicoService savedService = serviceRepository.save(service);
 
         return ResponseEntity
-                .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
-                .body(new Resource<>(service, getServiceLinks(service)));
+            .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+            .body(new Resource<>(service, getServiceLinks(service)));
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
@@ -204,12 +203,12 @@ public class ServiceController {
         MicoService savedService = serviceRepository.save(service);
 
         return ResponseEntity
-                .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
-                .body(new Resource<>(savedService, getServiceLinks(savedService)));
+            .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+            .body(new Resource<>(savedService, getServiceLinks(savedService)));
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees"
-            + "/{" + PATH_DELETE_SHORT_NAME + "}/{" + PATH_DELETE_VERSION + "}")
+        + "/{" + PATH_DELETE_SHORT_NAME + "}/{" + PATH_DELETE_VERSION + "}")
     public ResponseEntity<Resource<MicoService>> deleteDependee(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                 @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                 @PathVariable(PATH_DELETE_SHORT_NAME) String shortNameToDelete,
@@ -241,8 +240,8 @@ public class ServiceController {
         MicoService savedService = serviceRepository.save(service);
 
         return ResponseEntity
-                .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
-                .body(new Resource<>(savedService, getServiceLinks(savedService)));
+            .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+            .body(new Resource<>(savedService, getServiceLinks(savedService)));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependers")
@@ -258,8 +257,17 @@ public class ServiceController {
 
         List<Resource<MicoService>> resourceList = getServiceResourcesList(dependers);
         return ResponseEntity.ok(
-                new Resources<>(resourceList,
-                        linkTo(methodOn(ServiceController.class).getDependers(shortName, version)).withSelfRel()));
+            new Resources<>(resourceList,
+                linkTo(methodOn(ServiceController.class).getDependers(shortName, version)).withSelfRel()));
+    }
+
+    @PostMapping("/" + PATH_VARIABLE_IMPORT + "/" + PATH_VARIABLE_GITHUB)
+    public ResponseEntity<Resource<MicoService>> importMicoServiceFromGitHub(@RequestBody String url) {
+        RestTemplateBuilder restTemplate = new RestTemplateBuilder();
+        GitHubCrawler crawler = new GitHubCrawler(restTemplate);
+        MicoService newService = crawler.crawlGitHubRepoLatestRelease(url);
+
+        return createService(newService);
     }
 
     public List<MicoService> getDependers(MicoService serviceToLookFor) {
@@ -350,7 +358,7 @@ public class ServiceController {
 
     private List<Resource<MicoService>> getServiceResourcesList(List<MicoService> services) {
         return services.stream().map(service -> new Resource<>(service, getServiceLinks(service)))
-                .collect(Collectors.toList());
+            .collect(Collectors.toList());
     }
 
     private Iterable<Link> getServiceLinks(MicoService service) {
