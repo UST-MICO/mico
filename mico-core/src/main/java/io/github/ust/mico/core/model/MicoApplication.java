@@ -4,22 +4,20 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.github.ust.mico.core.VersionNotSupportedException;
+import lombok.*;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
 import io.swagger.annotations.ApiModelProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Singular;
 
 /**
  * Represents an application as a set of {@link MicoService}s
  * in the context of MICO.
  */
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
 @NodeEntity
@@ -42,25 +40,25 @@ public class MicoApplication {
      * for use as a unique identifier.
      */
     @ApiModelProperty(required = true)
-    private final String shortName;
+    private String shortName;
 
     /**
      * The name of the artifact. Intended for humans.
      */
     @ApiModelProperty(required = true)
-    private final String name;
+    private String name;
 
     /**
      * The version of this application.
      */
     @ApiModelProperty(required = true)
-    private final String version;
+    private String version;
 
     /**
      * Human readable description of this application.
      */
     @ApiModelProperty(required = true)
-    private final String description;
+    private String description;
 
     /**
      * The services this application is composed of.
@@ -68,13 +66,13 @@ public class MicoApplication {
     @ApiModelProperty(required = true)
     @Singular
     @Relationship(type = "INCLUDES")
-    private final List<MicoService> services;
+    private List<MicoService> services;
 
     /**
      * The information necessary for deploying this application.
      */
     @ApiModelProperty(required = true)
-    private final MicoApplicationDeploymentInfo deploymentInfo;
+    private MicoApplicationDeploymentInfo deploymentInfo;
 
 
     // ----------------------
