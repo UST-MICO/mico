@@ -209,9 +209,10 @@ export class ApiService {
         const stream = this.getStreamSource<ApiObject[]>(resource);
 
         this.rest.get<ApiObject>(resource).subscribe(val => {
-            let list = val._embedded.serviceList;
+            console.log(val);
+            let list = val._embedded.micoServiceList;
             if (list === undefined) {
-                list = val._embedded.applicationList;
+                list = val._embedded.micoApplicationList;
             }
             stream.next(freezeObject(list));
         });
