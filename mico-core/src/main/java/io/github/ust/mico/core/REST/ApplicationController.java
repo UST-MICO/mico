@@ -104,7 +104,7 @@ public class ApplicationController {
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/")
-    public ResponseEntity<Resources<Resource<MicoApplication>>> getVersionsOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
+    public ResponseEntity<Resources<Resource<MicoApplication>>> getApplicationsByShortName(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
         List<MicoApplication> micoApplicationList = applicationRepository.findByShortName(shortName);
 
         List<Resource<MicoApplication>> applicationResourceList = getApplicationResourceList(micoApplicationList);
