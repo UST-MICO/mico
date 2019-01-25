@@ -63,7 +63,6 @@ public class MicoApplication {
     /**
      * The services this application is composed of.
      */
-    @ApiModelProperty(required = true)
     @Singular
     @Relationship(type = "INCLUDES")
     private List<MicoService> services;
