@@ -1,5 +1,6 @@
 package io.github.ust.mico.core.model;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -17,7 +18,6 @@ import io.swagger.annotations.ApiModelProperty;
  * in the context of MICO.
  */
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
 @NodeEntity
@@ -29,6 +29,13 @@ public class MicoApplication {
     @Id
     @GeneratedValue
     private Long id;
+
+    /**
+     * Fix for https://github.com/rzwitserloot/lombok/issues/1347
+     */
+    public MicoApplication(){
+        services = Collections.emptyList();
+    }
 
 
     // ----------------------
