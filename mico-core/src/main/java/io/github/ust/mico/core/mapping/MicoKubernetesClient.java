@@ -1,6 +1,7 @@
 package io.github.ust.mico.core.mapping;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
@@ -94,6 +95,9 @@ public class MicoKubernetesClient {
                 .endMetadata()
                 .withNewSpec()
                     .withPorts(createServicePorts(serviceInterface))
+                    .withSelector(new HashMap<String, String>() {{
+                        put("app", micoServiceName); // TODO MicoService name is not unique! Service will load balance all requests to all versions of the MicoService
+                    }})
                 .endSpec()
                 .build();
 
