@@ -1,5 +1,7 @@
+#!/usr/bin/env groovy
+
 /* import shared library */
-/*@Library('jenkins-shared-library')_ */
+@Library('jenkins-shared-library')_
 
 pipeline {
     environment {
@@ -11,6 +13,11 @@ pipeline {
     }
     agent any
     stages {
+        stage('Checkout') {
+            steps {
+                git url: 'https://github.com/UST-MICO/mico.git'
+            }
+        }
         stage('Docker build') {
             parallel {
                 stage('mico-core') {
@@ -45,14 +52,14 @@ pipeline {
             parallel {
                 stage('mico-core') {
                     steps{
-                        sh '''ACR_IMAGE_NAME="ustmico/mico-core:kube${BUILD_NUMBER}"
-                        kubectl set image deployment/mico-core mico-core=$ACR_IMAGE_NAME --kubeconfig /var/lib/jenkins/config'''
+                        sh '''IMAGE_NAME="ustmico/mico-core:kube${BUILD_NUMBER}"
+                        kubectl set image deployment/mico-core mico-core=$IMAGE_NAME --kubeconfig /var/lib/jenkins/config'''
                     }
                 }
                 stage('mico-admin') {
                     steps{
-                        sh '''ACR_IMAGE_NAME="ustmico/mico-admin:kube${BUILD_NUMBER}"
-                        kubectl set image deployment/mico-admin mico-admin=$ACR_IMAGE_NAME --kubeconfig /var/lib/jenkins/config'''
+                        sh '''IMAGE_NAME="ustmico/mico-admin:kube${BUILD_NUMBER}"
+                        kubectl set image deployment/mico-admin mico-admin=$IMAGE_NAME --kubeconfig /var/lib/jenkins/config'''
                     }
                 }
             }
@@ -79,6 +86,8 @@ pipeline {
         always {
 	    /* Use slackNotifier.groovy from shared library and provide current build result as parameter */
             slackNotifier2(currentBuild.currentResult)
+
+            // Clean workspace
             cleanWs()
         }
     }
