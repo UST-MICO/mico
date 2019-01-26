@@ -167,7 +167,7 @@ public class DeploymentControllerIntegrationTests {
                 .serviceInterfaceName("hello-service")
                 .port(MicoServicePort.builder()
                     .number(80)
-                    .targetPort(8080)
+                    .targetPort(80)
                     .type(MicoPortType.TCP)
                     .build())
                 .build())
