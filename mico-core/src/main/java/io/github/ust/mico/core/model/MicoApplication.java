@@ -1,19 +1,17 @@
 package io.github.ust.mico.core.model;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.github.ust.mico.core.VersionNotSupportedException;
+import lombok.*;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
 import io.swagger.annotations.ApiModelProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Singular;
 
 /**
  * Represents an application as a set of {@link MicoService}s
@@ -32,6 +30,13 @@ public class MicoApplication {
     @GeneratedValue
     private Long id;
 
+    /**
+     * Fix for https://github.com/rzwitserloot/lombok/issues/1347
+     */
+    public MicoApplication(){
+        services = Collections.emptyList();
+    }
+
 
     // ----------------------
     // -> Required fields ---
@@ -42,44 +47,42 @@ public class MicoApplication {
      * for use as a unique identifier.
      */
     @ApiModelProperty(required = true)
-    private final String shortName;
+    private String shortName;
 
     /**
      * The name of the artifact. Intended for humans.
      */
     @ApiModelProperty(required = true)
-    private final String name;
+    private String name;
 
     /**
      * The version of this application.
      */
     @ApiModelProperty(required = true)
-    private final String version;
+    private String version;
 
     /**
      * Human readable description of this application.
      */
     @ApiModelProperty(required = true)
-    private final String description;
-
-    /**
-     * The services this application is composed of.
-     */
-    @ApiModelProperty(required = true)
-    @Singular
-    @Relationship(type = "INCLUDES")
-    private final List<MicoService> services;
-
-    /**
-     * The information necessary for deploying this application.
-     */
-    @ApiModelProperty(required = true)
-    private final MicoApplicationDeploymentInfo deploymentInfo;
+    private String description;
 
 
     // ----------------------
     // -> Optional fields ---
     // ----------------------
+
+    /**
+     * The services this application is composed of.
+     */
+    @Singular
+    @Relationship(type = "INCLUDES")
+    private List<MicoService> services;
+    
+    /**
+     * The information necessary for deploying this application.
+     */
+    private MicoApplicationDeploymentInfo deploymentInfo;
 
     /**
      * Human readable contact information for support purposes.

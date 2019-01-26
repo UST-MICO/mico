@@ -18,6 +18,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.Arrays;
 import java.util.Optional;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import io.github.ust.mico.core.model.MicoService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -109,6 +112,8 @@ public class ApplicationControllerTest {
 
         given(applicationRepository.save(any(MicoApplication.class))).willReturn(application);
 
+        prettyPrint(application);
+
         final ResultActions result = mvc.perform(post(BASE_PATH)
                 .content(mapper.writeValueAsBytes(application))
                 .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
@@ -144,6 +149,16 @@ public class ApplicationControllerTest {
                 .andExpect(jsonPath(VERSION_PATH, is(updatedApplication.getVersion())));
 
         resultUpdate.andExpect(status().isOk());
+    }
+
+    private void prettyPrint(Object object) {
+        ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+        try {
+            String json = mapper.writeValueAsString(object);
+            System.out.println(json);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
     }
 
 }

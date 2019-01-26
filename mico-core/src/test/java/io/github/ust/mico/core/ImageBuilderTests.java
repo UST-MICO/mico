@@ -50,7 +50,7 @@ public class ImageBuilderTests {
         MicoService micoService = MicoService.builder()
             .shortName("service-short-name")
             .version(MicoVersion.valueOf(RELEASE).toString())
-            .vcsRoot(GIT_URI)
+            .gitCloneUrl(GIT_URI)
             .dockerfilePath("Dockerfile")
             .build();
 

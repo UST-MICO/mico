@@ -25,7 +25,8 @@ public class DomainModelDemo {
                 .protocol("HTTPS") // optional
                 .transportProtocol("TCP") // optional
                 .build())
-            .vcsRoot("https://github.com/MICO-Enterprises/service-one")
+            .gitCloneUrl("https://github.com/MICO-Enterprises/service-one")
+            .gitReleaseInfoUrl("https://api.github.com/MICO-Enterprises/service-one/releases/1337")
             .dockerfilePath(".")
             .dependency(MicoServiceDependency.builder() // optional
                 .id(2L)

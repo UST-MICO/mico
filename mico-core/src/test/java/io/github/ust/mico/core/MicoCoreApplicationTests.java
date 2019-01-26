@@ -31,7 +31,8 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
 
     private static final String TEST_SHORT_NAME = "Test";
     private static final String TEST_SERVICE_DESCRIPTION = "Test Service";
-    private static final String TEST_VCS_ROOT = "http://test.org/test";
+    private static final String TEST_GIT_CLONE_URL = "http://github.com/org/repo.git";
+    private static final String TEST_GIT_RELEASE_INFO_URL = "http://api.github.com/repos/org/repo/releases/1337";
     private static final String TEST_CONTACT = "Test Person";
     private static final String TEST_PORT = "8080";
     private static final String TEST_TARGET_PORT = "8081";
@@ -64,7 +65,8 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
         assertEquals(TEST_VERSION, serviceTest.getVersion());
         assertEquals(TEST_LONGER_NAME, serviceTest.getName());
         assertEquals(TEST_SERVICE_DESCRIPTION, serviceTest.getDescription());
-        assertEquals(TEST_VCS_ROOT, serviceTest.getVcsRoot());
+        assertEquals(TEST_GIT_RELEASE_INFO_URL, serviceTest.getGitCloneUrl());
+        assertEquals(TEST_GIT_CLONE_URL, serviceTest.getGitReleaseInfoUrl());
         assertEquals(TEST_CONTACT, serviceTest.getContact());
 
         assertEquals(1, serviceInterfacesTest.size());
@@ -95,7 +97,8 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
                         .protocol(TEST_PROTOCOL)
                         .build())
                 .serviceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
-                .vcsRoot(TEST_VCS_ROOT)
+                .gitCloneUrl(TEST_GIT_CLONE_URL)
+                .gitReleaseInfoUrl(TEST_GIT_CLONE_URL)
                 .contact(TEST_CONTACT)
                 .build();
     }
@@ -109,7 +112,8 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
         String testServivce2Name = "Service 2";
         String testService2Version = "1.2.3";
         String testServivce2Description = "This is service 2.";
-        String testServivce2VscRoot = "Some GitHub root.";
+        String testServivce2GitReleaseInfoUrl = "Some GitHub root.";
+        String testServivce2GitCloneUrl = "Some GitHub clone url.";
         String testServivce2Contact = "Me";
 
         String testInterface2Name = "Service Interface 2";
@@ -136,7 +140,8 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
                         .protocol(testInterface2Protocol)
                         .build())
                 .serviceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
-                .vcsRoot(testServivce2VscRoot)
+                .gitCloneUrl(testServivce2GitCloneUrl)
+                .gitReleaseInfoUrl(testServivce2GitReleaseInfoUrl)
                 .contact(testServivce2Contact)
                 .build();
 
@@ -162,11 +167,11 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
         assertNotNull(testService2);
         assertEquals(testService2, testService2.getVersion());
         assertEquals(testServivce2Description, testService2.getDescription());
-        assertEquals(testServivce2VscRoot, testService2.getVcsRoot());
+        assertEquals(testServivce2GitReleaseInfoUrl, testService2.getGitReleaseInfoUrl());
+        assertEquals(testServivce2GitCloneUrl, testService2.getGitCloneUrl());
         assertEquals(testServivce2Contact, testService2.getContact());
     }
 
-    @Ignore
     @Test
     public void testStoreApplication() {
         MicoApplication application1 = MicoApplication.builder()

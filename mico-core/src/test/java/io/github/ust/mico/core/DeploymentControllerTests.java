@@ -55,9 +55,7 @@ public class DeploymentControllerTests {
     @Captor
     ArgumentCaptor<MicoService> micoServiceArgumentCaptor;
     @Captor
-    ArgumentCaptor<String> applicationNameArgumentCaptor;
-    @Captor
-    ArgumentCaptor<Integer> replicasArgumentCaptor;
+    ArgumentCaptor<MicoServiceDeploymentInfo> deploymentInfoArgumentCaptor;
 
     @Autowired
     private MockMvc mvc;
@@ -79,7 +77,10 @@ public class DeploymentControllerTests {
         given(imageBuilder.createImageName(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).willReturn(DOCKER_IMAGE_URI);
 
         Deployment deployment = new Deployment();
-        given(micoKubernetesClient.createMicoService(ArgumentMatchers.any(MicoService.class), ArgumentMatchers.eq(TestConstants.SHORT_NAME), ArgumentMatchers.anyInt())).willReturn(deployment);
+        given(micoKubernetesClient.createMicoService(
+            ArgumentMatchers.any(MicoService.class),
+            ArgumentMatchers.any(MicoServiceDeploymentInfo.class)))
+            .willReturn(deployment);
     }
 
     @Test
@@ -110,18 +111,16 @@ public class DeploymentControllerTests {
         assertEquals(DOCKER_IMAGE_URI, storedMicoService.getDockerImageUri());
 
         verify(micoKubernetesClient, times(1)).createMicoService(
-            micoServiceArgumentCaptor.capture(), applicationNameArgumentCaptor.capture(), replicasArgumentCaptor.capture());
+            micoServiceArgumentCaptor.capture(),
+            deploymentInfoArgumentCaptor.capture());
 
         MicoService micoServiceToCreate = micoServiceArgumentCaptor.getValue();
         assertNotNull(micoServiceToCreate);
         assertEquals("MicoService that will be created as Kubernetes resources does not match", serviceWithImage, micoServiceToCreate);
 
-        String actualApplicationName = applicationNameArgumentCaptor.getValue();
-        assertNotNull(actualApplicationName);
-        String expectedApplicationName = application.getShortName();
-        assertEquals("Application name is not the expected short name", expectedApplicationName, actualApplicationName);
-
-        int actualReplicas = replicasArgumentCaptor.getValue();
+        MicoServiceDeploymentInfo deploymentInfo = deploymentInfoArgumentCaptor.getValue();
+        assertNotNull(deploymentInfo);
+        int actualReplicas = deploymentInfo.getReplicas();
         int expectedReplicas = application.getDeploymentInfo().getServiceDeploymentInfos().get(service.getId()).getReplicas();
         assertEquals("Replicas does not match the definition in the deployment info", expectedReplicas, actualReplicas);
     }
@@ -145,7 +144,7 @@ public class DeploymentControllerTests {
             .id(ID)
             .shortName(SHORT_NAME)
             .version(RELEASE)
-            .vcsRoot(GIT_TEST_REPO_URL)
+            .gitCloneUrl(GIT_TEST_REPO_URL)
             .dockerfilePath(DOCKERFILE)
             .build();
     }

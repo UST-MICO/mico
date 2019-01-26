@@ -15,7 +15,7 @@ export class AppListComponent implements OnInit {
         this.getApplications();
     }
 
-    applications: Readonly<ApiObject>;
+    applications: Readonly<ApiObject[]>;
 
     displayedColumns: string[] = ['id', 'name', 'shortName', 'description'];
 

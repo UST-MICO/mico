@@ -76,7 +76,6 @@ public class MicoService {
      * GitHub (downloaded and built by MICO) or DockerHub
      * (ready-to-use image).
      */
-    @ApiModelProperty(required = true)
     private MicoServiceCrawlingOrigin serviceCrawlingOrigin;
 
 
@@ -112,15 +111,20 @@ public class MicoService {
     private String owner;
 
     /**
-     * The URL to the root directory of, e.g., the
-     * corresponding GitHub repository.
+     * The URL that could be used for a git clone
+     * to clone the current master branch.
      */
-    private String vcsRoot;
+    private String gitCloneUrl;
 
     /**
-     * The relative (to vcsRoot) path to the Dockerfile.
+     * The URL to the get the information about a specific git release.
      */
-    @Pattern(regexp = "^(?!/.*$).*", message = "Path must be relative to vcsRoot")
+    private String gitReleaseInfoUrl;
+
+    /**
+     * The relative path to the Dockerfile.
+     */
+    @Pattern(regexp = "^(?!/.*$).*", message = "Path must be relative to the Git clone url")
     private String dockerfilePath;
 
     /**

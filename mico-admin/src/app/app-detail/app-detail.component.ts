@@ -38,11 +38,11 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                         this.setLatestVersion(versions);
                     } else {
                         let found = false;
-                        found = versions.forEach(element => {
+                        found = versions.some(element => {
 
                             if (element.version === givenVersion) {
                                 this.selectedVersion = givenVersion;
-                                this.apiService = element;
+                                this.application = element;
                                 return true;
                             }
                         });

@@ -3,8 +3,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 
 import { ApiService } from '../api/api.service';
 import { Subscription } from 'rxjs';
+import { ApiObject } from '../api/apiobject';
 
-export interface Service {
+export interface Service extends ApiObject {
     name: string;
 }
 
@@ -73,7 +74,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
 
                         if (element.version === givenVersion) {
                             this.selectedVersion = givenVersion;
-                            this.service = element;
+                            this.service = element as Service;
                             this.updateVersion(givenVersion);
                             return true;
                         }

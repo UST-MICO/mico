@@ -31,12 +31,12 @@ import static io.github.ust.mico.core.TestConstants.*;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-// TODO Upgrade to Junit5
+@Ignore
+// TODO Upgrade to JUnit5
 @Category(IntegrationTests.class)
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
-@Ignore
 public class ImageBuilderIntegrationTests {
 
     @Autowired
@@ -98,7 +98,7 @@ public class ImageBuilderIntegrationTests {
         MicoService micoService = MicoService.builder()
             .shortName("hello-integration-test")
             .version(MicoVersion.valueOf(RELEASE).toString())
-            .vcsRoot(GIT_TEST_REPO_URL)
+            .gitCloneUrl(GIT_TEST_REPO_URL)
             .dockerfilePath(DOCKERFILE)
             .build();
 
@@ -141,9 +141,9 @@ public class ImageBuilderIntegrationTests {
                 ).build())
             .build();
         Pod createdPod = cluster.createPod(pod, namespace);
-
+        String podName = createdPod.getMetadata().getName();
         CompletableFuture<Boolean> podCreationResult = integrationTestsUtils.waitUntilPodIsRunning(
-            createdPod.getMetadata().getName(), namespace, 1, 1, 20);
+            podName, namespace, 1, 1, 20);
         return podCreationResult.get();
     }
 
