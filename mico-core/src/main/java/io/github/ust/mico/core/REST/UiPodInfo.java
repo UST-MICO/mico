@@ -11,5 +11,5 @@ public class UiPodInfo {
     String phase;
     String hostIp;
     String nodeName;
-    String memoryUsage;
+    UiPodMetrics metrics;
 }
