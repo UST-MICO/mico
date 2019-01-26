@@ -1,24 +1,21 @@
 package io.github.ust.mico.core.mapping;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-import io.fabric8.kubernetes.api.model.ContainerBuilder;
-import io.fabric8.kubernetes.api.model.ContainerPort;
-import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.fabric8.kubernetes.api.model.ServicePort;
-import io.fabric8.kubernetes.api.model.ServicePortBuilder;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.github.ust.mico.core.ClusterAwarenessFabric8;
 import io.github.ust.mico.core.MicoKubernetesConfig;
-import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.model.MicoServicePort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Provides accessor methods for creating deployment and services in Kubernetes.
@@ -94,6 +91,7 @@ public class MicoKubernetesClient {
                     .addToLabels("version", micoServiceVersion)
                 .endMetadata()
                 .withNewSpec()
+                    .withType("LoadBalancer")
                     .withPorts(createServicePorts(serviceInterface))
                     .withSelector(new HashMap<String, String>() {{
                         put("app", micoServiceName); // TODO MicoService name is not unique! Service will load balance all requests to all versions of the MicoService
