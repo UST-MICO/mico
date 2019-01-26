@@ -16,6 +16,7 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentList;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.github.ust.mico.core.ClusterAwarenessFabric8;
+import io.github.ust.mico.core.PrometheusConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
@@ -55,6 +56,9 @@ public class ApplicationController {
 
     @Autowired
     private MicoApplicationRepository applicationRepository;
+
+    @Autowired
+    private PrometheusConfig prometheusConfig;
 
     @GetMapping()
     public ResponseEntity<Resources<Resource<MicoApplication>>> getAllApplications() {
