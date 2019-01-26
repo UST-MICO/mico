@@ -133,10 +133,8 @@ public class ApplicationController {
             if (!application.getServices().contains(service)) {
                 MicoApplication applicationWithService = application.toBuilder().service(service).build();
                 applicationRepository.save(applicationWithService);
-                return ResponseEntity.noContent().build();
-            } else {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The application already contains this service");
             }
+            return ResponseEntity.noContent().build();
         } else {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is no such application/service");
         }
