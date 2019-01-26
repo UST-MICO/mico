@@ -3,8 +3,6 @@ package io.github.ust.mico.core.REST;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,6 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -61,7 +60,8 @@ public class ApplicationController {
 
 
     private static final int MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT = 1;
-
+    private static final String PROMETHEUS_QUERY_FOR_MEMEORY_USAGE = "sum(container_memory_working_set_bytes{pod_name=\"%s\",container_name=\"\"})";
+    private static final String PROMETHEUS_QUERY_PARAMETER_NAME = "query";
 
     @Autowired
     private MicoApplicationRepository applicationRepository;
@@ -148,7 +148,7 @@ public class ApplicationController {
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/deploymentInformation")
     public ResponseEntity<Resource<UiDeploymentInformation>> getApplicationDeploymentInformation(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                                         @PathVariable(PATH_VARIABLE_VERSION) String version) {
+                                                                                                 @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
         if (micoApplicationOptional.isPresent()) {
             KubernetesClient kubernetesClient = clusterAwarenessFabric8.getClient();
@@ -178,11 +178,7 @@ public class ApplicationController {
                     PodList podList = kubernetesClient.pods().inNamespace("integration-test-pwpojntm").withLabels(lables).list();
                     List<UiPodInfo> podInfos = new LinkedList<>();
                     for (Pod pod : podList.getItems()) {
-                        String nodeName = pod.getSpec().getNodeName();
-                        String podName = pod.getMetadata().getName();
-                        String phase = pod.getStatus().getPhase();
-                        String hostIp = pod.getStatus().getHostIP();
-                        UiPodInfo uiPodInfo = UiPodInfo.builder().nodeName(nodeName).podName(podName).phase(phase).hostIp(hostIp).build();
+                        UiPodInfo uiPodInfo = getUiPodInfo(pod);
                         podInfos.add(uiPodInfo);
                     }
                     uiDeploymentInformation.setPodInfo(podInfos);
@@ -199,6 +195,43 @@ public class ApplicationController {
         }
     }
 
+    private UiPodInfo getUiPodInfo(Pod pod) {
+        String nodeName = pod.getSpec().getNodeName();
+        String podName = pod.getMetadata().getName();
+        String phase = pod.getStatus().getPhase();
+        String hostIp = pod.getStatus().getHostIP();
+        int memoryUsage = -1;
+        UiPodMetrics uiPodMetrics = new UiPodMetrics();
+        try {
+            memoryUsage = getMemoryUsageForPod(podName);
+            uiPodMetrics.setAvailable(true);
+        } catch (PrometheusRequestFailedException | ResourceAccessException e) {
+            uiPodMetrics.setAvailable(false);
+            e.printStackTrace();
+        }
+        uiPodMetrics.setMemoryUsage(memoryUsage);
+        return UiPodInfo.builder().nodeName(nodeName).podName(podName)
+            .phase(phase).hostIp(hostIp).metrics(uiPodMetrics).build();
+    }
+
+
+    private int getMemoryUsageForPod(String podName) throws PrometheusRequestFailedException {
+        RestTemplate restTemplate = new RestTemplate();
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(prometheusConfig.getUri());
+        uriBuilder.queryParam(PROMETHEUS_QUERY_PARAMETER_NAME, String.format(PROMETHEUS_QUERY_FOR_MEMEORY_USAGE, podName));
+        ResponseEntity<PrometheusResponse> response
+            = restTemplate.getForEntity(uriBuilder.build().toUri(), PrometheusResponse.class);
+        if (response.getStatusCode().is2xxSuccessful()) {
+            PrometheusResponse prometheusMemoryResponse = response.getBody();
+            if (prometheusMemoryResponse.wasSuccessful()) {
+                return prometheusMemoryResponse.getValue();
+            } else {
+                throw new PrometheusRequestFailedException("The status of the prometheus response was " + prometheusMemoryResponse.getStatus(), response.getStatusCode(), prometheusMemoryResponse.getStatus());
+            }
+        } else {
+            throw new PrometheusRequestFailedException("The http status code was not 2xx", response.getStatusCode(), null);
+        }
+    }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/")
     public ResponseEntity<Resources<Resource<MicoApplication>>> getApplicationsByShortName(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {

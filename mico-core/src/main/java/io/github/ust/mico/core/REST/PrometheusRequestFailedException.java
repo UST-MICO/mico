@@ -5,11 +5,11 @@ import org.springframework.http.HttpStatus;
 public class PrometheusRequestFailedException extends Exception{
 
     private final HttpStatus httpStatus;
-    private final String responseStatus;
+    private final String prometheusResponseStatus;
 
-    public PrometheusRequestFailedException(String message,HttpStatus httpStatus,String responseStatus){
+    public PrometheusRequestFailedException(String message,HttpStatus httpStatus,String prometheusResponseStatus){
         super(message);
         this.httpStatus = httpStatus;
-        this.responseStatus = responseStatus;
+        this.prometheusResponseStatus = prometheusResponseStatus;
     }
 }

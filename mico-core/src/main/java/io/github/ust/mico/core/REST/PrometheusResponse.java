@@ -8,7 +8,7 @@ import java.util.Map;
 
 @Getter
 @Setter
-public class PrometheusMemoryResponse {
+public class PrometheusResponse {
     private static final String PROMETHEUS_SUCCCESSFUL_RESPONSE = "success";
     private String status;
     private int value;
