@@ -19,7 +19,7 @@ public class ClusterAwarenessFabric8 {
     /**
      * uses default kubernetes client
      */
-    ClusterAwarenessFabric8() {
+    public ClusterAwarenessFabric8() {
         if (client == null) {
             client = new DefaultKubernetesClient();
         }
