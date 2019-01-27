@@ -22,14 +22,14 @@ public class WebConfig {
      */
     @Bean
     // TODO: Check generic type arguments.
-    public FilterRegistrationBean<CorsFilter> corsFilter() {
+    public FilterRegistrationBean corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration().applyPermitDefaultValues();
         config.setAllowCredentials(false);
         config.setAllowedOrigins(Arrays.asList(allowedOrigins));
         source.registerCorsConfiguration("/**", config);
 
-        FilterRegistrationBean<CorsFilter> bean = new FilterRegistrationBean<>(new CorsFilter(source));
+        FilterRegistrationBean bean = new FilterRegistrationBean(new CorsFilter(source));
         bean.setOrder(0);
 
         return bean;
