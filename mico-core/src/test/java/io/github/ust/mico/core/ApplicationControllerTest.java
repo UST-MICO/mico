@@ -1,64 +1,49 @@
 package io.github.ust.mico.core;
 
-import static io.github.ust.mico.core.JsonPathBuilder.*;
-import static io.github.ust.mico.core.REST.ApplicationController.LABLE_APP_KEY;
-import static io.github.ust.mico.core.REST.ApplicationController.LABLE_VERSION_KEY;
-import static io.github.ust.mico.core.TestConstants.*;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.util.*;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
-import io.fabric8.kubernetes.api.model.apps.DeploymentList;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
+import io.github.ust.mico.core.REST.ApplicationController;
 import io.github.ust.mico.core.REST.PrometheusResponse;
-import io.github.ust.mico.core.model.MicoService;
-import org.junit.Before;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Answers;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Bean;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import io.github.ust.mico.core.REST.ApplicationController;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Optional;
+
+import static io.github.ust.mico.core.JsonPathBuilder.*;
+import static io.github.ust.mico.core.REST.ApplicationController.LABEL_APP_KEY;
+import static io.github.ust.mico.core.REST.ApplicationController.LABEL_VERSION_KEY;
+import static io.github.ust.mico.core.TestConstants.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(ApplicationController.class)
@@ -217,20 +202,20 @@ public class ApplicationControllerTest {
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(micoKubernetesConfig.getNamespaceMicoWorkspace()).willReturn(testNamespace);
 
-        HashMap<String, String> lables = new HashMap<>();
-        lables.put(LABLE_APP_KEY, application.getShortName());
-        lables.put(LABLE_VERSION_KEY, application.getVersion());
+        HashMap<String, String> labels = new HashMap<>();
+        labels.put(LABEL_APP_KEY, application.getShortName());
+        labels.put(LABEL_VERSION_KEY, application.getVersion());
         int availableReplicas = 1;
         int replicas = 1;
         server.getClient().apps().deployments().inNamespace(testNamespace).create(new DeploymentBuilder()
-            .withNewMetadata().withName(deploymentName).withLabels(lables).endMetadata()
+            .withNewMetadata().withName(deploymentName).withLabels(labels).endMetadata()
             .withNewSpec().withReplicas(replicas).endSpec().withNewStatus().withAvailableReplicas(availableReplicas).endStatus()
             .build());
         server.getClient().services().inNamespace(testNamespace).create(new ServiceBuilder()
-            .withNewMetadata().withName(serviceName).withLabels(lables).endMetadata()
+            .withNewMetadata().withName(serviceName).withLabels(labels).endMetadata()
             .build());
         server.getClient().pods().inNamespace(testNamespace).create(new PodBuilder()
-            .withNewMetadata().withName(podName).withLabels(lables).endMetadata()
+            .withNewMetadata().withName(podName).withLabels(labels).endMetadata()
             .withNewSpec().withNodeName(nodeName).endSpec()
             .withNewStatus().withPhase(podPhase).withHostIP(hostIp).endStatus().build());
 
@@ -261,7 +246,7 @@ public class ApplicationControllerTest {
 
     private ResponseEntity getPrometheusResponseEntity(int value) {
         PrometheusResponse prometheusResponse = new PrometheusResponse();
-        prometheusResponse.setStatus(PrometheusResponse.PROMETHEUS_SUCCCESSFUL_RESPONSE);
+        prometheusResponse.setStatus(PrometheusResponse.PROMETHEUS_SUCCESSFUL_RESPONSE);
         prometheusResponse.setValue(value);
         ResponseEntity responseEntity = mock(ResponseEntity.class);
         given(responseEntity.getStatusCode()).willReturn(HttpStatus.OK);

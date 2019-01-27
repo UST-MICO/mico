@@ -9,14 +9,16 @@ import java.util.Map;
 @Getter
 @Setter
 public class PrometheusResponse {
-    public static final String PROMETHEUS_SUCCCESSFUL_RESPONSE = "success";
+    public static final String PROMETHEUS_SUCCESSFUL_RESPONSE = "success";
     private String status;
     private int value;
 
     public boolean wasSuccessful(){
-        return status.equals(PROMETHEUS_SUCCCESSFUL_RESPONSE);
+        return status.equals(PROMETHEUS_SUCCESSFUL_RESPONSE);
     }
+
     @JsonProperty("data")
+    @SuppressWarnings("unused")
     private void unpackNested(Map<String, Object> data) {
         //TODO find a better mapping solution
         List<Object> resultList = (List<Object>) data.get("result");

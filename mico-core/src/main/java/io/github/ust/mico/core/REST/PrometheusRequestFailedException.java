@@ -4,6 +4,8 @@ import org.springframework.http.HttpStatus;
 
 public class PrometheusRequestFailedException extends Exception{
 
+    public static final long serialVersionUID = 381515548494367817L;
+
     private final HttpStatus httpStatus;
     private final String prometheusResponseStatus;
 

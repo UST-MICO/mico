@@ -18,12 +18,15 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentList;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.github.ust.mico.core.ClusterAwarenessFabric8;
+import io.github.ust.mico.core.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.MicoKubernetesConfig;
 import io.github.ust.mico.core.PrometheusConfig;
 
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
@@ -50,18 +53,20 @@ import org.springframework.web.util.UriComponentsBuilder;
 @RequestMapping(value = "/applications", produces = MediaTypes.HAL_JSON_VALUE)
 public class ApplicationController {
 
+    private Logger logger = LoggerFactory.getLogger(ApplicationController.class);
+
     private static final String PATH_VARIABLE_SHORT_NAME = "shortName";
     private static final String PATH_VARIABLE_VERSION = "version";
 
     /**
      * Used by deployments
      */
-    public static final String LABLE_APP_KEY = "app";
-    public static final String LABLE_VERSION_KEY = "version";
+    public static final String LABEL_APP_KEY = "app";
+    public static final String LABEL_VERSION_KEY = "version";
 
 
     private static final int MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT = 1;
-    private static final String PROMETHEUS_QUERY_FOR_MEMEORY_USAGE = "sum(container_memory_working_set_bytes{pod_name=\"%s\",container_name=\"\"})";
+    private static final String PROMETHEUS_QUERY_FOR_MEMORY_USAGE = "sum(container_memory_working_set_bytes{pod_name=\"%s\",container_name=\"\"})";
     private static final String PROMETHEUS_QUERY_FOR_CPU_USAGE = "sum(container_cpu_load_average_10s{pod_name=\"%s\"})";
     private static final String PROMETHEUS_QUERY_PARAMETER_NAME = "query";
 
@@ -157,11 +162,11 @@ public class ApplicationController {
         Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
         if (micoApplicationOptional.isPresent()) {
             KubernetesClient kubernetesClient = clusterAwarenessFabric8.getClient();
-            HashMap<String, String> lables = new HashMap<>();
-            lables.put(LABLE_APP_KEY, shortName);
-            lables.put(LABLE_VERSION_KEY, version);
+            HashMap<String, String> labels = new HashMap<>();
+            labels.put(LABEL_APP_KEY, shortName);
+            labels.put(LABEL_VERSION_KEY, version);
             String namespace = micoKubernetesConfig.getNamespaceMicoWorkspace();
-            DeploymentList deploymentList = kubernetesClient.apps().deployments().inNamespace(namespace).withLabels(lables).list();
+            DeploymentList deploymentList = kubernetesClient.apps().deployments().inNamespace(namespace).withLabels(labels).list();
             if (deploymentList.getItems().size() == 1) {
                 Deployment deployment = deploymentList.getItems().get(0);
                 UiDeploymentInformation uiDeploymentInformation = new UiDeploymentInformation();
@@ -170,7 +175,7 @@ public class ApplicationController {
                 uiDeploymentInformation.setAvailableReplicas(availableReplicas);
                 uiDeploymentInformation.setRequestedReplicas(requestedReplicas);
 
-                ServiceList serviceList = kubernetesClient.services().inNamespace(namespace).withLabels(lables).list(); //MicoServiceInterface maps to Service
+                ServiceList serviceList = kubernetesClient.services().inNamespace(namespace).withLabels(labels).list(); //MicoServiceInterface maps to Service
                 List<UiExternalMicoInterfaceInformation> interfacesInformation = new LinkedList<>();
                 if (serviceList.getItems().size() >= MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT) {
                     for (Service service : serviceList.getItems()) {
@@ -180,7 +185,7 @@ public class ApplicationController {
                         interfacesInformation.add(interfaceInformation);
                     }
                     uiDeploymentInformation.setInterfacesInformation(interfacesInformation);
-                    PodList podList = kubernetesClient.pods().inNamespace(namespace).withLabels(lables).list();
+                    PodList podList = kubernetesClient.pods().inNamespace(namespace).withLabels(labels).list();
                     List<UiPodInfo> podInfos = new LinkedList<>();
                     for (Pod pod : podList.getItems()) {
                         UiPodInfo uiPodInfo = getUiPodInfo(pod);
@@ -214,7 +219,7 @@ public class ApplicationController {
             uiPodMetrics.setAvailable(true);
         } catch (PrometheusRequestFailedException | ResourceAccessException e) {
             uiPodMetrics.setAvailable(false);
-            e.printStackTrace();
+            logger.error(e.getMessage(),e);
         }
         uiPodMetrics.setMemoryUsage(memoryUsage);
         uiPodMetrics.setCpuLoad(cpuLoad);
@@ -224,13 +229,12 @@ public class ApplicationController {
 
 
     private int getMemoryUsageForPod(String podName) throws PrometheusRequestFailedException {
-        URI prometheusUri = getPrometheusUri(PROMETHEUS_QUERY_FOR_MEMEORY_USAGE, podName);
+        URI prometheusUri = getPrometheusUri(PROMETHEUS_QUERY_FOR_MEMORY_USAGE, podName);
         return requestValueFromPrometheus(prometheusUri);
     }
 
     private int getCpuLoadForPod(String podName) throws PrometheusRequestFailedException {
         URI prometheusUri = getPrometheusUri(PROMETHEUS_QUERY_FOR_CPU_USAGE, podName);
-        System.out.println(prometheusUri.toString());
         return requestValueFromPrometheus(prometheusUri);
     }
 
