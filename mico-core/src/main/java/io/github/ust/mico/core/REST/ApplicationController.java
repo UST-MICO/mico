@@ -56,8 +56,8 @@ public class ApplicationController {
     /**
      * Used by deployments
      */
-    private static final String LABLE_APP_KEY = "app";
-    private static final String LABLE_VERSION_KEY = "version";
+    public static final String LABLE_APP_KEY = "app";
+    public static final String LABLE_VERSION_KEY = "version";
 
 
     private static final int MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT = 1;
@@ -79,6 +79,9 @@ public class ApplicationController {
 
     @Autowired
     ClusterAwarenessFabric8 clusterAwarenessFabric8;
+
+    @Autowired
+    private RestTemplate restTemplate;
 
     @GetMapping()
     public ResponseEntity<Resources<Resource<MicoApplication>>> getAllApplications() {
@@ -157,7 +160,7 @@ public class ApplicationController {
             HashMap<String, String> lables = new HashMap<>();
             lables.put(LABLE_APP_KEY, shortName);
             lables.put(LABLE_VERSION_KEY, version);
-            String namespace = "integration-test-kt27cgwz";
+            String namespace = micoKubernetesConfig.getNamespaceMicoWorkspace();
             DeploymentList deploymentList = kubernetesClient.apps().deployments().inNamespace(namespace).withLabels(lables).list();
             if (deploymentList.getItems().size() == 1) {
                 Deployment deployment = deploymentList.getItems().get(0);
@@ -232,7 +235,6 @@ public class ApplicationController {
     }
 
     private int requestValueFromPrometheus(URI prometheusUri) throws PrometheusRequestFailedException {
-        RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<PrometheusResponse> response
             = restTemplate.getForEntity(prometheusUri, PrometheusResponse.class);
         if (response.getStatusCode().is2xxSuccessful()) {

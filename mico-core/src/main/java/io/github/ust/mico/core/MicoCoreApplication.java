@@ -23,8 +23,11 @@ package io.github.ust.mico.core;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.context.annotation.Bean;
 import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.web.client.RestTemplate;
 
 /**
  * Entry point for the MICO core application.
@@ -36,6 +39,16 @@ public class MicoCoreApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(MicoCoreApplication.class, args);
+    }
+
+    /**
+     * https://gist.github.com/RealDeanZhao/38821bc1efeb7e2a9bcd554cc06cdf96
+     * @param builder
+     * @return
+     */
+    @Bean
+    public RestTemplate restTemplate(RestTemplateBuilder builder) {
+        return builder.build();
     }
 
 }
