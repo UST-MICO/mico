@@ -1,7 +1,7 @@
-<div style="display: flex; justify-content: flex-end">
-    <button mat-raised-button class="inline-flex items-center" (click)="autozoom()">
+<div style="position: relative; min-height: 20rem;">
+    <network-graph mode="layout" #graph></network-graph>
+    <button mat-raised-button style="position: absolute; top: 0.5rem; right: 0.5rem;" (click)="autozoom()">
         <span class="mr2">Auto-zoom</span>
         <mat-icon>search</mat-icon>
     </button>
 </div>
-<network-graph class="flex-grow-1" #graph></network-graph>

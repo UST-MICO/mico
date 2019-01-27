@@ -10,8 +10,6 @@ export const VERSION_REGEX = /(^\w+)?(\d+)\.(\d+).(\d+)(-(?:\w+.)*\w+)?/;
 export function versionComparator(versionA: string, versionB: string): number {
     const mA = versionA.match(VERSION_REGEX);
     const mB = versionB.match(VERSION_REGEX);
-    console.log(mA)
-    console.log(mB)
     if (mA == null && mB == null) {
         return 0;
     }
