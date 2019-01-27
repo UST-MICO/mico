@@ -53,13 +53,13 @@ pipeline {
                 stage('mico-core') {
                     steps{
                         sh '''IMAGE_NAME="ustmico/mico-core:kube${BUILD_NUMBER}"
-                        kubectl set image deployment/mico-core mico-core=$IMAGE_NAME --kubeconfig /var/lib/jenkins/config'''
+                        kubectl set image deployment/mico-core mico-core=$IMAGE_NAME -n mico-system --kubeconfig /var/lib/jenkins/config'''
                     }
                 }
                 stage('mico-admin') {
                     steps{
                         sh '''IMAGE_NAME="ustmico/mico-admin:kube${BUILD_NUMBER}"
-                        kubectl set image deployment/mico-admin mico-admin=$IMAGE_NAME --kubeconfig /var/lib/jenkins/config'''
+                        kubectl set image deployment/mico-admin mico-admin=$IMAGE_NAME -n mico-system --kubeconfig /var/lib/jenkins/config'''
                     }
                 }
             }

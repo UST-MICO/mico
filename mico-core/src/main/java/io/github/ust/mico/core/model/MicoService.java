@@ -38,8 +38,7 @@ public class MicoService {
     // ----------------------
 
     /**
-     * A brief name for the service intended
-     * for use as a unique identifier.
+     * A brief name for the service.
      */
     @ApiModelProperty(required = true)
     private String shortName;
@@ -135,11 +134,20 @@ public class MicoService {
      */
     private String dockerImageUri;
 
-
     @JsonIgnore
     public MicoVersion getMicoVersion() throws VersionNotSupportedException {
         MicoVersion micoVersion = MicoVersion.valueOf(this.version);
         return micoVersion;
+    }
+
+    /**
+     * Returns a unique name that is used as the run label for Kubernetes Services.
+     *
+     * @return Unique name based on short name and version.
+     */
+    @JsonIgnore
+    public String getUniqueName() {
+        return shortName + "-" + version;
     }
 
 }

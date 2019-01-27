@@ -267,7 +267,7 @@ public class ApplicationController {
     }
 
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/services")
-    public ResponseEntity addServiceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
+    public ResponseEntity<Void> addServiceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
                                                   @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
                                                   @RequestBody MicoService serviceFromBody) {
         Optional<MicoService> serviceOptional = serviceRepository.findByShortNameAndVersion(serviceFromBody.getShortName(), serviceFromBody.getVersion());

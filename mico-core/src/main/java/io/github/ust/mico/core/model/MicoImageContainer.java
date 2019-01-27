@@ -11,6 +11,8 @@ import java.util.List;
 
 /**
  * Represents a container running in a Kubernetes Pod.
+ * Multiple containers can run in one pod.
+ * For each container you can specify resource contraints.
  */
 @Data
 @AllArgsConstructor

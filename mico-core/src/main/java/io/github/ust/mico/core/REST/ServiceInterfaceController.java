@@ -26,6 +26,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import io.github.ust.mico.core.ClusterAwarenessFabric8;
+import io.github.ust.mico.core.MicoKubernetesConfig;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
@@ -35,11 +37,19 @@ import io.github.ust.mico.core.persistence.MicoServiceRepository;
 public class ServiceInterfaceController {
 
     private static final String PATH_VARIABLE_SERVICE_INTERFACE_NAME = "serviceInterfaceName";
-    private static final String PATH_PART_INTERFACES = "/interfaces";
-    public static final String SERVICE_INTERFACE_PATH = "/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + PATH_PART_INTERFACES + "/";
+    private static final String PATH_PART_INTERFACES = "interfaces";
+    private static final String PATH_PATH_PUBLIC_IP = "publicIP";
+    private static final String SERVICE_INTERFACE_PATH = "/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_PART_INTERFACES + "/";
+    private static final String SERVICE_INTERFACE_PUBLIC_IP_PATH = SERVICE_INTERFACE_PATH + "{" + PATH_PATH_PUBLIC_IP + "}/";
 
     @Autowired
     private MicoServiceRepository serviceRepository;
+    
+    @Autowired
+    private ClusterAwarenessFabric8 cluster;
+    
+    @Autowired
+    private MicoKubernetesConfig kubernetesConfig;
 
     @GetMapping(SERVICE_INTERFACE_PATH)
     public ResponseEntity<Resources<Resource<MicoServiceInterface>>> getInterfacesOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
@@ -58,6 +68,15 @@ public class ServiceInterfaceController {
         Optional<MicoServiceInterface> serviceInterfaceOptional = serviceRepository.findInterfaceOfServiceByName(serviceInterfaceName, shortName, version);
         return serviceInterfaceOptional.map(serviceInterface ->
             new Resource<>(serviceInterface, getServiceInterfaceLinks(serviceInterface, shortName, version))).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    }
+    
+    @GetMapping(SERVICE_INTERFACE_PUBLIC_IP_PATH)
+    public ResponseEntity<Resources<Resource<String>>> getInterfacePublicIpByName(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                         @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                                         @PathVariable(PATH_VARIABLE_SERVICE_INTERFACE_NAME) String serviceInterfaceName) {
+        List<String> publicIps = cluster.getService(shortName, kubernetesConfig.getNamespaceMicoWorkspace()).getSpec().getExternalIPs();
+        List<Resource<String>> publicIpResources = publicIps.stream().map(publicIp -> new Resource<>(publicIp)).collect(Collectors.toList());
+        return ResponseEntity.ok().body(new Resources<>(publicIpResources));
     }
 
     @DeleteMapping(SERVICE_INTERFACE_PATH + "{" + PATH_VARIABLE_SERVICE_INTERFACE_NAME + "}")

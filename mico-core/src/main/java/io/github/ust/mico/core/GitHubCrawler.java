@@ -16,10 +16,6 @@ import java.util.List;
 
 public class GitHubCrawler {
 
-    // TODO: Remove if not needed
-    private static final String GITHUB_API = "https://api.github.com";
-    // TODO: Remove if not needed
-    private static final String REPOS = "repos";
     private static final String RELEASES = "releases";
     private static final String TAGS = "tags";
     private static final String LATEST = "latest";
