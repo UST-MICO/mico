@@ -104,21 +104,24 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
     addService() {
 
-        console.log(this.application);
-        // TODO fix implementation
-
         const dialogRef = this.dialog.open(ServicePickerComponent, {
             data: {
                 filter: '',
                 choice: 'multi',
-                existingDependencies: this.application.dependsOn,
+                existingDependencies: this.application.services,
                 serviceId: '',
             }
         });
         this.subDependeesDialog = dialogRef.afterClosed().subscribe(result => {
-            console.log(result);
+
+            // TODO consider if null check is still neccesary as soon as endpoint to add dependencies exists
+            if (this.application.services == null) {
+                this.application.services = [];
+            }
+
             result.forEach(element => {
-                // this.services.push(element);
+                this.application.services.push(element);
+                // TODO replace push with api call to add dependency. Consider adding all at once.
             });
         });
 
