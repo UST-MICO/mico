@@ -112,15 +112,24 @@ public class DeploymentController {
         log.debug("Start creating Kubernetes resources for MICO service '{}' in version '{}'", micoService.getShortName(), micoService.getVersion());
 
         // Kubernetes Deployment
-        MicoServiceDeploymentInfo micoServiceDeploymentInfo = micoApplication.getDeploymentInfo().getServiceDeploymentInfos().get(micoService.getId());
+        MicoServiceDeploymentInfo micoServiceDeploymentInfo = MicoServiceDeploymentInfo.builder().build();
+        if(micoApplication.getDeploymentInfo() != null &&
+            micoApplication.getDeploymentInfo().getServiceDeploymentInfos() != null) {
+            micoServiceDeploymentInfo = micoApplication.getDeploymentInfo().getServiceDeploymentInfos().get(micoService.getId());
+        }
+        log.debug("Creating Kubernetes deployment for MICO service '{}' in version '{}'",
+            micoService.getShortName(), micoService.getVersion());
         micoKubernetesClient.createMicoService(micoService, micoServiceDeploymentInfo);
-        
+
+        log.debug("Creating {} Kubernetes service(s) for MICO service '{}' in version '{}'",
+            micoService.getServiceInterfaces().size(), micoService.getShortName(), micoService.getVersion());
         // Kubernetes Service(s)
         micoService.getServiceInterfaces().forEach(serviceInterface -> {
             micoKubernetesClient.createMicoServiceInterface(serviceInterface, micoService);
         });
         
-        log.info("Created Kubernetes resources for MICO service '{}' in version '{}'", micoService.getShortName(), micoService.getVersion());
+        log.info("Created Kubernetes resources for MICO service '{}' in version '{}'",
+            micoService.getShortName(), micoService.getVersion());
     }
 
     private Void exceptionHandler(Throwable e) {

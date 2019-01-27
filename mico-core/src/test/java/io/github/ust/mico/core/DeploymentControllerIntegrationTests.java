@@ -66,9 +66,15 @@ public class DeploymentControllerIntegrationTests {
      */
     @Before
     public void setUp() {
-        namespace = integrationTestsUtils.setUpEnvironment();
+        namespace = integrationTestsUtils.setUpEnvironment(true);
         log.info("Integration test is running in Kubernetes namespace '{}'", namespace);
-        integrationTestsUtils.setUpDockerRegistryConnection(namespace);
+
+        try {
+            integrationTestsUtils.setUpDockerRegistryConnection(namespace);
+        } catch(RuntimeException e) {
+            tearDown();
+            throw e;
+        }
 
         service = getTestService();
         application = getTestApplication(service);
@@ -139,8 +145,8 @@ public class DeploymentControllerIntegrationTests {
             .shortName("hello")
             .name("hello-application")
             .version("v1.0.0")
-            .description("Hello World Application")
-            .deploymentInfo(MicoApplicationDeploymentInfo.builder()
+            // TODO Refactor Deployment info (redundant information in comparison with MicoService)
+            /*.deploymentInfo(MicoApplicationDeploymentInfo.builder()
                 .serviceDeploymentInfo(service.getId(), MicoServiceDeploymentInfo.builder()
                     .replicas(1)
                     .container(MicoImageContainer.builder()
@@ -152,7 +158,7 @@ public class DeploymentControllerIntegrationTests {
                             .build())
                         .build())
                     .build())
-                .build())
+                .build())*/
             .service(service)
             .build();
     }
@@ -162,11 +168,9 @@ public class DeploymentControllerIntegrationTests {
             .id(ID)
             .shortName("hello")
             .name("UST-MICO/hello")
-            .description("Hello World Service")
             .version("v1.0.0")
             .gitCloneUrl("https://github.com/UST-MICO/hello.git")
             .dockerfilePath("Dockerfile")
-            .serviceCrawlingOrigin(MicoServiceCrawlingOrigin.valueOf("GITHUB"))
             .serviceInterface(MicoServiceInterface.builder()
                 .serviceInterfaceName("hello-service")
                 .port(MicoServicePort.builder()
