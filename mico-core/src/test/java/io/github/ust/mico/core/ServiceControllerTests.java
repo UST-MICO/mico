@@ -97,12 +97,6 @@ public class ServiceControllerTests {
 
     @MockBean
     private MicoServiceRepository serviceRepository;
-    
-    @MockBean
-    private ClusterAwarenessFabric8 cluster;
-    
-    @MockBean
-    private MicoKubernetesConfig kubernetesConfig;
 
     @Autowired
     private ObjectMapper mapper;

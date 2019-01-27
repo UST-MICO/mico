@@ -58,10 +58,19 @@ public class ServiceInterfaceControllerTests {
     private static final String SERVICES_HREF = buildPath(ROOT, LINKS, "service", HREF);
     private static final String SERVICE_URL = "/services/" + SHORT_NAME + "/" + VERSION;
     private static final String INTERFACES_URL = SERVICE_URL + "/interfaces/";
+    
     @Autowired
     private MockMvc mvc;
+    
     @MockBean
     private MicoServiceRepository serviceRepository;
+    
+    @MockBean
+    private ClusterAwarenessFabric8 cluster;
+    
+    @MockBean
+    private MicoKubernetesConfig kubernetesConfig;
+    
     @Autowired
     private ObjectMapper mapper;
 
