@@ -6,7 +6,7 @@
             <ng-container *ngIf="!edit">
                 <!-- display version -->
                 <!-- TODO change to serviceGET (as soon as api is available -->
-                <mico-data [modelUrl]="'remote/Service'" [startData]="serviceData"></mico-data>
+                <mico-data [modelUrl]="'remote/MicoService'" [startData]="serviceData"></mico-data>
 
                 <!-- TODO hard coded information - not yet part of the domain model-->
                 <!-- TODO some elements (like) tags are in the domain model now. Check as soon as the modelURLs are loaded dynamically-->
@@ -32,7 +32,7 @@
             <!-- editable version -->
 
             <ng-container *ngIf="edit">
-                <mico-form [modelUrl]="'remote/Service'" (data)="serviceData = $event" [startData]="serviceData"></mico-form>
+                <mico-form [modelUrl]="'remote/MicoService'" (data)="serviceData = $event" [startData]="serviceData"></mico-form>
                 <div class="ma1 pa1">
                     <span class="ma1">
                         <button mat-raised-button (click)="save()">Save</button>

@@ -21,7 +21,7 @@ export class DashboardComponent implements OnInit {
         this.getApplications();
     }
 
-    applications: ApiObject;
+    applications: Readonly<ApiObject[]>;
 
     displayedColumns: string[] = ['id', 'name', 'shortName'];
 
@@ -47,19 +47,34 @@ export class DashboardComponent implements OnInit {
     newService(): void {
         const dialogRef = this.dialog.open(CreateServiceDialogComponent);
         dialogRef.afterClosed().subscribe(result => {
+
             // filter empty results (when dialog is aborted)
-            if (result !== '') {
+            if (result !== '' && result != null && result.data != null) {
 
                 // check if returned object is complete
-                for (const property in result) {
-                    if (result[property] == null) {
-                        // TODO add some user feed back
-                        return;
+                for (const property in result.data) {
+                    if (result.data[property] == null) {
+
+                        if (property !== 'serviceInterfaces') {
+                            // TODO add some user feed back
+                            console.log('RETURN BECAUSE OF ', property);
+                            return;
+                        }
                     }
                 }
-                this.apiService.postService(result).subscribe(val => {
-                    this.router.navigate(['service-detail', val.shortName, val.version]);
-                });
+
+                // decide if the service was created manually or is to be created via github crawler
+                if (result.tab === 'manual') {
+                    this.apiService.postService(result.data).subscribe(val => {
+                        this.router.navigate(['service-detail', val.shortName, val.version]);
+                    });
+                } else if (result.tab === 'github') {
+                    // TODO replace result.data.vcsroot when the inpuf form field is changed
+                    this.apiService.postServiceViaGithub(result.data.vcsroot).subscribe(val => {
+                        this.router.navigate(['service-detail', val.shortName, val.version]);
+                    });
+                }
+
             }
         });
     }

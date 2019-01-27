@@ -3,6 +3,7 @@ import { ApiService } from 'src/app/api/api.service';
 import { Subscription } from 'rxjs';
 import { MatDialog } from '@angular/material';
 import { ServicePickerComponent } from '../service-picker/service-picker.component';
+import { ApiModel } from 'src/app/api/apimodel';
 
 @Component({
     selector: 'mico-create-application',
@@ -17,11 +18,11 @@ export class CreateApplicationComponent implements OnInit, OnDestroy {
 
     applicationData;
 
-    filterList: [string];
+    filterList: string[];
 
     constructor(private apiService: ApiService, private dialog: MatDialog) {
         this.subModelDefinitions = this.apiService.getModelDefinitions().subscribe(val => {
-            this.filterList = val['Application'].required;
+            this.filterList = (val['Application'] as ApiModel).required;
         });
     }
 

@@ -65,8 +65,8 @@ public class ImageBuilder {
             log.error("Custom Resource Definition `{}` is not available!", BUILD_CRD_NAME);
             throw new NotInitializedException("Build CRD not available!");
         }
-        Optional<ServiceAccount> buildServiceAccount = Optional.of(cluster.getServiceAccount(serviceAccountName, namespace));
-        if (!buildServiceAccount.isPresent()) {
+        ServiceAccount buildServiceAccount = cluster.getServiceAccount(serviceAccountName, namespace);
+        if (buildServiceAccount == null) {
             log.error("Service account `{}` is not available!", serviceAccountName);
             throw new NotInitializedException("Service account not available!");
         }
@@ -87,6 +87,7 @@ public class ImageBuilder {
                 buildClient).inNamespace(namespace);
         }
 
+        // TODO Use thread pool
         scheduledBuildStatusCheckService = Executors.newSingleThreadScheduledExecutor();
     }
 
@@ -130,8 +131,8 @@ public class ImageBuilder {
      */
     public Build build(MicoService micoService) throws NotInitializedException, IllegalArgumentException {
 
-        if (StringUtils.isEmpty(micoService.getVcsRoot())) {
-            throw new IllegalArgumentException("VcsRoot is missing");
+        if (StringUtils.isEmpty(micoService.getGitCloneUrl())) {
+            throw new IllegalArgumentException("Git clone url is missing");
         }
 
         String namespace = buildBotConfig.getNamespaceBuildExecution();
@@ -146,7 +147,7 @@ public class ImageBuilder {
             log.warn("Path to Dockerfile of MicoService '{}' is unknown. Try to use 'Dockerfile' in the root directory.", micoService.getShortName());
             dockerfilePath = "/workspace/Dockerfile";
         }
-        String gitUrl = micoService.getVcsRoot();
+        String gitUrl = micoService.getGitCloneUrl();
         String gitRevision = micoService.getVersion();
 
         return createBuild(buildName, destination, dockerfilePath, gitUrl, gitRevision, namespace);
@@ -198,12 +199,13 @@ public class ImageBuilder {
         return createdBuild;
     }
 
-    public CompletableFuture<Boolean> waitUntilBuildIsFinished(Build build) throws InterruptedException, ExecutionException, TimeoutException {
+    public CompletableFuture<Boolean> waitUntilBuildIsFinished(String buildName) throws InterruptedException, ExecutionException, TimeoutException {
         CompletableFuture<Boolean> completionFuture = new CompletableFuture<>();
 
         // Create a future that polls every second with a delay of 10 seconds.
         final ScheduledFuture<?> checkFuture = scheduledBuildStatusCheckService.scheduleAtFixedRate(() -> {
 
+            Build build = getBuild(buildName);
             if (build.getStatus() != null && build.getStatus().getCluster() != null) {
                 String buildPodName = build.getStatus().getCluster().getPodName();
                 String buildNamespace = build.getStatus().getCluster().getNamespace();
@@ -243,7 +245,7 @@ public class ImageBuilder {
         CustomResourceDefinitionList crds = client.customResourceDefinitions().list();
         List<CustomResourceDefinition> crdsItems = crds.getItems();
 
-        log.debug("CRDs: {}", crdsItems);
+        // log.debug("CRDs: {}", crdsItems);
         return crdsItems;
     }
 
