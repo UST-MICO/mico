@@ -1,24 +1,21 @@
 package io.github.ust.mico.core.mapping;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-import io.fabric8.kubernetes.api.model.ContainerBuilder;
-import io.fabric8.kubernetes.api.model.ContainerPort;
-import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.fabric8.kubernetes.api.model.ServicePort;
-import io.fabric8.kubernetes.api.model.ServicePortBuilder;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.github.ust.mico.core.ClusterAwarenessFabric8;
 import io.github.ust.mico.core.MicoKubernetesConfig;
-import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.model.MicoServicePort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Provides accessor methods for creating deployment and services in Kubernetes.
@@ -53,17 +50,18 @@ public class MicoKubernetesClient {
                 .withNewSpec()
                     .withNewReplicas(deploymentInfo.getReplicas())
                     .withNewSelector()
-                        .addToMatchLabels("app", service.getShortName())
-                        .addToMatchLabels("version", service.getVersion())
+                     .addToMatchLabels("run", service.getUniqueName())
                      .endSelector()
                      .withNewTemplate()
                          .withNewMetadata()
                              .addToLabels("app", service.getShortName())
                              .addToLabels("version", service.getVersion())
+                             .addToLabels("run", service.getUniqueName())
                          .endMetadata()
                          .withNewSpec()
                              .withContainers(
                                  new ContainerBuilder()
+                                 // TODO: Use containers from mico service deployment info
                                      .withName(service.getShortName())
                                      .withImage(service.getDockerImageUri())
                                      .withPorts(createContainerPorts(service))
@@ -80,24 +78,22 @@ public class MicoKubernetesClient {
     /**
      * Create a Kubernetes service based on a MICO service interface.
      *
-     * @param serviceInterface the {@link MicoServiceInterface}
-     * @param micoServiceName the name of the {@link MicoService}
-     * @param micoServiceVersion the version of the {@link MicoService}
+     * @param micoServiceInterface the {@link MicoServiceInterface}
+     * @param micoService the {@link MicoService}
      * @return the Kubernetes {@link Service} resource
      */
-    public Service createMicoServiceInterface(MicoServiceInterface serviceInterface, String micoServiceName, String micoServiceVersion) {
+    public Service createMicoServiceInterface(MicoServiceInterface micoServiceInterface, MicoService micoService) {
         Service service = new ServiceBuilder()
                 .withNewMetadata()
-                    .withName(serviceInterface.getServiceInterfaceName())
+                    .withName(micoServiceInterface.getServiceInterfaceName())
                     .withNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace())
-                    .addToLabels("app", micoServiceName)
-                    .addToLabels("version", micoServiceVersion)
+                    .addToLabels("app", micoService.getShortName())
+                    .addToLabels("version", micoService.getVersion())
                 .endMetadata()
                 .withNewSpec()
-                    .withPorts(createServicePorts(serviceInterface))
-                    .withSelector(new HashMap<String, String>() {{
-                        put("app", micoServiceName); // TODO MicoService name is not unique! Service will load balance all requests to all versions of the MicoService
-                    }})
+                    .withType("LoadBalancer")
+                    .withPorts(createServicePorts(micoServiceInterface))
+                    .addToSelector("run", micoService.getUniqueName())
                 .endSpec()
                 .build();
 

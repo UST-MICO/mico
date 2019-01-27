@@ -117,7 +117,7 @@ public class DeploymentController {
         
         // Kubernetes Service(s)
         micoService.getServiceInterfaces().forEach(serviceInterface -> {
-            micoKubernetesClient.createMicoServiceInterface(serviceInterface, micoService.getShortName(), micoService.getVersion());
+            micoKubernetesClient.createMicoServiceInterface(serviceInterface, micoService);
         });
         
         log.info("Created Kubernetes resources for MICO service '{}' in version '{}'", micoService.getShortName(), micoService.getVersion());

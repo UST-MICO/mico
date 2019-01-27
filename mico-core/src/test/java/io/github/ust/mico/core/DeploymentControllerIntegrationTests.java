@@ -128,6 +128,10 @@ public class DeploymentControllerIntegrationTests {
         Service actualService = cluster.getService(expectedServiceName, namespace);
         assertNotNull("No service with name '" + expectedServiceName + "' exists", actualService);
         assertEquals("Service name is not like expected", expectedServiceName, actualService.getMetadata().getName());
+
+        log.info("ClusterIP: {}", actualService.getSpec().getClusterIP());
+        log.info("LoadBalancerIP: {}", actualService.getSpec().getLoadBalancerIP());
+        log.info("ExternalIPs: {}", actualService.getSpec().getExternalIPs());
     }
 
     private MicoApplication getTestApplication(MicoService service) {
