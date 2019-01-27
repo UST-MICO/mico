@@ -25,6 +25,9 @@ fi
 # Create MICO namespaces
 kubectl apply -f mico-namespaces.yaml
 
+# Create ClusterRoleBinding for mico-system
+kubectl apply -f fabric8-rbac.yaml
+
 # Prepare MICO build bot namespace
 envsubst < mico-build-bot.yaml | kubectl apply -f -
 
