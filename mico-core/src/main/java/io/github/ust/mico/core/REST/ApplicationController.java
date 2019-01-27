@@ -3,6 +3,7 @@ package io.github.ust.mico.core.REST;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -61,6 +62,7 @@ public class ApplicationController {
 
     private static final int MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT = 1;
     private static final String PROMETHEUS_QUERY_FOR_MEMEORY_USAGE = "sum(container_memory_working_set_bytes{pod_name=\"%s\",container_name=\"\"})";
+    private static final String PROMETHEUS_QUERY_FOR_CPU_USAGE = "sum(container_cpu_load_average_10s{pod_name=\"%s\"})";
     private static final String PROMETHEUS_QUERY_PARAMETER_NAME = "query";
 
     @Autowired
@@ -155,7 +157,8 @@ public class ApplicationController {
             HashMap<String, String> lables = new HashMap<>();
             lables.put(LABLE_APP_KEY, shortName);
             lables.put(LABLE_VERSION_KEY, version);
-            DeploymentList deploymentList = kubernetesClient.apps().deployments().inNamespace("integration-test-pwpojntm").withLabels(lables).list();
+            String namespace = "integration-test-kt27cgwz";
+            DeploymentList deploymentList = kubernetesClient.apps().deployments().inNamespace(namespace).withLabels(lables).list();
             if (deploymentList.getItems().size() == 1) {
                 Deployment deployment = deploymentList.getItems().get(0);
                 UiDeploymentInformation uiDeploymentInformation = new UiDeploymentInformation();
@@ -164,7 +167,7 @@ public class ApplicationController {
                 uiDeploymentInformation.setAvailableReplicas(availableReplicas);
                 uiDeploymentInformation.setRequestedReplicas(requestedReplicas);
 
-                ServiceList serviceList = kubernetesClient.services().inNamespace("integration-test-pwpojntm").withLabels(lables).list(); //MicoServiceInterface maps to Service
+                ServiceList serviceList = kubernetesClient.services().inNamespace(namespace).withLabels(lables).list(); //MicoServiceInterface maps to Service
                 List<UiExternalMicoInterfaceInformation> interfacesInformation = new LinkedList<>();
                 if (serviceList.getItems().size() >= MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT) {
                     for (Service service : serviceList.getItems()) {
@@ -175,7 +178,7 @@ public class ApplicationController {
                         interfacesInformation.add(interfaceInformation);
                     }
                     uiDeploymentInformation.setInterfacesInformation(interfacesInformation);
-                    PodList podList = kubernetesClient.pods().inNamespace("integration-test-pwpojntm").withLabels(lables).list();
+                    PodList podList = kubernetesClient.pods().inNamespace(namespace).withLabels(lables).list();
                     List<UiPodInfo> podInfos = new LinkedList<>();
                     for (Pod pod : podList.getItems()) {
                         UiPodInfo uiPodInfo = getUiPodInfo(pod);
@@ -201,26 +204,38 @@ public class ApplicationController {
         String phase = pod.getStatus().getPhase();
         String hostIp = pod.getStatus().getHostIP();
         int memoryUsage = -1;
+        int cpuLoad = -1;
         UiPodMetrics uiPodMetrics = new UiPodMetrics();
         try {
             memoryUsage = getMemoryUsageForPod(podName);
+            cpuLoad = getCpuLoadForPod(podName);
             uiPodMetrics.setAvailable(true);
         } catch (PrometheusRequestFailedException | ResourceAccessException e) {
             uiPodMetrics.setAvailable(false);
             e.printStackTrace();
         }
         uiPodMetrics.setMemoryUsage(memoryUsage);
+        uiPodMetrics.setCpuLoad(cpuLoad);
         return UiPodInfo.builder().nodeName(nodeName).podName(podName)
             .phase(phase).hostIp(hostIp).metrics(uiPodMetrics).build();
     }
 
 
     private int getMemoryUsageForPod(String podName) throws PrometheusRequestFailedException {
+        URI prometheusUri = getPrometheusUri(PROMETHEUS_QUERY_FOR_MEMEORY_USAGE, podName);
+        return requestValueFromPrometheus(prometheusUri);
+    }
+
+    private int getCpuLoadForPod(String podName) throws PrometheusRequestFailedException {
+        URI prometheusUri = getPrometheusUri(PROMETHEUS_QUERY_FOR_CPU_USAGE, podName);
+        System.out.println(prometheusUri.toString());
+        return requestValueFromPrometheus(prometheusUri);
+    }
+
+    private int requestValueFromPrometheus(URI prometheusUri) throws PrometheusRequestFailedException {
         RestTemplate restTemplate = new RestTemplate();
-        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(prometheusConfig.getUri());
-        uriBuilder.queryParam(PROMETHEUS_QUERY_PARAMETER_NAME, String.format(PROMETHEUS_QUERY_FOR_MEMEORY_USAGE, podName));
         ResponseEntity<PrometheusResponse> response
-            = restTemplate.getForEntity(uriBuilder.build().toUri(), PrometheusResponse.class);
+            = restTemplate.getForEntity(prometheusUri, PrometheusResponse.class);
         if (response.getStatusCode().is2xxSuccessful()) {
             PrometheusResponse prometheusMemoryResponse = response.getBody();
             if (prometheusMemoryResponse.wasSuccessful()) {
@@ -231,6 +246,12 @@ public class ApplicationController {
         } else {
             throw new PrometheusRequestFailedException("The http status code was not 2xx", response.getStatusCode(), null);
         }
+    }
+
+    private URI getPrometheusUri(String query, String podName) {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(prometheusConfig.getUri());
+        uriBuilder.queryParam(PROMETHEUS_QUERY_PARAMETER_NAME, String.format(query, podName));
+        return uriBuilder.build().toUri();
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/")
