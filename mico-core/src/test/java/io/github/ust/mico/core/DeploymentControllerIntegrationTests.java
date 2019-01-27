@@ -68,7 +68,13 @@ public class DeploymentControllerIntegrationTests {
     public void setUp() {
         namespace = integrationTestsUtils.setUpEnvironment();
         log.info("Integration test is running in Kubernetes namespace '{}'", namespace);
-        integrationTestsUtils.setUpDockerRegistryConnection(namespace);
+
+        try {
+            integrationTestsUtils.setUpDockerRegistryConnection(namespace);
+        } catch(RuntimeException e) {
+            tearDown();
+            throw e;
+        }
 
         service = getTestService();
         application = getTestApplication(service);
