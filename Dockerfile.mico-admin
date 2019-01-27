@@ -14,7 +14,6 @@ FROM nginx:1.13.12-alpine
 COPY --from=builder /app/dist/mico-admin /usr/share/nginx/html
 COPY --from=builder /app/nginx.conf /etc/nginx/
 
-#for using env vars later
-#COPY --from=builder /app/docker-entrypoint.sh /
-#ENTRYPOINT ["/docker-entrypoint.sh"]
-#CMD ["nginx", "-g", "daemon off;"]
+COPY --from=builder /app/docker-entrypoint.sh /
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["nginx", "-g", "daemon off;"]
