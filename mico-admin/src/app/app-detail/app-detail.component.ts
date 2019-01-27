@@ -6,6 +6,7 @@ import { ApiObject } from '../api/apiobject';
 import { Subscription } from 'rxjs';
 import { MatDialog } from '@angular/material';
 import { ServicePickerComponent } from '../dialogs/service-picker/service-picker.component';
+import { versionComparator } from '../api/semantic-version';
 
 @Component({
     selector: 'mico-app-detail',
@@ -90,10 +91,9 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     setLatestVersion(list) {
         list.forEach(element => {
 
-            let version = '0';
+            let version = '0.0.0';
 
-            // TODO implement comparison for semantic versioning
-            if (element.version > version) {
+            if (versionComparator(element.version, version) > 0) {
                 version = element.version;
                 this.selectedVersion = element.version;
                 this.application = element;
