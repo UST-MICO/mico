@@ -172,9 +172,8 @@ public class ApplicationController {
                 if (serviceList.getItems().size() >= MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT) {
                     for (Service service : serviceList.getItems()) {
                         String name = service.getMetadata().getName();
-                        String ip = service.getSpec().getLoadBalancerIP();
                         UiExternalMicoInterfaceInformation interfaceInformation = UiExternalMicoInterfaceInformation.builder()
-                            .name(name).externalIp(ip).build();
+                            .name(name).build();
                         interfacesInformation.add(interfaceInformation);
                     }
                     uiDeploymentInformation.setInterfacesInformation(interfacesInformation);

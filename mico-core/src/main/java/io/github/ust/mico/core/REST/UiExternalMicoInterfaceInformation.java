@@ -8,5 +8,4 @@ import lombok.Data;
 public class UiExternalMicoInterfaceInformation {
 
     String name;
-    String externalIp;
 }
