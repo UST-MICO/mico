@@ -61,6 +61,7 @@ public class MicoKubernetesClient {
                          .withNewSpec()
                              .withContainers(
                                  new ContainerBuilder()
+                                 // TODO: Use containers from mico service deployment info
                                      .withName(service.getShortName())
                                      .withImage(service.getDockerImageUri())
                                      .withPorts(createContainerPorts(service))
