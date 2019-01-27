@@ -41,12 +41,16 @@ public class IntegrationTestsUtils {
     /**
      * Set up the Kubernetes environment.
      *
+     * @param uniqueNamespace if true, an random ID will be added to the namespace name
      * @return The Kubernetes namespace that is used for the integration test
      */
-    String setUpEnvironment() {
-        // Integration test namespace, use a random ID as a suffix to prevent errors if concurrent integration tests are executed
-        String shortId = RandomStringUtils.randomAlphanumeric(8).toLowerCase();
-        String namespace = integrationTestsConfig.getKubernetesNamespaceName() + "-" + shortId;
+    String setUpEnvironment(Boolean uniqueNamespace) {
+        String namespace = integrationTestsConfig.getKubernetesNamespaceName();
+        if (uniqueNamespace) {
+            // Integration test namespace, use a random ID as a suffix to prevent errors if concurrent integration tests are executed
+            String shortId = RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+            namespace = namespace + "-" + shortId;
+        }
         cluster.createNamespace(namespace);
         // Override config so all the Kubernetes objects will be created in the integration test namespace
         buildBotConfig.setNamespaceBuildExecution(namespace);

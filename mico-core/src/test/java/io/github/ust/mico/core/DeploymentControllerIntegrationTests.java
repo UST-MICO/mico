@@ -66,7 +66,7 @@ public class DeploymentControllerIntegrationTests {
      */
     @Before
     public void setUp() {
-        namespace = integrationTestsUtils.setUpEnvironment();
+        namespace = integrationTestsUtils.setUpEnvironment(true);
         log.info("Integration test is running in Kubernetes namespace '{}'", namespace);
 
         try {
