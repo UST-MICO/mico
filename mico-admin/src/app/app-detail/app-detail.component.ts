@@ -50,7 +50,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
                             if (element.version === givenVersion) {
                                 this.selectedVersion = givenVersion;
-                                this.application = element;
+                                this.application = JSON.parse(JSON.stringify(element));
                                 return true;
                             }
                         });
@@ -96,7 +96,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
             if (versionComparator(element.version, version) > 0) {
                 version = element.version;
                 this.selectedVersion = element.version;
-                this.application = element;
+                this.application = JSON.parse(JSON.stringify(element));
 
             }
         });
@@ -128,7 +128,21 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     }
 
     deleteService(shortName: string, version: string) {
-        // TODO implement as soon as there are working dummy values and application endpoints
+
+        let searchForId = -1;
+
+        let counter = 0;
+        this.application.services.forEach(element => {
+            if (element.shortName === shortName && element.version === version) {
+                searchForId = counter;
+            }
+            counter++;
+        });
+
+        if (searchForId >= 0) {
+            this.application.services.splice(searchForId, 1);
+        }
+        // TODO call api endpoint as soon as existing
     }
 
     /**
