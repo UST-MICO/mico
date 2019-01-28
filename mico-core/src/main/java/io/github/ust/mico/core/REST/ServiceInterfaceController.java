@@ -38,9 +38,9 @@ public class ServiceInterfaceController {
 
     private static final String PATH_VARIABLE_SERVICE_INTERFACE_NAME = "serviceInterfaceName";
     private static final String PATH_PART_INTERFACES = "interfaces";
-    private static final String PATH_PATH_PUBLIC_IP = "publicIP";
+    private static final String PATH_PART_PUBLIC_IP = "publicIP";
     private static final String SERVICE_INTERFACE_PATH = "/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_PART_INTERFACES + "/";
-    private static final String SERVICE_INTERFACE_PUBLIC_IP_PATH = SERVICE_INTERFACE_PATH + "{" + PATH_PATH_PUBLIC_IP + "}/";
+    private static final String SERVICE_INTERFACE_PUBLIC_IP_PATH = SERVICE_INTERFACE_PATH + "{" + PATH_VARIABLE_SERVICE_INTERFACE_NAME + "}/" + PATH_PART_PUBLIC_IP + "/";
 
     @Autowired
     private MicoServiceRepository serviceRepository;
