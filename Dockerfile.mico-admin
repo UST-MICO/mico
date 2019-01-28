@@ -7,9 +7,13 @@ COPY /mico-admin/package*.json /app/
 RUN npm install
 
 COPY /mico-admin /app
-RUN npm run build
+RUN npm run build -- --prod
 
 FROM nginx:1.13.12-alpine
 
 COPY --from=builder /app/dist/mico-admin /usr/share/nginx/html
 COPY --from=builder /app/nginx.conf /etc/nginx/
+
+COPY --from=builder /app/docker-entrypoint.sh /
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["nginx", "-g", "daemon off;"]
