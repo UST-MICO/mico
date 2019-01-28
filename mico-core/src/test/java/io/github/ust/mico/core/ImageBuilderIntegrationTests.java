@@ -37,7 +37,6 @@ import static org.junit.Assert.assertTrue;
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
-@Ignore
 public class ImageBuilderIntegrationTests {
 
     @Autowired
