@@ -41,6 +41,15 @@ export class MicoFormNumberComponent implements OnInit {
         }
     }
 
+    onInputChange(input: number) {
+        if (input == null) {
+            return;
+        }
+        this.content = input;
+        this.onChange(input);
+        this.onTouched();
+    }
+
     registerOnChange(fn) {
         console.log('on Change');
         this.onChange = fn;

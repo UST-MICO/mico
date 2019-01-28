@@ -1,5 +1,5 @@
-<div class="" [formGroup]="form">
-    <div [ngSwitch]="propertyType()" class="">
+<div class="flex flex-column items-stretch" [formGroup]="form">
+    <ng-container [ngSwitch]="propertyType()" class="">
 
         <mat-form-field class="form-element" *ngSwitchCase="'string'">
             <mat-label>{{property.title}}</mat-label>
@@ -10,5 +10,5 @@
         <mico-form-boolean *ngSwitchCase="'boolean'" [formControlName]="property['x-key']" [config]="property"></mico-form-boolean>
         <mico-form-number *ngSwitchCase="'number'" [formControlName]="property['x-key']" [config]="property"></mico-form-number>
         <mico-form-number *ngSwitchCase="'integer'" [formControlName]="property['x-key']" [config]="property"></mico-form-number>
-    </div>
+    </ng-container>
 </div>
