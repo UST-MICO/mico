@@ -33,7 +33,6 @@ export class MicoFormNumberComponent implements OnInit {
     }
 
     set value(val: number) {
-        console.log('set value');
         if (!Number.isNaN(val)) {
             this.content = val;
             this.onChange(val);
@@ -51,7 +50,6 @@ export class MicoFormNumberComponent implements OnInit {
     }
 
     registerOnChange(fn) {
-        console.log('on Change');
         this.onChange = fn;
     }
 
