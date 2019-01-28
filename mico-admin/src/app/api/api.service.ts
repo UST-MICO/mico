@@ -392,6 +392,10 @@ export class ApiService {
         );
     }
 
+    // =======================
+    // SERVICE INTERFACE CALLS
+    // =======================
+
     getServiceInterfaces(shortName, version): Observable<ApiObject> {
         const resource = 'services/' + shortName + '/' + version + '/interfaces';
         const stream = this.getStreamSource<ApiObject>(resource);
@@ -403,5 +407,24 @@ export class ApiService {
         return stream.asObservable().pipe(
             filter(data => data !== undefined)
         );
+    }
+
+    postServiceInterface(shortName, version, data) {
+        if (data == null) {
+            return;
+        }
+
+        return this.rest.post<ApiObject>('services/' + shortName + '/' + version + '/interfaces',
+            data, undefined, false).pipe(flatMap(val => {
+
+                const stream = this.getStreamSource<ApiObject>(val._links.self.href);
+                stream.next(val);
+
+                this.getServiceInterfaces(shortName, version);
+
+                return stream.asObservable().pipe(
+                    filter(service => service !== undefined)
+                );
+            }));
     }
 }

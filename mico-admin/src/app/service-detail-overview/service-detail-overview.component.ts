@@ -115,7 +115,10 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
                 /*
                 this.subServiceInterfaces = this.apiService.getServiceInterfaces(this.shortName, this.version)
                     .subscribe(val => {
-                        this.serviceInterfaces = val;
+                        console.log('subServiceInterfaces', val);
+                        if (val != null) {
+                            this.serviceInterfaces = val;
+                        }
                     });
                 */
             });
@@ -153,7 +156,7 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
         const dialogRef = this.dialog.open(CreateServiceInterfaceComponent);
         this.subProvide = dialogRef.afterClosed().subscribe(result => {
             console.log(result);
-            // TODO use result in a useful way
+            this.apiService.postServiceInterface(this.shortName, this.version, result);
         });
     }
 

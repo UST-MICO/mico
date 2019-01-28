@@ -211,6 +211,7 @@ export class ModelsService {
 
             return this.apiService.getModelDefinitions().pipe(
                 map(remoteModels => {
+                    console.log(remoteModels);
                     return JSON.parse(JSON.stringify(remoteModels[modelID]));
                 })
             );
