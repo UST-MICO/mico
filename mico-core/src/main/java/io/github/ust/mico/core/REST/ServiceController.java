@@ -46,7 +46,7 @@ public class ServiceController {
 
     @GetMapping()
     public ResponseEntity<Resources<Resource<MicoService>>> getServiceList() {
-        List<MicoService> services = serviceRepository.findAll();
+        List<MicoService> services = serviceRepository.findAll(2);
         List<Resource<MicoService>> serviceResources = getServiceResourcesList(services);
         return ResponseEntity.ok(
             new Resources<>(serviceResources,
@@ -275,7 +275,7 @@ public class ServiceController {
     }
 
     public List<MicoService> getDependers(MicoService serviceToLookFor) {
-        List<MicoService> serviceList = serviceRepository.findAll();
+        List<MicoService> serviceList = serviceRepository.findAll(2);
 
         List<MicoService> dependers = new LinkedList<>();
 

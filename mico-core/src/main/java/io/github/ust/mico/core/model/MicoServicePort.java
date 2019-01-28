@@ -25,7 +25,7 @@ public class MicoServicePort {
     @JsonIgnore
     @Id
     @GeneratedValue
-    private final Long id;
+    private Long id;
 
     // ----------------------
     // -> Required fields ---
@@ -35,7 +35,7 @@ public class MicoServicePort {
      * The port number of the externally exposed port.
      */
     @ApiModelProperty(required = true)
-    private final int number;
+    private int number;
 
     /**
      * The type (protocol) of the port
@@ -43,12 +43,12 @@ public class MicoServicePort {
      */
     @ApiModelProperty(required = true)
     @Default
-    private final MicoPortType type = MicoPortType.DEFAULT;
+    private MicoPortType type = MicoPortType.DEFAULT;
 
     /**
      * The port of the container.
      */
     @ApiModelProperty(required = true)
-    private final int targetPort;
+    private int targetPort;
 
 }
