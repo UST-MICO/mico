@@ -35,6 +35,8 @@ spec:
         imagePullPolicy: Always
         env:
           - name: NEO4J_BOLT_URI
-            value: 'neo4j.mico-system:7687'
+            value: 'bolt://neo4j.mico-system:7687'
+          - name: PROMETHEUS_URI
+            value: 'http://prometheus.istio-system:9090'
         ports:
         - containerPort: 8080
