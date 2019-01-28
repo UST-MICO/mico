@@ -6,12 +6,12 @@ import io.github.ust.mico.core.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.imagebuilder.buildtypes.Build;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -41,12 +41,16 @@ public class IntegrationTestsUtils {
     /**
      * Set up the Kubernetes environment.
      *
+     * @param uniqueNamespace if true, an random ID will be added to the namespace name
      * @return The Kubernetes namespace that is used for the integration test
      */
-    String setUpEnvironment() {
-        // Integration test namespace, use a random ID as a suffix to prevent errors if concurrent integration tests are executed
-        String shortId = RandomStringUtils.randomAlphanumeric(8).toLowerCase();
-        String namespace = integrationTestsConfig.getKubernetesNamespaceName() + "-" + shortId;
+    String setUpEnvironment(Boolean uniqueNamespace) {
+        String namespace = integrationTestsConfig.getKubernetesNamespaceName();
+        if (uniqueNamespace) {
+            // Integration test namespace, use a random ID as a suffix to prevent errors if concurrent integration tests are executed
+            String shortId = RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+            namespace = namespace + "-" + shortId;
+        }
         cluster.createNamespace(namespace);
         // Override config so all the Kubernetes objects will be created in the integration test namespace
         buildBotConfig.setNamespaceBuildExecution(namespace);
@@ -75,19 +79,22 @@ public class IntegrationTestsUtils {
         if (StringUtils.isEmpty(passwordBase64Encoded)) {
             throw new IllegalArgumentException("Environment variable 'DOCKERHUB_PASSWORD_BASE64' is missing");
         }
+        if (!Base64.isBase64(usernameBase64Encoded.getBytes())) {
+            throw new IllegalArgumentException("Environment variable 'DOCKERHUB_USERNAME_BASE64' is not Base64 encoded");
+        }
+        if (!Base64.isBase64(passwordBase64Encoded.getBytes())) {
+            throw new IllegalArgumentException("Environment variable 'DOCKERHUB_PASSWORD_BASE64' is not Base64 encoded");
+        }
 
         // Set up connection to Docker Hub
         Secret dockerRegistrySecret = new SecretBuilder()
             .withApiVersion("v1")
             .withType("kubernetes.io/basic-auth")
-            .withNewMetadata().withName("dockerhub-secret").withNamespace(namespace).withAnnotations(
-                new HashMap<String, String>() {{
-                    put("build.knative.dev/docker-0", "https://index.docker.io/v1/");
-                }}).endMetadata()
-            .withData(new HashMap<String, String>() {{
-                put("username", usernameBase64Encoded);
-                put("password", passwordBase64Encoded);
-            }})
+            .withNewMetadata().withName("dockerhub-secret").withNamespace(namespace)
+            .addToAnnotations("build.knative.dev/docker-0", "https://index.docker.io/v1/")
+            .endMetadata()
+            .addToData("username", usernameBase64Encoded)
+            .addToData("password", passwordBase64Encoded)
             .build();
         cluster.createSecret(dockerRegistrySecret, namespace);
 

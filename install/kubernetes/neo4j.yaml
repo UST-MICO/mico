@@ -1,0 +1,69 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: neo4j
+  namespace: mico-system
+  labels:
+    run: neo4j
+    component: core
+spec:
+  clusterIP: None
+  ports:
+    - port: 7474
+      targetPort: 7474
+      name: browser
+    - port: 7687
+      targetPort: 7687
+      name: bolt
+  selector:
+    run: neo4j
+    component: core
+---
+apiVersion: 'apps/v1beta1'
+kind: StatefulSet
+metadata:
+    name: neo4j-core
+    namespace: mico-system
+spec:
+    serviceName: neo4j
+    replicas: 1
+    template:
+        metadata:
+            namespace: mico-system
+            labels:
+                run: neo4j
+                component: core
+        spec:
+            containers:
+                - name: neo4j
+                  image: 'neo4j:latest'
+                  imagePullPolicy: 'IfNotPresent'
+                  env:
+                      - name: NEO4J_dbms_security_auth__enabled
+                        value: 'false'
+                      - name: NEO4J_ACCEPT_LICENSE_AGREEMENT
+                        value: 'yes'
+                  command: ['/bin/sh', '-c']
+                  args:
+                      - export NEO4J_bolt_connector=$(hostname -f):7687;
+                        exec /docker-entrypoint.sh "neo4j";
+                  ports:
+                      - containerPort: 7474
+                        name: browser
+                      - containerPort: 7687
+                        name: bolt
+                  securityContext:
+                      privileged: true
+                  volumeMounts:
+                      - name: datadir
+                        mountPath: '/data'
+    volumeClaimTemplates:
+        - metadata:
+              name: datadir
+          spec:
+              accessModes:
+                  - ReadWriteOnce
+              resources:
+                  requests:
+                    storage: '10Gi'

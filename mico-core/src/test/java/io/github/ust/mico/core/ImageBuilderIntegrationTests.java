@@ -57,7 +57,7 @@ public class ImageBuilderIntegrationTests {
     @Before
     public void setUp() {
 
-        namespace = integrationTestsUtils.setUpEnvironment();
+        namespace = integrationTestsUtils.setUpEnvironment(true);
         integrationTestsUtils.setUpDockerRegistryConnection(namespace);
     }
 
