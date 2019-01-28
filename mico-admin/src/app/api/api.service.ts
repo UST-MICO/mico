@@ -414,8 +414,12 @@ export class ApiService {
             return;
         }
 
+        console.log('postService', shortName, version, data);
+
         return this.rest.post<ApiObject>('services/' + shortName + '/' + version + '/interfaces',
             data, undefined, false).pipe(flatMap(val => {
+
+                console.log('RETURN', val);
 
                 const stream = this.getStreamSource<ApiObject>(val._links.self.href);
                 stream.next(val);

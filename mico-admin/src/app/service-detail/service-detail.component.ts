@@ -36,7 +36,6 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
 
             this.shortName = params['shortName'];
             const version = params['version'];
-            console.log(this.shortName, version);
             this.update(this.shortName, version);
         });
     }

@@ -1,6 +1,8 @@
 <h2 mat-dialog-title>Create a new Service Interface</h2>
 <mat-dialog-content style="min-width: 35rem">
     <mico-form [modelUrl]="'remote/MicoServiceInterface'" (data)="serviceData = $event"></mico-form>
+    <h5>Port</h5>
+    <mico-form [modelUrl]="'remote/MicoPort'" (data)="portData = $event"></mico-form>
 </mat-dialog-content>
 <mat-dialog-actions>
     <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->

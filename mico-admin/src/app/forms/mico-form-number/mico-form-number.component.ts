@@ -42,6 +42,7 @@ export class MicoFormNumberComponent implements OnInit {
     }
 
     registerOnChange(fn) {
+        console.log('on Change');
         this.onChange = fn;
     }
 
