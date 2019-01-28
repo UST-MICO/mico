@@ -83,11 +83,13 @@ export class ApiService {
         const stream = this.getStreamSource<ApiModelMap>(resource, () => new AsyncSubject<Readonly<ApiModelMap>>());
 
         // TODO replace URL with a generic path
-        this.rest.get<{ definitions: ApiModelMap, [prop: string]: any }>('http://localhost:8080/v2/api-docs').subscribe(val => {
+        if (!stream.isStopped) {
+            this.rest.get<{ definitions: ApiModelMap, [prop: string]: any }>('http://localhost:8080/v2/api-docs').subscribe(val => {
 
-            stream.next(freezeObject(val.definitions));
-            stream.complete();
-        });
+                stream.next(freezeObject(val.definitions));
+                stream.complete();
+            });
+        }
 
         return stream.asObservable().pipe(
             filter(data => data !== undefined)
@@ -417,7 +419,7 @@ export class ApiService {
         console.log('postService', shortName, version, data);
 
         return this.rest.post<ApiObject>('services/' + shortName + '/' + version + '/interfaces',
-            data, undefined, false).pipe(flatMap(val => {
+            data).pipe(flatMap(val => {
 
                 console.log('RETURN', val);
 

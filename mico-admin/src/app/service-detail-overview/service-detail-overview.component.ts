@@ -155,7 +155,7 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
     addProvides() {
         const dialogRef = this.dialog.open(CreateServiceInterfaceComponent);
         this.subProvide = dialogRef.afterClosed().subscribe(result => {
-            this.apiService.postServiceInterface(this.shortName, this.version, result);
+            this.apiService.postServiceInterface(this.shortName, this.version, result).subscribe();
         });
     }
 
