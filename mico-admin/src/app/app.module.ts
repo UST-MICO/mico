@@ -27,6 +27,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpModule } from '@angular/http';
 import { MatSelectModule } from '@angular/material/select';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { RoutingModule } from './routing.module';
 
@@ -139,7 +140,8 @@ import { CreateApplicationComponent } from './dialogs/create-application/create-
         MatSelectModule,
         MatExpansionModule,
         OwlDateTimeModule,
-        OwlNativeDateTimeModule
+        OwlNativeDateTimeModule,
+        MatSnackBarModule
     ],
     providers: [],
     bootstrap: [AppComponent],
