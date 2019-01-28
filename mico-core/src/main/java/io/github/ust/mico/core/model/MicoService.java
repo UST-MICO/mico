@@ -66,6 +66,7 @@ public class MicoService {
      */
     @ApiModelProperty(required = true)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    // TODO: Check type
     @Relationship(type = "PROVIDES", direction = Relationship.UNDIRECTED)
     @Singular
     private List<MicoServiceInterface> serviceInterfaces;

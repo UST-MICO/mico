@@ -15,6 +15,9 @@ public interface MicoServiceRepository extends Neo4jRepository<MicoService, Long
 
     @Override
     List<MicoService> findAll();
+    
+    @Override
+    List<MicoService> findAll(@Depth int depth);
 
     List<MicoService> findByShortName(@Param("shortName") String shortName);
 

@@ -6,6 +6,7 @@ import lombok.*;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Relationship;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Pattern;
@@ -47,6 +48,8 @@ public class MicoServiceInterface {
      * The list of ports.
      */
     @ApiModelProperty(required = true)
+    // TODO: Test if that works
+    @Relationship(type = "PORTS", direction = Relationship.UNDIRECTED)
     @Singular
     private List<MicoServicePort> ports;
 
