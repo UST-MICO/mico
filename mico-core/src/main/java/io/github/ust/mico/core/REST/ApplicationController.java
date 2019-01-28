@@ -18,7 +18,6 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentList;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.github.ust.mico.core.ClusterAwarenessFabric8;
-import io.github.ust.mico.core.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.MicoKubernetesConfig;
 import io.github.ust.mico.core.PrometheusConfig;
 
@@ -195,10 +194,17 @@ public class ApplicationController {
                     return ResponseEntity.ok(new Resource<>(uiDeploymentInformation));
 
                 } else {
-                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "There are not at least " + MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT + " service interface");
+                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                        "There are not at least " + MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT + " service interface");
                 }
             } else {
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "The application is running zero or multiple times");
+                if(deploymentList.getItems().isEmpty()) {
+                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                        "There are zero deployments of the application '" + shortName + "' in version '" + version + "'");
+                } else {
+                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                        "There are more than one deployments of the application '" + shortName + "' in version '" + version + "'");
+                }
             }
         } else {
             return ResponseEntity.notFound().build();
