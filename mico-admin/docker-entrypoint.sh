@@ -1,13 +1,15 @@
 #!/bin/ash
 set -eu
 
-echo "MICO Rest Api Url is: ${MICO_REST_API}""
+echo "MICO Rest Api Url is: ${MICO_REST_API}"
 envsubst '${MICO_REST_API}' < /etc/nginx/nginx.conf > /etc/nginx/nginx.conf
 
-if [ "$NAMESERVER" == "" ]; then
-    export NAMESERVER=`cat /etc/resolv.conf | grep "nameserver" | awk '{print $2}' | tr '\n' ' '`
+if [ "${NAMESERVER}" == "" ]; then
+    export NAMESERVER=$(awk '/^nameserver/{print $2}' /etc/resolv.conf)
 fi
-echo "Nameserver is: ${NAMESERVER}"
+
+echo "Nameserver is:" ${NAMESERVER}
+
 envsubst '${NAMESERVER}' < /etc/nginx/nginx.conf > /etc/nginx/nginx.conf
 
 exec "$@"
