@@ -39,4 +39,4 @@ envsubst < mico-admin.yaml | kubectl apply -f -
 # Install external components
 kubectl apply -f /kube-state-metrics
 kubectl apply -f knative-build.yaml
-kubectl apply -f istio-telemetry.yaml
+kubectl apply -f monitoring.yaml
