@@ -54,6 +54,7 @@ import java.util.Optional;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
@@ -103,7 +104,7 @@ public class ServiceControllerTests {
 
     @Test
     public void getCompleteServiceList() throws Exception {
-        given(serviceRepository.findAll()).willReturn(
+        given(serviceRepository.findAll(ArgumentMatchers.anyInt())).willReturn(
             Arrays.asList(
                 MicoService.builder().shortName(SHORT_NAME_1).version(VERSION_1_0_1).description(DESCRIPTION_1).build(),
                 MicoService.builder().shortName(SHORT_NAME_2).version(VERSION_1_0_2).description(DESCRIPTION_2).build(),
@@ -306,7 +307,7 @@ public class ServiceControllerTests {
         service2.setDependencies(Collections.singletonList(dependency2));
         service3.setDependencies(Collections.singletonList(dependency3));
 
-        given(serviceRepository.findAll()).willReturn(Arrays.asList(service, service1, service2, service3));
+        given(serviceRepository.findAll(ArgumentMatchers.anyInt())).willReturn(Arrays.asList(service, service1, service2, service3));
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
 
         StringBuilder urlPathBuilder = new StringBuilder(300);
