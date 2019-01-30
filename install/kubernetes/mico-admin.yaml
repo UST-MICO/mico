@@ -37,6 +37,6 @@ spec:
         imagePullPolicy: Always
         env:
         - name: MICO_REST_API
-          value: 'mico-core.mico-system:8080'
+          value: 'mico-core.mico-system.svc.cluster.local:8080'
         ports:
         - containerPort: 80
