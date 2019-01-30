@@ -1,16 +1,24 @@
 package io.github.ust.mico.core.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.swagger.annotations.ApiModelProperty;
-import lombok.*;
+import java.util.List;
+
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Pattern;
+
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.annotation.QueryResult;
 
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.Pattern;
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.Singular;
 
 /**
  * Represents a interface, e.g., REST API, of a {@link MicoService}.
@@ -20,6 +28,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @NodeEntity
+@QueryResult
 public class MicoServiceInterface {
 
     /**
@@ -48,8 +57,7 @@ public class MicoServiceInterface {
      * The list of ports.
      */
     @ApiModelProperty(required = true)
-    // TODO: Test if that works
-    @Relationship(type = "PORTS", direction = Relationship.UNDIRECTED)
+    @Relationship(type = "PROVIDES_PORTS", direction = Relationship.UNDIRECTED)
     @Singular
     private List<MicoServicePort> ports;
 
