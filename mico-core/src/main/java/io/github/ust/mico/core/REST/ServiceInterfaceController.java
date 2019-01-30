@@ -80,7 +80,7 @@ public class ServiceInterfaceController {
     }
 
     @DeleteMapping(SERVICE_INTERFACE_PATH + "{" + PATH_VARIABLE_SERVICE_INTERFACE_NAME + "}")
-    void deleteServiceInterface(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+    public void deleteServiceInterface(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                         @PathVariable(PATH_VARIABLE_VERSION) String version,
                         @PathVariable(PATH_VARIABLE_SERVICE_INTERFACE_NAME) String serviceInterfaceName) {
         serviceRepository.deleteInterfaceOfServiceByName(serviceInterfaceName,shortName,version);
