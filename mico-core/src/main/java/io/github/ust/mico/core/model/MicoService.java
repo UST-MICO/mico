@@ -1,18 +1,26 @@
 package io.github.ust.mico.core.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import io.github.ust.mico.core.VersionNotSupportedException;
-import io.swagger.annotations.ApiModelProperty;
-import lombok.*;
+import java.util.List;
+
+import javax.validation.constraints.Pattern;
+
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
-import javax.validation.constraints.Pattern;
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import io.github.ust.mico.core.VersionNotSupportedException;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.Singular;
 
 /**
  * Represents a service in the context of MICO.
@@ -66,8 +74,7 @@ public class MicoService {
      */
     @ApiModelProperty(required = true)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    // TODO: Check type
-    @Relationship(type = "PROVIDES", direction = Relationship.UNDIRECTED)
+    @Relationship(type = "PROVIDES_INTERFACES", direction = Relationship.UNDIRECTED)
     @Singular
     private List<MicoServiceInterface> serviceInterfaces;
 
