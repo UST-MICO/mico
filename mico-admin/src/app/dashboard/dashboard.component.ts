@@ -29,6 +29,11 @@ export class DashboardComponent implements OnInit {
 
     }
 
+    // TODO
+    someAction() {
+        console.log('TODO something')
+    }
+
 
     /**
      * receives a list of applications from the apiService
