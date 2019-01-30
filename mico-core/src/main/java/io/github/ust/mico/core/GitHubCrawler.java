@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceCrawlingOrigin;
-
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
@@ -105,6 +104,9 @@ public class GitHubCrawler {
     }
 
     public String makeUriToMatchGitHubApi(String uri) {
+        if (uri.endsWith(";")) {
+            uri = uri.substring(0, uri.length() - 1);
+        }
         return uri.replace(GITHUB_HTML_URL, GITHUB_API_URL);
     }
 
