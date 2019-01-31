@@ -89,7 +89,7 @@ public class ApplicationController {
 
     @GetMapping()
     public ResponseEntity<Resources<Resource<MicoApplication>>> getAllApplications() {
-        List<MicoApplication> allApplications = applicationRepository.findAll();
+        List<MicoApplication> allApplications = applicationRepository.findAll(3);
         List<Resource<MicoApplication>> applicationResources = getApplicationResourceList(allApplications);
 
         return ResponseEntity.ok(

@@ -75,6 +75,8 @@ public class ServiceInterfaceController {
                                                                          @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                          @PathVariable(PATH_VARIABLE_SERVICE_INTERFACE_NAME) String serviceInterfaceName) {
         List<String> publicIps = cluster.getService(shortName, kubernetesConfig.getNamespaceMicoWorkspace()).getSpec().getExternalIPs();
+//        List<String> publicIps = new ArrayList<String>();
+//        publicIps.add("51.136.51.59");
         List<Resource<String>> publicIpResources = publicIps.stream().map(publicIp -> new Resource<>(publicIp)).collect(Collectors.toList());
         return ResponseEntity.ok().body(new Resources<>(publicIpResources));
     }

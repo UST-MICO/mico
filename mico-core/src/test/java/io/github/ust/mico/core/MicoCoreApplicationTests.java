@@ -11,7 +11,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -158,7 +157,7 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
 
         serviceRepository.save(service1);
 
-        Optional<MicoService> serviceTestOpt = serviceRepository.findByShortNameAndVersion(TEST_SHORT_NAME, TEST_VERSION, 2);
+        Optional<MicoService> serviceTestOpt = serviceRepository.findByShortNameAndVersion(TEST_SHORT_NAME, TEST_VERSION);
         MicoService serviceTest = serviceTestOpt.get();
         checkDefaultService(serviceTest);
         List<MicoServiceDependency> dependsOnList = serviceTest.getDependencies();
@@ -199,9 +198,9 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
                 .build();
         applicationRepository.save(application3);
 
-        MicoApplication storedApplication1 = applicationRepository.findByShortNameAndVersion("App1", "1.0.0", 2).get();
-        MicoApplication storedApplication2 = applicationRepository.findByShortNameAndVersion("App2", "1.0.0", 2).get();
-        MicoApplication storedApplication3 = applicationRepository.findByShortNameAndVersion("App3", "1.0.0", 2).get();
+        MicoApplication storedApplication1 = applicationRepository.findByShortNameAndVersion("App1", "1.0.0").get();
+        MicoApplication storedApplication2 = applicationRepository.findByShortNameAndVersion("App2", "1.0.0").get();
+        MicoApplication storedApplication3 = applicationRepository.findByShortNameAndVersion("App3", "1.0.0").get();
 
         assertNotNull(storedApplication1);
         assertEquals("App1", storedApplication1.getShortName());

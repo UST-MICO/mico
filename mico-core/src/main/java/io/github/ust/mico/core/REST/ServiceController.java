@@ -47,7 +47,7 @@ public class ServiceController {
     @GetMapping()
     public ResponseEntity<Resources<Resource<MicoService>>> getServiceList() {
         List<MicoService> services = serviceRepository.findAll(2);
-        List<Resource<MicoService>> serviceResources = getServiceResourcesList(services);
+        List<Resource<MicoService>> serviceResources = getServiceResourcesList((List<MicoService>) services);
         return ResponseEntity.ok(
             new Resources<>(serviceResources,
                 linkTo(methodOn(ServiceController.class).getServiceList()).withSelfRel()));
