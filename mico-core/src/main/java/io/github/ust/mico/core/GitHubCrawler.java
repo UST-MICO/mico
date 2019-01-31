@@ -108,7 +108,8 @@ public class GitHubCrawler {
     }
 
     public String makeUriToMatchGitHubApi(String uri) {
-        if (uri.endsWith(";")) {
+        uri = uri.trim();
+        if (uri.endsWith("/")) {
             uri = uri.substring(0, uri.length() - 1);
         }
         return uri.replace(GITHUB_HTML_URL, GITHUB_API_URL);

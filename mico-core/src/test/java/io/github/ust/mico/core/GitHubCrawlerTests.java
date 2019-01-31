@@ -14,7 +14,8 @@ public class GitHubCrawlerTests extends Neo4jTestClass {
 
     private static final String REPO_URI_API = "https://api.github.com/repos/octokit/octokit.rb";
     private static final String REPO_URI_HTML = "https://github.com/octokit/octokit.rb";
-    private static final String REPO_URI_SLASH = "https://github.com/octokit/octokit.rb/";
+    private static final String REPO_URI_WITH_SLASH = "https://github.com/octokit/octokit.rb/";
+    private static final String REPO_URI_WITH_SPACES = " https://github.com/octokit/octokit.rb ";
     private static final String RELEASE = "v4.12.0";
 
     @Test
@@ -23,6 +24,7 @@ public class GitHubCrawlerTests extends Neo4jTestClass {
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
 
         assertEquals(REPO_URI_API, crawler.makeUriToMatchGitHubApi(REPO_URI_HTML));
-        assertEquals(REPO_URI_API, crawler.makeUriToMatchGitHubApi(REPO_URI_SLASH));
+        assertEquals(REPO_URI_API, crawler.makeUriToMatchGitHubApi(REPO_URI_WITH_SLASH));
+        assertEquals(REPO_URI_API, crawler.makeUriToMatchGitHubApi(REPO_URI_WITH_SPACES));
     }
 }
