@@ -104,7 +104,7 @@ public class ApplicationControllerTest {
 
     @Test
     public void getAllApplications() throws Exception {
-        given(applicationRepository.findAll()).willReturn(
+        given(applicationRepository.findAll(3)).willReturn(
                 Arrays.asList(MicoApplication.builder().shortName(SHORT_NAME).version(VERSION_1_0_1).build(),
                         MicoApplication.builder().shortName(SHORT_NAME).version(VERSION).build(),
                         MicoApplication.builder().shortName(SHORT_NAME_1).version(VERSION).build()));
