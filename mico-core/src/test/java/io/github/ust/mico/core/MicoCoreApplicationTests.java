@@ -28,9 +28,6 @@ import io.github.ust.mico.core.persistence.MicoServiceRepository;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-
-// TODO Only ignored because of Neo4j error
-@Ignore
 public class MicoCoreApplicationTests extends Neo4jTestClass {
 
     private static final String TEST_SHORT_NAME = "Test";
