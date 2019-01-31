@@ -33,7 +33,7 @@ public class MicoApplication {
     /**
      * Fix for https://github.com/rzwitserloot/lombok/issues/1347
      */
-    public MicoApplication(){
+    public MicoApplication() {
         services = Collections.emptyList();
     }
 

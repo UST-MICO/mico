@@ -12,20 +12,18 @@ import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 
 public interface MicoServiceRepository extends Neo4jRepository<MicoService, Long> {
-
+    
     @Override
     List<MicoService> findAll();
-    
+
     @Override
     List<MicoService> findAll(@Depth int depth);
 
+    @Depth(2)
     List<MicoService> findByShortName(@Param("shortName") String shortName);
 
-    List<MicoService> findByShortName(@Param("shortName") String shortName, @Depth int depth);
-
+    @Depth(2)
     Optional<MicoService> findByShortNameAndVersion(String shortName, String version);
-
-    Optional<MicoService> findByShortNameAndVersion(String shortName, String version, @Depth int depth);
 
     @Query("MATCH (service:MicoService)-[:PROVIDES_INTERFACES]->(interface:MicoServiceInterface)-[:PROVIDES_PORTS]->(port:MicoServicePort) WHERE service.shortName = {shortName} AND service.version = {version} return COLLECT(port) AS ports")
     List<MicoServiceInterface> findInterfacesOfService(@Param("shortName") String shortName, @Param("version") String version);
