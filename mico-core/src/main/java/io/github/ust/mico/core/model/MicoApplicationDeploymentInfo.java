@@ -1,15 +1,16 @@
 package io.github.ust.mico.core.model;
 
+import java.util.Map;
+
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
-
-import java.util.Map;
 
 /**
  * Represents the information necessary for deploying
@@ -39,6 +40,6 @@ public class MicoApplicationDeploymentInfo {
      */
     @ApiModelProperty(required = true)
     @Singular
-    private final Map<Long, MicoServiceDeploymentInfo> serviceDeploymentInfos;
+    private Map<Long, MicoServiceDeploymentInfo> serviceDeploymentInfos;
 
 }
