@@ -62,6 +62,7 @@ import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 @RunWith(SpringRunner.class)
 @WebMvcTest(ApplicationController.class)
 @OverrideAutoConfiguration(enabled = true) //Needed to override our neo4j config
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class ApplicationControllerTest {
 
     @Rule
