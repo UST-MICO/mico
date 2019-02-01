@@ -1,5 +1,6 @@
 package io.github.ust.mico.core;
 
+import io.github.ust.mico.core.crawling.GitHubCrawler;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.GitHubCrawler;

@@ -28,7 +28,7 @@ public class GitHubCrawler {
         this.restTemplate = restTemplateBuilder.build();
     }
 
-    private MicoService crawlGitHubRepo(String uriBasicInfo, String uriReleaseInfo) {
+    private MicoService crawlGitHubRepo(String uriBasicInfo, String uriReleaseInfo) throws IOException {
         log.debug("Crawl GitHub basic information from '{}' and release information from '{}'", uriBasicInfo, uriReleaseInfo);
         ResponseEntity<String> responseBasicInfo = restTemplate.getForEntity(uriBasicInfo, String.class);
         ResponseEntity<String> responseReleaseInfo = restTemplate.getForEntity(uriReleaseInfo, String.class);
@@ -47,26 +47,26 @@ public class GitHubCrawler {
                 .setGitCloneUrl(basicInfoJson.get("clone_url").textValue())
                 .setGitReleaseInfoUrl(releaseInfoJson.get("url").textValue());
         } catch (IOException e) {
-            // TODO: Better exception handling
-            e.printStackTrace();
-            return null;
+            log.error(e.getStackTrace().toString());
+            log.error("Getting exception '{}'", e.getMessage());
+            throw e;
         }
     }
 
-    public MicoService crawlGitHubRepoLatestRelease(String uri) {
+    public MicoService crawlGitHubRepoLatestRelease(String uri) throws IOException {
         uri = makeUriToMatchGitHubApi(uri);
         String releaseUrl = uri + "/" + RELEASES + "/" + LATEST;
         return crawlGitHubRepo(uri, releaseUrl);
     }
 
-    public MicoService crawlGitHubRepoSpecificRelease(String uri, String version) {
+    public MicoService crawlGitHubRepoSpecificRelease(String uri, String version) throws IOException {
         uri = makeUriToMatchGitHubApi(uri);
         String releaseUrl = uri + "/" + RELEASES + "/" + TAGS + "/" + version;
         return crawlGitHubRepo(uri, releaseUrl);
     }
 
     //TODO: Rename method - it is not crawling ALL releases
-    public List<MicoService> crawlGitHubRepoAllReleases(String uri) {
+    public List<MicoService> crawlGitHubRepoAllReleases(String uri) throws IOException {
         uri = makeUriToMatchGitHubApi(uri);
         String uriBasicInfo = uri;
         String uriReleases = uri + "/" + RELEASES;
@@ -99,10 +99,10 @@ public class GitHubCrawler {
             }
             return serviceList;
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(e.getStackTrace().toString());
+            log.error("Getting exception '{}'", e.getMessage());
+            throw e;
         }
-
-        return null;
     }
 
     public String makeUriToMatchGitHubApi(String uri) {
