@@ -1,4 +1,4 @@
-export const VERSION_REGEX = /(^\w+)?(\d+)\.(\d+).(\d+)(-(?:\w+.)*\w+)?/;
+export const VERSION_REGEX = /(^\w+)?(\d+)\.(\d+)\.(\d+)(-(?:\w+\.)*\w+)?/;
 
 /**
  * Comparator for semantic version strings. Can be used in the array.sort method.
