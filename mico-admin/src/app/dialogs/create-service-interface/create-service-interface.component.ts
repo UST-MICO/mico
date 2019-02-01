@@ -19,7 +19,8 @@ export class CreateServiceInterfaceComponent implements OnInit {
     confirmButton() {
         const tempReturn = this.serviceData;
         if (tempReturn != null) {
-            tempReturn.ports = this.portData;
+            tempReturn.ports = [];
+            tempReturn.ports.push(this.portData);
         }
         return tempReturn;
     }

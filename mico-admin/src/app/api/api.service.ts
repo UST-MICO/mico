@@ -188,7 +188,7 @@ export class ApiService {
     }
 
     deleteApplication(shortName: string, version: string) {
-        // TODO insert api call as soon as the endpoint exists.
+        // TODO insert api call as soon as the endpoint
     }
 
     /**
@@ -407,6 +407,10 @@ export class ApiService {
         const stream = this.getStreamSource<ApiObject>(resource);
 
         this.rest.get<ApiObject>(resource).subscribe(val => {
+
+            if (!val._embedded.hasOwnProperty('micoServiceInterfaceList')) {
+                val._embedded.micoServiceInterfaceList = [];
+            }
             stream.next(freezeObject((val as ApiObject)));
         });
 
@@ -426,6 +430,25 @@ export class ApiService {
             data).pipe(flatMap(val => {
 
                 console.log('RETURN', val);
+
+                const stream = this.getStreamSource<ApiObject>(val._links.self.href);
+                stream.next(val);
+
+                this.getServiceInterfaces(shortName, version);
+
+                return stream.asObservable().pipe(
+                    filter(service => service !== undefined)
+                );
+            }));
+    }
+
+    deleteServiceInterface(shortName: string, version: string, serviceInterfaceName: string) {
+
+        return this.rest.delete<ApiObject>('services/' + shortName + '/' + version + '/interfaces/' + serviceInterfaceName)
+            .pipe(flatMap(val => {
+                console.log('DELETE INTERFACE', val);
+
+                // TODO check if this body makes any sense
 
                 const stream = this.getStreamSource<ApiObject>(val._links.self.href);
                 stream.next(val);

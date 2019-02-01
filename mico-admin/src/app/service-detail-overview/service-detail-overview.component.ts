@@ -112,15 +112,15 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
 
 
                 // TODO insert as soon as there are interfaces in the dummy data
-                /*
+
                 this.subServiceInterfaces = this.apiService.getServiceInterfaces(this.shortName, this.version)
                     .subscribe(val => {
-                        console.log('subServiceInterfaces', val);
+                        console.log('subServiceInterfaces', val._embedded.micoServiceInterfaceList);
                         if (val != null) {
-                            this.serviceInterfaces = val;
+                            this.serviceInterfaces = val._embedded.micoServiceInterfaceList;
                         }
                     });
-                */
+
             });
 
     }
@@ -150,12 +150,34 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
     }
 
     /**
-     * action triggered in ui
+     * action triggered in ui to create a service interface
      */
     addProvides() {
         const dialogRef = this.dialog.open(CreateServiceInterfaceComponent);
         this.subProvide = dialogRef.afterClosed().subscribe(result => {
-            this.apiService.postServiceInterface(this.shortName, this.version, result).subscribe();
+            this.apiService.postServiceInterface(this.shortName, this.version, result).subscribe(val => {
+                console.log(val);
+            });
+        });
+    }
+
+    /**
+     * action triggered in ui
+     */
+    deleteServiceInterface(interfaceName) {
+        const dialogRef = this.dialog.open(YesNoDialogComponent, {
+            data: {
+                object: interfaceName,
+                question: 'deleteServiceInterface'
+            }
+        });
+
+        this.subDeleteServiceInterface = dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+                console.log('delete ' + interfaceName);
+                this.apiService.deleteServiceInterface(this.shortName, this.version, interfaceName);
+                // TODO check if the data should be removed locally to or further calls are needed (e.g. get service...)
+            }
         });
     }
 
@@ -193,25 +215,6 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
         });
 
         this.subDeleteDependency = dialogRef.afterClosed().subscribe(result => {
-            if (result) {
-                console.log('delete ' + id);
-                // TODO really delete the dependency
-            }
-        });
-    }
-
-    /**
-     * action triggered in ui
-     */
-    deleteServiceInterface(id) {
-        const dialogRef = this.dialog.open(YesNoDialogComponent, {
-            data: {
-                object: id,
-                question: 'deleteServiceInterface'
-            }
-        });
-
-        this.subDeleteServiceInterface = dialogRef.afterClosed().subscribe(result => {
             if (result) {
                 console.log('delete ' + id);
                 // TODO really delete the dependency

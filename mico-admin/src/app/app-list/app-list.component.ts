@@ -28,6 +28,6 @@ export class AppListComponent implements OnInit {
     }
 
     deleteApplication(application) {
-
+        // TODO implement as soon as the endpoint exists
     }
 }

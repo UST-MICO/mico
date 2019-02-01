@@ -103,13 +103,10 @@ export class ApiBaseFunctionService {
             }));
     }
 
-    delete<T>(url: string | LinkObject | ApiLinksObject | ApiObject, token?: string, data?): Observable<T> {
+    delete<T>(url: string | LinkObject | ApiLinksObject | ApiObject, token?: string): Observable<T> {
         url = this.extractUrl(url);
-        const options = this.headers(token);
-        if (data != null) {
-            options.body = data;
-        }
-        return this.http.delete(url, options)
+
+        return this.http.delete(url, this.headers(token))
             .pipe(map((res: Response) => {
                 return res.json();
             }));
