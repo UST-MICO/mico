@@ -254,10 +254,10 @@ public class ApplicationController {
             log.debug("Application is present");
             MicoApplication micoApplication = micoApplicationOptional.get();
             List<MicoService> services = micoApplication.getServices();
-            log.debug("Service list has size:"+services.size());
+            log.debug("Service list has size: {}", services.size());
             Predicate<MicoService> matchServiceShortName = service -> service.getShortName().equals(serviceShortName);
             List<MicoService> listWithoutService = services.stream().filter(matchServiceShortName.negate()).collect(Collectors.toList());
-            log.debug("New list has size:"+listWithoutService.size());
+            log.debug("New list has size: {} ", listWithoutService.size());
             MicoApplication micoApplicationWithoutService = micoApplication.toBuilder().clearServices().services(listWithoutService).build();
             applicationRepository.save(micoApplicationWithoutService);
 

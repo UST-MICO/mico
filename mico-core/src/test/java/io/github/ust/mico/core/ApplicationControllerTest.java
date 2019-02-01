@@ -19,6 +19,30 @@ import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import org.hamcrest.collection.IsEmptyCollection;
+import static io.github.ust.mico.core.JsonPathBuilder.EMBEDDED;
+import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
+import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
+import static io.github.ust.mico.core.REST.ApplicationController.LABEL_APP_KEY;
+import static io.github.ust.mico.core.REST.ApplicationController.LABEL_VERSION_KEY;
+import static io.github.ust.mico.core.TestConstants.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -316,14 +340,12 @@ public class ApplicationControllerTest {
             .shortName(SHORT_NAME)
             .version(VERSION)
             .build();
-        String micoServiceShortName = "micoServiceShortName";
-        String micoServiceVersion = "1.0";
-        MicoService micoService = MicoService.builder().shortName(micoServiceShortName).version(micoServiceVersion).build();
+        MicoService micoService = MicoService.builder().shortName(SERVICE_SHORT_NAME).version(SERVICE_VERSION).build();
         micoApplication = micoApplication.toBuilder().service(micoService).build();
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
         ArgumentCaptor<MicoApplication> micoApplicationCaptor = ArgumentCaptor.forClass(MicoApplication.class);
 
-        mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/services/" + micoServiceShortName))
+        mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/services/" + SERVICE_SHORT_NAME))
             .andDo(print())
             .andExpect(status().isNoContent());
         verify(applicationRepository, times(1)).save(micoApplicationCaptor.capture());

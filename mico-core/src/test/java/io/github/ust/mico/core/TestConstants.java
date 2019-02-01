@@ -43,7 +43,11 @@ public class TestConstants {
     public static final String DESCRIPTION_2_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION_2);
     public static final String DESCRIPTION_3_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION_3);
 
+    public static final String SERVICE_SHORT_NAME = "serviceShortName";
+    public static final String SERVICE_VERSION = "1.0.0";
+    
     public static final String SERVICE_INTERFACE_NAME = "service-interface-name";
+
 
     /**
      * Git repository that is used for testing.
