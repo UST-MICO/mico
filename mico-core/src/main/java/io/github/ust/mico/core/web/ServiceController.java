@@ -274,7 +274,7 @@ public class ServiceController {
             MicoService newService = crawler.crawlGitHubRepoLatestRelease(url);
             return createService(newService);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(e.getStackTrace().toString());
             log.error("Getting exception '{}'", e.getMessage());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), e);
         }
