@@ -160,31 +160,48 @@ public class ServiceController {
         if (!serviceOpt.isPresent()) {
             return ResponseEntity.notFound().build();
         }
-        MicoService service = serviceOpt.get();
-
 
         Optional<MicoService> serviceDependeeOpt = serviceRepository.findByShortNameAndVersion(newServiceDependee.getDependedService().getShortName(),
-            newServiceDependee.getDependedService().getVersion().toString());
+            newServiceDependee.getDependedService().getVersion());
 
         if (!serviceDependeeOpt.isPresent()) {
             return ResponseEntity.notFound().build();
         }
 
-        newServiceDependee.setService(service);
-        newServiceDependee.setDependedService(serviceDependeeOpt.get());
+        Optional<ResponseEntity<Resource<MicoService>>> fastResponse = serviceOpt.map(service -> {
+            // check if dependency already set
+            String localShortName = newServiceDependee.getDependedService().getShortName();
+            String localVersion = newServiceDependee.getDependedService().getVersion();
+            Boolean match = (service.getDependencies() != null) && service.getDependencies().stream().anyMatch(dependency -> {
+                return dependency.getDependedService().getShortName().equals(localShortName)
+                    && dependency.getDependedService().getVersion().equals(localVersion);
+            });
+            if (match) {
+                return ResponseEntity
+                    .created(linkTo(methodOn(ServiceController.class).getServiceById(service.getId())).toUri())
+                    .body(new Resource<>(service, getServiceLinks(service)));
+            }
+            return null;
+        });
 
-        List<MicoServiceDependency> dependees = service.getDependencies();
-        if (dependees == null) {
-            dependees = new LinkedList<>();
+        if (fastResponse.isPresent()) {
+            return fastResponse.get();
         }
-        dependees.add(newServiceDependee);
-        service.setDependencies(dependees);
 
-        MicoService savedService = serviceRepository.save(service);
+        final MicoServiceDependency processedServiceDependee = newServiceDependee.toBuilder()
+            .dependedService(serviceDependeeOpt.get())
+            .service(serviceOpt.get())
+            .build();
+
+        serviceOpt = serviceOpt.map(service -> {
+            return service.toBuilder().dependency(processedServiceDependee).build();
+        });
+
+        MicoService savedService = serviceRepository.save(serviceOpt.get());
 
         return ResponseEntity
             .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
-            .body(new Resource<>(service, getServiceLinks(service)));
+            .body(new Resource<>(savedService, getServiceLinks(savedService)));
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
