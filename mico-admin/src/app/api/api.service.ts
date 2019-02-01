@@ -187,6 +187,10 @@ export class ApiService {
         }));
     }
 
+    deleteApplication(shortName: string, version: string) {
+        // TODO insert api call as soon as the endpoint exists.
+    }
+
     /**
      * commands the mico-core application to deploy application {shortName}, {version}
      * @param shortName the applications shortName

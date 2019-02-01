@@ -102,4 +102,16 @@ export class ApiBaseFunctionService {
                 return res.json();
             }));
     }
+
+    delete<T>(url: string | LinkObject | ApiLinksObject | ApiObject, token?: string, data?): Observable<T> {
+        url = this.extractUrl(url);
+        const options = this.headers(token);
+        if (data != null) {
+            options.body = data;
+        }
+        return this.http.delete(url, options)
+            .pipe(map((res: Response) => {
+                return res.json();
+            }));
+    }
 }
