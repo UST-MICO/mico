@@ -48,7 +48,7 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 public class ApplicationController {
 
     private static final String SERVICE_SHORT_NAME = "serviceShortName";
-    
+
     public static final String PATH_SERVICES = "services";
     public static final String PATH_APPLICATIONS = "applications";
 
@@ -247,13 +247,22 @@ public class ApplicationController {
     public ResponseEntity deleteService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                         @PathVariable(PATH_VARIABLE_VERSION) String version,
                                         @PathVariable(SERVICE_SHORT_NAME) String serviceShortName) {
+        log.debug("Delete Mico service '{}' from Mico application '{}' in version '{}'", SERVICE_SHORT_NAME, shortName, version);
+
         Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
         if (micoApplicationOptional.isPresent()) {
+            log.debug("Application is present");
             MicoApplication micoApplication = micoApplicationOptional.get();
             List<MicoService> services = micoApplication.getServices();
+            log.debug("Service list has size:"+services.size());
             Predicate<MicoService> matchServiceShortName = service -> service.getShortName().equals(serviceShortName);
-            services.removeIf(matchServiceShortName);
-            applicationRepository.save(micoApplication);
+            List<MicoService> listWithoutService = services.stream().filter(matchServiceShortName.negate()).collect(Collectors.toList());
+            log.debug("New list has size:"+listWithoutService.size());
+            MicoApplication micoApplicationWithoutService = micoApplication.toBuilder().clearServices().services(listWithoutService).build();
+            applicationRepository.save(micoApplicationWithoutService);
+
+            // TODO Update Kubernetes deployment
+
             return ResponseEntity.noContent().build();
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "There is no such application");
