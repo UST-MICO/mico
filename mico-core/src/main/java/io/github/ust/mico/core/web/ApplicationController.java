@@ -6,15 +6,15 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentList;
-import io.github.ust.mico.core.dto.*;
-import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.configuration.PrometheusConfig;
+import io.github.ust.mico.core.dto.*;
 import io.github.ust.mico.core.exception.PrometheusRequestFailedException;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static io.github.ust.mico.core.service.MicoKubernetesClient.LABEL_APP_KEY;
@@ -46,6 +47,8 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 @RequestMapping(value = "/" + ApplicationController.PATH_APPLICATIONS, produces = MediaTypes.HAL_JSON_VALUE)
 public class ApplicationController {
 
+    private static final String SERVICE_SHORT_NAME = "serviceShortName";
+    
     public static final String PATH_SERVICES = "services";
     public static final String PATH_APPLICATIONS = "applications";
 
@@ -239,6 +242,28 @@ public class ApplicationController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' was not found!");
         }
     }
+
+    @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/services/{" + SERVICE_SHORT_NAME + "}")
+    public ResponseEntity deleteService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                        @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                        @PathVariable(SERVICE_SHORT_NAME) String serviceShortName) {
+        Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
+        if (micoApplicationOptional.isPresent()) {
+            MicoApplication micoApplication = micoApplicationOptional.get();
+            List<MicoService> services = micoApplication.getServices();
+            Predicate<MicoService> matchServiceShortName = service -> service.getShortName().equals(serviceShortName);
+            services.removeIf(matchServiceShortName);
+            applicationRepository.save(micoApplication);
+            return ResponseEntity.noContent().build();
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "There is no such application");
+        }
+    }
+
+    private boolean serviceExists(MicoApplication micoApplication, String serviceShortName) {
+        return micoApplication.getServices().stream().anyMatch(existingService -> existingService.getShortName().equals(serviceShortName));
+    }
+
 
     private UiPodInfo getUiPodInfo(Pod pod) {
         String nodeName = pod.getSpec().getNodeName();
