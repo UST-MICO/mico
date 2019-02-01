@@ -12,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.io.IOException;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -30,7 +31,7 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
     private MicoServiceRepository serviceRepository;
 
     @Test
-    public void testGitHubCrawlerLatestReleaseByApiUri() {
+    public void testGitHubCrawlerLatestReleaseByApiUri() throws IOException {
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
         MicoService service = crawler.crawlGitHubRepoLatestRelease(REPO_URI_API);
@@ -47,7 +48,7 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
     }
 
     @Test
-    public void testGitHubCrawlerLatestReleaseByHtmlUri() {
+    public void testGitHubCrawlerLatestReleaseByHtmlUri() throws IOException {
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
         MicoService service = crawler.crawlGitHubRepoLatestRelease(REPO_URI_HTML);
@@ -64,7 +65,7 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
     }
 
     @Test
-    public void testGitHubCrawlerSpecificRelease() {
+    public void testGitHubCrawlerSpecificRelease() throws IOException {
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
         MicoService service = crawler.crawlGitHubRepoSpecificRelease(REPO_URI_API, RELEASE);
@@ -81,7 +82,7 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
     }
 
     @Test
-    public void testGitHubCrawlerAllReleases() {
+    public void testGitHubCrawlerAllReleases() throws IOException {
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
         List<MicoService> serviceList = crawler.crawlGitHubRepoAllReleases(REPO_URI_API);
