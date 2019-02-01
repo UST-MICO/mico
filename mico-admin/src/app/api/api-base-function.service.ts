@@ -90,12 +90,15 @@ export class ApiBaseFunctionService {
         return this.http.post(url, tempData, this.headers(token))
             .pipe(map((res: Response) => {
                 console.log(res);
-                if (res.hasOwnProperty('_body') && (res as any)._body.length < 1) {
-                    // handle empty results
-                    return undefined;
+                if (res.hasOwnProperty('_body')) {
+                    if ((res as any)._body == null || (res as any)._body.length < 1) {
+                        // handle empty results
+                        return undefined;
+                    }
                 }
                 console.log(res);
                 return res.json();
+
             }));
     }
 

@@ -116,21 +116,31 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         });
         this.subDependeesDialog = dialogRef.afterClosed().subscribe(result => {
 
+            if (result === '') {
+                return;
+            }
+
             // TODO consider if null check is still neccesary as soon as endpoint to add dependencies exists
             if (this.application.services == null) {
                 this.application.services = [];
             }
 
-            result.forEach(element => {
-                this.application.services.push(element);
-                // TODO replace push with api call to add dependency. Consider adding all at once.
+            result.forEach(service => {
+                // this.application.services.push(element);
+                // TODO Consider adding all at once.
+                this.apiService.postApplicationServices(this.application.shortName, this.application.version, service)
+                    .subscribe(val => {
+                        console.log(val);
+                    });
             });
         });
 
     }
 
-    deleteService(shortName: string, version: string) {
+    deleteService(serviceShortName: string) {
 
+        // Local handling, TODO remove as soon as the delete endpoint actually exists
+        /*
         let searchForId = -1;
 
         let counter = 0;
@@ -144,7 +154,13 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         if (searchForId >= 0) {
             this.application.services.splice(searchForId, 1);
         }
-        // TODO call api endpoint as soon as existing
+        */
+
+        this.apiService.deleteApplicationServices(this.application.shortName, this.application.version, serviceShortName)
+            .subscribe(val => {
+                // TODO add some user output (as soon as the endpoint actually exists)
+                console.log(val);
+            });
     }
 
     /**

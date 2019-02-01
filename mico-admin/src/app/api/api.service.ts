@@ -235,6 +235,36 @@ export class ApiService {
         );
     }
 
+
+    postApplicationServices(applicationShortName: string, applicationVersion: string, serviceData: any) {
+
+        if (serviceData == null) {
+            return;
+        }
+
+        const resource = 'applications/' + applicationShortName + '/' + applicationVersion + '/services';
+
+        return this.rest.post<ApiObject>(resource, serviceData).pipe(map(val => {
+
+            this.getApplication(applicationShortName, applicationVersion);
+
+            return true;
+        }));
+    }
+
+    deleteApplicationServices(applicationShortName: string, applicationVersion: string, serviceShortName) {
+
+        return this.rest.delete<ApiObject>('application/' + applicationShortName + '/' + applicationVersion
+            + '/services/' + serviceShortName)
+            .pipe(map(val => {
+                console.log('DELETE includes', val);
+
+                this.getApplication(applicationShortName, applicationVersion);
+
+                return true;
+            }));
+    }
+
     // =============
     // SERVICE CALLS
     // =============
