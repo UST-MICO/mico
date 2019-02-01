@@ -43,6 +43,7 @@ public class MicoServiceDependency {
      * This is the {@link MicoService} that requires (depends on)
      * the {@link MicoServiceDependency#dependedService}.
      */
+    @JsonIgnore
     @JsonIdentityInfo(generator=ObjectIdGenerators.PropertyGenerator.class, property="id", scope=MicoService.class)
     @StartNode
     @EqualsAndHashCode.Exclude
