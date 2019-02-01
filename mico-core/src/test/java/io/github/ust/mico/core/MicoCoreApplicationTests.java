@@ -148,8 +148,8 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
         service1.setDependencies(Collections.singletonList(MicoServiceDependency.builder()
                 .service(service1)
                 .dependedService(service2)
-                .minVersion(MicoVersion.forIntegers(1, 0, 0))
-                .maxVersion(MicoVersion.forIntegers(2, 0, 0))
+                .minVersion(MicoVersion.forIntegers(1, 0, 0).toString())
+                .maxVersion(MicoVersion.forIntegers(2, 0, 0).toString())
                 .build()));
 
         serviceRepository.save(service1);
@@ -160,8 +160,8 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
         List<MicoServiceDependency> dependsOnList = serviceTest.getDependencies();
         assertEquals(1, dependsOnList.size());
         MicoServiceDependency dependency1 = dependsOnList.get(0);
-        assertEquals("1.0.0", dependency1.getMinVersion().toString());
-        assertEquals("2.0.0", dependency1.getMaxVersion().toString());
+        assertEquals("1.0.0", dependency1.getMinVersion());
+        assertEquals("2.0.0", dependency1.getMaxVersion());
 
         MicoService testService2 = dependency1.getDependedService();
         assertNotNull(testService2);
