@@ -276,7 +276,7 @@ public class ServiceController {
         } catch (IOException e) {
             log.error(e.getStackTrace().toString());
             log.error("Getting exception '{}'", e.getMessage());
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
