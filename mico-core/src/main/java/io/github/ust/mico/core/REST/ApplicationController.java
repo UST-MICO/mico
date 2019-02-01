@@ -37,6 +37,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -153,6 +154,31 @@ public class ApplicationController {
         MicoApplication updatedApplication = applicationRepository.save(application);
 
         return ResponseEntity.ok(new Resource<>(updatedApplication, linkTo(methodOn(ApplicationController.class).updateApplication(shortName, version, application)).withSelfRel()));
+    }
+
+    @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
+    public ResponseEntity<Resource<MicoApplication>> deleteApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                       @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
+        if (!applicationOptional.isPresent()) {
+            // application already deleted
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        }
+        applicationOptional.map(application -> {
+            if (application.getDeploymentInfo() == null || application.getDeploymentInfo().getServiceDeploymentInfos() != null) {
+                return application; // TODO better deployment detection
+            }
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Application is currently deployed!");
+        }).map(application -> {
+            return application.toBuilder().clearServices().build();
+        }).map(application -> {
+            applicationRepository.save(application);
+            return application;
+        }).map(application -> {
+            applicationRepository.delete(application);
+            return application;
+        });
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/deploymentInformation")

@@ -14,13 +14,16 @@ import static io.github.ust.mico.core.TestConstants.VERSION;
 import static io.github.ust.mico.core.TestConstants.VERSION_1_0_1;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -34,6 +37,7 @@ import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -213,6 +217,23 @@ public class ApplicationControllerTest {
                 .andExpect(jsonPath(VERSION_PATH, is(updatedApplication.getVersion())));
 
         resultUpdate.andExpect(status().isOk());
+    }
+
+    @Test
+    public void deleteApplication() throws Exception {
+        MicoApplication app = MicoApplication.builder().shortName(SHORT_NAME).version(VERSION).build();
+        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(app));
+
+        ArgumentCaptor<MicoApplication> appCaptor = ArgumentCaptor.forClass(MicoApplication.class);
+
+        mvc.perform(delete("/applications/" + SHORT_NAME + "/" + VERSION.toString()).accept(MediaTypes.HAL_JSON_VALUE))
+                .andDo(print())
+                .andExpect(status().isNoContent())
+                .andReturn();
+
+        verify(applicationRepository).delete(appCaptor.capture());
+        assertEquals("Wrong short name.", app.getShortName(), appCaptor.getValue().getShortName());
+        assertEquals("Wrong version.", app.getVersion(), appCaptor.getValue().getVersion());
     }
 
     @Test
