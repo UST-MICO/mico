@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, Subject, BehaviorSubject, AsyncSubject } from 'rxjs';
-import { filter, flatMap } from 'rxjs/operators';
+import { filter, flatMap, map } from 'rxjs/operators';
 import { ApiObject } from './apiobject';
 import { ApiBaseFunctionService } from './api-base-function.service';
 import { ApiModel, ApiModelAllOf } from './apimodel';
@@ -188,7 +188,23 @@ export class ApiService {
     }
 
     deleteApplication(shortName: string, version: string) {
-        // TODO insert api call as soon as the endpoint
+
+        return this.rest.delete<ApiObject>('applications/' + shortName + '/' + version)
+            .pipe(flatMap(val => {
+                console.log('DELETE Application', val);
+
+                // TODO check if this body makes any sense
+
+                const stream = this.getStreamSource<ApiObject>(val._links.self.href);
+                stream.next(val);
+
+                this.getServiceInterfaces(shortName, version);
+
+                return stream.asObservable().pipe(
+                    filter(service => service !== undefined)
+                );
+            }));
+
     }
 
     /**
@@ -199,18 +215,9 @@ export class ApiService {
     postApplicationDeployCommand(shortName: string, version: string) {
         const resource = 'applications/' + shortName + '/' + version + '/deploy';
 
-        return this.rest.post<ApiObject>(resource, null).pipe(flatMap(val => {
+        return this.rest.post<any>(resource, null).pipe(map(val => {
 
-            console.log(val);
-
-            const stream = this.getStreamSource<ApiObject>(val._links.self.href);
-            stream.next(val);
-
-            // TODO call API endpoints like application status
-
-            return stream.asObservable().pipe(
-                filter(service => service !== undefined)
-            );
+            return true;
         }));
     }
 

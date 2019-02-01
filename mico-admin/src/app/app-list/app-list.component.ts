@@ -28,6 +28,10 @@ export class AppListComponent implements OnInit {
     }
 
     deleteApplication(application) {
-        // TODO implement as soon as the endpoint exists
+        this.apiService.deleteApplication(application.shortName, application.version)
+            .subscribe(val => {
+                console.log(val);
+                // TODO add some user output
+            });
     }
 }

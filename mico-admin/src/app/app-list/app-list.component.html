@@ -25,7 +25,7 @@
             </ng-container>
             <ng-container matColumnDef="controls">
                 <mat-header-cell *matHeaderCellDef>Controls</mat-header-cell>
-                <mat-cell *matCellDef="let element" [routerLink]="['/app-detail', element.shortName]">
+                <mat-cell *matCellDef="let element">
                     <button mat-raised-button (click)="deleteApplication(element)">delete</button>
                 </mat-cell>
             </ng-container>

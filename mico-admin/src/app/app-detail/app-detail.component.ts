@@ -80,6 +80,8 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     deployApplication() {
         this.subDeploy = this.apiService.postApplicationDeployCommand(this.application.shortName, this.application.version)
             .subscribe(val => {
+                // TODO wait for propper return value from deploy endpoint
+                // add some deployment monitoring (e.g. state)
                 console.log(val);
             });
     }
