@@ -25,9 +25,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -39,6 +36,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -50,11 +49,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.web.client.RestTemplate;
-
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
@@ -67,6 +65,8 @@ import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 @RunWith(SpringRunner.class)
 @WebMvcTest(ApplicationController.class)
 @OverrideAutoConfiguration(enabled = true) //Needed to override our neo4j config
+@EnableAutoConfiguration
+@EnableConfigurationProperties(value = { CorsConfig.class })
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class ApplicationControllerTest {
 
@@ -121,6 +121,8 @@ public class ApplicationControllerTest {
     @Autowired
     private ObjectMapper mapper;
 
+    @Autowired
+    CorsConfig corsConfig;
 
     @Test
     public void getAllApplications() throws Exception {
@@ -292,6 +294,21 @@ public class ApplicationControllerTest {
             .andExpect(jsonPath(POD_INFO_METRICS_MEMORY_USAGE, is(memoryUsage)))
             .andExpect(jsonPath(POD_INFO_METRICS_CPU_LOAD, is(cpuLoad)))
             .andExpect(jsonPath(POD_INFO_METRICS_AVAILABLE, is(true)));
+    }
+
+    @Test
+    public void deleteApplicationCorsCheckForbidden() throws Exception {
+        mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION).header("Origin", "http://notAllowedOrigin.com"))
+            .andDo(print())
+            .andExpect(status().isForbidden())
+            .andExpect(content().string(is("Invalid CORS request")));
+    }
+
+    @Test
+    public void deleteApplicationCorsCheckAllowed() throws Exception {
+        mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION).header("Origin", corsConfig.getAllowedOrigins().get(0)))
+            .andDo(print())
+            .andExpect(status().isNoContent());
     }
 
     private ResponseEntity getPrometheusResponseEntity(int value) {
