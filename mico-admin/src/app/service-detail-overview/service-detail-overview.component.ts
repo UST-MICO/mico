@@ -153,6 +153,9 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
     addProvides() {
         const dialogRef = this.dialog.open(CreateServiceInterfaceComponent);
         this.subProvide = dialogRef.afterClosed().subscribe(result => {
+            if (result === '') {
+                return;
+            }
             this.apiService.postServiceInterface(this.shortName, this.version, result).subscribe(val => {
                 console.log(val);
             });
@@ -173,7 +176,9 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
         this.subDeleteServiceInterface = dialogRef.afterClosed().subscribe(result => {
             if (result) {
                 console.log('delete ' + interfaceName);
-                this.apiService.deleteServiceInterface(this.shortName, this.version, interfaceName);
+                this.apiService.deleteServiceInterface(this.shortName, this.version, interfaceName).subscribe(val => {
+                    console.log('deleted', interfaceName, val);
+                });
                 // TODO check if the data should be removed locally to or further calls are needed (e.g. get service...)
             }
         });

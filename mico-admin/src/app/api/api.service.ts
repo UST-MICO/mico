@@ -484,19 +484,13 @@ export class ApiService {
     deleteServiceInterface(shortName: string, version: string, serviceInterfaceName: string) {
 
         return this.rest.delete<ApiObject>('services/' + shortName + '/' + version + '/interfaces/' + serviceInterfaceName)
-            .pipe(flatMap(val => {
+            .pipe(map(val => {
                 console.log('DELETE INTERFACE', val);
 
-                // TODO check if this body makes any sense
-
-                const stream = this.getStreamSource<ApiObject>(val._links.self.href);
-                stream.next(val);
 
                 this.getServiceInterfaces(shortName, version);
 
-                return stream.asObservable().pipe(
-                    filter(service => service !== undefined)
-                );
+                return true;
             }));
     }
 }
