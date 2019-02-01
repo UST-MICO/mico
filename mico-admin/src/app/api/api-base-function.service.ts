@@ -82,8 +82,10 @@ export class ApiBaseFunctionService {
     post<T>(url: string | LinkObject | ApiLinksObject | ApiObject, data, token?: string, isJson = true): Observable<T> {
         url = this.extractUrl(url);
         let tempData = data;
-        if (isJson) {
-            tempData = JSON.stringify(tempData);
+        if (data != null) {
+            if (isJson) {
+                tempData = JSON.stringify(tempData);
+            }
         }
         return this.http.post(url, tempData, this.headers(token))
             .pipe(map((res: Response) => {

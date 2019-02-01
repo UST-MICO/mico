@@ -111,8 +111,6 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
 */
 
 
-                // TODO insert as soon as there are interfaces in the dummy data
-
                 this.subServiceInterfaces = this.apiService.getServiceInterfaces(this.shortName, this.version)
                     .subscribe(val => {
                         console.log('subServiceInterfaces', val._embedded.micoServiceInterfaceList);

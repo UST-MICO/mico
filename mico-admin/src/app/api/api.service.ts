@@ -201,6 +201,8 @@ export class ApiService {
 
         return this.rest.post<ApiObject>(resource, null).pipe(flatMap(val => {
 
+            console.log(val);
+
             const stream = this.getStreamSource<ApiObject>(val._links.self.href);
             stream.next(val);
 
