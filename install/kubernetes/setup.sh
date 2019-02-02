@@ -22,6 +22,10 @@ if [ "$err" = true ]; then
     exit 1
 fi
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+echo "Change directory to '$DIR'"
+cd $DIR
+
 # Create MICO namespaces
 kubectl apply -f mico-namespaces.yaml
 
