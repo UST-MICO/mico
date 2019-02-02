@@ -17,12 +17,6 @@ import javax.validation.constraints.NotBlank;
 public class MicoKubernetesConfig {
 
     /**
-     * The name of the namespace MICO itself is running in.
-     */
-    @NotBlank
-    private String namespaceMicoSystem;
-
-    /**
      * The name of the namespace all services deployed
      * by MICO are running in.
      */
