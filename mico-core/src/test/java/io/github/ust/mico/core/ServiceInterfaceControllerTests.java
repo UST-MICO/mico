@@ -1,6 +1,7 @@
 package io.github.ust.mico.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.github.ust.mico.core.REST.ServiceInterfaceController;
@@ -200,14 +201,26 @@ public class ServiceInterfaceControllerTests {
     }
 
     private Service getKubernetesService(String serviceInterfaceName, List<String> externalIPs) {
-        return new ServiceBuilder()
+        Service service = new ServiceBuilder()
             .withNewMetadata()
             .withName(serviceInterfaceName)
             .endMetadata()
-            .withNewSpec()
-            .withExternalIPs(externalIPs)
-            .endSpec()
+            .withNewStatus()
+            .withNewLoadBalancer()
+            .endLoadBalancer()
+            .endStatus()
             .build();
+
+        if (externalIPs != null && !externalIPs.isEmpty()) {
+            List<LoadBalancerIngress> ingressList = new ArrayList<LoadBalancerIngress>();
+            for (String externalIP : externalIPs) {
+                LoadBalancerIngress ingress = new LoadBalancerIngress();
+                ingress.setIp(externalIP);
+                ingressList.add(ingress);
+            }
+            service.getStatus().getLoadBalancer().setIngress(ingressList);
+        }
+        return service;
     }
 
     private MicoServiceInterface getTestServiceInterface() {

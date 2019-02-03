@@ -1,5 +1,7 @@
 package io.github.ust.mico.core.REST;
 
+import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
+import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
 import io.fabric8.kubernetes.api.model.Service;
 import io.github.ust.mico.core.ClusterAwarenessFabric8;
 import io.github.ust.mico.core.MicoKubernetesConfig;
@@ -87,9 +89,21 @@ public class ServiceInterfaceController {
             return ResponseEntity.notFound().build();
         }
 
-        List<String> publicIps = service.getSpec().getExternalIPs();
-        log.debug("Service interface with name '{}' of MicoService '{}' in version '{}' has external IPs: {}",
-            serviceInterfaceName, shortName, version, publicIps);
+        List<String> publicIps = new ArrayList<>();
+        LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
+        if(loadBalancer != null) {
+            List<LoadBalancerIngress> ingressList = loadBalancer.getIngress();
+            if(ingressList != null && !ingressList.isEmpty()) {
+                log.debug("There is/are {} ingress(es) defined for MicoServiceInterface '{}'.",
+                ingressList.size(), serviceInterfaceName);
+                for(LoadBalancerIngress ingress : ingressList) {
+                    publicIps.add(ingress.getIp());
+                }
+                log.info("Service interface with name '{}' of MicoService '{}' in version '{}' has external IPs: {}",
+                    serviceInterfaceName, shortName, version, publicIps);
+            }
+        }
+
         return ok().body(new ArrayList<>(publicIps));
     }
 
