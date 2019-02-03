@@ -32,7 +32,7 @@ cp *.yaml tmp/
 cd tmp
 
 # Prepare MICO build bot namespace
-envsubst < mico-build-bot.yaml | > mico-build-bot.yaml
+echo "$(envsubst < mico-build-bot.yaml)" > mico-build-bot.yaml
 
 # Replace namespaces with test namespace
 sed -i -- 's/mico-build-bot/'"${MICO_TEST_NAMESPACE}"'/g' *
