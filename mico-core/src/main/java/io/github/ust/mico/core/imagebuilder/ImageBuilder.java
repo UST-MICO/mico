@@ -193,7 +193,7 @@ public class ImageBuilder {
         build.setMetadata(metadata);
 
         Build createdBuild = buildClient.createOrReplace(build);
-        log.info("Build created");
+        log.info("Build created with name '{}'", buildName);
         log.debug("Created build: {} ", createdBuild);
 
         return createdBuild;
