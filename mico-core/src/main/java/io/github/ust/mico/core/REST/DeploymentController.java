@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -71,12 +70,17 @@ public class DeploymentController {
         }
         MicoApplication micoApplication = micoApplicationOptional.get();
 
-        List<MicoService> micoServices = micoApplication.getServices();
-        micoServices.forEach(micoService -> {
+        log.info("MicoApplication '{}' in version '{}' includes {} MicoService(s).",
+            shortName, version, micoApplication.getServices().size());
+
+        for (MicoService micoService : micoApplication.getServices()) {
+
             // TODO Check if build is already running -> no build required
             // TODO Check if image for the requested version is already in docker registry -> no build required
+
+            log.info("Start build of MicoService '{}' in version '{}'.", micoService.getShortName(), micoService.getVersion());
             backgroundTaskFactory.runAsync(() -> buildImageAndWait(micoService), dockerImageUri -> {
-                log.info("Build of image for service '{}' in version '{}' finished: {}",
+                log.info("Build of MicoService '{}' in version '{}' finished with image '{}'.",
                     micoService.getShortName(), micoService.getVersion(), dockerImageUri);
 
                 micoService.setDockerImageUri(dockerImageUri);
@@ -89,8 +93,7 @@ public class DeploymentController {
                     exceptionHandler(kre);
                 }
             }, this::exceptionHandler);
-        });
-
+        }
         return ResponseEntity.ok().build();
     }
 
@@ -105,7 +108,7 @@ public class DeploymentController {
                 return imageBuilder.createImageName(micoService.getShortName(), micoService.getVersion());
             } else {
                 booleanCompletableFuture.cancel(true);
-                throw new ImageBuildException("Build for service " + micoService.getShortName() + " failed");
+                throw new ImageBuildException("Build for service " + micoService.getShortName() + " in version " + micoService.getVersion() + " failed");
             }
         } catch (NotInitializedException | InterruptedException | ExecutionException | ImageBuildException | TimeoutException e) {
             log.error(e.getMessage(), e);
@@ -135,18 +138,19 @@ public class DeploymentController {
             log.warn("MICO application '{}' in version '{}' doesn't have any service deployment information stored.",
                 micoApplication.getShortName(), micoApplication.getShortName());
         }
-        log.debug("Creating Kubernetes deployment for MICO service '{}' in version '{}'",
+        log.info("Creating Kubernetes deployment for MicoService '{}' in version '{}'",
             micoService.getShortName(), micoService.getVersion());
+        log.debug("Details of MicoService: {}", micoService.toString());
         micoKubernetesClient.createMicoService(micoService, micoServiceDeploymentInfo);
 
-        log.debug("Creating {} Kubernetes service(s) for MICO service '{}' in version '{}'",
+        log.debug("Creating {} Kubernetes service(s) for MicoService '{}' in version '{}'",
             micoService.getServiceInterfaces().size(), micoService.getShortName(), micoService.getVersion());
         // Kubernetes Service(s)
         for (MicoServiceInterface serviceInterface : micoService.getServiceInterfaces()) {
             micoKubernetesClient.createMicoServiceInterface(serviceInterface, micoService);
         }
 
-        log.info("Created Kubernetes resources for MICO service '{}' in version '{}'",
+        log.info("Created Kubernetes resources for MicoService '{}' in version '{}'",
             micoService.getShortName(), micoService.getVersion());
     }
 
