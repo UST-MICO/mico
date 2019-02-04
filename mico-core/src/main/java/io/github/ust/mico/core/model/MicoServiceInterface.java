@@ -26,7 +26,7 @@ import lombok.Singular;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 @NodeEntity
 @QueryResult
 public class MicoServiceInterface {

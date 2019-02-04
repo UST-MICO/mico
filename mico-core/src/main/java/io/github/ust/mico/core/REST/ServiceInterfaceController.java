@@ -54,18 +54,33 @@ public class ServiceInterfaceController {
     @GetMapping(SERVICE_INTERFACE_PATH)
     public ResponseEntity<Resources<Resource<MicoServiceInterface>>> getInterfacesOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                             @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        List<MicoServiceInterface> serviceInterfaces = serviceRepository.findInterfacesOfService(shortName, version);
-        List<Resource<MicoServiceInterface>> serviceInterfaceResources = serviceInterfaces.stream().map(
-            serviceInterface -> new Resource<>(serviceInterface, getServiceInterfaceLinks(serviceInterface, shortName, version))
-        ).collect(Collectors.toList());
-        return ok(new Resources<>(serviceInterfaceResources, linkTo(methodOn(ServiceInterfaceController.class).getInterfacesOfService(shortName, version)).withSelfRel()));
+        Optional<List<Resource<MicoServiceInterface>>> interfacesOpt = serviceRepository.findByShortNameAndVersion(shortName, version).map(service -> {
+            // Use service to get the fully mapped interface objects from the ogm
+            return service.getServiceInterfaces();
+        }).map(interfaces -> {
+            return interfaces.stream().map(serviceInterface -> {
+                return new Resource<>(serviceInterface, getServiceInterfaceLinks(serviceInterface, shortName, version));
+            }).collect(Collectors.toList());
+        });
+        if (!interfacesOpt.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ok(new Resources<>(interfacesOpt.get(), linkTo(methodOn(ServiceInterfaceController.class).getInterfacesOfService(shortName, version)).withSelfRel()));
     }
 
     @GetMapping(SERVICE_INTERFACE_PATH + "/{" + PATH_VARIABLE_SERVICE_INTERFACE_NAME + "}")
     public ResponseEntity<Resource<MicoServiceInterface>> getInterfaceByName(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                              @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                              @PathVariable(PATH_VARIABLE_SERVICE_INTERFACE_NAME) String serviceInterfaceName) {
-        Optional<MicoServiceInterface> serviceInterfaceOptional = serviceRepository.findInterfaceOfServiceByName(serviceInterfaceName, shortName, version);
+        Optional<MicoServiceInterface> serviceInterfaceOptional = serviceRepository.findByShortNameAndVersion(shortName, version).flatMap(service -> {
+            // Use service to get the fully mapped interface objects from the ogm
+            if (service.getServiceInterfaces() == null) {
+                return Optional.of(null);
+            }
+            return service.getServiceInterfaces().stream().filter(serviceInterface ->
+                serviceInterface.getServiceInterfaceName().equals(serviceInterfaceName
+            )).findFirst();
+        });
         return serviceInterfaceOptional.map(serviceInterface ->
             new Resource<>(serviceInterface, getServiceInterfaceLinks(serviceInterface, shortName, version))).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
