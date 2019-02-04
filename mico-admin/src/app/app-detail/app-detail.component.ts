@@ -26,6 +26,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     subApplicationVersions: Subscription;
     subDeploy: Subscription;
     subDependeesDialog: Subscription;
+    subDeployInformation: Subscription;
 
     application: ApiObject;
     selectedVersion;
@@ -59,6 +60,13 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                             this.setLatestVersion(versions);
                         }
                     }
+
+                    // application is found now, so try to get some more information
+                    this.subDeployInformation = this.apiService
+                        .getApplicationDeploymentInformation(this.application.shortName, this.application.version)
+                        .subscribe(val => {
+                            console.log(val);
+                        });
                 });
         });
 
@@ -69,6 +77,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         this.unsubscribe(this.subApplicationVersions);
         this.unsubscribe(this.subDeploy);
         this.unsubscribe(this.subDependeesDialog);
+        this.unsubscribe(this.subDeployInformation);
     }
 
     unsubscribe(subscription: Subscription) {
