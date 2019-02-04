@@ -79,15 +79,18 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
                     this.application.services.forEach(service => {
 
-                        service.serviceInterfaces.forEach(micoInterface => {
-                            this.subPublicIps.push(this.apiService
-                                .getServiceInterfacePublicIp(service.shortName, service.version, micoInterface.serviceInterfaceName)
-                                .subscribe(listOfPublicIps => {
-                                    listOfPublicIps.forEach(publicIp => {
-                                        tempPublicIps.push(publicIp);
-                                    });
-                                }));
-                        });
+                        if (service.serviceInterfaces != null) {
+
+                            service.serviceInterfaces.forEach(micoInterface => {
+                                this.subPublicIps.push(this.apiService
+                                    .getServiceInterfacePublicIp(service.shortName, service.version, micoInterface.serviceInterfaceName)
+                                    .subscribe(listOfPublicIps => {
+                                        listOfPublicIps.forEach(publicIp => {
+                                            tempPublicIps.push(publicIp);
+                                        });
+                                    }));
+                            });
+                        }
                     });
                     this.publicIps = tempPublicIps;
                 });

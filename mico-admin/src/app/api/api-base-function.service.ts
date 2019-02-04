@@ -96,7 +96,6 @@ export class ApiBaseFunctionService {
                         return undefined;
                     }
                 }
-                console.log(res);
                 return res.json();
 
             }));
