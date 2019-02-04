@@ -22,6 +22,7 @@ import io.github.ust.mico.core.MicoKubernetesConfig;
 import io.github.ust.mico.core.PrometheusConfig;
 
 import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoApplication.MicoApplicationBuilder;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 
 import org.slf4j.Logger;
@@ -44,6 +45,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
@@ -129,7 +132,23 @@ public class ApplicationController {
             return ResponseEntity.badRequest().build();
         }
 
-        MicoApplication savedApplication = applicationRepository.save(newApplication);
+        MicoApplicationBuilder appBuilder = newApplication.toBuilder();
+
+        List<MicoService> oldServices = newApplication.getServices();
+        appBuilder.clearServices();
+
+        // specifically load all services from db
+        for (MicoService service : oldServices) {
+            Optional<MicoService> dbService = serviceRepository.findByShortNameAndVersion(service.getShortName(), service.getVersion());
+            if (!dbService.isPresent()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "One of the provided Services was not found!");
+            }
+            appBuilder.service(dbService.get());
+        }
+
+        // TODO update deploy info here if neccessary
+
+        MicoApplication savedApplication = applicationRepository.save(appBuilder.build());
 
         return ResponseEntity
                 .created(linkTo(methodOn(ApplicationController.class)
