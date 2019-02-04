@@ -1,10 +1,10 @@
 #!/usr/bin/env groovy
 
-/* import shared library */
-@Library('jenkins-shared-library')_
+def COLOR_MAP = ['SUCCESS': 'good', 'FAILURE': 'danger', 'UNSTABLE': 'danger', 'ABORTED': 'danger']
 
 pipeline {
     environment {
+        BUILD_USER = ''
         micoAdminRegistry = "ustmico/mico-admin"
         micoCoreRegistry = "ustmico/mico-core"
         registryCredential = 'dockerhub'
@@ -84,8 +84,13 @@ pipeline {
 
     post {
         always {
-	    /* Use slackNotifier.groovy from shared library and provide current build result as parameter */
-            slackNotifier2(currentBuild.currentResult)
+            script {
+                BUILD_USER = getBuildUser()
+            }
+
+	       slackSend channel: '#ci-pipeline',
+                color: COLOR_MAP[currentBuild.currentResult],
+                message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} by ${BUILD_USER}\n More info at: ${env.BUILD_URL}"
 
             // Clean workspace
             cleanWs()
@@ -93,17 +98,6 @@ pipeline {
     }
 }
 
-def slackNotifier2(String buildResult) {
-    if ( buildResult == "SUCCESS" ) {
-        slackSend color: "good", message: "Job: ${env.JOB_NAME} with buildnumber ${BUILD_NUMBER} was successful"
-    }
-    else if( buildResult == "FAILURE" ) {
-        slackSend color: "danger", message: "Job: ${env.JOB_NAME} with buildnumber ${BUILD_NUMBER} was failed"
-    }
-    else if( buildResult == "UNSTABLE" ) {
-        slackSend color: "warning", message: "Job: ${env.JOB_NAME} with buildnumber ${BUILD_NUMBER} was unstable"
-    }
-    else {
-        slackSend color: "danger", message: "Job: ${env.JOB_NAME} with buildnumber ${BUILD_NUMBER} its resulat was unclear"
-    }
+def getBuildUser() {
+    return currentBuild.rawBuild.getCause(Cause.UserIdCause).getUserId()
 }
