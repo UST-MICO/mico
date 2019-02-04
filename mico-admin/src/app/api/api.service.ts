@@ -55,6 +55,7 @@ export class ApiService {
             streamURL = x.pathname;
         } catch (TypeError) { }
         streamURL = streamURL.replace(/(^\/)|(\/$)/g, '');
+        streamURL = streamURL.replace(/\/\//g, '/');
         return streamURL;
     }
 
@@ -111,7 +112,11 @@ export class ApiService {
 
         this.rest.get<ApiObject>(resource).subscribe(val => {
             // return actual application list
-            stream.next(freezeObject(val._embedded.micoApplicationList));
+            if (val.hasOwnProperty('_embedded')) {
+                stream.next(freezeObject(val._embedded.micoApplicationList));
+            } else {
+                stream.next(freezeObject([]));
+            }
         });
 
         return stream.asObservable().pipe(
@@ -131,12 +136,9 @@ export class ApiService {
 
             let list: ApiObject[];
 
-            if (val['_embedded'] != null) {
-
+            if (val.hasOwnProperty('_embedded')) {
                 list = val._embedded.micoApplicationList;
-            }
-
-            if (list === undefined) {
+            } else {
                 list = [];
             }
 
@@ -253,6 +255,7 @@ export class ApiService {
 
         return this.rest.post<any>(resource, null).pipe(map(val => {
 
+            // TODO handle job ressource as soon as the api call returns a job ressource
             return true;
         }));
     }
@@ -262,8 +265,8 @@ export class ApiService {
         const resource = 'applications/' + shortName + '/' + version + '/deploymentInformation';
         const stream = this.getStreamSource(resource);
 
-        this.rest.get(resource).subscribe(val => {
-            stream.next(freezeObject((val as ApiObject)));
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+            stream.next(freezeObject(val));
         });
 
         return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
@@ -285,7 +288,11 @@ export class ApiService {
 
         this.rest.get<ApiObject>(resource).subscribe(val => {
             // return actual service list
-            stream.next(freezeObject(val._embedded.micoServiceList));
+            if (val.hasOwnProperty('_embedded')) {
+                stream.next(freezeObject(val._embedded.micoServiceList));
+            } else {
+                stream.next(freezeObject([]));
+            }
         });
 
         return stream.asObservable().pipe(
@@ -305,12 +312,9 @@ export class ApiService {
 
             let list: ApiObject[];
 
-            if (val['_embedded'] != null) {
-
+            if (val.hasOwnProperty('_embedded')) {
                 list = val._embedded.micoServiceList;
-            }
-
-            if (list === undefined) {
+            } else {
                 list = [];
             }
 
@@ -416,7 +420,11 @@ export class ApiService {
         const stream = this.getStreamSource<ApiObject[]>(resource);
 
         this.rest.get<ApiObject>(resource).subscribe(val => {
-            stream.next(freezeObject(val._embedded.serviceList));
+            if (val.hasOwnProperty('_embedded')) {
+                stream.next(freezeObject(val._embedded.serviceList));
+            } else {
+                stream.next(freezeObject([]));
+            }
         });
 
         return stream.asObservable().pipe(
@@ -448,16 +456,18 @@ export class ApiService {
     // SERVICE INTERFACE CALLS
     // =======================
 
-    getServiceInterfaces(shortName, version): Observable<ApiObject> {
+    getServiceInterfaces(shortName, version): Observable<ApiObject[]> {
         const resource = 'services/' + shortName + '/' + version + '/interfaces';
-        const stream = this.getStreamSource<ApiObject>(resource);
+        const stream = this.getStreamSource<ApiObject[]>(resource);
 
         this.rest.get<ApiObject>(resource).subscribe(val => {
 
-            if (!val._embedded.hasOwnProperty('micoServiceInterfaceList')) {
-                val._embedded.micoServiceInterfaceList = [];
+            if (val.hasOwnProperty('_embedded')) {
+                stream.next(freezeObject(val._embedded.micoServiceInterfaceList));
+            } else {
+                stream.next(freezeObject([]));
             }
-            stream.next(freezeObject((val as ApiObject)));
+
         });
 
         return stream.asObservable().pipe(

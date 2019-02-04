@@ -113,10 +113,7 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
 
                 this.subServiceInterfaces = this.apiService.getServiceInterfaces(this.shortName, this.version)
                     .subscribe(val => {
-                        console.log('subServiceInterfaces', val._embedded.micoServiceInterfaceList);
-                        if (val != null) {
-                            this.serviceInterfaces = val._embedded.micoServiceInterfaceList;
-                        }
+                        this.serviceInterfaces = val;
                     });
 
             });
