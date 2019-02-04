@@ -323,6 +323,12 @@ public class ApplicationController {
         }
     }
 
+    /**
+     * Returns a list of services associated with the mico application specified by the parameters.
+     * @param applicationShortName
+     * @param applicationVersion
+     * @return
+     */
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES)
     public ResponseEntity<Resources<Resource<MicoService>>> getMicoServicesFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
                                                                                            @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion) {
