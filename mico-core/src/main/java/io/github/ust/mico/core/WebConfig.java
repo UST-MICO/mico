@@ -1,11 +1,9 @@
 package io.github.ust.mico.core;
 
-import java.util.Arrays;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,7 +18,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 public class WebConfig extends WebMvcConfigurerAdapter {
 
     @Autowired
-    CorsConfig corsConfig;
+    CorsConfig corsUserConfig;
 
     /**
      * Based on https://github.com/springfox/springfox/issues/2215#issuecomment-446178059
@@ -30,18 +28,18 @@ public class WebConfig extends WebMvcConfigurerAdapter {
     // TODO: Check generic type arguments.
     public FilterRegistrationBean<CorsFilter> corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        CorsConfiguration config = new CorsConfiguration().applyPermitDefaultValues();
-        config.addAllowedMethod(HttpMethod.DELETE);
-        config.addAllowedMethod(HttpMethod.PUT);
-        for (String additionalAllowedMethod : corsConfig.getAdditionalAllowedMethods()) {
+        CorsConfiguration corsConfiguration = new CorsConfiguration().applyPermitDefaultValues(); // Allows GET, HEAD, and POST
+        corsConfiguration.addAllowedMethod(HttpMethod.DELETE);
+        corsConfiguration.addAllowedMethod(HttpMethod.PUT);
+        for (String additionalAllowedMethod : corsUserConfig.getAdditionalAllowedMethods()) {
             log.info("Adding additional method to CORS config:"+ additionalAllowedMethod);
-            config.addAllowedMethod(additionalAllowedMethod);
+            corsConfiguration.addAllowedMethod(additionalAllowedMethod);
         }
-        config.setAllowCredentials(false);
-        List<String> allowedOrigins = corsConfig.getAllowedOrigins();
+        corsConfiguration.setAllowCredentials(false);
+        List<String> allowedOrigins = corsUserConfig.getAllowedOrigins();
         allowedOrigins.forEach(allowedOrigin -> log.info("Adding additional allowed origin:"+allowedOrigin));
-        config.setAllowedOrigins(allowedOrigins);
-        source.registerCorsConfiguration("/**", config);
+        corsConfiguration.setAllowedOrigins(allowedOrigins);
+        source.registerCorsConfiguration("/**", corsConfiguration);
 
         FilterRegistrationBean<CorsFilter> bean = new FilterRegistrationBean<>(new CorsFilter(source));
         bean.setOrder(0);
