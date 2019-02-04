@@ -99,11 +99,6 @@ export class DashboardComponent implements OnInit {
                     }
                 }
 
-                // check if returned object has services
-                if (result.services.length <= 0) {
-                    return;
-                }
-
                 const data = result.applicationProperties;
                 data.services = result.services;
 
