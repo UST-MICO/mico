@@ -46,7 +46,7 @@
                                 <!-- Service Interfaces -->
                                 <div *ngFor="let dependee of application?.services">
                                     <div class="flex">
-                                        <div class="flex-grow-1">
+                                        <div class="flex-grow-1" [routerLink]="['/service-detail',dependee.shortName,dependee.version]">
                                             <mat-list-item.large style="font-size:small">
                                                 <div class="pv2 pl4">
                                                     {{dependee.shortName}}<br />

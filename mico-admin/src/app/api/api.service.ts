@@ -191,20 +191,12 @@ export class ApiService {
 
     deleteApplication(shortName: string, version: string) {
 
-        return this.rest.delete<ApiObject>('applications/' + shortName + '/' + version)
-            .pipe(flatMap(val => {
-                console.log('DELETE Application', val);
+        return this.rest.delete<any>('applications/' + shortName + '/' + version)
+            .pipe(map(val => {
 
-                // TODO check if this body makes any sense
+                this.getApplications();
 
-                const stream = this.getStreamSource<ApiObject>(val._links.self.href);
-                stream.next(val);
-
-                this.getServiceInterfaces(shortName, version);
-
-                return stream.asObservable().pipe(
-                    filter(service => service !== undefined)
-                );
+                return true;
             }));
 
     }
