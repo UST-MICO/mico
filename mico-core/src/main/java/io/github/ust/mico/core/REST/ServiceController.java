@@ -11,8 +11,10 @@ import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -152,20 +154,23 @@ public class ServiceController {
                 linkTo(methodOn(ServiceController.class).getDependees(shortName, version)).withSelfRel()));
     }
 
+    /**
+     * Create a new dependency edge between the Service and the dependee service.
+     */
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
     public ResponseEntity<Resource<MicoService>> createNewDependee(@RequestBody MicoServiceDependency newServiceDependee,
                                                                    @PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                    @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (!serviceOpt.isPresent()) {
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service \"" + shortName + "\" \"" + version + "\" was not found!");
         }
 
         Optional<MicoService> serviceDependeeOpt = serviceRepository.findByShortNameAndVersion(newServiceDependee.getDependedService().getShortName(),
             newServiceDependee.getDependedService().getVersion());
 
         if (!serviceDependeeOpt.isPresent()) {
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The dependee service was not found!");
         }
 
         Optional<ResponseEntity<Resource<MicoService>>> fastResponse = serviceOpt.map(service -> {
@@ -192,6 +197,10 @@ public class ServiceController {
             .dependedService(serviceDependeeOpt.get())
             .service(serviceOpt.get())
             .build();
+
+        log.info("New dependency for MicoService '{}' '{}' -[:DEPENDS_ON]-> '{}' '{}'", shortName, version,
+                processedServiceDependee.getDependedService().getShortName(),
+                processedServiceDependee.getDependedService().getVersion());
 
         serviceOpt = serviceOpt.map(service -> {
             return service.toBuilder().dependency(processedServiceDependee).build();
