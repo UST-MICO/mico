@@ -1,10 +1,7 @@
 package io.github.ust.mico.core;
 
-import static io.github.ust.mico.core.JsonPathBuilder.EMBEDDED;
-import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
-import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
-import static io.github.ust.mico.core.REST.ApplicationController.LABEL_APP_KEY;
-import static io.github.ust.mico.core.REST.ApplicationController.LABEL_VERSION_KEY;
+import static io.github.ust.mico.core.JsonPathBuilder.*;
+import static io.github.ust.mico.core.REST.ApplicationController.*;
 import static io.github.ust.mico.core.TestConstants.DESCRIPTION;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1;
@@ -12,6 +9,7 @@ import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1_MATCHER;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME_MATCHER;
 import static io.github.ust.mico.core.TestConstants.VERSION;
 import static io.github.ust.mico.core.TestConstants.VERSION_1_0_1;
+import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
@@ -31,6 +29,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Optional;
 
+import io.github.ust.mico.core.model.MicoService;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -74,7 +73,6 @@ public class ApplicationControllerTest {
     public KubernetesServer server = new KubernetesServer(true, true);
 
     private static final String JSON_PATH_LINKS_SECTION = "$._links.";
-    private static final String SELF_HREF = "self.href";
 
     public static final String APPLICATION_LIST = buildPath(EMBEDDED, "micoApplicationList");
     public static final String SHORT_NAME_PATH = buildPath(ROOT, "shortName");
@@ -310,6 +308,36 @@ public class ApplicationControllerTest {
             .andDo(print())
             .andExpect(status().isNoContent());
     }
+
+    @Test
+    public void getServicesFormApplicationNotFound() throws Exception {
+        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES))
+            .andDo(print())
+            .andExpect(status().isNotFound())
+            .andExpect(status().reason(is("There is no application with the name " + SHORT_NAME + " and the version " + VERSION)));
+    }
+
+    @Test
+    public void getServicesFormApplication() throws Exception {
+        MicoService micoService = MicoService.builder().shortName(SHORT_NAME_1).version(VERSION_1_0_1).build();
+        MicoApplication application = MicoApplication.builder()
+            .shortName(SHORT_NAME)
+            .version(VERSION)
+            .service(micoService)
+            .build();
+        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
+        String micoServiceListJsonPath = buildPath(EMBEDDED, "micoServiceList");
+        String micoServiceListJsonPathFirstElement = buildPath(micoServiceListJsonPath, FIRST_ELEMENT);
+        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(LINKS_SELF_HREF, endsWith(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES)))
+            .andExpect(jsonPath(micoServiceListJsonPath, hasSize(application.getServices().size())))
+            .andExpect(jsonPath(buildPath(micoServiceListJsonPathFirstElement, JsonPathBuilder.VERSION), is(VERSION_1_0_1)))
+            .andExpect(jsonPath(buildPath(micoServiceListJsonPathFirstElement, JsonPathBuilder.SHORT_NAME), is(SHORT_NAME_1)))
+            .andExpect(jsonPath(buildPath(micoServiceListJsonPathFirstElement, LINKS_SELF_HREF), endsWith(PATH_SERVICES + "/" + SHORT_NAME_1 + "/" + VERSION_1_0_1)));
+    }
+
 
     private ResponseEntity getPrometheusResponseEntity(int value) {
         PrometheusResponse prometheusResponse = new PrometheusResponse();
