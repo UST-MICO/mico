@@ -168,7 +168,17 @@ public class ApplicationControllerTest {
             .andExpect(status().isOk())
             .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
             .andExpect(jsonPath(APPLICATION_LIST + "[?(" + SHORT_NAME_MATCHER + "&& @.version=='" + VERSION + "')]", hasSize(1)))
-            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/applications/" + SHORT_NAME + "/")))
+            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/applications/" + SHORT_NAME)))
+            .andReturn();
+    }
+
+    @Test
+    public void getApplicationByShortNameWithTrailingSlash() throws Exception {
+        given(applicationRepository.findByShortName(SHORT_NAME)).willReturn(Collections.singletonList(MicoApplication.builder().shortName(SHORT_NAME).version(VERSION).build()));
+
+        mvc.perform(get("/applications/" + SHORT_NAME + "/").accept(MediaTypes.HAL_JSON_VALUE))
+            .andDo(print())
+            .andExpect(status().isOk())
             .andReturn();
     }
 

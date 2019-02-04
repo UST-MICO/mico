@@ -310,7 +310,7 @@ public class ApplicationController {
         return uriBuilder.build().toUri();
     }
 
-    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/")
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
     public ResponseEntity<Resources<Resource<MicoApplication>>> getApplicationsByShortName(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
         List<MicoApplication> micoApplicationList = applicationRepository.findByShortName(shortName);
 
