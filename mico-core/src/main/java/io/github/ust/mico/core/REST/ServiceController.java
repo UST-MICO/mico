@@ -355,12 +355,12 @@ public class ServiceController {
         return services;
     }
 
-    private List<Resource<MicoService>> getServiceResourcesList(List<MicoService> services) {
+    protected static List<Resource<MicoService>> getServiceResourcesList(List<MicoService> services) {
         return services.stream().map(service -> new Resource<>(service, getServiceLinks(service)))
             .collect(Collectors.toList());
     }
 
-    private Iterable<Link> getServiceLinks(MicoService service) {
+    private static Iterable<Link> getServiceLinks(MicoService service) {
         LinkedList<Link> links = new LinkedList<>();
         links.add(linkTo(methodOn(ServiceController.class).getServiceByShortNameAndVersion(service.getShortName(), service.getVersion().toString())).withSelfRel());
         links.add(linkTo(methodOn(ServiceController.class).getServiceList()).withRel("services"));
