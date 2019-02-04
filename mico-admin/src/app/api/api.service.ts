@@ -189,6 +189,25 @@ export class ApiService {
         }));
     }
 
+    putApplication(shortName, version, data): Observable<Readonly<ApiObject>> {
+
+        if (data == null) {
+            return;
+        }
+
+        const resource = 'application/' + shortName + '/' + version;
+
+        return this.rest.put<ApiObject>(resource, data).pipe(flatMap(val => {
+
+            const stream = this.getStreamSource<ApiObject>(val._links.self.href);
+            stream.next(val);
+
+            return stream.asObservable().pipe(
+                filter(service => service !== undefined)
+            );
+        }));
+    }
+
     deleteApplication(shortName: string, version: string) {
 
         return this.rest.delete<any>('applications/' + shortName + '/' + version)

@@ -32,12 +32,17 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     subApplication: Subscription;
     subServiceDependency: Subscription;
 
+    // immutable application  object which is updated, when new data is pushed
     application: ApiObject;
     shortName: string;
     selectedVersion;
     allVersions;
-
     publicIps: string[] = [];
+
+    // modifiable application object
+    applicationData;
+    edit: Boolean = false;
+
 
     ngOnInit() {
 
@@ -220,5 +225,14 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     updateVersion(version) {
         this.selectedVersion = version;
         this.router.navigate(['app-detail', this.application.shortName, version]);
+    }
+
+    saveApplicationChanges() {
+        console.log(this.applicationData);
+        this.apiService.putApplication(this.shortName, this.selectedVersion, this.applicationData)
+            .subscribe(val => {
+                console.log(val);
+            });
+        this.edit = false;
     }
 }
