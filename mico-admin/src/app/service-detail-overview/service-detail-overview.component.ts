@@ -221,4 +221,21 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
             }
         });
     }
+
+    deleteService() {
+
+        const dialogRef = this.dialog.open(YesNoDialogComponent, {
+            data: {
+                object: { shortName: this.shortName, version: this.version },
+                question: 'deleteService'
+            }
+        });
+
+        this.subDeleteDependency = dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+
+                this.apiService.deleteService(this.shortName, this.version).subscribe();
+            }
+        });
+    }
 }

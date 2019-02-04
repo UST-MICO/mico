@@ -408,6 +408,15 @@ export class ApiService {
         }));
     }
 
+    deleteService(shortName, version) {
+        return this.rest.delete<ApiObject>('services/' + shortName + '/' + version)
+            .pipe(map(val => {
+                console.log('DELETE SERVICE', val);
+
+                return true;
+            }));
+    }
+
     /**
      * Get all services a specific service depends on.
      *

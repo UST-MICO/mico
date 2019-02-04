@@ -8,12 +8,12 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 })
 export class YesNoDialogComponent implements OnInit {
 
-    object: String;
-    question: String;
+    object: any;
+    questionType: String;
 
     constructor(public dialogRef: MatDialogRef<YesNoDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: any) {
         this.object = data.object;
-        this.question = data.question;
+        this.questionType = data.question;
     }
 
     ngOnInit() {
