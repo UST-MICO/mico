@@ -207,33 +207,6 @@ export class ApiService {
 
     }
 
-    /**
-     * commands the mico-core application to deploy application {shortName}, {version}
-     * @param shortName the applications shortName
-     * @param version the applications version
-     */
-    postApplicationDeployCommand(shortName: string, version: string) {
-        const resource = 'applications/' + shortName + '/' + version + '/deploy';
-
-        return this.rest.post<any>(resource, null).pipe(map(val => {
-
-            return true;
-        }));
-    }
-
-    // TODO doc comment as soon as the endpoint is in this branch
-    getApplicationDeploymentInformation(shortName: string, version: string) {
-        const resource = 'applications/' + shortName + '/' + version + '/deploymentInformation';
-        const stream = this.getStreamSource(resource);
-
-        this.rest.get(resource).subscribe(val => {
-            stream.next(freezeObject((val as ApiObject)));
-        });
-
-        return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
-            filter(data => data !== undefined)
-        );
-    }
 
 
     postApplicationServices(applicationShortName: string, applicationVersion: string, serviceData: any) {
@@ -264,6 +237,40 @@ export class ApiService {
                 return true;
             }));
     }
+
+
+    // ==========
+    // DEPLOYMENT
+    // ==========
+
+    /**
+     * commands the mico-core application to deploy application {shortName}, {version}
+     * @param shortName the applications shortName
+     * @param version the applications version
+     */
+    postApplicationDeployCommand(shortName: string, version: string) {
+        const resource = 'applications/' + shortName + '/' + version + '/deploy';
+
+        return this.rest.post<any>(resource, null).pipe(map(val => {
+
+            return true;
+        }));
+    }
+
+    // TODO doc comment as soon as the endpoint is in this branch
+    getApplicationDeploymentInformation(shortName: string, version: string) {
+        const resource = 'applications/' + shortName + '/' + version + '/deploymentInformation';
+        const stream = this.getStreamSource(resource);
+
+        this.rest.get(resource).subscribe(val => {
+            stream.next(freezeObject((val as ApiObject)));
+        });
+
+        return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
+            filter(data => data !== undefined)
+        );
+    }
+
 
     // =============
     // SERVICE CALLS
@@ -492,5 +499,21 @@ export class ApiService {
 
                 return true;
             }));
+    }
+
+    getServiceInterfacePublicIp(serviceShortName: string, serviceVersion: string, interfaceShortName: string) {
+
+        const resource = 'services/' + serviceShortName + '/' + serviceVersion + '/interfaces/' + interfaceShortName + '/publicIP';
+        const stream = this.getStreamSource<ApiObject>(resource);
+
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+
+            console.log(val);
+            stream.next(freezeObject((val as ApiObject)));
+        });
+
+        return stream.asObservable().pipe(
+            filter(data => data !== undefined)
+        );
     }
 }

@@ -76,3 +76,17 @@
 </mat-card>
 
 <mat-card class="ma2">Endpoint: </mat-card>
+
+<mat-card class="ma2">
+    <mat-card-title>
+        Public IPs:
+    </mat-card-title>
+    <mat-card-content>
+        <div *ngFor="let ip of publicIps">
+            <a href="http://{{ip}}">
+                {{ip}}
+            </a><br />
+        </div>
+    </mat-card-content>
+
+</mat-card>

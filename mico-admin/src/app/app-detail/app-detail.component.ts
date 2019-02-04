@@ -27,10 +27,13 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     subDeploy: Subscription;
     subDependeesDialog: Subscription;
     subDeployInformation: Subscription;
+    subPublicIps: Subscription[] = [];
 
     application: ApiObject;
     selectedVersion;
     allVersions;
+
+    publicIps: string[] = [];
 
     ngOnInit() {
 
@@ -61,12 +64,32 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                         }
                     }
 
+                    console.log(this.application);
+
                     // application is found now, so try to get some more information
+                    // Deployment information
                     this.subDeployInformation = this.apiService
                         .getApplicationDeploymentInformation(this.application.shortName, this.application.version)
                         .subscribe(val => {
                             console.log(val);
                         });
+
+                    // public ip
+                    const tempPublicIps = [];
+
+                    this.application.services.forEach(service => {
+
+                        service.serviceInterfaces.forEach(micoInterface => {
+                            this.subPublicIps.push(this.apiService
+                                .getServiceInterfacePublicIp(service.shortName, service.version, micoInterface.serviceInterfaceName)
+                                .subscribe(listOfPublicIps => {
+                                    listOfPublicIps.forEach(publicIp => {
+                                        tempPublicIps.push(publicIp);
+                                    });
+                                }));
+                        });
+                    });
+                    this.publicIps = tempPublicIps;
                 });
         });
 
@@ -78,6 +101,9 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         this.unsubscribe(this.subDeploy);
         this.unsubscribe(this.subDependeesDialog);
         this.unsubscribe(this.subDeployInformation);
+        this.subPublicIps.forEach(subscription => {
+            this.unsubscribe(subscription);
+        });
     }
 
     unsubscribe(subscription: Subscription) {
