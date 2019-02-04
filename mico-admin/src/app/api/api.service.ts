@@ -413,6 +413,8 @@ export class ApiService {
             .pipe(map(val => {
                 console.log('DELETE SERVICE', val);
 
+                this.getServices();
+
                 return true;
             }));
     }

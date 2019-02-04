@@ -7,6 +7,7 @@ import { Subscription } from 'rxjs';
 import { MatDialog } from '@angular/material';
 import { ServicePickerComponent } from '../dialogs/service-picker/service-picker.component';
 import { versionComparator } from '../api/semantic-version';
+import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 
 @Component({
     selector: 'mico-app-detail',
@@ -28,8 +29,11 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     subDependeesDialog: Subscription;
     subDeployInformation: Subscription;
     subPublicIps: Subscription[] = [];
+    subApplication: Subscription;
+    subServiceDependency: Subscription;
 
     application: ApiObject;
+    shortName: string;
     selectedVersion;
     allVersions;
 
@@ -38,10 +42,10 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     ngOnInit() {
 
         this.subRouteParams = this.route.params.subscribe(params => {
-            const shortName = params['shortName'];
+            this.shortName = params['shortName'];
             const givenVersion = params['version'];
 
-            this.subApplicationVersions = this.apiService.getApplicationVersions(shortName)
+            this.subApplicationVersions = this.apiService.getApplicationVersions(this.shortName)
                 .subscribe(versions => {
 
                     this.allVersions = versions;
@@ -54,7 +58,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
                             if (element.version === givenVersion) {
                                 this.selectedVersion = givenVersion;
-                                this.application = JSON.parse(JSON.stringify(element));
+                                this.subscribeApplication(element.version);
                                 return true;
                             }
                         });
@@ -63,39 +67,48 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                             this.setLatestVersion(versions);
                         }
                     }
-
-                    console.log(this.application);
-
-                    // application is found now, so try to get some more information
-                    // Deployment information
-                    this.subDeployInformation = this.apiService
-                        .getApplicationDeploymentInformation(this.application.shortName, this.application.version)
-                        .subscribe(val => {
-                            console.log(val);
-                        });
-
-                    // public ip
-                    const tempPublicIps = [];
-
-                    this.application.services.forEach(service => {
-
-                        if (service.serviceInterfaces != null) {
-
-                            service.serviceInterfaces.forEach(micoInterface => {
-                                this.subPublicIps.push(this.apiService
-                                    .getServiceInterfacePublicIp(service.shortName, service.version, micoInterface.serviceInterfaceName)
-                                    .subscribe(listOfPublicIps => {
-                                        listOfPublicIps.forEach(publicIp => {
-                                            tempPublicIps.push(publicIp);
-                                        });
-                                    }));
-                            });
-                        }
-                    });
-                    this.publicIps = tempPublicIps;
                 });
         });
 
+    }
+
+    /**
+     * subscribe to the given shortName/version and subscribe to its interfaces
+     * @param shortName shortName of the application to be displayed
+     * @param version version of the application to be displayed
+     */
+    subscribeApplication(version: string) {
+        this.subApplication = this.apiService.getApplication(this.shortName, version).subscribe(val => {
+            this.application = val;
+
+            // application is found now, so try to get some more information
+            // Deployment information
+            this.subDeployInformation = this.apiService
+                .getApplicationDeploymentInformation(this.application.shortName, this.application.version)
+                .subscribe(deploymentInformation => {
+                    console.log(deploymentInformation);
+                });
+
+            // public ip
+            const tempPublicIps = [];
+
+            this.application.services.forEach(service => {
+
+                if (service.serviceInterfaces != null) {
+
+                    service.serviceInterfaces.forEach(micoInterface => {
+                        this.subPublicIps.push(this.apiService
+                            .getServiceInterfacePublicIp(service.shortName, service.version, micoInterface.serviceInterfaceName)
+                            .subscribe(listOfPublicIps => {
+                                listOfPublicIps.forEach(publicIp => {
+                                    tempPublicIps.push(publicIp);
+                                });
+                            }));
+                    });
+                }
+            });
+            this.publicIps = tempPublicIps;
+        });
     }
 
     ngOnDestroy() {
@@ -107,6 +120,8 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         this.subPublicIps.forEach(subscription => {
             this.unsubscribe(subscription);
         });
+        this.unsubscribe(this.subApplication);
+        this.unsubscribe(this.subServiceDependency);
     }
 
     unsubscribe(subscription: Subscription) {
@@ -129,17 +144,16 @@ export class AppDetailComponent implements OnInit, OnDestroy {
      * this.version is set accoringly
      */
     setLatestVersion(list) {
-        list.forEach(element => {
+        let version = '0.0.0';
 
-            let version = '0.0.0';
+        list.forEach(element => {
 
             if (versionComparator(element.version, version) > 0) {
                 version = element.version;
-                this.selectedVersion = element.version;
-                this.application = JSON.parse(JSON.stringify(element));
-
             }
         });
+        this.selectedVersion = version;
+        this.subscribeApplication(version);
     }
 
     addService() {
@@ -177,28 +191,26 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
     deleteService(serviceShortName: string) {
 
-        // Local handling, TODO remove as soon as the delete endpoint actually exists
-        /*
-        let searchForId = -1;
+        console.log(this.application);
 
-        let counter = 0;
-        this.application.services.forEach(element => {
-            if (element.shortName === shortName && element.version === version) {
-                searchForId = counter;
+        const dialogRef = this.dialog.open(YesNoDialogComponent, {
+            data: {
+                object: serviceShortName,
+                question: 'deleteDependency'
             }
-            counter++;
         });
 
-        if (searchForId >= 0) {
-            this.application.services.splice(searchForId, 1);
-        }
-        */
+        this.subServiceDependency = dialogRef.afterClosed().subscribe(result => {
+            if (result) {
 
-        this.apiService.deleteApplicationServices(this.application.shortName, this.application.version, serviceShortName)
-            .subscribe(val => {
-                // TODO add some user output (as soon as the endpoint actually exists)
-                console.log(val);
-            });
+                this.apiService.deleteApplicationServices(this.application.shortName, this.application.version, serviceShortName)
+                    .subscribe(val => {
+                        // TODO add some user output (as soon as the endpoint actually exists)
+                        console.log(val);
+                    });
+            }
+        });
+
     }
 
     /**

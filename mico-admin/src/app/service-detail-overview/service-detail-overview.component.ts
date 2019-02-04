@@ -6,6 +6,7 @@ import { ServicePickerComponent } from '../dialogs/service-picker/service-picker
 import { MatDialog } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 import { CreateServiceInterfaceComponent } from '../dialogs/create-service-interface/create-service-interface.component';
+import { Router } from '@angular/router';
 
 export interface Dependency {
     id;
@@ -29,7 +30,11 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
     private subVersion: Subscription;
     private subDependeesCall: Subscription;
 
-    constructor(private apiService: ApiService, private dialog: MatDialog) { }
+    constructor(
+        private apiService: ApiService,
+        private dialog: MatDialog,
+        private router: Router,
+    ) { }
 
     // dependees: services the current service depends on
     dependees: any = [];
@@ -235,6 +240,7 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
             if (result) {
 
                 this.apiService.deleteService(this.shortName, this.version).subscribe();
+                this.router.navigate(['../service-detail/service-list']);
             }
         });
     }
