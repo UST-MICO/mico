@@ -3,9 +3,6 @@
 # Read in public IP for MICO, if none is provided don't set the field loadBalancerIP
 echo "Please provide a public IP address for MICO. Leave blank if you don't want so set an IP:"
 read ip
-if ! [ -z "$ip" ]; then
-    export MICO_PUBLIC_IP="loadBalancerIP: $ip"
-fi
 
 # Read in DockerHub username
 echo "Please provide the base64 encoded user name for DockerHub:"
@@ -33,7 +30,12 @@ envsubst < mico-build-bot.yaml | kubectl apply -f -
 # Install MICO components
 kubectl apply -f neo4j.yaml
 kubectl apply -f mico-core.yaml
-envsubst < mico-admin.yaml | kubectl apply -f -
+if [ -z "$ip" ]; then
+    sed '/${MICO_PUBLIC_IP}/d' mico-admin.yaml | kubectl apply -f -
+else
+    export MICO_PUBLIC_IP=$ip
+    envsubst < mico-admin.yaml | kubectl apply -f -
+fi
 
 # Install external components
 kubectl apply -f /kube-state-metrics
