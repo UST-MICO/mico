@@ -1,5 +1,6 @@
 package io.github.ust.mico.core.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.validation.constraints.Pattern;
@@ -16,11 +17,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.ust.mico.core.VersionNotSupportedException;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.Singular;
+import lombok.experimental.Accessors;
 
 /**
  * Represents a service in the context of MICO.
@@ -28,7 +27,7 @@ import lombok.Singular;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder(toBuilder = true)
+@Accessors(chain = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NodeEntity
 public class MicoService {
@@ -75,8 +74,7 @@ public class MicoService {
     @ApiModelProperty(required = true)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Relationship(type = "PROVIDES_INTERFACES", direction = Relationship.UNDIRECTED)
-    @Singular
-    private List<MicoServiceInterface> serviceInterfaces;
+    private List<MicoServiceInterface> serviceInterfaces = new ArrayList<>();
 
     /**
      * Indicates where this service originates from, e.g.,
@@ -96,9 +94,7 @@ public class MicoService {
      */
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Relationship(type = "DEPENDS_ON")
-    @Singular
-    @Setter
-    private List<MicoServiceDependency> dependencies;
+    private List<MicoServiceDependency> dependencies = new ArrayList<>();
 
     /**
      * Same MicoService with previous version.
@@ -146,16 +142,6 @@ public class MicoService {
     public MicoVersion getMicoVersion() throws VersionNotSupportedException {
         MicoVersion micoVersion = MicoVersion.valueOf(this.version);
         return micoVersion;
-    }
-
-    /**
-     * Returns a unique name that is used as the run label for Kubernetes Services.
-     *
-     * @return Unique name based on short name and version.
-     */
-    @JsonIgnore
-    public String getUniqueName() {
-        return shortName + "-" + version;
     }
 
 }

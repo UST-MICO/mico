@@ -7,6 +7,8 @@ import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.model.MicoServicePort;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.util.CollectionUtils;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,7 +79,7 @@ public class ServiceInterfaceControllerTests {
     @Test
     public void postServiceInterface() throws Exception {
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
-            Optional.of(MicoService.builder().shortName(SHORT_NAME).version(VERSION).build())
+            Optional.of(new MicoService().setShortName(SHORT_NAME).setVersion(VERSION))
         );
 
         MicoServiceInterface serviceInterface = getTestServiceInterface();
@@ -105,8 +107,8 @@ public class ServiceInterfaceControllerTests {
     @Test
     public void postServiceInterfaceExists() throws Exception {
         MicoServiceInterface serviceInterface = getTestServiceInterface();
-        MicoService service = MicoService.builder().shortName(SHORT_NAME).version(VERSION).build();
-        service = service.toBuilder().serviceInterface(serviceInterface).build();
+        MicoService service = new MicoService().setShortName(SHORT_NAME).setVersion(VERSION);
+        service.getServiceInterfaces().add(serviceInterface);
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
             Optional.of(service)
         );
@@ -146,8 +148,8 @@ public class ServiceInterfaceControllerTests {
 
     @Test
     public void getAllServiceInterfacesOfService() throws Exception {
-        MicoServiceInterface serviceInterface0 = MicoServiceInterface.builder().serviceInterfaceName("ServiceInterface0").build();
-        MicoServiceInterface serviceInterface1 = MicoServiceInterface.builder().serviceInterfaceName("ServiceInterface1").build();
+        MicoServiceInterface serviceInterface0 = new MicoServiceInterface().setServiceInterfaceName("ServiceInterface0");
+        MicoServiceInterface serviceInterface1 = new MicoServiceInterface().setServiceInterfaceName("ServiceInterface1");
         List<MicoServiceInterface> serviceInterfaces = Arrays.asList(serviceInterface0, serviceInterface1);
         given(serviceRepository.findInterfacesOfService(SHORT_NAME, VERSION)).willReturn(
             serviceInterfaces);
@@ -162,16 +164,14 @@ public class ServiceInterfaceControllerTests {
 
 
     private MicoServiceInterface getTestServiceInterface() {
-        return MicoServiceInterface.builder()
-            .serviceInterfaceName(INTERFACE_NAME)
-            .port(MicoServicePort.builder()
-                .number(INTERFACE_PORT)
-                .type(INTERFACE_PORT_TYPE)
-                .targetPort(INTERFACE_TARGET_PORT)
-                .build())
-            .description(INTERFACE_DESCRIPTION)
-            .publicDns(INTERFACE_PUBLIC_DNS)
-            .build();
+        return new MicoServiceInterface()
+            .setServiceInterfaceName(INTERFACE_NAME)
+            .setPorts(CollectionUtils.listOf(new MicoServicePort()
+                .setNumber(INTERFACE_PORT)
+                .setType(INTERFACE_PORT_TYPE)
+                .setTargetPort(INTERFACE_TARGET_PORT)))
+            .setDescription(INTERFACE_DESCRIPTION)
+            .setPublicDns(INTERFACE_PUBLIC_DNS);
     }
 
     private ResultMatcher getServiceInterfaceMatcher(MicoServiceInterface serviceInterface, String selfBaseUrl, String serviceUrl) throws UnsupportedEncodingException, URISyntaxException, MalformedURLException {

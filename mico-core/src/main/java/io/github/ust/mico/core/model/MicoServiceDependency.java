@@ -11,15 +11,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 /**
  * Represents a dependency of a {@link MicoService}.
  */
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Accessors(chain = true)
 @RelationshipEntity(type = "DEPENDS_ON")
 public class MicoServiceDependency {
 
@@ -44,7 +46,7 @@ public class MicoServiceDependency {
     private MicoService service;
 
     /**
-     * This is the {@link MicoService} dependend by
+     * This is the {@link MicoService} depended by
      * {@link MicoServiceDependency#service}.
      */
     @ApiModelProperty(required = true)
@@ -57,14 +59,14 @@ public class MicoServiceDependency {
      * that is supported.
      */
     @ApiModelProperty(required = true)
-    private final MicoVersion minVersion;
+    private MicoVersion minVersion;
 
     /**
      * The maximum version of the depended service
      * that is supported.
      */
     @ApiModelProperty(required = true)
-    private final MicoVersion maxVersion;
+    private MicoVersion maxVersion;
 
     @JsonProperty("serviceDependee")
     private MicoService getDependee() {

@@ -14,13 +14,13 @@ import lombok.Getter;
 public class MicoVersion implements Comparable<MicoVersion> {
 
     /**
-     * String prefix of this version, e.g., 'v'
+     * String prefix of this version, e.g., 'v'.
      */
     @Getter
     private String prefix;
 
     /**
-     * The actual semantic version
+     * The actual semantic version.
      */
     private Version version;
 

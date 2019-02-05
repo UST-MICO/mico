@@ -1,16 +1,35 @@
 package io.github.ust.mico.core;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import io.fabric8.kubernetes.api.model.PodBuilder;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
-import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
-import io.github.ust.mico.core.REST.ApplicationController;
-import io.github.ust.mico.core.REST.PrometheusResponse;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import static io.github.ust.mico.core.JsonPathBuilder.EMBEDDED;
+import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
+import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
+import static io.github.ust.mico.core.REST.ApplicationController.LABEL_APP_KEY;
+import static io.github.ust.mico.core.REST.ApplicationController.LABEL_VERSION_KEY;
+import static io.github.ust.mico.core.TestConstants.DESCRIPTION;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1_MATCHER;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_MATCHER;
+import static io.github.ust.mico.core.TestConstants.VERSION;
+import static io.github.ust.mico.core.TestConstants.VERSION_1_0_1;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Optional;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,23 +46,18 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Optional;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
-import static io.github.ust.mico.core.JsonPathBuilder.*;
-import static io.github.ust.mico.core.REST.ApplicationController.LABEL_APP_KEY;
-import static io.github.ust.mico.core.REST.ApplicationController.LABEL_VERSION_KEY;
-import static io.github.ust.mico.core.TestConstants.*;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import io.fabric8.kubernetes.api.model.PodBuilder;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
+import io.github.ust.mico.core.REST.ApplicationController;
+import io.github.ust.mico.core.REST.PrometheusResponse;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(ApplicationController.class)
@@ -105,9 +119,9 @@ public class ApplicationControllerTest {
     @Test
     public void getAllApplications() throws Exception {
         given(applicationRepository.findAll()).willReturn(
-                Arrays.asList(MicoApplication.builder().shortName(SHORT_NAME).version(VERSION_1_0_1).build(),
-                        MicoApplication.builder().shortName(SHORT_NAME).version(VERSION).build(),
-                        MicoApplication.builder().shortName(SHORT_NAME_1).version(VERSION).build()));
+                Arrays.asList(new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION_1_0_1),
+                        new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION),
+                        new MicoApplication().setShortName(SHORT_NAME_1).setVersion(VERSION)));
 
         mvc.perform(get("/applications").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andDo(print())
@@ -124,7 +138,7 @@ public class ApplicationControllerTest {
     @Test
     public void getApplicationByShortNameAndVersion() throws Exception {
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
-                Optional.of(MicoApplication.builder().shortName(SHORT_NAME).version(VERSION).build()));
+                Optional.of(new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION)));
 
         mvc.perform(get("/applications/" + SHORT_NAME + "/" + VERSION.toString()).accept(MediaTypes.HAL_JSON_VALUE))
                 .andDo(print())
@@ -139,11 +153,10 @@ public class ApplicationControllerTest {
 
     @Test
     public void createApplication() throws Exception {
-        MicoApplication application = MicoApplication.builder()
-                .shortName(SHORT_NAME)
-                .version(VERSION)
-                .description(DESCRIPTION)
-                .build();
+        MicoApplication application = new MicoApplication()
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION)
+                .setDescription(DESCRIPTION);
 
         given(applicationRepository.save(any(MicoApplication.class))).willReturn(application);
 
@@ -159,17 +172,15 @@ public class ApplicationControllerTest {
 
     @Test
     public void updateApplication() throws Exception {
-        MicoApplication application = MicoApplication.builder()
-                .shortName(SHORT_NAME)
-                .version(VERSION)
-                .description(DESCRIPTION)
-                .build();
+        MicoApplication application = new MicoApplication()
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION)
+                .setDescription(DESCRIPTION);
 
-        MicoApplication updatedApplication = MicoApplication.builder()
-                .shortName(SHORT_NAME)
-                .version(VERSION)
-                .description("newDesc")
-                .build();
+        MicoApplication updatedApplication = new MicoApplication()
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION)
+                .setDescription("newDesc");
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(applicationRepository.save(any(MicoApplication.class))).willReturn(updatedApplication);
@@ -188,10 +199,9 @@ public class ApplicationControllerTest {
 
     @Test
     public void getDeploymentInformation() throws Exception {
-        MicoApplication application = MicoApplication.builder()
-            .shortName(SHORT_NAME)
-            .version(VERSION)
-            .build();
+        MicoApplication application = new MicoApplication()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION);
         String testNamespace = "TestNamespace";
         String nodeName = "testNode";
         String podPhase = "Running";

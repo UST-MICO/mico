@@ -1,6 +1,5 @@
 package io.github.ust.mico.core.model;
 
-import lombok.Builder;
 import lombok.Value;
 
 /**
@@ -9,7 +8,6 @@ import lombok.Value;
  * lower (requesting) constraint.
  */
 @Value
-@Builder
 public class MicoResourceConstraint {
 
     /**

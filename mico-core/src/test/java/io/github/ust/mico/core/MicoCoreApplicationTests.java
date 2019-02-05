@@ -11,7 +11,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -25,6 +24,7 @@ import io.github.ust.mico.core.model.MicoServicePort;
 import io.github.ust.mico.core.model.MicoVersion;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.util.CollectionUtils;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -84,27 +84,24 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
     }
 
     public static MicoService createServiceInDB() throws VersionNotSupportedException {
-        return MicoService.builder()
-                .shortName(TEST_SHORT_NAME)
-                .name(TEST_LONGER_NAME)
-                .version(TEST_VERSION)
-                .description(TEST_SERVICE_DESCRIPTION)
-                .serviceInterface(MicoServiceInterface.builder()
-                        .serviceInterfaceName(TEST_SERVICE_INTERFACE_NAME)
-                        .port(MicoServicePort.builder()
-                                .number(8080)
-                                .type(MicoPortType.TCP)
-                                .targetPort(8081)
-                                .build())
-                        .publicDns(TEST_DNS)
-                        .description(TEST_SERVICE_INTERFACE_DESCRIPTION)
-                        .protocol(TEST_PROTOCOL)
-                        .build())
-                .serviceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
-                .gitCloneUrl(TEST_GIT_CLONE_URL)
-                .gitReleaseInfoUrl(TEST_GIT_CLONE_URL)
-                .contact(TEST_CONTACT)
-                .build();
+        return new MicoService()
+                .setShortName(TEST_SHORT_NAME)
+                .setName(TEST_LONGER_NAME)
+                .setVersion(TEST_VERSION)
+                .setDescription(TEST_SERVICE_DESCRIPTION)
+                .setServiceInterfaces(CollectionUtils.listOf(new MicoServiceInterface()
+                        .setServiceInterfaceName(TEST_SERVICE_INTERFACE_NAME)
+                        .setPorts(CollectionUtils.listOf(new MicoServicePort()
+                                .setNumber(8080)
+                                .setType(MicoPortType.TCP)
+                                .setTargetPort(8081)))
+                        .setPublicDns(TEST_DNS)
+                        .setDescription(TEST_SERVICE_INTERFACE_DESCRIPTION)
+                        .setProtocol(TEST_PROTOCOL)))
+                .setServiceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
+                .setGitCloneUrl(TEST_GIT_CLONE_URL)
+                .setGitReleaseInfoUrl(TEST_GIT_CLONE_URL)
+                .setContact(TEST_CONTACT);
     }
 
     @Ignore
@@ -127,34 +124,30 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
         String testInterface2Description = "This is service interface 2";
         String testInterface2Protocol = "TCP";
 
-        MicoService service2 = MicoService.builder()
-                .shortName(testServivce2ShortName)
-                .name(testServivce2Name)
-                .version(testService2Version)
-                .description(testServivce2Description)
-                .serviceInterface(MicoServiceInterface.builder()
-                        .serviceInterfaceName(testInterface2Name)
-                        .port(MicoServicePort.builder()
-                                .number(testInterface2Port)
-                                .type(MicoPortType.TCP)
-                                .targetPort(testInterface2TargetPort)
-                                .build())
-                        .publicDns(testInterface2PublicDns)
-                        .description(testInterface2Description)
-                        .protocol(testInterface2Protocol)
-                        .build())
-                .serviceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
-                .gitCloneUrl(testServivce2GitCloneUrl)
-                .gitReleaseInfoUrl(testServivce2GitReleaseInfoUrl)
-                .contact(testServivce2Contact)
-                .build();
+        MicoService service2 = new MicoService()
+        .setShortName(testServivce2ShortName)
+        .setName(testServivce2Name)
+        .setVersion(testService2Version)
+        .setDescription(testServivce2Description)
+        .setServiceInterfaces(CollectionUtils.listOf(new MicoServiceInterface()
+                .setServiceInterfaceName(testInterface2Name)
+                .setPorts(CollectionUtils.listOf(new MicoServicePort()
+                        .setNumber(testInterface2Port)
+                        .setType(MicoPortType.TCP)
+                        .setTargetPort(testInterface2TargetPort)))
+                .setPublicDns(testInterface2PublicDns)
+                .setDescription(testInterface2Description)
+                .setProtocol(testInterface2Protocol)))
+        .setServiceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
+        .setGitCloneUrl(testServivce2GitCloneUrl)
+        .setGitReleaseInfoUrl(testServivce2GitReleaseInfoUrl)
+        .setContact(testServivce2Contact);
 
-        service1.setDependencies(Collections.singletonList(MicoServiceDependency.builder()
-                .service(service1)
-                .dependedService(service2)
-                .minVersion(MicoVersion.forIntegers(1, 0, 0))
-                .maxVersion(MicoVersion.forIntegers(2, 0, 0))
-                .build()));
+        service1.setDependencies(Collections.singletonList(new MicoServiceDependency()
+                .setService(service1)
+                .setDependedService(service2)
+                .setMinVersion(MicoVersion.forIntegers(1, 0, 0))
+                .setMaxVersion(MicoVersion.forIntegers(2, 0, 0))));
 
         serviceRepository.save(service1);
 
@@ -178,25 +171,22 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
 
     @Test
     public void testStoreApplication() {
-        MicoApplication application1 = MicoApplication.builder()
-                .shortName("App1")
-                .name("Application1")
-                .version("1.0.0")
-                .build();
+        MicoApplication application1 = new MicoApplication()
+                .setShortName("App1")
+                .setName("Application1")
+                .setVersion("1.0.0");
         applicationRepository.save(application1);
 
-        MicoApplication application2 = MicoApplication.builder()
-                .shortName("App2")
-                .name("Application2")
-                .version("1.0.0")
-                .build();
+        MicoApplication application2 = new MicoApplication()
+                .setShortName("App2")
+                .setName("Application2")
+                .setVersion("1.0.0");
         applicationRepository.save(application2);
 
-        MicoApplication application3 = MicoApplication.builder()
-                .shortName("App3")
-                .name("Application3")
-                .version("1.0.0")
-                .build();
+        MicoApplication application3 = new MicoApplication()
+                .setShortName("App3")
+                .setName("Application3")
+                .setVersion("1.0.0");
         applicationRepository.save(application3);
 
         MicoApplication storedApplication1 = applicationRepository.findByShortNameAndVersion("App1", "1.0.0", 2).get();

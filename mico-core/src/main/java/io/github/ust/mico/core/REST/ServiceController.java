@@ -307,7 +307,7 @@ public class ServiceController {
     public MicoService setServiceDependees(MicoService newService) {
         MicoService serviceToGetId = getService(newService);
         if (serviceToGetId == null) {
-            MicoService savedService = serviceRepository.save(MicoService.builder().shortName(newService.getShortName()).version(newService.getVersion()).build());
+            MicoService savedService = serviceRepository.save(new MicoService().setShortName(newService.getShortName()).setVersion(newService.getVersion()));
 
             List<MicoServiceDependency> dependees = savedService.getDependencies();
             LinkedList<MicoService> services = getDependentServices(dependees);
@@ -315,7 +315,7 @@ public class ServiceController {
             List<MicoServiceDependency> newDependees = new LinkedList<>();
 
             if (services != null) {
-                services.forEach(service -> newDependees.add(MicoServiceDependency.builder().service(savedService).dependedService(service).build()));
+                services.forEach(service -> newDependees.add(new MicoServiceDependency().setService(savedService).setDependedService(service)));
             }
 
             savedService.setDependencies(newDependees);
@@ -328,7 +328,7 @@ public class ServiceController {
 
             List<MicoServiceDependency> newDependees = new LinkedList<>();
 
-            services.forEach(service -> newDependees.add(MicoServiceDependency.builder().service(newService).dependedService(service).build()));
+            services.forEach(service -> newDependees.add(new MicoServiceDependency().setService(newService).setDependedService(service)));
 
             newService.setDependencies(newDependees);
 
@@ -350,7 +350,7 @@ public class ServiceController {
             Optional<MicoService> dependeeServiceOpt = serviceRepository.findByShortNameAndVersion(shortName, version.toString());
             MicoService dependeeService = dependeeServiceOpt.orElse(null);
             if (dependeeService == null) {
-                MicoService newService = serviceRepository.save(MicoService.builder().shortName(shortName).version(version).build());
+                MicoService newService = serviceRepository.save(new MicoService().setShortName(shortName).setVersion(version));
                 services.add(newService);
             } else {
                 services.add(dependeeService);

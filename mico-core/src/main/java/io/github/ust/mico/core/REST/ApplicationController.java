@@ -286,8 +286,8 @@ public class ApplicationController {
             MicoService service = serviceOptional.get();
             MicoApplication application = applicationOptional.get();
             if (!application.getServices().contains(service)) {
-                MicoApplication applicationWithService = application.toBuilder().service(service).build();
-                applicationRepository.save(applicationWithService);
+                application.getServices().add(service);
+                applicationRepository.save(application);
             }
             return ResponseEntity.noContent().build();
         } else {
