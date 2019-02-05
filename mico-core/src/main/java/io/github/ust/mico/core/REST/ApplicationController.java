@@ -106,7 +106,7 @@ public class ApplicationController {
                                                                                          @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
         if (!applicationOptional.isPresent()) {
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' was not found!");
         }
         return applicationOptional.map(application -> new Resource<>(application, getApplicationLinks(application)))
                 .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
@@ -166,7 +166,7 @@ public class ApplicationController {
 
         Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
         if (!applicationOptional.isPresent()) {
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' was not found!");
         }
 
         application.setId(applicationOptional.get().getId());
@@ -252,7 +252,7 @@ public class ApplicationController {
                 }
             }
         } else {
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' was not found!");
         }
     }
 
