@@ -48,7 +48,7 @@ pipeline {
                 }
             }
         }
-        stage('Deploy on kubernetes') {
+        stage('Deploy on Kubernetes') {
             parallel {
                 stage('mico-core') {
                     steps{
@@ -64,40 +64,24 @@ pipeline {
                 }
             }
         }
-        stage('Remove unused docker images') {
-            parallel {
-                stage('mico-core') {
-                    steps{
-                        sh "docker rmi $micoCoreRegistry:latest"
-                        sh "docker rmi $micoCoreRegistry:kube${BUILD_NUMBER}"
-                    }
-                }
-                stage('mico-admin') {
-                    steps{
-                        sh "docker rmi $micoAdminRegistry:latest"
-                        sh "docker rmi $micoAdminRegistry:kube${BUILD_NUMBER}"
-                    }
-                }
+        stage('Docker clean up') {
+            steps {
+                // Delete all images that are older than 10 days
+                sh '''docker image prune -a --force --filter "until=240h"'''
             }
         }
     }
 
     post {
         always {
-            script {
-                BUILD_USER = getBuildUser()
+            wrap([$class: 'BuildUser']) {
+    	       slackSend channel: '#ci-pipeline',
+                    color: COLOR_MAP[currentBuild.currentResult],
+                    message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} by ${BUILD_USER}\n More info at: ${env.BUILD_URL}"
+    
+                // Clean workspace
+                cleanWs()
             }
-
-	       slackSend channel: '#ci-pipeline',
-                color: COLOR_MAP[currentBuild.currentResult],
-                message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} by ${BUILD_USER}\n More info at: ${env.BUILD_URL}"
-
-            // Clean workspace
-            cleanWs()
         }
     }
-}
-
-def getBuildUser() {
-    return currentBuild.rawBuild.getCause(Cause.UserIdCause).getUserId()
 }
