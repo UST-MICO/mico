@@ -1,5 +1,37 @@
 package io.github.ust.mico.core.REST;
 
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+
+import java.net.URI;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.Resources;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.util.UriComponentsBuilder;
+
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.Service;
@@ -11,34 +43,9 @@ import io.github.ust.mico.core.ClusterAwarenessFabric8;
 import io.github.ust.mico.core.MicoKubernetesConfig;
 import io.github.ust.mico.core.PrometheusConfig;
 import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoApplication.MicoApplicationBuilder;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Link;
-import org.springframework.hateoas.MediaTypes;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.Resources;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.util.UriComponentsBuilder;
-
-import java.net.URI;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping(value = "/applications", produces = MediaTypes.HAL_JSON_VALUE)
@@ -120,10 +127,8 @@ public class ApplicationController {
             return ResponseEntity.badRequest().build();
         }
 
-        MicoApplicationBuilder appBuilder = newApplication.toBuilder();
-
         List<MicoService> oldServices = newApplication.getServices();
-        appBuilder.clearServices();
+        newApplication.getServices().clear();
 
         // specifically load all services from db
         for (MicoService service : oldServices) {
@@ -131,12 +136,12 @@ public class ApplicationController {
             if (!dbService.isPresent()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "One of the provided Services was not found!");
             }
-            appBuilder.service(dbService.get());
+            newApplication.getServices().add(dbService.get());
         }
 
         // TODO update deploy info here if neccessary
 
-        MicoApplication savedApplication = applicationRepository.save(appBuilder.build());
+        MicoApplication savedApplication = applicationRepository.save(newApplication);
 
         return ResponseEntity
             .created(linkTo(methodOn(ApplicationController.class)
@@ -177,7 +182,8 @@ public class ApplicationController {
             }
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Application is currently deployed!");
         }).map(application -> {
-            return application.toBuilder().clearServices().build();
+            application.getServices().clear();
+            return application;
         }).map(application -> {
             applicationRepository.save(application);
             return application;
@@ -319,8 +325,8 @@ public class ApplicationController {
             MicoService service = serviceOptional.get();
             MicoApplication application = applicationOptional.get();
             if (!application.getServices().contains(service)) {
-                MicoApplication applicationWithService = application.toBuilder().service(service).build();
-                applicationRepository.save(applicationWithService);
+                application.getServices().add(service);
+                applicationRepository.save(application);
             }
             return ResponseEntity.noContent().build();
         } else {

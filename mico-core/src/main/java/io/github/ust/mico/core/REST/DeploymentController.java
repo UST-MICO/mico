@@ -75,12 +75,10 @@ public class DeploymentController {
                 log.info("Build of image for service '{}' in version '{}' finished: {}",
                     micoService.getShortName(), micoService.getVersion(), dockerImageUri);
 
-                MicoService micoServiceUpdatedWithImageName = micoService.toBuilder()
-                    .dockerImageUri(dockerImageUri)
-                    .build();
+                micoService.setDockerImageUri(dockerImageUri);
 
-                serviceRepository.save(micoServiceUpdatedWithImageName);
-                createKubernetesResources(micoApplication, micoServiceUpdatedWithImageName);
+                serviceRepository.save(micoService);
+                createKubernetesResources(micoApplication, micoService);
             }, this::exceptionHandler);
         });
 
@@ -111,7 +109,7 @@ public class DeploymentController {
         log.debug("Start creating Kubernetes resources for MICO service '{}' in version '{}'", micoService.getShortName(), micoService.getVersion());
 
         // Kubernetes Deployment
-        MicoServiceDeploymentInfo micoServiceDeploymentInfo = MicoServiceDeploymentInfo.builder().build();
+        MicoServiceDeploymentInfo micoServiceDeploymentInfo = new MicoServiceDeploymentInfo();
         if (micoApplication.getDeploymentInfo() != null &&
             micoApplication.getDeploymentInfo().getServiceDeploymentInfos() != null) {
             micoServiceDeploymentInfo = micoApplication.getDeploymentInfo().getServiceDeploymentInfos().get(micoService.getId());

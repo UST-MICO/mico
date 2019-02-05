@@ -1,21 +1,24 @@
 package io.github.ust.mico.core.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.swagger.annotations.ApiModelProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Builder.Default;
-import lombok.Data;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 /**
  * Represents a basic port with a port number and port type (protocol).
  */
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Accessors(chain = true)
 @NodeEntity
 public class MicoServicePort {
 
@@ -42,7 +45,6 @@ public class MicoServicePort {
      * (Pivio -> transport_protocol).
      */
     @ApiModelProperty(required = true)
-    @Default
     private MicoPortType type = MicoPortType.DEFAULT;
 
     /**

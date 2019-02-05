@@ -1,20 +1,25 @@
 package io.github.ust.mico.core.model;
 
 /**
- * TODO: Class comment
+ * Enumeration for the various places
+ * a service may originate from.
  */
 public enum MicoServiceCrawlingOrigin {
 
     /**
-     * TODO: add comment
+     * Indicates that a service originates
+     * from some GitHub repository.
      */
     GITHUB,
+    
     /**
-     * TODO: add comment
+     * Indicates that a service originates
+     * from Docker.
      */
     DOCKER,
+    
     /**
-     * TODO: add comment
+     * Undefined.
      */
     NOT_DEFINED;
 

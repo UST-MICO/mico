@@ -1,10 +1,5 @@
 package io.github.ust.mico.core;
 
-import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
-import io.github.ust.mico.core.imagebuilder.ImageBuilder;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoVersion;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -13,7 +8,11 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-@Slf4j
+import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
+import io.github.ust.mico.core.imagebuilder.ImageBuilder;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoVersion;
+
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class ImageBuilderTests {
@@ -47,12 +46,11 @@ public class ImageBuilderTests {
     @Test(expected = NotInitializedException.class)
     public void withoutInitializingAnErrorIsThrown() throws NotInitializedException, VersionNotSupportedException {
 
-        MicoService micoService = MicoService.builder()
-            .shortName("service-short-name")
-            .version(MicoVersion.valueOf(RELEASE).toString())
-            .gitCloneUrl(GIT_URI)
-            .dockerfilePath("Dockerfile")
-            .build();
+        MicoService micoService = new MicoService()
+            .setShortName("service-short-name")
+            .setVersion(MicoVersion.valueOf(RELEASE).toString())
+            .setGitCloneUrl(GIT_URI)
+            .setDockerfilePath("Dockerfile");
 
         imageBuilder.build(micoService);
     }

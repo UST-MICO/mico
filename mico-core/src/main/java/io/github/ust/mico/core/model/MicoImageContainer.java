@@ -1,13 +1,13 @@
 package io.github.ust.mico.core.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Builder.Default;
 import lombok.Data;
-import lombok.Singular;
-
-import java.util.List;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 /**
  * Represents a container running in a Kubernetes Pod.
@@ -15,8 +15,9 @@ import java.util.List;
  * For each container you can specify resource contraints.
  */
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Accessors(chain = true)
 public class MicoImageContainer {
 
     // ----------------------
@@ -34,8 +35,7 @@ public class MicoImageContainer {
      * The list of ports for this service.
      */
     @ApiModelProperty(required = true)
-    @Singular
-    private List<MicoPort> ports;
+    private List<MicoPort> ports = new ArrayList<>();
 
 
     // ----------------------
@@ -66,7 +66,6 @@ public class MicoImageContainer {
      * Indicates whether this container should have
      * a read-only root file system. Defaults to false.
      */
-    @Default
     private boolean readOnlyRootFileSystem = false;
 
     /**
@@ -74,7 +73,6 @@ public class MicoImageContainer {
      * If somehow not run as non-root user (not UID 0) it will
      * fail to start. Default to false.
      */
-    @Default
     private boolean runAsNonRoot = false;
 
 }

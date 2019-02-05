@@ -1,5 +1,6 @@
 package io.github.ust.mico.core.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.validation.constraints.NotEmpty;
@@ -15,18 +16,17 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Singular;
+import lombok.experimental.Accessors;
 
 /**
  * Represents a interface, e.g., REST API, of a {@link MicoService}.
  */
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-@Builder(toBuilder = true)
+@AllArgsConstructor
+@Accessors(chain = true)
 @NodeEntity
 @QueryResult
 public class MicoServiceInterface {
@@ -58,8 +58,7 @@ public class MicoServiceInterface {
      */
     @ApiModelProperty(required = true)
     @Relationship(type = "PROVIDES_PORTS", direction = Relationship.UNDIRECTED)
-    @Singular
-    private List<MicoServicePort> ports;
+    private List<MicoServicePort> ports = new ArrayList<>();
 
 
     // ----------------------
@@ -86,5 +85,5 @@ public class MicoServiceInterface {
      * The transport protocol, e.g., TCP.
      */
     private String transportProtocol;
-
+    
 }

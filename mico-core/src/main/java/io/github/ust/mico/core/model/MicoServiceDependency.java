@@ -8,22 +8,23 @@ import org.neo4j.ogm.annotation.StartNode;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import io.github.ust.mico.core.VersionNotSupportedException;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 /**
  * Represents a dependency of a {@link MicoService}.
  */
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
-@Builder(toBuilder=true)
+@Accessors(chain = true)
 @RelationshipEntity(type = "DEPENDS_ON")
 public class MicoServiceDependency {
 
@@ -50,7 +51,7 @@ public class MicoServiceDependency {
     private MicoService service;
 
     /**
-     * This is the {@link MicoService} dependend by
+     * This is the {@link MicoService} depended by
      * {@link MicoServiceDependency#service}.
      */
     @JsonIdentityInfo(generator=ObjectIdGenerators.PropertyGenerator.class, property="id", scope=MicoService.class)
@@ -64,14 +65,14 @@ public class MicoServiceDependency {
      * that is supported.
      */
     @ApiModelProperty(required = true)
-    private final String minVersion;
+    private String minVersion;
 
     /**
      * The maximum version of the depended service
      * that is supported.
      */
     @ApiModelProperty(required = true)
-    private final String maxVersion;
+    private String maxVersion;
 
     @JsonIgnore
     public MicoVersion getMinMicoVersion() throws VersionNotSupportedException {

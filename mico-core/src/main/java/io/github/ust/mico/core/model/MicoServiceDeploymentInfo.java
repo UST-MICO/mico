@@ -1,25 +1,29 @@
 package io.github.ust.mico.core.model;
 
-import io.swagger.annotations.ApiModelProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Builder.Default;
-import lombok.Data;
-import lombok.Singular;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
-import java.util.List;
-import java.util.Map;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.Singular;
+import lombok.experimental.Accessors;
 
 /**
  * Represents the information necessary for deploying
  * a {@link MicoApplication}.
  */
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Accessors(chain = true)
 @NodeEntity
 public class MicoServiceDeploymentInfo {
 
@@ -40,7 +44,7 @@ public class MicoServiceDeploymentInfo {
      */
     @ApiModelProperty(required = true)
     @Singular
-    private final List<MicoImageContainer> containers;
+    private List<MicoImageContainer> containers = new ArrayList<>();
 
 
     // ----------------------
@@ -50,15 +54,13 @@ public class MicoServiceDeploymentInfo {
     /**
      * Number of desired instances. Defaults to 1.
      */
-    @Default
-    private final int replicas = 1;
+    private int replicas = 1;
 
     /**
      * Minimum number of seconds for which this service should be ready
      * without any of its containers crashing, for it to be considered available.
      * Defaults to 0 (considered available as soon as it is ready).
      */
-    @Default
     private int minReadySecondsBeforeMarkedAvailable = 0;
 
     /**
@@ -72,20 +74,18 @@ public class MicoServiceDeploymentInfo {
      * Defaults to [ {"app" -> "Service#shortName"} ].
      */
     @Singular
-    private Map<String, String> labels;
+    private Map<String, String> labels = new HashMap<>();
 
     /**
      * Indicates whether and when to pull the image.
      * Defaults to ImagePullPolicy#DEFAULT.
      */
-    @Default
     private ImagePullPolicy imagePullPolicy = ImagePullPolicy.DEFAULT;
 
     /**
      * Restart policy for all containers.
      * Defaults to RestartPolicy#ALWAYS.
      */
-    @Default
     private RestartPolicy restartPolicy = RestartPolicy.DEFAULT;
 
 
