@@ -8,13 +8,13 @@ import org.neo4j.ogm.annotation.StartNode;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import io.github.ust.mico.core.VersionNotSupportedException;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
@@ -65,14 +65,14 @@ public class MicoServiceDependency {
      * that is supported.
      */
     @ApiModelProperty(required = true)
-    private final String minVersion;
+    private String minVersion;
 
     /**
      * The maximum version of the depended service
      * that is supported.
      */
     @ApiModelProperty(required = true)
-    private final String maxVersion;
+    private String maxVersion;
 
     @JsonIgnore
     public MicoVersion getMinMicoVersion() throws VersionNotSupportedException {

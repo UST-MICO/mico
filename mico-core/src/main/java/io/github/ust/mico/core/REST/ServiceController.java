@@ -193,17 +193,17 @@ public class ServiceController {
             return fastResponse.get();
         }
 
-        final MicoServiceDependency processedServiceDependee = newServiceDependee.toBuilder()
-            .dependedService(serviceDependeeOpt.get())
-            .service(serviceOpt.get())
-            .build();
+        final MicoServiceDependency processedServiceDependee = new MicoServiceDependency()
+            .setDependedService(serviceDependeeOpt.get())
+            .setService(serviceOpt.get());
 
         log.info("New dependency for MicoService '{}' '{}' -[:DEPENDS_ON]-> '{}' '{}'", shortName, version,
             processedServiceDependee.getDependedService().getShortName(),
             processedServiceDependee.getDependedService().getVersion());
 
         serviceOpt = serviceOpt.map(service -> {
-            return service.toBuilder().dependency(processedServiceDependee).build();
+            service.getDependencies().add(processedServiceDependee);
+            return service;
         });
 
         MicoService savedService = serviceRepository.save(serviceOpt.get());
