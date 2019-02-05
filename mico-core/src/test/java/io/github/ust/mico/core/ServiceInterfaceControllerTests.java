@@ -127,8 +127,8 @@ public class ServiceInterfaceControllerTests {
     @Test
     public void getSpecificServiceInterface() throws Exception {
         MicoServiceInterface serviceInterface = getTestServiceInterface();
-        given(serviceRepository.findInterfaceOfServiceByName(serviceInterface.getServiceInterfaceName(), SHORT_NAME, VERSION)).willReturn(
-            Optional.of(serviceInterface));
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
+            Optional.of(MicoService.builder().serviceInterface(serviceInterface).build()));
 
         mvc.perform(get(INTERFACES_URL + "/" + serviceInterface.getServiceInterfaceName()).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
@@ -155,8 +155,8 @@ public class ServiceInterfaceControllerTests {
         MicoServiceInterface serviceInterface0 = MicoServiceInterface.builder().serviceInterfaceName("ServiceInterface0").build();
         MicoServiceInterface serviceInterface1 = MicoServiceInterface.builder().serviceInterfaceName("ServiceInterface1").build();
         List<MicoServiceInterface> serviceInterfaces = Arrays.asList(serviceInterface0, serviceInterface1);
-        given(serviceRepository.findInterfacesOfService(SHORT_NAME, VERSION)).willReturn(
-            serviceInterfaces);
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
+            Optional.of(MicoService.builder().serviceInterfaces(serviceInterfaces).build()));
         mvc.perform(get(INTERFACES_URL).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
