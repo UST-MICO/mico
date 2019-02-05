@@ -1,34 +1,30 @@
 package io.github.ust.mico.core.REST;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
-
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
+import io.github.ust.mico.core.GitHubCrawler;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDependency;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
-import io.github.ust.mico.core.GitHubCrawler;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDependency;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+
+@Slf4j
 @RestController
 @RequestMapping(value = "/services", produces = MediaTypes.HAL_JSON_VALUE)
 public class ServiceController {
@@ -47,7 +43,7 @@ public class ServiceController {
     @GetMapping()
     public ResponseEntity<Resources<Resource<MicoService>>> getServiceList() {
         List<MicoService> services = serviceRepository.findAll(2);
-        List<Resource<MicoService>> serviceResources = getServiceResourcesList(services);
+        List<Resource<MicoService>> serviceResources = getServiceResourcesList((List<MicoService>) services);
         return ResponseEntity.ok(
             new Resources<>(serviceResources,
                 linkTo(methodOn(ServiceController.class).getServiceList()).withSelfRel()));
@@ -59,7 +55,7 @@ public class ServiceController {
                                                                                  @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         return serviceOpt.map(service -> new Resource<>(service, getServiceLinks(service)))
-            .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+            .map(ResponseEntity::ok).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Service '" + shortName + "' '" + version + "' links not found!"));
     }
 
     @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
@@ -71,7 +67,7 @@ public class ServiceController {
         } else {
             Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
             if (!serviceOpt.isPresent()) {
-                return ResponseEntity.notFound().build();
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service '" + shortName + "' '" + version + "' was not found!");
             } else {
                 service.setId(serviceOpt.get().getId());
                 MicoService updatedService = serviceRepository.save(service);
@@ -84,10 +80,10 @@ public class ServiceController {
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     public ResponseEntity<Void> deleteService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                        @PathVariable(PATH_VARIABLE_VERSION) String version) {
+                                              @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (!serviceOpt.isPresent()) {
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service '" + shortName + "' '" + version + "' was not found!");
         }
         MicoService service = serviceOpt.get();
 
@@ -99,7 +95,7 @@ public class ServiceController {
         }
     }
 
-    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/")
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
     public ResponseEntity<Resources<Resource<MicoService>>> getVersionsOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
         List<MicoService> services = serviceRepository.findByShortName(shortName);
         List<Resource<MicoService>> serviceResources = getServiceResourcesList(services);
@@ -109,12 +105,12 @@ public class ServiceController {
     }
 
     //TODO: Ambiguous endpoint with /services/shortName
-    //@GetMapping("/{" + PATH_VARIABLE_ID + "}/")
+    //@GetMapping("/{" + PATH_VARIABLE_ID + "}")
     public ResponseEntity<Resource<MicoService>> getServiceById(@PathVariable(PATH_VARIABLE_ID) Long id) {
         Optional<MicoService> serviceOpt = serviceRepository.findById(id);
 
         return serviceOpt.map(service -> new Resource<>(service, getServiceLinks(service)))
-            .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+            .map(ResponseEntity::ok).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Service by '" + id + "' was not found!"));
     }
 
     @PostMapping
@@ -139,14 +135,14 @@ public class ServiceController {
                                                                          @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (!serviceOpt.isPresent()) {
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service '" + shortName + "' '" + version + "' was not found!");
         }
 
         MicoService service = serviceOpt.get();
 
         List<MicoServiceDependency> dependees = service.getDependencies();
         if (dependees == null) {
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Service dependees shouldn't be null");
         }
 
         LinkedList<MicoService> services = getDependentServices(dependees);
@@ -158,39 +154,63 @@ public class ServiceController {
                 linkTo(methodOn(ServiceController.class).getDependees(shortName, version)).withSelfRel()));
     }
 
+    /**
+     * Create a new dependency edge between the Service and the dependee service.
+     */
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
     public ResponseEntity<Resource<MicoService>> createNewDependee(@RequestBody MicoServiceDependency newServiceDependee,
                                                                    @PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                    @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (!serviceOpt.isPresent()) {
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service '" + shortName + "' '" + version + "' was not found!");
         }
-        MicoService service = serviceOpt.get();
-
 
         Optional<MicoService> serviceDependeeOpt = serviceRepository.findByShortNameAndVersion(newServiceDependee.getDependedService().getShortName(),
-            newServiceDependee.getDependedService().getVersion().toString());
+            newServiceDependee.getDependedService().getVersion());
 
         if (!serviceDependeeOpt.isPresent()) {
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The dependee service was not found!");
         }
 
-        newServiceDependee.setService(service);
-        newServiceDependee.setDependedService(serviceDependeeOpt.get());
+        Optional<ResponseEntity<Resource<MicoService>>> fastResponse = serviceOpt.map(service -> {
+            // check if dependency already set
+            String localShortName = newServiceDependee.getDependedService().getShortName();
+            String localVersion = newServiceDependee.getDependedService().getVersion();
+            Boolean match = (service.getDependencies() != null) && service.getDependencies().stream().anyMatch(dependency -> {
+                return dependency.getDependedService().getShortName().equals(localShortName)
+                    && dependency.getDependedService().getVersion().equals(localVersion);
+            });
+            if (match) {
+                return ResponseEntity
+                    .created(linkTo(methodOn(ServiceController.class).getServiceById(service.getId())).toUri())
+                    .body(new Resource<>(service, getServiceLinks(service)));
+            }
+            return null;
+        });
 
-        List<MicoServiceDependency> dependees = service.getDependencies();
-        if (dependees == null) {
-            dependees = new LinkedList<>();
+        if (fastResponse.isPresent()) {
+            return fastResponse.get();
         }
-        dependees.add(newServiceDependee);
-        service.setDependencies(dependees);
 
-        MicoService savedService = serviceRepository.save(service);
+        final MicoServiceDependency processedServiceDependee = newServiceDependee.toBuilder()
+            .dependedService(serviceDependeeOpt.get())
+            .service(serviceOpt.get())
+            .build();
+
+        log.info("New dependency for MicoService '{}' '{}' -[:DEPENDS_ON]-> '{}' '{}'", shortName, version,
+            processedServiceDependee.getDependedService().getShortName(),
+            processedServiceDependee.getDependedService().getVersion());
+
+        serviceOpt = serviceOpt.map(service -> {
+            return service.toBuilder().dependency(processedServiceDependee).build();
+        });
+
+        MicoService savedService = serviceRepository.save(serviceOpt.get());
 
         return ResponseEntity
             .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
-            .body(new Resource<>(service, getServiceLinks(service)));
+            .body(new Resource<>(savedService, getServiceLinks(savedService)));
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
@@ -198,7 +218,7 @@ public class ServiceController {
                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (!serviceOpt.isPresent()) {
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service '" + shortName + "' '" + version + "' was not found!");
         }
         MicoService service = serviceOpt.get();
         List<MicoServiceDependency> dependees = new LinkedList<>();
@@ -219,13 +239,13 @@ public class ServiceController {
                                                                 @PathVariable(PATH_DELETE_VERSION) String versionToDelete) {
         Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (!serviceOpt.isPresent()) {
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service '" + shortName + "' '" + version + "' was not found!");
         }
         MicoService service = serviceOpt.get();
 
         Optional<MicoService> serviceOptToDelete = serviceRepository.findByShortNameAndVersion(shortNameToDelete, versionToDelete);
         if (!serviceOptToDelete.isPresent()) {
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service dependee '" + shortNameToDelete + "' '" + versionToDelete + "'  was not found!");
         }
         MicoService serviceToDelete = serviceOptToDelete.get();
 
@@ -253,7 +273,7 @@ public class ServiceController {
                                                                          @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (!serviceOpt.isPresent()) {
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service '" + shortName + "' '" + version + "' was not found!");
         }
         MicoService serviceToLookFor = serviceOpt.get();
 
@@ -267,6 +287,7 @@ public class ServiceController {
 
     @PostMapping("/" + PATH_VARIABLE_IMPORT + "/" + PATH_VARIABLE_GITHUB)
     public ResponseEntity<Resource<MicoService>> importMicoServiceFromGitHub(@RequestBody String url) {
+        log.debug("Start importing MicoService from URL '{}'", url);
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
         MicoService newService = crawler.crawlGitHubRepoLatestRelease(url);

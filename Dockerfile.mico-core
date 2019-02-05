@@ -1,14 +1,20 @@
 FROM maven:3-jdk-8 as builder
+WORKDIR /workspace
 
 #Cache dependencies
-COPY pom.xml app/
-COPY mico-core/pom.xml app/mico-core/pom.xml
-RUN mvn -B -f app/mico-core/pom.xml dependency:go-offline
+COPY pom.xml .
+COPY mico-core/pom.xml mico-core/pom.xml
+RUN mvn -B -f mico-core/pom.xml dependency:go-offline
 
-COPY . app/
-RUN mvn -B -f app/mico-core/pom.xml clean package -Dmaven.test.skip=true
+COPY mico-core/src mico-core/src
+RUN mvn -B -f mico-core/pom.xml clean package -Dmaven.test.skip=true
+RUN mkdir -p mico-core/target/dependency && (cd mico-core/target/dependency; jar -xf ../*.jar)
 
-FROM openjdk:8-alpine
+FROM openjdk:8-jre-alpine
+ENV JAVA_OPTS="-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap"
 VOLUME /tmp
-COPY --from=builder app/mico-core/target/mico-core*.jar mico.jar
-ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/mico.jar"]
+ARG DEPENDENCY=/workspace/mico-core/target/dependency
+COPY --from=builder ${DEPENDENCY}/BOOT-INF/lib /app/lib
+COPY --from=builder ${DEPENDENCY}/META-INF /app/META-INF
+COPY --from=builder ${DEPENDENCY}/BOOT-INF/classes /app
+ENTRYPOINT ["java","-cp","app:app/lib/*","-Djava.security.egd=file:/dev/./urandom","io.github.ust.mico.core.MicoCoreApplication"]

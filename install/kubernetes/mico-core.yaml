@@ -1,5 +1,15 @@
 ---
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mico-core
+  namespace: mico-system
+data:
+  application.properties: |-
+    spring.data.neo4j.uri=bolt://neo4j.mico-system:7687
+    kubernetes.prometheus.uri=http://prometheus.monitoring:9090
+---
+apiVersion: v1
 kind: Service
 metadata:
   name: mico-core
@@ -33,10 +43,5 @@ spec:
       - name: mico-core
         image: ustmico/mico-core
         imagePullPolicy: Always
-        env:
-          - name: NEO4J_BOLT_URI
-            value: 'bolt://neo4j.mico-system:7687'
-          - name: PROMETHEUS_URI
-            value: 'http://prometheus.monitoring:9090'
         ports:
         - containerPort: 8080

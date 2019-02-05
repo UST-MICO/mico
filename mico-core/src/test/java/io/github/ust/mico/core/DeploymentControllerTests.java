@@ -30,6 +30,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -50,6 +52,8 @@ import io.github.ust.mico.core.persistence.MicoServiceRepository;
 @RunWith(SpringRunner.class)
 @WebMvcTest(DeploymentController.class)
 @OverrideAutoConfiguration(enabled = true) //Needed to override our neo4j config
+@EnableAutoConfiguration
+@EnableConfigurationProperties(value = { CorsConfig.class })
 public class DeploymentControllerTests {
 
     private static final String BASE_PATH = "/applications";

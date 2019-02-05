@@ -22,11 +22,15 @@ if [ "$err" = true ]; then
     exit 1
 fi
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+echo "Change directory to '$DIR'"
+cd $DIR
+
 # Create MICO namespaces
 kubectl apply -f mico-namespaces.yaml
 
 # Create ClusterRoleBinding for mico-system
-kubectl apply -f fabric8-rbac.yaml
+kubectl apply -f mico-cluster-admin.yaml
 
 # Prepare MICO build bot namespace
 envsubst < mico-build-bot.yaml | kubectl apply -f -

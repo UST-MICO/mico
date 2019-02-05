@@ -1,9 +1,7 @@
 package io.github.ust.mico.core;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -12,13 +10,12 @@ import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-
-// TODO Only ignored because of Neo4j error
-@Ignore
 public class GitHubCrawlerTests extends Neo4jTestClass {
 
     private static final String REPO_URI_API = "https://api.github.com/repos/octokit/octokit.rb";
     private static final String REPO_URI_HTML = "https://github.com/octokit/octokit.rb";
+    private static final String REPO_URI_WITH_SLASH = "https://github.com/octokit/octokit.rb/";
+    private static final String REPO_URI_WITH_SPACES = " https://github.com/octokit/octokit.rb ";
     private static final String RELEASE = "v4.12.0";
 
     @Test
@@ -27,5 +24,7 @@ public class GitHubCrawlerTests extends Neo4jTestClass {
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
 
         assertEquals(REPO_URI_API, crawler.makeUriToMatchGitHubApi(REPO_URI_HTML));
+        assertEquals(REPO_URI_API, crawler.makeUriToMatchGitHubApi(REPO_URI_WITH_SLASH));
+        assertEquals(REPO_URI_API, crawler.makeUriToMatchGitHubApi(REPO_URI_WITH_SPACES));
     }
 }

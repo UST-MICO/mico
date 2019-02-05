@@ -28,9 +28,6 @@ import io.github.ust.mico.core.util.CollectionUtils;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-
-// TODO Only ignored because of Neo4j error
-@Ignore
 public class MicoCoreApplicationTests extends Neo4jTestClass {
 
     private static final String TEST_SHORT_NAME = "Test";
@@ -151,14 +148,14 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
 
         serviceRepository.save(service1);
 
-        Optional<MicoService> serviceTestOpt = serviceRepository.findByShortNameAndVersion(TEST_SHORT_NAME, TEST_VERSION, 2);
+        Optional<MicoService> serviceTestOpt = serviceRepository.findByShortNameAndVersion(TEST_SHORT_NAME, TEST_VERSION);
         MicoService serviceTest = serviceTestOpt.get();
         checkDefaultService(serviceTest);
         List<MicoServiceDependency> dependsOnList = serviceTest.getDependencies();
         assertEquals(1, dependsOnList.size());
         MicoServiceDependency dependency1 = dependsOnList.get(0);
-        assertEquals("1.0.0", dependency1.getMinVersion().toString());
-        assertEquals("2.0.0", dependency1.getMaxVersion().toString());
+        assertEquals("1.0.0", dependency1.getMinVersion());
+        assertEquals("2.0.0", dependency1.getMaxVersion());
 
         MicoService testService2 = dependency1.getDependedService();
         assertNotNull(testService2);
@@ -189,9 +186,9 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
                 .setVersion("1.0.0");
         applicationRepository.save(application3);
 
-        MicoApplication storedApplication1 = applicationRepository.findByShortNameAndVersion("App1", "1.0.0", 2).get();
-        MicoApplication storedApplication2 = applicationRepository.findByShortNameAndVersion("App2", "1.0.0", 2).get();
-        MicoApplication storedApplication3 = applicationRepository.findByShortNameAndVersion("App3", "1.0.0", 2).get();
+        MicoApplication storedApplication1 = applicationRepository.findByShortNameAndVersion("App1", "1.0.0").get();
+        MicoApplication storedApplication2 = applicationRepository.findByShortNameAndVersion("App2", "1.0.0").get();
+        MicoApplication storedApplication3 = applicationRepository.findByShortNameAndVersion("App3", "1.0.0").get();
 
         assertNotNull(storedApplication1);
         assertEquals("App1", storedApplication1.getShortName());

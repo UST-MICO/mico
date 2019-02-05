@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceCrawlingOrigin;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 public class GitHubCrawler {
 
     private static final String RELEASES = "releases";
@@ -28,6 +29,7 @@ public class GitHubCrawler {
     }
 
     private MicoService crawlGitHubRepo(String uriBasicInfo, String uriReleaseInfo) {
+        log.debug("Crawl GitHub basic information from '{}' and release information from '{}'", uriBasicInfo, uriReleaseInfo);
         ResponseEntity<String> responseBasicInfo = restTemplate.getForEntity(uriBasicInfo, String.class);
         ResponseEntity<String> responseReleaseInfo = restTemplate.getForEntity(uriReleaseInfo, String.class);
         ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -68,6 +70,7 @@ public class GitHubCrawler {
         uri = makeUriToMatchGitHubApi(uri);
         String uriBasicInfo = uri;
         String uriReleases = uri + "/" + RELEASES;
+        log.debug("Crawl GitHub basic information from '{}' and release information from '{}'", uriBasicInfo, uriReleases);
         ResponseEntity<String> responseBasicInfo = restTemplate.getForEntity(uriBasicInfo, String.class);
         ResponseEntity<String> responseReleaseInfo = restTemplate.getForEntity(uriReleases, String.class); //TODO: If LINK(next) exists in header, we need to do another Request
         ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -103,6 +106,10 @@ public class GitHubCrawler {
     }
 
     public String makeUriToMatchGitHubApi(String uri) {
+        uri = uri.trim();
+        if (uri.endsWith("/")) {
+            uri = uri.substring(0, uri.length() - 1);
+        }
         return uri.replace(GITHUB_HTML_URL, GITHUB_API_URL);
     }
 

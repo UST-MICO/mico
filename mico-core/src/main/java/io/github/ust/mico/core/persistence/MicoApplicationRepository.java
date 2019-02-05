@@ -13,11 +13,14 @@ public interface MicoApplicationRepository extends Neo4jRepository<MicoApplicati
     
     @Override
     List<MicoApplication> findAll();
+    
+    @Override
+    List<MicoApplication> findAll(@Depth int depth);
 
-    Optional<MicoApplication> findByShortNameAndVersion(String shortName, String version, @Depth int depth);
-
-    Optional<MicoApplication> findByShortNameAndVersion(String shortName, String version);
-
+    @Depth(3)
     List<MicoApplication> findByShortName(@Param("shortName") String shortName);
+
+    @Depth(3)
+    Optional<MicoApplication> findByShortNameAndVersion(String shortName, String version);
     
 }

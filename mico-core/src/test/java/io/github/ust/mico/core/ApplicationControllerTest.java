@@ -14,26 +14,34 @@ import static io.github.ust.mico.core.TestConstants.VERSION;
 import static io.github.ust.mico.core.TestConstants.VERSION_1_0_1;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Optional;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -62,6 +70,9 @@ import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 @RunWith(SpringRunner.class)
 @WebMvcTest(ApplicationController.class)
 @OverrideAutoConfiguration(enabled = true) //Needed to override our neo4j config
+@EnableAutoConfiguration
+@EnableConfigurationProperties(value = { CorsConfig.class })
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class ApplicationControllerTest {
 
     @Rule
@@ -115,6 +126,8 @@ public class ApplicationControllerTest {
     @Autowired
     private ObjectMapper mapper;
 
+    @Autowired
+    CorsConfig corsConfig;
 
     @Test
     public void getAllApplications() throws Exception {
@@ -149,6 +162,29 @@ public class ApplicationControllerTest {
                 .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/applications/" + SHORT_NAME + "/" + VERSION)))
                 .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "applications.href", is("http://localhost/applications")))
                 .andReturn();
+    }
+
+    @Test
+    public void getApplicationByShortName() throws Exception {
+        given(applicationRepository.findByShortName(SHORT_NAME)).willReturn(Collections.singletonList(new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION)));
+
+        mvc.perform(get("/applications/" + SHORT_NAME + "/").accept(MediaTypes.HAL_JSON_VALUE))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andExpect(jsonPath(APPLICATION_LIST + "[?(" + SHORT_NAME_MATCHER + "&& @.version=='" + VERSION + "')]", hasSize(1)))
+            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/applications/" + SHORT_NAME)))
+            .andReturn();
+    }
+
+    @Test
+    public void getApplicationByShortNameWithTrailingSlash() throws Exception {
+        given(applicationRepository.findByShortName(SHORT_NAME)).willReturn(Collections.singletonList(new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION)));
+
+        mvc.perform(get("/applications/" + SHORT_NAME + "/").accept(MediaTypes.HAL_JSON_VALUE))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andReturn();
     }
 
     @Test
@@ -195,6 +231,23 @@ public class ApplicationControllerTest {
                 .andExpect(jsonPath(VERSION_PATH, is(updatedApplication.getVersion())));
 
         resultUpdate.andExpect(status().isOk());
+    }
+
+    @Test
+    public void deleteApplication() throws Exception {
+        MicoApplication app = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
+        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(app));
+
+        ArgumentCaptor<MicoApplication> appCaptor = ArgumentCaptor.forClass(MicoApplication.class);
+
+        mvc.perform(delete("/applications/" + SHORT_NAME + "/" + VERSION.toString()).accept(MediaTypes.HAL_JSON_VALUE))
+                .andDo(print())
+                .andExpect(status().isNoContent())
+                .andReturn();
+
+        verify(applicationRepository).delete(appCaptor.capture());
+        assertEquals("Wrong short name.", app.getShortName(), appCaptor.getValue().getShortName());
+        assertEquals("Wrong version.", app.getVersion(), appCaptor.getValue().getVersion());
     }
 
     @Test
@@ -252,6 +305,21 @@ public class ApplicationControllerTest {
             .andExpect(jsonPath(POD_INFO_METRICS_MEMORY_USAGE, is(memoryUsage)))
             .andExpect(jsonPath(POD_INFO_METRICS_CPU_LOAD, is(cpuLoad)))
             .andExpect(jsonPath(POD_INFO_METRICS_AVAILABLE, is(true)));
+    }
+
+    @Test
+    public void deleteApplicationCorsCheckForbidden() throws Exception {
+        mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION).header("Origin", "http://notAllowedOrigin.com"))
+            .andDo(print())
+            .andExpect(status().isForbidden())
+            .andExpect(content().string(is("Invalid CORS request")));
+    }
+
+    @Test
+    public void deleteApplicationCorsCheckAllowed() throws Exception {
+        mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION).header("Origin", corsConfig.getAllowedOrigins().get(0)))
+            .andDo(print())
+            .andExpect(status().isNoContent());
     }
 
     private ResponseEntity getPrometheusResponseEntity(int value) {

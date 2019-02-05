@@ -15,21 +15,28 @@ public interface MicoServiceRepository extends Neo4jRepository<MicoService, Long
 
     @Override
     List<MicoService> findAll();
-    
+
     @Override
     List<MicoService> findAll(@Depth int depth);
 
+    @Depth(2)
     List<MicoService> findByShortName(@Param("shortName") String shortName);
 
-    List<MicoService> findByShortName(@Param("shortName") String shortName, @Depth int depth);
-
+    @Depth(2)
     Optional<MicoService> findByShortNameAndVersion(String shortName, String version);
 
-    Optional<MicoService> findByShortNameAndVersion(String shortName, String version, @Depth int depth);
-
-    @Query("MATCH (service:MicoService)-[:PROVIDES_INTERFACES]->(interface:MicoServiceInterface)-[:PROVIDES_PORTS]->(port:MicoServicePort) WHERE service.shortName = {shortName} AND service.version = {version} return COLLECT(port) AS ports")
-    List<MicoServiceInterface> findInterfacesOfService(@Param("shortName") String shortName, @Param("version") String version);
-
+    /**
+     * Find a specific service interface.
+     *
+     * The returned interface will NOT have ports mapped by the ogm.
+     * If you want to have a interface with mapped ports use the serviceInterface
+     * list in the corresponding MicoService object returned by findByShortNameAndVersion!
+     *
+     * @param serviceInterfaceName
+     * @param shortName
+     * @param version
+     * @return
+     */
     @Query("MATCH (service:MicoService)-[:PROVIDES_INTERFACES]->(interface:MicoServiceInterface)-[:PROVIDES_PORTS]->(port:MicoServicePort) WHERE service.shortName = {shortName} AND service.version = {version} AND interface.serviceInterfaceName = {serviceInterfaceName} return COLLECT(port) AS ports")
     Optional<MicoServiceInterface> findInterfaceOfServiceByName(@Param("serviceInterfaceName") String serviceInterfaceName, @Param("shortName") String shortName, @Param("version") String version);
 
