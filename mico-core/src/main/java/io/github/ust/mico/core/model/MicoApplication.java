@@ -81,7 +81,7 @@ public class MicoApplication {
     /**
      * The information necessary for deploying this application.
      */
-    private MicoApplicationDeploymentInfo deploymentInfo;
+    private MicoApplicationDeploymentInfo deploymentInfo = new MicoApplicationDeploymentInfo();
 
     /**
      * Human readable contact information for support purposes.

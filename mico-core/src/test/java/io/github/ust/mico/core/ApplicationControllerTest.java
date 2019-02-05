@@ -131,7 +131,7 @@ public class ApplicationControllerTest {
 
     @Test
     public void getAllApplications() throws Exception {
-        given(applicationRepository.findAll()).willReturn(
+        given(applicationRepository.findAll(3)).willReturn(
                 Arrays.asList(new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION_1_0_1),
                         new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION),
                         new MicoApplication().setShortName(SHORT_NAME_1).setVersion(VERSION)));
