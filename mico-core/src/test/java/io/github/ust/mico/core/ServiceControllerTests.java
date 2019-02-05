@@ -381,19 +381,20 @@ public class ServiceControllerTests {
                 MicoService.builder().shortName(SHORT_NAME).version(VERSION_1_0_1).build(),
                 MicoService.builder().shortName(SHORT_NAME).version(VERSION_1_0_2).build()));
 
-        mvc.perform(get("/services/"+SHORT_NAME+"/").accept(MediaTypes.HAL_JSON_VALUE))
+        mvc.perform(get("/services/" + SHORT_NAME + "/").accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
             .andExpect(jsonPath(SERVICE_LIST + "[*]", hasSize(3)))
-            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_MATCHER + " && " + VERSION_MATCHER +  ")]", hasSize(1)))
-            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_MATCHER + " && " + VERSION_1_0_1_MATCHER +  ")]", hasSize(1)))
-            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_MATCHER + " && " + VERSION_1_0_2_MATCHER +  ")]", hasSize(1)))
-            .andExpect(jsonPath(SELF_HREF, is(BASE_URL + SERVICES_PATH+"/"+SHORT_NAME+"/")))
+            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_MATCHER + " && " + VERSION_MATCHER + ")]", hasSize(1)))
+            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_MATCHER + " && " + VERSION_1_0_1_MATCHER + ")]", hasSize(1)))
+            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_MATCHER + " && " + VERSION_1_0_2_MATCHER + ")]", hasSize(1)))
+            .andExpect(jsonPath(SELF_HREF, is(BASE_URL + SERVICES_PATH + "/" + SHORT_NAME + "/")))
             .andReturn();
     }
+
     @Test
-    public void createNewDependee() throws Exception{
+    public void createNewDependee() throws Exception {
         MicoService service = MicoService.builder()
             .shortName(SHORT_NAME)
             .version(VERSION)
@@ -413,7 +414,7 @@ public class ServiceControllerTests {
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME_1, VERSION_1_0_1)).willReturn(Optional.of(service1));
         given(serviceRepository.save(any(MicoService.class))).willReturn(service);
 
-        final ResultActions result = mvc.perform(post(SERVICES_PATH+"/"+SHORT_NAME+"/"+VERSION+DEPENDEES_SUBPATH)
+        final ResultActions result = mvc.perform(post(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + DEPENDEES_SUBPATH)
             .content(mapper.writeValueAsBytes(dependency1))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print());
@@ -422,7 +423,7 @@ public class ServiceControllerTests {
     }
 
     @Test
-    public void getDependees() throws Exception{
+    public void getDependees() throws Exception {
         MicoService service1 = MicoService.builder()
             .shortName(SHORT_NAME_1)
             .version(VERSION_1_0_1)
@@ -440,22 +441,24 @@ public class ServiceControllerTests {
             .build();
         MicoServiceDependency dependency1 = MicoServiceDependency.builder().service(service).dependedService(service1).build();
         MicoServiceDependency dependency2 = MicoServiceDependency.builder().service(service).dependedService(service2).build();
-        service.setDependencies(Arrays.asList(dependency1,dependency2));
+        service.setDependencies(Arrays.asList(dependency1, dependency2));
 
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME_1, VERSION_1_0_1)).willReturn(Optional.of(service1));
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME_2, VERSION_1_0_2)).willReturn(Optional.of(service2));
 
 
-        mvc.perform(get("/services/"+SHORT_NAME+"/"+VERSION+DEPENDEES_SUBPATH).accept(MediaTypes.HAL_JSON_VALUE))
+        mvc.perform(get("/services/" + SHORT_NAME + "/" + VERSION + DEPENDEES_SUBPATH).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andExpect(jsonPath(SERVICE_LIST + "[*]", hasSize(3)))
-            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_MATCHER + " && " + VERSION_MATCHER +  ")]", hasSize(1)))
-            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_MATCHER + " && " + VERSION_1_0_1_MATCHER +  ")]", hasSize(1)))
-            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_MATCHER + " && " + VERSION_1_0_2_MATCHER +  ")]", hasSize(1)))
-            .andExpect(jsonPath(SELF_HREF, is(BASE_URL + SERVICES_PATH+"/"+SHORT_NAME+"/")))
+            .andExpect(jsonPath(SERVICE_LIST + "[*]", hasSize(2)))
+            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_1_MATCHER + " && " + VERSION_1_0_1_MATCHER + ")]", hasSize(1)))
+            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_2_MATCHER + " && " + VERSION_1_0_2_MATCHER + ")]", hasSize(1)))
+            .andExpect(jsonPath(SELF_HREF, is(BASE_URL + SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + DEPENDEES_SUBPATH)))
             .andReturn();
     }
+
     @Test
     public void createServiceViaGitHubCrawler() {
         //TODO: Implementation
