@@ -1,15 +1,5 @@
 package io.github.ust.mico.core.REST;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
-
-import java.net.URI;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.Service;
@@ -20,11 +10,11 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.github.ust.mico.core.ClusterAwarenessFabric8;
 import io.github.ust.mico.core.MicoKubernetesConfig;
 import io.github.ust.mico.core.PrometheusConfig;
-
-import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoApplication.MicoApplicationBuilder;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,23 +24,21 @@ import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-
-import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.net.URI;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping(value = "/applications", produces = MediaTypes.HAL_JSON_VALUE)
@@ -97,8 +85,8 @@ public class ApplicationController {
         List<Resource<MicoApplication>> applicationResources = getApplicationResourceList(allApplications);
 
         return ResponseEntity.ok(
-                new Resources<>(applicationResources,
-                        linkTo(methodOn(ApplicationController.class).getAllApplications()).withSelfRel()));
+            new Resources<>(applicationResources,
+                linkTo(methodOn(ApplicationController.class).getAllApplications()).withSelfRel()));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
@@ -109,17 +97,17 @@ public class ApplicationController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' was not found!");
         }
         return applicationOptional.map(application -> new Resource<>(application, getApplicationLinks(application)))
-                .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+            .map(ResponseEntity::ok).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' links not found!"));
     }
 
     private List<Resource<MicoApplication>> getApplicationResourceList(List<MicoApplication> applications) {
         return applications.stream().map(application -> new Resource<>(application, getApplicationLinks(application)))
-                .collect(Collectors.toList());
+            .collect(Collectors.toList());
     }
 
     private Iterable<Link> getApplicationLinks(MicoApplication application) {
         LinkedList<Link> links = new LinkedList<>();
-        links.add(linkTo(methodOn(ApplicationController.class).getApplicationByShortNameAndVersion(application.getShortName(), application.getVersion().toString())).withSelfRel());
+        links.add(linkTo(methodOn(ApplicationController.class).getApplicationByShortNameAndVersion(application.getShortName(), application.getVersion())).withSelfRel());
         links.add(linkTo(methodOn(ApplicationController.class).getAllApplications()).withRel("applications"));
         return links;
     }
@@ -127,7 +115,7 @@ public class ApplicationController {
     @PostMapping
     public ResponseEntity<Resource<MicoApplication>> createApplication(@RequestBody MicoApplication newApplication) {
         Optional<MicoApplication> applicationOptional = applicationRepository.
-                findByShortNameAndVersion(newApplication.getShortName(), newApplication.getVersion());
+            findByShortNameAndVersion(newApplication.getShortName(), newApplication.getVersion());
         if (applicationOptional.isPresent()) {
             return ResponseEntity.badRequest().build();
         }
@@ -151,9 +139,9 @@ public class ApplicationController {
         MicoApplication savedApplication = applicationRepository.save(appBuilder.build());
 
         return ResponseEntity
-                .created(linkTo(methodOn(ApplicationController.class)
-                        .getApplicationByShortNameAndVersion(savedApplication.getShortName(), savedApplication.getVersion())).toUri())
-                .body(new Resource<>(savedApplication, getApplicationLinks(savedApplication)));
+            .created(linkTo(methodOn(ApplicationController.class)
+                .getApplicationByShortNameAndVersion(savedApplication.getShortName(), savedApplication.getVersion())).toUri())
+            .body(new Resource<>(savedApplication, getApplicationLinks(savedApplication)));
     }
 
     @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
@@ -243,7 +231,7 @@ public class ApplicationController {
                         "There are not at least " + MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT + " service interface");
                 }
             } else {
-                if(deploymentList.getItems().isEmpty()) {
+                if (deploymentList.getItems().isEmpty()) {
                     throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                         "There are zero deployments of the application '" + shortName + "' in version '" + version + "'");
                 } else {
@@ -270,7 +258,7 @@ public class ApplicationController {
             uiPodMetrics.setAvailable(true);
         } catch (PrometheusRequestFailedException | ResourceAccessException e) {
             uiPodMetrics.setAvailable(false);
-            logger.error(e.getMessage(),e);
+            logger.error(e.getMessage(), e);
         }
         uiPodMetrics.setMemoryUsage(memoryUsage);
         uiPodMetrics.setCpuLoad(cpuLoad);
@@ -323,8 +311,8 @@ public class ApplicationController {
 
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/services")
     public ResponseEntity<Void> addServiceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
-                                                  @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
-                                                  @RequestBody MicoService serviceFromBody) {
+                                                        @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
+                                                        @RequestBody MicoService serviceFromBody) {
         Optional<MicoService> serviceOptional = serviceRepository.findByShortNameAndVersion(serviceFromBody.getShortName(), serviceFromBody.getVersion());
         Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(applicationShortName, applicationVersion);
         if (serviceOptional.isPresent() && applicationOptional.isPresent()) {

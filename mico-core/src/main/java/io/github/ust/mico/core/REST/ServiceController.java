@@ -55,7 +55,7 @@ public class ServiceController {
                                                                                  @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         return serviceOpt.map(service -> new Resource<>(service, getServiceLinks(service)))
-            .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+            .map(ResponseEntity::ok).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Service '" + shortName + "' '" + version + "' links not found!"));
     }
 
     @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
@@ -110,7 +110,7 @@ public class ServiceController {
         Optional<MicoService> serviceOpt = serviceRepository.findById(id);
 
         return serviceOpt.map(service -> new Resource<>(service, getServiceLinks(service)))
-            .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+            .map(ResponseEntity::ok).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Service by '" + id + "' was not found!"));
     }
 
     @PostMapping
@@ -199,8 +199,8 @@ public class ServiceController {
             .build();
 
         log.info("New dependency for MicoService '{}' '{}' -[:DEPENDS_ON]-> '{}' '{}'", shortName, version,
-                processedServiceDependee.getDependedService().getShortName(),
-                processedServiceDependee.getDependedService().getVersion());
+            processedServiceDependee.getDependedService().getShortName(),
+            processedServiceDependee.getDependedService().getVersion());
 
         serviceOpt = serviceOpt.map(service -> {
             return service.toBuilder().dependency(processedServiceDependee).build();

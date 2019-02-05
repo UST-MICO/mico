@@ -1,21 +1,5 @@
 package io.github.ust.mico.core.REST;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
-
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.MediaTypes;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import io.github.ust.mico.core.ImageBuildException;
 import io.github.ust.mico.core.NotInitializedException;
 import io.github.ust.mico.core.concurrency.MicoCoreBackgroundTaskFactory;
@@ -24,9 +8,25 @@ import io.github.ust.mico.core.imagebuilder.buildtypes.Build;
 import io.github.ust.mico.core.mapping.MicoKubernetesClient;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 @Slf4j
 @RestController
@@ -63,8 +63,7 @@ public class DeploymentController {
         Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
 
         if (!micoApplicationOptional.isPresent()) {
-            log.error("MICO application with short name '{}' and version '{}' does not exist", shortName, version);
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' was not found!");
         }
         MicoApplication micoApplication = micoApplicationOptional.get();
 
@@ -113,7 +112,7 @@ public class DeploymentController {
 
         // Kubernetes Deployment
         MicoServiceDeploymentInfo micoServiceDeploymentInfo = MicoServiceDeploymentInfo.builder().build();
-        if(micoApplication.getDeploymentInfo() != null &&
+        if (micoApplication.getDeploymentInfo() != null &&
             micoApplication.getDeploymentInfo().getServiceDeploymentInfos() != null) {
             micoServiceDeploymentInfo = micoApplication.getDeploymentInfo().getServiceDeploymentInfos().get(micoService.getId());
         }
