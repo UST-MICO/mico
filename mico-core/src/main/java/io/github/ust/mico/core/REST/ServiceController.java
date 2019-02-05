@@ -95,7 +95,7 @@ public class ServiceController {
         }
     }
 
-    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/")
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
     public ResponseEntity<Resources<Resource<MicoService>>> getVersionsOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
         List<MicoService> services = serviceRepository.findByShortName(shortName);
         List<Resource<MicoService>> serviceResources = getServiceResourcesList(services);
@@ -105,7 +105,7 @@ public class ServiceController {
     }
 
     //TODO: Ambiguous endpoint with /services/shortName
-    //@GetMapping("/{" + PATH_VARIABLE_ID + "}/")
+    //@GetMapping("/{" + PATH_VARIABLE_ID + "}")
     public ResponseEntity<Resource<MicoService>> getServiceById(@PathVariable(PATH_VARIABLE_ID) Long id) {
         Optional<MicoService> serviceOpt = serviceRepository.findById(id);
 
