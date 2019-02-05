@@ -7,7 +7,7 @@ metadata:
   labels:
     run: mico-admin
 spec:
-  loadBalancerIP: ${MICO_PUBLIC_IP}
+  ${MICO_PUBLIC_IP}
   type: LoadBalancer
   ports:
   - port: 80

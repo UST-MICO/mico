@@ -1,26 +1,21 @@
 #!/bin/bash
 
-# Check if all required environment variable are set
-err=false
-
-if [[ -z "${MICO_PUBLIC_IP}" ]]; then
-    echo "Environment variable MICO_PUBLIC_IP is not set."
-    err=true
+# Read in public IP for MICO, if none is provided don't set the field loadBalancerIP
+echo "Please provide a public IP address for MICO. Leave blank if you don't want so set an IP:"
+read ip
+if ! [ -z "$ip" ]; then
+    export MICO_PUBLIC_IP="loadBalancerIP: $ip"
 fi
 
-if [[ -z "${DOCKERHUB_USERNAME_BASE64}" ]]; then
-    echo "Environment variable DOCKERHUB_USERNAME_BASE64 is not set."
-    err=true
-fi
+# Read in DockerHub username
+echo "Please provide the base64 encoded user name for DockerHub:"
+read uname
+export DOCKERHUB_USERNAME_BASE64=$uname
 
-if [[ -z "${DOCKERHUB_PASSWORD_BASE64}" ]]; then
-    echo "Environment variable DOCKERHUB_PASSWORD_BASE64 is not set."
-    err=true
-fi
-
-if [ "$err" = true ]; then
-    exit 1
-fi
+# Read in DockerHub password
+echo "Please provide the base64 enoded password for DockerHub:"
+read pw
+export DOCKERHUB_PASSWORD_BASE64=$pw
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 echo "Change directory to '$DIR'"
