@@ -21,7 +21,6 @@ import io.github.ust.mico.core.model.MicoServiceCrawlingOrigin;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.model.MicoServicePort;
-import io.github.ust.mico.core.model.MicoVersion;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.util.CollectionUtils;
@@ -143,8 +142,8 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
         service1.setDependencies(Collections.singletonList(new MicoServiceDependency()
                 .setService(service1)
                 .setDependedService(service2)
-                .setMinVersion(MicoVersion.forIntegers(1, 0, 0))
-                .setMaxVersion(MicoVersion.forIntegers(2, 0, 0))));
+                .setMinVersion("1.0.0")
+                .setMaxVersion("2.0.0")));
 
         serviceRepository.save(service1);
 
