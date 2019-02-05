@@ -5,7 +5,35 @@ import static io.github.ust.mico.core.JsonPathBuilder.LINKS;
 import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
 import static io.github.ust.mico.core.JsonPathBuilder.SELF;
 import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
-import static io.github.ust.mico.core.TestConstants.*;
+import static io.github.ust.mico.core.TestConstants.BASE_URL;
+import static io.github.ust.mico.core.TestConstants.DEPENDEES_SUBPATH;
+import static io.github.ust.mico.core.TestConstants.DEPENDERS_SUBPATH;
+import static io.github.ust.mico.core.TestConstants.DESCRIPTION;
+import static io.github.ust.mico.core.TestConstants.DESCRIPTION_1;
+import static io.github.ust.mico.core.TestConstants.DESCRIPTION_1_MATCHER;
+import static io.github.ust.mico.core.TestConstants.DESCRIPTION_2;
+import static io.github.ust.mico.core.TestConstants.DESCRIPTION_2_MATCHER;
+import static io.github.ust.mico.core.TestConstants.DESCRIPTION_3;
+import static io.github.ust.mico.core.TestConstants.DESCRIPTION_3_MATCHER;
+import static io.github.ust.mico.core.TestConstants.ID;
+import static io.github.ust.mico.core.TestConstants.ID_1;
+import static io.github.ust.mico.core.TestConstants.SERVICES_PATH;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1_MATCHER;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_2;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_2_MATCHER;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_3;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_3_MATCHER;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_MATCHER;
+import static io.github.ust.mico.core.TestConstants.VERSION;
+import static io.github.ust.mico.core.TestConstants.VERSION_1_0_1;
+import static io.github.ust.mico.core.TestConstants.VERSION_1_0_1_MATCHER;
+import static io.github.ust.mico.core.TestConstants.VERSION_1_0_2;
+import static io.github.ust.mico.core.TestConstants.VERSION_1_0_2_MATCHER;
+import static io.github.ust.mico.core.TestConstants.VERSION_1_0_3;
+import static io.github.ust.mico.core.TestConstants.VERSION_1_0_3_MATCHER;
+import static io.github.ust.mico.core.TestConstants.VERSION_MATCHER;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
@@ -374,9 +402,9 @@ public class ServiceControllerTests {
     public void getVersionsOfService() throws Exception {
         given(serviceRepository.findByShortName(SHORT_NAME)).willReturn(
             Arrays.asList(
-                MicoService.builder().shortName(SHORT_NAME).version(VERSION).build(),
-                MicoService.builder().shortName(SHORT_NAME).version(VERSION_1_0_1).build(),
-                MicoService.builder().shortName(SHORT_NAME).version(VERSION_1_0_2).build()));
+                new MicoService().setShortName(SHORT_NAME).setVersion(VERSION),
+                new MicoService().setShortName(SHORT_NAME).setVersion(VERSION_1_0_1),
+                new MicoService().setShortName(SHORT_NAME).setVersion(VERSION_1_0_2)));
 
         mvc.perform(get("/services/" + SHORT_NAME + "/").accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
@@ -392,18 +420,17 @@ public class ServiceControllerTests {
 
     @Test
     public void createNewDependee() throws Exception {
-        MicoService service = MicoService.builder()
-            .shortName(SHORT_NAME)
-            .version(VERSION)
-            .description(DESCRIPTION).build();
+        MicoService service = new MicoService()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setDescription(DESCRIPTION);
 
-        MicoService service1 = MicoService.builder()
-            .shortName(SHORT_NAME_1)
-            .version(VERSION_1_0_1)
-            .description(DESCRIPTION_1)
-            .build();
+        MicoService service1 = new MicoService()
+            .setShortName(SHORT_NAME_1)
+            .setVersion(VERSION_1_0_1)
+            .setDescription(DESCRIPTION_1);
 
-        MicoServiceDependency dependency1 = MicoServiceDependency.builder().service(service).dependedService(service1).build();
+        MicoServiceDependency dependency1 = new MicoServiceDependency().setService(service).setDependedService(service1);
 
         service.setDependencies(Collections.singletonList(dependency1));
 
@@ -421,23 +448,19 @@ public class ServiceControllerTests {
 
     @Test
     public void getDependees() throws Exception {
-        MicoService service1 = MicoService.builder()
-            .shortName(SHORT_NAME_1)
-            .version(VERSION_1_0_1)
-            .description(DESCRIPTION_1)
-            .build();
-        MicoService service2 = MicoService.builder()
-            .shortName(SHORT_NAME_2)
-            .version(VERSION_1_0_2)
-            .description(DESCRIPTION_2)
-            .build();
-
-        MicoService service = MicoService.builder()
-            .shortName(SHORT_NAME)
-            .version(VERSION)
-            .build();
-        MicoServiceDependency dependency1 = MicoServiceDependency.builder().service(service).dependedService(service1).build();
-        MicoServiceDependency dependency2 = MicoServiceDependency.builder().service(service).dependedService(service2).build();
+        MicoService service1 = new MicoService()
+            .setShortName(SHORT_NAME_1)
+            .setVersion(VERSION_1_0_1)
+            .setDescription(DESCRIPTION_1);
+        MicoService service2 = new MicoService()
+            .setShortName(SHORT_NAME_2)
+            .setVersion(VERSION_1_0_2)
+            .setDescription(DESCRIPTION_2);
+        MicoService service = new MicoService()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION);
+        MicoServiceDependency dependency1 = new MicoServiceDependency().setService(service).setDependedService(service1);
+        MicoServiceDependency dependency2 = new MicoServiceDependency().setService(service).setDependedService(service2);
         service.setDependencies(Arrays.asList(dependency1, dependency2));
 
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
