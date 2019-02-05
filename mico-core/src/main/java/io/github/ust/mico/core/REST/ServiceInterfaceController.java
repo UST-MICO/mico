@@ -63,7 +63,7 @@ public class ServiceInterfaceController {
             }).collect(Collectors.toList());
         });
         if (!interfacesOpt.isPresent()) {
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service interface '" + shortName + "' '" + version + "' was not found!");
         }
         return ok(new Resources<>(interfacesOpt.get(), linkTo(methodOn(ServiceInterfaceController.class).getInterfacesOfService(shortName, version)).withSelfRel()));
     }
@@ -79,10 +79,10 @@ public class ServiceInterfaceController {
             }
             return service.getServiceInterfaces().stream().filter(serviceInterface ->
                 serviceInterface.getServiceInterfaceName().equals(serviceInterfaceName
-            )).findFirst();
+                )).findFirst();
         });
         return serviceInterfaceOptional.map(serviceInterface ->
-            new Resource<>(serviceInterface, getServiceInterfaceLinks(serviceInterface, shortName, version))).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+            new Resource<>(serviceInterface, getServiceInterfaceLinks(serviceInterface, shortName, version))).map(ResponseEntity::ok).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Service interface '" + shortName + "' '" + version + "' links not found!"));
     }
 
     @GetMapping(SERVICE_INTERFACE_PUBLIC_IP_PATH)
@@ -93,7 +93,7 @@ public class ServiceInterfaceController {
         if (!serviceInterfaceOptional.isPresent()) {
             log.debug("Service interface with name '{}' of MicoService '{}' in version '{}' not found",
                 serviceInterfaceName, shortName, version);
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service interface '" + shortName + "' '" + version + "' was not found!");
         }
 
         // TODO Change naming of Kubernetes service
@@ -101,17 +101,17 @@ public class ServiceInterfaceController {
         if (service == null) {
             log.debug("Kubernetes service with name '{}' in namespace '{}' not found",
                 serviceInterfaceName, kubernetesConfig.getNamespaceMicoWorkspace());
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service interface '" + shortName + "' '" + version + "' was not found!");
         }
 
         List<String> publicIps = new ArrayList<>();
         LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
-        if(loadBalancer != null) {
+        if (loadBalancer != null) {
             List<LoadBalancerIngress> ingressList = loadBalancer.getIngress();
-            if(ingressList != null && !ingressList.isEmpty()) {
+            if (ingressList != null && !ingressList.isEmpty()) {
                 log.debug("There is/are {} ingress(es) defined for MicoServiceInterface '{}'.",
-                ingressList.size(), serviceInterfaceName);
-                for(LoadBalancerIngress ingress : ingressList) {
+                    ingressList.size(), serviceInterfaceName);
+                for (LoadBalancerIngress ingress : ingressList) {
                     publicIps.add(ingress.getIp());
                 }
                 log.info("Service interface with name '{}' of MicoService '{}' in version '{}' has external IPs: {}",
@@ -156,7 +156,7 @@ public class ServiceInterfaceController {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "An interface with this name is already associated with this service.");
             }
         } else {
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service '" + shortName + "' '" + version + "' was not found!");
         }
     }
 
