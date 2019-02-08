@@ -1,8 +1,14 @@
 import { Injectable } from '@angular/core';
 import { AsyncSubject, Observable, of, from, Subscription } from 'rxjs';
 import { ApiModel, ApiModelAllOf, ApiModelRef } from './apimodel';
-import { concatMap, reduce, first, timeout, map } from 'rxjs/operators';
+import { concatMap, reduce, first, timeout, map, flatMap } from 'rxjs/operators';
 import { ApiService, freezeObject } from './api.service';
+
+interface PropertyRef {
+    key: string;
+    parent?: ApiModel;
+    prop: ApiModel|ApiModelRef;
+}
 
 @Injectable({
     providedIn: 'root'
@@ -12,6 +18,8 @@ export class ModelsService {
     constructor(private apiService: ApiService, ) { }
 
     private modelCache: Map<string, AsyncSubject<ApiModel>> = new Map<string, AsyncSubject<ApiModel>>();
+
+    private nestedModelCache: Map<string, ApiModel> = new Map<string, ApiModel>();
 
     private localModels: { [property: string]: ApiModelAllOf | ApiModel } = {
         'serviceFromGitPOST': {
@@ -190,6 +198,7 @@ export class ModelsService {
      */
     private canonizeModelUri(modelUri: string): string {
         // TODO implement
+        modelUri = modelUri.replace(/^#\/definitions/, 'remote')
         return modelUri;
     }
 
@@ -214,6 +223,13 @@ export class ModelsService {
                     return JSON.parse(JSON.stringify(remoteModels[modelID]));
                 })
             );
+        } else if (modelUrl.startsWith('nested/')) {
+
+            const modelID = modelUrl.substring(7);
+
+            const model = JSON.parse(JSON.stringify(this.nestedModelCache.get(modelID)));
+
+            return of(model);
         }
         return of(null);
     }
@@ -288,6 +304,99 @@ export class ModelsService {
     }
 
     /**
+     * Handle object type properties.
+     *
+     * Replaces prop with ApiModelRef to nestedModelCache if needed
+     *
+     * @param property input PropertyRef
+     */
+    private handleObjectProperties = (property: PropertyRef): Observable<PropertyRef> => {
+        if (property.prop.hasOwnProperty('type') && (property.prop as ApiModel).type === 'object') {
+            let key: string;
+            if (property.parent != null && property.parent.title != null) {
+                key = `${property.parent.title}.${property.key}`;
+            } else {
+                key = `${property.key}-${Date.now()}`;
+            }
+            this.nestedModelCache.set(key, (property.prop as ApiModel));
+            return of({
+                key: property.key,
+                parent: property.parent,
+                prop: {
+                    $ref: `nested/${key}`,
+                },
+            });
+        }
+
+        return of(property);
+    }
+
+
+    /**
+     * Handle array type properties.
+     *
+     * Replaces items with ApiModelRef to nestedModelCache if needed
+     *
+     * @param property input PropertyRef
+     */
+    private handleArrayProperties = (property: PropertyRef): Observable<PropertyRef> => {
+        if (property.prop.hasOwnProperty('type') && (property.prop as ApiModel).type === 'array') {
+            let items = (property.prop as ApiModel).items;
+            if (items.$ref != null) {
+                return of(property);
+            }
+            let key: string;
+            if (property.parent != null && property.parent.title != null) {
+                key = `${property.parent.title}.${property.key}`;
+            } else {
+                key = `${property.key}-${Date.now()}`;
+            }
+            this.nestedModelCache.set(key, (items as ApiModel));
+            const propCopy = JSON.parse(JSON.stringify(property.prop));
+            propCopy.items = {
+                $ref: `nested/${key}`,
+            };
+            return of({
+                key: property.key,
+                parent: property.parent,
+                prop: propCopy,
+            });
+        }
+
+        return of(property);
+    }
+
+    /**
+     * Check all properties of model for complex properties like arrays or objects.
+     *
+     * Replaces all nested models with ApiModelRefs to nestedModelCache
+     *
+     * @param model input model
+     */
+    private handleComplexProperties = (model: ApiModel): Observable<ApiModel> => {
+        const props: PropertyRef[] = [];
+        for (const key in model.properties) {
+            if (model.properties.hasOwnProperty(key)) {
+                const prop = model.properties[key];
+                props.push({key: key, prop: prop, parent: model});
+            }
+        }
+        return of(...props).pipe(
+            flatMap(this.handleObjectProperties),
+            reduce((properties, prop: PropertyRef) => {
+                properties[prop.key] = prop.prop;
+                return properties;
+            }, {}),
+            map((properties) => {
+                model.properties = properties;
+                return model;
+            }),
+        );
+    }
+
+
+
+    /**
      * Fetch the cache source for the given model url.
      *
      * @param cacheUrl resource url
@@ -316,6 +425,7 @@ export class ModelsService {
             this.resolveModel(modelUrl).pipe(
                 concatMap(this.resolveModelLinks),
                 reduce(this.mergeModels, null),
+                flatMap(this.handleComplexProperties),
                 map(model => {
                     // inject name into properties
                     if (model.properties != null) {
@@ -377,7 +487,7 @@ export class ModelsService {
                         if ((isBlacklist && !filterset.has(propKey)) ||
                             (!isBlacklist && filterset.has(propKey))) {
                             // create new object because direct assignement fails (except for the debugger...)
-                            newProps[propKey] = Object.assign(new Object(), props[propKey]);
+                            newProps[propKey] = JSON.parse(JSON.stringify(props[propKey]));
                         }
                     }
                     newModel[key] = newProps;
