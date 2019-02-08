@@ -1,17 +1,11 @@
 package io.github.ust.mico.core.REST;
 
-import io.github.ust.mico.core.ImageBuildException;
-import io.github.ust.mico.core.NotInitializedException;
-import io.github.ust.mico.core.concurrency.MicoCoreBackgroundTaskFactory;
-import io.github.ust.mico.core.imagebuilder.ImageBuilder;
-import io.github.ust.mico.core.imagebuilder.buildtypes.Build;
-import io.github.ust.mico.core.mapping.MicoKubernetesClient;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpStatus;
@@ -22,11 +16,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
+import io.github.ust.mico.core.ImageBuildException;
+import io.github.ust.mico.core.NotInitializedException;
+import io.github.ust.mico.core.concurrency.MicoCoreBackgroundTaskFactory;
+import io.github.ust.mico.core.imagebuilder.ImageBuilder;
+import io.github.ust.mico.core.imagebuilder.buildtypes.Build;
+import io.github.ust.mico.core.mapping.KubernetesResourceException;
+import io.github.ust.mico.core.mapping.MicoKubernetesClient;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
@@ -78,7 +81,12 @@ public class DeploymentController {
                 micoService.setDockerImageUri(dockerImageUri);
 
                 serviceRepository.save(micoService);
-                createKubernetesResources(micoApplication, micoService);
+                try {
+                    createKubernetesResources(micoApplication, micoService);
+                } catch (KubernetesResourceException kre) {
+                    log.error(kre.getMessage(), kre);
+                    exceptionHandler(kre);
+                }
             }, this::exceptionHandler);
         });
 
@@ -105,7 +113,7 @@ public class DeploymentController {
         }
     }
 
-    private void createKubernetesResources(MicoApplication micoApplication, MicoService micoService) {
+    private void createKubernetesResources(MicoApplication micoApplication, MicoService micoService) throws KubernetesResourceException {
         log.debug("Start creating Kubernetes resources for MICO service '{}' in version '{}'", micoService.getShortName(), micoService.getVersion());
 
         // Kubernetes Deployment
@@ -121,9 +129,9 @@ public class DeploymentController {
         log.debug("Creating {} Kubernetes service(s) for MICO service '{}' in version '{}'",
             micoService.getServiceInterfaces().size(), micoService.getShortName(), micoService.getVersion());
         // Kubernetes Service(s)
-        micoService.getServiceInterfaces().forEach(serviceInterface -> {
+        for (MicoServiceInterface serviceInterface : micoService.getServiceInterfaces()) {
             micoKubernetesClient.createMicoServiceInterface(serviceInterface, micoService);
-        });
+        }
 
         log.info("Created Kubernetes resources for MICO service '{}' in version '{}'",
             micoService.getShortName(), micoService.getVersion());
@@ -131,7 +139,8 @@ public class DeploymentController {
 
     private Void exceptionHandler(Throwable e) {
 
-        // TODO Handle exceptions in async task properly. E.g. via message queue (RabbitMQ)
+        // TODO: Handle exceptions in async task properly, e.g., via message queue (RabbitMQ).
+        // TODO: Also handle KubernetesResourceExceptions.
 
         log.error(e.getMessage(), e);
         return null;

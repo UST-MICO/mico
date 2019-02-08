@@ -15,13 +15,13 @@ import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import io.github.ust.mico.core.ClusterAwarenessFabric8;
 import io.github.ust.mico.core.MicoKubernetesConfig;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.model.MicoServicePort;
+import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.UIDUtils;
 
 /**
@@ -47,25 +47,26 @@ public class MicoKubernetesClient {
      * @return the Kubernetes {@link Deployment} resource object
      */
     public Deployment createMicoService(MicoService service, MicoServiceDeploymentInfo deploymentInfo) {
-        String serviceUid = UIDUtils.uidFor(service);
+        String deploymentUid = UIDUtils.uidFor(service);
         
         Deployment deployment = new DeploymentBuilder()
                 .withNewMetadata()
-                    .withName(serviceUid)
+                    .withName(deploymentUid)
                     .withNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace())
                     .addToLabels("app", service.getShortName())
                     .addToLabels("version", service.getVersion())
+                    .addToLabels("run", deploymentUid)
                 .endMetadata()
                 .withNewSpec()
                     .withNewReplicas(deploymentInfo.getReplicas())
                     .withNewSelector()
-                     .addToMatchLabels("run", serviceUid)
+                     .addToMatchLabels("run", deploymentUid)
                      .endSelector()
                      .withNewTemplate()
                          .withNewMetadata()
                              .addToLabels("app", service.getShortName())
                              .addToLabels("version", service.getVersion())
-                             .addToLabels("run", serviceUid)
+                             .addToLabels("run", deploymentUid)
                          .endMetadata()
                          .withNewSpec()
                              .withContainers(
@@ -80,10 +81,9 @@ public class MicoKubernetesClient {
                 .endSpec()
                 .build();
 
-        KubernetesClient client = cluster.getClient();
-        return client.apps().deployments().inNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace()).createOrReplace(deployment);
+        return cluster.getClient().apps().deployments().inNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace()).createOrReplace(deployment);
     }
-
+    
     /**
      * Create a Kubernetes service based on a MICO service interface.
      *
@@ -91,30 +91,49 @@ public class MicoKubernetesClient {
      * @param micoService the {@link MicoService}
      * @return the Kubernetes {@link Service} resource
      */
-    public Service createMicoServiceInterface(MicoServiceInterface micoServiceInterface, MicoService micoService) {
+    public Service createMicoServiceInterface(MicoServiceInterface micoServiceInterface, MicoService micoService) throws KubernetesResourceException {
+        // Unique identifier for the service interface used as its name tag
         String serviceInterfaceUid = UIDUtils.uidFor(micoServiceInterface);
         
+        // Retrieve deployment corresponding to given MicoService to retrieve
+        // the unique run label which will be used for the Kubernetes Service, too.
+        List<Deployment> matchingDeployments = cluster.getClient().apps()
+                .deployments()
+                .inNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace())
+                .withLabels(
+                        CollectionUtils.mapOf("app", micoService.getShortName(), "version", micoService.getVersion()))
+                .list().getItems();
+        
+        if (matchingDeployments.size() == 0) {
+            throw new KubernetesResourceException("There are no deployments for service with name '"
+                    + micoService.getShortName() + "' and version '" + micoService.getVersion() + "'.");
+        } else if (matchingDeployments.size() > 1) {
+            throw new KubernetesResourceException("There are multiple deployments for service with name '"
+                    + micoService.getShortName() + "' and version '" + micoService.getVersion() + "'.");
+        }
+        
+        String serviceUid = matchingDeployments.get(0).getMetadata().getLabels().get("run");
+        serviceUid = micoService.getShortName() + serviceUid.substring(serviceUid.lastIndexOf("-"));
+
         Service service = new ServiceBuilder()
                 .withNewMetadata()
                     .withName(serviceInterfaceUid)
                     .withNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace())
                     .addToLabels("app", micoService.getShortName())
                     .addToLabels("version", micoService.getVersion())
+                    .addToLabels("run", serviceUid)
                 .endMetadata()
                 .withNewSpec()
                     .withType("LoadBalancer")
                     .withPorts(createServicePorts(micoServiceInterface))
-                    .addToSelector("run", serviceInterfaceUid)
+                    .addToSelector("run", serviceUid)
                 .endSpec()
                 .build();
 
         // TODO: Check whether optional fields of MicoServiceInterface have to be used in some way
         // (publicDns, description, protocol, transportProtocol)
-
-        // TODO: Retrieve Kubernetes deployment by labels and retrieve unique identifier
         
-        KubernetesClient client = cluster.getClient();
-        return client.services().inNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace()).createOrReplace(service);
+        return cluster.getClient().services().inNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace()).createOrReplace(service);
     }
 
 

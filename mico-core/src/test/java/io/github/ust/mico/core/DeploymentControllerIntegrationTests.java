@@ -99,7 +99,6 @@ public class DeploymentControllerIntegrationTests {
      */
     @After
     public void tearDown() {
-
         integrationTestsUtils.cleanUpEnvironment(namespace);
     }
 
