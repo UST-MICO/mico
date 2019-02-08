@@ -6,7 +6,6 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentList;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import io.github.ust.mico.core.ClusterAwarenessFabric8;
 import io.github.ust.mico.core.MicoKubernetesConfig;
 import io.github.ust.mico.core.PrometheusConfig;
@@ -72,7 +71,7 @@ public class ApplicationController {
     MicoKubernetesConfig micoKubernetesConfig;
 
     @Autowired
-    ClusterAwarenessFabric8 clusterAwarenessFabric8;
+    ClusterAwarenessFabric8 cluster;
 
     @Autowired
     private RestTemplate restTemplate;
@@ -191,12 +190,11 @@ public class ApplicationController {
                                                                                                  @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
         if (micoApplicationOptional.isPresent()) {
-            KubernetesClient kubernetesClient = clusterAwarenessFabric8.getClient();
             HashMap<String, String> labels = new HashMap<>();
             labels.put(LABEL_APP_KEY, shortName);
             labels.put(LABEL_VERSION_KEY, version);
             String namespace = micoKubernetesConfig.getNamespaceMicoWorkspace();
-            DeploymentList deploymentList = kubernetesClient.apps().deployments().inNamespace(namespace).withLabels(labels).list();
+            DeploymentList deploymentList = cluster.getDeploymentsByLabels(labels, namespace);
             if (deploymentList.getItems().size() == 1) {
                 Deployment deployment = deploymentList.getItems().get(0);
                 UiDeploymentInformation uiDeploymentInformation = new UiDeploymentInformation();
@@ -205,7 +203,7 @@ public class ApplicationController {
                 uiDeploymentInformation.setAvailableReplicas(availableReplicas);
                 uiDeploymentInformation.setRequestedReplicas(requestedReplicas);
 
-                ServiceList serviceList = kubernetesClient.services().inNamespace(namespace).withLabels(labels).list(); //MicoServiceInterface maps to Service
+                ServiceList serviceList = cluster.getServicesByLabels(labels, namespace); //MicoServiceInterface maps to Service
                 List<UiExternalMicoInterfaceInformation> interfacesInformation = new LinkedList<>();
                 if (serviceList.getItems().size() >= MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT) {
                     for (Service service : serviceList.getItems()) {
@@ -215,7 +213,7 @@ public class ApplicationController {
                         interfacesInformation.add(interfaceInformation);
                     }
                     uiDeploymentInformation.setInterfacesInformation(interfacesInformation);
-                    PodList podList = kubernetesClient.pods().inNamespace(namespace).withLabels(labels).list();
+                    PodList podList = cluster.getPodsByLabels(labels, namespace);
                     List<UiPodInfo> podInfos = new LinkedList<>();
                     for (Pod pod : podList.getItems()) {
                         UiPodInfo uiPodInfo = getUiPodInfo(pod);

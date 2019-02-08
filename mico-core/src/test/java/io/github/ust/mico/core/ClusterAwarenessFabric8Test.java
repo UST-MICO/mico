@@ -6,6 +6,7 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentList;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
+import io.github.ust.mico.core.util.CollectionUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -13,6 +14,7 @@ import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 import static org.junit.Assert.*;
 
@@ -26,6 +28,9 @@ public class ClusterAwarenessFabric8Test {
     public void setUp() {
         cluster = new ClusterAwarenessFabric8(server.getClient());
 
+        HashMap<String, String> labels = new HashMap<>();
+        labels.put("app", "app1");
+
         //Nodes
         server.getClient().nodes().create(new NodeBuilder().withNewMetadata().withName("node1").endMetadata().build());
         server.getClient().nodes().create(new NodeBuilder().withNewMetadata().withName("node2").endMetadata().build());
@@ -35,15 +40,15 @@ public class ClusterAwarenessFabric8Test {
         server.getClient().namespaces().createNew().withNewMetadata().withName("namespace2").endMetadata().done();
 
         //Pods
-        server.getClient().pods().inNamespace(namespaceName).create(new PodBuilder().withNewMetadata().withName("pod1").endMetadata().build());
+        server.getClient().pods().inNamespace(namespaceName).create(new PodBuilder().withNewMetadata().withName("pod1").withLabels(labels).endMetadata().build());
         server.getClient().pods().inNamespace(namespaceName).create(new PodBuilder().withNewMetadata().withName("pod2").endMetadata().build());
 
         //Services
-        server.getClient().services().inNamespace(namespaceName).create(new ServiceBuilder().withNewMetadata().withName("service1").endMetadata().build());
+        server.getClient().services().inNamespace(namespaceName).create(new ServiceBuilder().withNewMetadata().withName("service1").withLabels(labels).endMetadata().build());
         server.getClient().services().inNamespace(namespaceName).create(new ServiceBuilder().withNewMetadata().withName("service2").endMetadata().build());
 
         //Deployments
-        server.getClient().apps().deployments().inNamespace(namespaceName).create(new DeploymentBuilder().withNewMetadata().withName("deployment1").endMetadata().build());
+        server.getClient().apps().deployments().inNamespace(namespaceName).create(new DeploymentBuilder().withNewMetadata().withName("deployment1").withLabels(labels).endMetadata().build());
         server.getClient().apps().deployments().inNamespace(namespaceName).create(new DeploymentBuilder().withNewMetadata().withName("deployment2").endMetadata().build());
 
         //Secrets
@@ -73,6 +78,14 @@ public class ClusterAwarenessFabric8Test {
         Deployment deployment = cluster.getDeployment("deployment1", namespaceName);
         assertNotNull(deployment);
         assertEquals("deployment1", deployment.getMetadata().getName());
+    }
+
+    @Test
+    public void getDeploymentByLabel() {
+        DeploymentList deploymentList = cluster.getDeploymentsByLabels(CollectionUtils.mapOf("app", "app1"), namespaceName);
+        assertNotNull(deploymentList);
+        assertEquals(1, deploymentList.getItems().size());
+        assertEquals("deployment1", deploymentList.getItems().get(0).getMetadata().getName());
     }
 
     @Test
@@ -121,6 +134,14 @@ public class ClusterAwarenessFabric8Test {
     }
 
     @Test
+    public void getPodByLabel() {
+        PodList podList = cluster.getPodsByLabels(CollectionUtils.mapOf("app", "app1"), namespaceName);
+        assertNotNull(podList);
+        assertEquals(1, podList.getItems().size());
+        assertEquals("pod1", podList.getItems().get(0).getMetadata().getName());
+    }
+
+    @Test
     public void getAllServices() {
         ServiceList serviceList = cluster.getAllServices();
         assertNotNull(serviceList);
@@ -132,6 +153,14 @@ public class ClusterAwarenessFabric8Test {
         Service service = cluster.getService("service1", namespaceName);
         assertNotNull(service);
         assertEquals("service1", service.getMetadata().getName());
+    }
+
+    @Test
+    public void getServiceByLabel() {
+        ServiceList serviceList = cluster.getServicesByLabels(CollectionUtils.mapOf("app", "app1"), namespaceName);
+        assertNotNull(serviceList);
+        assertEquals(1, serviceList.getItems().size());
+        assertEquals("service1", serviceList.getItems().get(0).getMetadata().getName());
     }
 
     @Test
