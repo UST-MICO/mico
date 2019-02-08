@@ -86,16 +86,18 @@
                                 <div class="flex-grow-1">
                                     <mat-list-item.large style="font-size:small">
                                         <div class="pv2 pl4">
-                                            {{interface.Name}}<br>
-                                            {{interface.Port}}<br>
-                                            {{interface.Protocol}}<br>
-                                            {{interface.TransportProtocol}}
+                                            {{interface.serviceInterfaceName}}<br>
+                                            <div *ngFor="let port of interface.ports">
+                                                <i>#{{port.number}}</i><br>
+                                                {{port.targetPort}}<br>
+                                                {{port.type}}
+                                            </div>
                                         </div>
                                     </mat-list-item.large>
                                 </div>
                                 <div class="w-20">
                                     <mat-list-item>
-                                        <mat-icon (click)="deleteServiceInterface(interface.Name)">delete</mat-icon>
+                                        <mat-icon (click)="deleteServiceInterface(interface.serviceInterfaceName)">delete</mat-icon>
                                     </mat-list-item>
                                 </div>
                             </div>
