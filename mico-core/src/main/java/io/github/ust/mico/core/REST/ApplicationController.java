@@ -48,11 +48,11 @@ import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 
 @RestController
-@RequestMapping(value = ApplicationController.PATH_APPLICATIONS, produces = MediaTypes.HAL_JSON_VALUE)
+@RequestMapping(value = "/"+ApplicationController.PATH_APPLICATIONS, produces = MediaTypes.HAL_JSON_VALUE)
 public class ApplicationController {
 
     public static final String PATH_SERVICES = "services";
-    public static final String PATH_APPLICATIONS = "/applications";
+    public static final String PATH_APPLICATIONS = "applications";
     private Logger logger = LoggerFactory.getLogger(ApplicationController.class);
 
     private static final String PATH_VARIABLE_SHORT_NAME = "shortName";
