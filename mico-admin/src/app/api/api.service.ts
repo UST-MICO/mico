@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, Subject, BehaviorSubject, AsyncSubject } from 'rxjs';
-import { filter, flatMap } from 'rxjs/operators';
+import { filter, flatMap, map } from 'rxjs/operators';
 import { ApiObject } from './apiobject';
 import { ApiBaseFunctionService } from './api-base-function.service';
 import { ApiModel, ApiModelAllOf } from './apimodel';
@@ -55,6 +55,7 @@ export class ApiService {
             streamURL = x.pathname;
         } catch (TypeError) { }
         streamURL = streamURL.replace(/(^\/)|(\/$)/g, '');
+        streamURL = streamURL.replace(/\/\//g, '/');
         return streamURL;
     }
 
@@ -83,11 +84,13 @@ export class ApiService {
         const stream = this.getStreamSource<ApiModelMap>(resource, () => new AsyncSubject<Readonly<ApiModelMap>>());
 
         // TODO replace URL with a generic path
-        this.rest.get<{ definitions: ApiModelMap, [prop: string]: any }>('http://localhost:8080/v2/api-docs').subscribe(val => {
+        if (!stream.isStopped) {
+            this.rest.get<{ definitions: ApiModelMap, [prop: string]: any }>('v2/api-docs').subscribe(val => {
 
-            stream.next(freezeObject(val.definitions));
-            stream.complete();
-        });
+                stream.next(freezeObject(val.definitions));
+                stream.complete();
+            });
+        }
 
         return stream.asObservable().pipe(
             filter(data => data !== undefined)
@@ -109,7 +112,11 @@ export class ApiService {
 
         this.rest.get<ApiObject>(resource).subscribe(val => {
             // return actual application list
-            stream.next(freezeObject(val._embedded.micoApplicationList));
+            if (val.hasOwnProperty('_embedded')) {
+                stream.next(freezeObject(val._embedded.micoApplicationList));
+            } else {
+                stream.next(freezeObject([]));
+            }
         });
 
         return stream.asObservable().pipe(
@@ -117,23 +124,28 @@ export class ApiService {
         );
     }
 
-    getApplicationById(id): Observable<Readonly<ApiObject>> {
-        // TODO check if there is a resource for single applications
-        const resource = 'applications';
-        const stream = this.getStreamSource<ApiObject>(resource);
+    /**
+     * Get all versions of an application based on its shortName
+     * @param shortName the shortName of the applicaton
+     */
+    getApplicationVersions(shortName: string) {
+        const resource = 'applications/' + shortName + '/';
+        const stream = this.getStreamSource<ApiObject[]>(resource);
 
-        // TODO
-        const mockData: ApiObject = {
-            '_links': { 'self': { 'href': '' } },
-            'id': id,
-            'name': 'Hello World Application id ' + id,
-            'shortName': 'test.' + id + 'application',
-            'description': 'A generic application',
-        };
+        this.rest.get<ApiObject>(resource).subscribe(val => {
 
-        stream.next(mockData);
+            let list: ApiObject[];
 
-        return stream.asObservable().pipe(
+            if (val.hasOwnProperty('_embedded')) {
+                list = val._embedded.micoApplicationList;
+            } else {
+                list = [];
+            }
+
+            stream.next(freezeObject(list));
+        });
+
+        return (stream.asObservable()).pipe(
             filter(data => data !== undefined)
         );
     }
@@ -166,17 +178,94 @@ export class ApiService {
         const resource = 'applications/';
 
         return this.rest.post<ApiObject>(resource, data).pipe(flatMap(val => {
+            this.getApplications();
 
             const stream = this.getStreamSource<ApiObject>(val._links.self.href);
             stream.next(val);
 
-            this.getApplications();
-
-            return stream.asObservable().pipe(
+            return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
                 filter(service => service !== undefined)
             );
         }));
     }
+
+    deleteApplication(shortName: string, version: string) {
+
+        return this.rest.delete<any>('applications/' + shortName + '/' + version)
+            .pipe(map(val => {
+
+                this.getApplications();
+
+                return true;
+            }));
+
+    }
+
+
+
+    postApplicationServices(applicationShortName: string, applicationVersion: string, serviceData: any) {
+
+        if (serviceData == null) {
+            return;
+        }
+
+        const resource = 'applications/' + applicationShortName + '/' + applicationVersion + '/services';
+
+        return this.rest.post<ApiObject>(resource, serviceData).pipe(map(val => {
+
+            this.getApplication(applicationShortName, applicationVersion);
+
+            return true;
+        }));
+    }
+
+    deleteApplicationServices(applicationShortName: string, applicationVersion: string, serviceShortName) {
+
+        return this.rest.delete<ApiObject>('application/' + applicationShortName + '/' + applicationVersion
+            + '/services/' + serviceShortName)
+            .pipe(map(val => {
+                console.log('DELETE includes', val);
+
+                this.getApplication(applicationShortName, applicationVersion);
+
+                return true;
+            }));
+    }
+
+
+    // ==========
+    // DEPLOYMENT
+    // ==========
+
+    /**
+     * commands the mico-core application to deploy application {shortName}, {version}
+     * @param shortName the applications shortName
+     * @param version the applications version
+     */
+    postApplicationDeployCommand(shortName: string, version: string) {
+        const resource = 'applications/' + shortName + '/' + version + '/deploy';
+
+        return this.rest.post<any>(resource, null).pipe(map(val => {
+
+            // TODO handle job ressource as soon as the api call returns a job ressource
+            return true;
+        }));
+    }
+
+    // TODO doc comment as soon as the endpoint is in this branch
+    getApplicationDeploymentInformation(shortName: string, version: string) {
+        const resource = 'applications/' + shortName + '/' + version + '/deploymentInformation';
+        const stream = this.getStreamSource(resource);
+
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+            stream.next(freezeObject(val));
+        });
+
+        return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
+            filter(data => data !== undefined)
+        );
+    }
+
 
     // =============
     // SERVICE CALLS
@@ -191,7 +280,11 @@ export class ApiService {
 
         this.rest.get<ApiObject>(resource).subscribe(val => {
             // return actual service list
-            stream.next(freezeObject(val._embedded.micoServiceList));
+            if (val.hasOwnProperty('_embedded')) {
+                stream.next(freezeObject(val._embedded.micoServiceList));
+            } else {
+                stream.next(freezeObject([]));
+            }
         });
 
         return stream.asObservable().pipe(
@@ -211,15 +304,9 @@ export class ApiService {
 
             let list: ApiObject[];
 
-            if (val['_embedded'] != null) {
-
+            if (val.hasOwnProperty('_embedded')) {
                 list = val._embedded.micoServiceList;
-                if (list === undefined) {
-                    list = val._embedded.micoApplicationList;
-                }
-            }
-
-            if (list === undefined) {
+            } else {
                 list = [];
             }
 
@@ -313,6 +400,17 @@ export class ApiService {
         }));
     }
 
+    deleteService(shortName, version) {
+        return this.rest.delete<ApiObject>('services/' + shortName + '/' + version)
+            .pipe(map(val => {
+                console.log('DELETE SERVICE', val);
+
+                this.getServices();
+
+                return true;
+            }));
+    }
+
     /**
      * Get all services a specific service depends on.
      *
@@ -325,7 +423,11 @@ export class ApiService {
         const stream = this.getStreamSource<ApiObject[]>(resource);
 
         this.rest.get<ApiObject>(resource).subscribe(val => {
-            stream.next(freezeObject(val._embedded.serviceList));
+            if (val.hasOwnProperty('_embedded')) {
+                stream.next(freezeObject(val._embedded.serviceList));
+            } else {
+                stream.next(freezeObject([]));
+            }
         });
 
         return stream.asObservable().pipe(
@@ -353,11 +455,70 @@ export class ApiService {
         );
     }
 
-    getServiceInterfaces(shortName, version): Observable<ApiObject> {
+    // =======================
+    // SERVICE INTERFACE CALLS
+    // =======================
+
+    getServiceInterfaces(shortName, version): Observable<ApiObject[]> {
         const resource = 'services/' + shortName + '/' + version + '/interfaces';
+        const stream = this.getStreamSource<ApiObject[]>(resource);
+
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+
+            if (val.hasOwnProperty('_embedded')) {
+                stream.next(freezeObject(val._embedded.micoServiceInterfaceList));
+            } else {
+                stream.next(freezeObject([]));
+            }
+
+        });
+
+        return stream.asObservable().pipe(
+            filter(data => data !== undefined)
+        );
+    }
+
+    postServiceInterface(shortName, version, data) {
+        if (data == null) {
+            return;
+        }
+
+        return this.rest.post<ApiObject>('services/' + shortName + '/' + version + '/interfaces',
+            data).pipe(flatMap(val => {
+
+                console.log('RETURN', val);
+
+                const stream = this.getStreamSource<ApiObject>(val._links.self.href);
+                stream.next(val);
+
+                this.getServiceInterfaces(shortName, version);
+
+                return stream.asObservable().pipe(
+                    filter(service => service !== undefined)
+                );
+            }));
+    }
+
+    deleteServiceInterface(shortName: string, version: string, serviceInterfaceName: string) {
+
+        return this.rest.delete<ApiObject>('services/' + shortName + '/' + version + '/interfaces/' + serviceInterfaceName)
+            .pipe(map(val => {
+                console.log('DELETE INTERFACE', val);
+
+
+                this.getServiceInterfaces(shortName, version);
+
+                return true;
+            }));
+    }
+
+    getServiceInterfacePublicIp(serviceShortName: string, serviceVersion: string, interfaceShortName: string) {
+
+        const resource = 'services/' + serviceShortName + '/' + serviceVersion + '/interfaces/' + interfaceShortName + '/publicIP';
         const stream = this.getStreamSource<ApiObject>(resource);
 
         this.rest.get<ApiObject>(resource).subscribe(val => {
+
             stream.next(freezeObject((val as ApiObject)));
         });
 

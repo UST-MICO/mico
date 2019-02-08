@@ -1,4 +1,4 @@
-<mat-form-field class="form-element mv2">
+<mat-form-field class="form-element mv2 w-100">
     <mat-label>{{config.title}}</mat-label>
-    <input matInput #input type="number" [required]="config['x-required']" [(ngModel)]="content">
+    <input matInput #input type="number" [required]="config['x-required']" [ngModel]="content" (ngModelChange)="onInputChange($event)">
 </mat-form-field>

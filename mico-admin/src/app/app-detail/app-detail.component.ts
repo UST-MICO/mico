@@ -1,9 +1,13 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
 import { Subscription } from 'rxjs';
+import { MatDialog } from '@angular/material';
+import { ServicePickerComponent } from '../dialogs/service-picker/service-picker.component';
+import { versionComparator } from '../api/semantic-version';
+import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 
 @Component({
     selector: 'mico-app-detail',
@@ -15,25 +19,37 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     constructor(
         private apiService: ApiService,
         private route: ActivatedRoute,
+        private dialog: MatDialog,
+        private router: Router,
     ) { }
 
     subRouteParams: Subscription;
     subApplicationVersions: Subscription;
+    subDeploy: Subscription;
+    subDependeesDialog: Subscription;
+    subDeployInformation: Subscription;
+    subPublicIps: Subscription[] = [];
+    subApplication: Subscription;
+    subServiceDependency: Subscription;
 
     application: ApiObject;
+    shortName: string;
     selectedVersion;
+    allVersions;
+
+    publicIps: string[] = [];
 
     ngOnInit() {
 
         this.subRouteParams = this.route.params.subscribe(params => {
-            const shortName = params['shortName'];
+            this.shortName = params['shortName'];
             const givenVersion = params['version'];
 
-            // getServiceVersions works also for applications
-            // TODO with the new model getServiceVersions is not applicable anymore.
-            // change to getApplicationVersions as soon as the endpoint exists.
-            this.subApplicationVersions = this.apiService.getServiceVersions(shortName)
+            this.subApplicationVersions = this.apiService.getApplicationVersions(this.shortName)
                 .subscribe(versions => {
+
+                    this.allVersions = versions;
+
                     if (givenVersion == null) {
                         this.setLatestVersion(versions);
                     } else {
@@ -42,7 +58,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
                             if (element.version === givenVersion) {
                                 this.selectedVersion = givenVersion;
-                                this.application = element;
+                                this.subscribeApplication(element.version);
                                 return true;
                             }
                         });
@@ -56,9 +72,61 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
     }
 
+    /**
+     * subscribe to the given shortName/version and subscribe to its interfaces
+     * @param shortName shortName of the application to be displayed
+     * @param version version of the application to be displayed
+     */
+    subscribeApplication(version: string) {
+
+        if (this.subApplication != null) {
+            this.subApplication.unsubscribe();
+        }
+
+        this.subApplication = this.apiService.getApplication(this.shortName, version).subscribe(val => {
+            this.application = val;
+
+            // application is found now, so try to get some more information
+            // Deployment information
+            this.subDeployInformation = this.apiService
+                .getApplicationDeploymentInformation(this.application.shortName, this.application.version)
+                .subscribe(deploymentInformation => {
+                    console.log(deploymentInformation);
+                });
+
+            // public ip
+            const tempPublicIps = [];
+
+            this.application.services.forEach(service => {
+
+                if (service.serviceInterfaces != null) {
+
+                    service.serviceInterfaces.forEach(micoInterface => {
+                        this.subPublicIps.push(this.apiService
+                            .getServiceInterfacePublicIp(service.shortName, service.version, micoInterface.serviceInterfaceName)
+                            .subscribe(listOfPublicIps => {
+                                listOfPublicIps.forEach(publicIp => {
+                                    tempPublicIps.push(publicIp);
+                                });
+                            }));
+                    });
+                }
+            });
+            this.publicIps = tempPublicIps;
+        });
+    }
+
     ngOnDestroy() {
         this.unsubscribe(this.subRouteParams);
         this.unsubscribe(this.subApplicationVersions);
+        this.unsubscribe(this.subDeploy);
+        this.unsubscribe(this.subDependeesDialog);
+        this.unsubscribe(this.subDeployInformation);
+        this.subPublicIps.forEach(subscription => {
+            this.unsubscribe(subscription);
+        });
+        this.unsubscribe(this.subApplication);
+        this.unsubscribe(this.subServiceDependency);
     }
 
     unsubscribe(subscription: Subscription) {
@@ -67,22 +135,90 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         }
     }
 
+    deployApplication() {
+        this.subDeploy = this.apiService.postApplicationDeployCommand(this.application.shortName, this.application.version)
+            .subscribe(val => {
+                // TODO wait for propper return value from deploy endpoint
+                // add some deployment monitoring (e.g. state)
+                console.log(val);
+            });
+    }
+
     /**
      * takes a list of applications and sets this.application to the application with the latest version
      * this.version is set accoringly
      */
     setLatestVersion(list) {
+        let version = '0.0.0';
+
         list.forEach(element => {
 
-            let version = '0';
-
-            // TODO implement comparison for semantic versioning
-            if (element.version > version) {
+            if (versionComparator(element.version, version) > 0) {
                 version = element.version;
-                this.selectedVersion = element.version;
-                this.application = element;
-
             }
         });
+        this.selectedVersion = version;
+        this.subscribeApplication(version);
+    }
+
+    addService() {
+
+        const dialogRef = this.dialog.open(ServicePickerComponent, {
+            data: {
+                filter: '',
+                choice: 'multi',
+                existingDependencies: this.application.services,
+                serviceId: '',
+            }
+        });
+        this.subDependeesDialog = dialogRef.afterClosed().subscribe(result => {
+
+            if (result === '') {
+                return;
+            }
+
+            // TODO consider if null check is still neccesary as soon as endpoint to add dependencies exists
+            if (this.application.services == null) {
+                this.application.services = [];
+            }
+
+            result.forEach(service => {
+                // this.application.services.push(element);
+                // TODO Consider adding all at once.
+                this.apiService.postApplicationServices(this.application.shortName, this.application.version, service)
+                    .subscribe();
+            });
+        });
+
+    }
+
+    deleteService(serviceShortName: string) {
+
+        const dialogRef = this.dialog.open(YesNoDialogComponent, {
+            data: {
+                object: serviceShortName,
+                question: 'deleteDependency'
+            }
+        });
+
+        this.subServiceDependency = dialogRef.afterClosed().subscribe(shouldDelete => {
+            if (shouldDelete) {
+
+                this.apiService.deleteApplicationServices(this.application.shortName, this.application.version, serviceShortName)
+                    .subscribe(val => {
+                        // TODO add some user output (as soon as the endpoint actually exists)
+
+                    });
+            }
+        });
+
+    }
+
+    /**
+    * call-back from the version picker
+    */
+    updateVersion(version) {
+        this.selectedVersion = version;
+        this.router.navigate(['app-detail', this.application.shortName, version]);
     }
 }

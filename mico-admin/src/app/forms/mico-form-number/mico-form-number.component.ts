@@ -33,12 +33,20 @@ export class MicoFormNumberComponent implements OnInit {
     }
 
     set value(val: number) {
-        console.log('set value');
         if (!Number.isNaN(val)) {
             this.content = val;
             this.onChange(val);
             this.onTouched();
         }
+    }
+
+    onInputChange(input: number) {
+        if (input == null) {
+            return;
+        }
+        this.content = input;
+        this.onChange(input);
+        this.onTouched();
     }
 
     registerOnChange(fn) {

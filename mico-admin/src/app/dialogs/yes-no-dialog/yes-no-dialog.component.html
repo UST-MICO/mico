@@ -1,10 +1,13 @@
 <mat-dialog-content>
-    <div [ngSwitch]="question" class="">
+    <div [ngSwitch]="questionType" class="">
         <div *ngSwitchCase="'deleteDependency'">
-            Do you really want wo delete the dependency to <b>{{object}}</b>?
+            Do you really want to delete the dependency to <b>{{object}}</b>?
         </div>
         <div *ngSwitchCase="'deleteServiceInterface'">
-            Do you really want wo delete the service interface: <b>{{object}}</b>?
+            Do you really want to delete the service interface: <b>{{object}}</b>?
+        </div>
+        <div *ngSwitchCase="'deleteService'">
+            Do you really want to delete the service: <b>{{object.shortName}} {{object.version}}</b>?
         </div>
         <!-- add further questions -->
 

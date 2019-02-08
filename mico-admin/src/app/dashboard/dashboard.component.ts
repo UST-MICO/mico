@@ -1,7 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
-import { MatDialog } from '@angular/material';
+import { MatDialog, MatSnackBar } from '@angular/material';
 import { CreateServiceDialogComponent } from '../dialogs/create-service/create-service.component';
 import { Router } from '@angular/router';
 import { CreateApplicationComponent } from '../dialogs/create-application/create-application.component';
@@ -17,6 +17,7 @@ export class DashboardComponent implements OnInit {
         private apiService: ApiService,
         private dialog: MatDialog,
         private router: Router,
+        private snackBar: MatSnackBar,
     ) {
         this.getApplications();
     }
@@ -56,8 +57,9 @@ export class DashboardComponent implements OnInit {
                     if (result.data[property] == null) {
 
                         if (property !== 'serviceInterfaces') {
-                            // TODO add some user feed back
-                            console.log('RETURN BECAUSE OF ', property);
+                            this.snackBar.open('Missing property: ' + property, 'Ok', {
+                                duration: 8000,
+                            });
                             return;
                         }
                     }
@@ -89,18 +91,16 @@ export class DashboardComponent implements OnInit {
                 // check if returned object is complete
                 for (const property in result.applicationProperties) {
                     if (result.applicationProperties[property] == null) {
-                        // TODO add some user feed back
+
+                        this.snackBar.open('Missing property: ' + property, 'Ok', {
+                            duration: 8000,
+                        });
                         return;
                     }
                 }
 
-                // check if returned object has services
-                if (result.services.length <= 0) {
-                    return;
-                }
-
                 const data = result.applicationProperties;
-                data.dependsOn = result.services;
+                data.services = result.services;
 
                 this.apiService.postApplication(data).subscribe(val => {
                     this.router.navigate(['app-detail', val.shortName, val.version]);

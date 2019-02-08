@@ -6,6 +6,7 @@ import { ServicePickerComponent } from '../dialogs/service-picker/service-picker
 import { MatDialog } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 import { CreateServiceInterfaceComponent } from '../dialogs/create-service-interface/create-service-interface.component';
+import { Router } from '@angular/router';
 
 export interface Dependency {
     id;
@@ -29,7 +30,11 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
     private subVersion: Subscription;
     private subDependeesCall: Subscription;
 
-    constructor(private apiService: ApiService, private dialog: MatDialog) { }
+    constructor(
+        private apiService: ApiService,
+        private dialog: MatDialog,
+        private router: Router,
+    ) { }
 
     // dependees: services the current service depends on
     dependees: any = [];
@@ -111,13 +116,11 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
 */
 
 
-                // TODO insert as soon as there are interfaces in the dummy data
-                /*
                 this.subServiceInterfaces = this.apiService.getServiceInterfaces(this.shortName, this.version)
                     .subscribe(val => {
                         this.serviceInterfaces = val;
                     });
-                */
+
             });
 
     }
@@ -147,13 +150,33 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
     }
 
     /**
-     * action triggered in ui
+     * action triggered in ui to create a service interface
      */
     addProvides() {
         const dialogRef = this.dialog.open(CreateServiceInterfaceComponent);
         this.subProvide = dialogRef.afterClosed().subscribe(result => {
-            console.log(result);
-            // TODO use result in a useful way
+            if (result === '') {
+                return;
+            }
+            this.apiService.postServiceInterface(this.shortName, this.version, result).subscribe();
+        });
+    }
+
+    /**
+     * action triggered in ui
+     */
+    deleteServiceInterface(interfaceName) {
+        const dialogRef = this.dialog.open(YesNoDialogComponent, {
+            data: {
+                object: interfaceName,
+                question: 'deleteServiceInterface'
+            }
+        });
+
+        this.subDeleteServiceInterface = dialogRef.afterClosed().subscribe(shouldDelete => {
+            if (shouldDelete) {
+                this.apiService.deleteServiceInterface(this.shortName, this.version, interfaceName).subscribe();
+            }
         });
     }
 
@@ -198,21 +221,20 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
         });
     }
 
-    /**
-     * action triggered in ui
-     */
-    deleteServiceInterface(id) {
+    deleteService() {
+
         const dialogRef = this.dialog.open(YesNoDialogComponent, {
             data: {
-                object: id,
-                question: 'deleteServiceInterface'
+                object: { shortName: this.shortName, version: this.version },
+                question: 'deleteService'
             }
         });
 
-        this.subDeleteServiceInterface = dialogRef.afterClosed().subscribe(result => {
+        this.subDeleteDependency = dialogRef.afterClosed().subscribe(result => {
             if (result) {
-                console.log('delete ' + id);
-                // TODO really delete the dependency
+
+                this.apiService.deleteService(this.shortName, this.version).subscribe();
+                this.router.navigate(['../service-detail/service-list']);
             }
         });
     }

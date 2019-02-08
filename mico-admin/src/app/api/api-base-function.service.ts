@@ -38,7 +38,8 @@ export class ApiBaseFunctionService {
         if (url_string.endsWith('/')) {
             url_string = url_string.slice(0, url_string.length - 1);
         }
-        if (!url.endsWith('/')) {
+        // specific exception for swagger json (does not work with tailing /)
+        if (!url.endsWith('/') && !url.endsWith('api-docs')) {
             if ((url.lastIndexOf('.') < 0) || (url.lastIndexOf('/') > url.lastIndexOf('.'))) {
                 url = url + '/';
             }
@@ -82,12 +83,21 @@ export class ApiBaseFunctionService {
     post<T>(url: string | LinkObject | ApiLinksObject | ApiObject, data, token?: string, isJson = true): Observable<T> {
         url = this.extractUrl(url);
         let tempData = data;
-        if (isJson) {
-            tempData = JSON.stringify(tempData);
+        if (data != null) {
+            if (isJson) {
+                tempData = JSON.stringify(tempData);
+            }
         }
         return this.http.post(url, tempData, this.headers(token))
             .pipe(map((res: Response) => {
+                if (res.hasOwnProperty('_body')) {
+                    if ((res as any)._body == null || (res as any)._body.length < 1) {
+                        // handle empty results
+                        return undefined;
+                    }
+                }
                 return res.json();
+
             }));
     }
 
@@ -99,6 +109,22 @@ export class ApiBaseFunctionService {
         }
         return this.http.put(url, tempData, this.headers(token))
             .pipe(map((res: Response) => {
+                return res.json();
+            }));
+    }
+
+    delete<T>(url: string | LinkObject | ApiLinksObject | ApiObject, token?: string): Observable<T> {
+        url = this.extractUrl(url);
+
+        return this.http.delete(url, this.headers(token))
+            .pipe(map((res: Response) => {
+
+                if (res.hasOwnProperty('_body')) {
+                    if ((res as any)._body == null || (res as any)._body.length < 1) {
+                        // handle empty results
+                        return undefined;
+                    }
+                }
                 return res.json();
             }));
     }

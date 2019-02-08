@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../api/api.service';
 import { Subscription } from 'rxjs';
 import { ApiObject } from '../api/apiobject';
+import { versionComparator } from '../api/semantic-version';
 
 export interface Service extends ApiObject {
     name: string;
@@ -35,7 +36,6 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
 
             this.shortName = params['shortName'];
             const version = params['version'];
-            console.log(this.shortName, version);
             this.update(this.shortName, version);
         });
     }
@@ -97,10 +97,9 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
 
         list.forEach(element => {
 
-            let version = '0';
+            let version = '0.0.0';
 
-            // TODO implement comparison for semantic versioning
-            if (element.version > version) {
+            if (versionComparator(element.version, version) > 0) {
                 version = element.version;
                 this.service = element;
 

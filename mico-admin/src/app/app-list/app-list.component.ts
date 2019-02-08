@@ -17,7 +17,7 @@ export class AppListComponent implements OnInit {
 
     applications: Readonly<ApiObject[]>;
 
-    displayedColumns: string[] = ['id', 'name', 'shortName', 'description'];
+    displayedColumns: string[] = ['id', 'name', 'shortName', 'description', 'controls'];
 
     ngOnInit() {
     }
@@ -25,5 +25,9 @@ export class AppListComponent implements OnInit {
     getApplications(): void {
         this.apiService.getApplications()
             .subscribe(applications => this.applications = applications);
+    }
+
+    deleteApplication(application) {
+        this.apiService.deleteApplication(application.shortName, application.version).subscribe();
     }
 }

@@ -1,12 +1,72 @@
-<h3 class="ma3">Application {{application?.name}}</h3>
+<div class="flex w100">
+    <div class="ma3 flex-grow-1">
+        <h3>Application {{application?.name}}</h3>
+        <button mat-raised-button (click)="deployApplication()">deploy</button>
+    </div>
+
+    <!-- Drop Down Menu for version selection-->
+    <mat-form-field class="w25 ma2">
+        <mat-select placeholder="Application Version" (ngModelChange)="updateVersion($event)" [ngModel]="selectedVersion">
+            <mat-option *ngFor="let version of allVersions" [value]="version.version">
+                {{version?.version}}
+            </mat-option>
+        </mat-select>
+    </mat-form-field>
+</div>
+
+
 <mat-divider></mat-divider>
 
 <mat-card class="ma2">
     <mat-tab-group>
         <mat-tab label="Overview">
-            <div class="flex flex-column">
-                <mico-app-detail-overview [application]="application"></mico-app-detail-overview>
+            <div class="flex">
+                <div class="flex-grow-1 ma2 ml0 flex flex-column">
+                    <mico-app-detail-overview [application]="application"></mico-app-detail-overview>
+                </div>
+                <div class="w-25 ma2 flex flex-column">
+                    <mat-card class="w-100">
+                        <mat-card-content>
+                            <mat-action-list>
+                                <mat-divider></mat-divider>
+                                <div class="flex" (click)="addService()">
+                                    <div class="flex-grow-1">
+                                        <mat-list-item>
+                                            <span mat-line><b>Services</b></span>
+                                        </mat-list-item>
+                                    </div>
+                                    <div class="w-20">
+                                        <mat-list-item>
+                                            <mat-icon>add</mat-icon>
+                                        </mat-list-item>
+                                    </div>
+                                </div>
 
+                                <mat-divider></mat-divider>
+                                <!-- Service Interfaces -->
+                                <div *ngFor="let dependee of application?.services">
+                                    <div class="flex">
+                                        <div class="flex-grow-1" [routerLink]="['/service-detail',dependee.shortName,dependee.version]">
+                                            <mat-list-item.large style="font-size:small">
+                                                <div class="pv2 pl4">
+                                                    {{dependee.shortName}}<br />
+                                                    {{dependee.version}}
+                                                </div>
+                                            </mat-list-item.large>
+                                        </div>
+                                        <div class="w-20">
+                                            <mat-list-item>
+                                                <mat-icon (click)="deleteService(dependee.shortName)">delete</mat-icon>
+                                            </mat-list-item>
+                                        </div>
+                                    </div>
+                                    <mat-divider></mat-divider>
+                                </div>
+                            </mat-action-list>
+                        </mat-card-content>
+
+                    </mat-card>
+                </div>
             </div>
         </mat-tab>
         <mat-tab label="Deployment">
@@ -16,3 +76,17 @@
 </mat-card>
 
 <mat-card class="ma2">Endpoint: </mat-card>
+
+<mat-card class="ma2">
+    <mat-card-title>
+        Public IPs:
+    </mat-card-title>
+    <mat-card-content>
+        <div *ngFor="let ip of publicIps">
+            <a target="_blank" rel="noopener" href="http://{{ip}}">
+                {{ip}}
+            </a><br />
+        </div>
+    </mat-card-content>
+
+</mat-card>

@@ -22,7 +22,7 @@ export class CreateApplicationComponent implements OnInit, OnDestroy {
 
     constructor(private apiService: ApiService, private dialog: MatDialog) {
         this.subModelDefinitions = this.apiService.getModelDefinitions().subscribe(val => {
-            this.filterList = (val['Application'] as ApiModel).required;
+            this.filterList = (val['MicoApplication'] as ApiModel).required;
         });
     }
 
