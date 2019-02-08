@@ -23,7 +23,7 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
 
     constructor(private apiService: ApiService) {
         this.subModelDefinitions = this.apiService.getModelDefinitions().subscribe(val => {
-            this.filterList = (val['MicoService'] as ApiModel).required;
+            this.filterList = (val['MicoService'] as ApiModel).required.filter((val) => val !== 'serviceInterfaces');
         });
     }
 

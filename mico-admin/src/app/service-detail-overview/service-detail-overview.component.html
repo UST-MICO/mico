@@ -31,7 +31,7 @@
             <!-- editable version -->
 
             <ng-container *ngIf="edit">
-                <mico-form [modelUrl]="'remote/MicoService'" (data)="serviceData = $event" [startData]="serviceData"></mico-form>
+                <mico-form [modelUrl]="'remote/MicoService'" [filter]="['predecessor', 'dependencies', 'serviceInterfaces']" [isBlacklist]="true" (data)="serviceData = $event" [startData]="serviceData"></mico-form>
                 <div class="ma1 pa1">
                     <span class="ma1">
                         <button mat-raised-button (click)="save()">Save</button>
