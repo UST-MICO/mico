@@ -195,7 +195,7 @@ export class ApiService {
             return;
         }
 
-        const resource = 'application/' + shortName + '/' + version;
+        const resource = 'applications/' + shortName + '/' + version;
 
         return this.rest.put<ApiObject>(resource, data).pipe(flatMap(val => {
 
@@ -203,7 +203,7 @@ export class ApiService {
             stream.next(val);
 
             return stream.asObservable().pipe(
-                filter(service => service !== undefined)
+                filter(application => application !== undefined)
             );
         }));
     }
