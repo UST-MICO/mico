@@ -6,6 +6,7 @@ import { SelectionModel } from '@angular/cdk/collections';
 import { ApiObject } from 'src/app/api/apiobject';
 import { groupBy, mergeMap, toArray } from 'rxjs/operators';
 import { versionComparator } from 'src/app/api/semantic-version';
+import { selection } from 'd3';
 
 
 enum FilterTypes {
@@ -185,4 +186,5 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
         console.log(pickedVersion, element);
         element.selectedVersion = pickedVersion;
     }
+
 }
