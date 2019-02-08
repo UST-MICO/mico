@@ -85,7 +85,7 @@ export class ApiService {
 
         // TODO replace URL with a generic path
         if (!stream.isStopped) {
-            this.rest.get<{ definitions: ApiModelMap, [prop: string]: any }>('http://localhost:8080/v2/api-docs').subscribe(val => {
+            this.rest.get<{ definitions: ApiModelMap, [prop: string]: any }>('v2/api-docs').subscribe(val => {
 
                 stream.next(freezeObject(val.definitions));
                 stream.complete();
@@ -483,8 +483,6 @@ export class ApiService {
             return;
         }
 
-        console.log('postService', shortName, version, data);
-
         return this.rest.post<ApiObject>('services/' + shortName + '/' + version + '/interfaces',
             data).pipe(flatMap(val => {
 
@@ -521,7 +519,6 @@ export class ApiService {
 
         this.rest.get<ApiObject>(resource).subscribe(val => {
 
-            console.log(val);
             stream.next(freezeObject((val as ApiObject)));
         });
 

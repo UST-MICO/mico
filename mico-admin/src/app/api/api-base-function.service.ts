@@ -38,7 +38,8 @@ export class ApiBaseFunctionService {
         if (url_string.endsWith('/')) {
             url_string = url_string.slice(0, url_string.length - 1);
         }
-        if (!url.endsWith('/')) {
+        // specific exception for swagger json (does not work with tailing /)
+        if (!url.endsWith('/') && !url.endsWith('api-docs')) {
             if ((url.lastIndexOf('.') < 0) || (url.lastIndexOf('/') > url.lastIndexOf('.'))) {
                 url = url + '/';
             }

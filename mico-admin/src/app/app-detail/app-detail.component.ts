@@ -78,6 +78,11 @@ export class AppDetailComponent implements OnInit, OnDestroy {
      * @param version version of the application to be displayed
      */
     subscribeApplication(version: string) {
+
+        if (this.subApplication != null) {
+            this.subApplication.unsubscribe();
+        }
+
         this.subApplication = this.apiService.getApplication(this.shortName, version).subscribe(val => {
             this.application = val;
 
@@ -181,17 +186,13 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                 // this.application.services.push(element);
                 // TODO Consider adding all at once.
                 this.apiService.postApplicationServices(this.application.shortName, this.application.version, service)
-                    .subscribe(val => {
-                        console.log(val);
-                    });
+                    .subscribe();
             });
         });
 
     }
 
     deleteService(serviceShortName: string) {
-
-        console.log(this.application);
 
         const dialogRef = this.dialog.open(YesNoDialogComponent, {
             data: {
@@ -200,13 +201,13 @@ export class AppDetailComponent implements OnInit, OnDestroy {
             }
         });
 
-        this.subServiceDependency = dialogRef.afterClosed().subscribe(result => {
-            if (result) {
+        this.subServiceDependency = dialogRef.afterClosed().subscribe(shouldDelete => {
+            if (shouldDelete) {
 
                 this.apiService.deleteApplicationServices(this.application.shortName, this.application.version, serviceShortName)
                     .subscribe(val => {
                         // TODO add some user output (as soon as the endpoint actually exists)
-                        console.log(val);
+
                     });
             }
         });
