@@ -1,8 +1,11 @@
 import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Subscription, from } from 'rxjs';
 import { ApiService } from 'src/app/api/api.service';
 import { MatDialogRef, MAT_DIALOG_DATA, MatTableDataSource } from '@angular/material';
 import { SelectionModel } from '@angular/cdk/collections';
+import { ApiObject } from 'src/app/api/apiobject';
+import { groupBy, mergeMap, toArray } from 'rxjs/operators';
+import { versionComparator } from 'src/app/api/semantic-version';
 
 
 enum FilterTypes {
@@ -78,26 +81,47 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
 
     ngOnInit() {
 
+        const tempServices: any[] = [];
+
         // get the list of services
         this.serviceSubscription = this.apiService.getServices()
             .subscribe(services => {
-                this.serviceList = services;
+                from(services as unknown as ArrayLike<ApiObject>)
+                    .pipe(
+                        groupBy(service => service.shortName),
+                        mergeMap(group => group.pipe(toArray())))
+                    .subscribe(group => {
 
-                // fill options with the service names
-                const tempList: Service[] = [];
-                this.serviceList.forEach(element => {
-                    if (this.filterElement(element)) {
-                        tempList.push({
-                            name: element.name,
-                            shortName: element.shortName,
-                            description: element.description,
-                            id: element.id,
-                            version: element.version,
-                        });
-                    }
-                });
+                        // sort descending
+                        group.sort((v1, v2) => (-1) * versionComparator(v1.version, v2.version));
+                        console.log(group);
+                        tempServices.push(group[0]);
+                    });
 
-                this.dataSource = new MatTableDataSource(tempList);
+                this.serviceList = tempServices;
+
+
+
+
+                /*
+            // OLD CODE
+            this.serviceList = services;
+
+            // fill options with the service names
+            const tempList: Service[] = [];
+            this.serviceList.forEach(element => {
+                if (this.filterElement(element)) {
+                    tempList.push({
+                        name: element.name,
+                        shortName: element.shortName,
+                        description: element.description,
+                        id: element.id,
+                        version: element.version,
+                    });
+                }
+            });
+            */
+                this.dataSource = new MatTableDataSource(this.serviceList);
             });
     }
 
