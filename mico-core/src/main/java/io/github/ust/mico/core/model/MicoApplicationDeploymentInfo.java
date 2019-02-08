@@ -1,5 +1,6 @@
 package io.github.ust.mico.core.model;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
@@ -8,17 +9,18 @@ import org.neo4j.ogm.annotation.NodeEntity;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.Singular;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 /**
  * Represents the information necessary for deploying
  * a {@link MicoApplication}.
  */
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Accessors(chain = true)
 @NodeEntity
 public class MicoApplicationDeploymentInfo {
 
@@ -39,7 +41,6 @@ public class MicoApplicationDeploymentInfo {
      * application is composed of (service id -> service deployment info).
      */
     @ApiModelProperty(required = true)
-    @Singular
-    private Map<Long, MicoServiceDeploymentInfo> serviceDeploymentInfos;
+    private Map<Long, MicoServiceDeploymentInfo> serviceDeploymentInfos = new HashMap<>();
 
 }

@@ -1,15 +1,33 @@
 package io.github.ust.mico.core;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.github.ust.mico.core.REST.ServiceInterfaceController;
-import io.github.ust.mico.core.model.MicoPortType;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.model.MicoServicePort;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import static io.github.ust.mico.core.JsonPathBuilder.HREF;
+import static io.github.ust.mico.core.JsonPathBuilder.LINKS;
+import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
+import static io.github.ust.mico.core.JsonPathBuilder.SELF;
+import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.VERSION;
+import static org.hamcrest.CoreMatchers.endsWith;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,24 +43,18 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import static io.github.ust.mico.core.JsonPathBuilder.*;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
-import static io.github.ust.mico.core.TestConstants.VERSION;
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.github.ust.mico.core.REST.ServiceInterfaceController;
+import io.github.ust.mico.core.model.MicoPortType;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.model.MicoServicePort;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.util.CollectionUtils;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(ServiceInterfaceController.class)
@@ -83,7 +95,7 @@ public class ServiceInterfaceControllerTests {
     @Test
     public void postServiceInterface() throws Exception {
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
-            Optional.of(MicoService.builder().shortName(SHORT_NAME).version(VERSION).build())
+            Optional.of(new MicoService().setShortName(SHORT_NAME).setVersion(VERSION))
         );
 
         MicoServiceInterface serviceInterface = getTestServiceInterface();
@@ -111,8 +123,8 @@ public class ServiceInterfaceControllerTests {
     @Test
     public void postServiceInterfaceExists() throws Exception {
         MicoServiceInterface serviceInterface = getTestServiceInterface();
-        MicoService service = MicoService.builder().shortName(SHORT_NAME).version(VERSION).build();
-        service = service.toBuilder().serviceInterface(serviceInterface).build();
+        MicoService service = new MicoService().setShortName(SHORT_NAME).setVersion(VERSION);
+        service.getServiceInterfaces().add(serviceInterface);
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
             Optional.of(service)
         );
@@ -127,8 +139,8 @@ public class ServiceInterfaceControllerTests {
     @Test
     public void getSpecificServiceInterface() throws Exception {
         MicoServiceInterface serviceInterface = getTestServiceInterface();
-        given(serviceRepository.findInterfaceOfServiceByName(serviceInterface.getServiceInterfaceName(), SHORT_NAME, VERSION)).willReturn(
-            Optional.of(serviceInterface));
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
+            Optional.of(new MicoService().setServiceInterfaces(CollectionUtils.listOf(serviceInterface))));
 
         mvc.perform(get(INTERFACES_URL + "/" + serviceInterface.getServiceInterfaceName()).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
@@ -152,11 +164,11 @@ public class ServiceInterfaceControllerTests {
 
     @Test
     public void getAllServiceInterfacesOfService() throws Exception {
-        MicoServiceInterface serviceInterface0 = MicoServiceInterface.builder().serviceInterfaceName("ServiceInterface0").build();
-        MicoServiceInterface serviceInterface1 = MicoServiceInterface.builder().serviceInterfaceName("ServiceInterface1").build();
+        MicoServiceInterface serviceInterface0 = new MicoServiceInterface().setServiceInterfaceName("ServiceInterface0");
+        MicoServiceInterface serviceInterface1 = new MicoServiceInterface().setServiceInterfaceName("ServiceInterface1");
         List<MicoServiceInterface> serviceInterfaces = Arrays.asList(serviceInterface0, serviceInterface1);
-        given(serviceRepository.findInterfacesOfService(SHORT_NAME, VERSION)).willReturn(
-            serviceInterfaces);
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
+            Optional.of(new MicoService().setServiceInterfaces(serviceInterfaces)));
         mvc.perform(get(INTERFACES_URL).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
@@ -228,16 +240,14 @@ public class ServiceInterfaceControllerTests {
     }
 
     private MicoServiceInterface getTestServiceInterface() {
-        return MicoServiceInterface.builder()
-            .serviceInterfaceName(INTERFACE_NAME)
-            .port(MicoServicePort.builder()
-                .number(INTERFACE_PORT)
-                .type(INTERFACE_PORT_TYPE)
-                .targetPort(INTERFACE_TARGET_PORT)
-                .build())
-            .description(INTERFACE_DESCRIPTION)
-            .publicDns(INTERFACE_PUBLIC_DNS)
-            .build();
+        return new MicoServiceInterface()
+            .setServiceInterfaceName(INTERFACE_NAME)
+            .setPorts(CollectionUtils.listOf(new MicoServicePort()
+                .setNumber(INTERFACE_PORT)
+                .setType(INTERFACE_PORT_TYPE)
+                .setTargetPort(INTERFACE_TARGET_PORT)))
+            .setDescription(INTERFACE_DESCRIPTION)
+            .setPublicDns(INTERFACE_PUBLIC_DNS);
     }
 
     private ResultMatcher getServiceInterfaceMatcher(MicoServiceInterface serviceInterface, String selfBaseUrl, String serviceUrl) {

@@ -18,11 +18,15 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -48,10 +52,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.web.client.RestTemplate;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
@@ -125,9 +130,9 @@ public class ApplicationControllerTest {
     @Test
     public void getAllApplications() throws Exception {
         given(applicationRepository.findAll(3)).willReturn(
-                Arrays.asList(MicoApplication.builder().shortName(SHORT_NAME).version(VERSION_1_0_1).build(),
-                        MicoApplication.builder().shortName(SHORT_NAME).version(VERSION).build(),
-                        MicoApplication.builder().shortName(SHORT_NAME_1).version(VERSION).build()));
+                Arrays.asList(new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION_1_0_1),
+                        new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION),
+                        new MicoApplication().setShortName(SHORT_NAME_1).setVersion(VERSION)));
 
         mvc.perform(get("/applications").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andDo(print())
@@ -144,7 +149,7 @@ public class ApplicationControllerTest {
     @Test
     public void getApplicationByShortNameAndVersion() throws Exception {
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
-                Optional.of(MicoApplication.builder().shortName(SHORT_NAME).version(VERSION).build()));
+                Optional.of(new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION)));
 
         mvc.perform(get("/applications/" + SHORT_NAME + "/" + VERSION.toString()).accept(MediaTypes.HAL_JSON_VALUE))
                 .andDo(print())
@@ -159,24 +164,33 @@ public class ApplicationControllerTest {
 
     @Test
     public void getApplicationByShortName() throws Exception {
-        given(applicationRepository.findByShortName(SHORT_NAME)).willReturn(Collections.singletonList(MicoApplication.builder().shortName(SHORT_NAME).version(VERSION).build()));
+        given(applicationRepository.findByShortName(SHORT_NAME)).willReturn(Collections.singletonList(new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION)));
 
         mvc.perform(get("/applications/" + SHORT_NAME + "/").accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
             .andExpect(jsonPath(APPLICATION_LIST + "[?(" + SHORT_NAME_MATCHER + "&& @.version=='" + VERSION + "')]", hasSize(1)))
-            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/applications/" + SHORT_NAME + "/")))
+            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/applications/" + SHORT_NAME)))
+            .andReturn();
+    }
+
+    @Test
+    public void getApplicationByShortNameWithTrailingSlash() throws Exception {
+        given(applicationRepository.findByShortName(SHORT_NAME)).willReturn(Collections.singletonList(new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION)));
+
+        mvc.perform(get("/applications/" + SHORT_NAME + "/").accept(MediaTypes.HAL_JSON_VALUE))
+            .andDo(print())
+            .andExpect(status().isOk())
             .andReturn();
     }
 
     @Test
     public void createApplication() throws Exception {
-        MicoApplication application = MicoApplication.builder()
-                .shortName(SHORT_NAME)
-                .version(VERSION)
-                .description(DESCRIPTION)
-                .build();
+        MicoApplication application = new MicoApplication()
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION)
+                .setDescription(DESCRIPTION);
 
         given(applicationRepository.save(any(MicoApplication.class))).willReturn(application);
 
@@ -192,17 +206,15 @@ public class ApplicationControllerTest {
 
     @Test
     public void updateApplication() throws Exception {
-        MicoApplication application = MicoApplication.builder()
-                .shortName(SHORT_NAME)
-                .version(VERSION)
-                .description(DESCRIPTION)
-                .build();
+        MicoApplication application = new MicoApplication()
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION)
+                .setDescription(DESCRIPTION);
 
-        MicoApplication updatedApplication = MicoApplication.builder()
-                .shortName(SHORT_NAME)
-                .version(VERSION)
-                .description("newDesc")
-                .build();
+        MicoApplication updatedApplication = new MicoApplication()
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION)
+                .setDescription("newDesc");
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(applicationRepository.save(any(MicoApplication.class))).willReturn(updatedApplication);
@@ -221,7 +233,7 @@ public class ApplicationControllerTest {
 
     @Test
     public void deleteApplication() throws Exception {
-        MicoApplication app = MicoApplication.builder().shortName(SHORT_NAME).version(VERSION).build();
+        MicoApplication app = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(app));
 
         ArgumentCaptor<MicoApplication> appCaptor = ArgumentCaptor.forClass(MicoApplication.class);
@@ -238,10 +250,9 @@ public class ApplicationControllerTest {
 
     @Test
     public void getDeploymentInformation() throws Exception {
-        MicoApplication application = MicoApplication.builder()
-            .shortName(SHORT_NAME)
-            .version(VERSION)
-            .build();
+        MicoApplication application = new MicoApplication()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION);
         String testNamespace = "TestNamespace";
         String nodeName = "testNode";
         String podPhase = "Running";

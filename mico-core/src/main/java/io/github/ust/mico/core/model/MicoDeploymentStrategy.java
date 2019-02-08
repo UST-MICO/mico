@@ -1,9 +1,8 @@
 package io.github.ust.mico.core.model;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Builder.Default;
 import lombok.Value;
+import lombok.experimental.Accessors;
 
 /**
  * The deployment strategy to use to replace
@@ -11,7 +10,7 @@ import lombok.Value;
  */
 @Value
 @AllArgsConstructor
-@Builder
+@Accessors(chain = true)
 public class MicoDeploymentStrategy {
 
     // ----------------------
@@ -36,7 +35,6 @@ public class MicoDeploymentStrategy {
      * If the absolute number is also specified, this field will be used prior to the absolute number.
      * Defaults to 25%.
      */
-    @Default
     private final double maxInstancesOnTopPercent = 0.25;
     /**
      * The maximum (absolute) number of instances that can be scheduled above the desired number of
@@ -52,7 +50,6 @@ public class MicoDeploymentStrategy {
      * If the absolute number is also specified, this field will be used prior to the absolute number.
      * Defaults to 25%.
      */
-    @Default
     private final double maxInstancesBelowPercent = 0.25;
     /**
      * The maximum (absolute) number of instances that can be unavailable during the update.

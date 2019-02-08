@@ -1,25 +1,31 @@
 package io.github.ust.mico.core.model;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.github.ust.mico.core.VersionNotSupportedException;
-import lombok.*;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import io.github.ust.mico.core.VersionNotSupportedException;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.Singular;
+import lombok.experimental.Accessors;
 
 /**
  * Represents an application as a set of {@link MicoService}s
  * in the context of MICO.
  */
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
-@Builder(toBuilder = true)
+@Accessors(chain = true)
 @NodeEntity
 public class MicoApplication {
 
@@ -29,13 +35,6 @@ public class MicoApplication {
     @Id
     @GeneratedValue
     private Long id;
-
-    /**
-     * Fix for https://github.com/rzwitserloot/lombok/issues/1347
-     */
-    public MicoApplication() {
-        services = Collections.emptyList();
-    }
 
 
     // ----------------------
@@ -77,12 +76,12 @@ public class MicoApplication {
      */
     @Singular
     @Relationship(type = "INCLUDES")
-    private List<MicoService> services;
+    private List<MicoService> services = new ArrayList<>();
     
     /**
      * The information necessary for deploying this application.
      */
-    private MicoApplicationDeploymentInfo deploymentInfo;
+    private MicoApplicationDeploymentInfo deploymentInfo = new MicoApplicationDeploymentInfo();
 
     /**
      * Human readable contact information for support purposes.

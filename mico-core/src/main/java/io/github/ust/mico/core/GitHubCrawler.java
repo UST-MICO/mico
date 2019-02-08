@@ -38,15 +38,14 @@ public class GitHubCrawler {
             JsonNode basicInfoJson = mapper.readTree(responseBasicInfo.getBody());
             JsonNode releaseInfoJson = mapper.readTree(responseReleaseInfo.getBody());
 
-            return MicoService.builder()
-                .shortName(basicInfoJson.get("name").textValue())
-                .name(basicInfoJson.get("full_name").textValue())
-                .version(releaseInfoJson.get("tag_name").textValue())
-                .description(basicInfoJson.get("description").textValue())
-                .serviceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
-                .gitCloneUrl(basicInfoJson.get("clone_url").textValue())
-                .gitReleaseInfoUrl(releaseInfoJson.get("url").textValue())
-                .build();
+            return new MicoService()
+                .setShortName(basicInfoJson.get("name").textValue())
+                .setName(basicInfoJson.get("full_name").textValue())
+                .setVersion(releaseInfoJson.get("tag_name").textValue())
+                .setDescription(basicInfoJson.get("description").textValue())
+                .setServiceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
+                .setGitCloneUrl(basicInfoJson.get("clone_url").textValue())
+                .setGitReleaseInfoUrl(releaseInfoJson.get("url").textValue());
         } catch (IOException e) {
             // TODO: Better exception handling
             e.printStackTrace();
@@ -88,15 +87,14 @@ public class GitHubCrawler {
 
             for (JsonNode jsonNode : releaseInfoJson) {
 
-                serviceList.add(MicoService.builder()
-                    .shortName(shortName)
-                    .name(fullName)
-                    .version(jsonNode.get("tag_name").textValue())
-                    .description(description)
-                    .serviceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
-                    .gitCloneUrl(gitCloneUrl)
-                    .gitReleaseInfoUrl(jsonNode.get("url").textValue())
-                    .build());
+                serviceList.add(new MicoService()
+                    .setShortName(shortName)
+                    .setName(fullName)
+                    .setVersion(jsonNode.get("tag_name").textValue())
+                    .setDescription(description)
+                    .setServiceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
+                    .setGitCloneUrl(gitCloneUrl)
+                    .setGitReleaseInfoUrl(jsonNode.get("url").textValue()));
 
             }
             return serviceList;

@@ -45,8 +45,15 @@ sed -i -- '/${MICO_PUBLIC_IP}/d' mico-admin.yaml
 sed -i -- '/application.properties: |-/a \    kubernetes.build-bot.namespace-build-execution='"${MICO_TEST_NAMESPACE}"'' mico-core.yaml
 sed -i -- '/application.properties: |-/a \    kubernetes.namespace-mico-workspace='"${MICO_TEST_NAMESPACE}"'' mico-core.yaml
 
+# Create test namespace
 kubectl create namespace ${MICO_TEST_NAMESPACE}
-kubectl apply -f fabric8-rbac.yaml
+
+# Grant cluster-admin permissions
+kubectl create clusterrolebinding ${MICO_TEST_NAMESPACE}-cluster-admin \
+  --clusterrole=cluster-admin \
+  --serviceaccount=${MICO_TEST_NAMESPACE}:default
+
+# Apply required components
 kubectl apply -f neo4j.yaml
 kubectl apply -f mico-core.yaml
 kubectl apply -f mico-admin.yaml

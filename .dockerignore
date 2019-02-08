@@ -5,7 +5,6 @@ LICENSE
 docker-compose.yml
 readthedocs.yml
 Jenkinsfile
-var/slackNotifier.groovy
 
 # node directory is only used by Maven
 mico-admin/node

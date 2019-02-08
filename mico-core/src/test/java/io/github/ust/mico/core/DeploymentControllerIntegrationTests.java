@@ -1,11 +1,17 @@
 package io.github.ust.mico.core;
 
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.github.ust.mico.core.model.*;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import lombok.extern.slf4j.Slf4j;
+import static io.github.ust.mico.core.TestConstants.ID;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -20,15 +26,16 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-
-import static io.github.ust.mico.core.TestConstants.ID;
-import static org.junit.Assert.*;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoPortType;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.model.MicoServicePort;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import lombok.extern.slf4j.Slf4j;
 
 @Ignore
 // TODO Upgrade to JUnit5
@@ -141,10 +148,10 @@ public class DeploymentControllerIntegrationTests {
     }
 
     private MicoApplication getTestApplication(MicoService service) {
-        return MicoApplication.builder()
-            .shortName("hello")
-            .name("hello-application")
-            .version("v1.0.0")
+        MicoApplication application = new MicoApplication()
+            .setShortName("hello")
+            .setName("hello-application")
+            .setVersion("v1.0.0");
             // TODO Refactor Deployment info (redundant information in comparison with MicoService)
             /*.deploymentInfo(MicoApplicationDeploymentInfo.builder()
                 .serviceDeploymentInfo(service.getId(), MicoServiceDeploymentInfo.builder()
@@ -159,26 +166,25 @@ public class DeploymentControllerIntegrationTests {
                         .build())
                     .build())
                 .build())*/
-            .service(service)
-            .build();
+        application.getServices().add(service);
+        return application;
     }
 
     private MicoService getTestService() {
-        return MicoService.builder()
-            .id(ID)
-            .shortName("hello")
-            .name("UST-MICO/hello")
-            .version("v1.0.0")
-            .gitCloneUrl("https://github.com/UST-MICO/hello.git")
-            .dockerfilePath("Dockerfile")
-            .serviceInterface(MicoServiceInterface.builder()
-                .serviceInterfaceName("hello-service")
-                .port(MicoServicePort.builder()
-                    .number(80)
-                    .targetPort(80)
-                    .type(MicoPortType.TCP)
-                    .build())
-                .build())
-            .build();
+        MicoService service = new MicoService()
+            .setId(ID)
+            .setShortName("hello")
+            .setName("UST-MICO/hello")
+            .setVersion("v1.0.0")
+            .setGitCloneUrl("https://github.com/UST-MICO/hello.git")
+            .setDockerfilePath("Dockerfile");
+        service.getServiceInterfaces().add(new MicoServiceInterface()
+                .setServiceInterfaceName("hello-service")
+                .setPorts(io.github.ust.mico.core.util.CollectionUtils.listOf(new MicoServicePort()
+                    .setNumber(80)
+                    .setTargetPort(80)
+                    .setType(MicoPortType.TCP))));
+        return service;
+                
     }
 }

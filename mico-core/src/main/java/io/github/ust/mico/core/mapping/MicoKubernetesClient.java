@@ -22,6 +22,7 @@ import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.model.MicoServicePort;
+import io.github.ust.mico.core.util.UIDUtils;
 
 /**
  * Provides accessor methods for creating deployment and services in Kubernetes.
@@ -46,9 +47,11 @@ public class MicoKubernetesClient {
      * @return the Kubernetes {@link Deployment} resource object
      */
     public Deployment createMicoService(MicoService service, MicoServiceDeploymentInfo deploymentInfo) {
+        String serviceUid = UIDUtils.uidFor(service);
+        
         Deployment deployment = new DeploymentBuilder()
                 .withNewMetadata()
-                    .withName(service.getShortName())
+                    .withName(serviceUid)
                     .withNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace())
                     .addToLabels("app", service.getShortName())
                     .addToLabels("version", service.getVersion())
@@ -56,13 +59,13 @@ public class MicoKubernetesClient {
                 .withNewSpec()
                     .withNewReplicas(deploymentInfo.getReplicas())
                     .withNewSelector()
-                     .addToMatchLabels("run", service.getUniqueName())
+                     .addToMatchLabels("run", serviceUid)
                      .endSelector()
                      .withNewTemplate()
                          .withNewMetadata()
                              .addToLabels("app", service.getShortName())
                              .addToLabels("version", service.getVersion())
-                             .addToLabels("run", service.getUniqueName())
+                             .addToLabels("run", serviceUid)
                          .endMetadata()
                          .withNewSpec()
                              .withContainers(
@@ -78,7 +81,7 @@ public class MicoKubernetesClient {
                 .build();
 
         KubernetesClient client = cluster.getClient();
-        return client.apps().deployments().inNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace()).create(deployment);
+        return client.apps().deployments().inNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace()).createOrReplace(deployment);
     }
 
     /**
@@ -89,9 +92,11 @@ public class MicoKubernetesClient {
      * @return the Kubernetes {@link Service} resource
      */
     public Service createMicoServiceInterface(MicoServiceInterface micoServiceInterface, MicoService micoService) {
+        String serviceInterfaceUid = UIDUtils.uidFor(micoServiceInterface);
+        
         Service service = new ServiceBuilder()
                 .withNewMetadata()
-                    .withName(micoServiceInterface.getServiceInterfaceName())
+                    .withName(serviceInterfaceUid)
                     .withNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace())
                     .addToLabels("app", micoService.getShortName())
                     .addToLabels("version", micoService.getVersion())
@@ -99,15 +104,17 @@ public class MicoKubernetesClient {
                 .withNewSpec()
                     .withType("LoadBalancer")
                     .withPorts(createServicePorts(micoServiceInterface))
-                    .addToSelector("run", micoService.getUniqueName())
+                    .addToSelector("run", serviceInterfaceUid)
                 .endSpec()
                 .build();
 
         // TODO: Check whether optional fields of MicoServiceInterface have to be used in some way
         // (publicDns, description, protocol, transportProtocol)
 
+        // TODO: Retrieve Kubernetes deployment by labels and retrieve unique identifier
+        
         KubernetesClient client = cluster.getClient();
-        return client.services().inNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace()).create(service);
+        return client.services().inNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace()).createOrReplace(service);
     }
 
 

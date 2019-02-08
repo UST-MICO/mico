@@ -1,17 +1,28 @@
 package io.github.ust.mico.core;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.github.ust.mico.core.REST.DeploymentController;
-import io.github.ust.mico.core.concurrency.MicoCoreBackgroundTaskFactory;
-import io.github.ust.mico.core.imagebuilder.ImageBuilder;
-import io.github.ust.mico.core.mapping.MicoKubernetesClient;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoApplicationDeploymentInfo;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import static io.github.ust.mico.core.TestConstants.DESCRIPTION;
+import static io.github.ust.mico.core.TestConstants.DOCKERFILE;
+import static io.github.ust.mico.core.TestConstants.DOCKER_IMAGE_URI;
+import static io.github.ust.mico.core.TestConstants.GIT_TEST_REPO_URL;
+import static io.github.ust.mico.core.TestConstants.ID;
+import static io.github.ust.mico.core.TestConstants.RELEASE;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.VERSION;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,21 +38,16 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
-import java.util.function.Function;
-
-import static io.github.ust.mico.core.TestConstants.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.github.ust.mico.core.REST.DeploymentController;
+import io.github.ust.mico.core.concurrency.MicoCoreBackgroundTaskFactory;
+import io.github.ust.mico.core.imagebuilder.ImageBuilder;
+import io.github.ust.mico.core.mapping.MicoKubernetesClient;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(DeploymentController.class)
@@ -73,8 +79,6 @@ public class DeploymentControllerTests {
     private MicoCoreBackgroundTaskFactory factory;
     @MockBean
     private MicoKubernetesClient micoKubernetesClient;
-    @Autowired
-    private ObjectMapper mapper;
 
     @Before
     public void setUp() {
@@ -92,10 +96,10 @@ public class DeploymentControllerTests {
         MicoService service = getTestService();
         MicoApplication application = getTestApplication(service);
 
-        MicoService serviceWithImage = service.toBuilder().dockerImageUri(DOCKER_IMAGE_URI).build();
+        service.setDockerImageUri(DOCKER_IMAGE_URI);
 
         given(applicationRepository.findByShortNameAndVersion(TestConstants.SHORT_NAME, VERSION)).willReturn(Optional.of(application));
-        given(serviceRepository.save(any(MicoService.class))).willReturn(serviceWithImage);
+        given(serviceRepository.save(any(MicoService.class))).willReturn(service);
 
         given(factory.runAsync(ArgumentMatchers.any(), onSuccessArgumentCaptor.capture(), onErrorArgumentCaptor.capture()))
             .willReturn(CompletableFuture.completedFuture(service));
@@ -120,7 +124,7 @@ public class DeploymentControllerTests {
 
         MicoService micoServiceToCreate = micoServiceArgumentCaptor.getValue();
         assertNotNull(micoServiceToCreate);
-        assertEquals("MicoService that will be created as Kubernetes resources does not match", serviceWithImage, micoServiceToCreate);
+        assertEquals("MicoService that will be created as Kubernetes resources does not match", service, micoServiceToCreate);
 
         MicoServiceDeploymentInfo deploymentInfo = deploymentInfoArgumentCaptor.getValue();
         assertNotNull(deploymentInfo);
@@ -130,26 +134,22 @@ public class DeploymentControllerTests {
     }
 
     private MicoApplication getTestApplication(MicoService service) {
-        return MicoApplication.builder()
-            .shortName(TestConstants.SHORT_NAME)
-            .version(VERSION)
-            .description(DESCRIPTION)
-            .deploymentInfo(MicoApplicationDeploymentInfo.builder()
-                .serviceDeploymentInfo(ID, MicoServiceDeploymentInfo.builder()
-                    .replicas(1)
-                    .build())
-                .build())
-            .service(service)
-            .build();
+        MicoApplication application = new MicoApplication()
+            .setShortName(TestConstants.SHORT_NAME)
+            .setVersion(VERSION)
+            .setDescription(DESCRIPTION);
+        application.getDeploymentInfo().getServiceDeploymentInfos().put(ID, new MicoServiceDeploymentInfo()
+                .setReplicas(1));
+        application.getServices().add(service);
+        return application;
     }
 
     private MicoService getTestService() {
-        return MicoService.builder()
-            .id(ID)
-            .shortName(SHORT_NAME)
-            .version(RELEASE)
-            .gitCloneUrl(GIT_TEST_REPO_URL)
-            .dockerfilePath(DOCKERFILE)
-            .build();
+        return new MicoService()
+            .setId(ID)
+            .setShortName(SHORT_NAME)
+            .setVersion(RELEASE)
+            .setGitCloneUrl(GIT_TEST_REPO_URL)
+            .setDockerfilePath(DOCKERFILE);
     }
 }
