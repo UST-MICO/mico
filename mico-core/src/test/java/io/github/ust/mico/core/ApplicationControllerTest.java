@@ -330,12 +330,11 @@ public class ApplicationControllerTest {
 
     @Test
     public void getServicesFormApplication() throws Exception {
-        MicoService micoService = MicoService.builder().shortName(SHORT_NAME_1).version(VERSION_1_0_1).build();
-        MicoApplication application = MicoApplication.builder()
-            .shortName(SHORT_NAME)
-            .version(VERSION)
-            .service(micoService)
-            .build();
+        MicoService micoService = new MicoService().setShortName(SHORT_NAME_1).setVersion(VERSION_1_0_1);
+        MicoApplication application = new MicoApplication()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setServices(Collections.singletonList(micoService));
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         String micoServiceListJsonPath = buildPath(EMBEDDED, "micoServiceList");
         String micoServiceListJsonPathFirstElement = buildPath(micoServiceListJsonPath, FIRST_ELEMENT);

@@ -346,15 +346,14 @@ public class ApplicationController {
     public ResponseEntity<Resources<Resource<MicoService>>> getMicoServicesFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
                                                                                            @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion) {
         Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(applicationShortName, applicationVersion);
-        if (applicationOptional.isPresent()) {
-            MicoApplication micoApplication = applicationOptional.get();
-            List<MicoService> micoServices = micoApplication.getServices();
-            List<Resource<MicoService>> micoServicesWithLinks = ServiceController.getServiceResourcesList(micoServices);
-            return ResponseEntity.ok(
-                new Resources<>(micoServicesWithLinks,
-                    linkTo(methodOn(ApplicationController.class).getMicoServicesFromApplication(applicationShortName, applicationVersion)).withSelfRel()));
-        } else {
+        if (!applicationOptional.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "There is no application with the name " + applicationShortName + " and the version " + applicationVersion);
         }
+        MicoApplication micoApplication = applicationOptional.get();
+        List<MicoService> micoServices = micoApplication.getServices();
+        List<Resource<MicoService>> micoServicesWithLinks = ServiceController.getServiceResourcesList(micoServices);
+        return ResponseEntity.ok(
+            new Resources<>(micoServicesWithLinks,
+                linkTo(methodOn(ApplicationController.class).getMicoServicesFromApplication(applicationShortName, applicationVersion)).withSelfRel()));
     }
 }
