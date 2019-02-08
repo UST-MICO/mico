@@ -75,6 +75,7 @@ export class MicoFormComponent implements OnInit, OnChanges {
                     this.valid.emit(this.form.valid);
                     this.data.emit(this.form.value);
                 });
+                this.valid.emit(this.form.valid);
             });
         }
     }

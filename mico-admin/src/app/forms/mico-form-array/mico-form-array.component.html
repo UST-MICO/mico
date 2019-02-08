@@ -1,0 +1,18 @@
+<div class="mv2">
+    <div class="flex mb2 hide-child" *ngFor="let entry of currentValue; let index=index;trackBy:trackBy">
+        <mat-card class="w-100">
+            <mat-card-header class="flex items-center justify-between">
+                <mat-card-title>{{nestedModel?.title}}</mat-card-title>
+                <button class="justify-end" (click)="removeElement(index)" mat-stroked-button>
+                    <mat-icon>remove</mat-icon>
+                </button>
+            </mat-card-header>
+            <mat-card-content>
+                <mico-form [modelUrl]="config != null ? config.items['$ref'] : ''" [startData]="entry" (data)="updateElement(index, $event)"></mico-form>
+            </mat-card-content>
+        </mat-card>
+    </div>
+    <button class="w-100" (click)="addElement()" mat-raised-button>
+        <mat-icon>add</mat-icon>
+    </button>
+</div>
