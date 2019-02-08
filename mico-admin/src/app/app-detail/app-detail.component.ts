@@ -93,30 +93,36 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
             // application is found now, so try to get some more information
             // Deployment information
+            // TODO uncomment!!!
+            /*
             this.subDeployInformation = this.apiService
                 .getApplicationDeploymentInformation(this.application.shortName, this.application.version)
                 .subscribe(deploymentInformation => {
                     console.log(deploymentInformation);
                 });
+*/
 
             // public ip
             const tempPublicIps = [];
+            // TODO uncomment!!!
+            /*
 
-            this.application.services.forEach(service => {
+        this.application.services.forEach(service => {
 
-                if (service.serviceInterfaces != null) {
+            if (service.serviceInterfaces != null) {
 
-                    service.serviceInterfaces.forEach(micoInterface => {
-                        this.subPublicIps.push(this.apiService
-                            .getServiceInterfacePublicIp(service.shortName, service.version, micoInterface.serviceInterfaceName)
-                            .subscribe(listOfPublicIps => {
-                                listOfPublicIps.forEach(publicIp => {
-                                    tempPublicIps.push(publicIp);
-                                });
-                            }));
-                    });
-                }
-            });
+                service.serviceInterfaces.forEach(micoInterface => {
+                    this.subPublicIps.push(this.apiService
+                        .getServiceInterfacePublicIp(service.shortName, service.version, micoInterface.serviceInterfaceName)
+                        .subscribe(listOfPublicIps => {
+                            listOfPublicIps.forEach(publicIp => {
+                                tempPublicIps.push(publicIp);
+                            });
+                        }));
+                });
+            }
+        });
+        */
             this.publicIps = tempPublicIps;
         });
     }
