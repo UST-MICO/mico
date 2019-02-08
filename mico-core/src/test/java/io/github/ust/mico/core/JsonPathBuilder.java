@@ -12,6 +12,11 @@ public class JsonPathBuilder {
     public static final String SELF = "self";
 
     public static final String EQUALS = "==";
+    public static final String SELF_HREF = buildPath(SELF,HREF);
+    public static final String LINKS_SELF_HREF = buildPath(LINKS,SELF_HREF);
+    public static final String FIRST_ELEMENT = "[0]";
+    public static final String VERSION = "version";
+    public static final String SHORT_NAME = "shortName";
 
     public static String buildPath(String ...path) {
         StringBuilder resultPath = new StringBuilder(500);
