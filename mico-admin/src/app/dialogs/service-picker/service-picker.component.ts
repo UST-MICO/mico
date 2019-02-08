@@ -36,10 +36,9 @@ export interface Service {
 
 export class ServicePickerComponent implements OnInit, OnDestroy {
 
-    serviceList;
     filter = FilterTypes.None;
     choiceModel = ChoiceTypes.multi;
-    existingDependencies: number[] = [];
+    existingDependencies: string[] = [];
 
     private serviceSubscription: Subscription;
 
@@ -70,7 +69,7 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
 
         if (data.existingDependencies != null) {
             data.existingDependencies.forEach(element => {
-                this.existingDependencies.push(parseInt(element.id, 10));
+                this.existingDependencies.push(element.shortName);
             });
         }
 
@@ -81,11 +80,13 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
 
     ngOnInit() {
 
-        const tempServices: any[] = [];
 
         // get the list of services
         this.serviceSubscription = this.apiService.getServices()
             .subscribe(services => {
+
+                const tempServiceGroups: any[] = [];
+
                 from(services as unknown as ArrayLike<ApiObject>)
                     .pipe(
                         groupBy(service => service.shortName),
@@ -95,33 +96,21 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
                         // sort descending
                         group.sort((v1, v2) => (-1) * versionComparator(v1.version, v2.version));
                         console.log(group);
-                        tempServices.push(group[0]);
+                        // filter
+                        if (this.filterElement(group[0])) {
+
+                            tempServiceGroups.push(
+                                {
+                                    name: group[0].name,
+                                    shortName: group[0].shortName,
+                                    allVersions: group,
+                                    selectedVersion: group[0].version
+                                }
+                            );
+                        }
                     });
 
-                this.serviceList = tempServices;
-
-
-
-
-                /*
-            // OLD CODE
-            this.serviceList = services;
-
-            // fill options with the service names
-            const tempList: Service[] = [];
-            this.serviceList.forEach(element => {
-                if (this.filterElement(element)) {
-                    tempList.push({
-                        name: element.name,
-                        shortName: element.shortName,
-                        description: element.description,
-                        id: element.id,
-                        version: element.version,
-                    });
-                }
-            });
-            */
-                this.dataSource = new MatTableDataSource(this.serviceList);
+                this.dataSource = new MatTableDataSource(tempServiceGroups);
             });
     }
 
@@ -132,14 +121,28 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
     }
 
     getSelectedService() {
-        return this.selection.selected;
+
+        const tempSelected = [];
+
+        this.selection.selected.forEach(selectedElement => {
+
+            for (const service of selectedElement.allVersions) {
+                if ((service as any).version === selectedElement.selectedVersion) {
+                    tempSelected.push(service);
+                    // next selected service
+                    return;
+                }
+            }
+        });
+
+        return tempSelected;
     }
 
     private filterElement = (element): boolean => {
 
         let val = false;
 
-        if (!this.existingDependencies.includes(parseInt(element.id, 10))) {
+        if (!this.existingDependencies.includes(element.shortName)) {
             if (this.filter === FilterTypes.None) {
                 val = true;
             } else if (this.filter === FilterTypes.Internal) {
@@ -176,5 +179,10 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
 
     highlight(row) {
         this.selectedRowIndex = row.id;
+    }
+
+    updateVersion(pickedVersion, element) {
+        console.log(pickedVersion, element);
+        element.selectedVersion = pickedVersion;
     }
 }

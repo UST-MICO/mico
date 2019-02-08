@@ -54,9 +54,11 @@ export class CreateApplicationComponent implements OnInit, OnDestroy {
             }
         });
         this.subDependeesDialog = dialogRef.afterClosed().subscribe(result => {
-            result.forEach(element => {
-                this.services.push(element);
-            });
+            if (result) {
+                result.forEach(element => {
+                    this.services.push(element);
+                });
+            }
         });
     }
 
