@@ -6,7 +6,6 @@ import { SelectionModel } from '@angular/cdk/collections';
 import { ApiObject } from 'src/app/api/apiobject';
 import { groupBy, mergeMap, toArray } from 'rxjs/operators';
 import { versionComparator } from 'src/app/api/semantic-version';
-import { selection } from 'd3';
 
 
 enum FilterTypes {
@@ -87,6 +86,7 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
             .subscribe(services => {
 
                 const tempServiceGroups: any[] = [];
+                let counter = 0;
 
                 from(services as unknown as ArrayLike<ApiObject>)
                     .pipe(
@@ -96,18 +96,22 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
 
                         // sort descending
                         group.sort((v1, v2) => (-1) * versionComparator(v1.version, v2.version));
-                        console.log(group);
+
                         // filter
                         if (this.filterElement(group[0])) {
 
                             tempServiceGroups.push(
                                 {
+                                    id: counter,
                                     name: group[0].name,
                                     shortName: group[0].shortName,
                                     allVersions: group,
-                                    selectedVersion: group[0].version
+                                    selectedVersion: group[0].version,
+                                    selectedDescription: group[0].description
                                 }
                             );
+
+                            counter++;
                         }
                     });
 
@@ -183,8 +187,12 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
     }
 
     updateVersion(pickedVersion, element) {
-        console.log(pickedVersion, element);
         element.selectedVersion = pickedVersion;
+        element.allVersions.forEach(serviceVersion => {
+            if (serviceVersion.version === pickedVersion) {
+                element.selectedDescription = serviceVersion.description;
+            }
+        });
     }
 
 }
