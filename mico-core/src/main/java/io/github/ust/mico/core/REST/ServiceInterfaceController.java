@@ -29,7 +29,6 @@ import static io.github.ust.mico.core.REST.ServiceController.PATH_VARIABLE_SHORT
 import static io.github.ust.mico.core.REST.ServiceController.PATH_VARIABLE_VERSION;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
-import static org.springframework.http.ResponseEntity.ok;
 
 @Slf4j
 @RestController
@@ -54,18 +53,17 @@ public class ServiceInterfaceController {
     @GetMapping(SERVICE_INTERFACE_PATH)
     public ResponseEntity<Resources<Resource<MicoServiceInterface>>> getInterfacesOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                             @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        Optional<List<Resource<MicoServiceInterface>>> interfacesOpt = serviceRepository.findByShortNameAndVersion(shortName, version).map(service -> {
-            // Use service to get the fully mapped interface objects from the ogm
-            return service.getServiceInterfaces();
-        }).map(interfaces -> {
-            return interfaces.stream().map(serviceInterface -> {
-                return new Resource<>(serviceInterface, getServiceInterfaceLinks(serviceInterface, shortName, version));
-            }).collect(Collectors.toList());
-        });
+        // Use service to get the fully mapped interface objects from the ogm
+        Optional<List<Resource<MicoServiceInterface>>> interfacesOpt =
+            serviceRepository.findByShortNameAndVersion(shortName, version)
+                .map(MicoService::getServiceInterfaces)
+                .map(interfaces -> interfaces.stream()
+                    .map(serviceInterface -> new Resource<>(serviceInterface, getServiceInterfaceLinks(serviceInterface, shortName, version)))
+                    .collect(Collectors.toList()));
         if (!interfacesOpt.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service interface '" + shortName + "' '" + version + "' was not found!");
         }
-        return ok(new Resources<>(interfacesOpt.get(), linkTo(methodOn(ServiceInterfaceController.class).getInterfacesOfService(shortName, version)).withSelfRel()));
+        return ResponseEntity.ok(new Resources<>(interfacesOpt.get(), linkTo(methodOn(ServiceInterfaceController.class).getInterfacesOfService(shortName, version)).withSelfRel()));
     }
 
     @GetMapping(SERVICE_INTERFACE_PATH + "/{" + PATH_VARIABLE_SERVICE_INTERFACE_NAME + "}")
@@ -75,7 +73,7 @@ public class ServiceInterfaceController {
         Optional<MicoServiceInterface> serviceInterfaceOptional = serviceRepository.findByShortNameAndVersion(shortName, version).flatMap(service -> {
             // Use service to get the fully mapped interface objects from the ogm
             if (service.getServiceInterfaces() == null) {
-                return Optional.of(null);
+                return Optional.empty();
             }
             return service.getServiceInterfaces().stream().filter(serviceInterface ->
                 serviceInterface.getServiceInterfaceName().equals(serviceInterfaceName
@@ -119,25 +117,25 @@ public class ServiceInterfaceController {
             }
         }
 
-        return ok().body(new ArrayList<>(publicIps));
+        return ResponseEntity.ok().body(new ArrayList<>(publicIps));
     }
 
     @DeleteMapping(SERVICE_INTERFACE_PATH + "/{" + PATH_VARIABLE_SERVICE_INTERFACE_NAME + "}")
-    public void deleteServiceInterface(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                       @PathVariable(PATH_VARIABLE_VERSION) String version,
-                                       @PathVariable(PATH_VARIABLE_SERVICE_INTERFACE_NAME) String serviceInterfaceName) {
+    public ResponseEntity<Void> deleteServiceInterface(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                       @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                       @PathVariable(PATH_VARIABLE_SERVICE_INTERFACE_NAME) String serviceInterfaceName) {
         serviceRepository.deleteInterfaceOfServiceByName(serviceInterfaceName, shortName, version);
+        return ResponseEntity.noContent().build();
     }
-
 
     /**
      * This is not transactional. At the moment we have only one user. If this changes transactional support
      * is a must. FIXME Add transactional support
      *
-     * @param shortName
-     * @param version
-     * @param serviceInterface
-     * @return
+     * @param shortName        the name of the MICO service
+     * @param version          the version of the MICO service
+     * @param serviceInterface the name of the MICO service interface
+     * @return the created MICO service interface
      */
     @PostMapping(SERVICE_INTERFACE_PATH)
     public ResponseEntity<Resource<MicoServiceInterface>> createServiceInterface(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,

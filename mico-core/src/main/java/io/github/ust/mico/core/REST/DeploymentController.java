@@ -60,7 +60,8 @@ public class DeploymentController {
             imageBuilder.init();
         } catch (NotInitializedException e) {
             log.error(e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                "Initialization of the image build failed. Caused by: " + e.getMessage());
         }
 
         Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);

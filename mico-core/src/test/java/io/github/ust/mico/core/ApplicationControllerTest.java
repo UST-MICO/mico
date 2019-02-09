@@ -1,40 +1,19 @@
 package io.github.ust.mico.core;
 
-import static io.github.ust.mico.core.JsonPathBuilder.*;
-import static io.github.ust.mico.core.REST.ApplicationController.*;
-import static io.github.ust.mico.core.TestConstants.DESCRIPTION;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1_MATCHER;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME_MATCHER;
-import static io.github.ust.mico.core.TestConstants.VERSION;
-import static io.github.ust.mico.core.TestConstants.VERSION_1_0_1;
-import static org.hamcrest.CoreMatchers.endsWith;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Optional;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import io.fabric8.kubernetes.api.model.PodList;
+import io.fabric8.kubernetes.api.model.PodListBuilder;
+import io.fabric8.kubernetes.api.model.ServiceList;
+import io.fabric8.kubernetes.api.model.ServiceListBuilder;
+import io.fabric8.kubernetes.api.model.apps.DeploymentList;
+import io.fabric8.kubernetes.api.model.apps.DeploymentListBuilder;
+import io.github.ust.mico.core.REST.ApplicationController;
+import io.github.ust.mico.core.REST.PrometheusResponse;
+import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
-import org.junit.Rule;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -53,29 +32,39 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.web.client.RestTemplate;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Optional;
 
-import io.fabric8.kubernetes.api.model.PodBuilder;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
-import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
-import io.github.ust.mico.core.REST.ApplicationController;
-import io.github.ust.mico.core.REST.PrometheusResponse;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import static io.github.ust.mico.core.JsonPathBuilder.*;
+import static io.github.ust.mico.core.REST.ApplicationController.PATH_APPLICATIONS;
+import static io.github.ust.mico.core.REST.ApplicationController.PATH_SERVICES;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.VERSION;
+import static io.github.ust.mico.core.TestConstants.*;
+import static io.github.ust.mico.core.mapping.MicoKubernetesClient.LABEL_APP_KEY;
+import static io.github.ust.mico.core.mapping.MicoKubernetesClient.LABEL_VERSION_KEY;
+import static org.hamcrest.CoreMatchers.endsWith;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(ApplicationController.class)
 @OverrideAutoConfiguration(enabled = true) //Needed to override our neo4j config
 @EnableAutoConfiguration
-@EnableConfigurationProperties(value = { CorsConfig.class })
+@EnableConfigurationProperties(value = {CorsConfig.class})
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class ApplicationControllerTest {
-
-    @Rule
-    public KubernetesServer server = new KubernetesServer(true, true);
 
     private static final String JSON_PATH_LINKS_SECTION = "$._links.";
 
@@ -103,9 +92,6 @@ public class ApplicationControllerTest {
 
     private static final String BASE_PATH = "/applications";
 
-    @Autowired
-    private MockMvc mvc;
-
     @MockBean
     private PrometheusConfig prometheusConfig;
 
@@ -113,13 +99,16 @@ public class ApplicationControllerTest {
     private MicoKubernetesConfig micoKubernetesConfig;
 
     @MockBean
+    private MicoApplicationRepository applicationRepository;
+
+    @MockBean
     private RestTemplate restTemplate;
 
     @MockBean
-    private ClusterAwarenessFabric8 clusterAwarenessFabric8;
+    private ClusterAwarenessFabric8 cluster;
 
-    @MockBean
-    private MicoApplicationRepository applicationRepository;
+    @Autowired
+    private MockMvc mvc;
 
     @Autowired
     private ObjectMapper mapper;
@@ -130,36 +119,36 @@ public class ApplicationControllerTest {
     @Test
     public void getAllApplications() throws Exception {
         given(applicationRepository.findAll(3)).willReturn(
-                Arrays.asList(new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION_1_0_1),
-                        new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION),
-                        new MicoApplication().setShortName(SHORT_NAME_1).setVersion(VERSION)));
+            Arrays.asList(new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION_1_0_1),
+                new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION),
+                new MicoApplication().setShortName(SHORT_NAME_1).setVersion(VERSION)));
 
         mvc.perform(get("/applications").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andExpect(jsonPath(APPLICATION_LIST + "[*]", hasSize(3)))
-                .andExpect(jsonPath(APPLICATION_LIST + "[?(" + SHORT_NAME_MATCHER + "&& @.version=='" + VERSION_1_0_1 + "')]", hasSize(1)))
-                .andExpect(jsonPath(APPLICATION_LIST + "[?(" + SHORT_NAME_MATCHER + "&& @.version=='" + VERSION + "')]", hasSize(1)))
-                .andExpect(jsonPath(APPLICATION_LIST + "[?(" + SHORT_NAME_1_MATCHER + "&& @.version=='" + VERSION + "')]", hasSize(1)))
-                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "self.href", is("http://localhost/applications")))
-                .andReturn();
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andExpect(jsonPath(APPLICATION_LIST + "[*]", hasSize(3)))
+            .andExpect(jsonPath(APPLICATION_LIST + "[?(" + SHORT_NAME_MATCHER + "&& @.version=='" + VERSION_1_0_1 + "')]", hasSize(1)))
+            .andExpect(jsonPath(APPLICATION_LIST + "[?(" + SHORT_NAME_MATCHER + "&& @.version=='" + VERSION + "')]", hasSize(1)))
+            .andExpect(jsonPath(APPLICATION_LIST + "[?(" + SHORT_NAME_1_MATCHER + "&& @.version=='" + VERSION + "')]", hasSize(1)))
+            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "self.href", is("http://localhost/applications")))
+            .andReturn();
     }
 
     @Test
     public void getApplicationByShortNameAndVersion() throws Exception {
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
-                Optional.of(new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION)));
+            Optional.of(new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION)));
 
-        mvc.perform(get("/applications/" + SHORT_NAME + "/" + VERSION.toString()).accept(MediaTypes.HAL_JSON_VALUE))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
-                .andExpect(jsonPath(VERSION_PATH, is(VERSION)))
-                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/applications/" + SHORT_NAME + "/" + VERSION)))
-                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "applications.href", is("http://localhost/applications")))
-                .andReturn();
+        mvc.perform(get("/applications/" + SHORT_NAME + "/" + VERSION).accept(MediaTypes.HAL_JSON_VALUE))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
+            .andExpect(jsonPath(VERSION_PATH, is(VERSION)))
+            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/applications/" + SHORT_NAME + "/" + VERSION)))
+            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "applications.href", is("http://localhost/applications")))
+            .andReturn();
     }
 
     @Test
@@ -188,18 +177,18 @@ public class ApplicationControllerTest {
     @Test
     public void createApplication() throws Exception {
         MicoApplication application = new MicoApplication()
-                .setShortName(SHORT_NAME)
-                .setVersion(VERSION)
-                .setDescription(DESCRIPTION);
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setDescription(DESCRIPTION);
 
         given(applicationRepository.save(any(MicoApplication.class))).willReturn(application);
 
         prettyPrint(application);
 
         final ResultActions result = mvc.perform(post(BASE_PATH)
-                .content(mapper.writeValueAsBytes(application))
-                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andDo(print());
+            .content(mapper.writeValueAsBytes(application))
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print());
 
         result.andExpect(status().isCreated());
     }
@@ -207,26 +196,26 @@ public class ApplicationControllerTest {
     @Test
     public void updateApplication() throws Exception {
         MicoApplication application = new MicoApplication()
-                .setShortName(SHORT_NAME)
-                .setVersion(VERSION)
-                .setDescription(DESCRIPTION);
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setDescription(DESCRIPTION);
 
         MicoApplication updatedApplication = new MicoApplication()
-                .setShortName(SHORT_NAME)
-                .setVersion(VERSION)
-                .setDescription("newDesc");
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setDescription("newDesc");
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(applicationRepository.save(any(MicoApplication.class))).willReturn(updatedApplication);
 
         ResultActions resultUpdate = mvc.perform(put(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION)
-                .content(mapper.writeValueAsBytes(updatedApplication))
-                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andDo(print())
-                .andExpect(jsonPath(ID_PATH, is(application.getId())))
-                .andExpect(jsonPath(DESCRIPTION_PATH, is(updatedApplication.getDescription())))
-                .andExpect(jsonPath(SHORT_NAME_PATH, is(updatedApplication.getShortName())))
-                .andExpect(jsonPath(VERSION_PATH, is(updatedApplication.getVersion())));
+            .content(mapper.writeValueAsBytes(updatedApplication))
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(jsonPath(ID_PATH, is(application.getId())))
+            .andExpect(jsonPath(DESCRIPTION_PATH, is(updatedApplication.getDescription())))
+            .andExpect(jsonPath(SHORT_NAME_PATH, is(updatedApplication.getShortName())))
+            .andExpect(jsonPath(VERSION_PATH, is(updatedApplication.getVersion())));
 
         resultUpdate.andExpect(status().isOk());
     }
@@ -238,10 +227,10 @@ public class ApplicationControllerTest {
 
         ArgumentCaptor<MicoApplication> appCaptor = ArgumentCaptor.forClass(MicoApplication.class);
 
-        mvc.perform(delete("/applications/" + SHORT_NAME + "/" + VERSION.toString()).accept(MediaTypes.HAL_JSON_VALUE))
-                .andDo(print())
-                .andExpect(status().isNoContent())
-                .andReturn();
+        mvc.perform(delete("/applications/" + SHORT_NAME + "/" + VERSION).accept(MediaTypes.HAL_JSON_VALUE))
+            .andDo(print())
+            .andExpect(status().isNoContent())
+            .andReturn();
 
         verify(applicationRepository).delete(appCaptor.capture());
         assertEquals("Wrong short name.", app.getShortName(), appCaptor.getValue().getShortName());
@@ -266,21 +255,31 @@ public class ApplicationControllerTest {
         HashMap<String, String> labels = new HashMap<>();
         labels.put(LABEL_APP_KEY, application.getShortName());
         labels.put(LABEL_VERSION_KEY, application.getVersion());
-        int availableReplicas = 1;
-        int replicas = 1;
-        server.getClient().apps().deployments().inNamespace(testNamespace).create(new DeploymentBuilder()
+        final int availableReplicas = 1;
+        final int replicas = 1;
+
+        DeploymentList deploymentList = new DeploymentListBuilder()
+            .addNewItem()
             .withNewMetadata().withName(deploymentName).withLabels(labels).endMetadata()
             .withNewSpec().withReplicas(replicas).endSpec().withNewStatus().withAvailableReplicas(availableReplicas).endStatus()
-            .build());
-        server.getClient().services().inNamespace(testNamespace).create(new ServiceBuilder()
+            .endItem()
+            .build();
+        ServiceList serviceList = new ServiceListBuilder()
+            .addNewItem()
             .withNewMetadata().withName(serviceName).withLabels(labels).endMetadata()
-            .build());
-        server.getClient().pods().inNamespace(testNamespace).create(new PodBuilder()
+            .endItem()
+            .build();
+        PodList podList = new PodListBuilder()
+            .addNewItem()
             .withNewMetadata().withName(podName).withLabels(labels).endMetadata()
             .withNewSpec().withNodeName(nodeName).endSpec()
-            .withNewStatus().withPhase(podPhase).withHostIP(hostIp).endStatus().build());
+            .withNewStatus().withPhase(podPhase).withHostIP(hostIp).endStatus()
+            .endItem()
+            .build();
+        given(cluster.getDeploymentsByLabels(labels, testNamespace)).willReturn(deploymentList);
+        given(cluster.getServicesByLabels(labels, testNamespace)).willReturn(serviceList);
+        given(cluster.getPodsByLabels(labels, testNamespace)).willReturn(podList);
 
-        given(clusterAwarenessFabric8.getClient()).willReturn(server.getClient());
         given(prometheusConfig.getUri()).willReturn("http://localhost:9090/api/v1/query");
 
         int memoryUsage = 1;

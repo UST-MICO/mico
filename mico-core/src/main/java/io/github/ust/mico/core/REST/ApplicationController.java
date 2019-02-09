@@ -1,7 +1,31 @@
 package io.github.ust.mico.core.REST;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodList;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceList;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentList;
+import io.github.ust.mico.core.ClusterAwarenessFabric8;
+import io.github.ust.mico.core.MicoKubernetesConfig;
+import io.github.ust.mico.core.PrometheusConfig;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.Resources;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.util.HashMap;
@@ -10,60 +34,21 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Link;
-import org.springframework.hateoas.MediaTypes;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.Resources;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.util.UriComponentsBuilder;
+import static io.github.ust.mico.core.mapping.MicoKubernetesClient.LABEL_APP_KEY;
+import static io.github.ust.mico.core.mapping.MicoKubernetesClient.LABEL_VERSION_KEY;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodList;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceList;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.fabric8.kubernetes.api.model.apps.DeploymentList;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.github.ust.mico.core.ClusterAwarenessFabric8;
-import io.github.ust.mico.core.MicoKubernetesConfig;
-import io.github.ust.mico.core.PrometheusConfig;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-
+@Slf4j
 @RestController
-@RequestMapping(value = "/"+ApplicationController.PATH_APPLICATIONS, produces = MediaTypes.HAL_JSON_VALUE)
+@RequestMapping(value = "/" + ApplicationController.PATH_APPLICATIONS, produces = MediaTypes.HAL_JSON_VALUE)
 public class ApplicationController {
 
     public static final String PATH_SERVICES = "services";
     public static final String PATH_APPLICATIONS = "applications";
-    private Logger logger = LoggerFactory.getLogger(ApplicationController.class);
 
     private static final String PATH_VARIABLE_SHORT_NAME = "shortName";
     private static final String PATH_VARIABLE_VERSION = "version";
-
-    /**
-     * Used by deployments
-     */
-    public static final String LABEL_APP_KEY = "app";
-    public static final String LABEL_VERSION_KEY = "version";
-
 
     private static final int MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT = 1;
     private static final String PROMETHEUS_QUERY_FOR_MEMORY_USAGE = "sum(container_memory_working_set_bytes{pod_name=\"%s\",container_name=\"\"})";
@@ -83,7 +68,7 @@ public class ApplicationController {
     MicoKubernetesConfig micoKubernetesConfig;
 
     @Autowired
-    ClusterAwarenessFabric8 clusterAwarenessFabric8;
+    ClusterAwarenessFabric8 cluster;
 
     @Autowired
     private RestTemplate restTemplate;
@@ -126,7 +111,8 @@ public class ApplicationController {
         Optional<MicoApplication> applicationOptional = applicationRepository.
             findByShortNameAndVersion(newApplication.getShortName(), newApplication.getVersion());
         if (applicationOptional.isPresent()) {
-            return ResponseEntity.badRequest().build();
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "Application '" + newApplication.getShortName() + "' '" + newApplication.getVersion() + "' already exists.");
         }
 
         List<MicoService> oldServices = newApplication.getServices();
@@ -156,7 +142,7 @@ public class ApplicationController {
                                                                        @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                        @RequestBody MicoApplication application) {
         if (!application.getShortName().equals(shortName) || !application.getVersion().equals(version)) {
-            return ResponseEntity.badRequest().build();
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Application shortName or version does not match request body.");
         }
 
         Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
@@ -176,7 +162,7 @@ public class ApplicationController {
         Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
         if (!applicationOptional.isPresent()) {
             // application already deleted
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+            return ResponseEntity.noContent().build();
         }
         applicationOptional.map(application -> {
             if (application.getDeploymentInfo() == null || application.getDeploymentInfo().getServiceDeploymentInfos() != null) {
@@ -193,7 +179,7 @@ public class ApplicationController {
             applicationRepository.delete(application);
             return application;
         });
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/deploymentInformation")
@@ -201,12 +187,12 @@ public class ApplicationController {
                                                                                                  @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
         if (micoApplicationOptional.isPresent()) {
-            KubernetesClient kubernetesClient = clusterAwarenessFabric8.getClient();
             HashMap<String, String> labels = new HashMap<>();
             labels.put(LABEL_APP_KEY, shortName);
             labels.put(LABEL_VERSION_KEY, version);
             String namespace = micoKubernetesConfig.getNamespaceMicoWorkspace();
-            DeploymentList deploymentList = kubernetesClient.apps().deployments().inNamespace(namespace).withLabels(labels).list();
+            DeploymentList deploymentList = cluster.getDeploymentsByLabels(labels, namespace);
+            log.debug("Found {} deployments of Mico service '{}' in version '{}'", deploymentList.getItems().size(), shortName, version);
             if (deploymentList.getItems().size() == 1) {
                 Deployment deployment = deploymentList.getItems().get(0);
                 UiDeploymentInformation uiDeploymentInformation = new UiDeploymentInformation();
@@ -215,7 +201,7 @@ public class ApplicationController {
                 uiDeploymentInformation.setAvailableReplicas(availableReplicas);
                 uiDeploymentInformation.setRequestedReplicas(requestedReplicas);
 
-                ServiceList serviceList = kubernetesClient.services().inNamespace(namespace).withLabels(labels).list(); //MicoServiceInterface maps to Service
+                ServiceList serviceList = cluster.getServicesByLabels(labels, namespace); //MicoServiceInterface maps to Service
                 List<UiExternalMicoInterfaceInformation> interfacesInformation = new LinkedList<>();
                 if (serviceList.getItems().size() >= MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT) {
                     for (Service service : serviceList.getItems()) {
@@ -225,7 +211,7 @@ public class ApplicationController {
                         interfacesInformation.add(interfaceInformation);
                     }
                     uiDeploymentInformation.setInterfacesInformation(interfacesInformation);
-                    PodList podList = kubernetesClient.pods().inNamespace(namespace).withLabels(labels).list();
+                    PodList podList = cluster.getPodsByLabels(labels, namespace);
                     List<UiPodInfo> podInfos = new LinkedList<>();
                     for (Pod pod : podList.getItems()) {
                         UiPodInfo uiPodInfo = getUiPodInfo(pod);
@@ -266,7 +252,7 @@ public class ApplicationController {
             uiPodMetrics.setAvailable(true);
         } catch (PrometheusRequestFailedException | ResourceAccessException e) {
             uiPodMetrics.setAvailable(false);
-            logger.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
         }
         uiPodMetrics.setMemoryUsage(memoryUsage);
         uiPodMetrics.setCpuLoad(cpuLoad);
@@ -286,14 +272,19 @@ public class ApplicationController {
     }
 
     private int requestValueFromPrometheus(URI prometheusUri) throws PrometheusRequestFailedException {
+
         ResponseEntity<PrometheusResponse> response
             = restTemplate.getForEntity(prometheusUri, PrometheusResponse.class);
         if (response.getStatusCode().is2xxSuccessful()) {
             PrometheusResponse prometheusMemoryResponse = response.getBody();
-            if (prometheusMemoryResponse.wasSuccessful()) {
-                return prometheusMemoryResponse.getValue();
+            if (prometheusMemoryResponse != null) {
+                if (prometheusMemoryResponse.wasSuccessful()) {
+                    return prometheusMemoryResponse.getValue();
+                } else {
+                    throw new PrometheusRequestFailedException("The status of the prometheus response was " + prometheusMemoryResponse.getStatus(), response.getStatusCode(), prometheusMemoryResponse.getStatus());
+                }
             } else {
-                throw new PrometheusRequestFailedException("The status of the prometheus response was " + prometheusMemoryResponse.getStatus(), response.getStatusCode(), prometheusMemoryResponse.getStatus());
+                throw new PrometheusRequestFailedException("There was no response body", response.getStatusCode(), null);
             }
         } else {
             throw new PrometheusRequestFailedException("The http status code was not 2xx", response.getStatusCode(), null);
@@ -338,9 +329,10 @@ public class ApplicationController {
 
     /**
      * Returns a list of services associated with the mico application specified by the parameters.
-     * @param applicationShortName
-     * @param applicationVersion
-     * @return
+     *
+     * @param applicationShortName the name of the application
+     * @param applicationVersion   the version of the application
+     * @return the list of mico services that are associated with the application
      */
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES)
     public ResponseEntity<Resources<Resource<MicoService>>> getMicoServicesFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,

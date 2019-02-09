@@ -395,7 +395,7 @@ public class ServiceControllerTests {
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print());
 
-        resultDelete.andExpect(status().isOk());
+        resultDelete.andExpect(status().isNoContent());
     }
 
     @Test

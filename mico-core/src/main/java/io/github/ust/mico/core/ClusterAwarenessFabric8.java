@@ -8,31 +8,22 @@ import io.fabric8.kubernetes.api.model.apps.DeploymentList;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.internal.SerializationUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
+import java.util.Map;
 
 @Component
 public class ClusterAwarenessFabric8 {
-    KubernetesClient client;
 
-    /**
-     * uses default kubernetes client
-     */
-    public ClusterAwarenessFabric8() {
-        if (client == null) {
-            client = new DefaultKubernetesClient();
-        }
-    }
+    private final KubernetesClient client;
 
-    /**
-     * sets a specific client to use
-     *
-     * @param client
-     */
-    ClusterAwarenessFabric8(KubernetesClient client) {
+    @Autowired
+    public ClusterAwarenessFabric8(KubernetesClient client) {
         this.client = client;
     }
+
 
     /**
      * gets client to communicate with kubernetes cluster.
@@ -87,6 +78,10 @@ public class ClusterAwarenessFabric8 {
         return client.apps().deployments().inNamespace(namespace).withName(name).get();
     }
 
+    public DeploymentList getDeploymentsByLabels(Map<String, String> labels, String namespace) {
+        return client.apps().deployments().inNamespace(namespace).withLabels(labels).list();
+    }
+
     public DeploymentList getAllDeployments(String namespace) {
         return client.apps().deployments().inNamespace(namespace).list();
     }
@@ -115,12 +110,20 @@ public class ClusterAwarenessFabric8 {
         return client.pods().inNamespace(namespace).list();
     }
 
+    public PodList getPodsByLabels(Map<String, String> labels, String namespace) {
+        return client.pods().inNamespace(namespace).withLabels(labels).list();
+    }
+
     public Pod getPod(String name, String namespace) {
         return client.pods().inNamespace(namespace).withName(name).get();
     }
 
     public ServiceList getAllServices() {
         return client.services().inAnyNamespace().list();
+    }
+
+    public ServiceList getServicesByLabels(Map<String, String> labels, String namespace) {
+        return client.services().inNamespace(namespace).withLabels(labels).list();
     }
 
     public Service getService(String name, String namespace) {
