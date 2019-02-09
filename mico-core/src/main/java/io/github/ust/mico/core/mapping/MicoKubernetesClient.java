@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Provides accessor methods for creating deployment and services in Kubernetes.
@@ -101,12 +102,9 @@ public class MicoKubernetesClient {
 
         // Retrieve deployment corresponding to given MicoService to retrieve
         // the unique run label which will be used for the Kubernetes Service, too.
-        List<Deployment> matchingDeployments = cluster.getClient().apps()
-            .deployments()
-            .inNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace())
-            .withLabels(
-                CollectionUtils.mapOf(LABEL_APP_KEY, micoService.getShortName(), LABEL_VERSION_KEY, micoService.getVersion()))
-            .list().getItems();
+        Map<String, String> labels = CollectionUtils.mapOf(LABEL_APP_KEY, micoService.getShortName(), LABEL_VERSION_KEY, micoService.getVersion());
+        String namespace = micoKubernetesConfig.getNamespaceMicoWorkspace();
+        List<Deployment> matchingDeployments = cluster.getDeploymentsByLabels(labels, namespace).getItems();
 
         if (matchingDeployments.size() == 0) {
             throw new KubernetesResourceException("There are no deployments for service with name '"
