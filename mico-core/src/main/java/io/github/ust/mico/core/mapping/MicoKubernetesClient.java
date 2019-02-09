@@ -52,6 +52,8 @@ public class MicoKubernetesClient {
      * @return the Kubernetes {@link Deployment} resource object
      */
     public Deployment createMicoService(MicoService service, MicoServiceDeploymentInfo deploymentInfo) {
+        String namespace = micoKubernetesConfig.getNamespaceMicoWorkspace();
+
         String deploymentUid = UIDUtils.uidFor(service);
 
         Deployment deployment = new DeploymentBuilder()
@@ -86,7 +88,7 @@ public class MicoKubernetesClient {
             .endSpec()
             .build();
 
-        return cluster.getClient().apps().deployments().inNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace()).createOrReplace(deployment);
+        return cluster.createDeployment(deployment, namespace);
     }
 
     /**
@@ -97,13 +99,14 @@ public class MicoKubernetesClient {
      * @return the Kubernetes {@link Service} resource
      */
     public Service createMicoServiceInterface(MicoServiceInterface micoServiceInterface, MicoService micoService) throws KubernetesResourceException {
+        String namespace = micoKubernetesConfig.getNamespaceMicoWorkspace();
+
         // Unique identifier for the service interface used as its name tag
         String serviceInterfaceUid = UIDUtils.uidFor(micoServiceInterface);
 
         // Retrieve deployment corresponding to given MicoService to retrieve
         // the unique run label which will be used for the Kubernetes Service, too.
         Map<String, String> labels = CollectionUtils.mapOf(LABEL_APP_KEY, micoService.getShortName(), LABEL_VERSION_KEY, micoService.getVersion());
-        String namespace = micoKubernetesConfig.getNamespaceMicoWorkspace();
         List<Deployment> matchingDeployments = cluster.getDeploymentsByLabels(labels, namespace).getItems();
 
         if (matchingDeployments.size() == 0) {
@@ -135,7 +138,7 @@ public class MicoKubernetesClient {
         // TODO: Check whether optional fields of MicoServiceInterface have to be used in some way
         // (publicDns, description, protocol, transportProtocol)
 
-        return cluster.getClient().services().inNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace()).createOrReplace(service);
+        return cluster.createService(service, namespace);
     }
 
 

@@ -241,11 +241,9 @@ public class ImageBuilder {
      * @return the list of custom resource definitions
      */
     private List<CustomResourceDefinition> getCustomResourceDefinitions() {
-        KubernetesClient client = cluster.getClient();
-        CustomResourceDefinitionList crds = client.customResourceDefinitions().list();
+        CustomResourceDefinitionList crds = cluster.getClient().customResourceDefinitions().list();
         List<CustomResourceDefinition> crdsItems = crds.getItems();
 
-        // log.debug("CRDs: {}", crdsItems);
         return crdsItems;
     }
 

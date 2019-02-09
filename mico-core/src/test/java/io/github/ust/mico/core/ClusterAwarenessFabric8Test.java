@@ -5,13 +5,14 @@ import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentList;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.github.ust.mico.core.util.CollectionUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.IOException;
@@ -19,10 +20,11 @@ import java.util.HashMap;
 
 import static org.junit.Assert.*;
 
+@Slf4j
 public class ClusterAwarenessFabric8Test {
 
     @Rule
-    public KubernetesServer server = new KubernetesServer(false, true);
+    public KubernetesServer mockServer = new KubernetesServer(false, true);
 
     private final static String namespaceName = "unit-testing";
 
@@ -30,44 +32,44 @@ public class ClusterAwarenessFabric8Test {
 
     @Before
     public void setUp() {
-        cluster = new ClusterAwarenessFabric8(server.getClient());
+        cluster = new ClusterAwarenessFabric8(mockServer.getClient());
 
         HashMap<String, String> labels = new HashMap<>();
         labels.put("app", "app1");
 
         //Nodes
-        server.getClient().nodes().create(new NodeBuilder().withNewMetadata().withName("node1").endMetadata().build());
-        server.getClient().nodes().create(new NodeBuilder().withNewMetadata().withName("node2").endMetadata().build());
+        mockServer.getClient().nodes().create(new NodeBuilder().withNewMetadata().withName("node1").endMetadata().build());
+        mockServer.getClient().nodes().create(new NodeBuilder().withNewMetadata().withName("node2").endMetadata().build());
 
         //Namespaces
-        server.getClient().namespaces().createNew().withNewMetadata().withName("namespace1").endMetadata().done();
-        server.getClient().namespaces().createNew().withNewMetadata().withName("namespace2").endMetadata().done();
+        mockServer.getClient().namespaces().createNew().withNewMetadata().withName("namespace1").endMetadata().done();
+        mockServer.getClient().namespaces().createNew().withNewMetadata().withName("namespace2").endMetadata().done();
 
         //Pods
-        server.getClient().pods().inNamespace(namespaceName).create(new PodBuilder().withNewMetadata().withName("pod1").withLabels(labels).endMetadata().build());
-        server.getClient().pods().inNamespace(namespaceName).create(new PodBuilder().withNewMetadata().withName("pod2").endMetadata().build());
+        mockServer.getClient().pods().inNamespace(namespaceName).create(new PodBuilder().withNewMetadata().withName("pod1").withLabels(labels).endMetadata().build());
+        mockServer.getClient().pods().inNamespace(namespaceName).create(new PodBuilder().withNewMetadata().withName("pod2").endMetadata().build());
 
         //Services
-        server.getClient().services().inNamespace(namespaceName).create(new ServiceBuilder().withNewMetadata().withName("service1").withLabels(labels).endMetadata().build());
-        server.getClient().services().inNamespace(namespaceName).create(new ServiceBuilder().withNewMetadata().withName("service2").endMetadata().build());
+        mockServer.getClient().services().inNamespace(namespaceName).create(new ServiceBuilder().withNewMetadata().withName("service1").withLabels(labels).endMetadata().build());
+        mockServer.getClient().services().inNamespace(namespaceName).create(new ServiceBuilder().withNewMetadata().withName("service2").endMetadata().build());
 
         //Deployments
-        server.getClient().apps().deployments().inNamespace(namespaceName).create(new DeploymentBuilder().withNewMetadata().withName("deployment1").withLabels(labels).endMetadata().build());
-        server.getClient().apps().deployments().inNamespace(namespaceName).create(new DeploymentBuilder().withNewMetadata().withName("deployment2").endMetadata().build());
+        mockServer.getClient().apps().deployments().inNamespace(namespaceName).create(new DeploymentBuilder().withNewMetadata().withName("deployment1").withLabels(labels).endMetadata().build());
+        mockServer.getClient().apps().deployments().inNamespace(namespaceName).create(new DeploymentBuilder().withNewMetadata().withName("deployment2").endMetadata().build());
 
         //Secrets
-        server.getClient().secrets().inNamespace(namespaceName).create(new SecretBuilder().withNewMetadata().withName("secret1").endMetadata().build());
+        mockServer.getClient().secrets().inNamespace(namespaceName).create(new SecretBuilder().withNewMetadata().withName("secret1").endMetadata().build());
 
         //ServiceAccounts
-        server.getClient().serviceAccounts().inNamespace(namespaceName).create(new ServiceAccountBuilder().withNewMetadata().withName("service-account1").endMetadata().build());
+        mockServer.getClient().serviceAccounts().inNamespace(namespaceName).create(new ServiceAccountBuilder().withNewMetadata().withName("service-account1").endMetadata().build());
     }
 
     @Test
     public void getClient() {
-        //cluster = new ClusterAwarenessFabric8();
-        //System.out.println(cluster.getClient().getMasterUrl());
-        cluster = new ClusterAwarenessFabric8(server.getClient());
-        System.out.println(cluster.getClient().getMasterUrl());
+        KubernetesClient client = cluster.getClient();
+        assertNotNull(client);
+        assertNotNull(client.getMasterUrl());
+        log.info("Master url: {}, ", client.getMasterUrl());
     }
 
     @Test
