@@ -11,6 +11,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.IOException;
@@ -19,10 +20,13 @@ import java.util.HashMap;
 import static org.junit.Assert.*;
 
 public class ClusterAwarenessFabric8Test {
+
     @Rule
-    public KubernetesServer server = new KubernetesServer(true, true);
-    String namespaceName = "unit-testing";
-    ClusterAwarenessFabric8 cluster = new ClusterAwarenessFabric8();
+    public KubernetesServer server = new KubernetesServer(false, true);
+
+    private final static String namespaceName = "unit-testing";
+
+    private ClusterAwarenessFabric8 cluster;
 
     @Before
     public void setUp() {
@@ -60,8 +64,8 @@ public class ClusterAwarenessFabric8Test {
 
     @Test
     public void getClient() {
-        cluster = new ClusterAwarenessFabric8();
-        System.out.println(cluster.getClient().getMasterUrl());
+        //cluster = new ClusterAwarenessFabric8();
+        //System.out.println(cluster.getClient().getMasterUrl());
         cluster = new ClusterAwarenessFabric8(server.getClient());
         System.out.println(cluster.getClient().getMasterUrl());
     }

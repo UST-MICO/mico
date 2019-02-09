@@ -21,7 +21,7 @@ public class ImageBuilderTests {
     private static final String RELEASE = "v1.0.0";
 
     @Rule
-    public KubernetesServer mockServer = new KubernetesServer(true, true);
+    public KubernetesServer mockServer = new KubernetesServer(false, true);
 
     private ImageBuilder imageBuilder;
 

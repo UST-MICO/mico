@@ -8,6 +8,7 @@ import io.fabric8.kubernetes.api.model.apps.DeploymentList;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.internal.SerializationUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
@@ -15,25 +16,14 @@ import java.util.Map;
 
 @Component
 public class ClusterAwarenessFabric8 {
-    KubernetesClient client;
 
-    /**
-     * uses default kubernetes client
-     */
-    public ClusterAwarenessFabric8() {
-        if (client == null) {
-            client = new DefaultKubernetesClient();
-        }
-    }
+    private final KubernetesClient client;
 
-    /**
-     * sets a specific client to use
-     *
-     * @param client
-     */
-    ClusterAwarenessFabric8(KubernetesClient client) {
+    @Autowired
+    public ClusterAwarenessFabric8(KubernetesClient client) {
         this.client = client;
     }
+
 
     /**
      * gets client to communicate with kubernetes cluster.

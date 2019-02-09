@@ -1,18 +1,6 @@
 package io.github.ust.mico.core.mapping;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import io.fabric8.kubernetes.api.model.ContainerBuilder;
-import io.fabric8.kubernetes.api.model.ContainerPort;
-import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.fabric8.kubernetes.api.model.ServicePort;
-import io.fabric8.kubernetes.api.model.ServicePortBuilder;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.github.ust.mico.core.ClusterAwarenessFabric8;
@@ -23,12 +11,28 @@ import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.model.MicoServicePort;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.UIDUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Provides accessor methods for creating deployment and services in Kubernetes.
  */
 @Component
 public class MicoKubernetesClient {
+
+
+    /**
+     * Labels are used as selectors for Kubernetes deployments, services and pods.
+     * The `app` label references to the shortName of the {@link MicoService}.
+     * The `version` label references to the version of the {@link MicoService}.
+     * The `run` label references to the UID that is created for each {@link MicoService}.
+     */
+    public static final String LABEL_APP_KEY = "app";
+    public static final String LABEL_VERSION_KEY = "version";
+    public static final String LABEL_RUN_KEY = "run";
 
     private final MicoKubernetesConfig micoKubernetesConfig;
     private final ClusterAwarenessFabric8 cluster;
@@ -42,100 +46,99 @@ public class MicoKubernetesClient {
     /**
      * Create a Kubernetes deployment based on a MICO service.
      *
-     * @param service the {@link MicoService}
+     * @param service        the {@link MicoService}
      * @param deploymentInfo the {@link MicoServiceDeploymentInfo}
      * @return the Kubernetes {@link Deployment} resource object
      */
     public Deployment createMicoService(MicoService service, MicoServiceDeploymentInfo deploymentInfo) {
         String deploymentUid = UIDUtils.uidFor(service);
-        
+
         Deployment deployment = new DeploymentBuilder()
-                .withNewMetadata()
-                    .withName(deploymentUid)
-                    .withNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace())
-                    .addToLabels("app", service.getShortName())
-                    .addToLabels("version", service.getVersion())
-                    .addToLabels("run", deploymentUid)
-                .endMetadata()
-                .withNewSpec()
-                    .withNewReplicas(deploymentInfo.getReplicas())
-                    .withNewSelector()
-                     .addToMatchLabels("run", deploymentUid)
-                     .endSelector()
-                     .withNewTemplate()
-                         .withNewMetadata()
-                             .addToLabels("app", service.getShortName())
-                             .addToLabels("version", service.getVersion())
-                             .addToLabels("run", deploymentUid)
-                         .endMetadata()
-                         .withNewSpec()
-                             .withContainers(
-                                 new ContainerBuilder()
-                                 // TODO: Use containers from mico service deployment info
-                                     .withName(service.getShortName())
-                                     .withImage(service.getDockerImageUri())
-                                     .withPorts(createContainerPorts(service))
-                                     .build())
-                         .endSpec()
-                     .endTemplate()
-                .endSpec()
-                .build();
+            .withNewMetadata()
+            .withName(deploymentUid)
+            .withNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace())
+            .addToLabels(LABEL_APP_KEY, service.getShortName())
+            .addToLabels(LABEL_VERSION_KEY, service.getVersion())
+            .addToLabels(LABEL_RUN_KEY, deploymentUid)
+            .endMetadata()
+            .withNewSpec()
+            .withNewReplicas(deploymentInfo.getReplicas())
+            .withNewSelector()
+            .addToMatchLabels(LABEL_RUN_KEY, deploymentUid)
+            .endSelector()
+            .withNewTemplate()
+            .withNewMetadata()
+            .addToLabels(LABEL_APP_KEY, service.getShortName())
+            .addToLabels(LABEL_VERSION_KEY, service.getVersion())
+            .addToLabels(LABEL_RUN_KEY, deploymentUid)
+            .endMetadata()
+            .withNewSpec()
+            .withContainers(
+                new ContainerBuilder()
+                    // TODO: Use containers from mico service deployment info
+                    .withName(service.getShortName())
+                    .withImage(service.getDockerImageUri())
+                    .withPorts(createContainerPorts(service))
+                    .build())
+            .endSpec()
+            .endTemplate()
+            .endSpec()
+            .build();
 
         return cluster.getClient().apps().deployments().inNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace()).createOrReplace(deployment);
     }
-    
+
     /**
      * Create a Kubernetes service based on a MICO service interface.
      *
      * @param micoServiceInterface the {@link MicoServiceInterface}
-     * @param micoService the {@link MicoService}
+     * @param micoService          the {@link MicoService}
      * @return the Kubernetes {@link Service} resource
      */
     public Service createMicoServiceInterface(MicoServiceInterface micoServiceInterface, MicoService micoService) throws KubernetesResourceException {
         // Unique identifier for the service interface used as its name tag
         String serviceInterfaceUid = UIDUtils.uidFor(micoServiceInterface);
-        
+
         // Retrieve deployment corresponding to given MicoService to retrieve
         // the unique run label which will be used for the Kubernetes Service, too.
         List<Deployment> matchingDeployments = cluster.getClient().apps()
-                .deployments()
-                .inNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace())
-                .withLabels(
-                        CollectionUtils.mapOf("app", micoService.getShortName(), "version", micoService.getVersion()))
-                .list().getItems();
-        
+            .deployments()
+            .inNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace())
+            .withLabels(
+                CollectionUtils.mapOf(LABEL_APP_KEY, micoService.getShortName(), LABEL_VERSION_KEY, micoService.getVersion()))
+            .list().getItems();
+
         if (matchingDeployments.size() == 0) {
             throw new KubernetesResourceException("There are no deployments for service with name '"
-                    + micoService.getShortName() + "' and version '" + micoService.getVersion() + "'.");
+                + micoService.getShortName() + "' and version '" + micoService.getVersion() + "'.");
         } else if (matchingDeployments.size() > 1) {
             throw new KubernetesResourceException("There are multiple deployments for service with name '"
-                    + micoService.getShortName() + "' and version '" + micoService.getVersion() + "'.");
+                + micoService.getShortName() + "' and version '" + micoService.getVersion() + "'.");
         }
-        
-        String serviceUid = matchingDeployments.get(0).getMetadata().getLabels().get("run");
+
+        String serviceUid = matchingDeployments.get(0).getMetadata().getLabels().get(LABEL_RUN_KEY);
         serviceUid = micoService.getShortName() + serviceUid.substring(serviceUid.lastIndexOf("-"));
 
         Service service = new ServiceBuilder()
-                .withNewMetadata()
-                    .withName(serviceInterfaceUid)
-                    .withNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace())
-                    .addToLabels("app", micoService.getShortName())
-                    .addToLabels("version", micoService.getVersion())
-                    .addToLabels("run", serviceUid)
-                .endMetadata()
-                .withNewSpec()
-                    .withType("LoadBalancer")
-                    .withPorts(createServicePorts(micoServiceInterface))
-                    .addToSelector("run", serviceUid)
-                .endSpec()
-                .build();
+            .withNewMetadata()
+            .withName(serviceInterfaceUid)
+            .withNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace())
+            .addToLabels(LABEL_APP_KEY, micoService.getShortName())
+            .addToLabels(LABEL_VERSION_KEY, micoService.getVersion())
+            .addToLabels(LABEL_RUN_KEY, serviceUid)
+            .endMetadata()
+            .withNewSpec()
+            .withType("LoadBalancer")
+            .withPorts(createServicePorts(micoServiceInterface))
+            .addToSelector(LABEL_RUN_KEY, serviceUid)
+            .endSpec()
+            .build();
 
         // TODO: Check whether optional fields of MicoServiceInterface have to be used in some way
         // (publicDns, description, protocol, transportProtocol)
-        
+
         return cluster.getClient().services().inNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace()).createOrReplace(service);
     }
-
 
 
     /**
@@ -151,9 +154,9 @@ public class MicoKubernetesClient {
         for (MicoServiceInterface serviceInterface : service.getServiceInterfaces()) {
             for (MicoServicePort servicePort : serviceInterface.getPorts()) {
                 ports.add(new ContainerPortBuilder()
-                        .withContainerPort(servicePort.getTargetPort())
-                        .withProtocol(servicePort.getType().toString())
-                        .build());
+                    .withContainerPort(servicePort.getTargetPort())
+                    .withProtocol(servicePort.getType().toString())
+                    .build());
             }
         }
 
@@ -173,10 +176,10 @@ public class MicoKubernetesClient {
 
         for (MicoServicePort servicePort : serviceInterface.getPorts()) {
             ports.add(new ServicePortBuilder()
-                    .withNewPort(servicePort.getNumber())
-                    .withNewTargetPort(servicePort.getTargetPort())
-                    .withProtocol(servicePort.getType().toString())
-                    .build());
+                .withNewPort(servicePort.getNumber())
+                .withNewTargetPort(servicePort.getTargetPort())
+                .withProtocol(servicePort.getType().toString())
+                .build());
         }
 
         return ports;

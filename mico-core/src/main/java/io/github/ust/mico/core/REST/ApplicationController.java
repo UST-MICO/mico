@@ -34,6 +34,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static io.github.ust.mico.core.mapping.MicoKubernetesClient.LABEL_APP_KEY;
+import static io.github.ust.mico.core.mapping.MicoKubernetesClient.LABEL_VERSION_KEY;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
@@ -44,14 +46,9 @@ public class ApplicationController {
 
     public static final String PATH_SERVICES = "services";
     public static final String PATH_APPLICATIONS = "applications";
+
     private static final String PATH_VARIABLE_SHORT_NAME = "shortName";
     private static final String PATH_VARIABLE_VERSION = "version";
-
-    /**
-     * Used by deployments
-     */
-    public static final String LABEL_APP_KEY = "app";
-    public static final String LABEL_VERSION_KEY = "version";
 
     private static final int MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT = 1;
     private static final String PROMETHEUS_QUERY_FOR_MEMORY_USAGE = "sum(container_memory_working_set_bytes{pod_name=\"%s\",container_name=\"\"})";
@@ -195,6 +192,7 @@ public class ApplicationController {
             labels.put(LABEL_VERSION_KEY, version);
             String namespace = micoKubernetesConfig.getNamespaceMicoWorkspace();
             DeploymentList deploymentList = cluster.getDeploymentsByLabels(labels, namespace);
+            log.debug("Found {} deployments of Mico service '{}' in version '{}'", deploymentList.getItems().size(), shortName, version);
             if (deploymentList.getItems().size() == 1) {
                 Deployment deployment = deploymentList.getItems().get(0);
                 UiDeploymentInformation uiDeploymentInformation = new UiDeploymentInformation();
