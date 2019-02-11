@@ -23,10 +23,10 @@ public class TestConstants {
     public static final String VERSION_1_0_2_MATCHER = JsonPathBuilder.buildVersionMatcher(VERSION_1_0_2);
     public static final String VERSION_1_0_3_MATCHER = JsonPathBuilder.buildVersionMatcher(VERSION_1_0_3);
 
-    public static final String SHORT_NAME = "ShortName";
-    public static final String SHORT_NAME_1 = "ShortName1";
-    public static final String SHORT_NAME_2 = "ShortName2";
-    public static final String SHORT_NAME_3 = "ShortName3";
+    public static final String SHORT_NAME = "short-name";
+    public static final String SHORT_NAME_1 = "short-name-1";
+    public static final String SHORT_NAME_2 = "short-name-2";
+    public static final String SHORT_NAME_3 = "short-name-3";
     public static final String SHORT_NAME_ATTRIBUTE = JsonPathBuilder.buildAttributePath("shortName");
     public static final String SHORT_NAME_MATCHER = JsonPathBuilder.buildSingleMatcher(SHORT_NAME_ATTRIBUTE, SHORT_NAME);
     public static final String SHORT_NAME_1_MATCHER = JsonPathBuilder.buildSingleMatcher(SHORT_NAME_ATTRIBUTE, SHORT_NAME_1);
