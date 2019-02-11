@@ -33,6 +33,7 @@ public class MicoKubernetesClient {
      */
     public static final String LABEL_APP_KEY = "app";
     public static final String LABEL_VERSION_KEY = "version";
+    public static final String LABEL_INTERFACE_KEY = "interface";
     public static final String LABEL_RUN_KEY = "run";
 
     private final MicoKubernetesConfig micoKubernetesConfig;
@@ -126,6 +127,7 @@ public class MicoKubernetesClient {
             .withNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace())
             .addToLabels(LABEL_APP_KEY, micoService.getShortName())
             .addToLabels(LABEL_VERSION_KEY, micoService.getVersion())
+            .addToLabels(LABEL_INTERFACE_KEY, micoServiceInterface.getServiceInterfaceName())
             .addToLabels(LABEL_RUN_KEY, serviceUid)
             .endMetadata()
             .withNewSpec()
