@@ -294,7 +294,9 @@ public class ApplicationController {
     private URI getPrometheusUri(String query, String podName) {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(prometheusConfig.getUri());
         uriBuilder.queryParam(PROMETHEUS_QUERY_PARAMETER_NAME, String.format(query, podName));
-        return uriBuilder.build().toUri();
+        URI prometheusUri = uriBuilder.build().toUri();
+        log.debug("Using Prometheus URI '{}'", prometheusUri);
+        return prometheusUri;
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
