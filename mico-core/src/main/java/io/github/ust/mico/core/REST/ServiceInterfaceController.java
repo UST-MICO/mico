@@ -19,14 +19,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.github.ust.mico.core.REST.ServiceController.PATH_VARIABLE_SHORT_NAME;
 import static io.github.ust.mico.core.REST.ServiceController.PATH_VARIABLE_VERSION;
+import static io.github.ust.mico.core.mapping.MicoKubernetesClient.*;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
@@ -89,26 +87,37 @@ public class ServiceInterfaceController {
                                                                    @PathVariable(PATH_VARIABLE_SERVICE_INTERFACE_NAME) String serviceInterfaceName) {
         Optional<MicoServiceInterface> serviceInterfaceOptional = serviceRepository.findInterfaceOfServiceByName(serviceInterfaceName, shortName, version);
         if (!serviceInterfaceOptional.isPresent()) {
-            log.debug("Service interface with name '{}' of MicoService '{}' in version '{}' not found",
-                serviceInterfaceName, shortName, version);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service interface '" + shortName + "' '" + version + "' was not found!");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                "Service interface '" + serviceInterfaceName + "' of MicoService '" + shortName + "' '" + version + "' was not found!");
         }
 
-        // TODO Change naming of Kubernetes service
-        Service service = cluster.getService(serviceInterfaceName, kubernetesConfig.getNamespaceMicoWorkspace());
-        if (service == null) {
-            log.debug("Kubernetes service with name '{}' in namespace '{}' not found",
-                serviceInterfaceName, kubernetesConfig.getNamespaceMicoWorkspace());
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service interface '" + shortName + "' '" + version + "' was not found!");
+        Map<String, String> labels = new HashMap<>();
+        labels.put(LABEL_APP_KEY, shortName);
+        labels.put(LABEL_VERSION_KEY, version);
+        labels.put(LABEL_INTERFACE_KEY, serviceInterfaceName);
+        String namespace = kubernetesConfig.getNamespaceMicoWorkspace();
+
+        List<Service> serviceList = cluster.getServicesByLabels(labels, namespace).getItems();
+        if (serviceList.isEmpty()) {
+            log.info("There is no MicoServiceInterface deployed with name '{}' of MicoService '{}' in version '{}'.",
+                serviceInterfaceName, shortName, version);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                "No deployed service interface '" + serviceInterfaceName + "' of MicoService '" + shortName + "' '" + version + "' was found!");
         }
+        if (serviceList.size() > 1) {
+            log.warn("Multiple Kubernetes services found for MicoServiceInterface with name '{}' of MicoService '{}' in version '{}'.",
+                serviceInterfaceName, shortName, version);
+            // TODO What to do when multiple Kubernetes services are found?
+        }
+        Service service = serviceList.get(0);
 
         List<String> publicIps = new ArrayList<>();
         LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
         if (loadBalancer != null) {
             List<LoadBalancerIngress> ingressList = loadBalancer.getIngress();
             if (ingressList != null && !ingressList.isEmpty()) {
-                log.debug("There is/are {} ingress(es) defined for MicoServiceInterface '{}'.",
-                    ingressList.size(), serviceInterfaceName);
+                log.debug("There is/are {} ingress(es) defined for Kubernetes service '{}' (MicoServiceInterface '{}').",
+                    ingressList.size(), service.getMetadata().getName(), serviceInterfaceName);
                 for (LoadBalancerIngress ingress : ingressList) {
                     publicIps.add(ingress.getIp());
                 }
