@@ -38,7 +38,7 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
 
     filter = FilterTypes.None;
     choiceModel = ChoiceTypes.multi;
-    existingDependencies: string[] = [];
+    existingDependencies: Set<string> = new Set();
 
     private serviceSubscription: Subscription;
 
@@ -69,12 +69,12 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
 
         if (data.existingDependencies != null) {
             data.existingDependencies.forEach(element => {
-                this.existingDependencies.push(element.shortName);
+                this.existingDependencies.add(element.shortName);
             });
         }
 
         if (data.serviceId != null && data.serviceId !== '') {
-            this.existingDependencies.push(data.serviceId);
+            this.existingDependencies.add(data.serviceId);
         }
     }
 
@@ -147,7 +147,7 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
 
         let val = false;
 
-        if (!this.existingDependencies.includes(element.shortName)) {
+        if (!this.existingDependencies.has(element.shortName)) {
             if (this.filter === FilterTypes.None) {
                 val = true;
             } else if (this.filter === FilterTypes.Internal) {
