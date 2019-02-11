@@ -79,27 +79,24 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
     }
 
     public static MicoService createServiceInDB() throws VersionNotSupportedException {
-        return MicoService.builder()
-                .shortName(TEST_SHORT_NAME)
-                .name(TEST_LONGER_NAME)
-                .version(TEST_VERSION)
-                .description(TEST_SERVICE_DESCRIPTION)
-                .serviceInterface(MicoServiceInterface.builder()
-                        .serviceInterfaceName(TEST_SERVICE_INTERFACE_NAME)
-                        .port(MicoServicePort.builder()
-                                .number(8080)
-                                .type(MicoPortType.TCP)
-                                .targetPort(8081)
-                                .build())
-                        .publicDns(TEST_DNS)
-                        .description(TEST_SERVICE_INTERFACE_DESCRIPTION)
-                        .protocol(TEST_PROTOCOL)
-                        .build())
-                .serviceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
-                .gitCloneUrl(TEST_GIT_CLONE_URL)
-                .gitReleaseInfoUrl(TEST_GIT_RELEASE_INFO_URL)
-                .contact(TEST_CONTACT)
-                .build();
+        return new MicoService()
+                .setShortName(TEST_SHORT_NAME)
+                .setName(TEST_LONGER_NAME)
+                .setVersion(TEST_VERSION)
+                .setDescription(TEST_SERVICE_DESCRIPTION)
+                .setServiceInterfaces(CollectionUtils.listOf(new MicoServiceInterface()
+                        .setServiceInterfaceName(TEST_SERVICE_INTERFACE_NAME)
+                        .setPorts(CollectionUtils.listOf(new MicoServicePort()
+                                .setNumber(8080)
+                                .setType(MicoPortType.TCP)
+                                .setTargetPort(8081)))
+                        .setPublicDns(TEST_DNS)
+                        .setDescription(TEST_SERVICE_INTERFACE_DESCRIPTION)
+                        .setProtocol(TEST_PROTOCOL)))
+                .setServiceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
+                .setGitCloneUrl(TEST_GIT_CLONE_URL)
+                .setGitReleaseInfoUrl(TEST_GIT_RELEASE_INFO_URL)
+                .setContact(TEST_CONTACT);
     }
 
     @Test
