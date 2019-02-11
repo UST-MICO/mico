@@ -7,7 +7,7 @@ metadata:
 data:
   application.properties: |-
     spring.data.neo4j.uri=bolt://neo4j.mico-system:7687
-    kubernetes.prometheus.uri=http://prometheus.monitoring:9090
+    kubernetes.prometheus.uri=http://prometheus.monitoring:9090/api/v1/query
 ---
 apiVersion: v1
 kind: Service
