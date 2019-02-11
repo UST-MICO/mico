@@ -240,7 +240,7 @@ export class ApiService {
 
     deleteApplicationServices(applicationShortName: string, applicationVersion: string, serviceShortName) {
 
-        return this.rest.delete<ApiObject>('application/' + applicationShortName + '/' + applicationVersion
+        return this.rest.delete<ApiObject>('applications/' + applicationShortName + '/' + applicationVersion
             + '/services/' + serviceShortName)
             .pipe(map(val => {
                 console.log('DELETE includes', val);

@@ -100,7 +100,6 @@ export class DashboardComponent implements OnInit {
                 }
 
                 const data = result.applicationProperties;
-                data.services = result.services;
 
                 this.apiService.postApplication(data).subscribe(val => {
                     this.router.navigate(['app-detail', val.shortName, val.version]);

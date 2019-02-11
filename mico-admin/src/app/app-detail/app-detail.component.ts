@@ -93,14 +93,17 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
             // application is found now, so try to get some more information
             // Deployment information
+
             this.subDeployInformation = this.apiService
                 .getApplicationDeploymentInformation(this.application.shortName, this.application.version)
                 .subscribe(deploymentInformation => {
                     console.log(deploymentInformation);
                 });
 
+
             // public ip
             const tempPublicIps = [];
+
 
             this.application.services.forEach(service => {
 
