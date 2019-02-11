@@ -5,6 +5,7 @@ import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -17,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import io.github.ust.mico.core.concurrency.MicoCoreBackgroundTaskFactory;
+import scala.reflect.internal.AnnotationInfos;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -28,7 +30,38 @@ public class MicoCoreBackgroundTaskFactoryTests {
     private CountDownLatch latch;
     private AtomicReference<AssertionError> failure = new AtomicReference<>();
     private AtomicInteger atomicInt = new AtomicInteger(0);
-    
+
+    @Test
+    public void backgroundStatus() throws InterruptedException{
+        List<CompletableFuture> tasks = new ArrayList<>();
+        latch = new CountDownLatch(4);
+        // Fire-and-forget
+        tasks.add(factory.runAsync(() -> veryLongLastingTask("TestTask1"), result -> successHandler(result)));
+        System.out.println("Added task");
+        // Run and only proceed workflow on success
+        tasks.add(factory.runAsync(() -> veryLongLastingTask("TestTask2"), result -> {successHandler(result);
+            System.out.println(tasks);}));
+        System.out.println("Added task");
+        // Full result handling - success and error
+        tasks.add(factory.runAsync(() -> veryLongLastingTask("TestTask3"), result -> successHandler(result), e -> { e.printStackTrace(); return null; }));
+        tasks.add(factory.runAsync(() -> veryLongLastingTask("TestTask4"), result -> successHandler(result), e -> exceptionHandler(e)));
+        tasks.add(factory.runAsync(()-> veryLongLastingTaskException(), result -> successHandler(result), e -> exceptionHandler(e)));
+        System.out.println("Added task");
+
+        latch.await();
+        System.out.println(tasks);
+        for(CompletableFuture t: tasks){
+            System.out.println(t.toString());
+            System.out.println(t.isCompletedExceptionally());
+            System.out.println(t.isDone());
+        }
+    }
+
+    private void successHandler(String s) {
+        latch.countDown();
+        // Do other stuff
+        System.out.println("Result: " + s);
+    }
 
     @Test
     public void testRunAsync() throws InterruptedException {
