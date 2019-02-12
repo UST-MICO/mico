@@ -1,11 +1,12 @@
 package io.github.ust.mico.core;
 
 import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.github.ust.mico.core.REST.DeploymentController;
-import io.github.ust.mico.core.concurrency.MicoCoreBackgroundTaskFactory;
-import io.github.ust.mico.core.imagebuilder.ImageBuilder;
-import io.github.ust.mico.core.mapping.KubernetesResourceException;
-import io.github.ust.mico.core.mapping.MicoKubernetesClient;
+import io.github.ust.mico.core.configuration.CorsConfig;
+import io.github.ust.mico.core.web.DeploymentController;
+import io.github.ust.mico.core.service.MicoCoreBackgroundTaskFactory;
+import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
+import io.github.ust.mico.core.exception.KubernetesResourceException;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;

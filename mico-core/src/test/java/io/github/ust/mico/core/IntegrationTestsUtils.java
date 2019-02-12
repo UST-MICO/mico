@@ -10,6 +10,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
+import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
+import io.github.ust.mico.core.exception.DeploymentException;
+import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +30,8 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceAccount;
 import io.fabric8.kubernetes.api.model.ServiceAccountBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.github.ust.mico.core.imagebuilder.ImageBuilder;
-import io.github.ust.mico.core.imagebuilder.buildtypes.Build;
+import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
+import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
