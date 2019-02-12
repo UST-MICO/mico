@@ -1,7 +1,12 @@
 package io.github.ust.mico.core;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import io.github.ust.mico.core.concurrency.MicoCoreBackgroundTaskFactory;
+import org.junit.ComparisonFailure;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,15 +15,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.junit.ComparisonFailure;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
-
-import io.github.ust.mico.core.concurrency.MicoCoreBackgroundTaskFactory;
-import scala.reflect.internal.AnnotationInfos;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -26,31 +24,36 @@ public class MicoCoreBackgroundTaskFactoryTests {
 
     @Autowired
     private MicoCoreBackgroundTaskFactory factory;
-    
+
     private CountDownLatch latch;
     private AtomicReference<AssertionError> failure = new AtomicReference<>();
     private AtomicInteger atomicInt = new AtomicInteger(0);
 
     @Test
-    public void backgroundStatus() throws InterruptedException{
+    public void backgroundStatus() throws InterruptedException {
         List<CompletableFuture> tasks = new ArrayList<>();
         latch = new CountDownLatch(4);
         // Fire-and-forget
         tasks.add(factory.runAsync(() -> veryLongLastingTask("TestTask1"), result -> successHandler(result)));
         System.out.println("Added task");
         // Run and only proceed workflow on success
-        tasks.add(factory.runAsync(() -> veryLongLastingTask("TestTask2"), result -> {successHandler(result);
-            System.out.println(tasks);}));
+        tasks.add(factory.runAsync(() -> veryLongLastingTask("TestTask2"), result -> {
+            successHandler(result);
+            System.out.println(tasks);
+        }));
         System.out.println("Added task");
         // Full result handling - success and error
-        tasks.add(factory.runAsync(() -> veryLongLastingTask("TestTask3"), result -> successHandler(result), e -> { e.printStackTrace(); return null; }));
+        tasks.add(factory.runAsync(() -> veryLongLastingTask("TestTask3"), result -> successHandler(result), e -> {
+            e.printStackTrace();
+            return null;
+        }));
         tasks.add(factory.runAsync(() -> veryLongLastingTask("TestTask4"), result -> successHandler(result), e -> exceptionHandler(e)));
-        tasks.add(factory.runAsync(()-> veryLongLastingTaskException(), result -> successHandler(result), e -> exceptionHandler(e)));
+        tasks.add(factory.runAsync(() -> veryLongLastingTaskException(), result -> successHandler(result), e -> exceptionHandler(e)));
         System.out.println("Added task");
 
         latch.await();
         System.out.println(tasks);
-        for(CompletableFuture t: tasks){
+        for (CompletableFuture t : tasks) {
             System.out.println(t.toString());
             System.out.println(t.isCompletedExceptionally());
             System.out.println(t.isDone());
@@ -108,28 +111,28 @@ public class MicoCoreBackgroundTaskFactoryTests {
         latch.await();
         assertEquals(1, atomicInt.get());
     }
-    
+
     private Void exceptionHandler(Throwable e) {
         atomicInt.incrementAndGet();
         return null;
     }
-    
+
     private String veryLongLastingTask(String name) {
-            pi_digits(100000);
-            return "Hello " + name + "!";
+        pi_digits(100000);
+        return "Hello " + name + "!";
     }
-    
+
     private String veryLongLastingTaskException() {
         List<String> list = new ArrayList<>();
         list.get(0);
         return "This line is never executed!";
-}
-    
+    }
+
     private static final int SCALE = 10000;
     private static final int ARRINIT = 2000;
-    
+
     // see http://www.codecodex.com/wiki/index.php?title=Digits_of_pi_calculation#Java
-    private static String pi_digits(int digits){
+    private static String pi_digits(int digits) {
         StringBuffer pi = new StringBuffer();
         int[] arr = new int[digits + 1];
         int carry = 0;
@@ -137,7 +140,7 @@ public class MicoCoreBackgroundTaskFactoryTests {
         for (int i = 0; i <= digits; ++i)
             arr[i] = ARRINIT;
 
-        for (int i = digits; i > 0; i-= 14) {
+        for (int i = digits; i > 0; i -= 14) {
             int sum = 0;
             for (int j = i; j > 0; --j) {
                 sum = sum * j + SCALE * arr[j];
@@ -150,5 +153,5 @@ public class MicoCoreBackgroundTaskFactoryTests {
         }
         return pi.toString();
     }
-    
+
 }
