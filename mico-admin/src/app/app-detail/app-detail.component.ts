@@ -22,6 +22,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         private route: ActivatedRoute,
         private dialog: MatDialog,
         private router: Router,
+        private http: Http
     ) { }
 
     subRouteParams: Subscription;
@@ -43,7 +44,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     // modifiable application object
     applicationData;
     edit: Boolean = false;
-
+    deployment: string;
 
     ngOnInit() {
 
