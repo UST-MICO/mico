@@ -2,6 +2,7 @@ package io.github.ust.mico.core;
 
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.GitHubCrawler;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;

@@ -1,8 +1,6 @@
+.. java:import:: java.util ArrayList
+
 .. java:import:: java.util List
-
-.. java:import:: com.fasterxml.jackson.annotation JsonIgnore
-
-.. java:import:: io.github.ust.mico.core VersionNotSupportedException
 
 .. java:import:: org.neo4j.ogm.annotation GeneratedValue
 
@@ -12,15 +10,21 @@
 
 .. java:import:: org.neo4j.ogm.annotation Relationship
 
+.. java:import:: com.fasterxml.jackson.annotation JsonIgnore
+
+.. java:import:: io.github.ust.mico.core.exception VersionNotSupportedException
+
 .. java:import:: io.swagger.annotations ApiModelProperty
 
 .. java:import:: lombok AllArgsConstructor
 
-.. java:import:: lombok Builder
-
 .. java:import:: lombok Data
 
+.. java:import:: lombok NoArgsConstructor
+
 .. java:import:: lombok Singular
+
+.. java:import:: lombok.experimental Accessors
 
 MicoApplication
 ===============
@@ -28,7 +32,7 @@ MicoApplication
 .. java:package:: io.github.ust.mico.core.model
    :noindex:
 
-.. java:type:: @Data @AllArgsConstructor @Builder @NodeEntity public class MicoApplication
+.. java:type:: @Data @NoArgsConstructor @AllArgsConstructor @Accessors @NodeEntity public class MicoApplication
 
    Represents an application as a set of \ :java:ref:`MicoService`\ s in the context of MICO.
 

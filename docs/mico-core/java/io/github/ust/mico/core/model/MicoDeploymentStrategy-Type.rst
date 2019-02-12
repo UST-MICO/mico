@@ -1,10 +1,8 @@
 .. java:import:: lombok AllArgsConstructor
 
-.. java:import:: lombok Builder
-
-.. java:import:: lombok Builder.Default
-
 .. java:import:: lombok Value
+
+.. java:import:: lombok.experimental Accessors
 
 MicoDeploymentStrategy.Type
 ===========================

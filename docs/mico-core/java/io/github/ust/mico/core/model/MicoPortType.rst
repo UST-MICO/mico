@@ -34,5 +34,5 @@ DEFAULT
 .. java:field:: public static MicoPortType DEFAULT
    :outertype: MicoPortType
 
-   Default port type is \ :java:ref:`Type.TCP`\ .
+   Default port type is \ :java:ref:`MicoPortType.TCP`\ .
 
