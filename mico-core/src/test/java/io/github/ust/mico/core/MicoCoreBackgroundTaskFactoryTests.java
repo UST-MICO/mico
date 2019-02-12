@@ -1,6 +1,6 @@
 package io.github.ust.mico.core;
 
-import io.github.ust.mico.core.concurrency.MicoCoreBackgroundTaskFactory;
+import io.github.ust.mico.core.service.MicoCoreBackgroundTaskFactory;
 import org.junit.ComparisonFailure;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -51,11 +51,11 @@ public class MicoCoreBackgroundTaskFactoryTests {
         tasks.add(factory.runAsync(() -> veryLongLastingTask("TestTask4"), result -> successHandler(result), e -> exceptionHandler(e)));
         tasks.add(factory.runAsync(() -> veryLongLastingTaskException(), result -> successHandler(result), e -> exceptionHandler(e)));
         System.out.println("Added task");
-
+        
         latch.await();
         System.out.println(tasks);
         for (CompletableFuture t : tasks) {
-            System.out.println(t.get());
+            System.out.println("getNow "+t.get());
             System.out.println("to string "+t.toString());
             System.out.println("is completed exceptionally "+t.isCompletedExceptionally());
             System.out.println("is done "+t.isDone());
