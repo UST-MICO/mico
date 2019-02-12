@@ -8,12 +8,9 @@ import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentList;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
+import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.model.MicoServicePort;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.UIDUtils;
 import org.junit.Before;
@@ -28,7 +25,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.util.Map;
 
 import static io.github.ust.mico.core.TestConstants.*;
-import static io.github.ust.mico.core.service.MicoKubernetesClient.*;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -200,6 +196,29 @@ public class MicoKubernetesClientTests {
         assertNotNull(secondService);
         assertEquals("Expected both services have the same name", firstService.getMetadata().getName(), secondService.getMetadata().getName());
         assertEquals("Expected both services are the same", firstService, secondService);
+    }
+
+    @Test
+    public void isApplicationDeployed() throws KubernetesResourceException {
+
+        MicoService micoService = getMicoServiceWithInterface();
+        String deploymentUid = UIDUtils.uidFor(micoService);
+        Deployment existingDeployment = getDeploymentObject(micoService, deploymentUid);
+        Map<String, String> labels = CollectionUtils.mapOf(
+            LABEL_APP_KEY, micoService.getShortName(),
+            LABEL_VERSION_KEY, micoService.getVersion());
+        DeploymentList deploymentList = new DeploymentList();
+        deploymentList.setItems(CollectionUtils.listOf(existingDeployment));
+        given(cluster.getDeploymentsByLabels(labels, testNamespace)).willReturn(deploymentList);
+
+        MicoApplication micoApplication = new MicoApplication()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setServices(CollectionUtils.listOf(micoService));
+
+        boolean result = micoKubernetesClient.isApplicationDeployed(micoApplication);
+
+        assertTrue("Expected application is deployed", result);
     }
 
     private Deployment getDeploymentObject(MicoService micoService, String deploymentUid) {

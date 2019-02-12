@@ -5,10 +5,7 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.model.MicoServicePort;
+import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.UIDUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -181,6 +178,29 @@ public class MicoKubernetesClient {
         // (publicDns, description, protocol, transportProtocol)
 
         return cluster.createService(service, namespace);
+    }
+
+    /**
+     * Checks if a MICO application is already deployed.
+     *
+     * @param micoApplication the {@link MicoApplication}
+     * @return if true the application is deployed.
+     * @throws KubernetesResourceException if there is an error while retrieving the Kubernetes objects
+     */
+    public boolean isApplicationDeployed(MicoApplication micoApplication) throws KubernetesResourceException {
+        boolean result = false;
+
+        for (MicoService micoService : micoApplication.getServices()) {
+            Optional<Deployment> deployment = getDeploymentOfMicoService(micoService);
+            if (deployment.isPresent()) {
+                result = true;
+                break;
+            }
+        }
+        String deploymentStatus = result ? "deployed" : "not deployed";
+        log.info("MicoApplication '{}' in version '{}' is {}.",
+            micoApplication.getShortName(), micoApplication.getVersion(), deploymentStatus);
+        return result;
     }
 
     /**
