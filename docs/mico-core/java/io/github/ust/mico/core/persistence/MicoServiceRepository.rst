@@ -42,28 +42,22 @@ findAll
 .. java:method:: @Override  List<MicoService> findAll()
    :outertype: MicoServiceRepository
 
-findByShortName
-^^^^^^^^^^^^^^^
+findAll
+^^^^^^^
 
-.. java:method::  List<MicoService> findByShortName(String shortName)
+.. java:method:: @Override  List<MicoService> findAll(int depth)
    :outertype: MicoServiceRepository
 
 findByShortName
 ^^^^^^^^^^^^^^^
 
-.. java:method::  List<MicoService> findByShortName(String shortName, int depth)
+.. java:method:: @Depth  List<MicoService> findByShortName(String shortName)
    :outertype: MicoServiceRepository
 
 findByShortNameAndVersion
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method::  Optional<MicoService> findByShortNameAndVersion(String shortName, String version)
-   :outertype: MicoServiceRepository
-
-findByShortNameAndVersion
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. java:method::  Optional<MicoService> findByShortNameAndVersion(String shortName, String version, int depth)
+.. java:method:: @Depth  Optional<MicoService> findByShortNameAndVersion(String shortName, String version)
    :outertype: MicoServiceRepository
 
 findInterfaceOfServiceByName
@@ -72,9 +66,9 @@ findInterfaceOfServiceByName
 .. java:method:: @Query  Optional<MicoServiceInterface> findInterfaceOfServiceByName(String serviceInterfaceName, String shortName, String version)
    :outertype: MicoServiceRepository
 
-findInterfacesOfService
-^^^^^^^^^^^^^^^^^^^^^^^
+   Find a specific service interface. The returned interface will NOT have ports mapped by the ogm. If you want to have a interface with mapped ports use the serviceInterface list in the corresponding MicoService object returned by findByShortNameAndVersion!
 
-.. java:method:: @Query  List<MicoServiceInterface> findInterfacesOfService(String shortName, String version)
-   :outertype: MicoServiceRepository
+   :param serviceInterfaceName:
+   :param shortName:
+   :param version:
 

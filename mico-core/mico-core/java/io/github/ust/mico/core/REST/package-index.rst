@@ -1,7 +1,7 @@
-io.github.ust.mico.core.REST
+io.github.ust.mico.core.web
 ============================
 
-.. java:package:: io.github.ust.mico.core.REST
+.. java:package:: io.github.ust.mico.core.web
 
 .. toctree::
    :maxdepth: 1

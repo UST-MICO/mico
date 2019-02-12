@@ -6,7 +6,7 @@ MicoServiceCrawlingOrigin
 
 .. java:type:: public enum MicoServiceCrawlingOrigin
 
-   TODO: Class comment
+   Enumeration for the various places a service may originate from.
 
 Enum Constants
 --------------
@@ -16,7 +16,7 @@ DOCKER
 .. java:field:: public static final MicoServiceCrawlingOrigin DOCKER
    :outertype: MicoServiceCrawlingOrigin
 
-   TODO: add comment
+   Indicates that a service originates from Docker.
 
 GITHUB
 ^^^^^^
@@ -24,7 +24,7 @@ GITHUB
 .. java:field:: public static final MicoServiceCrawlingOrigin GITHUB
    :outertype: MicoServiceCrawlingOrigin
 
-   TODO: add comment
+   Indicates that a service originates from some GitHub repository.
 
 NOT_DEFINED
 ^^^^^^^^^^^
@@ -32,5 +32,5 @@ NOT_DEFINED
 .. java:field:: public static final MicoServiceCrawlingOrigin NOT_DEFINED
    :outertype: MicoServiceCrawlingOrigin
 
-   TODO: add comment
+   Undefined.
 

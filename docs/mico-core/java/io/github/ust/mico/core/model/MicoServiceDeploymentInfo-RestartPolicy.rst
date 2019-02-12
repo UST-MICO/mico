@@ -1,14 +1,10 @@
-.. java:import:: io.swagger.annotations ApiModelProperty
+.. java:import:: java.util ArrayList
 
-.. java:import:: lombok AllArgsConstructor
+.. java:import:: java.util HashMap
 
-.. java:import:: lombok Builder
+.. java:import:: java.util List
 
-.. java:import:: lombok Builder.Default
-
-.. java:import:: lombok Data
-
-.. java:import:: lombok Singular
+.. java:import:: java.util Map
 
 .. java:import:: org.neo4j.ogm.annotation GeneratedValue
 
@@ -16,9 +12,17 @@
 
 .. java:import:: org.neo4j.ogm.annotation NodeEntity
 
-.. java:import:: java.util List
+.. java:import:: io.swagger.annotations ApiModelProperty
 
-.. java:import:: java.util Map
+.. java:import:: lombok AllArgsConstructor
+
+.. java:import:: lombok Data
+
+.. java:import:: lombok NoArgsConstructor
+
+.. java:import:: lombok Singular
+
+.. java:import:: lombok.experimental Accessors
 
 MicoServiceDeploymentInfo.RestartPolicy
 =======================================
