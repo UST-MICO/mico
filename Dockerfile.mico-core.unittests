@@ -8,4 +8,4 @@ RUN mvn -B -f mico-core/pom.xml dependency:go-offline
 
 COPY mico-core/src mico-core/src
 RUN mvn -B -f mico-core/pom.xml clean package -Dmaven.test.skip=true
-RUN mvn test
+RUN mvn -B -f mico-core/pom.xml test
