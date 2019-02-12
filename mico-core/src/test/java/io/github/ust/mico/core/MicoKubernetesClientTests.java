@@ -38,6 +38,11 @@ import static org.mockito.Mockito.*;
 @SpringBootTest
 public class MicoKubernetesClientTests {
 
+    private static final String LABEL_APP_KEY = "app";
+    private static final String LABEL_VERSION_KEY = "version";
+    private static final String LABEL_INTERFACE_KEY = "interface";
+    private static final String LABEL_RUN_KEY = "run";
+
     @MockBean
     MicoKubernetesConfig micoKubernetesConfig;
 

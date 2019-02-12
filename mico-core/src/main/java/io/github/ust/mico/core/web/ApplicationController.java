@@ -1,20 +1,18 @@
 package io.github.ust.mico.core.web;
 
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.fabric8.kubernetes.api.model.apps.DeploymentList;
-import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.configuration.PrometheusConfig;
 import io.github.ust.mico.core.dto.*;
+import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.PrometheusRequestFailedException;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
@@ -30,14 +28,11 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static io.github.ust.mico.core.service.MicoKubernetesClient.LABEL_APP_KEY;
-import static io.github.ust.mico.core.service.MicoKubernetesClient.LABEL_VERSION_KEY;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
@@ -67,10 +62,7 @@ public class ApplicationController {
     private MicoServiceRepository serviceRepository;
 
     @Autowired
-    MicoKubernetesConfig micoKubernetesConfig;
-
-    @Autowired
-    ClusterAwarenessFabric8 cluster;
+    MicoKubernetesClient micoKubernetesClient;
 
     @Autowired
     private RestTemplate restTemplate;
@@ -186,7 +178,7 @@ public class ApplicationController {
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")
     public ResponseEntity<Resource<UiApplicationDeploymentInformation>> getStatusOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                                  @PathVariable(PATH_VARIABLE_VERSION) String version) {
+                                                                                               @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
         if (!micoApplicationOptional.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' was not found!");
@@ -198,52 +190,68 @@ public class ApplicationController {
 
         UiApplicationDeploymentInformation uiApplicationDeploymentInformation = new UiApplicationDeploymentInformation();
         for (MicoService micoService : micoServices) {
-            HashMap<String, String> labels = new HashMap<>();
-            labels.put(LABEL_APP_KEY, micoService.getShortName());
-            labels.put(LABEL_VERSION_KEY, micoService.getVersion());
-            String namespace = micoKubernetesConfig.getNamespaceMicoWorkspace();
-            DeploymentList deploymentList = cluster.getDeploymentsByLabels(labels, namespace);
-            log.debug("Found {} deployment(s) of Mico service '{}' '{}'",
-                deploymentList.getItems().size(), micoService.getShortName(), micoService.getVersion());
+            Optional<Deployment> deploymentOptional;
+            try {
+                deploymentOptional = micoKubernetesClient.getDeploymentOfMicoService(micoService);
+            } catch (KubernetesResourceException e) {
+                log.error("Error while retrieving Kubernetes deployment of MicoService '{}' '{}'. Continue with next one. Caused by: {}",
+                    micoService.getShortName(), micoService.getVersion(), e.getMessage());
+                continue;
+            }
+            if (!deploymentOptional.isPresent()) {
+                log.warn("There is no deployment of the MicoService '{}' '{}'. Continue with next one.",
+                    micoService.getShortName(), micoService.getVersion());
+                continue;
+            }
 
-            if (deploymentList.getItems().size() == 1) {
-                Deployment deployment = deploymentList.getItems().get(0);
-                UiServiceDeploymentInformation uiServiceDeploymentInformation = new UiServiceDeploymentInformation();
-                int requestedReplicas = deployment.getSpec().getReplicas();
-                int availableReplicas = deployment.getStatus().getAvailableReplicas();
-                uiServiceDeploymentInformation.setAvailableReplicas(availableReplicas);
-                uiServiceDeploymentInformation.setRequestedReplicas(requestedReplicas);
+            Deployment deployment = deploymentOptional.get();
+            UiServiceDeploymentInformation uiServiceDeploymentInformation = new UiServiceDeploymentInformation();
+            int requestedReplicas = deployment.getSpec().getReplicas();
+            int availableReplicas = deployment.getStatus().getAvailableReplicas();
+            uiServiceDeploymentInformation.setAvailableReplicas(availableReplicas);
+            uiServiceDeploymentInformation.setRequestedReplicas(requestedReplicas);
 
-                ServiceList serviceList = cluster.getServicesByLabels(labels, namespace); //MicoServiceInterface maps to Service
+            List<Pod> podList = micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(micoService);
+            List<UiPodInfo> podInfos = new LinkedList<>();
+            for (Pod pod : podList) {
+                UiPodInfo uiPodInfo = getUiPodInfo(pod);
+                podInfos.add(uiPodInfo);
+            }
+            uiServiceDeploymentInformation.setPodInfo(podInfos);
+            uiApplicationDeploymentInformation.serviceDeploymentInformationList.add(uiServiceDeploymentInformation);
+
+            List<MicoServiceInterface> serviceInterfaces = micoService.getServiceInterfaces();
+            if (serviceInterfaces.size() < MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "There are " + serviceInterfaces.size() + " service interfaces of MicoService '" +
+                        micoService.getShortName() + "' '" + micoService.getVersion() + "'. That is less than the required " +
+                        MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT + " service interfaces.");
+            }
+
+            for (MicoServiceInterface micoServiceInterface : serviceInterfaces) {
+                String serviceInterfaceName = micoServiceInterface.getServiceInterfaceName();
+                Optional<Service> kubernetesServiceOptional;
+                try {
+                    kubernetesServiceOptional = micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, serviceInterfaceName);
+                } catch (KubernetesResourceException e) {
+                    log.error("Error while retrieving Kubernetes services of MicoServiceInterface '{}' of MicoService '{}' '{}'. " +
+                            "Continue with next one. Caused by: {}",
+                        serviceInterfaceName, micoService.getShortName(), micoService.getVersion(), e.getMessage());
+                    continue;
+                }
+                if (!kubernetesServiceOptional.isPresent()) {
+                    log.warn("There is no service of the MicoServiceInterface '{}' of MicoService '{}' '{}'.",
+                        micoService.getShortName(), micoService.getVersion());
+                    continue;
+                }
+
+                Service kubernetesService = kubernetesServiceOptional.get();
                 List<UiExternalMicoInterfaceInformation> interfacesInformation = new LinkedList<>();
-                if (serviceList.getItems().size() >= MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT) {
-                    for (Service service : serviceList.getItems()) {
-                        String name = service.getMetadata().getName();
-                        UiExternalMicoInterfaceInformation interfaceInformation = UiExternalMicoInterfaceInformation.builder()
-                            .name(name).build();
-                        interfacesInformation.add(interfaceInformation);
-                    }
-                    uiServiceDeploymentInformation.setInterfacesInformation(interfacesInformation);
-                    PodList podList = cluster.getPodsByLabels(labels, namespace);
-                    List<UiPodInfo> podInfos = new LinkedList<>();
-                    for (Pod pod : podList.getItems()) {
-                        UiPodInfo uiPodInfo = getUiPodInfo(pod);
-                        podInfos.add(uiPodInfo);
-                    }
-                    uiServiceDeploymentInformation.setPodInfo(podInfos);
-                    uiApplicationDeploymentInformation.serviceDeploymentInformationList.add(uiServiceDeploymentInformation);
-                } else {
-                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                        "There are not at least " + MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT + " service interface");
-                }
-            } else {
-                if (deploymentList.getItems().isEmpty()) {
-                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                        "There are zero deployments of the Mico service '" + micoService.getShortName() + "' in version '" + micoService.getVersion() + "'");
-                } else {
-                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                        "There are more than one deployments of the Mico service '" + micoService.getShortName() + "' in version '" + micoService.getVersion() + "'");
-                }
+                String serviceName = kubernetesService.getMetadata().getName();
+                UiExternalMicoInterfaceInformation interfaceInformation = UiExternalMicoInterfaceInformation.builder()
+                    .name(serviceName).build();
+                interfacesInformation.add(interfaceInformation);
+                uiServiceDeploymentInformation.setInterfacesInformation(interfacesInformation);
             }
         }
         return ResponseEntity.ok(new Resource<>(uiApplicationDeploymentInformation));
