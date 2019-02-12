@@ -1,6 +1,5 @@
 package io.github.ust.mico.core;
 
-import io.github.ust.mico.core.crawling.GitHubCrawler;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.GitHubCrawler;
@@ -37,7 +36,7 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
         MicoService service = crawler.crawlGitHubRepoLatestRelease(REPO_URI_API);
         serviceRepository.save(service);
 
-        MicoService readService = serviceRepository.findByShortNameAndVersion(service.getShortName(), service.getVersion().toString()).get();
+        MicoService readService = serviceRepository.findByShortNameAndVersion(service.getShortName(), service.getVersion()).get();
         assertEquals(service.getShortName(), readService.getShortName());
         assertEquals(service.getDescription(), readService.getDescription());
         assertEquals(service.getId(), readService.getId());
@@ -54,7 +53,7 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
         MicoService service = crawler.crawlGitHubRepoLatestRelease(REPO_URI_HTML);
         serviceRepository.save(service);
 
-        MicoService readService = serviceRepository.findByShortNameAndVersion(service.getShortName(), service.getVersion().toString()).get();
+        MicoService readService = serviceRepository.findByShortNameAndVersion(service.getShortName(), service.getVersion()).get();
         assertEquals(service.getShortName(), readService.getShortName());
         assertEquals(service.getDescription(), readService.getDescription());
         assertEquals(service.getId(), readService.getId());
@@ -71,7 +70,7 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
         MicoService service = crawler.crawlGitHubRepoSpecificRelease(REPO_URI_API, RELEASE);
         serviceRepository.save(service);
 
-        MicoService readService = serviceRepository.findByShortNameAndVersion(service.getShortName(), service.getVersion().toString()).get();
+        MicoService readService = serviceRepository.findByShortNameAndVersion(service.getShortName(), service.getVersion()).get();
         assertEquals(service.getShortName(), readService.getShortName());
         assertEquals(service.getDescription(), readService.getDescription());
         assertEquals(service.getId(), readService.getId());
@@ -88,7 +87,7 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
         List<MicoService> serviceList = crawler.crawlGitHubRepoAllReleases(REPO_URI_API);
         serviceRepository.saveAll(serviceList);
 
-        MicoService readService = serviceRepository.findByShortNameAndVersion(serviceList.get(0).getShortName(), serviceList.get(0).getVersion().toString()).get();
+        MicoService readService = serviceRepository.findByShortNameAndVersion(serviceList.get(0).getShortName(), serviceList.get(0).getVersion()).get();
         assertEquals(serviceList.get(0).getShortName(), readService.getShortName());
         assertEquals(serviceList.get(0).getDescription(), readService.getDescription());
         assertEquals(serviceList.get(0).getId(), readService.getId());
