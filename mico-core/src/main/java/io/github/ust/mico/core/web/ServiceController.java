@@ -44,7 +44,7 @@ public class ServiceController {
     private MicoServiceRepository serviceRepository;
 
     @Autowired
-    ClusterAwarenessFabric8 cluster;
+    private ClusterAwarenessFabric8 cluster;
 
     @GetMapping()
     public ResponseEntity<Resources<Resource<MicoService>>> getServiceList() {
