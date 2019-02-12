@@ -192,14 +192,18 @@ public class ApplicationController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' was not found!");
         }
 
+        List<MicoService> micoServices = micoApplicationOptional.get().getServices();
+        log.debug("Aggregate status information of Mico application '{}' '{}' with {} included services",
+            shortName, version, micoServices.size());
+
         UiApplicationDeploymentInformation uiApplicationDeploymentInformation = new UiApplicationDeploymentInformation();
-        for (MicoService micoService : micoApplicationOptional.get().getServices()) {
+        for (MicoService micoService : micoServices) {
             HashMap<String, String> labels = new HashMap<>();
             labels.put(LABEL_APP_KEY, micoService.getShortName());
             labels.put(LABEL_VERSION_KEY, micoService.getVersion());
             String namespace = micoKubernetesConfig.getNamespaceMicoWorkspace();
             DeploymentList deploymentList = cluster.getDeploymentsByLabels(labels, namespace);
-            log.debug("Found {} deployments of Mico service '{}' in version '{}'",
+            log.debug("Found {} deployment(s) of Mico service '{}' '{}'",
                 deploymentList.getItems().size(), micoService.getShortName(), micoService.getVersion());
 
             if (deploymentList.getItems().size() == 1) {
