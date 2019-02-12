@@ -1,0 +1,11 @@
+FROM maven:3-jdk-8 as builder
+WORKDIR /workspace
+
+#Cache dependencies
+COPY pom.xml .
+COPY mico-core/pom.xml mico-core/pom.xml
+RUN mvn -B -f mico-core/pom.xml dependency:go-offline
+
+COPY mico-core/src mico-core/src
+RUN mvn -B -f mico-core/pom.xml clean package -Dmaven.test.skip=true
+RUN mvn failsafe:integration-test
