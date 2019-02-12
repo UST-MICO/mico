@@ -12,38 +12,13 @@ import io.fabric8.kubernetes.api.model.apps.DeploymentListBuilder;
 import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.configuration.PrometheusConfig;
-import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
-import io.github.ust.mico.core.web.ApplicationController;
 import io.github.ust.mico.core.dto.PrometheusResponse;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
+import io.github.ust.mico.core.web.ApplicationController;
 import org.hamcrest.collection.IsEmptyCollection;
-import static io.github.ust.mico.core.JsonPathBuilder.EMBEDDED;
-import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
-import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
-import static io.github.ust.mico.core.REST.ApplicationController.LABEL_APP_KEY;
-import static io.github.ust.mico.core.REST.ApplicationController.LABEL_VERSION_KEY;
-import static io.github.ust.mico.core.TestConstants.*;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Optional;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -68,14 +43,11 @@ import java.util.HashMap;
 import java.util.Optional;
 
 import static io.github.ust.mico.core.JsonPathBuilder.*;
-import static io.github.ust.mico.core.web.ApplicationController.PATH_APPLICATIONS;
-import static io.github.ust.mico.core.web.ApplicationController.PATH_SERVICES;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
 import static io.github.ust.mico.core.TestConstants.VERSION;
 import static io.github.ust.mico.core.TestConstants.*;
 import static io.github.ust.mico.core.service.MicoKubernetesClient.LABEL_APP_KEY;
 import static io.github.ust.mico.core.service.MicoKubernetesClient.LABEL_VERSION_KEY;
-import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
@@ -336,12 +308,11 @@ public class ApplicationControllerTest {
 
     @Test
     public void deleteServiceFromApplication() throws Exception {
-        MicoApplication micoApplication = MicoApplication.builder()
-            .shortName(SHORT_NAME)
-            .version(VERSION)
-            .build();
-        MicoService micoService = MicoService.builder().shortName(SERVICE_SHORT_NAME).version(SERVICE_VERSION).build();
-        micoApplication = micoApplication.toBuilder().service(micoService).build();
+        MicoApplication micoApplication = new MicoApplication()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION);
+        MicoService micoService = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
+        micoApplication.getServices().add(micoService);
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
         ArgumentCaptor<MicoApplication> micoApplicationCaptor = ArgumentCaptor.forClass(MicoApplication.class);
 

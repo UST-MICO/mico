@@ -256,10 +256,8 @@ public class ApplicationController {
             List<MicoService> services = micoApplication.getServices();
             log.debug("Service list has size: {}", services.size());
             Predicate<MicoService> matchServiceShortName = service -> service.getShortName().equals(serviceShortName);
-            List<MicoService> listWithoutService = services.stream().filter(matchServiceShortName.negate()).collect(Collectors.toList());
-            log.debug("New list has size: {} ", listWithoutService.size());
-            MicoApplication micoApplicationWithoutService = micoApplication.toBuilder().clearServices().services(listWithoutService).build();
-            applicationRepository.save(micoApplicationWithoutService);
+            services.removeIf(matchServiceShortName);
+            applicationRepository.save(micoApplication);
 
             // TODO Update Kubernetes deployment
 
@@ -272,7 +270,6 @@ public class ApplicationController {
     private boolean serviceExists(MicoApplication micoApplication, String serviceShortName) {
         return micoApplication.getServices().stream().anyMatch(existingService -> existingService.getShortName().equals(serviceShortName));
     }
-
 
     private UiPodInfo getUiPodInfo(Pod pod) {
         String nodeName = pod.getSpec().getNodeName();
