@@ -244,7 +244,7 @@ public class ApplicationControllerTest {
     }
 
     @Test
-    public void getDeploymentInformation() throws Exception {
+    public void getStatusOfApplication() throws Exception {
         MicoApplication application = new MicoApplication()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
@@ -299,7 +299,7 @@ public class ApplicationControllerTest {
         ResponseEntity responseEntity2 = getPrometheusResponseEntity(cpuLoad);
         given(restTemplate.getForEntity(any(), eq(PrometheusResponse.class))).willReturn(responseEntity).willReturn(responseEntity2);
 
-        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/deploymentInformation"))
+        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/status"))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath(REQUESTED_REPLICAS, is(replicas)))

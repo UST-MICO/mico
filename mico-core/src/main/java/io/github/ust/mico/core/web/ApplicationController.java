@@ -184,9 +184,9 @@ public class ApplicationController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/deploymentInformation")
-    public ResponseEntity<Resource<UiApplicationDeploymentInformation>> getApplicationDeploymentInformation(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                                                            @PathVariable(PATH_VARIABLE_VERSION) String version) {
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")
+    public ResponseEntity<Resource<UiApplicationDeploymentInformation>> getStatusOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                                  @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
         if (!micoApplicationOptional.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' was not found!");
