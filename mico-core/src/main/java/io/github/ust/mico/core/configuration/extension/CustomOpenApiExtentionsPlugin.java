@@ -1,4 +1,4 @@
-package io.github.ust.mico.core;
+package io.github.ust.mico.core.configuration.extension;
 
 import com.google.common.base.Optional;
 import io.swagger.annotations.ApiModelProperty;

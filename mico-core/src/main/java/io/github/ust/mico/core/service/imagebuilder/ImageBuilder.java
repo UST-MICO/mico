@@ -1,18 +1,17 @@
-package io.github.ust.mico.core.imagebuilder;
+package io.github.ust.mico.core.service.imagebuilder;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.ServiceAccount;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinitionList;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
-import io.github.ust.mico.core.ClusterAwarenessFabric8;
-import io.github.ust.mico.core.MicoKubernetesBuildBotConfig;
-import io.github.ust.mico.core.NotInitializedException;
-import io.github.ust.mico.core.imagebuilder.buildtypes.*;
+import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
+import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
+import io.github.ust.mico.core.exception.NotInitializedException;
+import io.github.ust.mico.core.service.imagebuilder.buildtypes.*;
 import io.github.ust.mico.core.model.MicoService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

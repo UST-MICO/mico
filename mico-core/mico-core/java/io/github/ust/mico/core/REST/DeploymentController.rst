@@ -51,7 +51,7 @@
 DeploymentController
 ====================
 
-.. java:package:: io.github.ust.mico.core.REST
+.. java:package:: io.github.ust.mico.core.web
    :noindex:
 
 .. java:type:: @Slf4j @RestController @RequestMapping public class DeploymentController

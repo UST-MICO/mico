@@ -4,6 +4,8 @@
 
 .. java:import:: io.github.ust.mico.core.model MicoApplication
 
+.. java:import:: org.springframework.data.repository.query Param
+
 .. java:import:: java.util List
 
 .. java:import:: java.util Optional
@@ -24,15 +26,21 @@ findAll
 .. java:method:: @Override  List<MicoApplication> findAll()
    :outertype: MicoApplicationRepository
 
-findByShortNameAndVersion
-^^^^^^^^^^^^^^^^^^^^^^^^^
+findAll
+^^^^^^^
 
-.. java:method::  Optional<MicoApplication> findByShortNameAndVersion(String shortName, String version, int depth)
+.. java:method:: @Override  List<MicoApplication> findAll(int depth)
+   :outertype: MicoApplicationRepository
+
+findByShortName
+^^^^^^^^^^^^^^^
+
+.. java:method:: @Depth  List<MicoApplication> findByShortName(String shortName)
    :outertype: MicoApplicationRepository
 
 findByShortNameAndVersion
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method::  Optional<MicoApplication> findByShortNameAndVersion(String shortName, String version)
+.. java:method:: @Depth  Optional<MicoApplication> findByShortNameAndVersion(String shortName, String version)
    :outertype: MicoApplicationRepository
 
