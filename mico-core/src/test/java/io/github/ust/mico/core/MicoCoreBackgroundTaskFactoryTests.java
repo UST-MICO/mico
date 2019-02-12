@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -30,7 +31,7 @@ public class MicoCoreBackgroundTaskFactoryTests {
     private AtomicInteger atomicInt = new AtomicInteger(0);
 
     @Test
-    public void backgroundStatus() throws InterruptedException {
+    public void backgroundStatus() throws InterruptedException, ExecutionException {
         List<CompletableFuture> tasks = new ArrayList<>();
         latch = new CountDownLatch(4);
         // Fire-and-forget
@@ -54,9 +55,10 @@ public class MicoCoreBackgroundTaskFactoryTests {
         latch.await();
         System.out.println(tasks);
         for (CompletableFuture t : tasks) {
-            System.out.println(t.toString());
-            System.out.println(t.isCompletedExceptionally());
-            System.out.println(t.isDone());
+            System.out.println(t.get());
+            System.out.println("to string "+t.toString());
+            System.out.println("is completed exceptionally "+t.isCompletedExceptionally());
+            System.out.println("is done "+t.isDone());
         }
     }
 
