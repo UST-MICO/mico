@@ -12,12 +12,13 @@ import io.fabric8.kubernetes.api.model.apps.DeploymentListBuilder;
 import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.configuration.PrometheusConfig;
-import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
-import io.github.ust.mico.core.web.ApplicationController;
 import io.github.ust.mico.core.dto.PrometheusResponse;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
+import io.github.ust.mico.core.util.CollectionUtils;
+import io.github.ust.mico.core.web.ApplicationController;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -42,13 +43,13 @@ import java.util.HashMap;
 import java.util.Optional;
 
 import static io.github.ust.mico.core.JsonPathBuilder.*;
-import static io.github.ust.mico.core.web.ApplicationController.PATH_APPLICATIONS;
-import static io.github.ust.mico.core.web.ApplicationController.PATH_SERVICES;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
 import static io.github.ust.mico.core.TestConstants.VERSION;
 import static io.github.ust.mico.core.TestConstants.*;
 import static io.github.ust.mico.core.service.MicoKubernetesClient.LABEL_APP_KEY;
 import static io.github.ust.mico.core.service.MicoKubernetesClient.LABEL_VERSION_KEY;
+import static io.github.ust.mico.core.web.ApplicationController.PATH_APPLICATIONS;
+import static io.github.ust.mico.core.web.ApplicationController.PATH_SERVICES;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
@@ -78,17 +79,18 @@ public class ApplicationControllerTest {
     public static final String DESCRIPTION_PATH = buildPath(ROOT, "description");
     public static final String ID_PATH = buildPath(ROOT, "id");
 
-    private static final String REQUESTED_REPLICAS = buildPath(ROOT, "requestedReplicas");
-    private static final String AVAILABLE_REPLICAS = buildPath(ROOT, "availableReplicas");
-    private static final String INTERFACES_INFORMATION = buildPath(ROOT, "interfacesInformation");
-    private static final String INTERFACES_INFORMATION_NAME = buildPath(ROOT, "interfacesInformation[0].name");
-    private static final String POD_INFO = buildPath(ROOT, "podInfo");
-    private static final String POD_INFO_POD_NAME = buildPath(ROOT, "podInfo[0].podName");
-    private static final String POD_INFO_PHASE = buildPath(ROOT, "podInfo[0].phase");
-    private static final String POD_INFO_NODE_NAME = buildPath(ROOT, "podInfo[0].nodeName");
-    private static final String POD_INFO_METRICS_MEMORY_USAGE = buildPath(ROOT, "podInfo[0].metrics.memoryUsage");
-    private static final String POD_INFO_METRICS_CPU_LOAD = buildPath(ROOT, "podInfo[0].metrics.cpuLoad");
-    private static final String POD_INFO_METRICS_AVAILABLE = buildPath(ROOT, "podInfo[0].metrics.available");
+    private static final String FIRST_SERVICE = buildPath(ROOT, "serviceDeploymentInformationList[0]");
+    private static final String REQUESTED_REPLICAS = buildPath(FIRST_SERVICE, "requestedReplicas");
+    private static final String AVAILABLE_REPLICAS = buildPath(FIRST_SERVICE, "availableReplicas");
+    private static final String INTERFACES_INFORMATION = buildPath(FIRST_SERVICE, "interfacesInformation");
+    private static final String INTERFACES_INFORMATION_NAME = buildPath(FIRST_SERVICE, "interfacesInformation[0].name");
+    private static final String POD_INFO = buildPath(FIRST_SERVICE, "podInfo");
+    private static final String POD_INFO_POD_NAME = buildPath(FIRST_SERVICE, "podInfo[0].podName");
+    private static final String POD_INFO_PHASE = buildPath(FIRST_SERVICE, "podInfo[0].phase");
+    private static final String POD_INFO_NODE_NAME = buildPath(FIRST_SERVICE, "podInfo[0].nodeName");
+    private static final String POD_INFO_METRICS_MEMORY_USAGE = buildPath(FIRST_SERVICE, "podInfo[0].metrics.memoryUsage");
+    private static final String POD_INFO_METRICS_CPU_LOAD = buildPath(FIRST_SERVICE, "podInfo[0].metrics.cpuLoad");
+    private static final String POD_INFO_METRICS_AVAILABLE = buildPath(FIRST_SERVICE, "podInfo[0].metrics.available");
 
     public static final String VERSION_MAJOR_PATH = buildPath(ROOT, "version", "majorVersion");
     public static final String VERSION_MINOR_PATH = buildPath(ROOT, "version", "minorVersion");
@@ -242,10 +244,15 @@ public class ApplicationControllerTest {
     }
 
     @Test
-    public void getDeploymentInformation() throws Exception {
+    public void getStatusOfApplication() throws Exception {
         MicoApplication application = new MicoApplication()
             .setShortName(SHORT_NAME)
-            .setVersion(VERSION);
+            .setVersion(VERSION)
+            .setServices(CollectionUtils.listOf(
+                new MicoService()
+                    .setShortName(SHORT_NAME)
+                    .setVersion(VERSION)
+            ));
         String testNamespace = "TestNamespace";
         String nodeName = "testNode";
         String podPhase = "Running";
@@ -292,7 +299,7 @@ public class ApplicationControllerTest {
         ResponseEntity responseEntity2 = getPrometheusResponseEntity(cpuLoad);
         given(restTemplate.getForEntity(any(), eq(PrometheusResponse.class))).willReturn(responseEntity).willReturn(responseEntity2);
 
-        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/deploymentInformation"))
+        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/status"))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath(REQUESTED_REPLICAS, is(replicas)))

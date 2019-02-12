@@ -6,15 +6,15 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentList;
-import io.github.ust.mico.core.dto.*;
-import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.configuration.PrometheusConfig;
+import io.github.ust.mico.core.dto.*;
 import io.github.ust.mico.core.exception.PrometheusRequestFailedException;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
@@ -184,24 +184,35 @@ public class ApplicationController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/deploymentInformation")
-    public ResponseEntity<Resource<UiDeploymentInformation>> getApplicationDeploymentInformation(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                                                 @PathVariable(PATH_VARIABLE_VERSION) String version) {
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")
+    public ResponseEntity<Resource<UiApplicationDeploymentInformation>> getStatusOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                                  @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
-        if (micoApplicationOptional.isPresent()) {
+        if (!micoApplicationOptional.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' was not found!");
+        }
+
+        List<MicoService> micoServices = micoApplicationOptional.get().getServices();
+        log.debug("Aggregate status information of Mico application '{}' '{}' with {} included services",
+            shortName, version, micoServices.size());
+
+        UiApplicationDeploymentInformation uiApplicationDeploymentInformation = new UiApplicationDeploymentInformation();
+        for (MicoService micoService : micoServices) {
             HashMap<String, String> labels = new HashMap<>();
-            labels.put(LABEL_APP_KEY, shortName);
-            labels.put(LABEL_VERSION_KEY, version);
+            labels.put(LABEL_APP_KEY, micoService.getShortName());
+            labels.put(LABEL_VERSION_KEY, micoService.getVersion());
             String namespace = micoKubernetesConfig.getNamespaceMicoWorkspace();
             DeploymentList deploymentList = cluster.getDeploymentsByLabels(labels, namespace);
-            log.debug("Found {} deployments of Mico service '{}' in version '{}'", deploymentList.getItems().size(), shortName, version);
+            log.debug("Found {} deployment(s) of Mico service '{}' '{}'",
+                deploymentList.getItems().size(), micoService.getShortName(), micoService.getVersion());
+
             if (deploymentList.getItems().size() == 1) {
                 Deployment deployment = deploymentList.getItems().get(0);
-                UiDeploymentInformation uiDeploymentInformation = new UiDeploymentInformation();
+                UiServiceDeploymentInformation uiServiceDeploymentInformation = new UiServiceDeploymentInformation();
                 int requestedReplicas = deployment.getSpec().getReplicas();
                 int availableReplicas = deployment.getStatus().getAvailableReplicas();
-                uiDeploymentInformation.setAvailableReplicas(availableReplicas);
-                uiDeploymentInformation.setRequestedReplicas(requestedReplicas);
+                uiServiceDeploymentInformation.setAvailableReplicas(availableReplicas);
+                uiServiceDeploymentInformation.setRequestedReplicas(requestedReplicas);
 
                 ServiceList serviceList = cluster.getServicesByLabels(labels, namespace); //MicoServiceInterface maps to Service
                 List<UiExternalMicoInterfaceInformation> interfacesInformation = new LinkedList<>();
@@ -212,16 +223,15 @@ public class ApplicationController {
                             .name(name).build();
                         interfacesInformation.add(interfaceInformation);
                     }
-                    uiDeploymentInformation.setInterfacesInformation(interfacesInformation);
+                    uiServiceDeploymentInformation.setInterfacesInformation(interfacesInformation);
                     PodList podList = cluster.getPodsByLabels(labels, namespace);
                     List<UiPodInfo> podInfos = new LinkedList<>();
                     for (Pod pod : podList.getItems()) {
                         UiPodInfo uiPodInfo = getUiPodInfo(pod);
                         podInfos.add(uiPodInfo);
                     }
-                    uiDeploymentInformation.setPodInfo(podInfos);
-                    return ResponseEntity.ok(new Resource<>(uiDeploymentInformation));
-
+                    uiServiceDeploymentInformation.setPodInfo(podInfos);
+                    uiApplicationDeploymentInformation.serviceDeploymentInformationList.add(uiServiceDeploymentInformation);
                 } else {
                     throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                         "There are not at least " + MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT + " service interface");
@@ -229,15 +239,14 @@ public class ApplicationController {
             } else {
                 if (deploymentList.getItems().isEmpty()) {
                     throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                        "There are zero deployments of the application '" + shortName + "' in version '" + version + "'");
+                        "There are zero deployments of the Mico service '" + micoService.getShortName() + "' in version '" + micoService.getVersion() + "'");
                 } else {
                     throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                        "There are more than one deployments of the application '" + shortName + "' in version '" + version + "'");
+                        "There are more than one deployments of the Mico service '" + micoService.getShortName() + "' in version '" + micoService.getVersion() + "'");
                 }
             }
-        } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' was not found!");
         }
+        return ResponseEntity.ok(new Resource<>(uiApplicationDeploymentInformation));
     }
 
     private UiPodInfo getUiPodInfo(Pod pod) {
