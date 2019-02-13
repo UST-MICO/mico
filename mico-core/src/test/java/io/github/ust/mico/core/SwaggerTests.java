@@ -1,5 +1,6 @@
 package io.github.ust.mico.core;
 
+import io.github.ust.mico.core.configuration.SwaggerConfig;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;

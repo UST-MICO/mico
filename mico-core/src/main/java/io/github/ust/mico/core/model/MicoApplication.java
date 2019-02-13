@@ -10,7 +10,7 @@ import org.neo4j.ogm.annotation.Relationship;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import io.github.ust.mico.core.VersionNotSupportedException;
+import io.github.ust.mico.core.exception.VersionNotSupportedException;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;

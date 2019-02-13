@@ -2,8 +2,10 @@ package io.github.ust.mico.core;
 
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.GitHubCrawler;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,8 +16,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-// TODO Run as integration tests
-@Ignore
+@Category(IntegrationTests.class)
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {

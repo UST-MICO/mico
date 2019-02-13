@@ -2,6 +2,7 @@ package io.github.ust.mico.core;
 
 import static org.junit.Assert.assertEquals;
 
+import io.github.ust.mico.core.exception.VersionNotSupportedException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;

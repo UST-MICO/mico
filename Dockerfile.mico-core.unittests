@@ -1,0 +1,11 @@
+FROM maven:3.6-jdk-8-alpine
+WORKDIR /workspace
+
+#Cache dependencies
+COPY pom.xml .
+COPY mico-core/pom.xml mico-core/pom.xml
+RUN mvn -B -f mico-core/pom.xml dependency:go-offline
+
+COPY mico-core/src mico-core/src
+RUN mvn -B -f mico-core/pom.xml clean package -DskipTests=true
+ENTRYPOINT ["mvn","-B","-f","mico-core/pom.xml","test"]
