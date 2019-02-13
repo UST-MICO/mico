@@ -102,8 +102,6 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
 
             // public ip
-            const tempPublicIps = [];
-
 
             this.application.services.forEach(service => {
 
@@ -113,14 +111,15 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                         this.subPublicIps.push(this.apiService
                             .getServiceInterfacePublicIp(service.shortName, service.version, micoInterface.serviceInterfaceName)
                             .subscribe(listOfPublicIps => {
+                                const tempPublicIps = [];
                                 listOfPublicIps.forEach(publicIp => {
                                     tempPublicIps.push(publicIp);
                                 });
+                                this.publicIps = tempPublicIps;
                             }));
                     });
                 }
             });
-            this.publicIps = tempPublicIps;
         });
     }
 
