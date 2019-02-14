@@ -38,6 +38,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     selectedVersion;
     allVersions;
     publicIps: string[] = [];
+    isLatestVersion: boolean;
 
     // modifiable application object
     applicationData;
@@ -54,22 +55,26 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                 .subscribe(versions => {
 
                     this.allVersions = versions;
+                    const latestVersion = this.getLatestVersion(versions);
 
                     if (givenVersion == null) {
-                        this.setLatestVersion(versions);
+                        this.subscribeApplication(latestVersion);
+                        this.isLatestVersion = true;
                     } else {
                         let found = false;
                         found = versions.some(element => {
 
                             if (element.version === givenVersion) {
-                                this.selectedVersion = givenVersion;
                                 this.subscribeApplication(element.version);
+
+                                this.isLatestVersion = element.version === latestVersion;
                                 return true;
                             }
                         });
                         if (!found) {
                             // given version was not found in the versions list, take latest instead
-                            this.setLatestVersion(versions);
+                            this.subscribeApplication(latestVersion);
+                            this.isLatestVersion = true;
                         }
                     }
                 });
@@ -83,6 +88,8 @@ export class AppDetailComponent implements OnInit, OnDestroy {
      * @param version version of the application to be displayed
      */
     subscribeApplication(version: string) {
+
+        this.selectedVersion = version;
 
         if (this.subApplication != null) {
             this.subApplication.unsubscribe();
@@ -155,7 +162,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
      * takes a list of applications and sets this.application to the application with the latest version
      * this.version is set accoringly
      */
-    setLatestVersion(list) {
+    getLatestVersion(list) {
         let version = '0.0.0';
 
         list.forEach(element => {
@@ -164,8 +171,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                 version = element.version;
             }
         });
-        this.selectedVersion = version;
-        this.subscribeApplication(version);
+        return version;
     }
 
     addService() {
@@ -236,5 +242,9 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                 console.log(val);
             });
         this.edit = false;
+    }
+
+    promoteNextVersion() {
+        console.log(this.selectedVersion);
     }
 }
