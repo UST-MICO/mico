@@ -43,3 +43,46 @@ export function versionComparator(versionA: string, versionB: string): number {
     }
     return 0;
 }
+
+export function incrementVersion(version: String) {
+    const match = version.match(VERSION_REGEX);
+    let versionString = '';
+
+    // optional letters in front
+    if (match[1] != null) {
+        versionString += match[1];
+    }
+
+    // major
+    if (match[2] != null) {
+        versionString += match[2];
+    } else {
+        versionString += '0';
+    }
+
+    versionString += '.';
+
+    // minor
+    if (match[3] != null) {
+        // increment version number
+        versionString += parseInt(match[3], 10) + 1;
+    } else {
+        versionString += '0';
+    }
+
+    versionString += '.';
+
+    // patch
+    if (match[4] != null) {
+        versionString += match[4];
+    } else {
+        versionString += '0';
+    }
+
+    // optional letters in the end
+    if (match[5] != null) {
+        versionString += match[5];
+    }
+
+    return versionString;
+}
