@@ -5,6 +5,9 @@
         <span *ngIf="isLatestVersion" class="mh2">
             <button mat-raised-button (click)="promoteNextVersion()">promote next Version</button>
         </span>
+        <span class="mh2">
+            <button mat-raised-button (click)="deleteCurrentVersion()">delete Version</button>
+        </span>
     </div>
 
     <!-- Drop Down Menu for version selection-->

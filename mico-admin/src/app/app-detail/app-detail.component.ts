@@ -231,8 +231,13 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     * call-back from the version picker
     */
     updateVersion(version) {
-        this.selectedVersion = version;
-        this.router.navigate(['app-detail', this.application.shortName, version]);
+        if (version != null) {
+            this.selectedVersion = version;
+            this.router.navigate(['app-detail', this.application.shortName, version]);
+        } else {
+            this.router.navigate(['app-detail', this.application.shortName]);
+        }
+
     }
 
     saveApplicationChanges() {
@@ -250,8 +255,23 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         nextApplication.version = nextVersion;
         nextApplication.id = null;
 
+        console.log(nextApplication);
+
         this.apiService.postApplication(nextApplication).subscribe(val => {
-            this.updateVersion(val.version);
+            this.updateVersion(null);
+        });
+    }
+
+    deleteCurrentVersion() {
+        this.apiService.deleteApplication(this.application.shortName, this.selectedVersion).subscribe(val => {
+            console.log(this.allVersions);
+            if (this.allVersions.length > 0) {
+                const latest = this.getLatestVersion(this.allVersions);
+                console.log(latest);
+                this.updateVersion(null);
+            } else {
+                this.router.navigate(['../app-list']);
+            }
         });
     }
 }
