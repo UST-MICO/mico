@@ -1,6 +1,8 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
+import { Subscription, from } from 'rxjs';
+import { groupBy, mergeMap, toArray } from 'rxjs/operators';
 
 @Component({
     selector: 'mico-app-list',
@@ -8,6 +10,8 @@ import { ApiObject } from '../api/apiobject';
     styleUrls: ['./app-list.component.css']
 })
 export class AppListComponent implements OnInit {
+
+    subApplication: Subscription;
 
     constructor(
         private apiService: ApiService
@@ -23,11 +27,23 @@ export class AppListComponent implements OnInit {
     }
 
     getApplications(): void {
-        this.apiService.getApplications()
-            .subscribe(applications => this.applications = applications);
+
+        // group applications by shortName
+        const tempApplications: any[] = [];
+        this.subApplication = this.apiService.getApplications()
+            .subscribe(val => {
+                from(val as unknown as ArrayLike<ApiObject>)
+                    .pipe(groupBy(service => service.shortName), mergeMap(group => group.pipe(toArray())))
+                    .subscribe(group => {
+                        tempApplications.push(group[0]);
+                    });
+
+                this.applications = tempApplications;
+            });
     }
 
     deleteApplication(application) {
+        // TODO delete whole application (all versions and add a dialog before)
         this.apiService.deleteApplication(application.shortName, application.version).subscribe();
     }
 }
