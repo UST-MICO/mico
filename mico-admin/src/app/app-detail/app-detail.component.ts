@@ -255,8 +255,6 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         nextApplication.version = nextVersion;
         nextApplication.id = null;
 
-        console.log(nextApplication);
-
         this.apiService.postApplication(nextApplication).subscribe(val => {
             this.updateVersion(null);
         });
@@ -264,10 +262,9 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
     deleteCurrentVersion() {
         this.apiService.deleteApplication(this.application.shortName, this.selectedVersion).subscribe(val => {
-            console.log(this.allVersions);
+
             if (this.allVersions.length > 0) {
                 const latest = this.getLatestVersion(this.allVersions);
-                console.log(latest);
                 this.updateVersion(null);
             } else {
                 this.router.navigate(['../app-list']);
