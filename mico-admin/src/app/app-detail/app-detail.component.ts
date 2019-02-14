@@ -47,7 +47,6 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     subApplicationVersions: Subscription;
     subDeploy: Subscription;
     subDependeesDialog: Subscription;
-    subDeployInformation: Subscription;
     subPublicIps: Subscription[] = [];
     subApplication: Subscription;
     subServiceDependency: Subscription;
@@ -122,16 +121,6 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         this.subApplication = this.apiService.getApplication(this.shortName, version).subscribe(val => {
             this.application = val;
 
-            // application is found now, so try to get some more information
-            // Deployment information
-
-            this.subDeployInformation = this.apiService
-                .getApplicationDeploymentInformation(this.application.shortName, this.application.version)
-                .subscribe(deploymentInformation => {
-                    console.log(deploymentInformation);
-                });
-
-
             // public ip
 
             this.application.services.forEach(service => {
@@ -159,7 +148,6 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         this.unsubscribe(this.subApplicationVersions);
         this.unsubscribe(this.subDeploy);
         this.unsubscribe(this.subDependeesDialog);
-        this.unsubscribe(this.subDeployInformation);
         this.subPublicIps.forEach(subscription => {
             this.unsubscribe(subscription);
         });
