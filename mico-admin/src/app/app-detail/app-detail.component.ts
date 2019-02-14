@@ -6,7 +6,7 @@ import { ApiObject } from '../api/apiobject';
 import { Subscription } from 'rxjs';
 import { MatDialog } from '@angular/material';
 import { ServicePickerComponent } from '../dialogs/service-picker/service-picker.component';
-import { versionComparator } from '../api/semantic-version';
+import { versionComparator, incrementVersion } from '../api/semantic-version';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 
 @Component({
@@ -245,6 +245,13 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     }
 
     promoteNextVersion() {
-        console.log(this.selectedVersion);
+        const nextApplication = JSON.parse(JSON.stringify(this.application));
+        const nextVersion = incrementVersion(this.selectedVersion);
+        nextApplication.version = nextVersion;
+        nextApplication.id = null;
+
+        this.apiService.postApplication(nextApplication).subscribe(val => {
+            this.updateVersion(val.version);
+        });
     }
 }
