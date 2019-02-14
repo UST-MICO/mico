@@ -295,8 +295,8 @@ export class ApiService {
     }
 
     // TODO doc comment as soon as the endpoint is in this branch
-    getApplicationDeploymentInformation(shortName: string, version: string) {
-        const resource = 'applications/' + shortName + '/' + version + '/deploymentInformation';
+    getApplicationStatus(shortName: string, version: string) {
+        const resource = 'applications/' + shortName + '/' + version + '/status';
         const stream = this.getStreamSource(resource);
 
         this.rest.get<ApiObject>(resource).subscribe(val => {

@@ -103,13 +103,11 @@
                 <mico-data [modelUrl]="'remote/MicoApplication'" [startData]="application"></mico-data>
             </ng-container>
         </mat-tab>
-        <mat-tab label="Deployment">
-            App-Detail-Deployment...
+        <mat-tab label="Status">
+            <mico-app-detail-status [shortName]="shortName" [version]="selectedVersion"></mico-app-detail-status>
         </mat-tab>
     </mat-tab-group>
 </mat-card>
-
-<mat-card class="ma2">Endpoint: </mat-card>
 
 <mat-card class="ma2">
     <mat-card-title>
