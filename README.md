@@ -25,12 +25,6 @@ Some cloud providers (like Microsoft Azure) offers the possibility to create a *
 If you want to use such a static IP address to access the **MICO dashboard** you can provide it during the execution of the script.
 Otherwise your cloud provider will create automatically a IP address for you.
 
-Prepare your DockerHub credentials for the setup script:
-```bash
-echo -n "username" | base64 -w 0
-echo -n "password" | base64 -w 0
-```
-
 Execute the script:
 ```bash
 ./install/kubernetes/setup.sh
