@@ -52,7 +52,7 @@ kubectl get svc mico-admin -n mico-system -o jsonpath="{.status.loadBalancer.ing
 
 ```bash
 kubectl delete namespace mico-system mico-workspace mico-build-bot \
- && kubectl delete -f mico-cluster-admin.yaml \
+ && kubectl delete -f install/kubernetes/mico-cluster-admin.yaml \
  && kubectl delete -f install/kubernetes/knative-build.yaml \
  && kubectl delete -f install/kubernetes/monitoring.yaml
 ```
