@@ -271,7 +271,6 @@ export class AppDetailComponent implements OnInit, OnDestroy {
             if (nextVersion) {
 
                 const nextApplication = JSON.parse(JSON.stringify(this.application));
-                // TODO add dialog to choose version component to increment.
                 nextApplication.version = nextVersion;
                 nextApplication.id = null;
 
