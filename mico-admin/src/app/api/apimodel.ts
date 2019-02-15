@@ -9,6 +9,7 @@ export interface ApiModel {
     required?: string[];
     title?: string;
     description?: string;
+    items?: ApiModel | ApiModelRef
     [propName: string]: any;
 }
 

@@ -81,7 +81,7 @@
 
             </div>
             <ng-container *ngIf="edit">
-                <mico-form [modelUrl]="'remote/MicoApplication'" (data)="applicationData = $event"
+                <mico-form [modelUrl]="'remote/MicoApplication'" [filter]="['deploymentInfo', 'services']" [isBlacklist]="true" (data)="applicationData = $event"
                     [startData]="application"></mico-form>
 
                 <div class="ma1 pa1">

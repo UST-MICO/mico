@@ -11,17 +11,21 @@ export class CreateServiceInterfaceComponent implements OnInit {
 
     // form elements are stored in here
     serviceData;
-    portData;
+    portData: any[];
 
     ngOnInit() {
     }
 
     confirmButton() {
-        const tempReturn = this.serviceData;
-        if (tempReturn != null) {
-            tempReturn.ports = [];
-            tempReturn.ports.push(this.portData);
+        if (this.serviceData == null) {
+            return null;
         }
+        console.log(this.portData);
+        if (this.portData == null || this.portData.length <= 0) {
+            return null;
+        }
+        const tempReturn = this.serviceData;
+        tempReturn.ports = this.portData;
         return tempReturn;
     }
 

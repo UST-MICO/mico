@@ -48,13 +48,15 @@ import { ToolbarComponent } from './toolbar/toolbar.component';
 // non page components
 import { MicoFormComponent } from './forms/mico-form/mico-form.component';
 import { MicoFormQuestionComponent } from './forms/mico-form-question/mico-form-question.component';
+import { MicoFormBooleanComponent } from './forms/mico-form-boolean/mico-form-boolean.component';
+import { MicoFormNumberComponent } from './forms/mico-form-number/mico-form-number.component';
+import { MicoFormArrayComponent } from './forms/mico-form-array/mico-form-array.component';
+import { MicoFormObjectComponent } from './forms/mico-form-object/mico-form-object.component';
 import { AppListComponent } from './app-list/app-list.component';
 import { AppDetailComponent } from './app-detail/app-detail.component';
 import { ServiceListComponent } from './service-list/service-list.component';
 import { ServiceDetailComponent } from './service-detail/service-detail.component';
 import { CreateServiceDialogComponent } from './dialogs/create-service/create-service.component';
-import { MicoFormBooleanComponent } from './forms/mico-form-boolean/mico-form-boolean.component';
-import { MicoFormNumberComponent } from './forms/mico-form-number/mico-form-number.component';
 import { ServicePickerComponent } from './dialogs/service-picker/service-picker.component';
 import { YesNoDialogComponent } from './dialogs/yes-no-dialog/yes-no-dialog.component';
 import { CreateServiceInterfaceComponent } from './dialogs/create-service-interface/create-service-interface.component';
@@ -79,13 +81,15 @@ import { CreateApplicationComponent } from './dialogs/create-application/create-
         ToolbarComponent,
         MicoFormComponent,
         MicoFormQuestionComponent,
+        MicoFormBooleanComponent,
+        MicoFormNumberComponent,
+        MicoFormArrayComponent,
+        MicoFormObjectComponent,
         AppListComponent,
         AppDetailComponent,
         ServiceListComponent,
         ServiceDetailComponent,
         CreateServiceDialogComponent,
-        MicoFormBooleanComponent,
-        MicoFormNumberComponent,
         ServicePickerComponent,
         YesNoDialogComponent,
         CreateServiceInterfaceComponent,
