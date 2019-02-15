@@ -177,7 +177,7 @@ public class ApplicationController {
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")
-    public ResponseEntity<Resource<UiApplicationDeploymentInformation>> getStatusOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+    public ResponseEntity<Resource<MicoApplicationDeploymentInformationDTO>> getStatusOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                                @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
         if (!micoApplicationOptional.isPresent()) {
@@ -188,7 +188,7 @@ public class ApplicationController {
         log.debug("Aggregate status information of Mico application '{}' '{}' with {} included services",
             shortName, version, micoServices.size());
 
-        UiApplicationDeploymentInformation uiApplicationDeploymentInformation = new UiApplicationDeploymentInformation();
+        MicoApplicationDeploymentInformationDTO applicationDeploymentInformation = new MicoApplicationDeploymentInformationDTO();
         for (MicoService micoService : micoServices) {
             Optional<Deployment> deploymentOptional;
             try {
@@ -205,20 +205,20 @@ public class ApplicationController {
             }
 
             Deployment deployment = deploymentOptional.get();
-            UiServiceDeploymentInformation uiServiceDeploymentInformation = new UiServiceDeploymentInformation();
+            MicoServiceDeploymentInformationDTO serviceDeploymentInformation = new MicoServiceDeploymentInformationDTO();
             int requestedReplicas = deployment.getSpec().getReplicas();
             int availableReplicas = deployment.getStatus().getAvailableReplicas();
-            uiServiceDeploymentInformation.setAvailableReplicas(availableReplicas);
-            uiServiceDeploymentInformation.setRequestedReplicas(requestedReplicas);
+            serviceDeploymentInformation.setAvailableReplicas(availableReplicas);
+            serviceDeploymentInformation.setRequestedReplicas(requestedReplicas);
 
             List<Pod> podList = micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(micoService);
-            List<UiPodInfo> podInfos = new LinkedList<>();
+            List<KubernetesPodInfoDTO> podInfos = new LinkedList<>();
             for (Pod pod : podList) {
-                UiPodInfo uiPodInfo = getUiPodInfo(pod);
-                podInfos.add(uiPodInfo);
+                KubernetesPodInfoDTO podInfo = getUiPodInfo(pod);
+                podInfos.add(podInfo);
             }
-            uiServiceDeploymentInformation.setPodInfo(podInfos);
-            uiApplicationDeploymentInformation.serviceDeploymentInformationList.add(uiServiceDeploymentInformation);
+            serviceDeploymentInformation.setPodInfo(podInfos);
+            applicationDeploymentInformation.getServiceDeploymentInformation().add(serviceDeploymentInformation);
 
             List<MicoServiceInterface> serviceInterfaces = micoService.getServiceInterfaces();
             if (serviceInterfaces.size() < MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT) {
@@ -246,37 +246,35 @@ public class ApplicationController {
                 }
 
                 Service kubernetesService = kubernetesServiceOptional.get();
-                List<UiExternalMicoInterfaceInformation> interfacesInformation = new LinkedList<>();
+                List<MicoServiceInterfaceDTO> interfacesInformation = new LinkedList<>();
                 String serviceName = kubernetesService.getMetadata().getName();
-                UiExternalMicoInterfaceInformation interfaceInformation = UiExternalMicoInterfaceInformation.builder()
-                    .name(serviceName).build();
+                MicoServiceInterfaceDTO interfaceInformation = new MicoServiceInterfaceDTO(serviceName);
                 interfacesInformation.add(interfaceInformation);
-                uiServiceDeploymentInformation.setInterfacesInformation(interfacesInformation);
+                serviceDeploymentInformation.setInterfacesInformation(interfacesInformation);
             }
         }
-        return ResponseEntity.ok(new Resource<>(uiApplicationDeploymentInformation));
+        return ResponseEntity.ok(new Resource<>(applicationDeploymentInformation));
     }
 
-    private UiPodInfo getUiPodInfo(Pod pod) {
+    private KubernetesPodInfoDTO getUiPodInfo(Pod pod) {
         String nodeName = pod.getSpec().getNodeName();
         String podName = pod.getMetadata().getName();
         String phase = pod.getStatus().getPhase();
         String hostIp = pod.getStatus().getHostIP();
         int memoryUsage = -1;
         int cpuLoad = -1;
-        UiPodMetrics uiPodMetrics = new UiPodMetrics();
+        KuberenetesPodMetricsDTO podMetrics = new KuberenetesPodMetricsDTO();
         try {
             memoryUsage = getMemoryUsageForPod(podName);
             cpuLoad = getCpuLoadForPod(podName);
-            uiPodMetrics.setAvailable(true);
+            podMetrics.setAvailable(true);
         } catch (PrometheusRequestFailedException | ResourceAccessException e) {
-            uiPodMetrics.setAvailable(false);
+            podMetrics.setAvailable(false);
             log.error(e.getMessage(), e);
         }
-        uiPodMetrics.setMemoryUsage(memoryUsage);
-        uiPodMetrics.setCpuLoad(cpuLoad);
-        return UiPodInfo.builder().nodeName(nodeName).podName(podName)
-            .phase(phase).hostIp(hostIp).metrics(uiPodMetrics).build();
+        podMetrics.setMemoryUsage(memoryUsage);
+        podMetrics.setCpuLoad(cpuLoad);
+        return new KubernetesPodInfoDTO(podName, phase, hostIp, nodeName, podMetrics);
     }
 
 
