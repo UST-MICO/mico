@@ -7,15 +7,25 @@ read ip
 # Read in DockerHub username
 echo "Please provide the user name for DockerHub:"
 read uname
+if [[ -z "$uname" ]]; then
+    echo ERROR: No username provided
+    exit 1
+fi
 export DOCKERHUB_USERNAME_BASE64=$(echo -n $uname | base64 -w 0)
 
 # Read in DockerHub password
 echo "Please provide the password for DockerHub:"
 read pw
+if [[ -z "$pw" ]]; then
+    echo ERROR: No password provided
+    exit 1
+fi
 export DOCKERHUB_PASSWORD_BASE64=$(echo -n $pw | base64 -w 0)
 
+# Change directory so Kubernetes configurations can be applied with relative path
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd $DIR
+
 
 echo ""
 echo "Create Kubernetes resources"
