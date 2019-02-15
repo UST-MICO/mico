@@ -6,6 +6,9 @@ import java.util.List;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Pattern;
 
+import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
+import io.swagger.annotations.Extension;
+import io.swagger.annotations.ExtensionProperty;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
@@ -48,7 +51,12 @@ public class MicoServiceInterface {
      * The name of this {@link MicoServiceInterface}.
      * Pattern is the same than the one for Kubernetes Service names.
      */
-    @ApiModelProperty(required = true)
+    @ApiModelProperty(required = true, extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Service Interface Name"),
+            @ExtensionProperty(name = "x-order", value = "20")
+        })})
     @NotEmpty
     @Pattern(regexp="^[a-z]([-a-z0-9]*[a-z0-9])?$")
     private String serviceInterfaceName;
@@ -56,7 +64,13 @@ public class MicoServiceInterface {
     /**
      * The list of ports.
      */
-    @ApiModelProperty(required = true)
+    @ApiModelProperty(required = true, extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Ports"),
+            @ExtensionProperty(name = "x-order", value = "200")
+        }
+    )})
     @Relationship(type = "PROVIDES_PORTS", direction = Relationship.UNDIRECTED)
     private List<MicoServicePort> ports = new ArrayList<>();
 
@@ -68,22 +82,50 @@ public class MicoServiceInterface {
     /**
      * The public DNS.
      */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "public DNS"),
+            @ExtensionProperty(name = "x-order", value = "100")
+        }
+    )})
     private String publicDns;
 
     /**
      * Human readable description of this service interface,
      * e.g., the functionality provided.
      */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Description"),
+            @ExtensionProperty(name = "x-order", value = "110")
+        }
+    )})
     private String description;
 
     /**
      * The protocol of this interface, e.g., HTTPS.
      */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Protocol"),
+            @ExtensionProperty(name = "x-order", value = "120")
+        }
+    )})
     private String protocol;
 
     /**
      * The transport protocol, e.g., TCP.
      */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Transport Protocol"),
+            @ExtensionProperty(name = "x-order", value = "130")
+        }
+    )})
     private String transportProtocol;
     
 }
