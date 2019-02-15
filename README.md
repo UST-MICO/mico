@@ -7,15 +7,49 @@
 
 This is the main repository for the development project MICO at the University of Stuttgart in the masters course Software Engineering.
 
-## Docker Setup
+## Setup MICO
+> Note: Currently, MICO is only tested with the Azure Kubernetes Service (AKS).
 
-The fastest way to get the MICO backend up and running is to use Docker.
-The `docker-compose.yml` file includes a Neo4j graph database and builds the backend.
-Simply run:
+**Requirements:**
+* Kubernetes cluster with at least 8 GB free memory
+* `kubectl` ([Install and Set Up kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/))
+* DockerHub account (required to store Docker images of services that are build by MICO)
+
+Configure `kubectl` to use the cluster as the current context.
+
+**Setup script:**
+
+The interactive setup script `install/kubernetes/setup.sh` will install all MICO components and its dependencies in your cluster.
+
+Some cloud providers (like Microsoft Azure) offers the possibility to create a *static* public IP address.
+If you want to use such a static IP address to access the **MICO dashboard** you can provide it during the execution of the script.
+Otherwise your cloud provider will create automatically a IP address for you.
+
+Execute the script:
+```bash
+./install/kubernetes/setup.sh
 ```
-docker-compose up
+
+After the setup script is finished, the components (especially the Neo4j database) needs some time to be ready (up to 5 minutes).
+
+Check the current deployment status of the MICO components until all pods are running:
+```bash
+kubectl get pods -n mico-system --watch
 ```
-The script `insertTestValues.sh` contains sample values and adds them to the database.
+
+Get the public IP address (or the hostname) of the MICO dashboard:
+```bash
+kubectl get svc mico-admin -n mico-system -o jsonpath="{.status.loadBalancer.ingress[*]['ip', 'hostname']}"
+``` 
+
+**Clean up:**
+
+```bash
+kubectl delete namespace mico-system mico-workspace mico-build-bot \
+ && kubectl delete -f install/kubernetes/mico-cluster-admin.yaml \
+ && kubectl delete -f install/kubernetes/knative-build.yaml \
+ && kubectl delete -f install/kubernetes/monitoring.yaml
+```
 
 ## Documentation
 
