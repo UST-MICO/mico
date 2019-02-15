@@ -2,7 +2,7 @@
 <mat-dialog-content style="min-width: 35rem">
     <mico-form [modelUrl]="'remote/MicoServiceInterface'" [filter]="['ports']" [isBlacklist]="true" (data)="serviceData = $event" #form></mico-form>
     <h5>Ports</h5>
-    <mico-form [modelUrl]="'remote/MicoServiceInterface'" [filter]="['ports']" (data)="portData = $event"></mico-form>
+    <mico-form [modelUrl]="'remote/MicoServiceInterface'" [filter]="['ports']" (data)="portData = $event.ports"></mico-form>
 </mat-dialog-content>
 <mat-dialog-actions>
     <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
