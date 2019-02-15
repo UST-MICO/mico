@@ -45,6 +45,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -210,6 +211,18 @@ public class ServiceInterfaceControllerTests {
             .andExpect(content().json("[]"))
             .andReturn();
     }
+
+    @Test
+    public void putMicoServiceInterfaceServiceNotFound() throws Exception {
+        MicoServiceInterface serviceInterface = getTestServiceInterface();
+        mvc.perform(put(INTERFACES_URL + "/" + serviceInterface.getServiceInterfaceName())
+            .content(mapper.writeValueAsBytes(serviceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isNotFound())
+            .andExpect(status().reason("MicoService '" + SHORT_NAME + "' '" + VERSION + "' was not found!"))
+            .andReturn();
+    }
+
 
     private Service getKubernetesService(String serviceInterfaceName, List<String> externalIPs) {
         Service service = new ServiceBuilder()
