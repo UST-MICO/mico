@@ -21,3 +21,11 @@ The script `insertTestValues.sh` contains sample values and adds them to the dat
 
 * [USERS](https://mico-docs.readthedocs.io) 
 * [CONTRIBUTORS](https://mico-dev.readthedocs.io)
+
+## Update Source File Headers
+
+### mico-core
+
+It is easy to update the license headers of the mico-core project with IntelliJ IDEA. 
+Create a Copyright Profile in `Settings > Editor > Copyright > Copyright Profiles` with the license from [CONTRIBUTING.md](CONTRIBUTING.md#Source-File-Headers). Set this profile to the default one for the project and use the "Update Copyright..." feature
+on the project root. 
