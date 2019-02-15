@@ -10,6 +10,8 @@
         <mico-form-boolean *ngSwitchCase="'boolean'" [formControlName]="property['x-key']" [config]="property"></mico-form-boolean>
         <mico-form-number *ngSwitchCase="'number'" [formControlName]="property['x-key']" [config]="property"></mico-form-number>
         <mico-form-number *ngSwitchCase="'integer'" [formControlName]="property['x-key']" [config]="property"></mico-form-number>
+        <mico-form-array *ngSwitchCase="'array'" [formControlName]="property['x-key']" [config]="property"></mico-form-array>
+        <mico-form-object *ngSwitchCase="'object'" [formControlName]="property['x-key']" [config]="property"></mico-form-object>
         <div *ngSwitchDefault>
             <!-- debug output
                 {{property|json}}

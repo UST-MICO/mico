@@ -179,6 +179,7 @@ export class ApiService {
 
         return this.rest.post<ApiObject>(resource, data).pipe(flatMap(val => {
             this.getApplications();
+            this.getApplicationVersions(data.shortName);
 
             const stream = this.getStreamSource<ApiObject>(val._links.self.href);
             stream.next(val);
@@ -213,7 +214,8 @@ export class ApiService {
         return this.rest.delete<any>('applications/' + shortName + '/' + version)
             .pipe(map(val => {
 
-                this.getApplications();
+                this.getApplications().subscribe();
+                this.getApplicationVersions(shortName).subscribe();
 
                 return true;
             }));
