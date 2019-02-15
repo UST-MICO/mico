@@ -48,25 +48,43 @@ import java.util.stream.Collectors;
 public class MicoKubernetesClient {
 
     /**
-     * The label `app` references to the shortName of the {@link MicoService}. It is used as a selector for Kubernetes
-     * deployments, services and pods.
+     * Prefix that is used for all MICO specific labels.
+     * Kubernetes recommends to use such a common prefix.
+     *
+     * @see <a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels">Recommended Labels</a>
      */
-    private static final String LABEL_APP_KEY = "app";
+    private static final String LABEL_PREFIX = "ust.mico/";
     /**
-     * The label `version` references to the version of the {@link MicoService}. It is used as a selector for Kubernetes
-     * deployments, services and pods.
+     * The label to get the name of the {@link MicoService}.
+     * It is used in conjunction with the version label to select all Kubernetes resources
+     * that belong to a specific version of a {@link MicoService}.
+     * It is set to the value of the `shortName` property of the {@link MicoService}.
      */
-    private static final String LABEL_VERSION_KEY = "version";
+    private static final String LABEL_NAME_KEY = LABEL_PREFIX + "name";
     /**
-     * The label `interface` references to the name of the {@link MicoServiceInterface}. It is used as a selector for
-     * Kubernetes services.
+     * The label to get the current version of the {@link MicoService} (semantic version).
+     * It is used in conjunction with the name label to select all Kubernetes resources
+     * that belong to a specific version of a {@link MicoService}.
+     * It is set to the value of the `version` property of the {@link MicoService}.
      */
-    private static final String LABEL_INTERFACE_KEY = "interface";
+    private static final String LABEL_VERSION_KEY = LABEL_PREFIX + "version";
     /**
-     * The label `run` references to the UID that is created for each {@link MicoService}. It is used for the
-     * association between Kubernetes Services and Pods.
+     * The label to get the name of the {@link MicoServiceInterface}.
+     * It is used in conjunction with the name and version label to select the Kubernetes {@link Service} resource
+     * that belong to a specific version of a {@link MicoServiceInterface}.
+     * It is set to the value of the name property of the {@link MicoServiceInterface}.
      */
-    private static final String LABEL_RUN_KEY = "run";
+    private static final String LABEL_INTERFACE_KEY = LABEL_PREFIX + "interface";
+    /**
+     * The label to identify the instance of the MICO resource ({@link MicoService} or {@link MicoServiceInterface}).
+     * {@link MicoService}:
+     * Label is used for the selector field of Kubernetes Deployments to find the Pods to manage.
+     * {@link MicoServiceInterface}:
+     * Label is used for the selector field of Kubernetes Services to find the Pods to target.
+     * <p>
+     * It is a unique name (UID) created for each {@link MicoService}.
+     */
+    private static final String LABEL_INSTANCE_KEY = LABEL_PREFIX + "instance";
 
     private final MicoKubernetesConfig micoKubernetesConfig;
     private final KubernetesClient kubernetesClient;
@@ -109,20 +127,20 @@ public class MicoKubernetesClient {
             .withNewMetadata()
             .withName(deploymentUid)
             .withNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace())
-            .addToLabels(LABEL_APP_KEY, micoService.getShortName())
+            .addToLabels(LABEL_NAME_KEY, micoService.getShortName())
             .addToLabels(LABEL_VERSION_KEY, micoService.getVersion())
-            .addToLabels(LABEL_RUN_KEY, deploymentUid)
+            .addToLabels(LABEL_INSTANCE_KEY, deploymentUid)
             .endMetadata()
             .withNewSpec()
             .withReplicas(deploymentInfo.getReplicas())
             .withNewSelector()
-            .addToMatchLabels(LABEL_RUN_KEY, deploymentUid)
+            .addToMatchLabels(LABEL_INSTANCE_KEY, deploymentUid)
             .endSelector()
             .withNewTemplate()
             .withNewMetadata()
-            .addToLabels(LABEL_APP_KEY, micoService.getShortName())
+            .addToLabels(LABEL_NAME_KEY, micoService.getShortName())
             .addToLabels(LABEL_VERSION_KEY, micoService.getVersion())
-            .addToLabels(LABEL_RUN_KEY, deploymentUid)
+            .addToLabels(LABEL_INSTANCE_KEY, deploymentUid)
             .endMetadata()
             .withNewSpec()
             .withContainers(
@@ -173,7 +191,7 @@ public class MicoKubernetesClient {
 
         // Retrieve deployment corresponding to given MicoService to retrieve
         // the unique run label which will be used for the Kubernetes Service, too.
-        Map<String, String> labels = CollectionUtils.mapOf(LABEL_APP_KEY, micoService.getShortName(), LABEL_VERSION_KEY, micoService.getVersion());
+        Map<String, String> labels = CollectionUtils.mapOf(LABEL_NAME_KEY, micoService.getShortName(), LABEL_VERSION_KEY, micoService.getVersion());
         List<Deployment> matchingDeployments = kubernetesClient.apps().deployments().inNamespace(namespace).withLabels(labels).list().getItems();
 
         if (matchingDeployments.size() == 0) {
@@ -184,22 +202,22 @@ public class MicoKubernetesClient {
                 + micoService.getShortName() + "' and version '" + micoService.getVersion() + "'.");
         }
 
-        String serviceUid = matchingDeployments.get(0).getMetadata().getLabels().get(LABEL_RUN_KEY);
+        String serviceUid = matchingDeployments.get(0).getMetadata().getLabels().get(LABEL_INSTANCE_KEY);
         serviceUid = micoService.getShortName() + serviceUid.substring(serviceUid.lastIndexOf("-"));
 
         Service service = new ServiceBuilder()
             .withNewMetadata()
             .withName(serviceInterfaceUid)
             .withNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace())
-            .addToLabels(LABEL_APP_KEY, micoService.getShortName())
+            .addToLabels(LABEL_NAME_KEY, micoService.getShortName())
             .addToLabels(LABEL_VERSION_KEY, micoService.getVersion())
             .addToLabels(LABEL_INTERFACE_KEY, serviceInterfaceName)
-            .addToLabels(LABEL_RUN_KEY, serviceUid)
+            .addToLabels(LABEL_INSTANCE_KEY, serviceUid)
             .endMetadata()
             .withNewSpec()
             .withType("LoadBalancer")
             .withPorts(createServicePorts(micoServiceInterface))
-            .addToSelector(LABEL_RUN_KEY, serviceUid)
+            .addToSelector(LABEL_INSTANCE_KEY, serviceUid)
             .endSpec()
             .build();
 
@@ -259,7 +277,7 @@ public class MicoKubernetesClient {
      */
     public Optional<Deployment> getDeploymentOfMicoService(MicoService micoService) throws KubernetesResourceException {
         Map<String, String> labels = CollectionUtils.mapOf(
-            LABEL_APP_KEY, micoService.getShortName(),
+            LABEL_NAME_KEY, micoService.getShortName(),
             LABEL_VERSION_KEY, micoService.getVersion()
         );
         String namespace = micoKubernetesConfig.getNamespaceMicoWorkspace();
@@ -291,7 +309,7 @@ public class MicoKubernetesClient {
      */
     public Optional<Service> getInterfaceByNameOfMicoService(MicoService micoService, String micoServiceInterfaceName) throws KubernetesResourceException {
         Map<String, String> labels = CollectionUtils.mapOf(
-            LABEL_APP_KEY, micoService.getShortName(),
+            LABEL_NAME_KEY, micoService.getShortName(),
             LABEL_VERSION_KEY, micoService.getVersion(),
             LABEL_INTERFACE_KEY, micoServiceInterfaceName
         );
@@ -323,7 +341,7 @@ public class MicoKubernetesClient {
      */
     public List<Service> getInterfacesOfMicoService(MicoService micoService) {
         Map<String, String> labels = CollectionUtils.mapOf(
-            LABEL_APP_KEY, micoService.getShortName(),
+            LABEL_NAME_KEY, micoService.getShortName(),
             LABEL_VERSION_KEY, micoService.getVersion()
         );
         String namespace = micoKubernetesConfig.getNamespaceMicoWorkspace();
@@ -342,7 +360,7 @@ public class MicoKubernetesClient {
      */
     public List<Pod> getPodsCreatedByDeploymentOfMicoService(MicoService micoService) {
         Map<String, String> labels = CollectionUtils.mapOf(
-            LABEL_APP_KEY, micoService.getShortName(),
+            LABEL_NAME_KEY, micoService.getShortName(),
             LABEL_VERSION_KEY, micoService.getVersion()
         );
         String namespace = micoKubernetesConfig.getNamespaceMicoWorkspace();

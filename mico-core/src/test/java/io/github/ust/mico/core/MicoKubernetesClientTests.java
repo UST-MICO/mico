@@ -35,6 +35,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
@@ -52,9 +53,11 @@ import io.github.ust.mico.core.util.UIDUtils;
 @SpringBootTest
 public class MicoKubernetesClientTests {
 
-    private static final String LABEL_APP_KEY = "app";
-    private static final String LABEL_VERSION_KEY = "version";
-    private static final String LABEL_RUN_KEY = "run";
+    private static final String LABEL_PREFIX = "ust.mico/";
+    private static final String LABEL_NAME_KEY = LABEL_PREFIX + "name";
+    private static final String LABEL_VERSION_KEY = LABEL_PREFIX + "version";
+    private static final String LABEL_INTERFACE_KEY = LABEL_PREFIX + "interface";
+    private static final String LABEL_INSTANCE_KEY = LABEL_PREFIX + "instance";
 
     @Rule
     public KubernetesServer mockServer = new KubernetesServer(false, true);
@@ -133,11 +136,11 @@ public class MicoKubernetesClientTests {
         assertTrue("Name of Kubernetes Service does not start with name of MicoServiceInterface",
             actualService.getMetadata().getName().startsWith(micoServiceInterface.getServiceInterfaceName()));
 
-        String expectedRunLabelValue = existingDeployment.getMetadata().getLabels().getOrDefault(LABEL_RUN_KEY, "UNKNOWN RUN LABEL KEY");
+        String expectedRunLabelValue = existingDeployment.getMetadata().getLabels().getOrDefault(LABEL_INSTANCE_KEY, "UNKNOWN INSTANCE LABEL KEY");
         assertEquals("Expected RUN label value in metadata is same than associated deployment",
-            expectedRunLabelValue, actualService.getMetadata().getLabels().getOrDefault(LABEL_RUN_KEY, "UNKNOWN RUN LABEL KEY"));
+            expectedRunLabelValue, actualService.getMetadata().getLabels().getOrDefault(LABEL_INSTANCE_KEY, "UNKNOWN INSTANCE LABEL KEY"));
         assertEquals("Expected RUN label value in spec used as selector is same than associated deployment",
-            expectedRunLabelValue, actualService.getSpec().getSelector().getOrDefault(LABEL_RUN_KEY, "UNKNOWN RUN LABEL KEY"));
+            expectedRunLabelValue, actualService.getSpec().getSelector().getOrDefault(LABEL_INSTANCE_KEY, "UNKNOWN INSTANCE LABEL KEY"));
         assertEquals(testNamespace, actualService.getMetadata().getNamespace());
     }
 
@@ -205,7 +208,7 @@ public class MicoKubernetesClientTests {
         String deploymentUid = UIDUtils.uidFor(micoService);
         Deployment existingDeployment = getDeploymentObject(micoService, deploymentUid);
         Map<String, String> labels = CollectionUtils.mapOf(
-            LABEL_APP_KEY, micoService.getShortName(),
+            LABEL_NAME_KEY, micoService.getShortName(),
             LABEL_VERSION_KEY, micoService.getVersion());
         existingDeployment.getMetadata().setLabels(labels);
 
@@ -224,12 +227,27 @@ public class MicoKubernetesClientTests {
 
     private Deployment getDeploymentObject(MicoService micoService, String deploymentUid) {
         Map<String, String> labels = CollectionUtils.mapOf(
-            LABEL_APP_KEY, micoService.getShortName(),
+            LABEL_NAME_KEY, micoService.getShortName(),
             LABEL_VERSION_KEY, micoService.getVersion(),
-            LABEL_RUN_KEY, deploymentUid);
+            LABEL_INSTANCE_KEY, deploymentUid);
         return new DeploymentBuilder()
             .withNewMetadata()
             .withName(deploymentUid)
+            .withNamespace(testNamespace)
+            .withLabels(labels)
+            .endMetadata()
+            .build();
+    }
+
+    private Service getServiceObject(MicoServiceInterface micoServiceInterface, MicoService micoService, String serviceInterfaceUid) {
+        Map<String, String> labels = CollectionUtils.mapOf(
+            LABEL_NAME_KEY, micoService.getShortName(),
+            LABEL_VERSION_KEY, micoService.getVersion(),
+            LABEL_INTERFACE_KEY, micoServiceInterface.getServiceInterfaceName(),
+            LABEL_INSTANCE_KEY, serviceInterfaceUid);
+        return new ServiceBuilder()
+            .withNewMetadata()
+            .withName(serviceInterfaceUid)
             .withNamespace(testNamespace)
             .withLabels(labels)
             .endMetadata()
