@@ -76,7 +76,7 @@ public class ApplicationControllerTests {
     public static final String DESCRIPTION_PATH = buildPath(ROOT, "description");
     public static final String ID_PATH = buildPath(ROOT, "id");
 
-    private static final String FIRST_SERVICE = buildPath(ROOT, "serviceDeploymentInformationList[0]");
+    private static final String FIRST_SERVICE = buildPath(ROOT, "serviceDeploymentInformation[0]");
     private static final String REQUESTED_REPLICAS = buildPath(FIRST_SERVICE, "requestedReplicas");
     private static final String AVAILABLE_REPLICAS = buildPath(FIRST_SERVICE, "availableReplicas");
     private static final String INTERFACES_INFORMATION = buildPath(FIRST_SERVICE, "interfacesInformation");
