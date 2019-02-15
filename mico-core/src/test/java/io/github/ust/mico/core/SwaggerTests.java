@@ -40,7 +40,6 @@ public class SwaggerTests {
         this.mvc = MockMvcBuilders.webAppContextSetup(this.context).dispatchOptions(true).build();
     }
 
-    @Ignore
     @Test
     public void vendorExtensionsTest() throws Exception {
         // If this test breaks, there is either no x-order annotation anywhere or the CustomOpenApiExtentionsPlugin is missing.
