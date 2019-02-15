@@ -29,7 +29,7 @@
         <mat-tab label="Overview">
             <mico-app-detail-overview [application]="application"></mico-app-detail-overview>
         </mat-tab>
-        <mat-tab label="Application Data">
+        <mat-tab label="Application Data" style="overflow-y: hidden">
             <div class="ma3">
                 <mat-button-toggle class="mt1 mb2 mr2 inline-flex items-center" value="edit" [checked]="edit"
                     (change)="edit = !edit">
@@ -39,8 +39,8 @@
 
             </div>
             <ng-container *ngIf="edit">
-                <mico-form [modelUrl]="'remote/MicoApplication'" [filter]="['deploymentInfo', 'services']" [isBlacklist]="true" (data)="applicationData = $event"
-                    [startData]="application"></mico-form>
+                <mico-form [modelUrl]="'remote/MicoApplication'" [filter]="['deploymentInfo', 'services']"
+                    [isBlacklist]="true" (data)="applicationData = $event" [startData]="application"></mico-form>
 
                 <div class="ma1 pa1">
                     <span class="ma1">

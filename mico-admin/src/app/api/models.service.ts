@@ -26,7 +26,7 @@ import { ApiService, freezeObject } from './api.service';
 interface PropertyRef {
     key: string;
     parent?: ApiModel;
-    prop: ApiModel|ApiModelRef;
+    prop: ApiModel | ApiModelRef;
 }
 
 @Injectable({
@@ -399,7 +399,7 @@ export class ModelsService {
         for (const key in model.properties) {
             if (model.properties.hasOwnProperty(key)) {
                 const prop = model.properties[key];
-                props.push({key: key, prop: prop, parent: model});
+                props.push({ key: key, prop: prop, parent: model });
             }
         }
         return of(...props).pipe(
