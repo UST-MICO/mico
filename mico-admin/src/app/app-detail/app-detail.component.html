@@ -2,8 +2,8 @@
     <div class="ma3 flex-grow-1">
         <h3>Application {{application?.name}}</h3>
         <button mat-raised-button (click)="deployApplication()">deploy</button>
-        <span *ngIf="isLatestVersion" class="mh2">
-            <button mat-raised-button (click)="promoteNextVersion()">promote next Version</button>
+        <span *ngIf="isLatestVersion()" class="mh2">
+            <button mat-raised-button (click)="promoteNextVersion()">create next Version</button>
         </span>
         <span class="mh2">
             <button mat-raised-button (click)="deleteCurrentVersion()">delete Version</button>

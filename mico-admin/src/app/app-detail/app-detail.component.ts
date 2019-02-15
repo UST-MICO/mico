@@ -6,7 +6,7 @@ import { ApiObject } from '../api/apiobject';
 import { Subscription } from 'rxjs';
 import { MatDialog } from '@angular/material';
 import { ServicePickerComponent } from '../dialogs/service-picker/service-picker.component';
-import { versionComparator, incrementVersion } from '../api/semantic-version';
+import { versionComparator, incrementVersion, versionComponents } from '../api/semantic-version';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 
 @Component({
@@ -38,12 +38,19 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     selectedVersion;
     allVersions;
     publicIps: string[] = [];
-    isLatestVersion: boolean;
 
     // modifiable application object
     applicationData;
     edit: Boolean = false;
 
+    isLatestVersion = () => {
+        if (this.allVersions != null) {
+            if (this.selectedVersion === this.getLatestVersion(this.allVersions)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     ngOnInit() {
 
@@ -59,22 +66,18 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
                     if (givenVersion == null) {
                         this.subscribeApplication(latestVersion);
-                        this.isLatestVersion = true;
                     } else {
                         let found = false;
                         found = versions.some(element => {
 
                             if (element.version === givenVersion) {
                                 this.subscribeApplication(element.version);
-
-                                this.isLatestVersion = element.version === latestVersion;
                                 return true;
                             }
                         });
                         if (!found) {
                             // given version was not found in the versions list, take latest instead
                             this.subscribeApplication(latestVersion);
-                            this.isLatestVersion = true;
                         }
                     }
                 });
@@ -159,8 +162,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     }
 
     /**
-     * takes a list of applications and sets this.application to the application with the latest version
-     * this.version is set accoringly
+     * takes a list of applications and the latest version number
      */
     getLatestVersion(list) {
         let version = '0.0.0';
@@ -251,7 +253,8 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
     promoteNextVersion() {
         const nextApplication = JSON.parse(JSON.stringify(this.application));
-        const nextVersion = incrementVersion(this.selectedVersion);
+        // TODO add dialog to choose version component to increment.
+        const nextVersion = incrementVersion(this.selectedVersion, versionComponents.minor);
         nextApplication.version = nextVersion;
         nextApplication.id = null;
 
