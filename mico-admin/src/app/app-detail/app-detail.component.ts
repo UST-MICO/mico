@@ -165,7 +165,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     }
 
     /**
-     * takes a list of applications and the latest version number
+     * takes a list of applications and returns the latest version number
      */
     getLatestVersion(list) {
         let version = '0.0.0';

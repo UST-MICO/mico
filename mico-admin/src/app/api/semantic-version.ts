@@ -1,5 +1,3 @@
-import { MinLengthValidator } from "@angular/forms";
-
 export const VERSION_REGEX = /(^\w+)?(\d+)\.(\d+)\.(\d+)(-(?:\w+\.)*\w+)?/;
 
 /**
@@ -119,5 +117,5 @@ export function incrementVersion(version: String, incrementComponent: versionCom
         return versionString + versionAppendix;
     }
 
-    return undefined;
+    throw new Error('given version is malformed');
 }
