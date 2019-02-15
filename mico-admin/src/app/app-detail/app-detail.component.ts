@@ -6,7 +6,7 @@ import { ApiObject } from '../api/apiobject';
 import { Subscription } from 'rxjs';
 import { MatDialog } from '@angular/material';
 import { ServicePickerComponent } from '../dialogs/service-picker/service-picker.component';
-import { versionComparator, incrementVersion, versionComponents } from '../api/semantic-version';
+import { versionComparator } from '../api/semantic-version';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 import { CreateNextVersionComponent } from '../dialogs/create-next-version/create-next-version.component';
 
