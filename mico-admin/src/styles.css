@@ -481,3 +481,7 @@ body {
 .mat-card .mat-divider-horizontal {
     position: relative !important;
 }
+
+.mat-tab-body.mat-tab-body-active{
+    overflow-y: hidden !important;
+}
