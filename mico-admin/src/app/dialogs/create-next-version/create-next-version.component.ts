@@ -25,6 +25,7 @@ export class CreateNextVersionComponent implements OnInit {
         this.minor = incrementVersion(version, versionComponents.minor);
         this.patch = incrementVersion(version, versionComponents.patch);
 
+        this.picked = this.minor;
     }
 
     ngOnInit() {
