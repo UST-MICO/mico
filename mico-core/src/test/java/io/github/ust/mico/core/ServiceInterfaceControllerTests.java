@@ -213,13 +213,37 @@ public class ServiceInterfaceControllerTests {
     }
 
     @Test
-    public void putMicoServiceInterfaceServiceNotFound() throws Exception {
+    public void putMicoServiceInterfaceNotFoundService() throws Exception {
         MicoServiceInterface serviceInterface = getTestServiceInterface();
         mvc.perform(put(INTERFACES_URL + "/" + serviceInterface.getServiceInterfaceName())
             .content(mapper.writeValueAsBytes(serviceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isNotFound())
             .andExpect(status().reason("MicoService '" + SHORT_NAME + "' '" + VERSION + "' was not found!"))
+            .andReturn();
+    }
+
+    @Test
+    public void putMicoServiceInterfaceNameNotEqual() throws Exception {
+        MicoServiceInterface serviceInterface = getTestServiceInterface();
+        mvc.perform(put(INTERFACES_URL + "/" + serviceInterface.getServiceInterfaceName()+"NotEqual")
+            .content(mapper.writeValueAsBytes(serviceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(status().reason("The variable 'serviceInterfaceName' must be equal to the name specified in the request body"))
+            .andReturn();
+    }
+
+    @Test
+    public void putMicoServiceInterfaceNotFound() throws Exception {
+        MicoService service = new MicoService().setShortName(SHORT_NAME).setVersion(VERSION);
+        MicoServiceInterface serviceInterface = getTestServiceInterface();
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
+        mvc.perform(put(INTERFACES_URL + "/" + serviceInterface.getServiceInterfaceName())
+            .content(mapper.writeValueAsBytes(serviceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isNotFound())
+            .andExpect(status().reason("MicoServiceInterface was not found!"))
             .andReturn();
     }
 
