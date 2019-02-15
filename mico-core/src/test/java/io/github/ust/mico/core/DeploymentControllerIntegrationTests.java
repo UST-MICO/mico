@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -99,7 +100,6 @@ public class DeploymentControllerIntegrationTests {
      */
     @After
     public void tearDown() {
-
         integrationTestsUtils.cleanUpEnvironment(namespace);
     }
 

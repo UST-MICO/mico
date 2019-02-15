@@ -16,7 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import io.github.ust.mico.core.concurrency.MicoCoreBackgroundTaskFactory;
+import io.github.ust.mico.core.service.MicoCoreBackgroundTaskFactory;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest

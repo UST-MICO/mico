@@ -1,8 +1,11 @@
 import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Subscription, from } from 'rxjs';
 import { ApiService } from 'src/app/api/api.service';
 import { MatDialogRef, MAT_DIALOG_DATA, MatTableDataSource } from '@angular/material';
 import { SelectionModel } from '@angular/cdk/collections';
+import { ApiObject } from 'src/app/api/apiobject';
+import { groupBy, mergeMap, toArray } from 'rxjs/operators';
+import { versionComparator } from 'src/app/api/semantic-version';
 
 
 enum FilterTypes {
@@ -33,10 +36,9 @@ export interface Service {
 
 export class ServicePickerComponent implements OnInit, OnDestroy {
 
-    serviceList;
     filter = FilterTypes.None;
     choiceModel = ChoiceTypes.multi;
-    existingDependencies: number[] = [];
+    existingDependencies: Set<string> = new Set();
 
     private serviceSubscription: Subscription;
 
@@ -67,37 +69,53 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
 
         if (data.existingDependencies != null) {
             data.existingDependencies.forEach(element => {
-                this.existingDependencies.push(parseInt(element.id, 10));
+                this.existingDependencies.add(element.shortName);
             });
         }
 
         if (data.serviceId != null && data.serviceId !== '') {
-            this.existingDependencies.push(data.serviceId);
+            this.existingDependencies.add(data.serviceId);
         }
     }
 
     ngOnInit() {
 
+
         // get the list of services
         this.serviceSubscription = this.apiService.getServices()
             .subscribe(services => {
-                this.serviceList = services;
 
-                // fill options with the service names
-                const tempList: Service[] = [];
-                this.serviceList.forEach(element => {
-                    if (this.filterElement(element)) {
-                        tempList.push({
-                            name: element.name,
-                            shortName: element.shortName,
-                            description: element.description,
-                            id: element.id,
-                            version: element.version,
-                        });
-                    }
-                });
+                const tempServiceGroups: any[] = [];
+                let counter = 0;
 
-                this.dataSource = new MatTableDataSource(tempList);
+                from(services as unknown as ArrayLike<ApiObject>)
+                    .pipe(
+                        groupBy(service => service.shortName),
+                        mergeMap(group => group.pipe(toArray())))
+                    .subscribe(group => {
+
+                        // sort descending
+                        group.sort((v1, v2) => (-1) * versionComparator(v1.version, v2.version));
+
+                        // filter
+                        if (this.filterElement(group[0])) {
+
+                            tempServiceGroups.push(
+                                {
+                                    id: counter,
+                                    name: group[0].name,
+                                    shortName: group[0].shortName,
+                                    allVersions: group,
+                                    selectedVersion: group[0].version,
+                                    selectedDescription: group[0].description
+                                }
+                            );
+
+                            counter++;
+                        }
+                    });
+
+                this.dataSource = new MatTableDataSource(tempServiceGroups);
             });
     }
 
@@ -108,14 +126,28 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
     }
 
     getSelectedService() {
-        return this.selection.selected;
+
+        const tempSelected = [];
+
+        this.selection.selected.forEach(selectedElement => {
+
+            for (const service of selectedElement.allVersions) {
+                if ((service as any).version === selectedElement.selectedVersion) {
+                    tempSelected.push(service);
+                    // next selected service
+                    return;
+                }
+            }
+        });
+
+        return tempSelected;
     }
 
     private filterElement = (element): boolean => {
 
         let val = false;
 
-        if (!this.existingDependencies.includes(parseInt(element.id, 10))) {
+        if (!this.existingDependencies.has(element.shortName)) {
             if (this.filter === FilterTypes.None) {
                 val = true;
             } else if (this.filter === FilterTypes.Internal) {
@@ -153,4 +185,14 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
     highlight(row) {
         this.selectedRowIndex = row.id;
     }
+
+    updateVersion(pickedVersion, element) {
+        element.selectedVersion = pickedVersion;
+        element.allVersions.forEach(serviceVersion => {
+            if (serviceVersion.version === pickedVersion) {
+                element.selectedDescription = serviceVersion.description;
+            }
+        });
+    }
+
 }

@@ -1,33 +1,18 @@
 package io.github.ust.mico.core;
 
-import static io.github.ust.mico.core.JsonPathBuilder.HREF;
-import static io.github.ust.mico.core.JsonPathBuilder.LINKS;
-import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
-import static io.github.ust.mico.core.JsonPathBuilder.SELF;
-import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
-import static io.github.ust.mico.core.TestConstants.VERSION;
-import static org.hamcrest.CoreMatchers.endsWith;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.github.ust.mico.core.configuration.CorsConfig;
+import io.github.ust.mico.core.model.MicoPortType;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.model.MicoServicePort;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.util.CollectionUtils;
+import io.github.ust.mico.core.web.ServiceInterfaceController;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,24 +28,31 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
-import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.github.ust.mico.core.REST.ServiceInterfaceController;
-import io.github.ust.mico.core.model.MicoPortType;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.model.MicoServicePort;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.util.CollectionUtils;
+import static io.github.ust.mico.core.JsonPathBuilder.*;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.VERSION;
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(ServiceInterfaceController.class)
 @OverrideAutoConfiguration(enabled = true) //Needed to override our neo4j config
 @EnableAutoConfiguration
-@EnableConfigurationProperties(value = { CorsConfig.class })
+@EnableConfigurationProperties(value = {CorsConfig.class})
 public class ServiceInterfaceControllerTests {
 
     private static final String JSON_PATH_LINKS_SECTION = buildPath(ROOT, LINKS);
@@ -84,10 +76,7 @@ public class ServiceInterfaceControllerTests {
     private MicoServiceRepository serviceRepository;
 
     @MockBean
-    private ClusterAwarenessFabric8 cluster;
-
-    @MockBean
-    private MicoKubernetesConfig kubernetesConfig;
+    private MicoKubernetesClient micoKubernetesClient;
 
     @Autowired
     private ObjectMapper mapper;
@@ -183,14 +172,17 @@ public class ServiceInterfaceControllerTests {
 
         List<String> externalIPs = new ArrayList<>();
         externalIPs.add("1.2.3.4");
+        MicoService service = new MicoService().setShortName(SHORT_NAME).setVersion(VERSION);
         MicoServiceInterface serviceInterface = getTestServiceInterface();
-        given(serviceRepository.findInterfaceOfServiceByName(serviceInterface.getServiceInterfaceName(), SHORT_NAME, VERSION)).willReturn(
+        String serviceInterfaceName = serviceInterface.getServiceInterfaceName();
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
+        given(serviceRepository.findInterfaceOfServiceByName(serviceInterfaceName, SHORT_NAME, VERSION)).willReturn(
             Optional.of(serviceInterface));
-        Service service = getKubernetesService(serviceInterface.getServiceInterfaceName(), externalIPs);
-        given(cluster.getService(serviceInterface.getServiceInterfaceName(),
-            kubernetesConfig.getNamespaceMicoWorkspace())).willReturn(service);
 
-        mvc.perform(get(INTERFACES_URL + "/" + serviceInterface.getServiceInterfaceName() + "/" + PATH_PART_PUBLIC_IP).accept(MediaTypes.HAL_JSON_VALUE))
+        Optional<Service> kubernetesService = Optional.of(getKubernetesService(serviceInterface.getServiceInterfaceName(), externalIPs));
+        given(micoKubernetesClient.getInterfaceByNameOfMicoService(eq(service), eq(serviceInterfaceName))).willReturn(kubernetesService);
+
+        mvc.perform(get(INTERFACES_URL + "/" + serviceInterfaceName + "/" + PATH_PART_PUBLIC_IP).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$", hasSize(1)))
@@ -202,14 +194,17 @@ public class ServiceInterfaceControllerTests {
     public void getInterfacePublicIpByNameWithPendingIP() throws Exception {
 
         List<String> externalIPs = new ArrayList<>();
+        MicoService service = new MicoService().setShortName(SHORT_NAME).setVersion(VERSION);
         MicoServiceInterface serviceInterface = getTestServiceInterface();
-        given(serviceRepository.findInterfaceOfServiceByName(serviceInterface.getServiceInterfaceName(), SHORT_NAME, VERSION)).willReturn(
+        String serviceInterfaceName = serviceInterface.getServiceInterfaceName();
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
+        given(serviceRepository.findInterfaceOfServiceByName(serviceInterfaceName, SHORT_NAME, VERSION)).willReturn(
             Optional.of(serviceInterface));
-        Service service = getKubernetesService(serviceInterface.getServiceInterfaceName(), externalIPs);
-        given(cluster.getService(serviceInterface.getServiceInterfaceName(),
-            kubernetesConfig.getNamespaceMicoWorkspace())).willReturn(service);
 
-        mvc.perform(get(INTERFACES_URL + "/" + serviceInterface.getServiceInterfaceName() + "/" + PATH_PART_PUBLIC_IP).accept(MediaTypes.HAL_JSON_VALUE))
+        Optional<Service> kubernetesService = Optional.of(getKubernetesService(serviceInterface.getServiceInterfaceName(), externalIPs));
+        given(micoKubernetesClient.getInterfaceByNameOfMicoService(eq(service), eq(serviceInterfaceName))).willReturn(kubernetesService);
+
+        mvc.perform(get(INTERFACES_URL + "/" + serviceInterfaceName + "/" + PATH_PART_PUBLIC_IP).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(content().json("[]"))
@@ -228,7 +223,7 @@ public class ServiceInterfaceControllerTests {
             .build();
 
         if (externalIPs != null && !externalIPs.isEmpty()) {
-            List<LoadBalancerIngress> ingressList = new ArrayList<LoadBalancerIngress>();
+            List<LoadBalancerIngress> ingressList = new ArrayList<>();
             for (String externalIP : externalIPs) {
                 LoadBalancerIngress ingress = new LoadBalancerIngress();
                 ingress.setIp(externalIP);

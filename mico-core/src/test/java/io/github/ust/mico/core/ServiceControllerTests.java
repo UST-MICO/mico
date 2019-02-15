@@ -53,6 +53,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
 
+import io.github.ust.mico.core.configuration.CorsConfig;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -72,7 +73,7 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.github.ust.mico.core.REST.ServiceController;
+import io.github.ust.mico.core.web.ServiceController;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
@@ -395,7 +396,7 @@ public class ServiceControllerTests {
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print());
 
-        resultDelete.andExpect(status().isOk());
+        resultDelete.andExpect(status().isNoContent());
     }
 
     @Test

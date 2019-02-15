@@ -37,7 +37,7 @@
 ServiceController
 =================
 
-.. java:package:: io.github.ust.mico.core.REST
+.. java:package:: io.github.ust.mico.core.web
    :noindex:
 
 .. java:type:: @RestController @RequestMapping public class ServiceController

@@ -4,7 +4,7 @@
 
 .. java:import:: com.github.zafarkhaja.semver Version
 
-.. java:import:: io.github.ust.mico.core VersionNotSupportedException
+.. java:import:: io.github.ust.mico.core.exception VersionNotSupportedException
 
 .. java:import:: lombok Getter
 

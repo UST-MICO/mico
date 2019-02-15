@@ -1,16 +1,16 @@
+.. java:import:: java.util ArrayList
+
+.. java:import:: java.util List
+
 .. java:import:: io.swagger.annotations ApiModelProperty
 
 .. java:import:: lombok AllArgsConstructor
 
-.. java:import:: lombok Builder
-
-.. java:import:: lombok Builder.Default
-
 .. java:import:: lombok Data
 
-.. java:import:: lombok Singular
+.. java:import:: lombok NoArgsConstructor
 
-.. java:import:: java.util List
+.. java:import:: lombok.experimental Accessors
 
 MicoImageContainer
 ==================
@@ -18,7 +18,7 @@ MicoImageContainer
 .. java:package:: io.github.ust.mico.core.model
    :noindex:
 
-.. java:type:: @Data @AllArgsConstructor @Builder public class MicoImageContainer
+.. java:type:: @Data @NoArgsConstructor @AllArgsConstructor @Accessors public class MicoImageContainer
 
-   Represents a container running in a Kubernetes Pod.
+   Represents a container running in a Kubernetes Pod. Multiple containers can run in one pod. For each container you can specify resource contraints.
 

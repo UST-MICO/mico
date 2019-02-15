@@ -21,7 +21,7 @@ public class UIDUtils {
     }
     
     private final String createUid(String prefix) {
-        return prefix + RandomStringFactory.randomAlphanumeric();
+        return prefix + "-" + RandomStringFactory.randomAlphanumeric();
     }
 
 }

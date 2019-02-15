@@ -1,5 +1,6 @@
 package io.github.ust.mico.core;
 
+import io.github.ust.mico.core.service.GitHubCrawler;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;

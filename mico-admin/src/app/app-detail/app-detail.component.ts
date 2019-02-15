@@ -32,12 +32,17 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     subApplication: Subscription;
     subServiceDependency: Subscription;
 
+    // immutable application  object which is updated, when new data is pushed
     application: ApiObject;
     shortName: string;
     selectedVersion;
     allVersions;
-
     publicIps: string[] = [];
+
+    // modifiable application object
+    applicationData;
+    edit: Boolean = false;
+
 
     ngOnInit() {
 
@@ -88,14 +93,15 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
             // application is found now, so try to get some more information
             // Deployment information
+
             this.subDeployInformation = this.apiService
                 .getApplicationDeploymentInformation(this.application.shortName, this.application.version)
                 .subscribe(deploymentInformation => {
                     console.log(deploymentInformation);
                 });
 
+
             // public ip
-            const tempPublicIps = [];
 
             this.application.services.forEach(service => {
 
@@ -105,14 +111,15 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                         this.subPublicIps.push(this.apiService
                             .getServiceInterfacePublicIp(service.shortName, service.version, micoInterface.serviceInterfaceName)
                             .subscribe(listOfPublicIps => {
+                                const tempPublicIps = [];
                                 listOfPublicIps.forEach(publicIp => {
                                     tempPublicIps.push(publicIp);
                                 });
+                                this.publicIps = tempPublicIps;
                             }));
                     });
                 }
             });
-            this.publicIps = tempPublicIps;
         });
     }
 
@@ -220,5 +227,14 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     updateVersion(version) {
         this.selectedVersion = version;
         this.router.navigate(['app-detail', this.application.shortName, version]);
+    }
+
+    saveApplicationChanges() {
+        console.log(this.applicationData);
+        this.apiService.putApplication(this.shortName, this.selectedVersion, this.applicationData)
+            .subscribe(val => {
+                console.log(val);
+            });
+        this.edit = false;
     }
 }

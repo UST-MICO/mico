@@ -3,7 +3,7 @@ package io.github.ust.mico.core.model;
 import com.github.zafarkhaja.semver.ParseException;
 import com.github.zafarkhaja.semver.UnexpectedCharacterException;
 import com.github.zafarkhaja.semver.Version;
-import io.github.ust.mico.core.VersionNotSupportedException;
+import io.github.ust.mico.core.exception.VersionNotSupportedException;
 import lombok.Getter;
 
 /**

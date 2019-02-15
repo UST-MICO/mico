@@ -6,7 +6,8 @@
 
     <!-- Drop Down Menu for version selection-->
     <mat-form-field class="w25 ma2">
-        <mat-select placeholder="Application Version" (ngModelChange)="updateVersion($event)" [ngModel]="selectedVersion">
+        <mat-select placeholder="Application Version" (ngModelChange)="updateVersion($event)"
+            [ngModel]="selectedVersion">
             <mat-option *ngFor="let version of allVersions" [value]="version.version">
                 {{version?.version}}
             </mat-option>
@@ -46,7 +47,8 @@
                                 <!-- Service Interfaces -->
                                 <div *ngFor="let dependee of application?.services">
                                     <div class="flex">
-                                        <div class="flex-grow-1" [routerLink]="['/service-detail',dependee.shortName,dependee.version]">
+                                        <div class="flex-grow-1"
+                                            [routerLink]="['/service-detail',dependee.shortName,dependee.version]">
                                             <mat-list-item.large style="font-size:small">
                                                 <div class="pv2 pl4">
                                                     {{dependee.shortName}}<br />
@@ -68,6 +70,32 @@
                     </mat-card>
                 </div>
             </div>
+        </mat-tab>
+        <mat-tab label="Application Data">
+            <div class="ma3">
+                <mat-button-toggle class="mt1 mb2 mr2 inline-flex items-center" value="edit" [checked]="edit"
+                    (change)="edit = !edit">
+                    <span class="mr2">Edit</span>
+                    <mat-icon>edit</mat-icon>
+                </mat-button-toggle>
+
+            </div>
+            <ng-container *ngIf="edit">
+                <mico-form [modelUrl]="'remote/MicoApplication'" (data)="applicationData = $event"
+                    [startData]="application"></mico-form>
+
+                <div class="ma1 pa1">
+                    <span class="ma1">
+                        <button mat-raised-button (click)="saveApplicationChanges()">Save</button>
+                    </span>
+                    <span class="ma1">
+                        <button mat-raised-button (click)="edit = !edit">Cancel</button>
+                    </span>
+                </div>
+            </ng-container>
+            <ng-container *ngIf="!edit">
+                <mico-data [modelUrl]="'remote/MicoApplication'" [startData]="application"></mico-data>
+            </ng-container>
         </mat-tab>
         <mat-tab label="Deployment">
             App-Detail-Deployment...
