@@ -12,7 +12,7 @@ export DOCKERHUB_USERNAME_BASE64=$(echo -n $uname | base64 -w 0)
 # Read in DockerHub password
 echo "Please provide the base64 enoded password for DockerHub:"
 read pw
-export DOCKERHUB_USERNAME_BASE64=$(echo -n $pw | base64 -w 0)
+export DOCKERHUB_PASSWORD_BASE64=$(echo -n $pw | base64 -w 0)
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 echo "Change directory to '$DIR'"
