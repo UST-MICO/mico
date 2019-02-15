@@ -1,3 +1,5 @@
+import { MinLengthValidator } from "@angular/forms";
+
 export const VERSION_REGEX = /(^\w+)?(\d+)\.(\d+)\.(\d+)(-(?:\w+\.)*\w+)?/;
 
 /**
@@ -44,9 +46,25 @@ export function versionComparator(versionA: string, versionB: string): number {
     return 0;
 }
 
-export function incrementVersion(version: String) {
+export enum versionComponents {
+    major,
+    minor,
+    patch,
+}
+
+/**
+ * takes a version string and creates the consecutive major/minor/patch version
+ * @param version the 'old' version
+ * @param incrementComponent the version level to be incremented.
+ */
+export function incrementVersion(version: String, incrementComponent: versionComponents) {
     const match = version.match(VERSION_REGEX);
     let versionString = '';
+
+    let versionAppendix = '';
+    if (match[5] != null) {
+        versionAppendix = match[5];
+    }
 
     // optional letters in front
     if (match[1] != null) {
@@ -55,7 +73,18 @@ export function incrementVersion(version: String) {
 
     // major
     if (match[2] != null) {
-        versionString += match[2];
+
+        if (incrementComponent === versionComponents.major) {
+            // increment major version number
+            versionString += (parseInt(match[2], 10) + 1).toString();
+            versionString += '.0.0' + versionAppendix;
+
+            return versionString;
+
+        } else {
+            versionString += match[2];
+        }
+
     } else {
         versionString += '0';
     }
@@ -64,8 +93,18 @@ export function incrementVersion(version: String) {
 
     // minor
     if (match[3] != null) {
-        // increment version number
-        versionString += parseInt(match[3], 10) + 1;
+
+        if (incrementComponent === versionComponents.minor) {
+
+            // increment minor version number
+            versionString += (parseInt(match[3], 10) + 1).toString();
+            versionString += '.0' + versionAppendix;
+
+            return versionString;
+        } else {
+            versionString += match[3];
+        }
+
     } else {
         versionString += '0';
     }
@@ -74,15 +113,11 @@ export function incrementVersion(version: String) {
 
     // patch
     if (match[4] != null) {
-        versionString += match[4];
-    } else {
-        versionString += '0';
+        // since no value was returned yet, the incrementComponent must be 'patch' or some kind of undefined.
+        versionString += (parseInt(match[4], 10) + 1).toString();
+
+        return versionString + versionAppendix;
     }
 
-    // optional letters in the end
-    if (match[5] != null) {
-        versionString += match[5];
-    }
-
-    return versionString;
+    return undefined;
 }

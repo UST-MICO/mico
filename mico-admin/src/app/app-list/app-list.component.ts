@@ -2,7 +2,7 @@ import { Component, OnInit, Input } from '@angular/core';
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
 import { Subscription, from } from 'rxjs';
-import { groupBy, mergeMap, toArray } from 'rxjs/operators';
+import { groupBy, mergeMap, toArray, map } from 'rxjs/operators';
 
 @Component({
     selector: 'mico-app-list',
@@ -29,16 +29,18 @@ export class AppListComponent implements OnInit {
     getApplications(): void {
 
         // group applications by shortName
-        const tempApplications: any[] = [];
         this.subApplication = this.apiService.getApplications()
             .subscribe(val => {
                 from(val as unknown as ArrayLike<ApiObject>)
-                    .pipe(groupBy(service => service.shortName), mergeMap(group => group.pipe(toArray())))
-                    .subscribe(group => {
-                        tempApplications.push(group[0]);
+                    .pipe(
+                        groupBy(service => service.shortName),
+                        mergeMap(group => group.pipe(toArray())),
+                        map(group => group[0]),
+                        toArray()
+                    ).subscribe(applicationList => {
+                        this.applications = applicationList;
                     });
 
-                this.applications = tempApplications;
             });
     }
 

@@ -178,8 +178,8 @@ export class ApiService {
         const resource = 'applications/';
 
         return this.rest.post<ApiObject>(resource, data).pipe(flatMap(val => {
-            this.getApplications().subscribe();
-            this.getApplicationVersions(data.shortName).subscribe();
+            this.getApplications();
+            this.getApplicationVersions(data.shortName);
 
             const stream = this.getStreamSource<ApiObject>(val._links.self.href);
             stream.next(val);

@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { ApiService } from '../api/api.service';
 import { Subscription } from 'rxjs';
 import { from } from 'rxjs';
-import { groupBy, mergeMap, toArray } from 'rxjs/operators';
+import { groupBy, mergeMap, toArray, map } from 'rxjs/operators';
 import { ApiObject } from '../api/apiobject';
 
 
@@ -21,7 +21,7 @@ export class ServiceListComponent implements OnInit, OnDestroy {
         this.getServices();
     }
 
-    services: ApiService[];
+    services;
 
     displayedColumns: string[] = ['id', 'name', 'shortName', 'description'];
 
@@ -37,17 +37,19 @@ export class ServiceListComponent implements OnInit, OnDestroy {
     getServices(): void {
 
         // group services by shortName
-        const tempServices: any[] = [];
         this.subServices = this.apiService.getServices()
             .subscribe(val => {
 
                 from(val as unknown as ArrayLike<ApiObject>)
-                    .pipe(groupBy(service => service.shortName), mergeMap(group => group.pipe(toArray())))
-                    .subscribe(group => {
-                        tempServices.push(group[0]);
+                    .pipe(
+                        groupBy(service => service.shortName),
+                        mergeMap(group => group.pipe(toArray())),
+                        map(group => group[0]),
+                        toArray()
+                    ).subscribe(serviceList => {
+                        this.services = serviceList;
                     });
 
-                this.services = tempServices;
             });
 
     }
