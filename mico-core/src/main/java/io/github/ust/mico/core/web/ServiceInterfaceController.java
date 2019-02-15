@@ -211,7 +211,7 @@ public class ServiceInterfaceController {
         log.debug("Add new version of micoServiceInterface");
         service.getServiceInterfaces().add(modifiedMicoServiceInterface);
         serviceRepository.save(service);
-        return ResponseEntity.ok(new Resource<>(micoServiceInterface, getServiceInterfaceLinks(micoServiceInterface, shortName, version)));
+        return ResponseEntity.ok(new Resource<>(modifiedMicoServiceInterface, getServiceInterfaceLinks(modifiedMicoServiceInterface, shortName, version)));
     }
 
 
