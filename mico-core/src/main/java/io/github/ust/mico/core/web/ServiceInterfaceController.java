@@ -4,6 +4,7 @@ import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
 import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
 import io.fabric8.kubernetes.api.model.Service;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
+import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
@@ -25,6 +26,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static io.github.ust.mico.core.web.ServiceController.PATH_VARIABLE_SHORT_NAME;
@@ -172,11 +174,69 @@ public class ServiceInterfaceController {
         }
     }
 
+    /**
+     * Updates an existing micoServiceInterface
+     *
+     * @param shortName
+     * @param version
+     * @param serviceInterfaceName
+     * @param modifiedMicoServiceInterface
+     * @return
+     */
+    @PutMapping(SERVICE_INTERFACE_PATH + "/{" + PATH_VARIABLE_SERVICE_INTERFACE_NAME + "}")
+    public ResponseEntity<Resource<MicoServiceInterface>> updateMicoServiceInterface(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                                                     @PathVariable(PATH_VARIABLE_SERVICE_INTERFACE_NAME) String serviceInterfaceName,
+                                                                                     @RequestBody MicoServiceInterface modifiedMicoServiceInterface) {
+
+        if (!modifiedMicoServiceInterface.getServiceInterfaceName().equals(serviceInterfaceName)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The variable '" + PATH_VARIABLE_SERVICE_INTERFACE_NAME + "' must be equal to the name specified in the request body");
+        }
+
+        Optional<MicoService> serviceOptional = serviceRepository.findByShortNameAndVersion(shortName, version);
+        if (!serviceOptional.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "MicoService '" + shortName + "' '" + version + "' was not found!");
+        }
+
+        MicoService service = serviceOptional.get();
+        Optional<MicoServiceInterface> micoServiceInterfaceOptional = service.getServiceInterfaces().stream().filter(getMicoServiceInterfaceNameMatchingPredicate(serviceInterfaceName)).findFirst();
+        if (!micoServiceInterfaceOptional.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "MicoServiceInterface was not found!");
+        }
+
+        log.debug("Remove old micoServiceInterface");
+        service.getServiceInterfaces().removeIf(getMicoServiceInterfaceNameMatchingPredicate(serviceInterfaceName));
+        MicoServiceInterface micoServiceInterface = micoServiceInterfaceOptional.get();
+        modifiedMicoServiceInterface.setId(micoServiceInterface.getId());
+        log.debug("Add new version of micoServiceInterface");
+        service.getServiceInterfaces().add(modifiedMicoServiceInterface);
+        serviceRepository.save(service);
+        return ResponseEntity.ok(new Resource<>(modifiedMicoServiceInterface, getServiceInterfaceLinks(modifiedMicoServiceInterface, shortName, version)));
+    }
+
+
+    /**
+     * Checks if a micoServiceInterface exists for a given micoService. The matching is based on the interface name.
+     *
+     * @param serviceInterface
+     * @param service
+     * @return
+     */
     private boolean serviceInterfaceExists(@RequestBody MicoServiceInterface serviceInterface, MicoService service) {
         if (service.getServiceInterfaces() == null) {
             return false;
         }
-        return service.getServiceInterfaces().stream().anyMatch(existingServiceInterface -> existingServiceInterface.getServiceInterfaceName().equals(serviceInterface.getServiceInterfaceName()));
+        return service.getServiceInterfaces().stream().anyMatch(getMicoServiceInterfaceNameMatchingPredicate(serviceInterface.getServiceInterfaceName()));
+    }
+
+    /**
+     * Generates a predicate which matches the given micoServiceInterfaceName.
+     *
+     * @param micoServiceInterfaceName
+     * @return
+     */
+    private Predicate<MicoServiceInterface> getMicoServiceInterfaceNameMatchingPredicate(String micoServiceInterfaceName) {
+        return existingServiceInterface -> existingServiceInterface.getServiceInterfaceName().equals(micoServiceInterfaceName);
     }
 
     private Iterable<Link> getServiceInterfaceLinks(MicoServiceInterface serviceInterface, String shortName, String version) {
