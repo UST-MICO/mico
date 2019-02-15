@@ -39,6 +39,6 @@ public class ServiceControllerIntegrationTests extends Neo4jTestClass {
             .andExpect(status().isNoContent())
             .andReturn();
         Optional<MicoService> micoServiceOptional = serviceRepository.findByShortNameAndVersion(SHORT_NAME,VERSION_1_0_1);
-        assertFalse("The service should not be there, but it was",micoServiceOptional.isPresent());
+        assertFalse("The service was not deleted properly",micoServiceOptional.isPresent());
     }
 }
