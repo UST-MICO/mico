@@ -311,24 +311,25 @@ export class ModelsService {
      * @param property input PropertyRef
      */
     private handleObjectProperties = (property: PropertyRef): Observable<PropertyRef> => {
-        if (property.prop.hasOwnProperty('type') && (property.prop as ApiModel).type === 'object') {
-            let key: string;
-            if (property.parent != null && property.parent.title != null) {
-                key = `${property.parent.title}.${property.key}`;
-            } else {
-                key = `${property.key}-${Date.now()}`;
-            }
-            this.nestedModelCache.set(key, (property.prop as ApiModel));
-            return of({
-                key: property.key,
-                parent: property.parent,
-                prop: {
-                    $ref: `nested/${key}`,
-                },
-            });
+        if (!property.prop.hasOwnProperty('type') || (property.prop as ApiModel).type !== 'object') {
+            return of(property);
         }
 
-        return of(property);
+        let key: string;
+        if (property.parent != null && property.parent.title != null) {
+            key = `${property.parent.title}.${property.key}`;
+        } else {
+            key = `${property.key}-${Date.now()}`;
+        }
+        this.nestedModelCache.set(key, (property.prop as ApiModel));
+
+        return of({
+            key: property.key,
+            parent: property.parent,
+            prop: {
+                $ref: `nested/${key}`,
+            },
+        });
     }
 
 
@@ -340,30 +341,31 @@ export class ModelsService {
      * @param property input PropertyRef
      */
     private handleArrayProperties = (property: PropertyRef): Observable<PropertyRef> => {
-        if (property.prop.hasOwnProperty('type') && (property.prop as ApiModel).type === 'array') {
-            let items = (property.prop as ApiModel).items;
-            if (items.$ref != null) {
-                return of(property);
-            }
-            let key: string;
-            if (property.parent != null && property.parent.title != null) {
-                key = `${property.parent.title}.${property.key}`;
-            } else {
-                key = `${property.key}-${Date.now()}`;
-            }
-            this.nestedModelCache.set(key, (items as ApiModel));
-            const propCopy = JSON.parse(JSON.stringify(property.prop));
-            propCopy.items = {
-                $ref: `nested/${key}`,
-            };
-            return of({
-                key: property.key,
-                parent: property.parent,
-                prop: propCopy,
-            });
+        if (!property.prop.hasOwnProperty('type') || (property.prop as ApiModel).type !== 'array') {
+            return of(property);
         }
 
-        return of(property);
+        const items = (property.prop as ApiModel).items;
+        if (items.$ref != null) {
+            return of(property);
+        }
+        let key: string;
+        if (property.parent != null && property.parent.title != null) {
+            key = `${property.parent.title}.${property.key}`;
+        } else {
+            key = `${property.key}-${Date.now()}`;
+        }
+        this.nestedModelCache.set(key, (items as ApiModel));
+        const propCopy = JSON.parse(JSON.stringify(property.prop));
+        propCopy.items = {
+            $ref: `nested/${key}`,
+        };
+
+        return of({
+            key: property.key,
+            parent: property.parent,
+            prop: propCopy,
+        });
     }
 
     /**
@@ -383,6 +385,7 @@ export class ModelsService {
         }
         return of(...props).pipe(
             flatMap(this.handleObjectProperties),
+            flatMap(this.handleArrayProperties),
             reduce((properties, prop: PropertyRef) => {
                 properties[prop.key] = prop.prop;
                 return properties;
