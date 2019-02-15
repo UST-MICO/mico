@@ -36,7 +36,7 @@ public class ServiceControllerIntegrationTests extends Neo4jTestClass {
         serviceRepository.save(micoService);
         mvc.perform(delete( SERVICES_PATH + "/" + SHORT_NAME + "/" + "/" + VERSION_1_0_1).accept(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
-            .andExpect(status().isOk())
+            .andExpect(status().isNoContent())
             .andReturn();
         Optional<MicoService> micoServiceOptional = serviceRepository.findByShortNameAndVersion(SHORT_NAME,VERSION_1_0_1);
         assertFalse("The service should not be there, but it was",micoServiceOptional.isPresent());
