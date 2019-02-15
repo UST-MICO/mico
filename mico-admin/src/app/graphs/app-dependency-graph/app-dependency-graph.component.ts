@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { Edge } from 'grapheditor-webcomponent/lib/edge';
-import { Node } from 'grapheditor-webcomponent/lib/node';
+import { Edge } from '@ustutt/grapheditor-webcomponent/lib/edge';
+import { Node } from '@ustutt/grapheditor-webcomponent/lib/node';
 import { ApiObject } from 'src/app/api/apiobject';
 
 const STYLE_TEMPLATE = {
