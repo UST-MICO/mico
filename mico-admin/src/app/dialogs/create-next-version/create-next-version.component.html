@@ -1,0 +1,28 @@
+<mat-dialog-content style="overflow: visible">
+    <h2>Next Version</h2>
+
+    <span class="ma1 mb2">
+        What type of new version shall be created?
+    </span>
+
+    <div class="ma2">
+        <mat-radio-group [(ngModel)]="picked">
+            <div class="ma1">
+                <mat-radio-button [value]="major">Major ({{major}})</mat-radio-button>
+            </div>
+            <div class="ma1">
+                <mat-radio-button [value]="minor">Minor ({{minor}})</mat-radio-button>
+            </div>
+            <div class="ma1">
+                <mat-radio-button [value]="patch">Patch ({{patch}})</mat-radio-button>
+            </div>
+        </mat-radio-group>
+
+    </div>
+
+</mat-dialog-content>
+<mat-dialog-actions>
+    <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
+    <button mat-button [mat-dialog-close]="confirm()">Confirm</button>
+    <button mat-button mat-dialog-close>Cancel</button>
+</mat-dialog-actions>

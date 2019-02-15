@@ -21,6 +21,7 @@ import {
     MatSlideToggleModule
 } from '@angular/material';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatRadioModule } from '@angular/material/radio';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -68,6 +69,7 @@ import { MicoDataStringComponent } from './data-view/mico-data-string/mico-data-
 import { MicoDataContainerComponent } from './data-view/mico-data-container/mico-data-container.component';
 import { MicoDataBooleanComponent } from './data-view/mico-data-boolean/mico-data-boolean.component';
 import { CreateApplicationComponent } from './dialogs/create-application/create-application.component';
+import { CreateNextVersionComponent } from './dialogs/create-next-version/create-next-version.component';
 
 @NgModule({
     declarations: [
@@ -99,7 +101,8 @@ import { CreateApplicationComponent } from './dialogs/create-application/create-
         MicoDataStringComponent,
         MicoDataContainerComponent,
         MicoDataBooleanComponent,
-        CreateApplicationComponent
+        CreateApplicationComponent,
+        CreateNextVersionComponent
     ],
     entryComponents: [
         // dialogs
@@ -108,6 +111,7 @@ import { CreateApplicationComponent } from './dialogs/create-application/create-
         YesNoDialogComponent,
         CreateServiceInterfaceComponent,
         CreateApplicationComponent,
+        CreateNextVersionComponent,
     ],
     imports: [
         BrowserModule,
@@ -145,7 +149,8 @@ import { CreateApplicationComponent } from './dialogs/create-application/create-
         MatExpansionModule,
         OwlDateTimeModule,
         OwlNativeDateTimeModule,
-        MatSnackBarModule
+        MatSnackBarModule,
+        MatRadioModule
     ],
     providers: [],
     bootstrap: [AppComponent],

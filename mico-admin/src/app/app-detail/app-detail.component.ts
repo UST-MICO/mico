@@ -8,6 +8,7 @@ import { MatDialog } from '@angular/material';
 import { ServicePickerComponent } from '../dialogs/service-picker/service-picker.component';
 import { versionComparator, incrementVersion, versionComponents } from '../api/semantic-version';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
+import { CreateNextVersionComponent } from '../dialogs/create-next-version/create-next-version.component';
 
 @Component({
     selector: 'mico-app-detail',
@@ -31,6 +32,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     subPublicIps: Subscription[] = [];
     subApplication: Subscription;
     subServiceDependency: Subscription;
+    subCreateNextVersion: Subscription;
 
     // immutable application  object which is updated, when new data is pushed
     application: ApiObject;
@@ -144,6 +146,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         });
         this.unsubscribe(this.subApplication);
         this.unsubscribe(this.subServiceDependency);
+        this.unsubscribe(this.subCreateNextVersion);
     }
 
     unsubscribe(subscription: Subscription) {
@@ -252,14 +255,31 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     }
 
     promoteNextVersion() {
-        const nextApplication = JSON.parse(JSON.stringify(this.application));
-        // TODO add dialog to choose version component to increment.
-        const nextVersion = incrementVersion(this.selectedVersion, versionComponents.minor);
-        nextApplication.version = nextVersion;
-        nextApplication.id = null;
 
-        this.apiService.postApplication(nextApplication).subscribe(val => {
-            this.updateVersion(null);
+        const dialogRef = this.dialog.open(CreateNextVersionComponent, {
+            data: {
+                version: this.selectedVersion,
+            }
+        });
+
+        if (this.subCreateNextVersion != null) {
+            this.unsubscribe(this.subCreateNextVersion);
+        }
+
+        this.subCreateNextVersion = dialogRef.afterClosed().subscribe(nextVersion => {
+
+            if (nextVersion) {
+
+                const nextApplication = JSON.parse(JSON.stringify(this.application));
+                // TODO add dialog to choose version component to increment.
+                nextApplication.version = nextVersion;
+                nextApplication.id = null;
+
+                this.apiService.postApplication(nextApplication).subscribe(val => {
+                    this.updateVersion(null);
+                });
+
+            }
         });
     }
 
@@ -267,7 +287,6 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         this.apiService.deleteApplication(this.application.shortName, this.selectedVersion).subscribe(val => {
 
             if (this.allVersions.length > 0) {
-                const latest = this.getLatestVersion(this.allVersions);
                 this.updateVersion(null);
             } else {
                 this.router.navigate(['../app-list']);
