@@ -108,8 +108,9 @@ public class ApplicationController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                 "Application '" + newApplication.getShortName() + "' '" + newApplication.getVersion() + "' already exists.");
         }
-
-        validateProvidedServices(newApplication.getServices());
+        for (MicoService providedService : newApplication.getServices()) {
+            validateProvidedService(providedService);
+        }
 
         // TODO Update deploy info here if necessary
 
@@ -133,7 +134,9 @@ public class ApplicationController {
         if (!existingApplicationOptional.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' was not found!");
         }
-        validateProvidedServices(application.getServices());
+        for (MicoService providedService : application.getServices()) {
+            validateProvidedService(providedService);
+        }
 
         MicoApplication existingApplication = existingApplicationOptional.get();
         application.setId(existingApplication.getId());
@@ -249,23 +252,22 @@ public class ApplicationController {
     }
 
     /**
-     * Validates the list of {@link MicoService} with the data that is stored in the database.
+     * Validates the {@link MicoService} with the data that is stored in the database.
      *
-     * @param providedServices the list of {@link MicoService} objects
+     * @param providedService the {@link MicoService}
      * @throws ResponseStatusException if a {@link MicoService} does not exist or there is a conflict
      */
-    private void validateProvidedServices(List<MicoService> providedServices) throws ResponseStatusException {
-        for (MicoService service : providedServices) {
-            Optional<MicoService> existingServiceOptional = serviceRepository.findByShortNameAndVersion(service.getShortName(), service.getVersion());
-            if (!existingServiceOptional.isPresent()) {
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                    "Provided service '" + service.getShortName() + "' '" + service.getVersion() + "' does not exist!");
-            }
-            MicoService existingService = existingServiceOptional.get();
-            if (!service.equals(existingService)) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Provided service '" + service.getShortName() + "' '" + service.getVersion() + "' has a conflict with the existing service!");
-            }
+    private void validateProvidedService(MicoService providedService) throws ResponseStatusException {
+
+        Optional<MicoService> existingServiceOptional = serviceRepository.findByShortNameAndVersion(providedService.getShortName(), providedService.getVersion());
+        if (!existingServiceOptional.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                "Provided service '" + providedService.getShortName() + "' '" + providedService.getVersion() + "' does not exist!");
+        }
+        MicoService existingService = existingServiceOptional.get();
+        if (!providedService.equals(existingService)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "Provided service '" + providedService.getShortName() + "' '" + providedService.getVersion() + "' has a conflict with the existing service!");
         }
     }
 
@@ -343,20 +345,25 @@ public class ApplicationController {
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES)
     public ResponseEntity<Void> addServiceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
                                                         @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
-                                                        @RequestBody MicoService serviceFromBody) {
-        Optional<MicoService> serviceOptional = serviceRepository.findByShortNameAndVersion(serviceFromBody.getShortName(), serviceFromBody.getVersion());
+                                                        @RequestBody MicoService service) {
         Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(applicationShortName, applicationVersion);
-        if (serviceOptional.isPresent() && applicationOptional.isPresent()) {
-            MicoService service = serviceOptional.get();
-            MicoApplication application = applicationOptional.get();
-            if (!application.getServices().contains(service)) {
-                application.getServices().add(service);
-                applicationRepository.save(application);
-            }
-            return ResponseEntity.noContent().build();
-        } else {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is no such application/service");
+        if (!applicationOptional.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                "Application '" + applicationShortName + "' '" + applicationVersion + "' does not exist!");
         }
+        validateProvidedService(service);
+
+        MicoApplication application = applicationOptional.get();
+        if (!application.getServices().contains(service)) {
+            log.info("Add service '" + service.getShortName() + "' '" + service.getVersion() +
+                "' to application '" + applicationShortName + "' '" + applicationVersion + "'.");
+            application.getServices().add(service);
+            applicationRepository.save(application);
+        } else {
+            log.info("Application '" + applicationShortName + "' '" + applicationVersion +
+                "' already contains service '" + service.getShortName() + "' '" + service.getVersion() + "'.");
+        }
+        return ResponseEntity.noContent().build();
     }
 
     /**
