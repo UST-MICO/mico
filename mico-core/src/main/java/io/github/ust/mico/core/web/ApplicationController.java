@@ -109,20 +109,7 @@ public class ApplicationController {
                 "Application '" + newApplication.getShortName() + "' '" + newApplication.getVersion() + "' already exists.");
         }
 
-        // Check if provided services already exists and data is valid
-        List<MicoService> providedServices = newApplication.getServices();
-        for (MicoService service : providedServices) {
-            Optional<MicoService> existingServiceOptional = serviceRepository.findByShortNameAndVersion(service.getShortName(), service.getVersion());
-            if (!existingServiceOptional.isPresent()) {
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                    "Provided service '" + service.getShortName() + "' '" + service.getVersion() + "' does not exist!");
-            }
-            MicoService existingService = existingServiceOptional.get();
-            if (!service.equals(existingService)) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Provided service '" + service.getShortName() + "' '" + service.getVersion() + "' has a conflict with the existing service!");
-            }
-        }
+        validateProvidedServices(newApplication.getServices());
 
         // TODO Update deploy info here if necessary
 
@@ -142,12 +129,14 @@ public class ApplicationController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Application shortName or version does not match request body.");
         }
 
-        Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
-        if (!applicationOptional.isPresent()) {
+        Optional<MicoApplication> existingApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
+        if (!existingApplicationOptional.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' was not found!");
         }
+        validateProvidedServices(application.getServices());
 
-        application.setId(applicationOptional.get().getId());
+        MicoApplication existingApplication = existingApplicationOptional.get();
+        application.setId(existingApplication.getId());
         MicoApplication updatedApplication = applicationRepository.save(application);
 
         return ResponseEntity.ok(new Resource<>(updatedApplication, linkTo(methodOn(ApplicationController.class).updateApplication(shortName, version, application)).withSelfRel()));
@@ -257,6 +246,27 @@ public class ApplicationController {
             }
         }
         return ResponseEntity.ok(new Resource<>(applicationDeploymentInformation));
+    }
+
+    /**
+     * Validates the list of {@link MicoService} with the data that is stored in the database.
+     *
+     * @param providedServices the list of {@link MicoService} objects
+     * @throws ResponseStatusException if a {@link MicoService} does not exist or there is a conflict
+     */
+    private void validateProvidedServices(List<MicoService> providedServices) throws ResponseStatusException {
+        for (MicoService service : providedServices) {
+            Optional<MicoService> existingServiceOptional = serviceRepository.findByShortNameAndVersion(service.getShortName(), service.getVersion());
+            if (!existingServiceOptional.isPresent()) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "Provided service '" + service.getShortName() + "' '" + service.getVersion() + "' does not exist!");
+            }
+            MicoService existingService = existingServiceOptional.get();
+            if (!service.equals(existingService)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Provided service '" + service.getShortName() + "' '" + service.getVersion() + "' has a conflict with the existing service!");
+            }
+        }
     }
 
     private KubernetesPodInfoDTO getUiPodInfo(Pod pod) {
