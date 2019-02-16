@@ -524,7 +524,7 @@ public class ApplicationControllerTests {
         mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES))
             .andDo(print())
             .andExpect(status().isNotFound())
-            .andExpect(status().reason(is("There is no application with the name " + SHORT_NAME + " and the version " + VERSION)));
+            .andExpect(status().reason(is("Application '" + SHORT_NAME + "' '" + VERSION + "' was not found!")));
     }
 
     @Test

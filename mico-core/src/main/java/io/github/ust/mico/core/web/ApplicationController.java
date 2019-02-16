@@ -369,22 +369,23 @@ public class ApplicationController {
     /**
      * Returns a list of services associated with the mico application specified by the parameters.
      *
-     * @param applicationShortName the name of the application
-     * @param applicationVersion   the version of the application
+     * @param shortName the name of the application
+     * @param version   the version of the application
      * @return the list of mico services that are associated with the application
      */
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES)
-    public ResponseEntity<Resources<Resource<MicoService>>> getMicoServicesFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
-                                                                                           @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion) {
-        Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(applicationShortName, applicationVersion);
+    public ResponseEntity<Resources<Resource<MicoService>>> getMicoServicesFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                                           @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
         if (!applicationOptional.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "There is no application with the name " + applicationShortName + " and the version " + applicationVersion);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                "Application '" + shortName + "' '" + version + "' was not found!");
         }
         MicoApplication micoApplication = applicationOptional.get();
         List<MicoService> micoServices = micoApplication.getServices();
         List<Resource<MicoService>> micoServicesWithLinks = ServiceController.getServiceResourcesList(micoServices);
         return ResponseEntity.ok(
             new Resources<>(micoServicesWithLinks,
-                linkTo(methodOn(ApplicationController.class).getMicoServicesFromApplication(applicationShortName, applicationVersion)).withSelfRel()));
+                linkTo(methodOn(ApplicationController.class).getMicoServicesFromApplication(shortName, version)).withSelfRel()));
     }
 }
