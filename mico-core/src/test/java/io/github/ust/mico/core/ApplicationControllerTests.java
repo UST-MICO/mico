@@ -17,6 +17,7 @@ import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.web.ApplicationController;
@@ -40,6 +41,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static io.github.ust.mico.core.JsonPathBuilder.*;
@@ -50,6 +52,7 @@ import static io.github.ust.mico.core.web.ApplicationController.PATH_APPLICATION
 import static io.github.ust.mico.core.web.ApplicationController.PATH_SERVICES;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
@@ -74,6 +77,7 @@ public class ApplicationControllerTests {
     public static final String SHORT_NAME_PATH = buildPath(ROOT, "shortName");
     public static final String VERSION_PATH = buildPath(ROOT, "version");
     public static final String DESCRIPTION_PATH = buildPath(ROOT, "description");
+    public static final String SERVICES_LIST_PATH = buildPath(ROOT, "services");
     public static final String ID_PATH = buildPath(ROOT, "id");
 
     private static final String FIRST_SERVICE = buildPath(ROOT, "serviceDeploymentInformation[0]");
@@ -103,6 +107,9 @@ public class ApplicationControllerTests {
 
     @MockBean
     private MicoApplicationRepository applicationRepository;
+
+    @MockBean
+    private MicoServiceRepository serviceRepository;
 
     @MockBean
     private RestTemplate restTemplate;
@@ -178,13 +185,90 @@ public class ApplicationControllerTests {
     }
 
     @Test
-    public void createApplication() throws Exception {
+    public void createApplicationWithoutServices() throws Exception {
         MicoApplication application = new MicoApplication()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setDescription(DESCRIPTION);
 
         given(applicationRepository.save(any(MicoApplication.class))).willReturn(application);
+        given(serviceRepository.findByShortNameAndVersion(
+            anyString(), anyString()))
+            .willReturn(Optional.empty());
+
+        prettyPrint(application);
+
+        final ResultActions result = mvc.perform(post(BASE_PATH)
+            .content(mapper.writeValueAsBytes(application))
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(jsonPath(SHORT_NAME_PATH, is(application.getShortName())))
+            .andExpect(jsonPath(VERSION_PATH, is(application.getVersion())))
+            .andExpect(jsonPath(SERVICES_LIST_PATH, is(empty())));
+
+        result.andExpect(status().isCreated());
+    }
+
+    @Test
+    public void createApplicationWithExistingServices() throws Exception {
+        List<MicoService> micoServices = CollectionUtils.listOf(
+            new MicoService()
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION),
+            new MicoService()
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION)
+        );
+
+        MicoApplication application = new MicoApplication()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setDescription(DESCRIPTION)
+            .setServices(micoServices);
+
+        given(applicationRepository.save(any(MicoApplication.class))).willReturn(application);
+        given(serviceRepository.findByShortNameAndVersion(
+            eq(micoServices.get(0).getShortName()), eq(micoServices.get(0).getVersion())))
+            .willReturn(Optional.of(micoServices.get(0)));
+        given(serviceRepository.findByShortNameAndVersion(
+            eq(micoServices.get(1).getShortName()), eq(micoServices.get(1).getVersion())))
+            .willReturn(Optional.of(micoServices.get(1)));
+
+        prettyPrint(application);
+
+        final ResultActions result = mvc.perform(post(BASE_PATH)
+            .content(mapper.writeValueAsBytes(application))
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(jsonPath(SHORT_NAME_PATH, is(application.getShortName())))
+            .andExpect(jsonPath(VERSION_PATH, is(application.getVersion())))
+            .andExpect(jsonPath(SERVICES_LIST_PATH + "[*]", hasSize(2)));
+
+        result.andExpect(status().isCreated());
+    }
+
+    @Test
+    public void createApplicationWithNotExistingServices() throws Exception {
+        List<MicoService> micoServices = CollectionUtils.listOf(
+            new MicoService()
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION),
+            new MicoService()
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION)
+        );
+
+        MicoApplication application = new MicoApplication()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setDescription(DESCRIPTION)
+            .setServices(micoServices);
+
+        given(applicationRepository.save(any(MicoApplication.class))).willReturn(application);
+        // Only one of the two MicoService exists -> exception
+        given(serviceRepository.findByShortNameAndVersion(
+            eq(micoServices.get(0).getShortName()), eq(micoServices.get(0).getVersion())))
+            .willReturn(Optional.of(micoServices.get(0)));
 
         prettyPrint(application);
 
@@ -193,7 +277,42 @@ public class ApplicationControllerTests {
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print());
 
-        result.andExpect(status().isCreated());
+        result.andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    public void createApplicationWithInconsistentServiceData() throws Exception {
+        MicoService existingMicoService = new MicoService()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setGitCloneUrl(GIT_TEST_REPO_URL);
+        MicoService invalidMicoService = new MicoService()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setGitCloneUrl("http://example.com/INVALID");
+
+        MicoApplication application = new MicoApplication()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setDescription(DESCRIPTION)
+            .setServices(CollectionUtils.listOf(
+                invalidMicoService
+            ));
+
+        given(applicationRepository.save(any(MicoApplication.class))).willReturn(application);
+        // MicoService exist with different data
+        given(serviceRepository.findByShortNameAndVersion(
+            eq(invalidMicoService.getShortName()), eq(invalidMicoService.getVersion())))
+            .willReturn(Optional.of(existingMicoService));
+
+        prettyPrint(application);
+
+        final ResultActions result = mvc.perform(post(BASE_PATH)
+            .content(mapper.writeValueAsBytes(application))
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print());
+
+        result.andExpect(status().isConflict());
     }
 
     @Test

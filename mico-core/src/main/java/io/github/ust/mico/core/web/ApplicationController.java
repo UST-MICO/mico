@@ -109,19 +109,22 @@ public class ApplicationController {
                 "Application '" + newApplication.getShortName() + "' '" + newApplication.getVersion() + "' already exists.");
         }
 
-        List<MicoService> oldServices = newApplication.getServices();
-        newApplication.getServices().clear();
-
-        // specifically load all services from db
-        for (MicoService service : oldServices) {
-            Optional<MicoService> dbService = serviceRepository.findByShortNameAndVersion(service.getShortName(), service.getVersion());
-            if (!dbService.isPresent()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "One of the provided Services was not found!");
+        // Check if provided services already exists and data is valid
+        List<MicoService> providedServices = newApplication.getServices();
+        for (MicoService service : providedServices) {
+            Optional<MicoService> existingServiceOptional = serviceRepository.findByShortNameAndVersion(service.getShortName(), service.getVersion());
+            if (!existingServiceOptional.isPresent()) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "Provided service '" + service.getShortName() + "' '" + service.getVersion() + "' does not exist!");
             }
-            newApplication.getServices().add(dbService.get());
+            MicoService existingService = existingServiceOptional.get();
+            if (!service.equals(existingService)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Provided service '" + service.getShortName() + "' '" + service.getVersion() + "' has a conflict with the existing service!");
+            }
         }
 
-        // TODO update deploy info here if neccessary
+        // TODO Update deploy info here if necessary
 
         MicoApplication savedApplication = applicationRepository.save(newApplication);
 
@@ -178,7 +181,7 @@ public class ApplicationController {
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")
     public ResponseEntity<Resource<MicoApplicationDeploymentInformationDTO>> getStatusOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                                               @PathVariable(PATH_VARIABLE_VERSION) String version) {
+                                                                                                    @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
         if (!micoApplicationOptional.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' was not found!");
