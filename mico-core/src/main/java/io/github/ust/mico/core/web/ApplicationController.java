@@ -342,7 +342,7 @@ public class ApplicationController {
                 linkTo(methodOn(ApplicationController.class).getApplicationsByShortName(shortName)).withSelfRel()));
     }
 
-    @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES)
+    @PatchMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES)
     public ResponseEntity<Void> addServiceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
                                                         @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
                                                         @RequestBody MicoService service) {
