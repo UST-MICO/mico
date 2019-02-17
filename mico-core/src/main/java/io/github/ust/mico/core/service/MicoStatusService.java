@@ -52,6 +52,11 @@ public class MicoStatusService {
     private static final String PROMETHEUS_QUERY_FOR_CPU_USAGE = "sum(container_cpu_load_average_10s{pod_name=\"%s\"})";
     private static final String PROMETHEUS_QUERY_PARAMETER_NAME = "query";
 
+    /**
+     * Get status information for a {@link MicoApplication}
+     * @param micoApplication
+     * @return {@link MicoApplicationDeploymentInformationDTO} containing a list of {@link MicoServiceDeploymentInformationDTO} for status information of a single {@link MicoService}
+     */
     public MicoApplicationDeploymentInformationDTO getApplicationStatus(MicoApplication micoApplication) {
         MicoApplicationDeploymentInformationDTO applicationDeploymentInformation = new MicoApplicationDeploymentInformationDTO();
         List<MicoService> micoServices = micoApplication.getServices();
@@ -62,6 +67,11 @@ public class MicoStatusService {
         return applicationDeploymentInformation;
     }
 
+    /**
+     * Get status information for a single {@link MicoService}: # available replicas, # requested replicas, pod metrics (cpu load, memory load)
+     * @param micoService is a {@link MicoService}
+     * @return {@link MicoServiceDeploymentInformationDTO} which contains status information for a specific {@link MicoService}
+     */
     private MicoServiceDeploymentInformationDTO getServiceStatus(MicoService micoService) {
         Optional<Deployment> deploymentOptional = null;
         try {
@@ -95,6 +105,12 @@ public class MicoStatusService {
         return serviceDeploymentInformation;
     }
 
+    /**
+     * Get status information for all {@link MicoServiceInterface} of a {@link MicoService}: service name,
+     * @param micoService is a {@link MicoService}
+     * @return a list of {@link MicoServiceInterfaceDTO}, each item contains status information for a {@link MicoServiceInterface}
+     * TODO add externalIP information
+     */
     private List<MicoServiceInterfaceDTO> getServiceInterfaceStatus(MicoService micoService) {
         List<MicoServiceInterfaceDTO> interfacesInformation = new LinkedList<>();
         List<MicoServiceInterface> serviceInterfaces = micoService.getServiceInterfaces();
@@ -127,6 +143,11 @@ public class MicoStatusService {
         return interfacesInformation;
     }
 
+    /**
+     * Get information and metrics for a {@link Pod} representing an instance of a {@link MicoService}
+     * @param pod is a {@link Pod} of Kubernetes
+     * @return a {@link KubernetesPodInfoDTO} which has node name, pod name, phase, host ip, memory usage, and cpu load as status information
+     */
     private KubernetesPodInfoDTO getUiPodInfo(Pod pod) {
         String nodeName = pod.getSpec().getNodeName();
         String podName = pod.getMetadata().getName();
@@ -147,7 +168,6 @@ public class MicoStatusService {
         podMetrics.setCpuLoad(cpuLoad);
         return new KubernetesPodInfoDTO(podName, phase, hostIp, nodeName, podMetrics);
     }
-
 
     private int getMemoryUsageForPod(String podName) throws PrometheusRequestFailedException {
         URI prometheusUri = getPrometheusUri(PROMETHEUS_QUERY_FOR_MEMORY_USAGE, podName);
