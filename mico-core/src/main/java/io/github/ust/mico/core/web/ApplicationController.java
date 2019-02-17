@@ -88,18 +88,6 @@ public class ApplicationController {
             .map(ResponseEntity::ok).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' links not found!"));
     }
 
-    private List<Resource<MicoApplication>> getApplicationResourceList(List<MicoApplication> applications) {
-        return applications.stream().map(application -> new Resource<>(application, getApplicationLinks(application)))
-            .collect(Collectors.toList());
-    }
-
-    private Iterable<Link> getApplicationLinks(MicoApplication application) {
-        LinkedList<Link> links = new LinkedList<>();
-        links.add(linkTo(methodOn(ApplicationController.class).getApplicationByShortNameAndVersion(application.getShortName(), application.getVersion())).withSelfRel());
-        links.add(linkTo(methodOn(ApplicationController.class).getAllApplications()).withRel("applications"));
-        return links;
-    }
-
     @PostMapping
     public ResponseEntity<Resource<MicoApplication>> createApplication(@RequestBody MicoApplication newApplication) {
         Optional<MicoApplication> applicationOptional = applicationRepository.
@@ -251,86 +239,6 @@ public class ApplicationController {
         return ResponseEntity.ok(new Resource<>(applicationDeploymentInformation));
     }
 
-    /**
-     * Validates the {@link MicoService} with the data that is stored in the database.
-     *
-     * @param providedService the {@link MicoService}
-     * @throws ResponseStatusException if a {@link MicoService} does not exist or there is a conflict
-     */
-    private void validateProvidedService(MicoService providedService) throws ResponseStatusException {
-
-        Optional<MicoService> existingServiceOptional = serviceRepository.findByShortNameAndVersion(providedService.getShortName(), providedService.getVersion());
-        if (!existingServiceOptional.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                "Provided service '" + providedService.getShortName() + "' '" + providedService.getVersion() + "' does not exist!");
-        }
-        MicoService existingService = existingServiceOptional.get();
-        if (!providedService.equals(existingService)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "Provided service '" + providedService.getShortName() + "' '" + providedService.getVersion() + "' has a conflict with the existing service!");
-        }
-    }
-
-    private KubernetesPodInfoDTO getUiPodInfo(Pod pod) {
-        String nodeName = pod.getSpec().getNodeName();
-        String podName = pod.getMetadata().getName();
-        String phase = pod.getStatus().getPhase();
-        String hostIp = pod.getStatus().getHostIP();
-        int memoryUsage = -1;
-        int cpuLoad = -1;
-        KuberenetesPodMetricsDTO podMetrics = new KuberenetesPodMetricsDTO();
-        try {
-            memoryUsage = getMemoryUsageForPod(podName);
-            cpuLoad = getCpuLoadForPod(podName);
-            podMetrics.setAvailable(true);
-        } catch (PrometheusRequestFailedException | ResourceAccessException e) {
-            podMetrics.setAvailable(false);
-            log.error(e.getMessage(), e);
-        }
-        podMetrics.setMemoryUsage(memoryUsage);
-        podMetrics.setCpuLoad(cpuLoad);
-        return new KubernetesPodInfoDTO(podName, phase, hostIp, nodeName, podMetrics);
-    }
-
-
-    private int getMemoryUsageForPod(String podName) throws PrometheusRequestFailedException {
-        URI prometheusUri = getPrometheusUri(PROMETHEUS_QUERY_FOR_MEMORY_USAGE, podName);
-        return requestValueFromPrometheus(prometheusUri);
-    }
-
-    private int getCpuLoadForPod(String podName) throws PrometheusRequestFailedException {
-        URI prometheusUri = getPrometheusUri(PROMETHEUS_QUERY_FOR_CPU_USAGE, podName);
-        return requestValueFromPrometheus(prometheusUri);
-    }
-
-    private int requestValueFromPrometheus(URI prometheusUri) throws PrometheusRequestFailedException {
-
-        ResponseEntity<PrometheusResponse> response
-            = restTemplate.getForEntity(prometheusUri, PrometheusResponse.class);
-        if (response.getStatusCode().is2xxSuccessful()) {
-            PrometheusResponse prometheusMemoryResponse = response.getBody();
-            if (prometheusMemoryResponse != null) {
-                if (prometheusMemoryResponse.wasSuccessful()) {
-                    return prometheusMemoryResponse.getValue();
-                } else {
-                    throw new PrometheusRequestFailedException("The status of the prometheus response was " + prometheusMemoryResponse.getStatus(), response.getStatusCode(), prometheusMemoryResponse.getStatus());
-                }
-            } else {
-                throw new PrometheusRequestFailedException("There was no response body", response.getStatusCode(), null);
-            }
-        } else {
-            throw new PrometheusRequestFailedException("The http status code was not 2xx", response.getStatusCode(), null);
-        }
-    }
-
-    private URI getPrometheusUri(String query, String podName) {
-        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(prometheusConfig.getUri());
-        uriBuilder.queryParam(PROMETHEUS_QUERY_PARAMETER_NAME, String.format(query, podName));
-        URI prometheusUri = uriBuilder.build().toUri();
-        log.debug("Using Prometheus URI '{}'", prometheusUri);
-        return prometheusUri;
-    }
-
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
     public ResponseEntity<Resources<Resource<MicoApplication>>> getApplicationsByShortName(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
         List<MicoApplication> micoApplicationList = applicationRepository.findByShortName(shortName);
@@ -388,4 +296,96 @@ public class ApplicationController {
             new Resources<>(micoServicesWithLinks,
                 linkTo(methodOn(ApplicationController.class).getMicoServicesFromApplication(shortName, version)).withSelfRel()));
     }
+
+    private List<Resource<MicoApplication>> getApplicationResourceList(List<MicoApplication> applications) {
+        return applications.stream().map(application -> new Resource<>(application, getApplicationLinks(application)))
+            .collect(Collectors.toList());
+    }
+
+    private Iterable<Link> getApplicationLinks(MicoApplication application) {
+        LinkedList<Link> links = new LinkedList<>();
+        links.add(linkTo(methodOn(ApplicationController.class).getApplicationByShortNameAndVersion(application.getShortName(), application.getVersion())).withSelfRel());
+        links.add(linkTo(methodOn(ApplicationController.class).getAllApplications()).withRel("applications"));
+        return links;
+    }
+
+    /**
+     * Validates the {@link MicoService} with the data that is stored in the database.
+     *
+     * @param providedService the {@link MicoService}
+     * @throws ResponseStatusException if a {@link MicoService} does not exist or there is a conflict
+     */
+    private void validateProvidedService(MicoService providedService) throws ResponseStatusException {
+
+        Optional<MicoService> existingServiceOptional = serviceRepository.findByShortNameAndVersion(providedService.getShortName(), providedService.getVersion());
+        if (!existingServiceOptional.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                "Provided service '" + providedService.getShortName() + "' '" + providedService.getVersion() + "' does not exist!");
+        }
+        MicoService existingService = existingServiceOptional.get();
+        if (!providedService.equals(existingService)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "Provided service '" + providedService.getShortName() + "' '" + providedService.getVersion() + "' has a conflict with the existing service!");
+        }
+    }
+
+    private KubernetesPodInfoDTO getUiPodInfo(Pod pod) {
+        String nodeName = pod.getSpec().getNodeName();
+        String podName = pod.getMetadata().getName();
+        String phase = pod.getStatus().getPhase();
+        String hostIp = pod.getStatus().getHostIP();
+        int memoryUsage = -1;
+        int cpuLoad = -1;
+        KuberenetesPodMetricsDTO podMetrics = new KuberenetesPodMetricsDTO();
+        try {
+            memoryUsage = getMemoryUsageForPod(podName);
+            cpuLoad = getCpuLoadForPod(podName);
+            podMetrics.setAvailable(true);
+        } catch (PrometheusRequestFailedException | ResourceAccessException e) {
+            podMetrics.setAvailable(false);
+            log.error(e.getMessage(), e);
+        }
+        podMetrics.setMemoryUsage(memoryUsage);
+        podMetrics.setCpuLoad(cpuLoad);
+        return new KubernetesPodInfoDTO(podName, phase, hostIp, nodeName, podMetrics);
+    }
+
+    private int getMemoryUsageForPod(String podName) throws PrometheusRequestFailedException {
+        URI prometheusUri = getPrometheusUri(PROMETHEUS_QUERY_FOR_MEMORY_USAGE, podName);
+        return requestValueFromPrometheus(prometheusUri);
+    }
+
+    private int getCpuLoadForPod(String podName) throws PrometheusRequestFailedException {
+        URI prometheusUri = getPrometheusUri(PROMETHEUS_QUERY_FOR_CPU_USAGE, podName);
+        return requestValueFromPrometheus(prometheusUri);
+    }
+
+    private int requestValueFromPrometheus(URI prometheusUri) throws PrometheusRequestFailedException {
+
+        ResponseEntity<PrometheusResponse> response
+            = restTemplate.getForEntity(prometheusUri, PrometheusResponse.class);
+        if (response.getStatusCode().is2xxSuccessful()) {
+            PrometheusResponse prometheusMemoryResponse = response.getBody();
+            if (prometheusMemoryResponse != null) {
+                if (prometheusMemoryResponse.wasSuccessful()) {
+                    return prometheusMemoryResponse.getValue();
+                } else {
+                    throw new PrometheusRequestFailedException("The status of the prometheus response was " + prometheusMemoryResponse.getStatus(), response.getStatusCode(), prometheusMemoryResponse.getStatus());
+                }
+            } else {
+                throw new PrometheusRequestFailedException("There was no response body", response.getStatusCode(), null);
+            }
+        } else {
+            throw new PrometheusRequestFailedException("The http status code was not 2xx", response.getStatusCode(), null);
+        }
+    }
+
+    private URI getPrometheusUri(String query, String podName) {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(prometheusConfig.getUri());
+        uriBuilder.queryParam(PROMETHEUS_QUERY_PARAMETER_NAME, String.format(query, podName));
+        URI prometheusUri = uriBuilder.build().toUri();
+        log.debug("Using Prometheus URI '{}'", prometheusUri);
+        return prometheusUri;
+    }
+
 }
