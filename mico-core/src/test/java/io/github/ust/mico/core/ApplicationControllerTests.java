@@ -1,3 +1,22 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package io.github.ust.mico.core;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -5,20 +24,22 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.PodListBuilder;
-import io.fabric8.kubernetes.api.model.ServiceList;
-import io.fabric8.kubernetes.api.model.ServiceListBuilder;
-import io.fabric8.kubernetes.api.model.apps.DeploymentList;
-import io.fabric8.kubernetes.api.model.apps.DeploymentListBuilder;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.configuration.PrometheusConfig;
 import io.github.ust.mico.core.dto.PrometheusResponse;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
 import io.github.ust.mico.core.web.ApplicationController;
 import org.hamcrest.collection.IsEmptyCollection;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.util.CollectionUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -39,21 +60,17 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Optional;
 
 import static io.github.ust.mico.core.JsonPathBuilder.*;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
 import static io.github.ust.mico.core.TestConstants.VERSION;
 import static io.github.ust.mico.core.TestConstants.*;
-import static io.github.ust.mico.core.service.MicoKubernetesClient.LABEL_APP_KEY;
-import static io.github.ust.mico.core.service.MicoKubernetesClient.LABEL_VERSION_KEY;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -66,7 +83,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @EnableAutoConfiguration
 @EnableConfigurationProperties(value = {CorsConfig.class})
 @SuppressWarnings({"rawtypes", "unchecked"})
-public class ApplicationControllerTest {
+public class ApplicationControllerTests {
 
     private static final String JSON_PATH_LINKS_SECTION = "$._links.";
 
@@ -76,17 +93,18 @@ public class ApplicationControllerTest {
     public static final String DESCRIPTION_PATH = buildPath(ROOT, "description");
     public static final String ID_PATH = buildPath(ROOT, "id");
 
-    private static final String REQUESTED_REPLICAS = buildPath(ROOT, "requestedReplicas");
-    private static final String AVAILABLE_REPLICAS = buildPath(ROOT, "availableReplicas");
-    private static final String INTERFACES_INFORMATION = buildPath(ROOT, "interfacesInformation");
-    private static final String INTERFACES_INFORMATION_NAME = buildPath(ROOT, "interfacesInformation[0].name");
-    private static final String POD_INFO = buildPath(ROOT, "podInfo");
-    private static final String POD_INFO_POD_NAME = buildPath(ROOT, "podInfo[0].podName");
-    private static final String POD_INFO_PHASE = buildPath(ROOT, "podInfo[0].phase");
-    private static final String POD_INFO_NODE_NAME = buildPath(ROOT, "podInfo[0].nodeName");
-    private static final String POD_INFO_METRICS_MEMORY_USAGE = buildPath(ROOT, "podInfo[0].metrics.memoryUsage");
-    private static final String POD_INFO_METRICS_CPU_LOAD = buildPath(ROOT, "podInfo[0].metrics.cpuLoad");
-    private static final String POD_INFO_METRICS_AVAILABLE = buildPath(ROOT, "podInfo[0].metrics.available");
+    private static final String FIRST_SERVICE = buildPath(ROOT, "serviceDeploymentInformation[0]");
+    private static final String REQUESTED_REPLICAS = buildPath(FIRST_SERVICE, "requestedReplicas");
+    private static final String AVAILABLE_REPLICAS = buildPath(FIRST_SERVICE, "availableReplicas");
+    private static final String INTERFACES_INFORMATION = buildPath(FIRST_SERVICE, "interfacesInformation");
+    private static final String INTERFACES_INFORMATION_NAME = buildPath(FIRST_SERVICE, "interfacesInformation[0].name");
+    private static final String POD_INFO = buildPath(FIRST_SERVICE, "podInfo");
+    private static final String POD_INFO_POD_NAME = buildPath(FIRST_SERVICE, "podInfo[0].podName");
+    private static final String POD_INFO_PHASE = buildPath(FIRST_SERVICE, "podInfo[0].phase");
+    private static final String POD_INFO_NODE_NAME = buildPath(FIRST_SERVICE, "podInfo[0].nodeName");
+    private static final String POD_INFO_METRICS_MEMORY_USAGE = buildPath(FIRST_SERVICE, "podInfo[0].metrics.memoryUsage");
+    private static final String POD_INFO_METRICS_CPU_LOAD = buildPath(FIRST_SERVICE, "podInfo[0].metrics.cpuLoad");
+    private static final String POD_INFO_METRICS_AVAILABLE = buildPath(FIRST_SERVICE, "podInfo[0].metrics.available");
 
     public static final String VERSION_MAJOR_PATH = buildPath(ROOT, "version", "majorVersion");
     public static final String VERSION_MINOR_PATH = buildPath(ROOT, "version", "minorVersion");
@@ -107,7 +125,7 @@ public class ApplicationControllerTest {
     private RestTemplate restTemplate;
 
     @MockBean
-    private ClusterAwarenessFabric8 cluster;
+    private MicoKubernetesClient micoKubernetesClient;
 
     @Autowired
     private MockMvc mvc;
@@ -240,10 +258,19 @@ public class ApplicationControllerTest {
     }
 
     @Test
-    public void getDeploymentInformation() throws Exception {
+    public void getStatusOfApplication() throws Exception {
         MicoApplication application = new MicoApplication()
             .setShortName(SHORT_NAME)
-            .setVersion(VERSION);
+            .setVersion(VERSION)
+            .setServices(CollectionUtils.listOf(
+                new MicoService()
+                    .setShortName(SHORT_NAME)
+                    .setVersion(VERSION)
+                    .setServiceInterfaces(CollectionUtils.listOf(
+                        new MicoServiceInterface()
+                            .setServiceInterfaceName(SERVICE_INTERFACE_NAME)
+                    ))
+            ));
         String testNamespace = "TestNamespace";
         String nodeName = "testNode";
         String podPhase = "Running";
@@ -254,33 +281,26 @@ public class ApplicationControllerTest {
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(micoKubernetesConfig.getNamespaceMicoWorkspace()).willReturn(testNamespace);
 
-        HashMap<String, String> labels = new HashMap<>();
-        labels.put(LABEL_APP_KEY, application.getShortName());
-        labels.put(LABEL_VERSION_KEY, application.getVersion());
         final int availableReplicas = 1;
         final int replicas = 1;
 
-        DeploymentList deploymentList = new DeploymentListBuilder()
-            .addNewItem()
-            .withNewMetadata().withName(deploymentName).withLabels(labels).endMetadata()
+        Optional<Deployment> deployment = Optional.of(new DeploymentBuilder()
+            .withNewMetadata().withName(deploymentName).endMetadata()
             .withNewSpec().withReplicas(replicas).endSpec().withNewStatus().withAvailableReplicas(availableReplicas).endStatus()
-            .endItem()
-            .build();
-        ServiceList serviceList = new ServiceListBuilder()
-            .addNewItem()
-            .withNewMetadata().withName(serviceName).withLabels(labels).endMetadata()
-            .endItem()
-            .build();
+            .build());
+        Optional<Service> kubernetesService = Optional.of(new ServiceBuilder()
+            .withNewMetadata().withName(serviceName).endMetadata()
+            .build());
         PodList podList = new PodListBuilder()
             .addNewItem()
-            .withNewMetadata().withName(podName).withLabels(labels).endMetadata()
+            .withNewMetadata().withName(podName).endMetadata()
             .withNewSpec().withNodeName(nodeName).endSpec()
             .withNewStatus().withPhase(podPhase).withHostIP(hostIp).endStatus()
             .endItem()
             .build();
-        given(cluster.getDeploymentsByLabels(labels, testNamespace)).willReturn(deploymentList);
-        given(cluster.getServicesByLabels(labels, testNamespace)).willReturn(serviceList);
-        given(cluster.getPodsByLabels(labels, testNamespace)).willReturn(podList);
+        given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(deployment);
+        given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(any(MicoService.class))).willReturn(podList.getItems());
+        given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(kubernetesService);
 
         given(prometheusConfig.getUri()).willReturn("http://localhost:9090/api/v1/query");
 
@@ -290,7 +310,7 @@ public class ApplicationControllerTest {
         ResponseEntity responseEntity2 = getPrometheusResponseEntity(cpuLoad);
         given(restTemplate.getForEntity(any(), eq(PrometheusResponse.class))).willReturn(responseEntity).willReturn(responseEntity2);
 
-        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/deploymentInformation"))
+        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/status"))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath(REQUESTED_REPLICAS, is(replicas)))

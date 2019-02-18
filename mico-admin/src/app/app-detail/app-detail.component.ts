@@ -1,3 +1,22 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -8,6 +27,7 @@ import { MatDialog } from '@angular/material';
 import { ServicePickerComponent } from '../dialogs/service-picker/service-picker.component';
 import { versionComparator } from '../api/semantic-version';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
+import { CreateNextVersionComponent } from '../dialogs/create-next-version/create-next-version.component';
 
 @Component({
     selector: 'mico-app-detail',
@@ -31,6 +51,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     subPublicIps: Subscription[] = [];
     subApplication: Subscription;
     subServiceDependency: Subscription;
+    subCreateNextVersion: Subscription;
 
     // immutable application  object which is updated, when new data is pushed
     application: ApiObject;
@@ -43,6 +64,14 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     applicationData;
     edit: Boolean = false;
 
+    isLatestVersion = () => {
+        if (this.allVersions != null) {
+            if (this.selectedVersion === this.getLatestVersion(this.allVersions)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     ngOnInit() {
 
@@ -54,22 +83,22 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                 .subscribe(versions => {
 
                     this.allVersions = versions;
+                    const latestVersion = this.getLatestVersion(versions);
 
                     if (givenVersion == null) {
-                        this.setLatestVersion(versions);
+                        this.subscribeApplication(latestVersion);
                     } else {
                         let found = false;
                         found = versions.some(element => {
 
                             if (element.version === givenVersion) {
-                                this.selectedVersion = givenVersion;
                                 this.subscribeApplication(element.version);
                                 return true;
                             }
                         });
                         if (!found) {
                             // given version was not found in the versions list, take latest instead
-                            this.setLatestVersion(versions);
+                            this.subscribeApplication(latestVersion);
                         }
                     }
                 });
@@ -83,6 +112,8 @@ export class AppDetailComponent implements OnInit, OnDestroy {
      * @param version version of the application to be displayed
      */
     subscribeApplication(version: string) {
+
+        this.selectedVersion = version;
 
         if (this.subApplication != null) {
             this.subApplication.unsubscribe();
@@ -102,8 +133,6 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
 
             // public ip
-            const tempPublicIps = [];
-
 
             this.application.services.forEach(service => {
 
@@ -113,14 +142,15 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                         this.subPublicIps.push(this.apiService
                             .getServiceInterfacePublicIp(service.shortName, service.version, micoInterface.serviceInterfaceName)
                             .subscribe(listOfPublicIps => {
+                                const tempPublicIps = [];
                                 listOfPublicIps.forEach(publicIp => {
                                     tempPublicIps.push(publicIp);
                                 });
+                                this.publicIps = tempPublicIps;
                             }));
                     });
                 }
             });
-            this.publicIps = tempPublicIps;
         });
     }
 
@@ -135,6 +165,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         });
         this.unsubscribe(this.subApplication);
         this.unsubscribe(this.subServiceDependency);
+        this.unsubscribe(this.subCreateNextVersion);
     }
 
     unsubscribe(subscription: Subscription) {
@@ -153,10 +184,9 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     }
 
     /**
-     * takes a list of applications and sets this.application to the application with the latest version
-     * this.version is set accoringly
+     * takes a list of applications and returns the latest version number
      */
-    setLatestVersion(list) {
+    getLatestVersion(list) {
         let version = '0.0.0';
 
         list.forEach(element => {
@@ -165,8 +195,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                 version = element.version;
             }
         });
-        this.selectedVersion = version;
-        this.subscribeApplication(version);
+        return version;
     }
 
     addService() {
@@ -226,8 +255,13 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     * call-back from the version picker
     */
     updateVersion(version) {
-        this.selectedVersion = version;
-        this.router.navigate(['app-detail', this.application.shortName, version]);
+        if (version != null) {
+            this.selectedVersion = version;
+            this.router.navigate(['app-detail', this.application.shortName, version]);
+        } else {
+            this.router.navigate(['app-detail', this.application.shortName]);
+        }
+
     }
 
     saveApplicationChanges() {
@@ -237,5 +271,44 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                 console.log(val);
             });
         this.edit = false;
+    }
+
+    promoteNextVersion() {
+
+        const dialogRef = this.dialog.open(CreateNextVersionComponent, {
+            data: {
+                version: this.selectedVersion,
+            }
+        });
+
+        if (this.subCreateNextVersion != null) {
+            this.unsubscribe(this.subCreateNextVersion);
+        }
+
+        this.subCreateNextVersion = dialogRef.afterClosed().subscribe(nextVersion => {
+
+            if (nextVersion) {
+
+                const nextApplication = JSON.parse(JSON.stringify(this.application));
+                nextApplication.version = nextVersion;
+                nextApplication.id = null;
+
+                this.apiService.postApplication(nextApplication).subscribe(val => {
+                    this.updateVersion(null);
+                });
+
+            }
+        });
+    }
+
+    deleteCurrentVersion() {
+        this.apiService.deleteApplication(this.application.shortName, this.selectedVersion).subscribe(val => {
+
+            if (this.allVersions.length > 0) {
+                this.updateVersion(null);
+            } else {
+                this.router.navigate(['../app-list']);
+            }
+        });
     }
 }
