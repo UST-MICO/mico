@@ -4,9 +4,18 @@
             <mat-card-title>{{config?.title}}</mat-card-title>
         </mat-card-header>
         <mat-card-content>
-            <div *ngFor="let element of dataValue">
-                <mico-data [modelUrl]="config != null ? config.items['$ref'] : ''" [startData]="element"></mico-data>
-            </div>
+            <mat-accordion>
+                <div *ngFor="let element of dataValue; let index=index">
+                    <mat-expansion-panel>
+                        <mat-expansion-panel-header>
+                            Element {{index+1}}
+                        </mat-expansion-panel-header>
+
+                        <mico-data [modelUrl]="config != null ? config.items['$ref'] : ''" [startData]="element">
+                        </mico-data>
+                    </mat-expansion-panel>
+                </div>
+            </mat-accordion>
         </mat-card-content>
     </mat-card>
 </div>
