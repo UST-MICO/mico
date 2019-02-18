@@ -77,6 +77,17 @@ public class ApplicationController {
                 linkTo(methodOn(ApplicationController.class).getAllApplications()).withSelfRel()));
     }
 
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
+    public ResponseEntity<Resources<Resource<MicoApplication>>> getApplicationsByShortName(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
+        List<MicoApplication> micoApplicationList = applicationRepository.findByShortName(shortName);
+
+        List<Resource<MicoApplication>> applicationResourceList = getApplicationResourceList(micoApplicationList);
+
+        return ResponseEntity.ok(
+            new Resources<>(applicationResourceList,
+                linkTo(methodOn(ApplicationController.class).getApplicationsByShortName(shortName)).withSelfRel()));
+    }
+
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     public ResponseEntity<Resource<MicoApplication>> getApplicationByShortNameAndVersion(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                          @PathVariable(PATH_VARIABLE_VERSION) String version) {
@@ -159,6 +170,53 @@ public class ApplicationController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Returns a list of services associated with the mico application specified by the parameters.
+     *
+     * @param shortName the name of the application
+     * @param version   the version of the application
+     * @return the list of mico services that are associated with the application
+     */
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES)
+    public ResponseEntity<Resources<Resource<MicoService>>> getMicoServicesFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                                           @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
+        if (!applicationOptional.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                "Application '" + shortName + "' '" + version + "' was not found!");
+        }
+        MicoApplication micoApplication = applicationOptional.get();
+        List<MicoService> micoServices = micoApplication.getServices();
+        List<Resource<MicoService>> micoServicesWithLinks = ServiceController.getServiceResourcesList(micoServices);
+        return ResponseEntity.ok(
+            new Resources<>(micoServicesWithLinks,
+                linkTo(methodOn(ApplicationController.class).getMicoServicesFromApplication(shortName, version)).withSelfRel()));
+    }
+
+    @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES)
+    public ResponseEntity<Void> addServiceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
+                                                        @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
+                                                        @RequestBody MicoService service) {
+        Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(applicationShortName, applicationVersion);
+        if (!applicationOptional.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                "Application '" + applicationShortName + "' '" + applicationVersion + "' does not exist!");
+        }
+        validateProvidedService(service);
+
+        MicoApplication application = applicationOptional.get();
+        if (!application.getServices().contains(service)) {
+            log.info("Add service '" + service.getShortName() + "' '" + service.getVersion() +
+                "' to application '" + applicationShortName + "' '" + applicationVersion + "'.");
+            application.getServices().add(service);
+            applicationRepository.save(application);
+        } else {
+            log.info("Application '" + applicationShortName + "' '" + applicationVersion +
+                "' already contains service '" + service.getShortName() + "' '" + service.getVersion() + "'.");
+        }
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")
     public ResponseEntity<Resource<MicoApplicationDeploymentInformationDTO>> getStatusOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version) {
@@ -237,64 +295,6 @@ public class ApplicationController {
             }
         }
         return ResponseEntity.ok(new Resource<>(applicationDeploymentInformation));
-    }
-
-    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
-    public ResponseEntity<Resources<Resource<MicoApplication>>> getApplicationsByShortName(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
-        List<MicoApplication> micoApplicationList = applicationRepository.findByShortName(shortName);
-
-        List<Resource<MicoApplication>> applicationResourceList = getApplicationResourceList(micoApplicationList);
-
-        return ResponseEntity.ok(
-            new Resources<>(applicationResourceList,
-                linkTo(methodOn(ApplicationController.class).getApplicationsByShortName(shortName)).withSelfRel()));
-    }
-
-    @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES)
-    public ResponseEntity<Void> addServiceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
-                                                        @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
-                                                        @RequestBody MicoService service) {
-        Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(applicationShortName, applicationVersion);
-        if (!applicationOptional.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "Application '" + applicationShortName + "' '" + applicationVersion + "' does not exist!");
-        }
-        validateProvidedService(service);
-
-        MicoApplication application = applicationOptional.get();
-        if (!application.getServices().contains(service)) {
-            log.info("Add service '" + service.getShortName() + "' '" + service.getVersion() +
-                "' to application '" + applicationShortName + "' '" + applicationVersion + "'.");
-            application.getServices().add(service);
-            applicationRepository.save(application);
-        } else {
-            log.info("Application '" + applicationShortName + "' '" + applicationVersion +
-                "' already contains service '" + service.getShortName() + "' '" + service.getVersion() + "'.");
-        }
-        return ResponseEntity.noContent().build();
-    }
-
-    /**
-     * Returns a list of services associated with the mico application specified by the parameters.
-     *
-     * @param shortName the name of the application
-     * @param version   the version of the application
-     * @return the list of mico services that are associated with the application
-     */
-    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES)
-    public ResponseEntity<Resources<Resource<MicoService>>> getMicoServicesFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                                           @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
-        if (!applicationOptional.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "Application '" + shortName + "' '" + version + "' was not found!");
-        }
-        MicoApplication micoApplication = applicationOptional.get();
-        List<MicoService> micoServices = micoApplication.getServices();
-        List<Resource<MicoService>> micoServicesWithLinks = ServiceController.getServiceResourcesList(micoServices);
-        return ResponseEntity.ok(
-            new Resources<>(micoServicesWithLinks,
-                linkTo(methodOn(ApplicationController.class).getMicoServicesFromApplication(shortName, version)).withSelfRel()));
     }
 
     private List<Resource<MicoApplication>> getApplicationResourceList(List<MicoApplication> applications) {
