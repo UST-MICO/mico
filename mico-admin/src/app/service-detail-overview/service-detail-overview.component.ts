@@ -69,7 +69,7 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
     @Input() version: string;
 
     // TODO add serviceInterfaces to be ignored
-    serviceOverviewFilter = ['predecessor'];
+    serviceOverviewFilter = ['predecessor', 'serviceInterfaces', 'dependencies'];
 
     ngOnChanges() {
 
