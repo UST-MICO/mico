@@ -89,7 +89,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
 
     ngOnInit() {
         if (this.graph == null) {
-            console.warn("Graph not in dom!");
+            console.warn('Graph not in dom!');
         }
         const graph: GraphEditor = this.graph.nativeElement;
         graph.setNodeClass = (className, node) => {
@@ -126,12 +126,15 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
             }
             if (this.shortName != null && this.version != null) {
                 this.appSubscription = this.api.getApplication(this.shortName, this.version).subscribe(application => {
-                    this.updateApplicationData(application);
+                    this.updateGraphFromApplicationData(application);
                 });
             }
         }
     }
 
+    /**
+     * Reset the graph (all edges and nodes) and clears cache/layout data.
+     */
     resetGraph() {
         this.nodeMap = new Map<string, Node>();
         this.edgeMap = new Map<string, Edge>();
@@ -145,11 +148,18 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
         graph.zoomToBoundingBox(false);
     }
 
-    updateApplicationData(application) {
+    /**
+     * Update the existing graph to match the new Application data.
+     *
+     * @param application mico application
+     */
+    updateGraphFromApplicationData(application) {
+        // keep local reference in case of resetGraph changes global variables.
         const nodeMap = this.nodeMap;
         const edgeMap = this.edgeMap;
         const graph: GraphEditor = this.graph.nativeElement;
 
+        // mark all nodes (except root) as possible to delete
         const toDelete: Set<string> = new Set<string>();
         nodeMap.forEach(node => {
             if (node.id !== 'APPLICATION') {
@@ -158,6 +168,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
         });
 
         if (!nodeMap.has('APPLICATION')) {
+            // create new application root node if node does not exist
             const node: Node = {
                 id: 'APPLICATION',
                 x: 0,
@@ -173,10 +184,13 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
             nodeMap.set('APPLICATION', node);
             graph.addNode(node, false);
         }
+
+        // map services to graph nodes
         application.services.forEach((service) => {
             const serviceId = `${service.shortName}-${service.version}`;
-            toDelete.delete(serviceId);
+            toDelete.delete(serviceId); // remove toDelete mark from node
             if (nodeMap.has(serviceId)) {
+                // update existing node
                 const node = nodeMap.get(serviceId);
                 node.title = service.name != null ? service.name : service.shortName;
                 node.version = service.version;
@@ -185,6 +199,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
                 node.description = service.description;
                 node.service = service;
             } else {
+                // create new node
                 const node: Node = {
                     id: serviceId,
                     x: this.lastX,
@@ -196,9 +211,11 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
                     name: service.name,
                     description: service.description,
                 };
+                // super basic layout algorithm:
                 this.lastX += 110;
                 nodeMap.set(serviceId, node);
                 graph.addNode(node, false);
+                // add edge from root to service node
                 const edge: Edge = {
                     source: 'APPLICATION',
                     target: serviceId,
@@ -218,6 +235,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
         });
 
         toDelete.forEach(nodeId => {
+            // delete all nodes still marked as toDelete
             const node = nodeMap.get(nodeId);
             graph.removeNode(node);
             nodeMap.delete(nodeId);
