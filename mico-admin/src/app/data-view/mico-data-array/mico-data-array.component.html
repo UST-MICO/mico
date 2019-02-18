@@ -11,8 +11,10 @@
                             Element {{index+1}}
                         </mat-expansion-panel-header>
 
-                        <mico-data [modelUrl]="config != null ? config.items['$ref'] : ''" [startData]="element">
-                        </mico-data>
+                        <ng-template matExpansionPanelContent>
+                            <mico-data [modelUrl]="config != null ? config.items['$ref'] : ''" [startData]="element">
+                            </mico-data>
+                        </ng-template>
                     </mat-expansion-panel>
                 </div>
             </mat-accordion>
