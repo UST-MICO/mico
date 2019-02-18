@@ -128,17 +128,19 @@ public class ApplicationController {
         if (!application.getShortName().equals(shortName) || !application.getVersion().equals(version)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Application shortName or version does not match request body.");
         }
-
         Optional<MicoApplication> existingApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
         if (!existingApplicationOptional.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' was not found!");
         }
-        for (MicoService providedService : application.getServices()) {
-            validateProvidedService(providedService);
+        MicoApplication existingApplication = existingApplicationOptional.get();
+
+        // Including services must not be updated through this API. There is an own API for that purpose.
+        if (application.getServices().size() > 0) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Update of an application is only allowed without services.");
         }
 
-        MicoApplication existingApplication = existingApplicationOptional.get();
         application.setId(existingApplication.getId());
+        application.setServices(existingApplication.getServices());
         MicoApplication updatedApplication = applicationRepository.save(application);
 
         return ResponseEntity.ok(new Resource<>(updatedApplication, linkTo(methodOn(ApplicationController.class).updateApplication(shortName, version, application)).withSelfRel()));
