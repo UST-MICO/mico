@@ -51,6 +51,10 @@ export class MicoDataContainerComponent implements OnChanges {
     propertyType(): string {
         if (this.property != null && this.property.type != null) {
             return this.property.type;
-        } else { return 'string'; }
+        } else if (this.property != null && this.property.$ref != null) {
+            return 'object';
+        } else {
+            return 'string';
+        }
     }
 }

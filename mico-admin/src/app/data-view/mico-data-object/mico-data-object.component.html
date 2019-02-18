@@ -1,0 +1,10 @@
+<div class="ma1">
+    <mat-card>
+        <mat-card-header>
+            <mat-card-title>{{config?.title}}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+            <mico-data [modelUrl]="config['$ref']" [startData]="dataValue"></mico-data>
+        </mat-card-content>
+    </mat-card>
+</div>
