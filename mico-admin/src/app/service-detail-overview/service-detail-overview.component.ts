@@ -68,6 +68,8 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
     @Input() shortName: string;
     @Input() version: string;
 
+    serviceOverviewFilter = ['predecessor', 'serviceInterfaces'];
+
     ngOnChanges() {
 
         if (this.shortName != null && this.version != null) {
