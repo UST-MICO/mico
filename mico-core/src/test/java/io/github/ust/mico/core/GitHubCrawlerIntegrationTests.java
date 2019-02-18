@@ -12,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.io.IOException;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -29,13 +30,13 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
     private MicoServiceRepository serviceRepository;
 
     @Test
-    public void testGitHubCrawlerLatestReleaseByApiUri() {
+    public void testGitHubCrawlerLatestReleaseByApiUri() throws IOException {
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
         MicoService service = crawler.crawlGitHubRepoLatestRelease(REPO_URI_API);
         serviceRepository.save(service);
 
-        MicoService readService = serviceRepository.findByShortNameAndVersion(service.getShortName(), service.getVersion().toString()).get();
+        MicoService readService = serviceRepository.findByShortNameAndVersion(service.getShortName(), service.getVersion()).get();
         assertEquals(service.getShortName(), readService.getShortName());
         assertEquals(service.getDescription(), readService.getDescription());
         assertEquals(service.getId(), readService.getId());
@@ -46,13 +47,13 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
     }
 
     @Test
-    public void testGitHubCrawlerLatestReleaseByHtmlUri() {
+    public void testGitHubCrawlerLatestReleaseByHtmlUri() throws IOException {
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
         MicoService service = crawler.crawlGitHubRepoLatestRelease(REPO_URI_HTML);
         serviceRepository.save(service);
 
-        MicoService readService = serviceRepository.findByShortNameAndVersion(service.getShortName(), service.getVersion().toString()).get();
+        MicoService readService = serviceRepository.findByShortNameAndVersion(service.getShortName(), service.getVersion()).get();
         assertEquals(service.getShortName(), readService.getShortName());
         assertEquals(service.getDescription(), readService.getDescription());
         assertEquals(service.getId(), readService.getId());
@@ -63,13 +64,13 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
     }
 
     @Test
-    public void testGitHubCrawlerSpecificRelease() {
+    public void testGitHubCrawlerSpecificRelease() throws IOException {
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
         MicoService service = crawler.crawlGitHubRepoSpecificRelease(REPO_URI_API, RELEASE);
         serviceRepository.save(service);
 
-        MicoService readService = serviceRepository.findByShortNameAndVersion(service.getShortName(), service.getVersion().toString()).get();
+        MicoService readService = serviceRepository.findByShortNameAndVersion(service.getShortName(), service.getVersion()).get();
         assertEquals(service.getShortName(), readService.getShortName());
         assertEquals(service.getDescription(), readService.getDescription());
         assertEquals(service.getId(), readService.getId());
@@ -80,13 +81,13 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
     }
 
     @Test
-    public void testGitHubCrawlerAllReleases() {
+    public void testGitHubCrawlerAllReleases() throws IOException {
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
         List<MicoService> serviceList = crawler.crawlGitHubRepoAllReleases(REPO_URI_API);
         serviceRepository.saveAll(serviceList);
 
-        MicoService readService = serviceRepository.findByShortNameAndVersion(serviceList.get(0).getShortName(), serviceList.get(0).getVersion().toString()).get();
+        MicoService readService = serviceRepository.findByShortNameAndVersion(serviceList.get(0).getShortName(), serviceList.get(0).getVersion()).get();
         assertEquals(serviceList.get(0).getShortName(), readService.getShortName());
         assertEquals(serviceList.get(0).getDescription(), readService.getDescription());
         assertEquals(serviceList.get(0).getId(), readService.getId());

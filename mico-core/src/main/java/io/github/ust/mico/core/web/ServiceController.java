@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -269,9 +270,14 @@ public class ServiceController {
         log.debug("Start importing MicoService from URL '{}'", url);
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
-        MicoService newService = crawler.crawlGitHubRepoLatestRelease(url);
-
-        return createService(newService);
+        try {
+            MicoService newService = crawler.crawlGitHubRepoLatestRelease(url);
+            return createService(newService);
+        } catch (IOException e) {
+            log.error(e.getStackTrace().toString());
+            log.error("Getting exception '{}'", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
     }
 
     public List<MicoService> getDependers(MicoService serviceToLookFor) {
