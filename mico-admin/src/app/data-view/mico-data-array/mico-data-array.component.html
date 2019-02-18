@@ -1,3 +1,12 @@
-<p>
-  mico-data-array works!
-</p>
+<div class="ma1">
+    <mat-card>
+        <mat-card-header>
+            <mat-card-title>{{config?.title}}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+            <div *ngFor="let element of dataValue">
+                <mico-data [modelUrl]="config != null ? config.items['$ref'] : ''" [startData]="element"></mico-data>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</div>
