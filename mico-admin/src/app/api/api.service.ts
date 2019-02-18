@@ -253,6 +253,7 @@ export class ApiService {
 
         return this.rest.post<ApiObject>(resource, serviceData).pipe(map(val => {
 
+            this.getApplicationVersions(applicationShortName);
             this.getApplication(applicationShortName, applicationVersion);
 
             return true;
@@ -266,6 +267,7 @@ export class ApiService {
             .pipe(map(val => {
                 console.log('DELETE includes', val);
 
+                this.getApplicationVersions(applicationShortName);
                 this.getApplication(applicationShortName, applicationVersion);
 
                 return true;
