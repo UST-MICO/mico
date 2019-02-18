@@ -1,3 +1,22 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package io.github.ust.mico.core.web;
 
 import io.fabric8.kubernetes.api.model.Pod;
@@ -31,6 +50,7 @@ import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
@@ -40,6 +60,8 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 @RestController
 @RequestMapping(value = "/" + ApplicationController.PATH_APPLICATIONS, produces = MediaTypes.HAL_JSON_VALUE)
 public class ApplicationController {
+
+    private static final String SERVICE_SHORT_NAME = "serviceShortName";
 
     public static final String PATH_SERVICES = "services";
     public static final String PATH_APPLICATIONS = "applications";
@@ -180,8 +202,8 @@ public class ApplicationController {
      * @return the list of mico services that are associated with the application
      */
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES)
-    public ResponseEntity<Resources<Resource<MicoService>>> getMicoServicesFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                                           @PathVariable(PATH_VARIABLE_VERSION) String version) {
+    public ResponseEntity<Resources<Resource<MicoService>>> getServicesFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                                       @PathVariable(PATH_VARIABLE_VERSION) String version) {
         Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
         if (!applicationOptional.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
@@ -192,7 +214,7 @@ public class ApplicationController {
         List<Resource<MicoService>> micoServicesWithLinks = ServiceController.getServiceResourcesList(micoServices);
         return ResponseEntity.ok(
             new Resources<>(micoServicesWithLinks,
-                linkTo(methodOn(ApplicationController.class).getMicoServicesFromApplication(shortName, version)).withSelfRel()));
+                linkTo(methodOn(ApplicationController.class).getServicesFromApplication(shortName, version)).withSelfRel()));
     }
 
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES)
@@ -217,6 +239,30 @@ public class ApplicationController {
                 "' already contains service '" + service.getShortName() + "' '" + service.getVersion() + "'.");
         }
         return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/services/{" + SERVICE_SHORT_NAME + "}")
+    public ResponseEntity deleteServiceFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                       @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                       @PathVariable(SERVICE_SHORT_NAME) String serviceShortName) {
+        log.debug("Delete Mico service '{}' from Mico application '{}' in version '{}'", SERVICE_SHORT_NAME, shortName, version);
+
+        Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
+        if (micoApplicationOptional.isPresent()) {
+            log.debug("Application is present");
+            MicoApplication micoApplication = micoApplicationOptional.get();
+            List<MicoService> services = micoApplication.getServices();
+            log.debug("Service list has size: {}", services.size());
+            Predicate<MicoService> matchServiceShortName = service -> service.getShortName().equals(serviceShortName);
+            services.removeIf(matchServiceShortName);
+            applicationRepository.save(micoApplication);
+
+            // TODO Update Kubernetes deployment
+
+            return ResponseEntity.noContent().build();
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "There is no such application");
+        }
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")
@@ -297,6 +343,10 @@ public class ApplicationController {
             }
         }
         return ResponseEntity.ok(new Resource<>(applicationDeploymentInformation));
+    }
+
+    private boolean serviceExists(MicoApplication micoApplication, String serviceShortName) {
+        return micoApplication.getServices().stream().anyMatch(existingService -> existingService.getShortName().equals(serviceShortName));
     }
 
     private List<Resource<MicoApplication>> getApplicationResourceList(List<MicoApplication> applications) {
