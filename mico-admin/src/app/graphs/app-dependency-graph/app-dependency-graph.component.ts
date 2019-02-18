@@ -150,6 +150,13 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
         const edgeMap = this.edgeMap;
         const graph: GraphEditor = this.graph.nativeElement;
 
+        const toDelete: Set<string> = new Set<string>();
+        nodeMap.forEach(node => {
+            if (node.id !== 'APPLICATION') {
+                toDelete.add(node.id as string);
+            }
+        });
+
         if (!nodeMap.has('APPLICATION')) {
             const node: Node = {
                 id: 'APPLICATION',
@@ -168,6 +175,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
         }
         application.services.forEach((service) => {
             const serviceId = `${service.shortName}-${service.version}`;
+            toDelete.delete(serviceId);
             if (nodeMap.has(serviceId)) {
                 const node = nodeMap.get(serviceId);
                 node.title = service.name != null ? service.name : service.shortName;
@@ -207,6 +215,12 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
                 edgeMap.set(`sAPPLICATION-t${serviceId}`, edge);
                 graph.addEdge(edge, false);
             }
+        });
+
+        toDelete.forEach(nodeId => {
+            const node = nodeMap.get(nodeId);
+            graph.removeNode(node);
+            nodeMap.delete(nodeId);
         });
 
         graph.completeRender();
