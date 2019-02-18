@@ -18,35 +18,49 @@
  */
 
 import { Component, OnInit, ViewChild, Input, OnChanges, SimpleChanges } from '@angular/core';
+import GraphEditor from '@ustutt/grapheditor-webcomponent/lib/grapheditor';
 import { Edge } from '@ustutt/grapheditor-webcomponent/lib/edge';
 import { Node } from '@ustutt/grapheditor-webcomponent/lib/node';
 import { ApiObject } from 'src/app/api/apiobject';
+import { ApiService } from 'src/app/api/api.service';
+import { Subscription } from 'rxjs';
 
 const STYLE_TEMPLATE = {
     id: 'style',
     innerHTML: `
         svg {position: absolute;}
         .ghost {opacity: 0.5;}
-        .node {fill: white}
+        .node {fill: #cccccc}
+        .node.application {fill: #005c99}
         .link-handle {display: none; fill: black; opacity: 0.1; transition:r 0.25s ease-out;}
-        .edge-group .link-handle {display: initial}
+        .edge-group:not(.includes) .link-handle {display: initial}
         .link-handle:hover {opacity: 0.7; r: 5;}
         .text {fill: black; font-size: 6pt; text-overflow: ellipsis; word-break: break-word}
-        .text.title {font-size: initial; word-break: break-all;}
-        .node.hovered {fill: red;}
+        .text.title {font-size: 8pt; text-decoration: underline; text-overflow: ellipsis; word-break: break-all;}
+        .text.version {word-break: break-all;}
+        .node:not(.application):not(.selected).hovered {fill: #efefef;}
+        .node.application.hovered {fill: #0099ff;}
         .hovered .link-handle {display: initial;}
-        .node.selected {fill: green; }
+        .node.selected {fill: #ccff99; }
+        .includes .edge {stroke: #0099ff; stroke-width: 2}
+        .includes .marker {fill: #0099ff}
         .highlight-outgoing .edge {stroke: red;}
         .highlight-incoming .edge {stroke: green;}
         .highlight-outgoing .marker {fill: red;}
         .highlight-incoming .marker {fill: green;}`
 };
 
-const NODE_TEMPLATE = {
+const APPLICATION_NODE_TEMPLATE = {
+    id: 'application',
+    innerHTML: `<circle r="20" cx="0" cy="0"></circle>`
+};
+
+const SERVICE_NODE_TEMPLATE = {
     id: 'default',
     innerHTML: `<rect width="100" height="60" x="-50" y="-30"></rect>
-        <text class="title text" data-content="title" data-click="title" x="-40" y="-10"></text>
-        <text class="text" data-content="version" x="-40" y="10"></text>`
+        <text class="text title" data-content="title" data-click="title" width="90" x="-45" y="-16"></text>
+        <text class="text description" data-content="description" data-click="description" width="90" height="30" x="-45" y="-5"></text>
+        <text class="text version" data-content="version" data-click="version" width="40" x="-45" y="25"></text>`
 };
 
 const ARROW_TEMPLATE = {
@@ -61,79 +75,139 @@ const ARROW_TEMPLATE = {
 })
 export class AppDependencyGraphComponent implements OnInit, OnChanges {
     @ViewChild('graph') graph;
-    @Input() application: ApiObject;
+    @Input() shortName: string;
+    @Input() version: string;
+
+    appSubscription: Subscription;
+
+    private lastX = 0;
 
     private nodeMap: Map<string, Node>;
-    private nodes: Node[] = [];
+    private edgeMap: Map<string, Edge>;
 
-    constructor() {}
+    constructor(private api: ApiService) {}
 
     ngOnInit() {
-        if (this.graph != null) {
-            this.graph.nativeElement.initialize();
-            this.graph.nativeElement.updateTemplates([NODE_TEMPLATE], [STYLE_TEMPLATE], [ARROW_TEMPLATE]);
-            this.graph.onCreateDraggedEdge = (edge) => {
-                edge.markers = [{template: 'arrow', positionOnLine: 1, scale: 0.5, rotate: {relativeAngle: 0}}, ];
-                return edge;
-            };
+        if (this.graph == null) {
+            console.warn("Graph not in dom!");
         }
+        const graph: GraphEditor = this.graph.nativeElement;
+        graph.setNodeClass = (className, node) => {
+            if (className === node.type) {
+                return true;
+            }
+            return false;
+        };
+        graph.setEdgeClass = (className, edge) => {
+            if (className === edge.type) {
+                return true;
+            }
+            return false;
+        };
+        graph.addEventListener('nodeclick', (event) => {
+            if ((event as any).detail.node.id === 'APPLICATION') {
+                event.preventDefault();
+            }
+        });
+        graph.updateTemplates([SERVICE_NODE_TEMPLATE, APPLICATION_NODE_TEMPLATE], [STYLE_TEMPLATE], [ARROW_TEMPLATE]);
+        graph.onCreateDraggedEdge = (edge) => {
+            edge.markers = [{template: 'arrow', positionOnLine: 1, scale: 0.5, rotate: {relativeAngle: 0}}, ];
+            return edge;
+        };
+        this.resetGraph();
 
-        this.updateGraph();
     }
 
     ngOnChanges(changes: SimpleChanges) {
-        if (changes.application != null) {
-            const prev = changes.application.previousValue;
-            const now = changes.application.currentValue;
-            if (now == null) {
-                return;
+        if (changes.shortName != null || changes.version != null) {
+            this.resetGraph();
+            if (this.appSubscription != null) {
+                this.appSubscription.unsubscribe();
             }
-            if (prev == null || prev.shortName !== now.shortName || prev.version != now.version) {
-                const nodeMap = new Map<string, Node>();
-                const nodes = [];
-                if (now.services != null) {
-                    now.services.forEach((service) => {
-                        const node: Node = {
-                            id: `${service.shortName}-${service.version}`,
-                            x: 0,
-                            y: 0,
-                            title: service.name != null ? service.name : service.shortName,
-                            version: service.version,
-                            shortName: service.shortName,
-                            name: service.name,
-                            description: service.description,
-                        };
-                        nodeMap.set(node.id as string, node);
-                        nodes.push(node);
-                    });
-                }
-                this.nodeMap = nodeMap;
-                this.nodes = nodes;
+            if (this.shortName != null && this.version != null) {
+                this.appSubscription = this.api.getApplication(this.shortName, this.version).subscribe(application => {
+                    this.updateApplicationData(application);
+                });
             }
-            this.updateGraph();
         }
     }
 
-    updateGraph() {
-        if (this.graph == null) {
-            return;
+    resetGraph() {
+        this.nodeMap = new Map<string, Node>();
+        this.edgeMap = new Map<string, Edge>();
+        this.lastX = 0;
+        const graph: GraphEditor = this.graph.nativeElement;
+
+        graph.setNodes([]);
+        graph.setEdges([]);
+
+        graph.completeRender();
+        graph.zoomToBoundingBox(false);
+    }
+
+    updateApplicationData(application) {
+        const nodeMap = this.nodeMap;
+        const edgeMap = this.edgeMap;
+        const graph: GraphEditor = this.graph.nativeElement;
+
+        if (!nodeMap.has('APPLICATION')) {
+            const node: Node = {
+                id: 'APPLICATION',
+                x: 0,
+                y: 0,
+                type: 'application',
+                title: application.name != null ? application.name : application.shortName,
+                version: application.version,
+                shortName: application.shortName,
+                name: application.name,
+                description: application.description,
+                application: application,
+            };
+            nodeMap.set('APPLICATION', node);
+            graph.addNode(node, false);
         }
-        const graph = this.graph.nativeElement;
-
-        graph.setNodes(this.nodes);
-
-        const graphEdges: Edge[] = [];
-
-        if (this.application != null) {
-            [].forEach(edge => {
-                graphEdges.push({
-                    source: edge.source,
-                    target: edge.target
-                });
-            });
-        }
-
-        graph.setEdges(graphEdges);
+        application.services.forEach((service) => {
+            const serviceId = `${service.shortName}-${service.version}`;
+            if (nodeMap.has(serviceId)) {
+                const node = nodeMap.get(serviceId);
+                node.title = service.name != null ? service.name : service.shortName;
+                node.version = service.version;
+                node.shortName = service.shortName;
+                node.name = service.name;
+                node.description = service.description;
+                node.service = service;
+            } else {
+                const node: Node = {
+                    id: serviceId,
+                    x: this.lastX,
+                    y: 90,
+                    type: 'service',
+                    title: service.name != null ? service.name : service.shortName,
+                    version: service.version,
+                    shortName: service.shortName,
+                    name: service.name,
+                    description: service.description,
+                };
+                this.lastX += 110;
+                nodeMap.set(serviceId, node);
+                graph.addNode(node, false);
+                const edge: Edge = {
+                    source: 'APPLICATION',
+                    target: serviceId,
+                    type: 'includes',
+                    markers: [{
+                        template: 'arrow',
+                        positionOnLine: 1,
+                        scale: 1,
+                        rotate: {
+                            relativeAngle: 0,
+                        },
+                    }],
+                };
+                edgeMap.set(`sAPPLICATION-t${serviceId}`, edge);
+                graph.addEdge(edge, false);
+            }
+        });
 
         graph.completeRender();
         graph.zoomToBoundingBox(false);
