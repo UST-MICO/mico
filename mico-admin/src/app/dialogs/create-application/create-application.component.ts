@@ -16,6 +16,7 @@ export class CreateApplicationComponent implements OnInit, OnDestroy {
     subModelDefinitions: Subscription;
 
     applicationData;
+    services = [];
 
     filterList: string[];
 
@@ -40,6 +41,31 @@ export class CreateApplicationComponent implements OnInit, OnDestroy {
     }
 
     save() {
-        return { applicationProperties: this.applicationData, };
+        return { applicationProperties: this.applicationData, services: this.services };
+    }
+
+    pickServices() {
+        const dialogRef = this.dialog.open(ServicePickerComponent, {
+            data: {
+                filter: '',
+                choice: 'multi',
+                existingDependencies: this.services,
+                serviceId: '',
+            }
+        });
+        this.subDependeesDialog = dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+                result.forEach(element => {
+                    this.services.push(element);
+                });
+            }
+        });
+    }
+
+    deleteDependency(element) {
+        const index = this.services.indexOf(element);
+        if (index > -1) {
+            this.services.splice(index, 1);
+        }
     }
 }
