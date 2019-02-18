@@ -126,7 +126,7 @@ public class ApplicationController {
         Optional<MicoApplication> applicationOptional = applicationRepository.
             findByShortNameAndVersion(newApplication.getShortName(), newApplication.getVersion());
         if (applicationOptional.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "Application '" + newApplication.getShortName() + "' '" + newApplication.getVersion() + "' already exists.");
         }
         for (MicoService providedService : newApplication.getServices()) {
@@ -148,7 +148,7 @@ public class ApplicationController {
                                                                        @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                        @RequestBody MicoApplication application) {
         if (!application.getShortName().equals(shortName) || !application.getVersion().equals(version)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Application shortName or version does not match request body.");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Application shortName or version does not match request body.");
         }
         Optional<MicoApplication> existingApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
         if (!existingApplicationOptional.isPresent()) {

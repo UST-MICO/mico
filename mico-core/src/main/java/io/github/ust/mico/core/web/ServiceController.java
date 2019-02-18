@@ -19,10 +19,10 @@
 
 package io.github.ust.mico.core.web;
 
-import io.github.ust.mico.core.service.GitHubCrawler;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.GitHubCrawler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -83,8 +83,8 @@ public class ServiceController {
                                                                @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                @RequestBody MicoService service) {
         if (!service.getShortName().equals(shortName) || !service.getVersion().equals(version)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                "Service shortName or version does not match request body.");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                "The shortName and/or version of the given service object inside the request body do not match the shortName and/or version inside the URI.");
         } else {
             Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
             if (!serviceOpt.isPresent()) {
@@ -104,13 +104,13 @@ public class ServiceController {
                                               @PathVariable(PATH_VARIABLE_VERSION) String version) {
         MicoService service = getServiceFromDatabase(shortName, version);
 
-        if (getDependers(service).isEmpty()) {
-            serviceRepository.deleteServiceByShortNameAndVersion(shortName, version);
-            return ResponseEntity.noContent().build();
-        } else {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+        if (!getDependers(service).isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
                 "Service '" + service.getShortName() + "' '" + service.getVersion() + "' has dependers, therefore it can't be deleted.");
         }
+
+        serviceRepository.deleteServiceByShortNameAndVersion(shortName, version);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
@@ -133,20 +133,18 @@ public class ServiceController {
 
     @PostMapping
     public ResponseEntity<Resource<MicoService>> createService(@RequestBody MicoService newService) {
-        //Check if shortName and version combination already exists
-        Optional<MicoService> serviceOptional = serviceRepository.findByShortNameAndVersion(newService.getShortName(), newService.getVersion());
-        MicoService serviceToCheck = serviceOptional.orElse(null);
-
-        if (serviceToCheck != null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                "Service '" + serviceToCheck.getShortName() + "' '" + serviceToCheck.getVersion() + "' already exists.");
-        } else {
-            MicoService savedService = serviceRepository.save(newService);
-
-            return ResponseEntity
-                .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
-                .body(new Resource<>(newService, getServiceLinks(newService)));
+        Optional<MicoService> serviceOptional = serviceRepository.
+            findByShortNameAndVersion(newService.getShortName(), newService.getVersion());
+        if (serviceOptional.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "Service '" + newService.getShortName() + "' '" + newService.getVersion() + "' already exists.");
         }
+
+        MicoService savedService = serviceRepository.save(newService);
+
+        return ResponseEntity
+            .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+            .body(new Resource<>(newService, getServiceLinks(newService)));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
@@ -155,7 +153,7 @@ public class ServiceController {
         MicoService service = getServiceFromDatabase(shortName, version);
         List<MicoServiceDependency> dependees = service.getDependencies();
         if (dependees == null) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Service dependees shouldn't be null");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Service dependees should not be null");
         }
 
         LinkedList<MicoService> services = getDependentServices(dependees);

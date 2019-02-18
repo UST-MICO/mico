@@ -23,7 +23,6 @@ import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
 import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
 import io.fabric8.kubernetes.api.model.Service;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
-import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
@@ -179,14 +178,15 @@ public class ServiceInterfaceController {
         Optional<MicoService> serviceOptional = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (serviceOptional.isPresent()) {
             MicoService service = serviceOptional.get();
+            String serviceInterfaceName = serviceInterface.getServiceInterfaceName();
             if (!serviceInterfaceExists(serviceInterface, service)) {
                 service.getServiceInterfaces().add(serviceInterface);
                 serviceRepository.save(service);
                 return ResponseEntity.created(
-                    linkTo(methodOn(ServiceInterfaceController.class).getInterfaceByName(shortName, version, serviceInterface.getServiceInterfaceName())).toUri()).body(new Resource<>(serviceInterface, getServiceInterfaceLinks(serviceInterface, shortName, version)));
-            }
-            {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "An interface with this name is already associated with this service.");
+                    linkTo(methodOn(ServiceInterfaceController.class).getInterfaceByName(shortName, version, serviceInterfaceName)).toUri()).body(new Resource<>(serviceInterface, getServiceInterfaceLinks(serviceInterface, shortName, version)));
+            } else {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "An interface with the name '" + serviceInterfaceName +
+                    "' is already associated with the service '" + shortName + "' '" + version + "'.");
             }
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service '" + shortName + "' '" + version + "' was not found!");
@@ -209,7 +209,7 @@ public class ServiceInterfaceController {
                                                                                      @RequestBody MicoServiceInterface modifiedMicoServiceInterface) {
 
         if (!modifiedMicoServiceInterface.getServiceInterfaceName().equals(serviceInterfaceName)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The variable '" + PATH_VARIABLE_SERVICE_INTERFACE_NAME + "' must be equal to the name specified in the request body");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "The variable '" + PATH_VARIABLE_SERVICE_INTERFACE_NAME + "' must be equal to the name specified in the request body");
         }
 
         Optional<MicoService> serviceOptional = serviceRepository.findByShortNameAndVersion(shortName, version);
