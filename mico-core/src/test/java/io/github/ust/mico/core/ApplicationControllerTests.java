@@ -36,9 +36,10 @@ import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.web.ApplicationController;
+import org.hamcrest.collection.IsEmptyCollection;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.util.CollectionUtils;
-import io.github.ust.mico.core.web.ApplicationController;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -65,16 +66,13 @@ import static io.github.ust.mico.core.JsonPathBuilder.*;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
 import static io.github.ust.mico.core.TestConstants.VERSION;
 import static io.github.ust.mico.core.TestConstants.*;
-import static io.github.ust.mico.core.web.ApplicationController.PATH_APPLICATIONS;
-import static io.github.ust.mico.core.web.ApplicationController.PATH_SERVICES;
-import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -329,48 +327,22 @@ public class ApplicationControllerTests {
     }
 
     @Test
-    public void deleteApplicationCorsCheckForbidden() throws Exception {
-        mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION).header("Origin", "http://notAllowedOrigin.com"))
-            .andDo(print())
-            .andExpect(status().isForbidden())
-            .andExpect(content().string(is("Invalid CORS request")));
-    }
+    public void deleteServiceFromApplication() throws Exception {
+        MicoApplication micoApplication = new MicoApplication()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION);
+        MicoService micoService = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
+        micoApplication.getServices().add(micoService);
+        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
+        ArgumentCaptor<MicoApplication> micoApplicationCaptor = ArgumentCaptor.forClass(MicoApplication.class);
 
-    @Test
-    public void deleteApplicationCorsCheckAllowed() throws Exception {
-        mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION).header("Origin", corsConfig.getAllowedOrigins().get(0)))
+        mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/services/" + SERVICE_SHORT_NAME))
             .andDo(print())
             .andExpect(status().isNoContent());
+        verify(applicationRepository, times(1)).save(micoApplicationCaptor.capture());
+        MicoApplication savedMicoApplication = micoApplicationCaptor.getValue();
+        assertThat(savedMicoApplication.getServices(), IsEmptyCollection.empty());
     }
-
-    @Test
-    public void getServicesFormApplicationNotFound() throws Exception {
-        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES))
-            .andDo(print())
-            .andExpect(status().isNotFound())
-            .andExpect(status().reason(is("There is no application with the name " + SHORT_NAME + " and the version " + VERSION)));
-    }
-
-    @Test
-    public void getServicesFormApplication() throws Exception {
-        MicoService micoService = new MicoService().setShortName(SHORT_NAME_1).setVersion(VERSION_1_0_1);
-        MicoApplication application = new MicoApplication()
-            .setShortName(SHORT_NAME)
-            .setVersion(VERSION)
-            .setServices(Collections.singletonList(micoService));
-        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
-        String micoServiceListJsonPath = buildPath(EMBEDDED, "micoServiceList");
-        String micoServiceListJsonPathFirstElement = buildPath(micoServiceListJsonPath, FIRST_ELEMENT);
-        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES))
-            .andDo(print())
-            .andExpect(status().isOk())
-            .andExpect(jsonPath(LINKS_SELF_HREF, endsWith(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES)))
-            .andExpect(jsonPath(micoServiceListJsonPath, hasSize(application.getServices().size())))
-            .andExpect(jsonPath(buildPath(micoServiceListJsonPathFirstElement, JsonPathBuilder.VERSION), is(VERSION_1_0_1)))
-            .andExpect(jsonPath(buildPath(micoServiceListJsonPathFirstElement, JsonPathBuilder.SHORT_NAME), is(SHORT_NAME_1)))
-            .andExpect(jsonPath(buildPath(micoServiceListJsonPathFirstElement, LINKS_SELF_HREF), endsWith(PATH_SERVICES + "/" + SHORT_NAME_1 + "/" + VERSION_1_0_1)));
-    }
-
 
     private ResponseEntity getPrometheusResponseEntity(int value) {
         PrometheusResponse prometheusResponse = new PrometheusResponse();
