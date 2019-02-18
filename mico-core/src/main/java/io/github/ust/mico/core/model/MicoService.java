@@ -55,7 +55,8 @@ public class MicoService {
         properties = {
             @ExtensionProperty(name = "title", value = "Short Name"),
             @ExtensionProperty(name = "pattern", value = "^([a-z]+[a-z0-9-]-)*[a-z]+[a-z0-9]*$"),
-            @ExtensionProperty(name = "x-order", value = "20")
+            @ExtensionProperty(name = "x-order", value = "10"),
+            @ExtensionProperty(name = "description", value = "A unique name of the MicoService")
         }
     )})
     private String shortName;
@@ -67,7 +68,8 @@ public class MicoService {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Name"),
-            @ExtensionProperty(name = "x-order", value = "10")
+            @ExtensionProperty(name = "x-order", value = "20"),
+            @ExtensionProperty(name = "description", value = "A human readable name of the MicoService")
         }
     )})
     private String name;
@@ -80,7 +82,8 @@ public class MicoService {
         properties = {
             @ExtensionProperty(name = "title", value = "Version"),
             @ExtensionProperty(name = "pattern", value = "^(\\w+)?(\\d+)\\.(\\d+)\\.(\\d+)(-(\\w+\\.)*\\w+)?$"),
-            @ExtensionProperty(name = "x-order", value = "30")
+            @ExtensionProperty(name = "x-order", value = "30"),
+            @ExtensionProperty(name = "description", value = "The version of this service. Refers to GitHub release tag")
         }
     )})
     private String version;
@@ -92,7 +95,8 @@ public class MicoService {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Description"),
-            @ExtensionProperty(name = "x-order", value = "40")
+            @ExtensionProperty(name = "x-order", value = "40"),
+            @ExtensionProperty(name = "description", value = "Human readable description of this service.")
         }
     )})
     private String description;
@@ -104,7 +108,8 @@ public class MicoService {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Service Interfaces"),
-            @ExtensionProperty(name = "x-order", value = "50")
+            @ExtensionProperty(name = "x-order", value = "50"),
+            @ExtensionProperty(name = "description", value = "The list of interfaces this service provides")
         }
     )})
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
@@ -120,7 +125,8 @@ public class MicoService {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Service Crawling Origin"),
-            @ExtensionProperty(name = "x-order", value = "100")
+            @ExtensionProperty(name = "x-order", value = "100"),
+            @ExtensionProperty(name = "description", value = "Indicates where this service originates from")
         }
     )})
     private MicoServiceCrawlingOrigin serviceCrawlingOrigin;
@@ -138,7 +144,8 @@ public class MicoService {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Dependencies"),
-            @ExtensionProperty(name = "x-order", value = "90")
+            @ExtensionProperty(name = "x-order", value = "90"),
+            @ExtensionProperty(name = "description", value = "The list of services that this service requires in order to run normally")
         }
     )})
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
@@ -152,7 +159,8 @@ public class MicoService {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Predecessor"),
-            @ExtensionProperty(name = "x-order", value = "80")
+            @ExtensionProperty(name = "x-order", value = "80"),
+            @ExtensionProperty(name = "description", value = "Previous version of this service")
         }
     )})
     @Relationship(type = "PREDECESSOR")
@@ -165,7 +173,8 @@ public class MicoService {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Contact Information"),
-            @ExtensionProperty(name = "x-order", value = "70")
+            @ExtensionProperty(name = "x-order", value = "70"),
+            @ExtensionProperty(name = "description", value = "Human readable contact information for support purposes")
         }
     )})
     private String contact;
@@ -178,20 +187,22 @@ public class MicoService {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Owner"),
-            @ExtensionProperty(name = "x-order", value = "60")
+            @ExtensionProperty(name = "x-order", value = "60"),
+            @ExtensionProperty(name = "description", value = "Human readable information for the service owner ,who is responsible for this service")
         }
     )})
     private String owner;
 
     /**
-     * The URL that could be used for a git clone
+     * The URL that could be used for a git clone,
      * to clone the current master branch.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "\"git clone\" Url"),
-            @ExtensionProperty(name = "x-order", value = "110")
+            @ExtensionProperty(name = "x-order", value = "110"),
+            @ExtensionProperty(name = "description", value = "The URL that could be used for a git clone, to clone the current master branch")
         }
     )})
     private String gitCloneUrl;
@@ -203,7 +214,8 @@ public class MicoService {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Git Release Info Url"),
-            @ExtensionProperty(name = "x-order", value = "120")
+            @ExtensionProperty(name = "x-order", value = "120"),
+            @ExtensionProperty(name = "description", value = "The URL to the get the information about a specific git release")
         }
     )})
     private String gitReleaseInfoUrl;
@@ -216,7 +228,8 @@ public class MicoService {
         properties = {
             @ExtensionProperty(name = "title", value = "Path to Dockerfile"),
             @ExtensionProperty(name = "pattern", value = "^(?!/.*$).*"),
-            @ExtensionProperty(name = "x-order", value = "130")
+            @ExtensionProperty(name = "x-order", value = "130"),
+            @ExtensionProperty(name = "description", value = "The relative path to the Dockerfile")
         }
     )})
     @Pattern(regexp = "^(?!/.*$).*", message = "Path must be relative to the Git clone url")
@@ -232,7 +245,8 @@ public class MicoService {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Docker Image Url"),
-            @ExtensionProperty(name = "x-order", value = "140")
+            @ExtensionProperty(name = "x-order", value = "140"),
+            @ExtensionProperty(name = "description", value = "The fully qualified URI to the image on DockerHub")
         }
     )})
     private String dockerImageUri;
