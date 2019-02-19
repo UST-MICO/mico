@@ -2,6 +2,9 @@ package io.github.ust.mico.core;
 
 import io.github.ust.mico.core.model.MicoVersion;
 
+import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
+import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
+
 public class TestConstants {
 
     public static final String BASE_URL = "http://localhost";
@@ -44,6 +47,25 @@ public class TestConstants {
     public static final String DESCRIPTION_3_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION_3);
 
     public static final String SERVICE_INTERFACE_NAME = "service-interface-name";
+
+    public static final String FIRST_SERVICE = buildPath(ROOT, "serviceDeploymentInformation[0]");
+    public static final String REQUESTED_REPLICAS = buildPath(FIRST_SERVICE, "requestedReplicas");
+    public static final String AVAILABLE_REPLICAS = buildPath(FIRST_SERVICE, "availableReplicas");
+    public static final String INTERFACES_INFORMATION = buildPath(FIRST_SERVICE, "interfacesInformation");
+    public static final String INTERFACES_INFORMATION_NAME = buildPath(FIRST_SERVICE, "interfacesInformation[0].name");
+    public static final String POD_INFO = buildPath(FIRST_SERVICE, "podInfo");
+    public static final String POD_INFO_POD_NAME_1 = buildPath(FIRST_SERVICE, "podInfo[0].podName");
+    public static final String POD_INFO_PHASE_1 = buildPath(FIRST_SERVICE, "podInfo[0].phase");
+    public static final String POD_INFO_NODE_NAME_1 = buildPath(FIRST_SERVICE, "podInfo[0].nodeName");
+    public static final String POD_INFO_METRICS_MEMORY_USAGE_1 = buildPath(FIRST_SERVICE, "podInfo[0].metrics.memoryUsage");
+    public static final String POD_INFO_METRICS_CPU_LOAD_1 = buildPath(FIRST_SERVICE, "podInfo[0].metrics.cpuLoad");
+    public static final String POD_INFO_METRICS_AVAILABLE_1 = buildPath(FIRST_SERVICE, "podInfo[0].metrics.available");
+    public static final String POD_INFO_POD_NAME_2 = buildPath(FIRST_SERVICE, "podInfo[1].podName");
+    public static final String POD_INFO_PHASE_2 = buildPath(FIRST_SERVICE, "podInfo[1].phase");
+    public static final String POD_INFO_NODE_NAME_2 = buildPath(FIRST_SERVICE, "podInfo[1].nodeName");
+    public static final String POD_INFO_METRICS_MEMORY_USAGE_2 = buildPath(FIRST_SERVICE, "podInfo[1].metrics.memoryUsage");
+    public static final String POD_INFO_METRICS_CPU_LOAD_2 = buildPath(FIRST_SERVICE, "podInfo[1].metrics.cpuLoad");
+    public static final String POD_INFO_METRICS_AVAILABLE_2 = buildPath(FIRST_SERVICE, "podInfo[1].metrics.available");
 
     /**
      * Git repository that is used for testing.
