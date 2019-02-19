@@ -1,10 +1,13 @@
 package io.github.ust.mico.core.model;
 
+import lombok.Data;
+import org.neo4j.ogm.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 
 import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;
 
+@Data
 @RedisHash("BackgroundJob")
 public class MicoBackgroundTask implements Serializable {
     public enum Type {
@@ -15,6 +18,7 @@ public class MicoBackgroundTask implements Serializable {
         PENDING, RUNNING, CANCELLED, ERROR, DONE
     }
 
+    @Id
     String id;
     CompletableFuture job;
     MicoService service;
