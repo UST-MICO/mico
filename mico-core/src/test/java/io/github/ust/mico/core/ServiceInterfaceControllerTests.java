@@ -239,7 +239,7 @@ public class ServiceInterfaceControllerTests {
             .content(mapper.writeValueAsBytes(serviceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isNotFound())
-            .andExpect(status().reason("MicoService '" + SHORT_NAME + "' '" + VERSION + "' was not found!"))
+            .andExpect(status().reason("Service '" + SHORT_NAME + "' '" + VERSION + "' was not found!"))
             .andReturn();
     }
 

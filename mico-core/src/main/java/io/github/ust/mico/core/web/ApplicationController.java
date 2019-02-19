@@ -113,12 +113,8 @@ public class ApplicationController {
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     public ResponseEntity<Resource<MicoApplication>> getApplicationByShortNameAndVersion(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                          @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
-        if (!applicationOptional.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' was not found!");
-        }
-        return applicationOptional.map(application -> new Resource<>(application, getApplicationLinks(application)))
-            .map(ResponseEntity::ok).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' links not found!"));
+        MicoApplication application = getApplicationFromDatabase(shortName, version);
+        return ResponseEntity.ok(new Resource<>(application, getApplicationLinks(application)));
     }
 
     @PostMapping
@@ -150,17 +146,13 @@ public class ApplicationController {
         if (!application.getShortName().equals(shortName) || !application.getVersion().equals(version)) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Application shortName or version does not match request body.");
         }
-        Optional<MicoApplication> existingApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
-        if (!existingApplicationOptional.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' was not found!");
-        }
-        MicoApplication existingApplication = existingApplicationOptional.get();
 
         // Including services must not be updated through this API. There is an own API for that purpose.
         if (application.getServices().size() > 0) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Update of an application is only allowed without services.");
         }
 
+        MicoApplication existingApplication = getApplicationFromDatabase(shortName, version);
         application.setId(existingApplication.getId());
         application.setServices(existingApplication.getServices());
         MicoApplication updatedApplication = applicationRepository.save(application);
@@ -204,12 +196,7 @@ public class ApplicationController {
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES)
     public ResponseEntity<Resources<Resource<MicoService>>> getServicesFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                        @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
-        if (!applicationOptional.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "Application '" + shortName + "' '" + version + "' was not found!");
-        }
-        MicoApplication micoApplication = applicationOptional.get();
+        MicoApplication micoApplication = getApplicationFromDatabase(shortName, version);
         List<MicoService> micoServices = micoApplication.getServices();
         List<Resource<MicoService>> micoServicesWithLinks = ServiceController.getServiceResourcesList(micoServices);
         return ResponseEntity.ok(
@@ -221,14 +208,9 @@ public class ApplicationController {
     public ResponseEntity<Void> addServiceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
                                                         @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
                                                         @RequestBody MicoService providedService) {
-        Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(applicationShortName, applicationVersion);
-        if (!applicationOptional.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "Application '" + applicationShortName + "' '" + applicationVersion + "' does not exist!");
-        }
+        MicoApplication application = getApplicationFromDatabase(applicationShortName, applicationVersion);
         MicoService existingService = validateProvidedService(providedService);
 
-        MicoApplication application = applicationOptional.get();
         if (!application.getServices().contains(existingService)) {
             log.info("Add service '" + existingService.getShortName() + "' '" + existingService.getVersion() +
                 "' to application '" + applicationShortName + "' '" + applicationVersion + "'.");
@@ -247,33 +229,24 @@ public class ApplicationController {
                                                        @PathVariable(SERVICE_SHORT_NAME) String serviceShortName) {
         log.debug("Delete Mico service '{}' from Mico application '{}' in version '{}'", SERVICE_SHORT_NAME, shortName, version);
 
-        Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
-        if (micoApplicationOptional.isPresent()) {
-            log.debug("Application is present");
-            MicoApplication micoApplication = micoApplicationOptional.get();
-            List<MicoService> services = micoApplication.getServices();
-            log.debug("Service list has size: {}", services.size());
-            Predicate<MicoService> matchServiceShortName = service -> service.getShortName().equals(serviceShortName);
-            services.removeIf(matchServiceShortName);
-            applicationRepository.save(micoApplication);
+        MicoApplication application = getApplicationFromDatabase(shortName, version);
+        List<MicoService> services = application.getServices();
+        log.debug("Service list of application '{}' '{}' has size: {}", shortName, version, services.size());
+        Predicate<MicoService> matchServiceShortName = service -> service.getShortName().equals(serviceShortName);
+        services.removeIf(matchServiceShortName);
+        applicationRepository.save(application);
 
-            // TODO Update Kubernetes deployment
+        // TODO Update Kubernetes deployment
 
-            return ResponseEntity.noContent().build();
-        } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "There is no such application");
-        }
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")
     public ResponseEntity<Resource<MicoApplicationDeploymentInformationDTO>> getStatusOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
-        if (!micoApplicationOptional.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' was not found!");
-        }
+        MicoApplication application = getApplicationFromDatabase(shortName, version);
 
-        List<MicoService> micoServices = micoApplicationOptional.get().getServices();
+        List<MicoService> micoServices = application.getServices();
         log.debug("Aggregate status information of Mico application '{}' '{}' with {} included services",
             shortName, version, micoServices.size());
 
@@ -343,6 +316,22 @@ public class ApplicationController {
             }
         }
         return ResponseEntity.ok(new Resource<>(applicationDeploymentInformation));
+    }
+
+    /**
+     * Returns the existing {@link MicoApplication} object from the database for the given shortName and version.
+     *
+     * @param shortName the short name of a {@link MicoApplication}
+     * @param version   the version of a {@link MicoApplication}
+     * @return the existing {@link MicoApplication} from the database
+     * @throws ResponseStatusException if a {@link MicoApplication} for the given shortName and version does not exist
+     */
+    private MicoApplication getApplicationFromDatabase(String shortName, String version) throws ResponseStatusException {
+        Optional<MicoApplication> existingApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
+        if (!existingApplicationOptional.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' was not found!");
+        }
+        return existingApplicationOptional.get();
     }
 
     private boolean serviceExists(MicoApplication micoApplication, String serviceShortName) {
