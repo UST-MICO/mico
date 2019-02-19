@@ -66,9 +66,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -144,8 +142,7 @@ public class ServiceInterfaceControllerTests {
         mvc.perform(post(INTERFACES_URL)
             .content(mapper.writeValueAsBytes(serviceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
-            .andExpect(status().isBadRequest())
-            .andExpect(status().reason("An interface with this name is already associated with this service."))
+            .andExpect(status().isConflict())
             .andReturn();
     }
 
@@ -242,17 +239,17 @@ public class ServiceInterfaceControllerTests {
             .content(mapper.writeValueAsBytes(serviceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isNotFound())
-            .andExpect(status().reason("MicoService '" + SHORT_NAME + "' '" + VERSION + "' was not found!"))
+            .andExpect(status().reason("Service '" + SHORT_NAME + "' '" + VERSION + "' was not found!"))
             .andReturn();
     }
 
     @Test
     public void putMicoServiceInterfaceNameNotEqual() throws Exception {
         MicoServiceInterface serviceInterface = getTestServiceInterface();
-        mvc.perform(put(INTERFACES_URL + "/" + serviceInterface.getServiceInterfaceName()+"NotEqual")
+        mvc.perform(put(INTERFACES_URL + "/" + serviceInterface.getServiceInterfaceName() + "NotEqual")
             .content(mapper.writeValueAsBytes(serviceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
-            .andExpect(status().isBadRequest())
+            .andExpect(status().is(422))
             .andExpect(status().reason("The variable 'serviceInterfaceName' must be equal to the name specified in the request body"))
             .andReturn();
     }
@@ -283,15 +280,14 @@ public class ServiceInterfaceControllerTests {
             .content(mapper.writeValueAsBytes(modifiedServiceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
-            .andExpect(getServiceInterfaceMatcher(modifiedServiceInterface,INTERFACES_URL, SERVICE_URL))
+            .andExpect(getServiceInterfaceMatcher(modifiedServiceInterface, INTERFACES_URL, SERVICE_URL))
             .andReturn();
         verify(serviceRepository, times(1)).save(micoServiceArgumentCaptor.capture());
         MicoService savedMicoService = micoServiceArgumentCaptor.getValue();
-        assertEquals("There should only be one mico service interface",1,savedMicoService.getServiceInterfaces().size());
+        assertEquals("There should only be one mico service interface", 1, savedMicoService.getServiceInterfaces().size());
         MicoServiceInterface micoServiceInterfaceFromSave = savedMicoService.getServiceInterfaces().get(0);
-        assertEquals("The interface which was saved to the db, should be equal to the interface which was provided in the request body",modifiedServiceInterface,micoServiceInterfaceFromSave);
+        assertEquals("The interface which was saved to the db, should be equal to the interface which was provided in the request body", modifiedServiceInterface, micoServiceInterfaceFromSave);
     }
-
 
 
     private Service getKubernetesService(String serviceInterfaceName, List<String> externalIPs) {
