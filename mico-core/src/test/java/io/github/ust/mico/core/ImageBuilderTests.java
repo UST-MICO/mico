@@ -19,11 +19,11 @@
 
 package io.github.ust.mico.core;
 
+import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.exception.NotInitializedException;
-import io.github.ust.mico.core.exception.VersionNotSupportedException;
-import io.github.ust.mico.core.model.MicoVersion;
-import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -31,10 +31,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
-import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
-import io.github.ust.mico.core.model.MicoService;
 
 import static io.github.ust.mico.core.TestConstants.*;
 
@@ -49,15 +45,13 @@ public class ImageBuilderTests {
 
     @Before
     public void setUp() {
-        ClusterAwarenessFabric8 cluster = new ClusterAwarenessFabric8(mockServer.getClient());
-
         MicoKubernetesBuildBotConfig buildBotConfig = new MicoKubernetesBuildBotConfig();
         buildBotConfig.setNamespaceBuildExecution("build-execution-namespace");
         buildBotConfig.setKanikoExecutorImageUrl("kaniko-executor-image-url");
         buildBotConfig.setDockerRegistryServiceAccountName("service-account-name");
         buildBotConfig.setDockerImageRepositoryUrl("image-repository-url");
 
-        imageBuilder = new ImageBuilder(cluster, buildBotConfig);
+        imageBuilder = new ImageBuilder(mockServer.getClient(), buildBotConfig);
     }
 
     @After

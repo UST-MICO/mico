@@ -25,11 +25,11 @@ import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentList;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.UIDUtils;
@@ -63,7 +63,7 @@ public class MicoKubernetesClientTests {
     private MicoKubernetesConfig micoKubernetesConfig;
 
     @MockBean
-    private ClusterAwarenessFabric8 cluster;
+    private KubernetesClient kubernetesClient;
 
     @Autowired
     private MicoKubernetesClient micoKubernetesClient;
@@ -82,7 +82,8 @@ public class MicoKubernetesClientTests {
     public void creationOfMicoServiceWorks() throws KubernetesResourceException {
 
         DeploymentList emptyDeploymentList = new DeploymentList(); // at the beginning there are no existing deployments
-        given(cluster.getDeploymentsByLabels(anyMap(), anyString())).willReturn(emptyDeploymentList);
+        given(kubernetesClient.apps().deployments().inNamespace(anyString()).withLabels(anyMap()).list()).willReturn(emptyDeploymentList);
+
 
         MicoService micoServiceWithoutInterface = getMicoServiceWithoutInterface();
         MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo();
@@ -91,7 +92,7 @@ public class MicoKubernetesClientTests {
         ArgumentCaptor<Deployment> deploymentArgumentCaptor = ArgumentCaptor.forClass(Deployment.class);
         ArgumentCaptor<String> namespaceArgumentCaptor = ArgumentCaptor.forClass(String.class);
 
-        verify(cluster, times(1)).createDeployment(deploymentArgumentCaptor.capture(), namespaceArgumentCaptor.capture());
+        verify(kubernetesClient, times(1)).apps().deployments().inNamespace(namespaceArgumentCaptor.capture()).createOrReplace(deploymentArgumentCaptor.capture());
         assertEquals(testNamespace, namespaceArgumentCaptor.getValue());
 
         Deployment actualDeployment = deploymentArgumentCaptor.getValue();
@@ -100,14 +101,14 @@ public class MicoKubernetesClientTests {
             actualDeployment.getMetadata().getName().startsWith(micoServiceWithoutInterface.getShortName()));
         assertEquals(testNamespace, actualDeployment.getMetadata().getNamespace());
 
-        verify(cluster, never()).createService(any(), any());
+        verify(kubernetesClient, never()).services().inNamespace(any()).createOrReplace(any());
     }
 
     @Test
     public void creationOfMicoServiceInterfaceWorks() throws KubernetesResourceException {
 
         ServiceList existingServices = new ServiceList(); // at the beginning there are no existing services
-        given(cluster.getServicesByLabels(anyMap(), anyString())).willReturn(existingServices);
+        given(kubernetesClient.services().inNamespace(anyString()).withLabels(anyMap()).list()).willReturn(existingServices);
 
         MicoService micoService = getMicoServiceWithInterface();
         MicoServiceInterface micoServiceInterface = getMicoServiceInterface();
@@ -120,14 +121,14 @@ public class MicoKubernetesClientTests {
             LABEL_VERSION_KEY, micoService.getVersion());
         DeploymentList deploymentList = new DeploymentList();
         deploymentList.setItems(CollectionUtils.listOf(existingDeployment));
-        given(cluster.getDeploymentsByLabels(labels, testNamespace)).willReturn(deploymentList);
+        given(kubernetesClient.apps().deployments().inNamespace(testNamespace).withLabels(labels).list()).willReturn(deploymentList);
 
         micoKubernetesClient.createMicoServiceInterface(micoServiceInterface, micoService);
 
         ArgumentCaptor<Service> serviceArgumentCaptor = ArgumentCaptor.forClass(Service.class);
         ArgumentCaptor<String> namespaceArgumentCaptor = ArgumentCaptor.forClass(String.class);
 
-        verify(cluster, times(1)).createService(serviceArgumentCaptor.capture(), namespaceArgumentCaptor.capture());
+        verify(kubernetesClient, times(1)).services().inNamespace(namespaceArgumentCaptor.capture()).createOrReplace(serviceArgumentCaptor.capture());
         assertEquals(testNamespace, namespaceArgumentCaptor.getValue());
 
         Service actualService = serviceArgumentCaptor.getValue();
@@ -142,7 +143,7 @@ public class MicoKubernetesClientTests {
             expectedRunLabelValue, actualService.getSpec().getSelector().getOrDefault(LABEL_RUN_KEY, "UNKNOWN RUN LABEL KEY"));
         assertEquals(testNamespace, actualService.getMetadata().getNamespace());
 
-        verify(cluster, never()).createDeployment(any(), any());
+        verify(kubernetesClient, never()).apps().deployments().inNamespace(any()).createOrReplace(any());
     }
 
     @Test
@@ -150,7 +151,7 @@ public class MicoKubernetesClientTests {
 
         // Arrange existing deployments
         DeploymentList existingDeployments = new DeploymentList(); // at the beginning there are no existing deployments
-        given(cluster.getDeploymentsByLabels(anyMap(), anyString())).willReturn(existingDeployments);
+        given(kubernetesClient.apps().deployments().inNamespace(anyString()).withLabels(anyMap()).list()).willReturn(existingDeployments);
 
         MicoService micoServiceWithoutInterface = getMicoServiceWithoutInterface();
         MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo();
@@ -161,18 +162,18 @@ public class MicoKubernetesClientTests {
         // First creation
         micoKubernetesClient.createMicoService(micoServiceWithoutInterface, deploymentInfo);
 
-        verify(cluster, times(1)).createDeployment(deploymentArgumentCaptor.capture(), namespaceArgumentCaptor.capture());
+        verify(kubernetesClient, times(1)).apps().deployments().inNamespace(namespaceArgumentCaptor.capture()).createOrReplace(deploymentArgumentCaptor.capture());
         Deployment firstDeployment = deploymentArgumentCaptor.getValue();
         assertNotNull(firstDeployment);
         String firstDeploymentName = firstDeployment.getMetadata().getName();
         Deployment deployment = getDeploymentObject(micoServiceWithoutInterface, firstDeploymentName);
         existingDeployments.setItems(CollectionUtils.listOf(deployment));  // after the first deployment there is one deployment
-        given(cluster.getDeploymentsByLabels(anyMap(), anyString())).willReturn(existingDeployments);
+        given(kubernetesClient.apps().deployments().inNamespace(anyString()).withLabels(anyMap()).list()).willReturn(existingDeployments);
 
         // Second creation
         micoKubernetesClient.createMicoService(micoServiceWithoutInterface, deploymentInfo);
 
-        verify(cluster, times(2)).createDeployment(deploymentArgumentCaptor.capture(), namespaceArgumentCaptor.capture());
+        verify(kubernetesClient, times(2)).apps().deployments().inNamespace(namespaceArgumentCaptor.capture()).createOrReplace(deploymentArgumentCaptor.capture());
         Deployment secondDeployment = deploymentArgumentCaptor.getValue();
         assertNotNull(secondDeployment);
         assertEquals("Expected both deployments have the same name", firstDeployment.getMetadata().getName(), secondDeployment.getMetadata().getName());
@@ -191,11 +192,11 @@ public class MicoKubernetesClientTests {
         Map<String, String> labels = CollectionUtils.mapOf(LABEL_APP_KEY, micoService.getShortName(), LABEL_VERSION_KEY, micoService.getVersion());
         DeploymentList deploymentList = new DeploymentList();
         deploymentList.setItems(CollectionUtils.listOf(existingDeployment));
-        given(cluster.getDeploymentsByLabels(labels, testNamespace)).willReturn(deploymentList);
+        given(kubernetesClient.apps().deployments().inNamespace(testNamespace).withLabels(labels).list()).willReturn(deploymentList);
 
         // Arrange existing services
         ServiceList existingServices = new ServiceList(); // at the beginning there are no existing services
-        given(cluster.getServicesByLabels(anyMap(), anyString())).willReturn(existingServices);
+        given(kubernetesClient.services().inNamespace(anyString()).withLabels(anyMap()).list()).willReturn(existingServices);
 
         ArgumentCaptor<Service> serviceArgumentCaptor = ArgumentCaptor.forClass(Service.class);
         ArgumentCaptor<String> namespaceArgumentCaptor = ArgumentCaptor.forClass(String.class);
@@ -203,18 +204,18 @@ public class MicoKubernetesClientTests {
         // First creation
         micoKubernetesClient.createMicoServiceInterface(micoServiceInterface, micoService);
 
-        verify(cluster, times(1)).createService(serviceArgumentCaptor.capture(), namespaceArgumentCaptor.capture());
+        verify(kubernetesClient, times(1)).services().inNamespace(namespaceArgumentCaptor.capture()).createOrReplace(serviceArgumentCaptor.capture());
         Service firstService = serviceArgumentCaptor.getValue();
         assertNotNull(firstService);
         String firstServiceName = firstService.getMetadata().getName();
         Service service = getServiceObject(micoServiceInterface, micoService, firstServiceName);
         existingServices.setItems(CollectionUtils.listOf(service)); // after the first creation there is one service
-        given(cluster.getServicesByLabels(anyMap(), anyString())).willReturn(existingServices);
+        given(kubernetesClient.services().inNamespace(anyString()).withLabels(anyMap()).list()).willReturn(existingServices);
 
         // Second creation
         micoKubernetesClient.createMicoServiceInterface(micoServiceInterface, micoService);
 
-        verify(cluster, times(2)).createService(serviceArgumentCaptor.capture(), namespaceArgumentCaptor.capture());
+        verify(kubernetesClient, times(2)).services().inNamespace(namespaceArgumentCaptor.capture()).createOrReplace(serviceArgumentCaptor.capture());
         Service secondService = serviceArgumentCaptor.getValue();
         assertNotNull(secondService);
         assertEquals("Expected both services have the same name", firstService.getMetadata().getName(), secondService.getMetadata().getName());
@@ -232,8 +233,8 @@ public class MicoKubernetesClientTests {
       
         DeploymentList deploymentList = new DeploymentList();
         deploymentList.setItems(CollectionUtils.listOf(existingDeployment));
-        
-        given(cluster.getDeploymentsByLabels(labels, testNamespace)).willReturn(deploymentList);
+
+        given(kubernetesClient.apps().deployments().inNamespace(testNamespace).withLabels(labels).list()).willReturn(deploymentList);
         given(serviceRepository.findAllByApplication(SHORT_NAME, VERSION))
                 .willReturn(CollectionUtils.listOf(micoService));
 
