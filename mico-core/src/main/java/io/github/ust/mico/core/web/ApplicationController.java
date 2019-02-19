@@ -144,12 +144,14 @@ public class ApplicationController {
                                                                        @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                        @RequestBody MicoApplication application) {
         if (!application.getShortName().equals(shortName) || !application.getVersion().equals(version)) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Application shortName or version does not match request body.");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                "Application shortName or version does not match request body.");
         }
 
         // Including services must not be updated through this API. There is an own API for that purpose.
         if (application.getServices().size() > 0) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Update of an application is only allowed without services.");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                "Update of an application is only allowed without providing services.");
         }
 
         MicoApplication existingApplication = getApplicationFromDatabase(shortName, version);

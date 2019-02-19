@@ -93,6 +93,7 @@ public class ApplicationControllerTests {
     public static final String VERSION_PATH = buildPath(ROOT, "version");
     public static final String DESCRIPTION_PATH = buildPath(ROOT, "description");
     public static final String SERVICES_LIST_PATH = buildPath(ROOT, "services");
+    public static final String INTERFACES_LIST_PATH = buildPath(ROOT, "serviceInterfaces");
     public static final String ID_PATH = buildPath(ROOT, "id");
 
     private static final String FIRST_SERVICE = buildPath(ROOT, "serviceDeploymentInformation[0]");
@@ -393,7 +394,6 @@ public class ApplicationControllerTests {
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingApplication));
         given(applicationRepository.save(eq(expectedApplication))).willReturn(expectedApplication);
-        //given(applicationRepository.save(any(MicoApplication.class))).willThrow(new RuntimeException("Unexpected MicoApplication"));
 
         ResultActions resultUpdate = mvc.perform(put(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION)
             .content(mapper.writeValueAsBytes(updatedApplication))
