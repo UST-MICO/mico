@@ -10,10 +10,7 @@ import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
@@ -45,6 +42,14 @@ public class BackgroundTaskController {
 
     @GetMapping("/{" + PATH_ID + "}")
     public ResponseEntity<Resource<MicoBackgroundTask>> getJobById(@PathVariable(PATH_ID) String id) {
+        //// If job has been finished
+        //HTTP/1.1 303 See Other
+        //Location: /services/{shortName}/{version} // depends on "type"
+        //
+        //or
+        //
+        //// If job info is no longer available (for whatever reason)
+        //HTTP/1.1 410 Gone (once job information is no longer available, when the server expires the resource)
         Optional<MicoBackgroundTask> jobOptional = jobRepository.findById(id);
         if (!jobOptional.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Job with id'" + id + "' was not found!");
@@ -53,14 +58,21 @@ public class BackgroundTaskController {
             .map(ResponseEntity::ok).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Job with id '" + id + "' links not found!"));
     }
 
+    @DeleteMapping("/{"+PATH_ID+"}")
+    public ResponseEntity<Resource<MicoBackgroundTask>> deleteJob(@PathVariable(PATH_ID) String id){
+        ResponseEntity<Resource<MicoBackgroundTask>> job = getJobById(id);
+        jobRepository.deleteById(id);
+        return job;
+    }
 
     private List<Resource<MicoBackgroundTask>> getJobResourceList(List<MicoBackgroundTask> applications) {
-        return applications.stream().map(application -> new Resource<>(application, getJobLinks(application)))
+        return applications.stream().map(job -> new Resource<>(job, getJobLinks(job)))
             .collect(Collectors.toList());
     }
 
     private Iterable<Link> getJobLinks(MicoBackgroundTask task) {
         LinkedList<Link> links = new LinkedList<>();
+
         links.add(linkTo(methodOn(BackgroundTaskController.class).getJobById(task.getId())).withSelfRel());
         links.add(linkTo(methodOn(BackgroundTaskController.class).getAllJobs()).withRel("jobs"));
         return links;
