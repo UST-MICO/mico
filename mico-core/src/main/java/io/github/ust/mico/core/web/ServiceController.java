@@ -87,9 +87,15 @@ public class ServiceController {
                 "The shortName and/or version of the given service object inside the request body do not match the shortName and/or version inside the URI.");
         }
 
-        MicoService existingService = getServiceFromDatabase(shortName, version);
+        // Including interfaces must not be updated through this API. There is an own API for that purpose.
+        if (service.getServiceInterfaces().size() > 0) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                "Update of a service is only allowed without providing interfaces.");
+        }
 
+        MicoService existingService = getServiceFromDatabase(shortName, version);
         service.setId(existingService.getId());
+        service.setServiceInterfaces(existingService.getServiceInterfaces());
         MicoService updatedService = serviceRepository.save(service);
 
         return ResponseEntity.ok(new Resource<>(updatedService,
