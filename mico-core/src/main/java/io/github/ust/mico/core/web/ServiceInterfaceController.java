@@ -1,13 +1,33 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package io.github.ust.mico.core.web;
 
 import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
 import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
 import io.fabric8.kubernetes.api.model.Service;
-import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
-import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
+import io.github.ust.mico.core.exception.KubernetesResourceException;
+import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
@@ -19,12 +39,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.*;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Pattern;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static io.github.ust.mico.core.web.ServiceController.PATH_VARIABLE_SHORT_NAME;
 import static io.github.ust.mico.core.web.ServiceController.PATH_VARIABLE_VERSION;
-import static io.github.ust.mico.core.service.MicoKubernetesClient.*;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
@@ -43,10 +68,7 @@ public class ServiceInterfaceController {
     private MicoServiceRepository serviceRepository;
 
     @Autowired
-    private ClusterAwarenessFabric8 cluster;
-
-    @Autowired
-    private MicoKubernetesConfig kubernetesConfig;
+    private MicoKubernetesClient micoKubernetesClient;
 
     @GetMapping(SERVICE_INTERFACE_PATH)
     public ResponseEntity<Resources<Resource<MicoServiceInterface>>> getInterfacesOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
@@ -85,39 +107,43 @@ public class ServiceInterfaceController {
     public ResponseEntity<List<String>> getInterfacePublicIpByName(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                    @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                    @PathVariable(PATH_VARIABLE_SERVICE_INTERFACE_NAME) String serviceInterfaceName) {
+        Optional<MicoService> micoServiceOptional = serviceRepository.findByShortNameAndVersion(shortName, version);
+        if (!micoServiceOptional.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "MicoService '" + shortName + "' '" + version + "' was not found!");
+        }
+        MicoService micoService = micoServiceOptional.get();
+
         Optional<MicoServiceInterface> serviceInterfaceOptional = serviceRepository.findInterfaceOfServiceByName(serviceInterfaceName, shortName, version);
         if (!serviceInterfaceOptional.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                 "Service interface '" + serviceInterfaceName + "' of MicoService '" + shortName + "' '" + version + "' was not found!");
         }
 
-        Map<String, String> labels = new HashMap<>();
-        labels.put(LABEL_APP_KEY, shortName);
-        labels.put(LABEL_VERSION_KEY, version);
-        labels.put(LABEL_INTERFACE_KEY, serviceInterfaceName);
-        String namespace = kubernetesConfig.getNamespaceMicoWorkspace();
-
-        List<Service> serviceList = cluster.getServicesByLabels(labels, namespace).getItems();
-        if (serviceList.isEmpty()) {
-            log.info("There is no MicoServiceInterface deployed with name '{}' of MicoService '{}' in version '{}'.",
+        Optional<Service> kubernetesServiceOptional;
+        try {
+            kubernetesServiceOptional = micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, serviceInterfaceName);
+        } catch (KubernetesResourceException e) {
+            log.error("Error occur while retrieving Kubernetes service of MicoServiceInterface '{}' of MicoService '{}' in version '{}'. Caused by: {}",
+                serviceInterfaceName, shortName, version, e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                "Error occur while retrieving Kubernetes service of MicoServiceInterface '" + serviceInterfaceName +
+                    "' of MicoService '" + shortName + "' '" + version + "'!");
+        }
+        if (!kubernetesServiceOptional.isPresent()) {
+            log.warn("There is no MicoServiceInterface deployed with name '{}' of MicoService '{}' in version '{}'.",
                 serviceInterfaceName, shortName, version);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                 "No deployed service interface '" + serviceInterfaceName + "' of MicoService '" + shortName + "' '" + version + "' was found!");
         }
-        if (serviceList.size() > 1) {
-            log.warn("Multiple Kubernetes services found for MicoServiceInterface with name '{}' of MicoService '{}' in version '{}'.",
-                serviceInterfaceName, shortName, version);
-            // TODO What to do when multiple Kubernetes services are found?
-        }
-        Service service = serviceList.get(0);
 
+        Service kubernetesService = kubernetesServiceOptional.get();
         List<String> publicIps = new ArrayList<>();
-        LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
+        LoadBalancerStatus loadBalancer = kubernetesService.getStatus().getLoadBalancer();
         if (loadBalancer != null) {
             List<LoadBalancerIngress> ingressList = loadBalancer.getIngress();
             if (ingressList != null && !ingressList.isEmpty()) {
                 log.debug("There is/are {} ingress(es) defined for Kubernetes service '{}' (MicoServiceInterface '{}').",
-                    ingressList.size(), service.getMetadata().getName(), serviceInterfaceName);
+                    ingressList.size(), kubernetesService.getMetadata().getName(), serviceInterfaceName);
                 for (LoadBalancerIngress ingress : ingressList) {
                     publicIps.add(ingress.getIp());
                 }
@@ -167,11 +193,69 @@ public class ServiceInterfaceController {
         }
     }
 
+    /**
+     * Updates an existing micoServiceInterface
+     *
+     * @param shortName
+     * @param version
+     * @param serviceInterfaceName
+     * @param modifiedMicoServiceInterface
+     * @return
+     */
+    @PutMapping(SERVICE_INTERFACE_PATH + "/{" + PATH_VARIABLE_SERVICE_INTERFACE_NAME + "}")
+    public ResponseEntity<Resource<MicoServiceInterface>> updateMicoServiceInterface(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                                                     @PathVariable(PATH_VARIABLE_SERVICE_INTERFACE_NAME) String serviceInterfaceName,
+                                                                                     @RequestBody MicoServiceInterface modifiedMicoServiceInterface) {
+
+        if (!modifiedMicoServiceInterface.getServiceInterfaceName().equals(serviceInterfaceName)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The variable '" + PATH_VARIABLE_SERVICE_INTERFACE_NAME + "' must be equal to the name specified in the request body");
+        }
+
+        Optional<MicoService> serviceOptional = serviceRepository.findByShortNameAndVersion(shortName, version);
+        if (!serviceOptional.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "MicoService '" + shortName + "' '" + version + "' was not found!");
+        }
+
+        MicoService service = serviceOptional.get();
+        Optional<MicoServiceInterface> micoServiceInterfaceOptional = service.getServiceInterfaces().stream().filter(getMicoServiceInterfaceNameMatchingPredicate(serviceInterfaceName)).findFirst();
+        if (!micoServiceInterfaceOptional.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "MicoServiceInterface was not found!");
+        }
+
+        log.debug("Remove old micoServiceInterface");
+        service.getServiceInterfaces().removeIf(getMicoServiceInterfaceNameMatchingPredicate(serviceInterfaceName));
+        MicoServiceInterface micoServiceInterface = micoServiceInterfaceOptional.get();
+        modifiedMicoServiceInterface.setId(micoServiceInterface.getId());
+        log.debug("Add new version of micoServiceInterface");
+        service.getServiceInterfaces().add(modifiedMicoServiceInterface);
+        serviceRepository.save(service);
+        return ResponseEntity.ok(new Resource<>(modifiedMicoServiceInterface, getServiceInterfaceLinks(modifiedMicoServiceInterface, shortName, version)));
+    }
+
+
+    /**
+     * Checks if a micoServiceInterface exists for a given micoService. The matching is based on the interface name.
+     *
+     * @param serviceInterface
+     * @param service
+     * @return
+     */
     private boolean serviceInterfaceExists(@RequestBody MicoServiceInterface serviceInterface, MicoService service) {
         if (service.getServiceInterfaces() == null) {
             return false;
         }
-        return service.getServiceInterfaces().stream().anyMatch(existingServiceInterface -> existingServiceInterface.getServiceInterfaceName().equals(serviceInterface.getServiceInterfaceName()));
+        return service.getServiceInterfaces().stream().anyMatch(getMicoServiceInterfaceNameMatchingPredicate(serviceInterface.getServiceInterfaceName()));
+    }
+
+    /**
+     * Generates a predicate which matches the given micoServiceInterfaceName.
+     *
+     * @param micoServiceInterfaceName
+     * @return
+     */
+    private Predicate<MicoServiceInterface> getMicoServiceInterfaceNameMatchingPredicate(String micoServiceInterfaceName) {
+        return existingServiceInterface -> existingServiceInterface.getServiceInterfaceName().equals(micoServiceInterfaceName);
     }
 
     private Iterable<Link> getServiceInterfaceLinks(MicoServiceInterface serviceInterface, String shortName, String version) {

@@ -2,6 +2,12 @@
     <div class="ma3 flex-grow-1">
         <h3>Application {{application?.name}}</h3>
         <button mat-raised-button (click)="deployApplication()">deploy</button>
+        <span *ngIf="isLatestVersion()" class="mh2">
+            <button mat-raised-button (click)="promoteNextVersion()">create next Version</button>
+        </span>
+        <span class="mh2">
+            <button mat-raised-button (click)="deleteCurrentVersion()">delete Version</button>
+        </span>
     </div>
 
     <!-- Drop Down Menu for version selection-->
@@ -81,7 +87,7 @@
 
             </div>
             <ng-container *ngIf="edit">
-                <mico-form [modelUrl]="'remote/MicoApplication'" (data)="applicationData = $event"
+                <mico-form [modelUrl]="'remote/MicoApplication'" [filter]="['deploymentInfo', 'services']" [isBlacklist]="true" (data)="applicationData = $event"
                     [startData]="application"></mico-form>
 
                 <div class="ma1 pa1">

@@ -36,6 +36,22 @@ pipeline {
                 }
             }
         }
+        stage('Unit tests') {
+            steps {
+                script {
+                    docker.build(micoCoreRegistry + ":unit-tests", "-f Dockerfile.mico-core.unittests .")
+                }
+                sh '''docker run ${micoCoreRegistry}:unit-tests'''
+            }
+        }
+        stage('Integration tests') {
+            steps {
+                script {
+                    docker.build(micoCoreRegistry + ":integration-tests", "-f Dockerfile.mico-core.integrationtests .")
+                }
+                sh '''docker run ${micoCoreRegistry}:integration-tests'''
+            }
+        }
         stage('Push images') {
             steps {
                 script{
@@ -78,7 +94,7 @@ pipeline {
     	       slackSend channel: '#ci-pipeline',
                     color: COLOR_MAP[currentBuild.currentResult],
                     message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} by ${BUILD_USER}\n More info at: ${env.BUILD_URL}"
-    
+
                 // Clean workspace
                 cleanWs()
             }
