@@ -46,6 +46,7 @@ public class TestConstants {
     public static final String SHORT_NAME_1 = "short-name-1";
     public static final String SHORT_NAME_2 = "short-name-2";
     public static final String SHORT_NAME_3 = "short-name-3";
+    public static final String SHORT_NAME_INVALID = "short_NAME";
     public static final String SHORT_NAME_ATTRIBUTE = JsonPathBuilder.buildAttributePath("shortName");
     public static final String SHORT_NAME_MATCHER = JsonPathBuilder.buildSingleMatcher(SHORT_NAME_ATTRIBUTE, SHORT_NAME);
     public static final String SHORT_NAME_1_MATCHER = JsonPathBuilder.buildSingleMatcher(SHORT_NAME_ATTRIBUTE, SHORT_NAME_1);

@@ -172,7 +172,7 @@ public class ServiceInterfaceController {
                                                                                  @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                                  @Valid @RequestBody MicoServiceInterface serviceInterface,
                                                                                  BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
+        if (bindingResult != null && bindingResult.hasErrors()) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "The name of the service interface is not valid.");
         }
 
