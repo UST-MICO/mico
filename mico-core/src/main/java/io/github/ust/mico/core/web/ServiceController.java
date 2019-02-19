@@ -1,9 +1,13 @@
 package io.github.ust.mico.core.web;
 
+import io.github.ust.mico.core.configuration.PrometheusConfig;
+import io.github.ust.mico.core.dto.MicoServiceDeploymentInformationDTO;
 import io.github.ust.mico.core.service.GitHubCrawler;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.service.MicoStatusService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -14,6 +18,7 @@ import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.LinkedList;
@@ -39,6 +44,9 @@ public class ServiceController {
 
     @Autowired
     private MicoServiceRepository serviceRepository;
+
+    @Autowired
+    private MicoStatusService micoStatusService;
 
     @GetMapping()
     public ResponseEntity<Resources<Resource<MicoService>>> getServiceList() {
@@ -91,6 +99,21 @@ public class ServiceController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                 "Service '" + service.getShortName() + "' '" + service.getVersion() + "' has dependers, therefore it can't be deleted.");
         }
+    }
+
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")
+    public ResponseEntity<Resource<MicoServiceDeploymentInformationDTO>> getStatusOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                                            @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        MicoServiceDeploymentInformationDTO serviceDeploymentInformation = new MicoServiceDeploymentInformationDTO();
+        Optional<MicoService> micoServiceOptional = serviceRepository.findByShortNameAndVersion(shortName, version);
+        if (micoServiceOptional.isPresent()) {
+            log.debug("Retrieve status information of Mico service '{}' '{}'",
+                shortName, version);
+            serviceDeploymentInformation = micoStatusService.getServiceStatus(micoServiceOptional.get());
+        } else {
+            log.error("MicoService not found in service repository.");
+        }
+        return ResponseEntity.ok(new Resource<>(serviceDeploymentInformation));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")

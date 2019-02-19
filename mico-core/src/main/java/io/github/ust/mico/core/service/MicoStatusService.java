@@ -8,7 +8,6 @@ import java.util.Optional;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.configuration.PrometheusConfig;
 import io.github.ust.mico.core.dto.KuberenetesPodMetricsDTO;
 import io.github.ust.mico.core.dto.KubernetesPodInfoDTO;
@@ -19,38 +18,37 @@ import io.github.ust.mico.core.dto.PrometheusResponse;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.PrometheusRequestFailedException;
 import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoApplicationDeploymentInfo;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Slf4j
-@AllArgsConstructor
+@Component
 public class MicoStatusService {
 
-    private PrometheusConfig prometheusConfig;
-    private MicoKubernetesClient micoKubernetesClient;
-    private RestTemplate restTemplate;
+    private final PrometheusConfig prometheusConfig;
+    private final MicoKubernetesClient micoKubernetesClient;
+    private final RestTemplate restTemplate;
 
     private static final int MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT = 1;
     private static final String PROMETHEUS_QUERY_FOR_MEMORY_USAGE = "sum(container_memory_working_set_bytes{pod_name=\"%s\",container_name=\"\"})";
     private static final String PROMETHEUS_QUERY_FOR_CPU_USAGE = "sum(container_cpu_load_average_10s{pod_name=\"%s\"})";
     private static final String PROMETHEUS_QUERY_PARAMETER_NAME = "query";
+
+    @Autowired
+    public MicoStatusService(PrometheusConfig prometheusConfig, MicoKubernetesClient micoKubernetesClient, RestTemplate restTemplate) {
+        this.prometheusConfig = prometheusConfig;
+        this.micoKubernetesClient = micoKubernetesClient;
+        this.restTemplate = restTemplate;
+    }
 
     /**
      * Get status information for a {@link MicoApplication}
@@ -72,7 +70,7 @@ public class MicoStatusService {
      * @param micoService is a {@link MicoService}
      * @return {@link MicoServiceDeploymentInformationDTO} which contains status information for a specific {@link MicoService}
      */
-    private MicoServiceDeploymentInformationDTO getServiceStatus(MicoService micoService) {
+    public MicoServiceDeploymentInformationDTO getServiceStatus(MicoService micoService) {
         Optional<Deployment> deploymentOptional = null;
         try {
             deploymentOptional = micoKubernetesClient.getDeploymentOfMicoService(micoService);

@@ -64,6 +64,9 @@ public class ApplicationController {
     @Autowired
     private RestTemplate restTemplate;
 
+    @Autowired
+    private MicoStatusService micoStatusService;
+
     @GetMapping()
     public ResponseEntity<Resources<Resource<MicoApplication>>> getAllApplications() {
         List<MicoApplication> allApplications = applicationRepository.findAll(3);
@@ -178,7 +181,6 @@ public class ApplicationController {
                                                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version) {
         MicoApplicationDeploymentInformationDTO applicationDeploymentInformation = new MicoApplicationDeploymentInformationDTO();
         Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
-        MicoStatusService micoStatusService = new MicoStatusService(prometheusConfig, micoKubernetesClient, restTemplate);
         if (micoApplicationOptional.isPresent()) {
             log.debug("Aggregate status information of Mico application '{}' '{}' with {} included services",
                 shortName, version, micoApplicationOptional.get().getServices());
