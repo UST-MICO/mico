@@ -64,8 +64,9 @@ public class TestConstants {
 
     public static final String SERVICE_SHORT_NAME = "serviceShortName";
     public static final String SERVICE_VERSION = "1.0.0";
-    
+
     public static final String SERVICE_INTERFACE_NAME = "service-interface-name";
+    public static final String SERVICE_INTERFACE_NAME_1 = "service-interface-name-1";
 
 
     /**

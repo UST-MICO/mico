@@ -21,6 +21,7 @@ package io.github.ust.mico.core.web;
 
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
+import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.GitHubCrawler;
 import lombok.extern.slf4j.Slf4j;
@@ -136,6 +137,9 @@ public class ServiceController {
         if (serviceOptional.isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "Service '" + newService.getShortName() + "' '" + newService.getVersion() + "' already exists.");
+        }
+        for (MicoServiceInterface serviceInterface : newService.getServiceInterfaces()) {
+            validateProvidedInterface(newService.getShortName(), newService.getVersion(), serviceInterface);
         }
 
         MicoService savedService = serviceRepository.save(newService);
@@ -387,6 +391,67 @@ public class ServiceController {
         links.add(linkTo(methodOn(ServiceController.class).getServiceByShortNameAndVersion(service.getShortName(), service.getVersion())).withSelfRel());
         links.add(linkTo(methodOn(ServiceController.class).getServiceList()).withRel("services"));
         return links;
+    }
+
+    /**
+     * Validates the {@link MicoServiceInterface} with the data that is stored in the database.
+     * If the provided interface is valid, return the existing interface.
+     *
+     * @param providedInterface the {@link MicoServiceInterface}
+     * @return the already existing {@link MicoServiceInterface}
+     * @throws ResponseStatusException if a {@link MicoServiceInterface} does not exist or there is a conflict
+     */
+    private MicoServiceInterface validateProvidedInterface(
+        String serviceName, String serviceVersion, MicoServiceInterface providedInterface) throws ResponseStatusException {
+
+        // Check if the provided interface exists
+        Optional<MicoServiceInterface> existingInterfaceOptional = serviceRepository.findInterfaceOfServiceByName(
+            providedInterface.getServiceInterfaceName(), serviceName, serviceVersion);
+        if (!existingInterfaceOptional.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                "Provided interface '" + providedInterface.getServiceInterfaceName() + "' of service '" +
+                    serviceName + "' '" + serviceVersion + "' does not exist!");
+        }
+
+        // If more than the name of the interface is provided,
+        // check if the data is consistent. If not throw a 409 conflict error.
+        MicoServiceInterface existingInterface = existingInterfaceOptional.get();
+        if (providedInterface.getId() != null
+            && !providedInterface.getId().equals(existingInterface.getId())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "Provided interface '" + providedInterface.getServiceInterfaceName() + "' of service '" +
+                    serviceName + "' '" + serviceVersion +
+                    "' has a conflict in the property 'id' with the existing interface!");
+        }
+        if (providedInterface.getDescription() != null
+            && !providedInterface.getDescription().equals(existingInterface.getDescription())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "Provided interface '" + providedInterface.getServiceInterfaceName() + "' of service '" +
+                    serviceName + "' '" + serviceVersion +
+                    "' has a conflict in the property 'description' with the existing interface!");
+        }
+        if (providedInterface.getProtocol() != null
+            && !providedInterface.getProtocol().equals(existingInterface.getProtocol())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "Provided interface '" + providedInterface.getServiceInterfaceName() + "' of service '" +
+                    serviceName + "' '" + serviceVersion +
+                    "' has a conflict in the property 'protocol' with the existing interface!");
+        }
+        if (providedInterface.getPublicDns() != null
+            && !providedInterface.getPublicDns().equals(existingInterface.getPublicDns())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "Provided interface '" + providedInterface.getServiceInterfaceName() + "' of service '" +
+                    serviceName + "' '" + serviceVersion +
+                    "' has a conflict in the property 'publicDns' with the existing interface!");
+        }
+        if (providedInterface.getTransportProtocol() != null
+            && !providedInterface.getTransportProtocol().equals(existingInterface.getTransportProtocol())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "Provided interface '" + providedInterface.getServiceInterfaceName() + "' of service '" +
+                    serviceName + "' '" + serviceVersion +
+                    "' has a conflict in the property 'transportProtocol' with the existing interface!");
+        }
+        return existingInterface;
     }
 
 }
