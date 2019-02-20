@@ -56,6 +56,7 @@ public class MicoServiceInterface {
         properties = {
             @ExtensionProperty(name = "title", value = "Service Interface Name"),
             @ExtensionProperty(name = "x-order", value = "20"),
+            @ExtensionProperty(name = "pattern", value = "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"),
             @ExtensionProperty(name = "description", value = "The name of this MicoServiceInterface")
         })})
     @NotEmpty
@@ -133,5 +134,5 @@ public class MicoServiceInterface {
         }
     )})
     private String transportProtocol;
-    
+
 }
