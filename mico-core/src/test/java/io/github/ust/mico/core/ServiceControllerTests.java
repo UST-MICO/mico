@@ -19,32 +19,14 @@
 
 package io.github.ust.mico.core;
 
-import static io.github.ust.mico.core.JsonPathBuilder.HREF;
-import static io.github.ust.mico.core.JsonPathBuilder.LINKS;
-import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
-import static io.github.ust.mico.core.JsonPathBuilder.SELF;
-import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
-import static io.github.ust.mico.core.TestConstants.*;
-import static org.hamcrest.CoreMatchers.endsWith;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Optional;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ust.mico.core.configuration.CorsConfig;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDependency;
+import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.util.CollectionUtils;
+import io.github.ust.mico.core.web.ServiceController;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -62,12 +44,24 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Optional;
 
-import io.github.ust.mico.core.web.ServiceController;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDependency;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import static io.github.ust.mico.core.ApplicationControllerTests.INTERFACES_LIST_PATH;
+import static io.github.ust.mico.core.JsonPathBuilder.*;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.VERSION;
+import static io.github.ust.mico.core.TestConstants.*;
+import static org.hamcrest.CoreMatchers.endsWith;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(ServiceController.class)
@@ -193,6 +187,7 @@ public class ServiceControllerTests {
     }
 
     @Test
+
     public void createInvalidService() throws Exception {
         MicoService service = new MicoService()
             .setShortName(SHORT_NAME_INVALID)
@@ -207,6 +202,99 @@ public class ServiceControllerTests {
             .andExpect(status().isUnprocessableEntity())
             .andExpect(status().reason("The name of the service is not valid."))
             .andReturn();
+
+    public void createServiceWithExistingInterfaces() throws Exception {
+        MicoServiceInterface serviceInterface1 = new MicoServiceInterface()
+            .setServiceInterfaceName(SERVICE_INTERFACE_NAME);
+        MicoServiceInterface serviceInterface2 = new MicoServiceInterface()
+            .setServiceInterfaceName(SERVICE_INTERFACE_NAME_1);
+
+        MicoService service = new MicoService()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setDescription(DESCRIPTION)
+            .setServiceInterfaces(CollectionUtils.listOf(
+                serviceInterface1, serviceInterface2
+            ));
+
+        given(serviceRepository.save(any(MicoService.class))).willReturn(service);
+        given(serviceRepository.findInterfaceOfServiceByName(
+            serviceInterface1.getServiceInterfaceName(), service.getShortName(), service.getVersion()))
+            .willReturn(Optional.of(serviceInterface1));
+        given(serviceRepository.findInterfaceOfServiceByName(
+            serviceInterface2.getServiceInterfaceName(), service.getShortName(), service.getVersion()))
+            .willReturn(Optional.of(serviceInterface2));
+
+        final ResultActions result = mvc.perform(post(SERVICES_PATH)
+            .content(mapper.writeValueAsBytes(service))
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(jsonPath(SHORT_NAME_PATH, is(service.getShortName())))
+            .andExpect(jsonPath(VERSION_PATH, is(service.getVersion())))
+            .andExpect(jsonPath(INTERFACES_LIST_PATH + "[*]", hasSize(2)));
+
+        result.andExpect(status().isCreated());
+    }
+
+    @Test
+    public void createServiceWithNotExistingInterfaces() throws Exception {
+        MicoServiceInterface serviceInterface1 = new MicoServiceInterface()
+            .setServiceInterfaceName(SERVICE_INTERFACE_NAME);
+        MicoServiceInterface serviceInterface2 = new MicoServiceInterface()
+            .setServiceInterfaceName(SERVICE_INTERFACE_NAME_1);
+
+        MicoService service = new MicoService()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setDescription(DESCRIPTION)
+            .setServiceInterfaces(CollectionUtils.listOf(
+                serviceInterface1, serviceInterface2
+            ));
+
+        given(serviceRepository.save(any(MicoService.class))).willReturn(service);
+        // Only one of the two interfaces exists -> exception
+        given(serviceRepository.findInterfaceOfServiceByName(
+            serviceInterface1.getServiceInterfaceName(), service.getShortName(), service.getVersion()))
+            .willReturn(Optional.of(serviceInterface1));
+
+        final ResultActions result = mvc.perform(post(SERVICES_PATH)
+            .content(mapper.writeValueAsBytes(service))
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print());
+
+        result.andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    public void createServiceWithInconsistentInterfaceData() throws Exception {
+        MicoServiceInterface existingServiceInterface = new MicoServiceInterface()
+            .setServiceInterfaceName(SERVICE_INTERFACE_NAME)
+            .setDescription(DESCRIPTION);
+        MicoServiceInterface invalidServiceInterface = new MicoServiceInterface()
+            .setServiceInterfaceName(SERVICE_INTERFACE_NAME)
+            .setDescription("INVALID");
+
+        MicoService service = new MicoService()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setDescription(DESCRIPTION)
+            .setServiceInterfaces(CollectionUtils.listOf(
+                invalidServiceInterface
+            ));
+
+        given(serviceRepository.save(any(MicoService.class))).willReturn(service);
+        // Interface exists with different data
+        given(serviceRepository.findInterfaceOfServiceByName(
+            existingServiceInterface.getServiceInterfaceName(), service.getShortName(), service.getVersion()))
+            .willReturn(Optional.of(existingServiceInterface));
+
+        final ResultActions result = mvc.perform(post(SERVICES_PATH)
+            .content(mapper.writeValueAsBytes(service))
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print());
+
+        result.andExpect(status().isConflict());
+
     }
 
     @Test
@@ -380,6 +468,98 @@ public class ServiceControllerTests {
             .andExpect(jsonPath(VERSION_PATH, is(VERSION)));
 
         resultUpdate.andExpect(status().isOk());
+    }
+
+    @Test
+    public void updateServiceUsesExistingInterfaces() throws Exception {
+        String updatedDescription = "updated description.";
+        MicoServiceInterface serviceInterface = new MicoServiceInterface()
+            .setServiceInterfaceName(SERVICE_INTERFACE_NAME)
+            .setDescription(DESCRIPTION);
+        MicoService existingService = new MicoService()
+            .setId(ID)
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setDescription(DESCRIPTION)
+            .setServiceInterfaces(CollectionUtils.listOf(
+                serviceInterface
+            ));
+        MicoService updatedService = new MicoService()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setDescription(updatedDescription);
+        MicoService expectedService = new MicoService()
+            .setId(existingService.getId())
+            .setShortName(updatedService.getShortName())
+            .setVersion(updatedService.getVersion())
+            .setDescription(updatedService.getDescription())
+            .setServiceInterfaces(existingService.getServiceInterfaces());
+
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingService));
+        given(serviceRepository.save(eq(expectedService))).willReturn(expectedService);
+        given(serviceRepository.findInterfaceOfServiceByName(serviceInterface.getServiceInterfaceName(),
+            existingService.getShortName(), existingService.getVersion())).willReturn(Optional.of(serviceInterface));
+
+        StringBuilder urlPathBuilder = new StringBuilder(300);
+        urlPathBuilder.append(SERVICES_PATH);
+        urlPathBuilder.append("/");
+        urlPathBuilder.append(SHORT_NAME);
+        urlPathBuilder.append("/");
+        urlPathBuilder.append(VERSION);
+
+        String urlPath = urlPathBuilder.toString();
+
+        ResultActions resultUpdate = mvc.perform(put(urlPath)
+            .content(mapper.writeValueAsBytes(updatedService))
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(jsonPath(ID_PATH, is(existingService.getId().intValue())))
+            .andExpect(jsonPath(DESCRIPTION_PATH, is(updatedDescription)))
+            .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
+            .andExpect(jsonPath(VERSION_PATH, is(VERSION)))
+            .andExpect(jsonPath(INTERFACES_LIST_PATH + "[*]", hasSize(1)));
+
+        resultUpdate.andExpect(status().isOk());
+    }
+
+    @Test
+    public void updateServiceIsOnlyAllowedWithoutUsingExistingInterfaces() throws Exception {
+        String updatedDescription = "updated description.";
+        MicoServiceInterface serviceInterface = new MicoServiceInterface()
+            .setServiceInterfaceName(SERVICE_INTERFACE_NAME)
+            .setDescription(DESCRIPTION);
+        MicoService service = new MicoService()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setDescription(DESCRIPTION)
+            .setServiceInterfaces(CollectionUtils.listOf(
+                serviceInterface
+            ));
+        MicoService updatedService = new MicoService()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setDescription(updatedDescription)
+            .setServiceInterfaces(CollectionUtils.listOf(
+                serviceInterface
+            ));
+
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
+
+        StringBuilder urlPathBuilder = new StringBuilder(300);
+        urlPathBuilder.append(SERVICES_PATH);
+        urlPathBuilder.append("/");
+        urlPathBuilder.append(SHORT_NAME);
+        urlPathBuilder.append("/");
+        urlPathBuilder.append(VERSION);
+
+        String urlPath = urlPathBuilder.toString();
+
+        ResultActions resultUpdate = mvc.perform(put(urlPath)
+            .content(mapper.writeValueAsBytes(updatedService))
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print());
+
+        resultUpdate.andExpect(status().isUnprocessableEntity());
     }
 
     @Test

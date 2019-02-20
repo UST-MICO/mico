@@ -93,7 +93,6 @@ public class MicoService {
      * The list of interfaces this service provides.
      */
     @ApiModelProperty(required = true)
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Relationship(type = "PROVIDES_INTERFACES", direction = Relationship.UNDIRECTED)
     private List<MicoServiceInterface> serviceInterfaces = new ArrayList<>();
 
