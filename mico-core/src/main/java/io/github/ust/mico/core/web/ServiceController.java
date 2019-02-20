@@ -33,9 +33,11 @@ import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.validation.Valid;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -137,7 +139,12 @@ public class ServiceController {
     }
 
     @PostMapping
-    public ResponseEntity<Resource<MicoService>> createService(@RequestBody MicoService newService) {
+    public ResponseEntity<Resource<MicoService>> createService(@Valid @RequestBody MicoService newService,
+                                                               BindingResult bindingResult) {
+        if (bindingResult != null && bindingResult.hasErrors()) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "The name of the service is not valid.");
+        }
+
         Optional<MicoService> serviceOptional = serviceRepository.
             findByShortNameAndVersion(newService.getShortName(), newService.getVersion());
         if (serviceOptional.isPresent()) {
@@ -282,7 +289,7 @@ public class ServiceController {
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
         try {
             MicoService newService = crawler.crawlGitHubRepoLatestRelease(url);
-            return createService(newService);
+            return createService(newService, null);
         } catch (IOException e) {
             log.error(e.getStackTrace().toString());
             log.error("Getting exception '{}'", e.getMessage());

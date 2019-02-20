@@ -187,6 +187,23 @@ public class ServiceControllerTests {
     }
 
     @Test
+
+    public void createInvalidService() throws Exception {
+        MicoService service = new MicoService()
+            .setShortName(SHORT_NAME_INVALID)
+            .setVersion(VERSION)
+            .setDescription(DESCRIPTION);
+
+        given(serviceRepository.save(any(MicoService.class))).willReturn(service);
+
+        mvc.perform(post(SERVICES_PATH)
+            .content(mapper.writeValueAsBytes(service)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isUnprocessableEntity())
+            .andExpect(status().reason("The name of the service is not valid."))
+            .andReturn();
+    }
+
     public void createServiceWithExistingInterfaces() throws Exception {
         MicoServiceInterface serviceInterface1 = new MicoServiceInterface()
             .setServiceInterfaceName(SERVICE_INTERFACE_NAME);
@@ -278,6 +295,7 @@ public class ServiceControllerTests {
             .andDo(print());
 
         result.andExpect(status().isConflict());
+
     }
 
     @Test
