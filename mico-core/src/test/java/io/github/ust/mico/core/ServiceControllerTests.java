@@ -202,6 +202,7 @@ public class ServiceControllerTests {
             .andExpect(status().isUnprocessableEntity())
             .andExpect(status().reason("The name of the service is not valid."))
             .andReturn();
+    }
 
     public void createServiceWithExistingInterfaces() throws Exception {
         MicoServiceInterface serviceInterface1 = new MicoServiceInterface()
