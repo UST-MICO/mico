@@ -65,7 +65,7 @@ public class MicoService {
 
     /**
      * A brief name for the service.
-     * Pattern is the same than the one for Kubernetes Service names.
+     * Pattern is the same as the one for Kubernetes Service names.
      */
     @ApiModelProperty(required = true)
     @Pattern(regexp="^[a-z]([-a-z0-9]*[a-z0-9])?$")
