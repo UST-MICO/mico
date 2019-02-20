@@ -82,7 +82,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
             this.subApplicationVersions = this.apiService.getApplicationVersions(this.shortName)
                 .subscribe(versions => {
 
-                    this.allVersions = versions;
+                    this.allVersions = JSON.parse(JSON.stringify(versions)).sort((n1, n2) => versionComparator(n1.version, n2.version));
                     const latestVersion = this.getLatestVersion(versions);
 
                     if (givenVersion == null) {
