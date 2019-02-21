@@ -72,7 +72,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @OverrideAutoConfiguration(enabled = true) //Needed to override our neo4j config
 @EnableAutoConfiguration
 @EnableConfigurationProperties(value = {CorsConfig.class})
-@SuppressWarnings({"rawtypes", "unchecked"})
+@SuppressWarnings({"rawtypes"})
 public class ApplicationControllerTests {
 
     private static final String JSON_PATH_LINKS_SECTION = "$._links.";
@@ -229,11 +229,14 @@ public class ApplicationControllerTests {
 
     @Test
     public void getStatusOfApplication() throws Exception {
+        // Create a new application with one service
         MicoApplication application = new MicoApplication()
+            .setName(APPLICATION_NAME)
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setServices(CollectionUtils.listOf(
                 new MicoService()
+                    .setName(SERVICE_NAME)
                     .setShortName(SHORT_NAME)
                     .setVersion(VERSION)
                     .setServiceInterfaces(CollectionUtils.listOf(
@@ -241,43 +244,24 @@ public class ApplicationControllerTests {
                             .setServiceInterfaceName(SERVICE_INTERFACE_NAME)
                     ))
             ));
-        String testNamespace = "TestNamespace";
+
+        // Test properties for pods of the service
         String nodeName = "testNode";
         String podPhase = "Running";
         String hostIp = "192.168.0.0";
-        String deploymentName = "deployment1";
-        String serviceName = "service1";
         String podName1 = "pod1";
         String podName2 = "pod2";
+        int availableReplicas = 1;
+        int replicas = 2;
+        int memoryUsage1 = 50;
+        int cpuLoad1 = 10;
+        int memoryUsage2 = 70;
+        int cpuLoad2 = 40;
 
-        int availableReplicas = 0;
-        int replicas = 1;
-
-        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
-//        given(micoKubernetesConfig.getNamespaceMicoWorkspace()).willReturn(testNamespace);
-
-        Optional<Deployment> deployment = Optional.of(new DeploymentBuilder()
-            .withNewMetadata().withName(deploymentName).endMetadata()
-            .withNewSpec().withReplicas(replicas).endSpec().withNewStatus().withAvailableReplicas(availableReplicas).endStatus()
-            .build());
-        Optional<Service> kubernetesService = Optional.of(new ServiceBuilder()
-            .withNewMetadata().withName(serviceName).endMetadata()
-            .build());
-        PodList podList = new PodListBuilder()
-            .addNewItem()
-            .withNewMetadata().withName(podName1).endMetadata()
-            .withNewSpec().withNodeName(nodeName).endSpec()
-            .withNewStatus().withPhase(podPhase).withHostIP(hostIp).endStatus()
-            .endItem()
-            .build();
-//        given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(deployment);
-//        given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(any(MicoService.class))).willReturn(podList.getItems());
-        given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(kubernetesService);
-
-//        given(prometheusConfig.getUri()).willReturn("http://localhost:9090/api/v1/query");
-
+        MicoApplicationDeploymentInformationDTO micoApplicationDeploymentInformation = new MicoApplicationDeploymentInformationDTO();
         MicoServiceDeploymentInformationDTO micoServiceDeploymentInformation = new MicoServiceDeploymentInformationDTO();
 
+        // Set information for first pod of a MicoService
         KubernetesPodInfoDTO kubernetesPodInfo1 = new KubernetesPodInfoDTO();
         kubernetesPodInfo1
             .setHostIp(hostIp)
@@ -286,8 +270,10 @@ public class ApplicationControllerTests {
             .setPodName(podName1)
             .setMetrics(new KuberenetesPodMetricsDTO()
                 .setAvailable(false)
-                .setCpuLoad(10)
-                .setMemoryUsage(50));
+                .setCpuLoad(cpuLoad1)
+                .setMemoryUsage(memoryUsage1));
+
+        // Set information for second pod of a MicoService
         KubernetesPodInfoDTO kubernetesPodInfo2 = new KubernetesPodInfoDTO();
         kubernetesPodInfo2
             .setHostIp(hostIp)
@@ -296,36 +282,34 @@ public class ApplicationControllerTests {
             .setPodName(podName2)
             .setMetrics(new KuberenetesPodMetricsDTO()
                 .setAvailable(true)
-                .setCpuLoad(40)
-                .setMemoryUsage(70));
+                .setCpuLoad(cpuLoad2)
+                .setMemoryUsage(memoryUsage2));
 
+        // Set deployment information for MicoService
         micoServiceDeploymentInformation
+            .setName(SERVICE_NAME)
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
             .setAvailableReplicas(availableReplicas)
             .setRequestedReplicas(replicas)
-            .setInterfacesInformation(Collections.singletonList(new MicoServiceInterfaceDTO().setName(serviceName)))
+            .setInterfacesInformation(Collections.singletonList(new MicoServiceInterfaceDTO().setName(SERVICE_INTERFACE_NAME)))
             .setPodInfo(Arrays.asList(kubernetesPodInfo1, kubernetesPodInfo2));
 
-        MicoApplicationDeploymentInformationDTO micoApplicationDeploymentInformation = new MicoApplicationDeploymentInformationDTO();
         micoApplicationDeploymentInformation.getServiceDeploymentInformation().add(micoServiceDeploymentInformation);
 
+        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
+
+        // Mock MicoStatusService
         given(micoStatusService.getApplicationStatus(any(MicoApplication.class))).willReturn(micoApplicationDeploymentInformation);
-
-        int memoryUsage1 = 50;
-//        ResponseEntity responseEntity = getPrometheusResponseEntity(memoryUsage1);
-        int cpuLoad1 = 10;
-//        ResponseEntity responseEntity2 = getPrometheusResponseEntity(cpuLoad1);
-//        given(restTemplate.getForEntity(any(), eq(PrometheusResponse.class))).willReturn(responseEntity).willReturn(responseEntity2);
-
-        int memoryUsage2 = 70;
-        int cpuLoad2 = 40;
 
         mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/status"))
             .andDo(print())
             .andExpect(status().isOk())
+            .andExpect(jsonPath(SERVICE_INFORMATION_NAME, is(SERVICE_NAME)))
             .andExpect(jsonPath(TestConstants.REQUESTED_REPLICAS, is(replicas)))
             .andExpect(jsonPath(TestConstants.AVAILABLE_REPLICAS, is(availableReplicas)))
             .andExpect(jsonPath(TestConstants.INTERFACES_INFORMATION, hasSize(1)))
-            .andExpect(jsonPath(TestConstants.INTERFACES_INFORMATION_NAME, is(serviceName)))
+            .andExpect(jsonPath(TestConstants.INTERFACES_INFORMATION_NAME, is(SERVICE_INTERFACE_NAME)))
             .andExpect(jsonPath(TestConstants.POD_INFO, hasSize(2)))
             .andExpect(jsonPath(TestConstants.POD_INFO_POD_NAME_1, is(podName1)))
             .andExpect(jsonPath(TestConstants.POD_INFO_PHASE_1, is(podPhase)))
@@ -382,17 +366,6 @@ public class ApplicationControllerTests {
             .andExpect(jsonPath(buildPath(micoServiceListJsonPathFirstElement, JsonPathBuilder.VERSION), is(VERSION_1_0_1)))
             .andExpect(jsonPath(buildPath(micoServiceListJsonPathFirstElement, JsonPathBuilder.SHORT_NAME), is(SHORT_NAME_1)))
             .andExpect(jsonPath(buildPath(micoServiceListJsonPathFirstElement, LINKS_SELF_HREF), endsWith(PATH_SERVICES + "/" + SHORT_NAME_1 + "/" + VERSION_1_0_1)));
-    }
-
-
-    private ResponseEntity getPrometheusResponseEntity(int value) {
-        PrometheusResponse prometheusResponse = new PrometheusResponse();
-        prometheusResponse.setStatus(PrometheusResponse.PROMETHEUS_SUCCESSFUL_RESPONSE);
-        prometheusResponse.setValue(value);
-        ResponseEntity responseEntity = mock(ResponseEntity.class);
-        given(responseEntity.getStatusCode()).willReturn(HttpStatus.OK);
-        given(responseEntity.getBody()).willReturn(prometheusResponse);
-        return responseEntity;
     }
 
     private void prettyPrint(Object object) {

@@ -1,6 +1,8 @@
 package io.github.ust.mico.core;
 
+import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoVersion;
+import springfox.documentation.spring.web.json.Json;
 
 import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
 import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
@@ -16,6 +18,9 @@ public class TestConstants {
     public static final Long ID_1 = Long.valueOf(1001);
     public static final Long ID_2 = Long.valueOf(1002);
     public static final Long ID_3 = Long.valueOf(1003);
+
+    public static final String APPLICATION_NAME= "application-test-name";
+
 
     public static final String VERSION = MicoVersion.forIntegers(1, 0, 0).toString();
     public static final String VERSION_1_0_1 = MicoVersion.forIntegers(1, 0, 1).toString();
@@ -47,8 +52,10 @@ public class TestConstants {
     public static final String DESCRIPTION_3_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION_3);
 
     public static final String SERVICE_INTERFACE_NAME = "service-interface-name";
+    public static final String SERVICE_NAME = "test-service";
 
     public static final String FIRST_SERVICE = buildPath(ROOT, "serviceDeploymentInformation[0]");
+    public static final String SERVICE_INFORMATION_NAME = buildPath(FIRST_SERVICE, "name");
     public static final String REQUESTED_REPLICAS = buildPath(FIRST_SERVICE, "requestedReplicas");
     public static final String AVAILABLE_REPLICAS = buildPath(FIRST_SERVICE, "availableReplicas");
     public static final String INTERFACES_INFORMATION = buildPath(FIRST_SERVICE, "interfacesInformation");

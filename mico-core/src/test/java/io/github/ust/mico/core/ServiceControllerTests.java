@@ -18,6 +18,9 @@ import static io.github.ust.mico.core.TestConstants.DESCRIPTION_3_MATCHER;
 import static io.github.ust.mico.core.TestConstants.ID;
 import static io.github.ust.mico.core.TestConstants.ID_1;
 import static io.github.ust.mico.core.TestConstants.SERVICES_PATH;
+import static io.github.ust.mico.core.TestConstants.SERVICE_INFORMATION_NAME;
+import static io.github.ust.mico.core.TestConstants.SERVICE_INTERFACE_NAME;
+import static io.github.ust.mico.core.TestConstants.SERVICE_NAME;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1_MATCHER;
@@ -158,16 +161,14 @@ public class ServiceControllerTests {
     @Test
     public void getStatusOfService() throws Exception {
         MicoService micoService = new MicoService()
+            .setName(SERVICE_NAME)
             .setShortName(SHORT_NAME_1)
             .setVersion(VERSION_1_0_1)
             .setDescription(DESCRIPTION_1);
 
-        given(serviceRepository.findByShortNameAndVersion(ArgumentMatchers.anyString(), ArgumentMatchers.any())).willReturn(Optional.of(micoService));
-
         String nodeName = "testNode";
         String podPhase = "Running";
         String hostIp = "192.168.0.0";
-        String serviceName = "service1";
         String podName1 = "pod1";
         String podName2 = "pod2";
         int availableReplicas = 1;
@@ -187,8 +188,8 @@ public class ServiceControllerTests {
             .setPodName(podName1)
             .setMetrics(new KuberenetesPodMetricsDTO()
                 .setAvailable(false)
-                .setCpuLoad(10)
-                .setMemoryUsage(50));
+                .setCpuLoad(cpuLoadPod1)
+                .setMemoryUsage(memoryUsagePod1));
         KubernetesPodInfoDTO kubernetesPodInfo2 = new KubernetesPodInfoDTO();
         kubernetesPodInfo2
             .setHostIp(hostIp)
@@ -197,24 +198,26 @@ public class ServiceControllerTests {
             .setPodName(podName2)
             .setMetrics(new KuberenetesPodMetricsDTO()
                 .setAvailable(true)
-                .setCpuLoad(40)
-                .setMemoryUsage(70));
+                .setCpuLoad(cpuLoadPod2)
+                .setMemoryUsage(memoryUsagePod2));
 
         micoServiceDeploymentInformation
             .setAvailableReplicas(availableReplicas)
             .setRequestedReplicas(requestedReplicas)
-            .setInterfacesInformation(Collections.singletonList(new MicoServiceInterfaceDTO().setName(serviceName)))
+            .setInterfacesInformation(Collections.singletonList(new MicoServiceInterfaceDTO().setName(SERVICE_INTERFACE_NAME)))
             .setPodInfo(Arrays.asList(kubernetesPodInfo1, kubernetesPodInfo2));
 
         given(micoStatusService.getServiceStatus(any(MicoService.class))).willReturn(micoServiceDeploymentInformation);
+        given(serviceRepository.findByShortNameAndVersion(ArgumentMatchers.anyString(), ArgumentMatchers.any())).willReturn(Optional.of(micoService));
 
         mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/status"))
             .andDo(print())
             .andExpect(status().isOk())
+            .andExpect(jsonPath(SERVICE_INFORMATION_NAME, is(SERVICE_NAME)))
             .andExpect(jsonPath(REQUESTED_REPLICAS, is(requestedReplicas)))
             .andExpect(jsonPath(AVAILABLE_REPLICAS, is(availableReplicas)))
             .andExpect(jsonPath(INTERFACES_INFORMATION, hasSize(1)))
-            .andExpect(jsonPath(INTERFACES_INFORMATION_NAME, is(serviceName)))
+            .andExpect(jsonPath(INTERFACES_INFORMATION_NAME, is(SERVICE_INTERFACE_NAME)))
             .andExpect(jsonPath(POD_INFO, hasSize(2)))
             .andExpect(jsonPath(POD_INFO_POD_NAME_1, is(podName1)))
             .andExpect(jsonPath(POD_INFO_PHASE_1, is(podPhase)))
