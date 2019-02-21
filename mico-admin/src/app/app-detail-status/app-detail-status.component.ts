@@ -18,6 +18,8 @@ export class AppDetailStatusComponent implements OnChanges, OnDestroy {
     @Input() shortName;
     @Input() version;
 
+    applicationStatus;
+
     ngOnChanges() {
         if (this.version != null) {
 
@@ -27,6 +29,7 @@ export class AppDetailStatusComponent implements OnChanges, OnDestroy {
 
             this.subApplicationStatus = this.apiService.getApplicationStatus(this.shortName, this.version)
                 .subscribe(val => {
+                    this.applicationStatus = val;
                     console.log(val);
                 });
         }
