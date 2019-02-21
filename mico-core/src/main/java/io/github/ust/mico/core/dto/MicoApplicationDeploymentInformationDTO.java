@@ -12,7 +12,8 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for deployment information of a {@link io.github.ust.mico.core.model.MicoApplication}
+ * DTO for deployment information of a {@link io.github.ust.mico.core.model.MicoApplication}.
+ * A list contains all {@link MicoService} the {@link io.github.ust.mico.core.model.MicoApplication} consists of.
  */
 @Data
 @NoArgsConstructor
@@ -22,7 +23,7 @@ import lombok.experimental.Accessors;
 public class MicoApplicationDeploymentInformationDTO {
 
     /**
-     * List of {@link MicoServiceDeploymentInformationDTO}, each object contains information of deployed {@link MicoService}
+     * List of deployment information of {@link MicoService}s, which belong to a {@link io.github.ust.mico.core.model.MicoApplication}.
      */
     private List<MicoServiceDeploymentInformationDTO> serviceDeploymentInformation = new ArrayList<>();
 

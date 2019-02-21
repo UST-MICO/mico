@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
+import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
@@ -153,6 +154,11 @@ public class MicoStatusService {
         String podName = pod.getMetadata().getName();
         String phase = pod.getStatus().getPhase();
         String hostIp = pod.getStatus().getHostIP();
+        int restarts = 0;
+        for (ContainerStatus containterStatus: pod.getStatus().getContainerStatuses()) {{
+            restarts += containterStatus.getRestartCount();
+        }}
+        String age = pod.getStatus().getStartTime();
         int memoryUsage = -1;
         int cpuLoad = -1;
         KuberenetesPodMetricsDTO podMetrics = new KuberenetesPodMetricsDTO();
@@ -166,7 +172,7 @@ public class MicoStatusService {
         }
         podMetrics.setMemoryUsage(memoryUsage);
         podMetrics.setCpuLoad(cpuLoad);
-        return new KubernetesPodInfoDTO(podName, phase, hostIp, nodeName, podMetrics);
+        return new KubernetesPodInfoDTO(podName, phase, hostIp, nodeName, restarts, age, podMetrics);
     }
 
     private int getMemoryUsageForPod(String podName) throws PrometheusRequestFailedException {

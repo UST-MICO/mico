@@ -1,6 +1,7 @@
 package io.github.ust.mico.core;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -90,6 +91,8 @@ public class MicoStatusServiceTest {
 
     private int memoryUsage = 70;
     private int cpuLoad = 30;
+    private String startTime = new Date().toString();
+    private int restarts = 0;
     private boolean podAvailable = true;
 
 
@@ -136,10 +139,10 @@ public class MicoStatusServiceTest {
             .addNewItem()
                 .withNewMetadata().withName(podName1).endMetadata()
                 .withNewSpec().withNodeName(nodeName).endSpec()
-                .withNewStatus().withPhase(podPhase).withHostIP(hostIp).endStatus()
+                .withNewStatus().withStartTime(startTime).addNewContainerStatus().withNewRestartCount(restarts).endContainerStatus().withPhase(podPhase).withHostIP(hostIp).endStatus()
             .endItem()
             .build();
-    }
+}
 
     @Test
     public void getApplicationStatus() {
@@ -155,6 +158,8 @@ public class MicoStatusServiceTest {
                 .setHostIp(hostIp)
                 .setNodeName(nodeName)
                 .setPhase(podPhase)
+                .setAge(startTime)
+                .setRestarts(restarts)
                 .setMetrics(new KuberenetesPodMetricsDTO()
                     .setMemoryUsage(memoryUsage)
                     .setCpuLoad(cpuLoad)
@@ -199,6 +204,8 @@ public class MicoStatusServiceTest {
                 .setHostIp(hostIp)
                 .setNodeName(nodeName)
                 .setPhase(podPhase)
+                .setRestarts(restarts)
+                .setAge(startTime)
                 .setMetrics(new KuberenetesPodMetricsDTO()
                     .setMemoryUsage(memoryUsage)
                     .setCpuLoad(cpuLoad)

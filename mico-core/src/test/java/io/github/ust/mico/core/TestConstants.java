@@ -5,6 +5,7 @@ import io.github.ust.mico.core.model.MicoVersion;
 import springfox.documentation.spring.web.json.Json;
 
 import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
+import static io.github.ust.mico.core.JsonPathBuilder.buildAttributePath;
 import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
 
 public class TestConstants {
@@ -56,6 +57,7 @@ public class TestConstants {
 
     public static final String FIRST_SERVICE = buildPath(ROOT, "serviceDeploymentInformation[0]");
     public static final String SERVICE_INFORMATION_NAME = buildPath(FIRST_SERVICE, "name");
+    public static final String SINGLE_SERVICE_INFORMATION_NAME = buildAttributePath("name");
     public static final String REQUESTED_REPLICAS = buildPath(FIRST_SERVICE, "requestedReplicas");
     public static final String AVAILABLE_REPLICAS = buildPath(FIRST_SERVICE, "availableReplicas");
     public static final String INTERFACES_INFORMATION = buildPath(FIRST_SERVICE, "interfacesInformation");

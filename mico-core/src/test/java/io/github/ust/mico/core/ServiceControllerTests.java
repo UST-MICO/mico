@@ -29,6 +29,7 @@ import static io.github.ust.mico.core.TestConstants.SHORT_NAME_2_MATCHER;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME_3;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME_3_MATCHER;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME_MATCHER;
+import static io.github.ust.mico.core.TestConstants.SINGLE_SERVICE_INFORMATION_NAME;
 import static io.github.ust.mico.core.TestConstants.VERSION;
 import static io.github.ust.mico.core.TestConstants.VERSION_1_0_1;
 import static io.github.ust.mico.core.TestConstants.VERSION_1_0_1_MATCHER;
@@ -162,8 +163,8 @@ public class ServiceControllerTests {
     public void getStatusOfService() throws Exception {
         MicoService micoService = new MicoService()
             .setName(SERVICE_NAME)
-            .setShortName(SHORT_NAME_1)
-            .setVersion(VERSION_1_0_1)
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
             .setDescription(DESCRIPTION_1);
 
         String nodeName = "testNode";
@@ -202,6 +203,9 @@ public class ServiceControllerTests {
                 .setMemoryUsage(memoryUsagePod2));
 
         micoServiceDeploymentInformation
+            .setVersion(VERSION)
+            .setName(SERVICE_NAME)
+            .setShortName(SHORT_NAME)
             .setAvailableReplicas(availableReplicas)
             .setRequestedReplicas(requestedReplicas)
             .setInterfacesInformation(Collections.singletonList(new MicoServiceInterfaceDTO().setName(SERVICE_INTERFACE_NAME)))
@@ -213,7 +217,7 @@ public class ServiceControllerTests {
         mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/status"))
             .andDo(print())
             .andExpect(status().isOk())
-            .andExpect(jsonPath(SERVICE_INFORMATION_NAME, is(SERVICE_NAME)))
+            .andExpect(jsonPath(SINGLE_SERVICE_INFORMATION_NAME, is(SERVICE_NAME)))
             .andExpect(jsonPath(REQUESTED_REPLICAS, is(requestedReplicas)))
             .andExpect(jsonPath(AVAILABLE_REPLICAS, is(availableReplicas)))
             .andExpect(jsonPath(INTERFACES_INFORMATION, hasSize(1)))
