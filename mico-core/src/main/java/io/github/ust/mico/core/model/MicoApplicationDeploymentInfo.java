@@ -48,7 +48,8 @@ public class MicoApplicationDeploymentInfo {
         properties = {
             @ExtensionProperty(name = "title", value = "Service Deployment Info"),
             @ExtensionProperty(name = "x-order", value = "10"),
-            @ExtensionProperty(name = "description", value = "The service deployment info for each service this application is composed of")
+            @ExtensionProperty(name = "description", value = "The service deployment info for each service this " +
+                "application is composed of.")
         }
     )})
     private Map<Long, MicoServiceDeploymentInfo> serviceDeploymentInfos = new HashMap<>();

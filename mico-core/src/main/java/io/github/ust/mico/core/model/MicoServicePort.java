@@ -45,7 +45,7 @@ public class MicoServicePort {
         properties = {
             @ExtensionProperty(name = "title", value = "Exposed Port Number"),
             @ExtensionProperty(name = "x-order", value = "10"),
-            @ExtensionProperty(name = "description", value = "The port number of the externally exposed port")
+            @ExtensionProperty(name = "description", value = "The port number of the externally exposed port.")
         })})
     private int number;
 
@@ -58,7 +58,7 @@ public class MicoServicePort {
         properties = {
             @ExtensionProperty(name = "title", value = "Type"),
             @ExtensionProperty(name = "x-order", value = "30"),
-            @ExtensionProperty(name = "description", value = "The type (protocol) of the port. TCP or UDP")
+            @ExtensionProperty(name = "description", value = "The type (protocol) of the port. TCP or UDP.")
         })})
     private MicoPortType type = MicoPortType.DEFAULT;
 
@@ -70,7 +70,7 @@ public class MicoServicePort {
         properties = {
             @ExtensionProperty(name = "title", value = "Target Port Number"),
             @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "The port inside the container")
+            @ExtensionProperty(name = "description", value = "The port inside the container.")
         })})
     private int targetPort;
 

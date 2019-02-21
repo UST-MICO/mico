@@ -71,7 +71,7 @@ public class MicoServiceInterface {
         properties = {
             @ExtensionProperty(name = "title", value = "Ports"),
             @ExtensionProperty(name = "x-order", value = "200"),
-            @ExtensionProperty(name = "description", value = "The list of the interfaces ports")
+            @ExtensionProperty(name = "description", value = "The list of the interfaces ports.")
         }
     )})
     @Relationship(type = "PROVIDES_PORTS", direction = Relationship.UNDIRECTED)
@@ -88,9 +88,9 @@ public class MicoServiceInterface {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "public DNS"),
+            @ExtensionProperty(name = "title", value = "Public DNS"),
             @ExtensionProperty(name = "x-order", value = "100"),
-            @ExtensionProperty(name = "description", value = "The public DNS")
+            @ExtensionProperty(name = "description", value = "The public DNS.")
         }
     )})
     private String publicDns;
@@ -104,7 +104,7 @@ public class MicoServiceInterface {
         properties = {
             @ExtensionProperty(name = "title", value = "Description"),
             @ExtensionProperty(name = "x-order", value = "110"),
-            @ExtensionProperty(name = "description", value = "Human readable description of this service interface")
+            @ExtensionProperty(name = "description", value = "Human readable description of this service interface.")
         }
     )})
     private String description;
@@ -117,7 +117,7 @@ public class MicoServiceInterface {
         properties = {
             @ExtensionProperty(name = "title", value = "Protocol"),
             @ExtensionProperty(name = "x-order", value = "120"),
-            @ExtensionProperty(name = "description", value = "The protocol of this interface")
+            @ExtensionProperty(name = "description", value = "The protocol of this interface.")
         }
     )})
     private String protocol;
@@ -130,7 +130,7 @@ public class MicoServiceInterface {
         properties = {
             @ExtensionProperty(name = "title", value = "Transport Protocol"),
             @ExtensionProperty(name = "x-order", value = "130"),
-            @ExtensionProperty(name = "description", value = "The transport protocol of this interface")
+            @ExtensionProperty(name = "description", value = "The transport protocol of this interface.")
         }
     )})
     private String transportProtocol;

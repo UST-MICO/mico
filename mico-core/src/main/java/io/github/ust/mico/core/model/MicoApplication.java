@@ -51,10 +51,11 @@ public class MicoApplication {
     @ApiModelProperty(required = true, extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Short NAme"),
+            @ExtensionProperty(name = "title", value = "Short Name"),
             @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "Unique short name of the application")
-        })})
+            @ExtensionProperty(name = "description", value = "Unique short name of the application.")
+        }
+    )})
     private String shortName;
 
     /**
@@ -65,8 +66,9 @@ public class MicoApplication {
         properties = {
             @ExtensionProperty(name = "title", value = "Name"),
             @ExtensionProperty(name = "x-order", value = "10"),
-            @ExtensionProperty(name = "description", value = "human readdable name of the application")
-        })})
+            @ExtensionProperty(name = "description", value = "Human readable name of the application.")
+        }
+    )})
     private String name;
 
     /**
@@ -77,8 +79,9 @@ public class MicoApplication {
         properties = {
             @ExtensionProperty(name = "title", value = "Version"),
             @ExtensionProperty(name = "x-order", value = "30"),
-            @ExtensionProperty(name = "description", value = "Version number of the application")
-        })})
+            @ExtensionProperty(name = "description", value = "Version number of the application.")
+        }
+    )})
     private String version;
 
     /**
@@ -90,7 +93,8 @@ public class MicoApplication {
             @ExtensionProperty(name = "title", value = "Description"),
             @ExtensionProperty(name = "x-order", value = "40"),
             @ExtensionProperty(name = "description", value = "Human readable description of this application.")
-        })})
+        }
+    )})
     private String description;
 
 
@@ -106,12 +110,13 @@ public class MicoApplication {
         properties = {
             @ExtensionProperty(name = "title", value = "Mico Services"),
             @ExtensionProperty(name = "x-order", value = "130"),
-            @ExtensionProperty(name = "description", value = "The services this application is composed of")
-        })})
+            @ExtensionProperty(name = "description", value = "The services this application is composed of.")
+        }
+    )})
     @Singular
     @Relationship(type = "INCLUDES")
     private List<MicoService> services = new ArrayList<>();
-    
+
     /**
      * The information necessary for deploying this application.
      */
@@ -120,8 +125,9 @@ public class MicoApplication {
         properties = {
             @ExtensionProperty(name = "title", value = "Deployment Info"),
             @ExtensionProperty(name = "x-order", value = "120"),
-            @ExtensionProperty(name = "description", value = "The information necessary for deploying this application")
-        })})
+            @ExtensionProperty(name = "description", value = "The information necessary for deploying this application.")
+        }
+    )})
     private MicoApplicationDeploymentInfo deploymentInfo = new MicoApplicationDeploymentInfo();
 
     /**
@@ -132,8 +138,9 @@ public class MicoApplication {
         properties = {
             @ExtensionProperty(name = "title", value = "Contact"),
             @ExtensionProperty(name = "x-order", value = "110"),
-            @ExtensionProperty(name = "description", value = "Human readable contact information for support purposes")
-        })})
+            @ExtensionProperty(name = "description", value = "Human readable contact information for support purposes.")
+        }
+    )})
     private String contact;
 
     /**
@@ -145,8 +152,10 @@ public class MicoApplication {
         properties = {
             @ExtensionProperty(name = "title", value = "Owner"),
             @ExtensionProperty(name = "x-order", value = "100"),
-            @ExtensionProperty(name = "description", value = "Human readable information for the application owner, who is responsible for this application")
-        })})
+            @ExtensionProperty(name = "description", value = "Human readable information for the application owner, " +
+                "who is responsible for this application.")
+        }
+    )})
     private String owner;
 
     @JsonIgnore

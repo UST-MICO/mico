@@ -31,7 +31,8 @@ public class MicoDeploymentStrategy {
         properties = {
             @ExtensionProperty(name = "title", value = "Deployment Strategy Type"),
             @ExtensionProperty(name = "x-order", value = "10"),
-            @ExtensionProperty(name = "description", value = "The type of this deployment strategy, can RECREATE or ROLLING_UPDATE. Defaults to ALWAYS.")
+            @ExtensionProperty(name = "description", value = "The type of this deployment strategy, can RECREATE or " +
+                "ROLLING_UPDATE. Defaults to ALWAYS.")
         }
     )})
     private final Type type;
@@ -50,9 +51,12 @@ public class MicoDeploymentStrategy {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Max. Additional Instances (percentage)"),
+            @ExtensionProperty(name = "title", value = "Max. Additional Instances (Percentage)"),
             @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "The maximum percentage of instances that can be scheduled above the desired number of instances during the update. This can not be 0 if maxUnavailable is 0. If the absolute number is also specified, this field will be used prior to the absolute number. Defaults to 25%")
+            @ExtensionProperty(name = "description", value = "The maximum percentage of instances that can be " +
+                "scheduled above the desired number of instances during the update. This can not be 0 if " +
+                "maxUnavailable is 0. If the absolute number is also specified, this field will be used prior to the " +
+                "absolute number. Defaults to 25%.")
         }
     )})
     private final double maxInstancesOnTopPercent = 0.25;
@@ -64,9 +68,12 @@ public class MicoDeploymentStrategy {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Max. Additional Instances (absolute)"),
+            @ExtensionProperty(name = "title", value = "Max. Additional Instances (Absolute)"),
             @ExtensionProperty(name = "x-order", value = "30"),
-            @ExtensionProperty(name = "description", value = "The maximum (absolute) number of instances that can be scheduled above the desired number of instances during the update. This can not be 0 if maxUnavailable is 0. If the percentage is also specified, it will be used prior to this absolute number.")
+            @ExtensionProperty(name = "description", value = "The maximum (absolute) number of instances that can be " +
+                "scheduled above the desired number of instances during the update. This can not be 0 if " +
+                "maxUnavailable is 0. If the percentage is also specified, it will be used prior to this absolute " +
+                "number.")
         }
     )})
     private final double maxInstancesOnTopAbsolute;
@@ -80,9 +87,11 @@ public class MicoDeploymentStrategy {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Max. Unavailable Instances During Updates (percentage)"),
+            @ExtensionProperty(name = "title", value = "Max. Unavailable Instances During Updates (Percentage)"),
             @ExtensionProperty(name = "x-order", value = "40"),
-            @ExtensionProperty(name = "description", value = "The maximum percentage of instances that can be unavailable during the update. This can not be 0 if maxSurge is 0. If the absolute number is also specified, this field will be used prior to the absolute number. Defaults to 25%.")
+            @ExtensionProperty(name = "description", value = "The maximum percentage of instances that can be " +
+                "unavailable during the update. This can not be 0 if maxSurge is 0. If the absolute number is also " +
+                "specified, this field will be used prior to the absolute number. Defaults to 25%.")
         }
     )})
     private final double maxInstancesBelowPercent = 0.25;
@@ -95,9 +104,11 @@ public class MicoDeploymentStrategy {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Max. Unavailable Instances During Updates (absolute)"),
+            @ExtensionProperty(name = "title", value = "Max. Unavailable Instances During Updates (Absolute)"),
             @ExtensionProperty(name = "x-order", value = "50"),
-            @ExtensionProperty(name = "description", value = "The maximum (absolute) number of instances that can be unavailable during the update. This can not be 0 if maxSurge is 0. If the percentage is also specified, it will be used prior to this absolute number.")
+            @ExtensionProperty(name = "description", value = "The maximum (absolute) number of instances that can be " +
+                "unavailable during the update. This can not be 0 if maxSurge is 0. If the percentage is also " +
+                "specified, it will be used prior to this absolute number.")
         }
     )})
     private final double maxInstancesBelow;

@@ -36,7 +36,7 @@ public class MicoImageContainer {
         properties = {
             @ExtensionProperty(name = "title", value = "Image Name"),
             @ExtensionProperty(name = "x-order", value = "10"),
-            @ExtensionProperty(name = "description", value = "The name of the docker image")
+            @ExtensionProperty(name = "description", value = "The name of the docker image.")
         }
     )})
     private String image;
@@ -49,7 +49,7 @@ public class MicoImageContainer {
         properties = {
             @ExtensionProperty(name = "title", value = "Ports"),
             @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "The list of ports for this service")
+            @ExtensionProperty(name = "description", value = "The list of ports for this service.")
         }
     )})
     private List<MicoPort> ports = new ArrayList<>();
@@ -68,7 +68,7 @@ public class MicoImageContainer {
         properties = {
             @ExtensionProperty(name = "title", value = "Container Name"),
             @ExtensionProperty(name = "x-order", value = "30"),
-            @ExtensionProperty(name = "description", value = "The name of the container (in the Kubernetes Pod)")
+            @ExtensionProperty(name = "description", value = "The name of the container (in the Kubernetes Pod).")
         }
     )})
     private String name;
@@ -83,7 +83,8 @@ public class MicoImageContainer {
         properties = {
             @ExtensionProperty(name = "title", value = "Resource Limit (minimum)"),
             @ExtensionProperty(name = "x-order", value = "40"),
-            @ExtensionProperty(name = "description", value = "Limit describing the minimum amount of compute resources allowed. If omitted it defaults to the upper limit if that is explicitly specified")
+            @ExtensionProperty(name = "description", value = "Limit describing the minimum amount of compute " +
+                "resources allowed. If omitted it defaults to the upper limit if that is explicitly specified.")
         }
     )})
     private MicoResourceConstraint resourceLowerLimit;
@@ -97,7 +98,8 @@ public class MicoImageContainer {
         properties = {
             @ExtensionProperty(name = "title", value = "Resource Limit (maximum)"),
             @ExtensionProperty(name = "x-order", value = "50"),
-            @ExtensionProperty(name = "description", value = "Limit describing the maximum amount of compute resources allowed.")
+            @ExtensionProperty(name = "description", value = "Limit describing the maximum amount of compute " +
+                "resources allowed.")
         }
     )})
     private MicoResourceConstraint resourceUpperLimit;
@@ -111,7 +113,8 @@ public class MicoImageContainer {
         properties = {
             @ExtensionProperty(name = "title", value = "Read Only Root File System"),
             @ExtensionProperty(name = "x-order", value = "60"),
-            @ExtensionProperty(name = "description", value = "Indicates whether this container should have a read-only root file system. Defaults to false.")
+            @ExtensionProperty(name = "description", value = "Indicates whether this container should have a " +
+                "read-only root file system. Defaults to false.")
         }
     )})
     private boolean readOnlyRootFileSystem = false;
@@ -126,8 +129,9 @@ public class MicoImageContainer {
         properties = {
             @ExtensionProperty(name = "title", value = "Run As Non Root"),
             @ExtensionProperty(name = "x-order", value = "70"),
-            @ExtensionProperty(name = "description", value = "Indicates whether the service must run as a non-root user.\n" +
-                "     * If somehow not run as non-root user (not UID 0) it will fail to start. Default to false.")
+            @ExtensionProperty(name = "description", value = "Indicates whether the service must run as a non-root " +
+                "user.\n" +
+                "If somehow not run as non-root user (not UID 0) it will fail to start. Default to false.")
         }
     )})
     private boolean runAsNonRoot = false;

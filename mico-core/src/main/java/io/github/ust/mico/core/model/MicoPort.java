@@ -24,7 +24,7 @@ public class MicoPort {
         properties = {
             @ExtensionProperty(name = "title", value = "Port Number"),
             @ExtensionProperty(name = "x-order", value = "10"),
-            @ExtensionProperty(name = "description", value = "The port number")
+            @ExtensionProperty(name = "description", value = "The port number.")
         }
     )})
     private final int number;
@@ -37,7 +37,7 @@ public class MicoPort {
         properties = {
             @ExtensionProperty(name = "title", value = "Port Type"),
             @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "The type (protocol) of the port")
+            @ExtensionProperty(name = "description", value = "The type (protocol) of the port.")
         }
     )})
     private final MicoPortType type = MicoPortType.DEFAULT;

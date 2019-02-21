@@ -50,7 +50,7 @@ public class MicoServiceDeploymentInfo {
         properties = {
             @ExtensionProperty(name = "title", value = "Containers"),
             @ExtensionProperty(name = "x-order", value = "10"),
-            @ExtensionProperty(name = "description", value = "The list of containers to run within this service")
+            @ExtensionProperty(name = "description", value = "The list of containers to run within this service.")
         }
     )})
     @Singular
@@ -69,7 +69,7 @@ public class MicoServiceDeploymentInfo {
         properties = {
             @ExtensionProperty(name = "title", value = "Replicas"),
             @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "Number of desired instances. Defaults to 1")
+            @ExtensionProperty(name = "description", value = "Number of desired instances. Defaults to 1.")
         }
     )})
     private int replicas = 1;
