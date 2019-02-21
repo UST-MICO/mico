@@ -1,4 +1,15 @@
-<p>
-    app-detail-status works!
-</p>
-{{shortName}} - {{version}}
+<mat-accordion>
+
+    <mat-expansion-panel *ngFor="let serviceStatus of applicationStatus?.serviceDeploymentInformation">
+        <mat-expansion-panel-header>
+            <mat-panel-title>
+                *Service Name and Version*
+            </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <ng-template matExpansionPanelContent>
+            <mico-service-detail-status [serviceStatus]="serviceStatus"></mico-service-detail-status>
+        </ng-template>
+
+    </mat-expansion-panel>
+</mat-accordion>
