@@ -85,6 +85,9 @@ public class MicoStatusService {
 
         Deployment deployment = deploymentOptional.get();
         MicoServiceDeploymentInformationDTO serviceDeploymentInformation = new MicoServiceDeploymentInformationDTO();
+        serviceDeploymentInformation.setName(micoService.getName());
+        serviceDeploymentInformation.setShortName(micoService.getShortName());
+        serviceDeploymentInformation.setVersion(micoService.getVersion());
         serviceDeploymentInformation.setAvailableReplicas(deployment.getStatus().getAvailableReplicas());
         serviceDeploymentInformation.setRequestedReplicas(deployment.getSpec().getReplicas());
 
@@ -109,29 +112,28 @@ public class MicoStatusService {
      * @return a list of {@link MicoServiceInterfaceDTO}, each item contains status information for a {@link MicoServiceInterface}
      * TODO add externalIP information
      */
-    private List<MicoServiceInterfaceDTO> getServiceInterfaceStatus(MicoService micoService) {
+    public List<MicoServiceInterfaceDTO> getServiceInterfaceStatus(MicoService micoService) {
         List<MicoServiceInterfaceDTO> interfacesInformation = new LinkedList<>();
         List<MicoServiceInterface> serviceInterfaces = micoService.getServiceInterfaces();
         if (serviceInterfaces.size() < MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                "There are " + serviceInterfaces.size() + " service interfaces of MicoService '" +
-                    micoService.getShortName() + "' '" + micoService.getVersion() + "'. That is less than the required " +
+                "There are " + serviceInterfaces.size() + " service interfaces of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "'. That is less than the required " +
                     MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT + " service interfaces.");
         }
 
         for (MicoServiceInterface micoServiceInterface : serviceInterfaces) {
             String serviceInterfaceName = micoServiceInterface.getServiceInterfaceName();
-            Optional<Service> kubernetesServiceOptional = null;
+            Optional<Service> kubernetesServiceOptional = Optional.empty();
             try {
                 kubernetesServiceOptional = micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, serviceInterfaceName);
             } catch (KubernetesResourceException e) {
-                log.error("Error while retrieving Kubernetes services of MicoServiceInterface '{}' of MicoService '{}' '{}'. " +
-                        "Continue with next one. Caused by: {}",
+                log.error("Error while retrieving Kubernetes services of MicoServiceInterface '{}' of MicoService '{}' '{}'. " + "Continue with next one. Caused by: {}",
                     serviceInterfaceName, micoService.getShortName(), micoService.getVersion(), e.getMessage());
             }
             if (!kubernetesServiceOptional.isPresent()) {
                 log.warn("There is no service of the MicoServiceInterface '{}' of MicoService '{}' '{}'.",
                     micoService.getShortName(), micoService.getVersion());
+                continue;
             }
             Service kubernetesService = kubernetesServiceOptional.get();
             String serviceName = kubernetesService.getMetadata().getName();
