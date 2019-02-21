@@ -1,3 +1,22 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package io.github.ust.mico.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,6 +34,7 @@ import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.web.ServiceInterfaceController;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -40,11 +60,13 @@ import static io.github.ust.mico.core.TestConstants.VERSION;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -59,6 +81,7 @@ public class ServiceInterfaceControllerTests {
     private static final String SELF_HREF = buildPath(JSON_PATH_LINKS_SECTION, SELF, HREF);
     private static final String INTERFACES_HREF = buildPath(JSON_PATH_LINKS_SECTION, "interfaces", HREF);
     private static final String INTERFACE_NAME = "interface-name";
+    private static final String INTERFACE_NAME_INVALID = "interface_NAME";
     private static final int INTERFACE_PORT = 1024;
     private static final MicoPortType INTERFACE_PORT_TYPE = MicoPortType.TCP;
     private static final int INTERFACE_TARGET_PORT = 1025;
@@ -120,8 +143,21 @@ public class ServiceInterfaceControllerTests {
         mvc.perform(post(INTERFACES_URL)
             .content(mapper.writeValueAsBytes(serviceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
-            .andExpect(status().isBadRequest())
-            .andExpect(status().reason("An interface with this name is already associated with this service."))
+            .andExpect(status().isConflict())
+            .andReturn();
+    }
+
+    @Test
+    public void postInvalidServiceInterface() throws Exception {
+        MicoServiceInterface serviceInterface = getInvalidTestServiceInterface();
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
+            Optional.of(new MicoService().setShortName(SHORT_NAME).setVersion(VERSION))
+        );
+        mvc.perform(post(INTERFACES_URL)
+            .content(mapper.writeValueAsBytes(serviceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isUnprocessableEntity())
+            .andExpect(status().reason("The name of the service interface is not valid."))
             .andReturn();
     }
 
@@ -211,6 +247,64 @@ public class ServiceInterfaceControllerTests {
             .andReturn();
     }
 
+    @Test
+    public void putMicoServiceInterfaceNotFoundService() throws Exception {
+        MicoServiceInterface serviceInterface = getTestServiceInterface();
+        mvc.perform(put(INTERFACES_URL + "/" + serviceInterface.getServiceInterfaceName())
+            .content(mapper.writeValueAsBytes(serviceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isNotFound())
+            .andExpect(status().reason("Service '" + SHORT_NAME + "' '" + VERSION + "' was not found!"))
+            .andReturn();
+    }
+
+    @Test
+    public void putMicoServiceInterfaceNameNotEqual() throws Exception {
+        MicoServiceInterface serviceInterface = getTestServiceInterface();
+        mvc.perform(put(INTERFACES_URL + "/" + serviceInterface.getServiceInterfaceName() + "NotEqual")
+            .content(mapper.writeValueAsBytes(serviceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().is(422))
+            .andExpect(status().reason("The variable 'serviceInterfaceName' must be equal to the name specified in the request body"))
+            .andReturn();
+    }
+
+    @Test
+    public void putMicoServiceInterfaceNotFound() throws Exception {
+        MicoService service = new MicoService().setShortName(SHORT_NAME).setVersion(VERSION);
+        MicoServiceInterface serviceInterface = getTestServiceInterface();
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
+        mvc.perform(put(INTERFACES_URL + "/" + serviceInterface.getServiceInterfaceName())
+            .content(mapper.writeValueAsBytes(serviceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isNotFound())
+            .andExpect(status().reason("MicoServiceInterface was not found!"))
+            .andReturn();
+    }
+
+    @Test
+    public void putMicoServiceInterface() throws Exception {
+        MicoService service = new MicoService().setShortName(SHORT_NAME).setVersion(VERSION);
+        MicoServiceInterface micoServiceInterface = new MicoServiceInterface().setServiceInterfaceName(INTERFACE_NAME);
+        service.getServiceInterfaces().add(micoServiceInterface);
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
+
+        ArgumentCaptor<MicoService> micoServiceArgumentCaptor = ArgumentCaptor.forClass(MicoService.class);
+        MicoServiceInterface modifiedServiceInterface = getTestServiceInterface();
+        mvc.perform(put(INTERFACES_URL + "/" + modifiedServiceInterface.getServiceInterfaceName())
+            .content(mapper.writeValueAsBytes(modifiedServiceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(getServiceInterfaceMatcher(modifiedServiceInterface, INTERFACES_URL, SERVICE_URL))
+            .andReturn();
+        verify(serviceRepository, times(1)).save(micoServiceArgumentCaptor.capture());
+        MicoService savedMicoService = micoServiceArgumentCaptor.getValue();
+        assertEquals("There should only be one mico service interface", 1, savedMicoService.getServiceInterfaces().size());
+        MicoServiceInterface micoServiceInterfaceFromSave = savedMicoService.getServiceInterfaces().get(0);
+        assertEquals("The interface which was saved to the db, should be equal to the interface which was provided in the request body", modifiedServiceInterface, micoServiceInterfaceFromSave);
+    }
+
+
     private Service getKubernetesService(String serviceInterfaceName, List<String> externalIPs) {
         Service service = new ServiceBuilder()
             .withNewMetadata()
@@ -237,6 +331,17 @@ public class ServiceInterfaceControllerTests {
     private MicoServiceInterface getTestServiceInterface() {
         return new MicoServiceInterface()
             .setServiceInterfaceName(INTERFACE_NAME)
+            .setPorts(CollectionUtils.listOf(new MicoServicePort()
+                .setNumber(INTERFACE_PORT)
+                .setType(INTERFACE_PORT_TYPE)
+                .setTargetPort(INTERFACE_TARGET_PORT)))
+            .setDescription(INTERFACE_DESCRIPTION)
+            .setPublicDns(INTERFACE_PUBLIC_DNS);
+    }
+
+    private MicoServiceInterface getInvalidTestServiceInterface() {
+        return new MicoServiceInterface()
+            .setServiceInterfaceName(INTERFACE_NAME_INVALID)
             .setPorts(CollectionUtils.listOf(new MicoServicePort()
                 .setNumber(INTERFACE_PORT)
                 .setType(INTERFACE_PORT_TYPE)

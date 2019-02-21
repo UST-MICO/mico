@@ -1,3 +1,22 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package io.github.ust.mico.core;
 
 import io.github.ust.mico.core.model.MicoService;
@@ -36,6 +55,7 @@ public class TestConstants {
     public static final String SHORT_NAME_1 = "short-name-1";
     public static final String SHORT_NAME_2 = "short-name-2";
     public static final String SHORT_NAME_3 = "short-name-3";
+    public static final String SHORT_NAME_INVALID = "short_NAME";
     public static final String SHORT_NAME_ATTRIBUTE = JsonPathBuilder.buildAttributePath("shortName");
     public static final String SHORT_NAME_MATCHER = JsonPathBuilder.buildSingleMatcher(SHORT_NAME_ATTRIBUTE, SHORT_NAME);
     public static final String SHORT_NAME_1_MATCHER = JsonPathBuilder.buildSingleMatcher(SHORT_NAME_ATTRIBUTE, SHORT_NAME_1);
@@ -51,6 +71,9 @@ public class TestConstants {
     public static final String DESCRIPTION_1_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION_1);
     public static final String DESCRIPTION_2_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION_2);
     public static final String DESCRIPTION_3_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION_3);
+
+    public static final String SERVICE_SHORT_NAME = "serviceShortName";
+    public static final String SERVICE_VERSION = "1.0.0";
 
     public static final String SERVICE_INTERFACE_NAME = "service-interface-name";
     public static final String SERVICE_NAME = "test-service";
@@ -75,6 +98,8 @@ public class TestConstants {
     public static final String POD_INFO_METRICS_MEMORY_USAGE_2 = buildPath(FIRST_SERVICE, "podInfo[1].metrics.memoryUsage");
     public static final String POD_INFO_METRICS_CPU_LOAD_2 = buildPath(FIRST_SERVICE, "podInfo[1].metrics.cpuLoad");
     public static final String POD_INFO_METRICS_AVAILABLE_2 = buildPath(FIRST_SERVICE, "podInfo[1].metrics.available");
+    public static final String SERVICE_INTERFACE_NAME_1 = "service-interface-name-1";
+
 
     /**
      * Git repository that is used for testing.
