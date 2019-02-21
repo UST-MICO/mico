@@ -311,18 +311,34 @@ public class ServiceController {
     }
 
     @PostMapping("/" + PATH_VARIABLE_IMPORT + "/" + PATH_VARIABLE_GITHUB)
-    public ResponseEntity<Resource<MicoService>> importMicoServiceFromGitHub(@RequestBody String url) {
-        log.debug("Start importing MicoService from URL '{}'", url);
+    public ResponseEntity<Resource<MicoService>> importMicoServiceFromGitHub(@RequestBody CrawlingInformation crawlingInformation) {
+        log.debug("Start importing MicoService from URL '{}' with version '{}'", crawlingInformation.getUri(), crawlingInformation.getVersion());
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
+
         try {
-            MicoService newService = crawler.crawlGitHubRepoLatestRelease(url);
-            return createService(newService, null);
+            if (crawlingInformation.getVersion().equals("latest") || crawlingInformation.getVersion().isEmpty()) {
+                MicoService service = crawler.crawlGitHubRepoLatestRelease(crawlingInformation.getUri());
+                return createService(service, null);
+            } else {
+                MicoService service = crawler.crawlGitHubRepoSpecificRelease(crawlingInformation.getUri(), crawlingInformation.getVersion());
+                return createService(service, null);
+            }
         } catch (IOException e) {
             log.error(e.getStackTrace().toString());
             log.error("Getting exception '{}'", e.getMessage());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
+    }
+
+    //TODO add new endpoint for crawling versions
+    @GetMapping("/" + PATH_VARIABLE_IMPORT + "/" + PATH_VARIABLE_GITHUB)
+    public ResponseEntity<Resource<MicoService>> getGitHubVersions(@RequestBody CrawlingInformation crawlingInformation) {
+        log.debug("Start importing MicoService from URL '{}' with version '{}'", crawlingInformation.getUri(), crawlingInformation.getVersion());
+        RestTemplateBuilder restTemplate = new RestTemplateBuilder();
+        GitHubCrawler crawler = new GitHubCrawler(restTemplate);
+
+        //TODO
     }
 
     public List<MicoService> getDependers(MicoService serviceToLookFor) {
