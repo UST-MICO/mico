@@ -39,7 +39,6 @@ export class CreateServiceInterfaceComponent implements OnInit {
         if (this.serviceData == null) {
             return null;
         }
-        console.log(this.portData);
         if (this.portData == null || this.portData.length <= 0) {
             return null;
         }
