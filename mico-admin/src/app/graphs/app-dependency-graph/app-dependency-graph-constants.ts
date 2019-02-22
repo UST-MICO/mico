@@ -59,6 +59,10 @@ export const STYLE_TEMPLATE = {
         }
         .text.version {
             word-break: break-all;
+            cursor: pointer;
+        }
+        .text.version:hover {
+            text-decoration: underline;
         }
         .node:not(.application):not(.selected).hovered {
             fill: #efefef;

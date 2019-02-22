@@ -19,12 +19,14 @@
 
 import { Component, OnInit, ViewChild, Input, OnChanges, SimpleChanges } from '@angular/core';
 import GraphEditor from '@ustutt/grapheditor-webcomponent/lib/grapheditor';
-import { Edge } from '@ustutt/grapheditor-webcomponent/lib/edge';
+import { Edge, DraggedEdge } from '@ustutt/grapheditor-webcomponent/lib/edge';
 import { Node } from '@ustutt/grapheditor-webcomponent/lib/node';
 import { ApiObject } from 'src/app/api/apiobject';
 import { ApiService } from 'src/app/api/api.service';
 import { Subscription } from 'rxjs';
 import { STYLE_TEMPLATE, APPLICATION_NODE_TEMPLATE, SERVICE_NODE_TEMPLATE, ARROW_TEMPLATE } from './app-dependency-graph-constants';
+import { MatDialog } from '@angular/material';
+import { ChangeServiceVersionComponent } from 'src/app/dialogs/change-service-version/change-service-version.component';
 
 
 @Component({
@@ -44,7 +46,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
     private nodeMap: Map<string, Node>;
     private edgeMap: Map<string, Edge>;
 
-    constructor(private api: ApiService) {}
+    constructor(private api: ApiService, private dialog: MatDialog) {}
 
     ngOnInit() {
         if (this.graph == null) {
@@ -63,16 +65,9 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
             }
             return false;
         };
-        graph.addEventListener('nodeclick', (event) => {
-            if ((event as any).detail.node.id === 'APPLICATION') {
-                event.preventDefault();
-            }
-        });
+        graph.addEventListener('nodeclick', this.onNodeClick);
         graph.updateTemplates([SERVICE_NODE_TEMPLATE, APPLICATION_NODE_TEMPLATE], [STYLE_TEMPLATE], [ARROW_TEMPLATE]);
-        graph.onCreateDraggedEdge = (edge) => {
-            edge.markers = [{template: 'arrow', positionOnLine: 1, scale: 0.5, rotate: {relativeAngle: 0}}, ];
-            return edge;
-        };
+        graph.onCreateDraggedEdge = this.onCreateDraggedEdge;
         this.resetGraph();
 
     }
@@ -89,6 +84,45 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
                 });
             }
         }
+    }
+
+    onNodeClick = (event: CustomEvent) => {
+        if (event.detail.node.id === 'APPLICATION') {
+            event.preventDefault();
+            return;
+        }
+        if (event.detail.key === 'version') {
+            event.preventDefault();
+            console.log(event.detail)
+
+            const dialogRef = this.dialog.open(ChangeServiceVersionComponent, {
+                data: {
+                    service: event.detail.node.service,
+                }
+            });
+
+            dialogRef.afterClosed().subscribe((selected) => {
+                if (selected == null || event.detail.node.service.version === selected.version) {
+                    return;
+                }
+                this.changeServiceVersion(event.detail.node, selected);
+            });
+            return;
+        }
+    }
+
+    changeServiceVersion(node: Node, newVerion: ApiObject) {
+
+    }
+
+    onCreateDraggedEdge = (edge: DraggedEdge) => {
+        edge.markers = [{template: 'arrow', positionOnLine: 1, scale: 0.5, rotate: {relativeAngle: 0}}, ];
+        edge.validTargets.clear();
+        if (edge.source === 'APPLICATION') {
+            edge.type = 'includes';
+            edge.markers[0].scale = 1;
+        }
+        return edge;
     }
 
     /**

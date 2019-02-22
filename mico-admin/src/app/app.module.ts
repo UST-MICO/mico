@@ -77,6 +77,7 @@ import { AppDetailComponent } from './app-detail/app-detail.component';
 import { ServiceListComponent } from './service-list/service-list.component';
 import { ServiceDetailComponent } from './service-detail/service-detail.component';
 import { CreateServiceDialogComponent } from './dialogs/create-service/create-service.component';
+import { ChangeServiceVersionComponent } from './dialogs/change-service-version/change-service-version.component';
 import { ServicePickerComponent } from './dialogs/service-picker/service-picker.component';
 import { YesNoDialogComponent } from './dialogs/yes-no-dialog/yes-no-dialog.component';
 import { CreateServiceInterfaceComponent } from './dialogs/create-service-interface/create-service-interface.component';
@@ -113,6 +114,7 @@ import { MicoDataObjectComponent } from './data-view/mico-data-object/mico-data-
         ServiceListComponent,
         ServiceDetailComponent,
         CreateServiceDialogComponent,
+        ChangeServiceVersionComponent,
         ServicePickerComponent,
         YesNoDialogComponent,
         CreateServiceInterfaceComponent,
@@ -125,11 +127,12 @@ import { MicoDataObjectComponent } from './data-view/mico-data-object/mico-data-
         CreateApplicationComponent,
         CreateNextVersionComponent,
         MicoDataArrayComponent,
-        MicoDataObjectComponent
+        MicoDataObjectComponent,
     ],
     entryComponents: [
         // dialogs
         CreateServiceDialogComponent,
+        ChangeServiceVersionComponent,
         ServicePickerComponent,
         YesNoDialogComponent,
         CreateServiceInterfaceComponent,
