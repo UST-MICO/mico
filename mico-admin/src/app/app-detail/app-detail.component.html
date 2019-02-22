@@ -2,6 +2,7 @@
     <div class="ma3 flex-grow-1">
         <h3>Application {{application?.name}}</h3>
 
+        <!-- BUTTONS -->
         <mat-button-toggle mat-raised-button (click)="deployApplication()">
             <span>
                 deploy
@@ -32,7 +33,7 @@
     <mat-form-field class="w25 ma2">
         <mat-select placeholder="Application Version" (ngModelChange)="updateVersion($event)"
             [ngModel]="selectedVersion">
-            <mat-option *ngFor="let version of allVersions" [value]="version.version">
+            <mat-option *ngFor="let version of allVersions" [value]="version?.version">
                 {{version?.version}}
             </mat-option>
         </mat-select>
@@ -44,11 +45,14 @@
 
 <mat-card class="ma2">
     <mat-tab-group>
+        <!-- OVERVIEW TAB -->
         <mat-tab label="Overview">
             <mico-app-detail-overview [application]="application"></mico-app-detail-overview>
         </mat-tab>
+        <!-- DATA TAB -->
         <mat-tab label="Application Data" style="overflow-y: hidden">
             <div class="ma3">
+                <!-- edit button -->
                 <mat-button-toggle class="mt1 mb2 mr2 inline-flex items-center" value="edit" [checked]="edit"
                     (change)="edit = !edit">
                     <span class="mr2">Edit</span>
@@ -57,6 +61,7 @@
 
             </div>
             <ng-container *ngIf="edit">
+                <!-- edit version (dynamic form) -->
                 <mico-form [modelUrl]="'remote/MicoApplication'" [filter]="['deploymentInfo', 'services']"
                     [isBlacklist]="true" (data)="applicationData = $event" [startData]="application"></mico-form>
 
@@ -70,9 +75,11 @@
                 </div>
             </ng-container>
             <ng-container *ngIf="!edit">
+                <!-- display version (data-view) -->
                 <mico-data [modelUrl]="'remote/MicoApplication'" [startData]="application"></mico-data>
             </ng-container>
         </mat-tab>
+        <!-- STATUS TAB -->
         <mat-tab label="Status">
             <mico-app-detail-status [shortName]="shortName" [version]="selectedVersion"></mico-app-detail-status>
         </mat-tab>
