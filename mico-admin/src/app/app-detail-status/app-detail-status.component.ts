@@ -30,7 +30,6 @@ export class AppDetailStatusComponent implements OnChanges, OnDestroy {
             this.subApplicationStatus = this.apiService.getApplicationStatus(this.shortName, this.version)
                 .subscribe(val => {
                     this.applicationStatus = val;
-                    console.log(val);
                 });
         }
     }

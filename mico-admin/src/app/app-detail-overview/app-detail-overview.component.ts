@@ -100,10 +100,7 @@ export class AppDetailOverviewComponent implements OnInit, OnDestroy {
             if (shouldDelete) {
 
                 this.apiService.deleteApplicationServices(this.application.shortName, this.application.version, serviceShortName)
-                    .subscribe(val => {
-                        // TODO add some user output (as soon as the endpoint actually exists)
-
-                    });
+                    .subscribe();
             }
         });
 

@@ -21,15 +21,19 @@
 
 <mat-card class="ma2">
     <mat-tab-group>
+        <!-- OVERVIEW TAB-->
         <mat-tab label="Overview">
             <mico-service-detail-overview [shortName]="shortName" [version]="selectedVersion">
             </mico-service-detail-overview>
         </mat-tab>
+        <!-- DEPLOYMENT TAB-->
         <mat-tab label="Deployment">
             Service-Detail-Deployment...
         </mat-tab>
+        <!-- STATUS TAB -->
         <mat-tab label="Status">
-            To be done...
+            <mico-service-detail-status [shortName]="shortName" [version]="selectedVersion">
+            </mico-service-detail-status>
         </mat-tab>
     </mat-tab-group>
 </mat-card>
