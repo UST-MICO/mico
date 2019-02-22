@@ -615,7 +615,7 @@ export class ApiService {
         console.log('call throwError api method');
         const stream = this.getStreamSource<ApiObject>('errorCall');
         const url = 'service';
-        this.rest.get<ApiObject>(url).subscribe(val => {
+        this.rest.delete<ApiObject>(url).subscribe(val => {
 
             console.log('ApiService', val);
             stream.next(freezeObject((val as ApiObject)));
