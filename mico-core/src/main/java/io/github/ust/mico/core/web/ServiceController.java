@@ -132,8 +132,8 @@ public class ServiceController {
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
-    public ResponseEntity<Void> deleteServices(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
-        List<MicoService> micoServiceList = getServicesFromDatabase(shortName);
+    public ResponseEntity<Void> deleteAllVersionsOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
+        List<MicoService> micoServiceList = getAllVersionsOfServiceFromDatabase(shortName);
         log.debug("Got following services from database: {}", micoServiceList);
         micoServiceList.forEach(service -> {
             //TODO: check for deployment
@@ -378,7 +378,7 @@ public class ServiceController {
         return serviceOpt.get();
     }
 
-    private List<MicoService> getServicesFromDatabase(String shortName) throws ResponseStatusException {
+    private List<MicoService> getAllVersionsOfServiceFromDatabase(String shortName) throws ResponseStatusException {
         List<MicoService> micoServiceList = serviceRepository.findByShortName(shortName);
         log.debug("Retrieve service list from database: {}", micoServiceList);
         if (micoServiceList.isEmpty()) {
