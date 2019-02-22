@@ -31,6 +31,7 @@ import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.persistence.MicoApplicationDeploymentInfoRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,6 +83,9 @@ public class ApplicationController {
 
     @Autowired
     private MicoServiceRepository serviceRepository;
+
+    @Autowired
+    private MicoApplicationDeploymentInfoRepository applicationDeploymentInfoRepository;
 
     @Autowired
     MicoKubernetesClient micoKubernetesClient;
@@ -168,6 +172,7 @@ public class ApplicationController {
         Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
         if (!applicationOptional.isPresent()) {
             // application already deleted
+            // TODO: Shoudn't this be a not found response?
             return ResponseEntity.noContent().build();
         }
         applicationOptional.map(application -> {
@@ -184,6 +189,28 @@ public class ApplicationController {
         }).map(application -> {
             applicationRepository.delete(application);
             return application;
+        });
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
+    public ResponseEntity<Resource<MicoApplication>> deleteAllApplications(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
+        List<MicoApplication> micoApplicationList = applicationRepository.findByShortName(shortName);
+
+        if(micoApplicationList.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+
+        micoApplicationList.forEach(application -> {
+            // TODO. Verfiy if this the proper way to check if an application is deployed
+            if (application.getDeploymentInfo().getServiceDeploymentInfos().size() != 0) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Application is currently deployed!");
+            }
+        });
+
+        micoApplicationList.forEach(application -> {
+            applicationDeploymentInfoRepository.delete(application.getDeploymentInfo());
+            applicationRepository.delete(application);
         });
         return ResponseEntity.noContent().build();
     }
