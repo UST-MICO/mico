@@ -1,7 +1,15 @@
 <mat-list>
     <mat-divider></mat-divider>
-    <div *ngFor="let property of properties;trackBy: trackByFn">
-        <mico-data-container [property]="property" [data]="startData"></mico-data-container>
-        <mat-divider></mat-divider>
-    </div>
+    <ng-container *ngIf="properties?.length; else emptyList">
+        <div *ngFor="let property of properties;trackBy: trackByFn">
+            <mico-data-container [property]="property" [data]="startData"></mico-data-container>
+            <mat-divider></mat-divider>
+        </div>
+
+    </ng-container>
+    <ng-template #emptyList>
+        <div class="mt2 ml3">
+            No properties defined.
+        </div>
+    </ng-template>
 </mat-list>

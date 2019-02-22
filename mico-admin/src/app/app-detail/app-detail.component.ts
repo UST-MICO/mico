@@ -1,3 +1,22 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -47,7 +66,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
     isLatestVersion = () => {
         if (this.allVersions != null) {
-            if (this.selectedVersion === this.getLatestVersion(this.allVersions)) {
+            if (this.selectedVersion === this.getLatestVersion()) {
                 return true;
             }
         }
@@ -63,8 +82,8 @@ export class AppDetailComponent implements OnInit, OnDestroy {
             this.subApplicationVersions = this.apiService.getApplicationVersions(this.shortName)
                 .subscribe(versions => {
 
-                    this.allVersions = versions;
-                    const latestVersion = this.getLatestVersion(versions);
+                    this.allVersions = JSON.parse(JSON.stringify(versions)).sort((n1, n2) => versionComparator(n1.version, n2.version));
+                    const latestVersion = this.getLatestVersion();
 
                     if (givenVersion == null) {
                         this.subscribeApplication(latestVersion);
@@ -165,18 +184,10 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     }
 
     /**
-     * takes a list of applications and returns the latest version number
+     * returns the last elements version of the allVersions list (list is sorted in ngOnInit)
      */
-    getLatestVersion(list) {
-        let version = '0.0.0';
-
-        list.forEach(element => {
-
-            if (versionComparator(element.version, version) > 0) {
-                version = element.version;
-            }
-        });
-        return version;
+    getLatestVersion() {
+        return this.allVersions[this.allVersions.length - 1].version;
     }
 
     addService() {

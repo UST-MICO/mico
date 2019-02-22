@@ -466,3 +466,18 @@ body {
     margin-left: 16rem;
     margin-right: 16rem;
 }
+
+
+/*
+* workaround for service detail overview
+*/
+.mat-tab-body-content {
+    overflow: hidden !important;
+}
+
+/*
+* workaround for divider in data-view for arrays
+*/
+.mat-card .mat-divider-horizontal {
+    position: relative !important;
+}
