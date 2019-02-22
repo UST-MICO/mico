@@ -296,7 +296,7 @@ public class MicoKubernetesClientTests {
             .setServiceInterfaceName(SERVICE_INTERFACE_NAME)
             .setPorts(CollectionUtils.listOf(
                 new MicoServicePort()
-                    .setNumber(80)
+                    .setPort(80)
                     .setTargetPort(80)
                 )
             );

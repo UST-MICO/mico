@@ -185,7 +185,7 @@ public class DeploymentControllerIntegrationTests {
         service.getServiceInterfaces().add(new MicoServiceInterface()
                 .setServiceInterfaceName("hello-service")
                 .setPorts(io.github.ust.mico.core.util.CollectionUtils.listOf(new MicoServicePort()
-                    .setNumber(80)
+                    .setPort(80)
                     .setTargetPort(80)
                     .setType(MicoPortType.TCP))));
         return service;
