@@ -85,12 +85,14 @@ export class ApiBaseFunctionService {
 
 
     private showError = (error) => {
-        const message = JSON.parse(error._body).message;
-        const path = JSON.parse(error._body).path;
+        if (error.hasOwnProperty('_body')) {
+            const message = JSON.parse(error._body).message;
+            const path = JSON.parse(error._body).path;
 
-        this.snackBar.open('An error occured in ' + path + ': ' + message, 'Ok', {
-            duration: 10 * 1000,
-        });
+            this.snackBar.open('An error occured in ' + path + ': ' + message, 'Ok', {
+                duration: 0,
+            });
+        }
         return throwError(error);
     }
 
