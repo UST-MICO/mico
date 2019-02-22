@@ -20,9 +20,10 @@
 import { environment } from '../../environments/environment';
 import { Injectable } from '@angular/core';
 import { Http, Response, Headers, RequestOptions, ResponseContentType } from '@angular/http';
-import { Observable } from 'rxjs';
-import { map, } from 'rxjs/operators';
+import { Observable, throwError } from 'rxjs';
+import { map, catchError, } from 'rxjs/operators';
 import { ApiObject, ApiLinksObject, LinkObject, isApiObject, isApiLinksObject, isLinkObject } from './apiobject';
+import { MatSnackBar } from '@angular/material';
 
 
 
@@ -31,7 +32,7 @@ import { ApiObject, ApiLinksObject, LinkObject, isApiObject, isApiLinksObject, i
 })
 export class ApiBaseFunctionService {
 
-    constructor(private http: Http) { }
+    constructor(private http: Http, private snackBar: MatSnackBar) { }
 
     private extractUrl(url: string | LinkObject | ApiLinksObject | ApiObject): string {
         if (typeof url === 'string' || url instanceof String) {
@@ -83,6 +84,16 @@ export class ApiBaseFunctionService {
     }
 
 
+    private showError = (error) => {
+        const message = JSON.parse(error._body).message;
+        const path = JSON.parse(error._body).path;
+
+        this.snackBar.open('An error occured in ' + path + ': ' + message, 'Ok', {
+            duration: 10 * 1000,
+        });
+        return throwError(error);
+    }
+
     get<T>(url: string | LinkObject | ApiLinksObject | ApiObject, token?: string, params?): Observable<T> {
         url = this.extractUrl(url);
 
@@ -91,9 +102,12 @@ export class ApiBaseFunctionService {
             options.params = params;
         }
 
-        const request = this.http.get(url, options).pipe(map((res: Response) => {
-            return res.json();
-        }));
+        const request = this.http.get(url, options).pipe(
+            catchError((error) => this.showError(error)),
+            map((res: Response) => {
+                console.log('map', res);
+                return res.json();
+            }));
 
         return request;
     }
