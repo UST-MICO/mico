@@ -23,17 +23,7 @@ import static io.github.ust.mico.core.JsonPathBuilder.EMBEDDED;
 import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
 import static io.github.ust.mico.core.JsonPathBuilder.SELF_HREF;
 import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
-import static io.github.ust.mico.core.TestConstants.DESCRIPTION;
-import static io.github.ust.mico.core.TestConstants.GIT_TEST_REPO_URL;
-import static io.github.ust.mico.core.TestConstants.ID;
-import static io.github.ust.mico.core.TestConstants.SERVICE_SHORT_NAME;
-import static io.github.ust.mico.core.TestConstants.SERVICE_VERSION;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1_MATCHER;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME_MATCHER;
-import static io.github.ust.mico.core.TestConstants.VERSION;
-import static io.github.ust.mico.core.TestConstants.VERSION_1_0_1;
+import static io.github.ust.mico.core.TestConstants.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
@@ -153,9 +143,9 @@ public class ApplicationControllerTests {
     @Test
     public void getAllApplications() throws Exception {
         given(applicationRepository.findAll(3)).willReturn(
-            Arrays.asList(new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION_1_0_1),
-                new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION),
-                new MicoApplication().setShortName(SHORT_NAME_1).setVersion(VERSION)));
+            Arrays.asList(new MicoApplication().setId(ID_1).setShortName(SHORT_NAME).setVersion(VERSION_1_0_1),
+                new MicoApplication().setId(ID_2).setShortName(SHORT_NAME).setVersion(VERSION),
+                new MicoApplication().setId(ID_3).setShortName(SHORT_NAME_1).setVersion(VERSION)));
 
         mvc.perform(get("/applications").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -172,7 +162,7 @@ public class ApplicationControllerTests {
     @Test
     public void getApplicationByShortNameAndVersion() throws Exception {
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
-            Optional.of(new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION)));
+            Optional.of(new MicoApplication().setId(ID).setShortName(SHORT_NAME).setVersion(VERSION)));
 
         mvc.perform(get("/applications/" + SHORT_NAME + "/" + VERSION).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
@@ -187,7 +177,8 @@ public class ApplicationControllerTests {
 
     @Test
     public void getApplicationByShortName() throws Exception {
-        given(applicationRepository.findByShortName(SHORT_NAME)).willReturn(CollectionUtils.listOf(new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION)));
+        given(applicationRepository.findByShortName(SHORT_NAME)).willReturn(
+            CollectionUtils.listOf(new MicoApplication().setId(ID).setShortName(SHORT_NAME).setVersion(VERSION)));
 
         mvc.perform(get("/applications/" + SHORT_NAME + "/").accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
@@ -200,7 +191,8 @@ public class ApplicationControllerTests {
 
     @Test
     public void getApplicationByShortNameWithTrailingSlash() throws Exception {
-        given(applicationRepository.findByShortName(SHORT_NAME)).willReturn(CollectionUtils.listOf(new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION)));
+        given(applicationRepository.findByShortName(SHORT_NAME)).willReturn(
+            CollectionUtils.listOf(new MicoApplication().setId(ID).setShortName(SHORT_NAME).setVersion(VERSION)));
 
         mvc.perform(get("/applications/" + SHORT_NAME + "/").accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
@@ -211,6 +203,7 @@ public class ApplicationControllerTests {
     @Test
     public void createApplicationWithoutServices() throws Exception {
         MicoApplication application = new MicoApplication()
+            .setId(ID)
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setDescription(DESCRIPTION);
@@ -239,6 +232,7 @@ public class ApplicationControllerTests {
         MicoService service2 = new MicoService().setShortName(SHORT_NAME_1).setVersion(VERSION);
 
         MicoApplication application = new MicoApplication()
+            .setId(ID)
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setDescription(DESCRIPTION);
@@ -279,6 +273,7 @@ public class ApplicationControllerTests {
         MicoService service2 = new MicoService().setShortName(SHORT_NAME_1).setVersion(VERSION);
 
         MicoApplication application = new MicoApplication()
+            .setId(ID)
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setDescription(DESCRIPTION);
@@ -324,6 +319,7 @@ public class ApplicationControllerTests {
             .setGitCloneUrl("http://example.com/INVALID");
 
         MicoApplication application = new MicoApplication()
+            .setId(ID)
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setDescription(DESCRIPTION);
@@ -442,6 +438,7 @@ public class ApplicationControllerTests {
     @Test
     public void updateApplicationIsOnlyAllowedWithoutServices() throws Exception {
         MicoApplication application = new MicoApplication()
+            .setId(ID)
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setDescription(DESCRIPTION);
@@ -469,7 +466,7 @@ public class ApplicationControllerTests {
 
     @Test
     public void deleteApplication() throws Exception {
-        MicoApplication app = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
+        MicoApplication app = new MicoApplication().setId(ID).setShortName(SHORT_NAME).setVersion(VERSION);
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(app));
 
         ArgumentCaptor<MicoApplication> appCaptor = ArgumentCaptor.forClass(MicoApplication.class);
@@ -488,6 +485,7 @@ public class ApplicationControllerTests {
     public void getStatusOfApplication() throws Exception {
      // Create a new application with one service
       MicoApplication application = new MicoApplication()
+          .setId(ID)
           .setName(TestConstants.APPLICATION_NAME)
           .setShortName(SHORT_NAME)
           .setVersion(VERSION);
@@ -584,6 +582,7 @@ public class ApplicationControllerTests {
     @Test
     public void addServiceToApplication() throws Exception {
         MicoApplication application = new MicoApplication()
+            .setId(ID)
             .setShortName(SHORT_NAME)
             .setVersion(VERSION);
         
@@ -612,6 +611,7 @@ public class ApplicationControllerTests {
     @Test
     public void addServiceOnlyWithNameAndVersionToApplication() throws Exception {
         MicoApplication application = new MicoApplication()
+            .setId(ID)
             .setShortName(SHORT_NAME)
             .setVersion(VERSION);
         
@@ -649,6 +649,7 @@ public class ApplicationControllerTests {
     @Test
     public void addServiceWithInconsistentDataToApplication() throws Exception {
         MicoApplication micoApplication = new MicoApplication()
+            .setId(ID)
             .setShortName(SHORT_NAME)
             .setVersion(VERSION);
         
@@ -675,6 +676,7 @@ public class ApplicationControllerTests {
     @Test
     public void deleteServiceFromApplication() throws Exception {
         MicoApplication application = new MicoApplication()
+            .setId(ID)
             .setShortName(SHORT_NAME)
             .setVersion(VERSION);
         

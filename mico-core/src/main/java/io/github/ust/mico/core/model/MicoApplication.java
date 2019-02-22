@@ -22,6 +22,8 @@ package io.github.ust.mico.core.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -133,6 +135,7 @@ public class MicoApplication {
                 "this application uses for the deployment of the required services.")
         }
     )})
+    @JsonManagedReference
     @Relationship(type = "INCLUDES_SERVICE")
     private List<MicoServiceDeploymentInfo> serviceDeploymentInfos = new ArrayList<>();
 

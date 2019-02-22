@@ -22,6 +22,7 @@ package io.github.ust.mico.core.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.*;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
@@ -31,10 +32,6 @@ import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.RelationshipEntity;
 import org.neo4j.ogm.annotation.StartNode;
-
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -79,9 +76,7 @@ public class MicoServiceDeploymentInfo {
                 "this deployment information refers to.")
         }
     )})
-    @JsonIgnore
-    // TODO: @JsonIdentityInfo really necessary?
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id", scope = MicoApplication.class)
+    @JsonBackReference
     @StartNode
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
@@ -98,9 +93,6 @@ public class MicoServiceDeploymentInfo {
             @ExtensionProperty(name = "description", value = "The service this deployment information refers to.")
         }
     )})
-    @JsonIgnore
-    // TODO: @JsonIdentityInfo really necessary?
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id", scope = MicoService.class)
     @EndNode
     @ToString.Exclude
     @EqualsAndHashCode.Exclude

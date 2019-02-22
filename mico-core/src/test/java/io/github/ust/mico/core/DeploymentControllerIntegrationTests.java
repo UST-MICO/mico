@@ -168,6 +168,7 @@ public class DeploymentControllerIntegrationTests {
 
     private MicoApplication getTestApplication(MicoService service) {
         return new MicoApplication()
+            .setId(ID)
             .setShortName("hello")
             .setName("hello-application")
             .setVersion("v1.0.0");

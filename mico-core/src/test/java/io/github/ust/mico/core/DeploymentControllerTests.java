@@ -181,6 +181,7 @@ public class DeploymentControllerTests {
 
     private MicoApplication getTestApplication(MicoService service) {
         return new MicoApplication()
+            .setId(ID)
             .setShortName(TestConstants.SHORT_NAME)
             .setVersion(VERSION)
             .setDescription(DESCRIPTION);
