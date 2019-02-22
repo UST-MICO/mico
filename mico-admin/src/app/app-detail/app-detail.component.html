@@ -10,10 +10,21 @@
         </mat-button-toggle>
 
         <span *ngIf="isLatestVersion()" class="mh2">
-            <button mat-raised-button (click)="promoteNextVersion()">create next Version</button>
+            <mat-button-toggle mat-raised-button (click)="promoteNextVersion()">
+                <span>
+                    create next Version
+                </span>
+                <mat-icon>arrow_upward</mat-icon>
+            </mat-button-toggle>
         </span>
+
         <span class="mh2">
-            <button mat-raised-button (click)="deleteCurrentVersion()">delete Version</button>
+            <mat-button-toggle mat-raised-button (click)="deleteCurrentVersion()">
+                <span>
+                    delete version
+                </span>
+                <mat-icon>delete</mat-icon>
+            </mat-button-toggle>
         </span>
     </div>
 
