@@ -98,21 +98,4 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
         assertEquals(service.getGitReleaseInfoUrl(), readService.getGitReleaseInfoUrl());
         assertEquals(service.getName(), readService.getName());
     }
-
-    @Test
-    public void testGitHubCrawlerAllReleases() throws IOException {
-        RestTemplateBuilder restTemplate = new RestTemplateBuilder();
-        GitHubCrawler crawler = new GitHubCrawler(restTemplate);
-        List<MicoService> serviceList = crawler.crawlGitHubRepoAllReleases(REPO_URI_API);
-        serviceRepository.saveAll(serviceList);
-
-        MicoService readService = serviceRepository.findByShortNameAndVersion(serviceList.get(0).getShortName(), serviceList.get(0).getVersion()).get();
-        assertEquals(serviceList.get(0).getShortName(), readService.getShortName());
-        assertEquals(serviceList.get(0).getDescription(), readService.getDescription());
-        assertEquals(serviceList.get(0).getId(), readService.getId());
-        assertEquals(serviceList.get(0).getVersion(), readService.getVersion());
-        assertEquals(serviceList.get(0).getGitCloneUrl(), readService.getGitCloneUrl());
-        assertEquals(serviceList.get(0).getGitReleaseInfoUrl(), readService.getGitReleaseInfoUrl());
-        assertEquals(serviceList.get(0).getName(), readService.getName());
-    }
 }

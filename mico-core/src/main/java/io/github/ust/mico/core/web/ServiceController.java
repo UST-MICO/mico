@@ -19,14 +19,6 @@
 
 package io.github.ust.mico.core.web;
 
-import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import javax.validation.Valid;
-
 import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
@@ -44,15 +36,15 @@ import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+
+import javax.validation.Valid;
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
@@ -69,6 +61,7 @@ public class ServiceController {
     public static final String PATH_DELETE_VERSION = "versionToDelete";
     public static final String PATH_VARIABLE_IMPORT = "import";
     public static final String PATH_VARIABLE_GITHUB = "github";
+    public static final String PATH_GITHUB_ENDPOINT = "/" + PATH_VARIABLE_IMPORT + "/" + PATH_VARIABLE_GITHUB;
 
     @Autowired
     private MicoServiceRepository serviceRepository;
@@ -310,14 +303,41 @@ public class ServiceController {
                 linkTo(methodOn(ServiceController.class).getDependers(shortName, version)).withSelfRel()));
     }
 
-    @PostMapping("/" + PATH_VARIABLE_IMPORT + "/" + PATH_VARIABLE_GITHUB)
-    public ResponseEntity<Resource<MicoService>> importMicoServiceFromGitHub(@RequestBody String url) {
-        log.debug("Start importing MicoService from URL '{}'", url);
+    @PostMapping(PATH_GITHUB_ENDPOINT)
+    public ResponseEntity<Resource<MicoService>> importMicoServiceFromGitHub(@RequestBody CrawlingInformation crawlingInformation) {
+        String uri = crawlingInformation.getUri();
+        String version = crawlingInformation.getVersion();
+        log.debug("Start importing MicoService from URL '{}'", uri);
+
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
+
         try {
-            MicoService newService = crawler.crawlGitHubRepoLatestRelease(url);
-            return createService(newService, null);
+            if (version.equals("latest") || version.equals("")) {
+                MicoService service = crawler.crawlGitHubRepoLatestRelease(uri);
+                return createService(service, null);
+            } else {
+                MicoService service = crawler.crawlGitHubRepoSpecificRelease(uri, version);
+                return createService(service, null);
+            }
+        } catch (IOException e) {
+            log.error(e.getStackTrace().toString());
+            log.error("Getting exception '{}'", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    @GetMapping(PATH_GITHUB_ENDPOINT)
+    @ResponseBody
+    public LinkedList<String> getVersionsFromGitHub(@RequestParam String uri) {
+        log.debug("Start getting versions from URL '{}'", uri);
+
+        RestTemplateBuilder restTemplate = new RestTemplateBuilder();
+        GitHubCrawler crawler = new GitHubCrawler(restTemplate);
+
+        try {
+            return crawler.getVersionsFromGitHubRepo(uri);
+
         } catch (IOException e) {
             log.error(e.getStackTrace().toString());
             log.error("Getting exception '{}'", e.getMessage());
