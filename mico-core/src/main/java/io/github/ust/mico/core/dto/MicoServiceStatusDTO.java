@@ -60,7 +60,7 @@ public class MicoServiceStatusDTO {
     private int requestedReplicas;
 
     /**
-     * Counter for that are actually available.
+     * Counter for replicas that are actually available.
       */
     private int availableReplicas;
 

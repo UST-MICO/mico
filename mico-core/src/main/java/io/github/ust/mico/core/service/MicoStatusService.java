@@ -1,6 +1,26 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package io.github.ust.mico.core.service;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +41,7 @@ import io.github.ust.mico.core.exception.PrometheusRequestFailedException;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -41,6 +62,7 @@ public class MicoStatusService {
     private final PrometheusConfig prometheusConfig;
     private final MicoKubernetesClient micoKubernetesClient;
     private final RestTemplate restTemplate;
+    private final MicoApplicationRepository micoApplicationRepository;
 
     private static final int MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT = 1;
     private static final String PROMETHEUS_QUERY_FOR_MEMORY_USAGE = "sum(container_memory_working_set_bytes{pod_name=\"%s\",container_name=\"\"})";
@@ -48,10 +70,11 @@ public class MicoStatusService {
     private static final String PROMETHEUS_QUERY_PARAMETER_NAME = "query";
 
     @Autowired
-    public MicoStatusService(PrometheusConfig prometheusConfig, MicoKubernetesClient micoKubernetesClient, RestTemplate restTemplate) {
+    public MicoStatusService(PrometheusConfig prometheusConfig, MicoKubernetesClient micoKubernetesClient, RestTemplate restTemplate, MicoApplicationRepository micoApplicationRepository) {
         this.prometheusConfig = prometheusConfig;
         this.micoKubernetesClient = micoKubernetesClient;
         this.restTemplate = restTemplate;
+        this.micoApplicationRepository = micoApplicationRepository;
     }
 
     /**
@@ -60,13 +83,23 @@ public class MicoStatusService {
      * @return {@link MicoApplicationStatusDTO} containing a list of {@link MicoServiceStatusDTO} for status information of a single {@link MicoService}
      */
     public MicoApplicationStatusDTO getApplicationStatus(MicoApplication micoApplication) {
-        MicoApplicationStatusDTO applicationDeploymentInformation = new MicoApplicationStatusDTO();
+        MicoApplicationStatusDTO applicationStatus = new MicoApplicationStatusDTO();
         List<MicoService> micoServices = micoApplication.getServices();
+        int podCount = 0;
+        int requestedReplicasCount = 0;
+        int availableReplicasCount = 0;
         for (MicoService micoService: micoServices) {
-            MicoServiceStatusDTO micoServiceDeploymentInformation = getServiceStatus(micoService);
-            applicationDeploymentInformation.getServiceStatus().add(micoServiceDeploymentInformation);
+            MicoServiceStatusDTO micoServiceStatus = getServiceStatus(micoService);
+            podCount += micoServiceStatus.getPodInfo().size();
+            requestedReplicasCount += micoServiceStatus.getRequestedReplicas();
+            availableReplicasCount += micoServiceStatus.getAvailableReplicas();
+            applicationStatus.getServiceStatus().add(micoServiceStatus);
         }
-        return applicationDeploymentInformation;
+        applicationStatus.setTotalNumberMicoServices(micoServices.size());
+        applicationStatus.setTotalNumberPods(podCount);
+        applicationStatus.setTotalNumberAvailableReplicas(availableReplicasCount);
+        applicationStatus.setTotalNumberRequestedReplicas(requestedReplicasCount);
+        return applicationStatus;
     }
 
     /**
@@ -88,16 +121,19 @@ public class MicoStatusService {
         }
 
         Deployment deployment = deploymentOptional.get();
-        MicoServiceStatusDTO serviceDeploymentInformation = new MicoServiceStatusDTO();
-        serviceDeploymentInformation.setName(micoService.getName());
-        serviceDeploymentInformation.setShortName(micoService.getShortName());
-        serviceDeploymentInformation.setVersion(micoService.getVersion());
-        serviceDeploymentInformation.setAvailableReplicas(deployment.getStatus().getAvailableReplicas());
-        serviceDeploymentInformation.setRequestedReplicas(deployment.getSpec().getReplicas());
+        MicoServiceStatusDTO serviceStatus = new MicoServiceStatusDTO();
+        serviceStatus.setName(micoService.getName());
+        serviceStatus.setShortName(micoService.getShortName());
+        serviceStatus.setVersion(micoService.getVersion());
+        serviceStatus.setAvailableReplicas(deployment.getStatus().getAvailableReplicas());
+        serviceStatus.setRequestedReplicas(deployment.getSpec().getReplicas());
 
-        // Get status information for service interfaces of a serivce
+        // Get status information for service interfaces of a service
         List<MicoServiceInterfaceDTO> micoServiceInterfaceDTOList = getServiceInterfaceStatus(micoService);
-        serviceDeploymentInformation.setInterfacesInformation(micoServiceInterfaceDTOList);
+        serviceStatus.setInterfacesInformation(micoServiceInterfaceDTOList);
+
+        // Get information about concurrent use of a service by multiple applications
+        List<String> applicationsUsingService = findConcurrentUsageOfService(micoService, micoApplicationRepository.findAll());
 
         // Get status information for all pods of a service
         List<Pod> podList = micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(micoService);
@@ -106,9 +142,26 @@ public class MicoStatusService {
             KubernetesPodInfoDTO podInfo = getUiPodInfo(pod);
             podInfos.add(podInfo);
         }
-        serviceDeploymentInformation.setPodInfo(podInfos);
-        return serviceDeploymentInformation;
+
+        serviceStatus.setPodInfo(podInfos);
+        return serviceStatus;
     }
+
+    // TODO evaluate usage
+    private List<String> findConcurrentUsageOfService(MicoService micoService, List<MicoApplication> micoApplications) {
+        List<String> applicationNames = new ArrayList<>();
+        for (MicoApplication micoApplication: micoApplications) {
+            for (MicoService micoServiceInMicoApplication: micoApplication.getServices()) {
+                if (micoServiceInMicoApplication.getName().equals(micoService.getName()) && micoServiceInMicoApplication.getVersion().equals(micoService.getVersion())) {
+                    applicationNames.add(micoApplication.getName());
+                    continue;
+                }
+                log.info("Found concurrent usage of MicoService '{}' within MicoApplication '{}'.", micoService.getName(), micoServiceInMicoApplication.getName());
+            }
+        }
+        return applicationNames;
+    }
+
 
     /**
      * Get status information for all {@link MicoServiceInterface} of a {@link MicoService}: service name,
@@ -141,6 +194,7 @@ public class MicoStatusService {
             }
             Service kubernetesService = kubernetesServiceOptional.get();
             String serviceName = kubernetesService.getMetadata().getName();
+            String loadBalancerIp = kubernetesService.getSpec().getLoadBalancerIP();
             MicoServiceInterfaceDTO interfaceInformation = new MicoServiceInterfaceDTO(serviceName);
             interfacesInformation.add(interfaceInformation);
         }

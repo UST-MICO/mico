@@ -46,4 +46,16 @@ public class MicoApplicationStatusDTO {
      */
     private List<MicoServiceStatusDTO> serviceStatus = new ArrayList<>();
 
+    private int totalNumberMicoServices;
+
+    private int totalNumberAvailableReplicas;
+
+    private int totalNumberRequestedReplicas;
+
+    private int totalNumberPods;
+
+
+
+
+
 }
