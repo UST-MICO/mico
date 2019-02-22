@@ -20,19 +20,23 @@
 package io.github.ust.mico.core.model;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+import org.neo4j.ogm.annotation.EndNode;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.RelationshipEntity;
+import org.neo4j.ogm.annotation.StartNode;
 
-import io.swagger.annotations.ApiModelProperty;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.Singular;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 
 /**
@@ -43,7 +47,7 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@NodeEntity
+@RelationshipEntity(type = "INCLUDES_SERVICE")
 public class MicoServiceDeploymentInfo {
 
     /**
@@ -52,18 +56,36 @@ public class MicoServiceDeploymentInfo {
     @Id
     @GeneratedValue
     private Long id;
-
-
+    
+    
     // ----------------------
     // -> Required fields ---
     // ----------------------
-
+    
     /**
-     * The list of containers to run within this service.
+     * The parent {@link MicoApplication} of a {@link MicoService}
+     * this deployment information refers to.
      */
-    @ApiModelProperty(required = true)
-    @Singular
-    private List<MicoImageContainer> containers = new ArrayList<>();
+    // TODO: @ApiModelProperty(required = true) necessary
+    @JsonIgnore
+    // TODO: @JsonIdentityInfo really necessary?
+    @JsonIdentityInfo(generator=ObjectIdGenerators.PropertyGenerator.class, property="id", scope=MicoApplication.class)
+    @StartNode
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private MicoApplication application;
+    
+    /**
+     * The {@link MicoService} this deployment information refers to. 
+     */
+    // TODO: @ApiModelProperty(required = true) necessary
+    @JsonIgnore
+    // TODO: @JsonIdentityInfo really necessary?
+    @JsonIdentityInfo(generator=ObjectIdGenerators.PropertyGenerator.class, property="id", scope=MicoService.class)
+    @EndNode
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private MicoService service;
 
 
     // ----------------------
@@ -90,10 +112,8 @@ public class MicoServiceDeploymentInfo {
      * subsets of objects. Labels can be attached to objects at creation time and
      * subsequently added and modified at any time.
      * Each key must be unique for a given object.
-     * Defaults to [ {"app" -> "Service#shortName"} ].
      */
-    @Singular
-    private Map<String, String> labels = new HashMap<>();
+    private List<MicoLabel<String, String>> labels = new ArrayList<>();
 
     /**
      * Indicates whether and when to pull the image.

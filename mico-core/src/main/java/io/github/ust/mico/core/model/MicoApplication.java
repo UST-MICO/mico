@@ -34,7 +34,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Singular;
 import lombok.experimental.Accessors;
 
 /**
@@ -93,15 +92,9 @@ public class MicoApplication {
     /**
      * The services this application is composed of.
      */
-    @Singular
-    @Relationship(type = "INCLUDES")
-    private List<MicoService> services = new ArrayList<>();
+    @Relationship(type = "INCLUDES_SERVICE")
+    private List<MicoServiceDeploymentInfo> serviceDeploymentInfos = new ArrayList<>();
     
-    /**
-     * The information necessary for deploying this application.
-     */
-    private MicoApplicationDeploymentInfo deploymentInfo = new MicoApplicationDeploymentInfo();
-
     /**
      * Human readable contact information for support purposes.
      */
