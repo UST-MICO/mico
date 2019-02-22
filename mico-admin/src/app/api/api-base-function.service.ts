@@ -122,16 +122,18 @@ export class ApiBaseFunctionService {
             }
         }
         return this.http.post(url, tempData, this.headers(token))
-            .pipe(map((res: Response) => {
-                if (res.hasOwnProperty('_body')) {
-                    if ((res as any)._body == null || (res as any)._body.length < 1) {
-                        // handle empty results
-                        return undefined;
+            .pipe(
+                catchError((error) => this.showError(error)),
+                map((res: Response) => {
+                    if (res.hasOwnProperty('_body')) {
+                        if ((res as any)._body == null || (res as any)._body.length < 1) {
+                            // handle empty results
+                            return undefined;
+                        }
                     }
-                }
-                return res.json();
+                    return res.json();
 
-            }));
+                }));
     }
 
     put<T>(url: string | LinkObject | ApiLinksObject | ApiObject, data, token?: string, isJson = true): Observable<T> {
@@ -141,24 +143,28 @@ export class ApiBaseFunctionService {
             tempData = JSON.stringify(tempData);
         }
         return this.http.put(url, tempData, this.headers(token))
-            .pipe(map((res: Response) => {
-                return res.json();
-            }));
+            .pipe(
+                catchError((error) => this.showError(error)),
+                map((res: Response) => {
+                    return res.json();
+                }));
     }
 
     delete<T>(url: string | LinkObject | ApiLinksObject | ApiObject, token?: string): Observable<T> {
         url = this.extractUrl(url);
 
         return this.http.delete(url, this.headers(token))
-            .pipe(map((res: Response) => {
+            .pipe(
+                catchError((error) => this.showError(error)),
+                map((res: Response) => {
 
-                if (res.hasOwnProperty('_body')) {
-                    if ((res as any)._body == null || (res as any)._body.length < 1) {
-                        // handle empty results
-                        return undefined;
+                    if (res.hasOwnProperty('_body')) {
+                        if ((res as any)._body == null || (res as any)._body.length < 1) {
+                            // handle empty results
+                            return undefined;
+                        }
                     }
-                }
-                return res.json();
-            }));
+                    return res.json();
+                }));
     }
 }
