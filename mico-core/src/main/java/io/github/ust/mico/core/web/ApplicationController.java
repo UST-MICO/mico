@@ -197,7 +197,7 @@ public class ApplicationController {
     public ResponseEntity<Resource<MicoApplication>> deleteAllApplications(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
         List<MicoApplication> micoApplicationList = applicationRepository.findByShortName(shortName);
 
-        if(micoApplicationList.isEmpty()){
+        if (micoApplicationList.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 

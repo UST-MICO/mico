@@ -641,7 +641,7 @@ public class ApplicationControllerTests {
         micoApplicationTwo.setDeploymentInfo(micoApplicationDeploymentInfoTwo);
         micoApplicationThree.setDeploymentInfo(micoApplicationDeploymentInfoThree);
 
-        given(applicationRepository.findByShortName(SHORT_NAME)).willReturn(CollectionUtils.listOf(micoApplicationOne,micoApplicationTwo,micoApplicationThree));
+        given(applicationRepository.findByShortName(SHORT_NAME)).willReturn(CollectionUtils.listOf(micoApplicationOne, micoApplicationTwo, micoApplicationThree));
         mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME))
                 .andDo(print())
                 .andExpect(status().isNoContent())
