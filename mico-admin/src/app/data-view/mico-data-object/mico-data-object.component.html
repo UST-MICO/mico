@@ -1,12 +1,17 @@
 <div class="ma1">
 
-    <mat-expansion-panel>
+    <mat-expansion-panel [disabled]="dataValue == null">
         <mat-expansion-panel-header>
             <mat-panel-title>
                 {{config?.title}}
             </mat-panel-title>
             <mat-panel-description>
-                {{config?.description}}
+                <div *ngIf="dataValue == null; else showDescription">
+                    null
+                </div>
+                <ng-template #showDescription>
+                    {{config?.description}}
+                </ng-template>
             </mat-panel-description>
         </mat-expansion-panel-header>
 
