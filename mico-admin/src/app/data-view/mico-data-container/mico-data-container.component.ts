@@ -54,7 +54,7 @@ export class MicoDataContainerComponent implements OnChanges {
         } else if (this.property != null && this.property.$ref != null) {
             return 'object';
         } else {
-            return 'string';
+            return 'json-default';
         }
     }
 }

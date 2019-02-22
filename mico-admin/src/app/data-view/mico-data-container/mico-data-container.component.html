@@ -6,4 +6,7 @@
     <mico-data-boolean *ngSwitchCase="'boolean'" [config]="property" [dataValue]="dataValue"></mico-data-boolean>
     <mico-data-object *ngSwitchCase="'object'" [config]="property" [dataValue]="dataValue"></mico-data-object>
     <mico-data-array *ngSwitchCase="'array'" [config]="property" [dataValue]="dataValue"></mico-data-array>
+    <div *ngSwitchCase="'json-default'">
+        {{dataValue|json}}
+    </div>
 </div>
