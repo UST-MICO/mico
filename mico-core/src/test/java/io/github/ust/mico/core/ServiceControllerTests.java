@@ -19,96 +19,27 @@
 
 package io.github.ust.mico.core;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import static io.github.ust.mico.core.JsonPathBuilder.HREF;
-import static io.github.ust.mico.core.JsonPathBuilder.LINKS;
-import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
-import static io.github.ust.mico.core.JsonPathBuilder.SELF;
-import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
-import static io.github.ust.mico.core.TestConstants.BASE_URL;
-import static io.github.ust.mico.core.TestConstants.DEPENDEES_SUBPATH;
-import static io.github.ust.mico.core.TestConstants.DEPENDERS_SUBPATH;
-import static io.github.ust.mico.core.TestConstants.DESCRIPTION;
-import static io.github.ust.mico.core.TestConstants.DESCRIPTION_1;
-import static io.github.ust.mico.core.TestConstants.DESCRIPTION_1_MATCHER;
-import static io.github.ust.mico.core.TestConstants.DESCRIPTION_2;
-import static io.github.ust.mico.core.TestConstants.DESCRIPTION_2_MATCHER;
-import static io.github.ust.mico.core.TestConstants.DESCRIPTION_3;
-import static io.github.ust.mico.core.TestConstants.DESCRIPTION_3_MATCHER;
-import static io.github.ust.mico.core.TestConstants.ID;
-import static io.github.ust.mico.core.TestConstants.ID_1;
-import static io.github.ust.mico.core.TestConstants.SERVICES_PATH;
-import static io.github.ust.mico.core.TestConstants.SERVICE_INFORMATION_NAME;
-import static io.github.ust.mico.core.TestConstants.SERVICE_INTERFACE_NAME;
-import static io.github.ust.mico.core.TestConstants.SERVICE_NAME;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1_MATCHER;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME_2;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME_2_MATCHER;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME_3;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME_3_MATCHER;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME_MATCHER;
-import static io.github.ust.mico.core.TestConstants.SINGLE_SERVICE_INFORMATION_NAME;
-import static io.github.ust.mico.core.TestConstants.VERSION;
-import static io.github.ust.mico.core.TestConstants.VERSION_1_0_1;
-import static io.github.ust.mico.core.TestConstants.VERSION_1_0_1_MATCHER;
-import static io.github.ust.mico.core.TestConstants.VERSION_1_0_2;
-import static io.github.ust.mico.core.TestConstants.VERSION_1_0_2_MATCHER;
-import static io.github.ust.mico.core.TestConstants.VERSION_1_0_3;
-import static io.github.ust.mico.core.TestConstants.VERSION_1_0_3_MATCHER;
-import static io.github.ust.mico.core.TestConstants.VERSION_MATCHER;
-import static org.hamcrest.CoreMatchers.endsWith;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.request;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
 
-import io.fabric8.kubernetes.api.model.PodList;
-import io.fabric8.kubernetes.api.model.PodListBuilder;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ust.mico.core.configuration.CorsConfig;
+import io.github.ust.mico.core.dto.KuberenetesPodMetricsDTO;
+import io.github.ust.mico.core.dto.KubernetesPodInfoDTO;
+import io.github.ust.mico.core.dto.MicoServiceDeploymentInformationDTO;
+import io.github.ust.mico.core.dto.MicoServiceInterfaceDTO;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.MicoStatusService;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.web.ServiceController;
-import io.github.ust.mico.core.configuration.PrometheusConfig;
-import io.github.ust.mico.core.dto.KuberenetesPodMetricsDTO;
-import io.github.ust.mico.core.dto.KubernetesPodInfoDTO;
-import io.github.ust.mico.core.dto.MicoApplicationDeploymentInformationDTO;
-import io.github.ust.mico.core.dto.MicoServiceDeploymentInformationDTO;
-import io.github.ust.mico.core.dto.MicoServiceInterfaceDTO;
-import io.github.ust.mico.core.dto.PrometheusResponse;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.MicoStatusService;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -118,20 +49,16 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Optional;
-
 import static io.github.ust.mico.core.ApplicationControllerTests.INTERFACES_LIST_PATH;
-import static io.github.ust.mico.core.JsonPathBuilder.*;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
-import static io.github.ust.mico.core.TestConstants.VERSION;
+import static io.github.ust.mico.core.JsonPathBuilder.HREF;
+import static io.github.ust.mico.core.JsonPathBuilder.LINKS;
+import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
+import static io.github.ust.mico.core.JsonPathBuilder.SELF;
+import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
 import static io.github.ust.mico.core.TestConstants.*;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.is;
@@ -139,9 +66,15 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(ServiceController.class)
@@ -161,24 +94,6 @@ public class ServiceControllerTests {
     private static final String SHORT_NAME_PATH = buildPath(ROOT, "shortName");
     private static final String DESCRIPTION_PATH = buildPath(ROOT, "description");
     private static final String VERSION_PATH = buildPath(ROOT, "version");
-
-    private static final String REQUESTED_REPLICAS = buildPath(ROOT, "requestedReplicas");
-    private static final String AVAILABLE_REPLICAS = buildPath(ROOT, "availableReplicas");
-    private static final String INTERFACES_INFORMATION = buildPath(ROOT, "interfacesInformation");
-    private static final String INTERFACES_INFORMATION_NAME = buildPath(ROOT, "interfacesInformation[0].name");
-    private static final String POD_INFO = buildPath(ROOT, "podInfo");
-    private static final String POD_INFO_POD_NAME_1 = buildPath(ROOT, "podInfo[0].podName");
-    private static final String POD_INFO_PHASE_1 = buildPath(ROOT, "podInfo[0].phase");
-    private static final String POD_INFO_NODE_NAME_1 = buildPath(ROOT, "podInfo[0].nodeName");
-    private static final String POD_INFO_METRICS_MEMORY_USAGE_1 = buildPath(ROOT, "podInfo[0].metrics.memoryUsage");
-    private static final String POD_INFO_METRICS_CPU_LOAD_1 = buildPath(ROOT, "podInfo[0].metrics.cpuLoad");
-    private static final String POD_INFO_METRICS_AVAILABLE_1 = buildPath(ROOT, "podInfo[0].metrics.available");
-    private static final String POD_INFO_POD_NAME_2 = buildPath(ROOT, "podInfo[1].podName");
-    private static final String POD_INFO_PHASE_2 = buildPath(ROOT, "podInfo[1].phase");
-    private static final String POD_INFO_NODE_NAME_2 = buildPath(ROOT, "podInfo[1].nodeName");
-    private static final String POD_INFO_METRICS_MEMORY_USAGE_2 = buildPath(ROOT, "podInfo[1].metrics.memoryUsage");
-    private static final String POD_INFO_METRICS_CPU_LOAD_2 = buildPath(ROOT, "podInfo[1].metrics.cpuLoad");
-    private static final String POD_INFO_METRICS_AVAILABLE_2 = buildPath(ROOT, "podInfo[1].metrics.available");
 
     //TODO: Use these variables inside the tests instead of the local variables
 
@@ -255,24 +170,24 @@ public class ServiceControllerTests {
         mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/status"))
             .andDo(print())
             .andExpect(status().isOk())
-            .andExpect(jsonPath(SINGLE_SERVICE_INFORMATION_NAME, is(SERVICE_NAME)))
-            .andExpect(jsonPath(REQUESTED_REPLICAS, is(requestedReplicas)))
-            .andExpect(jsonPath(AVAILABLE_REPLICAS, is(availableReplicas)))
-            .andExpect(jsonPath(INTERFACES_INFORMATION, hasSize(1)))
-            .andExpect(jsonPath(INTERFACES_INFORMATION_NAME, is(SERVICE_INTERFACE_NAME)))
-            .andExpect(jsonPath(POD_INFO, hasSize(2)))
-            .andExpect(jsonPath(POD_INFO_POD_NAME_1, is(podName1)))
-            .andExpect(jsonPath(POD_INFO_PHASE_1, is(podPhase)))
-            .andExpect(jsonPath(POD_INFO_NODE_NAME_1, is(nodeName)))
-            .andExpect(jsonPath(POD_INFO_METRICS_MEMORY_USAGE_1, is(memoryUsagePod1)))
-            .andExpect(jsonPath(POD_INFO_METRICS_CPU_LOAD_1, is(cpuLoadPod1)))
-            .andExpect(jsonPath(POD_INFO_METRICS_AVAILABLE_1, is(false)))
-            .andExpect(jsonPath(POD_INFO_POD_NAME_2, is(podName2)))
-            .andExpect(jsonPath(POD_INFO_PHASE_2, is(podPhase)))
-            .andExpect(jsonPath(POD_INFO_NODE_NAME_2, is(nodeName)))
-            .andExpect(jsonPath(POD_INFO_METRICS_MEMORY_USAGE_2, is(memoryUsagePod2)))
-            .andExpect(jsonPath(POD_INFO_METRICS_CPU_LOAD_2, is(cpuLoadPod2)))
-            .andExpect(jsonPath(POD_INFO_METRICS_AVAILABLE_2, is(true)));
+            .andExpect(jsonPath(SERVICE_DTO_SERVICE_NAME, is(SERVICE_NAME)))
+            .andExpect(jsonPath(SERVICE_DTO_REQUESTED_REPLICAS, is(requestedReplicas)))
+            .andExpect(jsonPath(SERVICE_DTO_AVAILABLE_REPLICAS, is(availableReplicas)))
+            .andExpect(jsonPath(SERVICE_DTO_INTERFACES_INFORMATION, hasSize(1)))
+            .andExpect(jsonPath(SERVICE_DTO_INTERFACES_INFORMATION_NAME, is(SERVICE_INTERFACE_NAME)))
+            .andExpect(jsonPath(SERVICE_DTO_POD_INFO, hasSize(2)))
+            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_POD_NAME_1, is(podName1)))
+            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_PHASE_1, is(podPhase)))
+            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_NODE_NAME_1, is(nodeName)))
+            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_METRICS_MEMORY_USAGE_1, is(memoryUsagePod1)))
+            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_METRICS_CPU_LOAD_1, is(cpuLoadPod1)))
+            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_METRICS_AVAILABLE_1, is(false)))
+            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_POD_NAME_2, is(podName2)))
+            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_PHASE_2, is(podPhase)))
+            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_NODE_NAME_2, is(nodeName)))
+            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_METRICS_MEMORY_USAGE_2, is(memoryUsagePod2)))
+            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_METRICS_CPU_LOAD_2, is(cpuLoadPod2)))
+            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_METRICS_AVAILABLE_2, is(true)));
     }
 
     @Test

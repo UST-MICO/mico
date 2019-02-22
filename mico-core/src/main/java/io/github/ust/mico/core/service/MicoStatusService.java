@@ -31,6 +31,9 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
+/**
+ * Provide functionality to retrieve status information for a {@link MicoApplication} or a particular {@link MicoService}
+ */
 @Slf4j
 @Component
 public class MicoStatusService {

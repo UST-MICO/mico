@@ -19,9 +19,7 @@
 
 package io.github.ust.mico.core;
 
-import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoVersion;
-import springfox.documentation.spring.web.json.Json;
 
 import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
 import static io.github.ust.mico.core.JsonPathBuilder.buildAttributePath;
@@ -56,7 +54,7 @@ public class TestConstants {
     public static final String SHORT_NAME_2 = "short-name-2";
     public static final String SHORT_NAME_3 = "short-name-3";
     public static final String SHORT_NAME_INVALID = "short_NAME";
-    public static final String SHORT_NAME_ATTRIBUTE = JsonPathBuilder.buildAttributePath("shortName");
+    public static final String SHORT_NAME_ATTRIBUTE = buildAttributePath("shortName");
     public static final String SHORT_NAME_MATCHER = JsonPathBuilder.buildSingleMatcher(SHORT_NAME_ATTRIBUTE, SHORT_NAME);
     public static final String SHORT_NAME_1_MATCHER = JsonPathBuilder.buildSingleMatcher(SHORT_NAME_ATTRIBUTE, SHORT_NAME_1);
     public static final String SHORT_NAME_2_MATCHER = JsonPathBuilder.buildSingleMatcher(SHORT_NAME_ATTRIBUTE, SHORT_NAME_2);
@@ -66,7 +64,7 @@ public class TestConstants {
     public static final String DESCRIPTION_1 = "Description Service 1";
     public static final String DESCRIPTION_2 = "Description Service 2";
     public static final String DESCRIPTION_3 = "Description Service 3";
-    public static final String DESCRIPTION_ATTRIBUTE = JsonPathBuilder.buildAttributePath("description");
+    public static final String DESCRIPTION_ATTRIBUTE = buildAttributePath("description");
     public static final String DESCRIPTION_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION);
     public static final String DESCRIPTION_1_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION_1);
     public static final String DESCRIPTION_2_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION_2);
@@ -78,9 +76,12 @@ public class TestConstants {
     public static final String SERVICE_INTERFACE_NAME = "service-interface-name";
     public static final String SERVICE_NAME = "test-service";
 
+    /**
+     * For tests in {@link ApplicationControllerTests}, one service is added to the list of {@link io.github.ust.mico.core.dto.MicoServiceDeploymentInformationDTO} in {@link io.github.ust.mico.core.dto.MicoApplicationDeploymentInformationDTO}.
+     * All paths are are build on path for the deployment information of this service.
+     */
     public static final String FIRST_SERVICE = buildPath(ROOT, "serviceDeploymentInformation[0]");
     public static final String SERVICE_INFORMATION_NAME = buildPath(FIRST_SERVICE, "name");
-    public static final String SINGLE_SERVICE_INFORMATION_NAME = buildAttributePath("name");
     public static final String REQUESTED_REPLICAS = buildPath(FIRST_SERVICE, "requestedReplicas");
     public static final String AVAILABLE_REPLICAS = buildPath(FIRST_SERVICE, "availableReplicas");
     public static final String INTERFACES_INFORMATION = buildPath(FIRST_SERVICE, "interfacesInformation");
@@ -100,6 +101,28 @@ public class TestConstants {
     public static final String POD_INFO_METRICS_AVAILABLE_2 = buildPath(FIRST_SERVICE, "podInfo[1].metrics.available");
     public static final String SERVICE_INTERFACE_NAME_1 = "service-interface-name-1";
 
+    /**
+     * For tests in {@link ServiceControllerTests} a {@link io.github.ust.mico.core.dto.MicoServiceDeploymentInformationDTO} is used.
+     * All paths are build on the base path of this object.
+     */
+    public static final String SERVICE_DTO_SERVICE_NAME = buildAttributePath("name");
+    public static final String SERVICE_DTO_REQUESTED_REPLICAS = buildPath(ROOT, "requestedReplicas");
+    public static final String SERVICE_DTO_AVAILABLE_REPLICAS = buildPath(ROOT, "availableReplicas");
+    public static final String SERVICE_DTO_INTERFACES_INFORMATION = buildPath(ROOT, "interfacesInformation");
+    public static final String SERVICE_DTO_INTERFACES_INFORMATION_NAME = buildPath(ROOT, "interfacesInformation[0].name");
+    public static final String SERVICE_DTO_POD_INFO = buildPath(ROOT, "podInfo");
+    public static final String SERVICE_DTO_POD_INFO_POD_NAME_1 = buildPath(ROOT, "podInfo[0].podName");
+    public static final String SERVICE_DTO_POD_INFO_PHASE_1 = buildPath(ROOT, "podInfo[0].phase");
+    public static final String SERVICE_DTO_POD_INFO_NODE_NAME_1 = buildPath(ROOT, "podInfo[0].nodeName");
+    public static final String SERVICE_DTO_POD_INFO_METRICS_MEMORY_USAGE_1 = buildPath(ROOT, "podInfo[0].metrics.memoryUsage");
+    public static final String SERVICE_DTO_POD_INFO_METRICS_CPU_LOAD_1 = buildPath(ROOT, "podInfo[0].metrics.cpuLoad");
+    public static final String SERVICE_DTO_POD_INFO_METRICS_AVAILABLE_1 = buildPath(ROOT, "podInfo[0].metrics.available");
+    public static final String SERVICE_DTO_POD_INFO_POD_NAME_2 = buildPath(ROOT, "podInfo[1].podName");
+    public static final String SERVICE_DTO_POD_INFO_PHASE_2 = buildPath(ROOT, "podInfo[1].phase");
+    public static final String SERVICE_DTO_POD_INFO_NODE_NAME_2 = buildPath(ROOT, "podInfo[1].nodeName");
+    public static final String SERVICE_DTO_POD_INFO_METRICS_MEMORY_USAGE_2 = buildPath(ROOT, "podInfo[1].metrics.memoryUsage");
+    public static final String SERVICE_DTO_POD_INFO_METRICS_CPU_LOAD_2 = buildPath(ROOT, "podInfo[1].metrics.cpuLoad");
+    public static final String SERVICE_DTO_POD_INFO_METRICS_AVAILABLE_2 = buildPath(ROOT, "podInfo[1].metrics.available");
 
     /**
      * Git repository that is used for testing.
