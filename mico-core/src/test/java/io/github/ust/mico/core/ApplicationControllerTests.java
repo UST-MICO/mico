@@ -33,6 +33,7 @@ import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.configuration.PrometheusConfig;
 import io.github.ust.mico.core.dto.PrometheusResponse;
 import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoApplicationDeploymentInfo;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
@@ -618,6 +619,33 @@ public class ApplicationControllerTests {
         verify(applicationRepository, times(1)).save(micoApplicationCaptor.capture());
         MicoApplication savedMicoApplication = micoApplicationCaptor.getValue();
         assertTrue("Expected services are empty", savedMicoApplication.getServices().isEmpty());
+    }
+
+    @Test
+    public void deleteAllApplications() throws Exception {
+        MicoApplication micoApplicationOne = new MicoApplication()
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION);
+        MicoApplication micoApplicationTwo = new MicoApplication()
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION_1_0_1);
+        MicoApplication micoApplicationThree = new MicoApplication()
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION_1_0_2);
+
+        MicoApplicationDeploymentInfo micoApplicationDeploymentInfoOne = new MicoApplicationDeploymentInfo();
+        MicoApplicationDeploymentInfo micoApplicationDeploymentInfoTwo = new MicoApplicationDeploymentInfo();
+        MicoApplicationDeploymentInfo micoApplicationDeploymentInfoThree = new MicoApplicationDeploymentInfo();
+
+        micoApplicationOne.setDeploymentInfo(micoApplicationDeploymentInfoOne);
+        micoApplicationTwo.setDeploymentInfo(micoApplicationDeploymentInfoTwo);
+        micoApplicationThree.setDeploymentInfo(micoApplicationDeploymentInfoThree);
+
+        given(applicationRepository.findByShortName(SHORT_NAME)).willReturn(CollectionUtils.listOf(micoApplicationOne,micoApplicationTwo,micoApplicationThree));
+        mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME))
+                .andDo(print())
+                .andExpect(status().isNoContent())
+                .andReturn();
     }
 
     private ResponseEntity getPrometheusResponseEntity(int value) {
