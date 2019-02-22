@@ -18,7 +18,7 @@
  */
 
 import { Injectable } from '@angular/core';
-import { AsyncSubject, Observable, of, from, Subscription } from 'rxjs';
+import { AsyncSubject, Observable, of, from } from 'rxjs';
 import { ApiModel, ApiModelAllOf, ApiModelRef } from './apimodel';
 import { concatMap, reduce, first, timeout, map, flatMap } from 'rxjs/operators';
 import { ApiService, freezeObject } from './api.service';
@@ -217,7 +217,7 @@ export class ModelsService {
      */
     private canonizeModelUri(modelUri: string): string {
         // TODO implement
-        modelUri = modelUri.replace(/^#\/definitions/, 'remote')
+        modelUri = modelUri.replace(/^#\/definitions/, 'remote');
         return modelUri;
     }
 
@@ -239,6 +239,9 @@ export class ModelsService {
 
             return this.apiService.getModelDefinitions().pipe(
                 map(remoteModels => {
+                    // TODO remove in the end of the project
+                    // print all current remote models
+                    // console.log(remoteModels);
                     return JSON.parse(JSON.stringify(remoteModels[modelID]));
                 })
             );

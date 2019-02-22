@@ -173,7 +173,9 @@ export class AppDetailComponent implements OnInit, OnDestroy {
      * returns the last elements version of the allVersions list (list is sorted in ngOnInit)
      */
     getLatestVersion() {
-        return this.allVersions[this.allVersions.length - 1].version;
+        if (this.allVersions != null && this.allVersions.length > 0) {
+            return this.allVersions[this.allVersions.length - 1].version;
+        }
     }
 
 
