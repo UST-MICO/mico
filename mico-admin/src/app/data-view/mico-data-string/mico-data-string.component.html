@@ -1,12 +1,8 @@
-<!-- Reconsider the boundary -->
-<div *ngIf="dataValue?.length > 100; else elseBlock">
-    <mat-list-item style="height: auto; min-height: 48px">
-        <b>{{config.title}}:</b> &nbsp; {{dataValue}}
-    </mat-list-item>
-</div>
-
-<ng-template #elseBlock>
-    <mat-list-item style="height: auto; min-height: 48px; display: inline-flex; vertical-align: middle">
-        <b>{{config.title}}:</b> &nbsp; {{dataValue}}
-    </mat-list-item>
-</ng-template>
+<mat-list-item style="height: auto; min-height: 48px; display: inline-flex; vertical-align: middle">
+    <span class="mr1">
+        <b>{{config.title}}:</b>
+    </span>
+    <span class="mv1">
+        {{dataValue}}
+    </span>
+</mat-list-item>

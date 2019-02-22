@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { ApiModel } from 'src/app/api/apimodel';
 
 @Component({
@@ -6,13 +6,14 @@ import { ApiModel } from 'src/app/api/apimodel';
     templateUrl: './mico-data-array.component.html',
     styleUrls: ['./mico-data-array.component.css']
 })
-export class MicoDataArrayComponent implements OnInit {
+export class MicoDataArrayComponent {
 
     constructor() { }
 
     @Input() config: ApiModel;
     @Input() dataValue: any;
 
-    ngOnInit() {
+    trackBy(index) {
+        return index;
     }
 }
