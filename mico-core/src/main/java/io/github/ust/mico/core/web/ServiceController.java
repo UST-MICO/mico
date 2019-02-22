@@ -131,6 +131,19 @@ public class ServiceController {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
+    public ResponseEntity<Void> deleteServices(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName){
+        List<MicoService> micoServiceList = getServicesFromDatabase(shortName);
+        log.debug("Got following services from database: {}", micoServiceList);
+        micoServiceList.forEach(service -> {
+            //TODO: check for deployment
+        });
+
+        micoServiceList.forEach(service -> serviceRepository.delete(service));
+
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")
     public ResponseEntity<Resource<MicoServiceStatusDTO>> getStatusOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                              @PathVariable(PATH_VARIABLE_VERSION) String version) {
@@ -363,6 +376,16 @@ public class ServiceController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service '" + shortName + "' '" + version + "' was not found!");
         }
         return serviceOpt.get();
+    }
+
+    private List<MicoService> getServicesFromDatabase(String shortName) throws ResponseStatusException {
+        List<MicoService> micoServiceList = serviceRepository.findByShortName(shortName);
+        log.debug("Retrieve service list from database: {}", micoServiceList);
+        if(micoServiceList.isEmpty()){
+            log.error("Service list is empty.");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Could not find any Service with name: '" + shortName);
+        }
+        return micoServiceList;
     }
 
     //Get the dependees of a service, check if they exists, if true get the ids and set the dependees
