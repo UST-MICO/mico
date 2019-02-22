@@ -84,46 +84,6 @@ public class GitHubCrawler {
         return crawlGitHubRepo(uri, releaseUrl);
     }
 
-    //TODO: Rename method - it is not crawling ALL releases
-    public List<MicoService> crawlGitHubRepoAllReleases(String uri) throws IOException {
-        uri = makeUriToMatchGitHubApi(uri);
-        String uriBasicInfo = uri;
-        String uriReleases = uri + "/" + RELEASES;
-        log.debug("Crawl GitHub basic information from '{}' and release information from '{}'", uriBasicInfo, uriReleases);
-        ResponseEntity<String> responseBasicInfo = restTemplate.getForEntity(uriBasicInfo, String.class);
-        ResponseEntity<String> responseReleaseInfo = restTemplate.getForEntity(uriReleases, String.class); //TODO: If LINK(next) exists in header, we need to do another Request
-        ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        ArrayList<MicoService> serviceList = new ArrayList<>();
-
-        try {
-            JsonNode basicInfoJson = mapper.readTree(responseBasicInfo.getBody());
-            JsonNode releaseInfoJson = mapper.readTree(responseReleaseInfo.getBody());
-
-            String shortName = basicInfoJson.get("name").textValue();
-            String description = basicInfoJson.get("description").textValue();
-            String fullName = basicInfoJson.get("full_name").textValue();
-            String gitCloneUrl = basicInfoJson.get("clone_url").textValue();
-
-            for (JsonNode jsonNode : releaseInfoJson) {
-
-                serviceList.add(new MicoService()
-                    .setShortName(shortName)
-                    .setName(fullName)
-                    .setVersion(jsonNode.get("tag_name").textValue())
-                    .setDescription(description)
-                    .setServiceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
-                    .setGitCloneUrl(gitCloneUrl)
-                    .setGitReleaseInfoUrl(jsonNode.get("url").textValue()));
-
-            }
-            return serviceList;
-        } catch (IOException e) {
-            log.error(e.getStackTrace().toString());
-            log.error("Getting exception '{}'", e.getMessage());
-            throw e;
-        }
-    }
-
     public String makeUriToMatchGitHubApi(String uri) {
         uri = uri.trim();
         if (uri.endsWith("/")) {
