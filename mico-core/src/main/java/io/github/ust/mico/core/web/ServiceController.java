@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
-import io.github.ust.mico.core.dto.MicoServiceDeploymentInformationDTO;
+import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.model.MicoServiceInterface;
@@ -132,18 +132,18 @@ public class ServiceController {
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")
-    public ResponseEntity<Resource<MicoServiceDeploymentInformationDTO>> getStatusOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                                            @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        MicoServiceDeploymentInformationDTO serviceDeploymentInformation = new MicoServiceDeploymentInformationDTO();
+    public ResponseEntity<Resource<MicoServiceStatusDTO>> getStatusOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                             @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        MicoServiceStatusDTO serviceStatus = new MicoServiceStatusDTO();
         Optional<MicoService> micoServiceOptional = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (micoServiceOptional.isPresent()) {
             log.debug("Retrieve status information of Mico service '{}' '{}'",
                 shortName, version);
-            serviceDeploymentInformation = micoStatusService.getServiceStatus(micoServiceOptional.get());
+            serviceStatus = micoStatusService.getServiceStatus(micoServiceOptional.get());
         } else {
             log.error("MicoService not found in service repository.");
         }
-        return ResponseEntity.ok(new Resource<>(serviceDeploymentInformation));
+        return ResponseEntity.ok(new Resource<>(serviceStatus));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")

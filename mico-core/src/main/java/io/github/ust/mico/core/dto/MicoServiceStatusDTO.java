@@ -24,26 +24,54 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import io.github.ust.mico.core.model.MicoService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for deployment information of a {@link io.github.ust.mico.core.model.MicoApplication}.
- * A list contains all {@link MicoService} the {@link io.github.ust.mico.core.model.MicoApplication} consists of.
+ * DTO for deployment information of {@link io.github.ust.mico.core.model.MicoService}.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MicoApplicationDeploymentInformationDTO {
+public class MicoServiceStatusDTO {
 
     /**
-     * List of deployment information of {@link MicoService}s, which belong to a {@link io.github.ust.mico.core.model.MicoApplication}.
+     * Name of a {@link io.github.ust.mico.core.model.MicoService}.
      */
-    private List<MicoServiceDeploymentInformationDTO> serviceDeploymentInformation = new ArrayList<>();
+    private String name;
+
+    /**
+     * shortName of a {@link io.github.ust.mico.core.model.MicoService}.
+     */
+    private String shortName;
+
+    /**
+     * Version of a {@link io.github.ust.mico.core.model.MicoService}.
+     */
+    private String version;
+
+    /**
+     * Counter for number of replicas that should be available.
+     */
+    private int requestedReplicas;
+
+    /**
+     * Counter for that are actually available.
+      */
+    private int availableReplicas;
+
+    /**
+     * Each item in this list represents a Kubernetes Service.
+     */
+    private List<MicoServiceInterfaceDTO> interfacesInformation = new ArrayList<>();
+
+    /**
+     * List of {@link io.fabric8.kubernetes.api.model.Pod}s of a {@link io.github.ust.mico.core.model.MicoService}.
+     */
+    private List<KubernetesPodInfoDTO> podInfo = new ArrayList<>();
 
 }

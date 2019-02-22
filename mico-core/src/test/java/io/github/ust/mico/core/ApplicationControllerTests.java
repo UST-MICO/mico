@@ -19,30 +19,25 @@
 
 package io.github.ust.mico.core;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import io.fabric8.kubernetes.api.model.PodList;
-import io.fabric8.kubernetes.api.model.PodListBuilder;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.github.ust.mico.core.configuration.CorsConfig;
-import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
-import io.github.ust.mico.core.configuration.PrometheusConfig;
 import io.github.ust.mico.core.dto.KuberenetesPodMetricsDTO;
 import io.github.ust.mico.core.dto.KubernetesPodInfoDTO;
-import io.github.ust.mico.core.dto.MicoApplicationDeploymentInformationDTO;
-import io.github.ust.mico.core.dto.MicoServiceDeploymentInformationDTO;
+import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
 import io.github.ust.mico.core.dto.MicoServiceInterfaceDTO;
-import io.github.ust.mico.core.dto.PrometheusResponse;
+import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.web.ApplicationController;
@@ -50,7 +45,6 @@ import org.hamcrest.collection.IsEmptyCollection;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -59,33 +53,47 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.web.client.RestTemplate;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-
-import static io.github.ust.mico.core.JsonPathBuilder.*;
+import static io.github.ust.mico.core.JsonPathBuilder.EMBEDDED;
+import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
+import static io.github.ust.mico.core.JsonPathBuilder.SELF_HREF;
+import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
+import static io.github.ust.mico.core.TestConstants.APPLICATION_NAME;
+import static io.github.ust.mico.core.TestConstants.DESCRIPTION;
+import static io.github.ust.mico.core.TestConstants.GIT_TEST_REPO_URL;
+import static io.github.ust.mico.core.TestConstants.ID;
+import static io.github.ust.mico.core.TestConstants.SERVICE_INFORMATION_NAME;
+import static io.github.ust.mico.core.TestConstants.SERVICE_INTERFACE_NAME;
+import static io.github.ust.mico.core.TestConstants.SERVICE_NAME;
+import static io.github.ust.mico.core.TestConstants.SERVICE_SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.SERVICE_VERSION;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1_MATCHER;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_MATCHER;
 import static io.github.ust.mico.core.TestConstants.VERSION;
-import static io.github.ust.mico.core.TestConstants.*;
+import static io.github.ust.mico.core.TestConstants.VERSION_1_0_1;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(ApplicationController.class)
@@ -109,12 +117,6 @@ public class ApplicationControllerTests {
 
     @MockBean
     private MicoApplicationRepository applicationRepository;
-
-    @MockBean
-    private MicoKubernetesClient micoKubernetesClient;
-
-    @MockBean
-    private PrometheusConfig prometheusConfig;
 
     @MockBean
     private MicoServiceRepository serviceRepository;
@@ -474,8 +476,8 @@ public class ApplicationControllerTests {
         int memoryUsage2 = 70;
         int cpuLoad2 = 40;
 
-        MicoApplicationDeploymentInformationDTO micoApplicationDeploymentInformation = new MicoApplicationDeploymentInformationDTO();
-        MicoServiceDeploymentInformationDTO micoServiceDeploymentInformation = new MicoServiceDeploymentInformationDTO();
+        MicoApplicationStatusDTO micoApplicationStatus = new MicoApplicationStatusDTO();
+        MicoServiceStatusDTO micoServiceStatus = new MicoServiceStatusDTO();
 
         // Set information for first pod of a MicoService
         KubernetesPodInfoDTO kubernetesPodInfo1 = new KubernetesPodInfoDTO();
@@ -502,7 +504,7 @@ public class ApplicationControllerTests {
                 .setMemoryUsage(memoryUsage2));
 
         // Set deployment information for MicoService
-        micoServiceDeploymentInformation
+        micoServiceStatus
             .setName(SERVICE_NAME)
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
@@ -511,12 +513,12 @@ public class ApplicationControllerTests {
             .setInterfacesInformation(Collections.singletonList(new MicoServiceInterfaceDTO().setName(SERVICE_INTERFACE_NAME)))
             .setPodInfo(Arrays.asList(kubernetesPodInfo1, kubernetesPodInfo2));
 
-        micoApplicationDeploymentInformation.getServiceDeploymentInformation().add(micoServiceDeploymentInformation);
+        micoApplicationStatus.getServiceStatus().add(micoServiceStatus);
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
 
         // Mock MicoStatusService
-        given(micoStatusService.getApplicationStatus(any(MicoApplication.class))).willReturn(micoApplicationDeploymentInformation);
+        given(micoStatusService.getApplicationStatus(any(MicoApplication.class))).willReturn(micoApplicationStatus);
 
         mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/status"))
             .andDo(print())

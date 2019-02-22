@@ -25,7 +25,7 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import io.github.ust.mico.core.dto.MicoApplicationDeploymentInformationDTO;
+import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
@@ -229,11 +229,11 @@ public class ApplicationController {
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")
-    public ResponseEntity<Resource<MicoApplicationDeploymentInformationDTO>> getStatusOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                                                    @PathVariable(PATH_VARIABLE_VERSION) String version) {
+    public ResponseEntity<Resource<MicoApplicationStatusDTO>> getStatusOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version) {
         MicoApplication micoApplication = getApplicationFromDatabase(shortName, version);
-        MicoApplicationDeploymentInformationDTO applicationDeploymentInformation = micoStatusService.getApplicationStatus(micoApplication);
-        return ResponseEntity.ok(new Resource<>(applicationDeploymentInformation));
+        MicoApplicationStatusDTO applicationStatus = micoStatusService.getApplicationStatus(micoApplication);
+        return ResponseEntity.ok(new Resource<>(applicationStatus));
     }
 
     /**

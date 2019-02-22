@@ -74,35 +74,39 @@ public class TestConstants {
     public static final String SERVICE_VERSION = "1.0.0";
 
     public static final String SERVICE_INTERFACE_NAME = "service-interface-name";
+    public static final String SERVICE_INTERFACE_NAME_1 = "service-interface-name-1";
     public static final String SERVICE_NAME = "test-service";
 
-    /**
-     * For tests in {@link ApplicationControllerTests}, one service is added to the list of {@link io.github.ust.mico.core.dto.MicoServiceDeploymentInformationDTO} in {@link io.github.ust.mico.core.dto.MicoApplicationDeploymentInformationDTO}.
-     * All paths are are build on path for the deployment information of this service.
+    /*
+     * For tests in ApplicationControllerTests, one service is added to the list of MicoServiceStatusDTOs in MicoApplicationStatusDTO.
+     * All paths are build on the path for the status of this service.
      */
-    public static final String FIRST_SERVICE = buildPath(ROOT, "serviceDeploymentInformation[0]");
-    public static final String SERVICE_INFORMATION_NAME = buildPath(FIRST_SERVICE, "name");
-    public static final String REQUESTED_REPLICAS = buildPath(FIRST_SERVICE, "requestedReplicas");
-    public static final String AVAILABLE_REPLICAS = buildPath(FIRST_SERVICE, "availableReplicas");
-    public static final String INTERFACES_INFORMATION = buildPath(FIRST_SERVICE, "interfacesInformation");
-    public static final String INTERFACES_INFORMATION_NAME = buildPath(FIRST_SERVICE, "interfacesInformation[0].name");
-    public static final String POD_INFO = buildPath(FIRST_SERVICE, "podInfo");
-    public static final String POD_INFO_POD_NAME_1 = buildPath(FIRST_SERVICE, "podInfo[0].podName");
-    public static final String POD_INFO_PHASE_1 = buildPath(FIRST_SERVICE, "podInfo[0].phase");
-    public static final String POD_INFO_NODE_NAME_1 = buildPath(FIRST_SERVICE, "podInfo[0].nodeName");
-    public static final String POD_INFO_METRICS_MEMORY_USAGE_1 = buildPath(FIRST_SERVICE, "podInfo[0].metrics.memoryUsage");
-    public static final String POD_INFO_METRICS_CPU_LOAD_1 = buildPath(FIRST_SERVICE, "podInfo[0].metrics.cpuLoad");
-    public static final String POD_INFO_METRICS_AVAILABLE_1 = buildPath(FIRST_SERVICE, "podInfo[0].metrics.available");
-    public static final String POD_INFO_POD_NAME_2 = buildPath(FIRST_SERVICE, "podInfo[1].podName");
-    public static final String POD_INFO_PHASE_2 = buildPath(FIRST_SERVICE, "podInfo[1].phase");
-    public static final String POD_INFO_NODE_NAME_2 = buildPath(FIRST_SERVICE, "podInfo[1].nodeName");
-    public static final String POD_INFO_METRICS_MEMORY_USAGE_2 = buildPath(FIRST_SERVICE, "podInfo[1].metrics.memoryUsage");
-    public static final String POD_INFO_METRICS_CPU_LOAD_2 = buildPath(FIRST_SERVICE, "podInfo[1].metrics.cpuLoad");
-    public static final String POD_INFO_METRICS_AVAILABLE_2 = buildPath(FIRST_SERVICE, "podInfo[1].metrics.available");
-    public static final String SERVICE_INTERFACE_NAME_1 = "service-interface-name-1";
-
     /**
-     * For tests in {@link ServiceControllerTests} a {@link io.github.ust.mico.core.dto.MicoServiceDeploymentInformationDTO} is used.
+     * Path of a single {@link io.github.ust.mico.core.dto.MicoServiceStatusDTO} in a {@link io.github.ust.mico.core.dto.MicoApplicationStatusDTO}.
+     * Contains status information for this service.
+     */
+    public static final String SERVICE_STATUS_PATH = buildPath(ROOT, "serviceStatus[0]");
+    public static final String SERVICE_INFORMATION_NAME = buildPath(SERVICE_STATUS_PATH, "name");
+    public static final String REQUESTED_REPLICAS = buildPath(SERVICE_STATUS_PATH, "requestedReplicas");
+    public static final String AVAILABLE_REPLICAS = buildPath(SERVICE_STATUS_PATH, "availableReplicas");
+    public static final String INTERFACES_INFORMATION = buildPath(SERVICE_STATUS_PATH, "interfacesInformation");
+    public static final String INTERFACES_INFORMATION_NAME = buildPath(SERVICE_STATUS_PATH, "interfacesInformation[0].name");
+    public static final String POD_INFO = buildPath(SERVICE_STATUS_PATH, "podInfo");
+    public static final String POD_INFO_POD_NAME_1 = buildPath(SERVICE_STATUS_PATH, "podInfo[0].podName");
+    public static final String POD_INFO_PHASE_1 = buildPath(SERVICE_STATUS_PATH, "podInfo[0].phase");
+    public static final String POD_INFO_NODE_NAME_1 = buildPath(SERVICE_STATUS_PATH, "podInfo[0].nodeName");
+    public static final String POD_INFO_METRICS_MEMORY_USAGE_1 = buildPath(SERVICE_STATUS_PATH, "podInfo[0].metrics.memoryUsage");
+    public static final String POD_INFO_METRICS_CPU_LOAD_1 = buildPath(SERVICE_STATUS_PATH, "podInfo[0].metrics.cpuLoad");
+    public static final String POD_INFO_METRICS_AVAILABLE_1 = buildPath(SERVICE_STATUS_PATH, "podInfo[0].metrics.available");
+    public static final String POD_INFO_POD_NAME_2 = buildPath(SERVICE_STATUS_PATH, "podInfo[1].podName");
+    public static final String POD_INFO_PHASE_2 = buildPath(SERVICE_STATUS_PATH, "podInfo[1].phase");
+    public static final String POD_INFO_NODE_NAME_2 = buildPath(SERVICE_STATUS_PATH, "podInfo[1].nodeName");
+    public static final String POD_INFO_METRICS_MEMORY_USAGE_2 = buildPath(SERVICE_STATUS_PATH, "podInfo[1].metrics.memoryUsage");
+    public static final String POD_INFO_METRICS_CPU_LOAD_2 = buildPath(SERVICE_STATUS_PATH, "podInfo[1].metrics.cpuLoad");
+    public static final String POD_INFO_METRICS_AVAILABLE_2 = buildPath(SERVICE_STATUS_PATH, "podInfo[1].metrics.available");
+
+    /*
+     * For tests in ServiceControllerTests, a MicoServiceStatusDTO is used.
      * All paths are build on the base path of this object.
      */
     public static final String SERVICE_DTO_SERVICE_NAME = buildAttributePath("name");

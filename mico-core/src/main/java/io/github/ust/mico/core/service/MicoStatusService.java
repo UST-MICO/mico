@@ -12,8 +12,8 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.github.ust.mico.core.configuration.PrometheusConfig;
 import io.github.ust.mico.core.dto.KuberenetesPodMetricsDTO;
 import io.github.ust.mico.core.dto.KubernetesPodInfoDTO;
-import io.github.ust.mico.core.dto.MicoApplicationDeploymentInformationDTO;
-import io.github.ust.mico.core.dto.MicoServiceDeploymentInformationDTO;
+import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
+import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
 import io.github.ust.mico.core.dto.MicoServiceInterfaceDTO;
 import io.github.ust.mico.core.dto.PrometheusResponse;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
@@ -57,14 +57,14 @@ public class MicoStatusService {
     /**
      * Get status information for a {@link MicoApplication}
      * @param micoApplication
-     * @return {@link MicoApplicationDeploymentInformationDTO} containing a list of {@link MicoServiceDeploymentInformationDTO} for status information of a single {@link MicoService}
+     * @return {@link MicoApplicationStatusDTO} containing a list of {@link MicoServiceStatusDTO} for status information of a single {@link MicoService}
      */
-    public MicoApplicationDeploymentInformationDTO getApplicationStatus(MicoApplication micoApplication) {
-        MicoApplicationDeploymentInformationDTO applicationDeploymentInformation = new MicoApplicationDeploymentInformationDTO();
+    public MicoApplicationStatusDTO getApplicationStatus(MicoApplication micoApplication) {
+        MicoApplicationStatusDTO applicationDeploymentInformation = new MicoApplicationStatusDTO();
         List<MicoService> micoServices = micoApplication.getServices();
         for (MicoService micoService: micoServices) {
-            MicoServiceDeploymentInformationDTO micoServiceDeploymentInformation = getServiceStatus(micoService);
-            applicationDeploymentInformation.getServiceDeploymentInformation().add(micoServiceDeploymentInformation);
+            MicoServiceStatusDTO micoServiceDeploymentInformation = getServiceStatus(micoService);
+            applicationDeploymentInformation.getServiceStatus().add(micoServiceDeploymentInformation);
         }
         return applicationDeploymentInformation;
     }
@@ -72,9 +72,9 @@ public class MicoStatusService {
     /**
      * Get status information for a single {@link MicoService}: # available replicas, # requested replicas, pod metrics (cpu load, memory load)
      * @param micoService is a {@link MicoService}
-     * @return {@link MicoServiceDeploymentInformationDTO} which contains status information for a specific {@link MicoService}
+     * @return {@link MicoServiceStatusDTO} which contains status information for a specific {@link MicoService}
      */
-    public MicoServiceDeploymentInformationDTO getServiceStatus(MicoService micoService) {
+    public MicoServiceStatusDTO getServiceStatus(MicoService micoService) {
         Optional<Deployment> deploymentOptional = null;
         try {
             deploymentOptional = micoKubernetesClient.getDeploymentOfMicoService(micoService);
@@ -88,7 +88,7 @@ public class MicoStatusService {
         }
 
         Deployment deployment = deploymentOptional.get();
-        MicoServiceDeploymentInformationDTO serviceDeploymentInformation = new MicoServiceDeploymentInformationDTO();
+        MicoServiceStatusDTO serviceDeploymentInformation = new MicoServiceStatusDTO();
         serviceDeploymentInformation.setName(micoService.getName());
         serviceDeploymentInformation.setShortName(micoService.getShortName());
         serviceDeploymentInformation.setVersion(micoService.getVersion());

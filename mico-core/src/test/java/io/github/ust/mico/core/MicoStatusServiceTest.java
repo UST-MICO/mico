@@ -15,8 +15,8 @@ import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.github.ust.mico.core.configuration.PrometheusConfig;
 import io.github.ust.mico.core.dto.KuberenetesPodMetricsDTO;
 import io.github.ust.mico.core.dto.KubernetesPodInfoDTO;
-import io.github.ust.mico.core.dto.MicoApplicationDeploymentInformationDTO;
-import io.github.ust.mico.core.dto.MicoServiceDeploymentInformationDTO;
+import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
+import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
 import io.github.ust.mico.core.dto.MicoServiceInterfaceDTO;
 import io.github.ust.mico.core.dto.PrometheusResponse;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
@@ -30,9 +30,6 @@ import io.github.ust.mico.core.util.CollectionUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentMatcher;
-import org.mockito.ArgumentMatchers;
-import org.neo4j.server.rest.RESTRequestGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -43,17 +40,13 @@ import org.springframework.web.client.RestTemplate;
 
 import static io.github.ust.mico.core.TestConstants.APPLICATION_NAME;
 import static io.github.ust.mico.core.TestConstants.DESCRIPTION_1;
-import static io.github.ust.mico.core.TestConstants.INTERFACES_INFORMATION_NAME;
 import static io.github.ust.mico.core.TestConstants.SERVICE_INTERFACE_NAME;
 import static io.github.ust.mico.core.TestConstants.SERVICE_NAME;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1;
 import static io.github.ust.mico.core.TestConstants.VERSION;
-import static io.github.ust.mico.core.TestConstants.VERSION_1_0_1;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
@@ -94,7 +87,6 @@ public class MicoStatusServiceTest {
     private String startTime = new Date().toString();
     private int restarts = 0;
     private boolean podAvailable = true;
-
 
     @Before
     public void setupMicoApplication() {
@@ -146,8 +138,8 @@ public class MicoStatusServiceTest {
 
     @Test
     public void getApplicationStatus() {
-        MicoApplicationDeploymentInformationDTO micoApplicationDeploymentInformation = new MicoApplicationDeploymentInformationDTO();
-        micoApplicationDeploymentInformation.setServiceDeploymentInformation(Collections.singletonList(new MicoServiceDeploymentInformationDTO()
+        MicoApplicationStatusDTO micoApplicationStatus = new MicoApplicationStatusDTO();
+        micoApplicationStatus.setServiceStatus(Collections.singletonList(new MicoServiceStatusDTO()
             .setName(SERVICE_NAME)
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
@@ -177,7 +169,7 @@ public class MicoStatusServiceTest {
         ResponseEntity responseEntityMemoryUsage = getPrometheusResponseEntity(memoryUsage);
         ResponseEntity responseEntityCpuLoad = getPrometheusResponseEntity(cpuLoad);
         given(restTemplate.getForEntity(any(), eq(PrometheusResponse.class))).willReturn(responseEntityMemoryUsage).willReturn(responseEntityCpuLoad);
-        assertEquals(micoApplicationDeploymentInformation, micoStatusService.getApplicationStatus(micoApplication));
+        assertEquals(micoApplicationStatus, micoStatusService.getApplicationStatus(micoApplication));
     }
 
     private ResponseEntity getPrometheusResponseEntity(int value) {
@@ -192,8 +184,8 @@ public class MicoStatusServiceTest {
 
     @Test
     public void getServiceStatus() {
-        MicoServiceDeploymentInformationDTO micoServiceDeploymentInformation = new MicoServiceDeploymentInformationDTO();
-        micoServiceDeploymentInformation
+        MicoServiceStatusDTO micoServiceStatus = new MicoServiceStatusDTO();
+        micoServiceStatus
             .setName(SERVICE_NAME)
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
@@ -223,7 +215,7 @@ public class MicoStatusServiceTest {
         ResponseEntity responseEntityMemoryUsage = getPrometheusResponseEntity(memoryUsage);
         ResponseEntity responseEntityCpuLoad = getPrometheusResponseEntity(cpuLoad);
         given(restTemplate.getForEntity(any(), eq(PrometheusResponse.class))).willReturn(responseEntityMemoryUsage).willReturn(responseEntityCpuLoad);
-        assertEquals(micoServiceDeploymentInformation, micoStatusService.getServiceStatus(micoService));
+        assertEquals(micoServiceStatus, micoStatusService.getServiceStatus(micoService));
     }
 
     @Test

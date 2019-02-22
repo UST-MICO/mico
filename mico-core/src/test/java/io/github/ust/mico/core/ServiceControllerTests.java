@@ -27,7 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.dto.KuberenetesPodMetricsDTO;
 import io.github.ust.mico.core.dto.KubernetesPodInfoDTO;
-import io.github.ust.mico.core.dto.MicoServiceDeploymentInformationDTO;
+import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
 import io.github.ust.mico.core.dto.MicoServiceInterfaceDTO;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
@@ -132,7 +132,7 @@ public class ServiceControllerTests {
         int memoryUsagePod2 = 70;
         int cpuLoadPod2 = 40;
 
-        MicoServiceDeploymentInformationDTO micoServiceDeploymentInformation = new MicoServiceDeploymentInformationDTO();
+        MicoServiceStatusDTO micoServiceStatus = new MicoServiceStatusDTO();
 
         KubernetesPodInfoDTO kubernetesPodInfo1 = new KubernetesPodInfoDTO();
         kubernetesPodInfo1
@@ -155,7 +155,7 @@ public class ServiceControllerTests {
                 .setCpuLoad(cpuLoadPod2)
                 .setMemoryUsage(memoryUsagePod2));
 
-        micoServiceDeploymentInformation
+        micoServiceStatus
             .setVersion(VERSION)
             .setName(SERVICE_NAME)
             .setShortName(SHORT_NAME)
@@ -164,7 +164,7 @@ public class ServiceControllerTests {
             .setInterfacesInformation(Collections.singletonList(new MicoServiceInterfaceDTO().setName(SERVICE_INTERFACE_NAME)))
             .setPodInfo(Arrays.asList(kubernetesPodInfo1, kubernetesPodInfo2));
 
-        given(micoStatusService.getServiceStatus(any(MicoService.class))).willReturn(micoServiceDeploymentInformation);
+        given(micoStatusService.getServiceStatus(any(MicoService.class))).willReturn(micoServiceStatus);
         given(serviceRepository.findByShortNameAndVersion(ArgumentMatchers.anyString(), ArgumentMatchers.any())).willReturn(Optional.of(micoService));
 
         mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/status"))
