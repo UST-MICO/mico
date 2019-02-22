@@ -74,20 +74,20 @@ public class GitHubCrawler {
     }
 
     public MicoService crawlGitHubRepoLatestRelease(String uri) throws IOException {
-        uri = makeUriToMatchGitHubApi(uri);
+        uri = adaptUriForGitHubApi(uri);
         String releaseUrl = uri + "/" + RELEASES + "/" + LATEST;
 
         return crawlGitHubRepo(uri, releaseUrl);
     }
 
     public MicoService crawlGitHubRepoSpecificRelease(String uri, String version) throws IOException {
-        uri = makeUriToMatchGitHubApi(uri);
+        uri = adaptUriForGitHubApi(uri);
         String releaseUrl = uri + "/" + RELEASES + "/" + TAGS + "/" + version;
 
         return crawlGitHubRepo(uri, releaseUrl);
     }
 
-    public String makeUriToMatchGitHubApi(String uri) {
+    public String adaptUriForGitHubApi(String uri) {
         uri = uri.trim();
         if (uri.endsWith("/")) {
             uri = uri.substring(0, uri.length() - 1);
@@ -97,7 +97,7 @@ public class GitHubCrawler {
     }
 
     public LinkedList<String> getVersionsFromGitHubRepo(String uri) throws IOException {
-        uri = makeUriToMatchGitHubApi(uri);
+        uri = adaptUriForGitHubApi(uri);
         String releasesUrl = uri + "/" + RELEASES;
         log.debug("Getting release tags from '{}'", releasesUrl);
 

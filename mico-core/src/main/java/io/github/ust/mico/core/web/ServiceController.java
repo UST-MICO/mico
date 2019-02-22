@@ -61,6 +61,7 @@ public class ServiceController {
     public static final String PATH_DELETE_VERSION = "versionToDelete";
     public static final String PATH_VARIABLE_IMPORT = "import";
     public static final String PATH_VARIABLE_GITHUB = "github";
+    public static final String PATH_GITHUB_ENDPOINT = "/" + PATH_VARIABLE_IMPORT + "/" + PATH_VARIABLE_GITHUB;
 
     @Autowired
     private MicoServiceRepository serviceRepository;
@@ -302,7 +303,7 @@ public class ServiceController {
                 linkTo(methodOn(ServiceController.class).getDependers(shortName, version)).withSelfRel()));
     }
 
-    @PostMapping("/" + PATH_VARIABLE_IMPORT + "/" + PATH_VARIABLE_GITHUB)
+    @PostMapping(PATH_GITHUB_ENDPOINT)
     public ResponseEntity<Resource<MicoService>> importMicoServiceFromGitHub(@RequestBody CrawlingInformation crawlingInformation) {
         String uri = crawlingInformation.getUri();
         String version = crawlingInformation.getVersion();
@@ -326,7 +327,7 @@ public class ServiceController {
         }
     }
 
-    @GetMapping("/" + PATH_VARIABLE_IMPORT + "/" + PATH_VARIABLE_GITHUB)
+    @GetMapping(PATH_GITHUB_ENDPOINT)
     @ResponseBody
     public LinkedList<String> getVersionsFromGitHub(@RequestParam String uri) {
         log.debug("Start getting versions from URL '{}'", uri);
