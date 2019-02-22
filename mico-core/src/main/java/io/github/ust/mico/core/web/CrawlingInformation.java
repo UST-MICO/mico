@@ -12,5 +12,5 @@ public class CrawlingInformation {
      * Can be 'latest' or a specific version (e.g. v1.2.3)
      */
     @Getter
-    private String version;
+    private String version = "";
 }
