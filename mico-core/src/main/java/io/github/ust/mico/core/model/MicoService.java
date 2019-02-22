@@ -147,7 +147,7 @@ public class MicoService {
             @ExtensionProperty(name = "title", value = "Dependencies"),
             @ExtensionProperty(name = "x-order", value = "90"),
             @ExtensionProperty(name = "description", value = "The list of services that this service requires in " +
-                "rder to run normally.")
+                "order to run normally.")
         }
     )})
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
@@ -190,7 +190,7 @@ public class MicoService {
         properties = {
             @ExtensionProperty(name = "title", value = "Owner"),
             @ExtensionProperty(name = "x-order", value = "60"),
-            @ExtensionProperty(name = "description", value = "Human readable information for the service owner ,who " +
+            @ExtensionProperty(name = "description", value = "Human readable information for the services owner, who " +
                 "is responsible for this service.")
         }
     )})
