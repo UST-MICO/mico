@@ -26,16 +26,19 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+/**
+ * Represents a service in Kubernetes for a {@link io.github.ust.mico.core.model.MicoService}.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-// TODO: Class comment.
 public class MicoServiceInterfaceDTO {
-    
-    // TODO: Add comments for fields.
 
+    /**
+     * Name of the {@link io.github.ust.mico.core.model.MicoServiceInterface}.
+     */
     private String name;
     
 }

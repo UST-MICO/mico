@@ -19,11 +19,21 @@
 
 package io.github.ust.mico.core.web;
 
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import javax.validation.Valid;
+
+import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.GitHubCrawler;
+import io.github.ust.mico.core.service.MicoStatusService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -34,15 +44,15 @@ import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
-
-import javax.validation.Valid;
-import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
@@ -62,6 +72,9 @@ public class ServiceController {
 
     @Autowired
     private MicoServiceRepository serviceRepository;
+
+    @Autowired
+    private MicoStatusService micoStatusService;
 
     @GetMapping()
     public ResponseEntity<Resources<Resource<MicoService>>> getServiceList() {
@@ -116,6 +129,21 @@ public class ServiceController {
 
         serviceRepository.deleteServiceByShortNameAndVersion(shortName, version);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")
+    public ResponseEntity<Resource<MicoServiceStatusDTO>> getStatusOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                             @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        MicoServiceStatusDTO serviceStatus = new MicoServiceStatusDTO();
+        Optional<MicoService> micoServiceOptional = serviceRepository.findByShortNameAndVersion(shortName, version);
+        if (micoServiceOptional.isPresent()) {
+            log.debug("Retrieve status information of Mico service '{}' '{}'",
+                shortName, version);
+            serviceStatus = micoStatusService.getServiceStatus(micoServiceOptional.get());
+        } else {
+            log.error("MicoService not found in service repository.");
+        }
+        return ResponseEntity.ok(new Resource<>(serviceStatus));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")

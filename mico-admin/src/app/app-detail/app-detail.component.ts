@@ -66,7 +66,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
     isLatestVersion = () => {
         if (this.allVersions != null) {
-            if (this.selectedVersion === this.getLatestVersion(this.allVersions)) {
+            if (this.selectedVersion === this.getLatestVersion()) {
                 return true;
             }
         }
@@ -82,8 +82,8 @@ export class AppDetailComponent implements OnInit, OnDestroy {
             this.subApplicationVersions = this.apiService.getApplicationVersions(this.shortName)
                 .subscribe(versions => {
 
-                    this.allVersions = versions;
-                    const latestVersion = this.getLatestVersion(versions);
+                    this.allVersions = JSON.parse(JSON.stringify(versions)).sort((n1, n2) => versionComparator(n1.version, n2.version));
+                    const latestVersion = this.getLatestVersion();
 
                     if (givenVersion == null) {
                         this.subscribeApplication(latestVersion);
@@ -184,18 +184,10 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     }
 
     /**
-     * takes a list of applications and returns the latest version number
+     * returns the last elements version of the allVersions list (list is sorted in ngOnInit)
      */
-    getLatestVersion(list) {
-        let version = '0.0.0';
-
-        list.forEach(element => {
-
-            if (versionComparator(element.version, version) > 0) {
-                version = element.version;
-            }
-        });
-        return version;
+    getLatestVersion() {
+        return this.allVersions[this.allVersions.length - 1].version;
     }
 
     addService() {

@@ -22,7 +22,6 @@ package io.github.ust.mico.core.web;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
-import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -43,32 +42,20 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.github.ust.mico.core.configuration.PrometheusConfig;
-import io.github.ust.mico.core.dto.KuberenetesPodMetricsDTO;
-import io.github.ust.mico.core.dto.KubernetesPodInfoDTO;
-import io.github.ust.mico.core.dto.MicoApplicationDeploymentInformationDTO;
-import io.github.ust.mico.core.dto.MicoServiceDeploymentInformationDTO;
-import io.github.ust.mico.core.dto.MicoServiceInterfaceDTO;
-import io.github.ust.mico.core.dto.PrometheusResponse;
+import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
-import io.github.ust.mico.core.exception.PrometheusRequestFailedException;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfoQueryResult;
-import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.service.MicoStatusService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -84,16 +71,8 @@ public class ApplicationController {
     private static final String PATH_VARIABLE_SHORT_NAME = "shortName";
     private static final String PATH_VARIABLE_VERSION = "version";
 
-    private static final int MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT = 1;
-    private static final String PROMETHEUS_QUERY_FOR_MEMORY_USAGE = "sum(container_memory_working_set_bytes{pod_name=\"%s\",container_name=\"\"})";
-    private static final String PROMETHEUS_QUERY_FOR_CPU_USAGE = "sum(container_cpu_load_average_10s{pod_name=\"%s\"})";
-    private static final String PROMETHEUS_QUERY_PARAMETER_NAME = "query";
-
     @Autowired
     private MicoApplicationRepository applicationRepository;
-
-    @Autowired
-    private PrometheusConfig prometheusConfig;
 
     @Autowired
     private MicoServiceRepository serviceRepository;
@@ -102,10 +81,14 @@ public class ApplicationController {
     private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
 
     @Autowired
-    MicoKubernetesClient micoKubernetesClient;
+    private MicoKubernetesClient micoKubernetesClient;
 
     @Autowired
     private RestTemplate restTemplate;
+    
+    @Autowired
+    private MicoStatusService micoStatusService;
+
 
     @GetMapping()
     public ResponseEntity<Resources<Resource<MicoApplication>>> getAllApplications() {
@@ -286,78 +269,11 @@ public class ApplicationController {
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")
-    public ResponseEntity<Resource<MicoApplicationDeploymentInformationDTO>> getStatusOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                                                    @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        List<MicoService> micoServices = serviceRepository.findAllByApplication(shortName, version);
-        log.debug("Aggregate status information of Mico application '{}' '{}' with {} included services",
-            shortName, version, micoServices.size());
-
-        MicoApplicationDeploymentInformationDTO applicationDeploymentInformation = new MicoApplicationDeploymentInformationDTO();
-        for (MicoService micoService : micoServices) {
-            Optional<Deployment> deploymentOptional;
-            try {
-                deploymentOptional = micoKubernetesClient.getDeploymentOfMicoService(micoService);
-            } catch (KubernetesResourceException e) {
-                log.error("Error while retrieving Kubernetes deployment of MicoService '{}' '{}'. Continue with next one. Caused by: {}",
-                    micoService.getShortName(), micoService.getVersion(), e.getMessage());
-                continue;
-            }
-            if (!deploymentOptional.isPresent()) {
-                log.warn("There is no deployment of the MicoService '{}' '{}'. Continue with next one.",
-                    micoService.getShortName(), micoService.getVersion());
-                continue;
-            }
-
-            Deployment deployment = deploymentOptional.get();
-            MicoServiceDeploymentInformationDTO serviceDeploymentInformation = new MicoServiceDeploymentInformationDTO();
-            int requestedReplicas = deployment.getSpec().getReplicas();
-            int availableReplicas = deployment.getStatus().getAvailableReplicas();
-            serviceDeploymentInformation.setAvailableReplicas(availableReplicas);
-            serviceDeploymentInformation.setRequestedReplicas(requestedReplicas);
-
-            List<Pod> podList = micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(micoService);
-            List<KubernetesPodInfoDTO> podInfos = new LinkedList<>();
-            for (Pod pod : podList) {
-                KubernetesPodInfoDTO podInfo = getUiPodInfo(pod);
-                podInfos.add(podInfo);
-            }
-            serviceDeploymentInformation.setPodInfo(podInfos);
-            applicationDeploymentInformation.getServiceDeploymentInformation().add(serviceDeploymentInformation);
-
-            List<MicoServiceInterface> serviceInterfaces = micoService.getServiceInterfaces();
-            if (serviceInterfaces.size() < MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT) {
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "There are " + serviceInterfaces.size() + " service interfaces of MicoService '" +
-                        micoService.getShortName() + "' '" + micoService.getVersion() + "'. That is less than the required " +
-                        MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT + " service interfaces.");
-            }
-
-            for (MicoServiceInterface micoServiceInterface : serviceInterfaces) {
-                String serviceInterfaceName = micoServiceInterface.getServiceInterfaceName();
-                Optional<Service> kubernetesServiceOptional;
-                try {
-                    kubernetesServiceOptional = micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, serviceInterfaceName);
-                } catch (KubernetesResourceException e) {
-                    log.error("Error while retrieving Kubernetes services of MicoServiceInterface '{}' of MicoService '{}' '{}'. " +
-                            "Continue with next one. Caused by: {}",
-                        serviceInterfaceName, micoService.getShortName(), micoService.getVersion(), e.getMessage());
-                    continue;
-                }
-                if (!kubernetesServiceOptional.isPresent()) {
-                    log.warn("There is no service of the MicoServiceInterface '{}' of MicoService '{}' '{}'.",
-                        micoService.getShortName(), micoService.getVersion());
-                    continue;
-                }
-
-                Service kubernetesService = kubernetesServiceOptional.get();
-                List<MicoServiceInterfaceDTO> interfacesInformation = new LinkedList<>();
-                String serviceName = kubernetesService.getMetadata().getName();
-                MicoServiceInterfaceDTO interfaceInformation = new MicoServiceInterfaceDTO(serviceName);
-                interfacesInformation.add(interfaceInformation);
-                serviceDeploymentInformation.setInterfacesInformation(interfacesInformation);
-            }
-        }
-        return ResponseEntity.ok(new Resource<>(applicationDeploymentInformation));
+    public ResponseEntity<Resource<MicoApplicationStatusDTO>> getStatusOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        MicoApplication micoApplication = getApplicationFromDatabase(shortName, version);
+        MicoApplicationStatusDTO applicationStatus = micoStatusService.getApplicationStatus(micoApplication);
+        return ResponseEntity.ok(new Resource<>(applicationStatus));
     }
 
     /**
@@ -458,64 +374,4 @@ public class ApplicationController {
         }
         return existingService;
     }
-
-    private KubernetesPodInfoDTO getUiPodInfo(Pod pod) {
-        String nodeName = pod.getSpec().getNodeName();
-        String podName = pod.getMetadata().getName();
-        String phase = pod.getStatus().getPhase();
-        String hostIp = pod.getStatus().getHostIP();
-        int memoryUsage = -1;
-        int cpuLoad = -1;
-        KuberenetesPodMetricsDTO podMetrics = new KuberenetesPodMetricsDTO();
-        try {
-            memoryUsage = getMemoryUsageForPod(podName);
-            cpuLoad = getCpuLoadForPod(podName);
-            podMetrics.setAvailable(true);
-        } catch (PrometheusRequestFailedException | ResourceAccessException e) {
-            podMetrics.setAvailable(false);
-            log.error(e.getMessage(), e);
-        }
-        podMetrics.setMemoryUsage(memoryUsage);
-        podMetrics.setCpuLoad(cpuLoad);
-        return new KubernetesPodInfoDTO(podName, phase, hostIp, nodeName, podMetrics);
-    }
-
-    private int getMemoryUsageForPod(String podName) throws PrometheusRequestFailedException {
-        URI prometheusUri = getPrometheusUri(PROMETHEUS_QUERY_FOR_MEMORY_USAGE, podName);
-        return requestValueFromPrometheus(prometheusUri);
-    }
-
-    private int getCpuLoadForPod(String podName) throws PrometheusRequestFailedException {
-        URI prometheusUri = getPrometheusUri(PROMETHEUS_QUERY_FOR_CPU_USAGE, podName);
-        return requestValueFromPrometheus(prometheusUri);
-    }
-
-    private int requestValueFromPrometheus(URI prometheusUri) throws PrometheusRequestFailedException {
-
-        ResponseEntity<PrometheusResponse> response
-            = restTemplate.getForEntity(prometheusUri, PrometheusResponse.class);
-        if (response.getStatusCode().is2xxSuccessful()) {
-            PrometheusResponse prometheusMemoryResponse = response.getBody();
-            if (prometheusMemoryResponse != null) {
-                if (prometheusMemoryResponse.wasSuccessful()) {
-                    return prometheusMemoryResponse.getValue();
-                } else {
-                    throw new PrometheusRequestFailedException("The status of the prometheus response was " + prometheusMemoryResponse.getStatus(), response.getStatusCode(), prometheusMemoryResponse.getStatus());
-                }
-            } else {
-                throw new PrometheusRequestFailedException("There was no response body", response.getStatusCode(), null);
-            }
-        } else {
-            throw new PrometheusRequestFailedException("The http status code was not 2xx", response.getStatusCode(), null);
-        }
-    }
-
-    private URI getPrometheusUri(String query, String podName) {
-        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(prometheusConfig.getUri());
-        uriBuilder.queryParam(PROMETHEUS_QUERY_PARAMETER_NAME, String.format(query, podName));
-        URI prometheusUri = uriBuilder.build().toUri();
-        log.debug("Using Prometheus URI '{}'", prometheusUri);
-        return prometheusUri;
-    }
-
 }

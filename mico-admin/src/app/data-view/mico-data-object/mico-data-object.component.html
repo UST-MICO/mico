@@ -1,0 +1,18 @@
+<div class="ma1">
+
+    <mat-expansion-panel>
+        <mat-expansion-panel-header>
+            <mat-panel-title>
+                {{config?.title}}
+            </mat-panel-title>
+            <mat-panel-description>
+                {{config?.description}}
+            </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <ng-template matExpansionPanelContent>
+            <mico-data [modelUrl]="config['$ref']" [startData]="dataValue"></mico-data>
+        </ng-template>
+
+    </mat-expansion-panel>
+</div>

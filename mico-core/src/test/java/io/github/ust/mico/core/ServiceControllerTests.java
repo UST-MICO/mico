@@ -19,12 +19,21 @@
 
 package io.github.ust.mico.core;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Optional;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ust.mico.core.configuration.CorsConfig;
+import io.github.ust.mico.core.dto.KuberenetesPodMetricsDTO;
+import io.github.ust.mico.core.dto.KubernetesPodInfoDTO;
+import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
+import io.github.ust.mico.core.dto.MicoServiceInterfaceDTO;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.MicoStatusService;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.web.ServiceController;
 import org.junit.Ignore;
@@ -44,14 +53,12 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Optional;
-
 import static io.github.ust.mico.core.ApplicationControllerTests.INTERFACES_LIST_PATH;
-import static io.github.ust.mico.core.JsonPathBuilder.*;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
-import static io.github.ust.mico.core.TestConstants.VERSION;
+import static io.github.ust.mico.core.JsonPathBuilder.HREF;
+import static io.github.ust.mico.core.JsonPathBuilder.LINKS;
+import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
+import static io.github.ust.mico.core.JsonPathBuilder.SELF;
+import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
 import static io.github.ust.mico.core.TestConstants.*;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.is;
@@ -59,9 +66,15 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(ServiceController.class)
@@ -69,6 +82,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @EnableAutoConfiguration
 @EnableConfigurationProperties(value = {CorsConfig.class})
 public class ServiceControllerTests {
+
+    private static final String BASE_PATH = "/services";
 
     private static final String JSON_PATH_LINKS_SECTION = buildPath(ROOT, LINKS);
     private static final String SELF_HREF = buildPath(JSON_PATH_LINKS_SECTION, SELF, HREF);
@@ -91,8 +106,89 @@ public class ServiceControllerTests {
     @MockBean
     private MicoServiceRepository serviceRepository;
 
+    @MockBean
+    MicoStatusService micoStatusService;
+
     @Autowired
     private ObjectMapper mapper;
+
+    @Test
+    public void getStatusOfService() throws Exception {
+        MicoService micoService = new MicoService()
+            .setName(SERVICE_NAME)
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setDescription(DESCRIPTION_1);
+
+        String nodeName = "testNode";
+        String podPhase = "Running";
+        String hostIp = "192.168.0.0";
+        String podName1 = "pod1";
+        String podName2 = "pod2";
+        int availableReplicas = 1;
+        int requestedReplicas = 2;
+        int memoryUsagePod1 = 50;
+        int cpuLoadPod1 = 10;
+        int memoryUsagePod2 = 70;
+        int cpuLoadPod2 = 40;
+
+        MicoServiceStatusDTO micoServiceStatus = new MicoServiceStatusDTO();
+
+        KubernetesPodInfoDTO kubernetesPodInfo1 = new KubernetesPodInfoDTO();
+        kubernetesPodInfo1
+            .setHostIp(hostIp)
+            .setNodeName(nodeName)
+            .setPhase(podPhase)
+            .setPodName(podName1)
+            .setMetrics(new KuberenetesPodMetricsDTO()
+                .setAvailable(false)
+                .setCpuLoad(cpuLoadPod1)
+                .setMemoryUsage(memoryUsagePod1));
+        KubernetesPodInfoDTO kubernetesPodInfo2 = new KubernetesPodInfoDTO();
+        kubernetesPodInfo2
+            .setHostIp(hostIp)
+            .setNodeName(nodeName)
+            .setPhase(podPhase)
+            .setPodName(podName2)
+            .setMetrics(new KuberenetesPodMetricsDTO()
+                .setAvailable(true)
+                .setCpuLoad(cpuLoadPod2)
+                .setMemoryUsage(memoryUsagePod2));
+
+        micoServiceStatus
+            .setVersion(VERSION)
+            .setName(SERVICE_NAME)
+            .setShortName(SHORT_NAME)
+            .setAvailableReplicas(availableReplicas)
+            .setRequestedReplicas(requestedReplicas)
+            .setInterfacesInformation(Collections.singletonList(new MicoServiceInterfaceDTO().setName(SERVICE_INTERFACE_NAME)))
+            .setPodInfo(Arrays.asList(kubernetesPodInfo1, kubernetesPodInfo2));
+
+        given(micoStatusService.getServiceStatus(any(MicoService.class))).willReturn(micoServiceStatus);
+        given(serviceRepository.findByShortNameAndVersion(ArgumentMatchers.anyString(), ArgumentMatchers.any())).willReturn(Optional.of(micoService));
+
+        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/status"))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(SERVICE_DTO_SERVICE_NAME, is(SERVICE_NAME)))
+            .andExpect(jsonPath(SERVICE_DTO_REQUESTED_REPLICAS, is(requestedReplicas)))
+            .andExpect(jsonPath(SERVICE_DTO_AVAILABLE_REPLICAS, is(availableReplicas)))
+            .andExpect(jsonPath(SERVICE_DTO_INTERFACES_INFORMATION, hasSize(1)))
+            .andExpect(jsonPath(SERVICE_DTO_INTERFACES_INFORMATION_NAME, is(SERVICE_INTERFACE_NAME)))
+            .andExpect(jsonPath(SERVICE_DTO_POD_INFO, hasSize(2)))
+            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_POD_NAME_1, is(podName1)))
+            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_PHASE_1, is(podPhase)))
+            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_NODE_NAME_1, is(nodeName)))
+            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_METRICS_MEMORY_USAGE_1, is(memoryUsagePod1)))
+            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_METRICS_CPU_LOAD_1, is(cpuLoadPod1)))
+            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_METRICS_AVAILABLE_1, is(false)))
+            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_POD_NAME_2, is(podName2)))
+            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_PHASE_2, is(podPhase)))
+            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_NODE_NAME_2, is(nodeName)))
+            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_METRICS_MEMORY_USAGE_2, is(memoryUsagePod2)))
+            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_METRICS_CPU_LOAD_2, is(cpuLoadPod2)))
+            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_METRICS_AVAILABLE_2, is(true)));
+    }
 
     @Test
     public void getCompleteServiceList() throws Exception {
