@@ -46,6 +46,8 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
     private nodeMap: Map<string, Node>;
     private edgeMap: Map<string, Edge>;
 
+    private versionChangedFor: { node: Node, newVersion: ApiObject};
+
     constructor(private api: ApiService, private dialog: MatDialog) {}
 
     ngOnInit() {
@@ -93,7 +95,6 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
         }
         if (event.detail.key === 'version') {
             event.preventDefault();
-            console.log(event.detail)
 
             const dialogRef = this.dialog.open(ChangeServiceVersionComponent, {
                 data: {
@@ -102,7 +103,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
             });
 
             dialogRef.afterClosed().subscribe((selected) => {
-                if (selected == null || event.detail.node.service.version === selected.version) {
+                if (selected == null || selected === '' || event.detail.node.service.version === selected.version) {
                     return;
                 }
                 this.changeServiceVersion(event.detail.node, selected);
@@ -111,8 +112,14 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
         }
     }
 
-    changeServiceVersion(node: Node, newVerion: ApiObject) {
-
+    changeServiceVersion(node: Node, newVersion: ApiObject) {
+        this.versionChangedFor = {node: node, newVersion: newVersion};
+        this.api.deleteApplicationServices(this.shortName, this.version, node.service.shortName).subscribe((success) => {
+            if (!success) {
+                return;
+            }
+            this.api.postApplicationServices(this.shortName, this.version, newVersion).subscribe();
+        });
     }
 
     onCreateDraggedEdge = (edge: DraggedEdge) => {
@@ -132,6 +139,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
         this.nodeMap = new Map<string, Node>();
         this.edgeMap = new Map<string, Edge>();
         this.lastX = 0;
+        this.versionChangedFor = null;
         const graph: GraphEditor = this.graph.nativeElement;
 
         graph.setNodes([]);
@@ -206,6 +214,15 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
                 };
                 // super basic layout algorithm:
                 this.lastX += 110;
+                if (this.versionChangedFor != null) {
+                    if (this.versionChangedFor.newVersion.shortName === service.shortName &&
+                        this.versionChangedFor.newVersion.version === service.version) {
+                        node.x = this.versionChangedFor.node.x;
+                        node.y = this.versionChangedFor.node.y;
+                        this.lastX -= 110;
+                        this.versionChangedFor = null;
+                    }
+                }
                 nodeMap.set(serviceId, node);
                 graph.addNode(node, false);
                 // add edge from root to service node
