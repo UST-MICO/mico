@@ -1,27 +1,32 @@
 #!/bin/bash
 
-# Check if required environment variable are set
-if [[ -z "${DOCKERHUB_USERNAME_BASE64}" ]]; then
-    err=true
-    echo "Warning: Environment variable DOCKERHUB_USERNAME_BASE64 is not set."
-fi
-
-if [[ -z "${DOCKERHUB_PASSWORD_BASE64}" ]]; then
-    err=true
-    echo "Warning: Environment variable DOCKERHUB_PASSWORD_BASE64 is not set."
-fi
-
-# Check if test namespace is set
-if [[ -z "${MICO_TEST_NAMESPACE}" ]]; then
-    err=true
-    echo "Environment variable MICO_TEST_NAMESPACE is not set."
-else
-    echo "Use test namespace '${MICO_TEST_NAMESPACE}''"
-fi
-
-if [ "$err" = true ]; then
+# Read in DockerHub username
+echo "Please provide the user name for DockerHub:"
+read uname
+if [[ -z "$uname" ]]; then
+    echo "ERROR: No username provided"
     exit 1
 fi
+export DOCKERHUB_USERNAME_BASE64=$(echo -n $uname | base64 -w 0)
+
+# Read in DockerHub password
+echo "Please provide the password for DockerHub:"
+read pw
+if [[ -z "$pw" ]]; then
+    echo "ERROR: No password provided"
+    exit 1
+fi
+export DOCKERHUB_PASSWORD_BASE64=$(echo -n $pw | base64 -w 0)
+
+# Read in name for test namespace
+echo "Please provide the name for the test namespace"
+read nspace
+if [[ -z "$nspace" ]]; then
+    echo "ERROR: No name for test namespace provided"
+    exit 1
+fi
+export MICO_TEST_NAMESPACE=$nspace
+echo "Use test namespace '${MICO_TEST_NAMESPACE}''"
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 echo "Change directory to '$DIR'"
