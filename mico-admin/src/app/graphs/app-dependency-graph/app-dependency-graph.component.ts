@@ -24,49 +24,8 @@ import { Node } from '@ustutt/grapheditor-webcomponent/lib/node';
 import { ApiObject } from 'src/app/api/apiobject';
 import { ApiService } from 'src/app/api/api.service';
 import { Subscription } from 'rxjs';
+import { STYLE_TEMPLATE, APPLICATION_NODE_TEMPLATE, SERVICE_NODE_TEMPLATE, ARROW_TEMPLATE } from './app-dependency-graph-constants';
 
-const STYLE_TEMPLATE = {
-    id: 'style',
-    innerHTML: `
-        svg {position: absolute;}
-        .ghost {opacity: 0.5;}
-        .node {fill: #cccccc}
-        .node.application {fill: #005c99}
-        .link-handle {display: none; fill: black; opacity: 0.1; transition:r 0.25s ease-out;}
-        .edge-group:not(.includes) .link-handle {display: initial}
-        .link-handle:hover {opacity: 0.7; r: 5;}
-        .text {fill: black; font-size: 6pt; text-overflow: ellipsis; word-break: break-word}
-        .text.title {font-size: 8pt; text-decoration: underline; text-overflow: ellipsis; word-break: break-all;}
-        .text.version {word-break: break-all;}
-        .node:not(.application):not(.selected).hovered {fill: #efefef;}
-        .node.application.hovered {fill: #0099ff;}
-        .hovered .link-handle {display: initial;}
-        .node.selected {fill: #ccff99; }
-        .includes .edge {stroke: #0099ff; stroke-width: 2}
-        .includes .marker {fill: #0099ff}
-        .highlight-outgoing .edge {stroke: red;}
-        .highlight-incoming .edge {stroke: green;}
-        .highlight-outgoing .marker {fill: red;}
-        .highlight-incoming .marker {fill: green;}`
-};
-
-const APPLICATION_NODE_TEMPLATE = {
-    id: 'application',
-    innerHTML: `<circle r="20" cx="0" cy="0"></circle>`
-};
-
-const SERVICE_NODE_TEMPLATE = {
-    id: 'default',
-    innerHTML: `<rect width="100" height="60" x="-50" y="-30"></rect>
-        <text class="text title" data-content="title" data-click="title" width="90" x="-45" y="-16"></text>
-        <text class="text description" data-content="description" data-click="description" width="90" height="30" x="-45" y="-5"></text>
-        <text class="text version" data-content="version" data-click="version" width="40" x="-45" y="25"></text>`
-};
-
-const ARROW_TEMPLATE = {
-    id: 'arrow',
-    innerHTML: `<path d="M -9 -5 L 1 0 L -9 5 z" />`
-};
 
 @Component({
     selector: 'mico-app-dependency-graph',
