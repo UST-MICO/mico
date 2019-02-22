@@ -312,18 +312,39 @@ public class ServiceController {
 
     @PostMapping("/" + PATH_VARIABLE_IMPORT + "/" + PATH_VARIABLE_GITHUB)
     public ResponseEntity<Resource<MicoService>> importMicoServiceFromGitHub(@RequestBody CrawlingInformation crawlingInformation) {
-        log.debug("Start importing MicoService from URL '{}'", crawlingInformation.getUri());
+        String uri = crawlingInformation.getUri();
+        String version = crawlingInformation.getVersion();
+        log.debug("Start importing MicoService from URL '{}'", uri);
+
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
 
         try {
-            if (crawlingInformation.getVersion().equals("latest") || crawlingInformation.getVersion().equals("")) {
-                MicoService service = crawler.crawlGitHubRepoLatestRelease(crawlingInformation.getUri());
+            if (version.equals("latest") || version.equals("")) {
+                MicoService service = crawler.crawlGitHubRepoLatestRelease(uri);
                 return createService(service, null);
             } else {
-                MicoService service = crawler.crawlGitHubRepoSpecificRelease(crawlingInformation.getUri(), crawlingInformation.getVersion());
+                MicoService service = crawler.crawlGitHubRepoSpecificRelease(uri, version);
                 return createService(service, null);
             }
+        } catch (IOException e) {
+            log.error(e.getStackTrace().toString());
+            log.error("Getting exception '{}'", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    @GetMapping("/" + PATH_VARIABLE_IMPORT + "/" + PATH_VARIABLE_GITHUB)
+    @ResponseBody
+    public LinkedList<String> getVersionsFromGitHub(@RequestParam String uri) {
+        log.debug("Start getting versions from URL '{}'", uri);
+
+        RestTemplateBuilder restTemplate = new RestTemplateBuilder();
+        GitHubCrawler crawler = new GitHubCrawler(restTemplate);
+
+        try {
+            return crawler.getVersionsFromGitHubRepo(uri);
+
         } catch (IOException e) {
             log.error(e.getStackTrace().toString());
             log.error("Getting exception '{}'", e.getMessage());

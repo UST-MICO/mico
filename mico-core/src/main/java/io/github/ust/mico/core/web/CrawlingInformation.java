@@ -10,7 +10,7 @@ public class CrawlingInformation {
 
     /**
      * Required.
-     *
+     * <p>
      * Link to the GitHub repo to crawl from
      */
     @Getter
@@ -18,7 +18,7 @@ public class CrawlingInformation {
 
     /**
      * Optional.
-     *
+     * <p>
      * Can be one of the following:
      * - 'latest'
      * - specific version (e.g., 'v1.0.0')

@@ -30,8 +30,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedList;
 
 @Slf4j
 public class GitHubCrawler {
@@ -49,6 +48,7 @@ public class GitHubCrawler {
 
     private MicoService crawlGitHubRepo(String uriBasicInfo, String uriReleaseInfo) throws IOException {
         log.debug("Crawl GitHub basic information from '{}' and release information from '{}'", uriBasicInfo, uriReleaseInfo);
+
         ResponseEntity<String> responseBasicInfo = restTemplate.getForEntity(uriBasicInfo, String.class);
         ResponseEntity<String> responseReleaseInfo = restTemplate.getForEntity(uriReleaseInfo, String.class);
         ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -65,6 +65,7 @@ public class GitHubCrawler {
                 .setServiceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
                 .setGitCloneUrl(basicInfoJson.get("clone_url").textValue())
                 .setGitReleaseInfoUrl(releaseInfoJson.get("url").textValue());
+
         } catch (IOException e) {
             log.error(e.getStackTrace().toString());
             log.error("Getting exception '{}'", e.getMessage());
@@ -75,12 +76,14 @@ public class GitHubCrawler {
     public MicoService crawlGitHubRepoLatestRelease(String uri) throws IOException {
         uri = makeUriToMatchGitHubApi(uri);
         String releaseUrl = uri + "/" + RELEASES + "/" + LATEST;
+
         return crawlGitHubRepo(uri, releaseUrl);
     }
 
     public MicoService crawlGitHubRepoSpecificRelease(String uri, String version) throws IOException {
         uri = makeUriToMatchGitHubApi(uri);
         String releaseUrl = uri + "/" + RELEASES + "/" + TAGS + "/" + version;
+
         return crawlGitHubRepo(uri, releaseUrl);
     }
 
@@ -89,7 +92,31 @@ public class GitHubCrawler {
         if (uri.endsWith("/")) {
             uri = uri.substring(0, uri.length() - 1);
         }
+
         return uri.replace(GITHUB_HTML_URL, GITHUB_API_URL);
+    }
+
+    public LinkedList<String> getVersionsFromGitHubRepo(String uri) throws IOException {
+        uri = makeUriToMatchGitHubApi(uri);
+        String releasesUrl = uri + "/" + RELEASES;
+        log.debug("Getting release tags from '{}'", releasesUrl);
+
+        ResponseEntity<String> response = restTemplate.getForEntity(releasesUrl, String.class);
+        ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        try {
+            JsonNode responseJson = mapper.readTree(response.getBody());
+
+            LinkedList<String> versionList = new LinkedList<>();
+            responseJson.forEach(release -> versionList.add(release.get("tag_name").textValue()));
+
+            return versionList;
+
+        } catch (IOException e) {
+            log.error(e.getStackTrace().toString());
+            log.error("Getting exception '{}'", e.getMessage());
+            throw e;
+        }
     }
 
 }
