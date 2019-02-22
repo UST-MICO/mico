@@ -19,10 +19,11 @@
 
 package io.github.ust.mico.core;
 
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.service.GitHubCrawler;
-import org.junit.Ignore;
+import static org.junit.Assert.assertEquals;
+
+import java.io.IOException;
+import java.util.List;
+
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -31,10 +32,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.io.IOException;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.GitHubCrawler;
 
 @Category(IntegrationTests.class)
 @RunWith(SpringRunner.class)

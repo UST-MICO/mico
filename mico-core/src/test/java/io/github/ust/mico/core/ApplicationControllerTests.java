@@ -59,7 +59,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.hamcrest.collection.IsEmptyCollection;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -167,9 +166,6 @@ public class ApplicationControllerTests {
 
     @Autowired
     private ObjectMapper mapper;
-
-    @Autowired
-    CorsConfig corsConfig;
 
     @Test
     public void getAllApplications() throws Exception {

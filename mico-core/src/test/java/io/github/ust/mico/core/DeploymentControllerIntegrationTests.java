@@ -31,7 +31,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -55,6 +54,7 @@ import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.model.MicoServicePort;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
 import lombok.extern.slf4j.Slf4j;
 
 @Ignore
@@ -167,26 +167,10 @@ public class DeploymentControllerIntegrationTests {
     }
 
     private MicoApplication getTestApplication(MicoService service) {
-        MicoApplication application = new MicoApplication()
+        return new MicoApplication()
             .setShortName("hello")
             .setName("hello-application")
             .setVersion("v1.0.0");
-            // TODO Refactor Deployment info (redundant information in comparison with MicoService)
-            /*.deploymentInfo(MicoApplicationDeploymentInfo.builder()
-                .serviceDeploymentInfo(service.getId(), MicoServiceDeploymentInfo.builder()
-                    .replicas(1)
-                    .container(MicoImageContainer.builder()
-                        .name("hello-container")
-                        .image(service.getShortName())
-                        .port(MicoPort.builder()
-                            .number(80)
-                            .type(MicoPortType.TCP)
-                            .build())
-                        .build())
-                    .build())
-                .build())*/
-        application.getServices().add(service);
-        return application;
     }
 
     private MicoService getTestService() {

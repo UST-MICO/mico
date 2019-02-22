@@ -26,9 +26,10 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import io.github.ust.mico.core.configuration.MicoCoreBackgroundTaskFactoryConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import io.github.ust.mico.core.configuration.MicoCoreBackgroundTaskFactoryConfig;
 
 /**
  * Helper class for background task with the functionality
@@ -76,6 +77,7 @@ public class MicoCoreBackgroundTaskFactory {
      * @param onSuccess a {@link Consumer} in case the task succeeds.
      * @return a new {@link CompletableFuture}.
      */
+    @SuppressWarnings("rawtypes")
     public <T> CompletableFuture runAsync(Supplier<T> task, Consumer<? super T> onSuccess) {
         return CompletableFuture.supplyAsync(task, executorService).thenAccept(onSuccess);
     }
@@ -94,6 +96,7 @@ public class MicoCoreBackgroundTaskFactory {
      * @param onError a {@link Function} in case the task fails.
      * @return a new {@link CompletableFuture}.
      */
+    @SuppressWarnings("rawtypes")
     public <T> CompletableFuture runAsync(Supplier<T> task, Consumer<? super T> onSuccess, Function<Throwable, ? extends Void> onError) {
         return CompletableFuture.supplyAsync(task, executorService).thenAccept(onSuccess).exceptionally(onError);
     }
