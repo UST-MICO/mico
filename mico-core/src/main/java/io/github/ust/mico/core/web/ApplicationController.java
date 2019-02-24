@@ -162,9 +162,6 @@ public class ApplicationController {
         application.setId(existingApplication.getId());
         MicoApplication updatedApplication = applicationRepository.save(application);
         
-        System.out.println(1);
-        System.out.println(updatedApplication);
-
         return ResponseEntity.ok(new Resource<>(updatedApplication, linkTo(methodOn(ApplicationController.class).updateApplication(shortName, version, application)).withSelfRel()));
     }
 
@@ -209,7 +206,6 @@ public class ApplicationController {
                 linkTo(methodOn(ApplicationController.class).getServicesFromApplication(shortName, version)).withSelfRel()));
     }
 
-    // TODO: Deployment info necessary to add new service to application!
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES)
     public ResponseEntity<Void> addServiceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
                                                         @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
@@ -218,10 +214,9 @@ public class ApplicationController {
         MicoService existingService = validateProvidedService(providedService);
         
         // Each service can be added to one application only once
-        if (!application.getServiceDeploymentInfos().stream().anyMatch(sdi -> sdi.getService().equals(existingService))) {
+        if (application.getServiceDeploymentInfos().stream().noneMatch(sdi -> sdi.getService().equals(existingService))) {
             log.info("Add service '" + existingService.getShortName() + "' '" + existingService.getVersion()
                     + "' to application '" + applicationShortName + "' '" + applicationVersion + "'.");
-            // NOTE: Only for development purposes, replace with real value (parameter)
             MicoServiceDeploymentInfo sdi = new MicoServiceDeploymentInfo();
             
             sdi.setApplication(application).setService(existingService);

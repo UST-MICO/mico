@@ -144,7 +144,14 @@ public class DeploymentController {
         }
     }
 
-    // TODO: Method comment.
+    /**
+     * Creates the Kubernetes resources based on the deployment
+     * information of the provided {@link MicoApplication}.
+     * 
+     * @param micoApplication the {@link MicoApplication}.
+     * @param micoService the {@link MicoService}.
+     * @throws KubernetesResourceException
+     */
     private void createKubernetesResources(MicoApplication micoApplication, MicoService micoService) throws KubernetesResourceException {
         log.debug("Start creating Kubernetes resources for MICO service '{}' in version '{}'", micoService.getShortName(), micoService.getVersion());
 
