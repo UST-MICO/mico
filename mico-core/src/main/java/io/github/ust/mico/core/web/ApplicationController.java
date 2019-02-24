@@ -151,7 +151,8 @@ public class ApplicationController {
         }
 
         // Including services must not be updated through this API. There is an own API for that purpose.
-        List<MicoService> services = serviceRepository.findAllByApplication(application.getShortName(), application.getVersion());
+        List<MicoService> services = application.getServiceDeploymentInfos().stream()
+                .map(sdi -> sdi.getService()).collect(Collectors.toList());
         if (services.size() > 0) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
                 "Update of an application is only allowed without providing services.");
