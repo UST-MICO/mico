@@ -14,7 +14,7 @@ import javax.validation.constraints.NotBlank;
 
 @Component
 @Configuration
-@EnableRedisRepositories
+@EnableRedisRepositories(basePackages = "io.github.ust.mico.core.persistence")
 @Getter
 @Setter
 @ConfigurationProperties(prefix = "mico-core.redis")

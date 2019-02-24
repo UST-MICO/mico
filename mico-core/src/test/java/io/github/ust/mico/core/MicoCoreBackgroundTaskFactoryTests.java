@@ -70,7 +70,7 @@ public class MicoCoreBackgroundTaskFactoryTests {
         tasks.add(factory.runAsync(() -> veryLongLastingTask("TestTask4"), result -> successHandler(result), e -> exceptionHandler(e)));
         tasks.add(factory.runAsync(() -> veryLongLastingTaskException(), result -> successHandler(result), e -> exceptionHandler(e)));
         System.out.println("Added task");
-        
+
         latch.await();
         System.out.println(tasks);
         for (CompletableFuture t : tasks) {

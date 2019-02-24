@@ -20,18 +20,16 @@
 package io.github.ust.mico.core.web;
 
 import io.github.ust.mico.core.exception.ImageBuildException;
+import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.NotInitializedException;
+import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoBackgroundTaskRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoCoreBackgroundTaskFactory;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
-import io.github.ust.mico.core.exception.KubernetesResourceException;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.MediaTypes;
@@ -70,6 +68,8 @@ public class DeploymentController {
 
     @Autowired
     private MicoKubernetesClient micoKubernetesClient;
+    @Autowired
+    private MicoBackgroundTaskRepository backgroundTaskRepo;
 
     @PostMapping
     public ResponseEntity<Void> deploy(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
@@ -98,20 +98,22 @@ public class DeploymentController {
             // TODO Check if image for the requested version is already in docker registry -> no build required
 
             log.info("Start build of MicoService '{}' in version '{}'.", micoService.getShortName(), micoService.getVersion());
-            backgroundTaskFactory.runAsync(() -> buildImageAndWait(micoService), dockerImageUri -> {
-                log.info("Build of MicoService '{}' in version '{}' finished with image '{}'.",
-                    micoService.getShortName(), micoService.getVersion(), dockerImageUri);
+            MicoBackgroundTask task = new MicoBackgroundTask(
+                backgroundTaskFactory.runAsync(() -> buildImageAndWait(micoService), dockerImageUri -> {
+                    log.info("Build of MicoService '{}' in version '{}' finished with image '{}'.",
+                        micoService.getShortName(), micoService.getVersion(), dockerImageUri);
 
-                micoService.setDockerImageUri(dockerImageUri);
+                    micoService.setDockerImageUri(dockerImageUri);
 
-                serviceRepository.save(micoService);
-                try {
-                    createKubernetesResources(micoApplication, micoService);
-                } catch (KubernetesResourceException kre) {
-                    log.error(kre.getMessage(), kre);
-                    exceptionHandler(kre);
-                }
-            }, this::exceptionHandler);
+                    serviceRepository.save(micoService);
+                    try {
+                        createKubernetesResources(micoApplication, micoService);
+                    } catch (KubernetesResourceException kre) {
+                        log.error(kre.getMessage(), kre);
+                        exceptionHandler(kre);
+                    }
+                }, this::exceptionHandler), micoService, MicoBackgroundTask.Type.BUILD);
+            backgroundTaskRepo.save(task);
         }
         return ResponseEntity.ok().build();
     }
