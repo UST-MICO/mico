@@ -42,7 +42,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
@@ -84,9 +83,6 @@ public class ApplicationController {
     private MicoKubernetesClient micoKubernetesClient;
 
     @Autowired
-    private RestTemplate restTemplate;
-    
-    @Autowired
     private MicoStatusService micoStatusService;
 
 
@@ -118,9 +114,9 @@ public class ApplicationController {
         return ResponseEntity.ok(new Resource<>(application, getApplicationLinks(application)));
     }
 
-    // TODO: List of services necessary
     @PostMapping
     public ResponseEntity<Resource<MicoApplication>> createApplication(@RequestBody MicoApplication newApplication) {
+        // Check whether application already exists (not allowed)
         Optional<MicoApplication> applicationOptional = applicationRepository.
             findByShortNameAndVersion(newApplication.getShortName(), newApplication.getVersion());
         if (applicationOptional.isPresent()) {
@@ -128,8 +124,8 @@ public class ApplicationController {
                 "Application '" + newApplication.getShortName() + "' '" + newApplication.getVersion() + "' already exists.");
         }
         
-        List<MicoService> servicesOfNewApplication = serviceDeploymentInfoRepository
-                .findAllByApplication(newApplication.getShortName(), newApplication.getVersion()).stream()
+        // Validate each service of the new application
+        List<MicoService> servicesOfNewApplication = newApplication.getServiceDeploymentInfos().stream()
                 .map(sdi -> sdi.getService()).collect(Collectors.toList());
         for (MicoService providedService : servicesOfNewApplication) {
             validateProvidedService(providedService);

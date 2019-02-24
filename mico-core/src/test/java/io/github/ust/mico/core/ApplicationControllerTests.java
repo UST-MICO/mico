@@ -23,7 +23,20 @@ import static io.github.ust.mico.core.JsonPathBuilder.EMBEDDED;
 import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
 import static io.github.ust.mico.core.JsonPathBuilder.SELF_HREF;
 import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
-import static io.github.ust.mico.core.TestConstants.*;
+import static io.github.ust.mico.core.TestConstants.DESCRIPTION;
+import static io.github.ust.mico.core.TestConstants.GIT_TEST_REPO_URL;
+import static io.github.ust.mico.core.TestConstants.ID;
+import static io.github.ust.mico.core.TestConstants.ID_1;
+import static io.github.ust.mico.core.TestConstants.ID_2;
+import static io.github.ust.mico.core.TestConstants.ID_3;
+import static io.github.ust.mico.core.TestConstants.SERVICE_SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.SERVICE_VERSION;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1_MATCHER;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_MATCHER;
+import static io.github.ust.mico.core.TestConstants.VERSION;
+import static io.github.ust.mico.core.TestConstants.VERSION_1_0_1;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
@@ -60,7 +73,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -70,19 +82,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
-import io.fabric8.kubernetes.api.model.PodList;
-import io.fabric8.kubernetes.api.model.PodListBuilder;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.dto.KuberenetesPodMetricsDTO;
 import io.github.ust.mico.core.dto.KubernetesPodInfoDTO;
 import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
 import io.github.ust.mico.core.dto.MicoServiceInterfaceDTO;
 import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
-import io.github.ust.mico.core.dto.PrometheusResponse;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
@@ -101,7 +106,6 @@ import io.github.ust.mico.core.web.ApplicationController;
 @OverrideAutoConfiguration(enabled = true) //Needed to override our neo4j config
 @EnableAutoConfiguration
 @EnableConfigurationProperties(value = {CorsConfig.class})
-@SuppressWarnings({"rawtypes"})
 public class ApplicationControllerTests {
 
     private static final String JSON_PATH_LINKS_SECTION = "$._links.";
@@ -209,9 +213,6 @@ public class ApplicationControllerTests {
             .setDescription(DESCRIPTION);
 
         given(applicationRepository.save(any(MicoApplication.class))).willReturn(application);
-        given(serviceRepository.findByShortNameAndVersion(
-            anyString(), anyString()))
-            .willReturn(Optional.empty());
 
         prettyPrint(application);
 
@@ -251,8 +252,6 @@ public class ApplicationControllerTests {
         given(serviceRepository.findByShortNameAndVersion(
             eq(service2.getShortName()), eq(service2.getVersion())))
             .willReturn(Optional.of(service2));
-        given(serviceRepository.findAllByApplication(eq(application.getShortName()), eq(application.getVersion())))
-                .willReturn(CollectionUtils.listOf(service1, service2));
 
         prettyPrint(application);
 
@@ -287,14 +286,6 @@ public class ApplicationControllerTests {
 
         // Only one of the two MicoService exists -> exception
         given(applicationRepository.save(any(MicoApplication.class))).willReturn(application);
-        given(serviceRepository.findAllByApplication(eq(application.getShortName()), eq(application.getVersion())))
-                .willReturn(CollectionUtils.listOf(service1));
-        given(serviceDeploymentInfoRepository.findAllByApplication(eq(application.getShortName()),
-                eq(application.getVersion()))).willReturn(
-                        CollectionUtils.listOf(new MicoServiceDeploymentInfoQueryResult()
-                                .setApplication(application)
-                                .setServiceDeploymentInfo(application.getServiceDeploymentInfos().get(0))
-                                .setService(service1)));
 
         prettyPrint(application);
 
@@ -308,11 +299,6 @@ public class ApplicationControllerTests {
 
     @Test
     public void createApplicationWithInconsistentServiceData() throws Exception {
-        MicoService existingMicoService = new MicoService()
-            .setShortName(SHORT_NAME)
-            .setVersion(VERSION)
-            .setGitCloneUrl(GIT_TEST_REPO_URL);
-        
         MicoService invalidMicoService = new MicoService()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
@@ -331,14 +317,6 @@ public class ApplicationControllerTests {
         // MicoService exist with different data
         given(applicationRepository.findByShortNameAndVersion(eq(application.getShortName()),
                 eq(application.getVersion()))).willReturn(Optional.of(application));
-        given(serviceRepository.findAllByApplication(eq(application.getShortName()),
-                eq(application.getVersion()))).willReturn(CollectionUtils.listOf(existingMicoService));
-        given(serviceDeploymentInfoRepository.findAllByApplication(eq(application.getShortName()),
-                eq(application.getVersion()))).willReturn(
-                        CollectionUtils.listOf(new MicoServiceDeploymentInfoQueryResult()
-                                .setApplication(application)
-                                .setServiceDeploymentInfo(application.getServiceDeploymentInfos().get(0))
-                                .setService(existingMicoService)));
 
         prettyPrint(application);
 
