@@ -42,7 +42,6 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
@@ -430,6 +429,10 @@ public class ApplicationControllerTests {
                 .setShortName(SHORT_NAME)
                 .setVersion(VERSION)
                 .setGitCloneUrl(GIT_TEST_REPO_URL);
+        
+        updatedApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
+                .setApplication(updatedApplication)
+                .setService(service));
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(serviceRepository.findAllByApplication(SHORT_NAME, VERSION)).willReturn(CollectionUtils.listOf(service));
