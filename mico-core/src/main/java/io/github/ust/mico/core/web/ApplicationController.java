@@ -161,35 +161,32 @@ public class ApplicationController {
         MicoApplication existingApplication = getApplicationFromDatabase(shortName, version);
         application.setId(existingApplication.getId());
         MicoApplication updatedApplication = applicationRepository.save(application);
+        
+        System.out.println(1);
+        System.out.println(updatedApplication);
 
         return ResponseEntity.ok(new Resource<>(updatedApplication, linkTo(methodOn(ApplicationController.class).updateApplication(shortName, version, application)).withSelfRel()));
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     public ResponseEntity<Resource<MicoApplication>> deleteApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                       @PathVariable(PATH_VARIABLE_VERSION) String version) {
+                                                                       @PathVariable(PATH_VARIABLE_VERSION) String version) throws KubernetesResourceException {
         Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
+        
+        // Check whether application is present, i.e., not already deleted
         if (!applicationOptional.isPresent()) {
-            // application already deleted
             return ResponseEntity.noContent().build();
         }
         
-        applicationOptional.map(application -> {
-            try {
-                if (micoKubernetesClient.isApplicationDeployed(application)) {
-                    throw new ResponseStatusException(HttpStatus.CONFLICT, "Application is currently deployed!");
-                } else {
-                    return application;
-                }
-            } catch (KubernetesResourceException e) {
-                log.error(e.getMessage(), e);
-                // TODO: Check whether CONFLICT is the best status option here
-                throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
-            }
-        }).map(application -> {
-            applicationRepository.delete(application);
-            return application;
-        });
+        
+        // Check whether application is currently deployed, i.e., it cannot be deleted
+        MicoApplication application = applicationOptional.get();
+        if (micoKubernetesClient.isApplicationDeployed(application)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Application is currently deployed!");
+        }
+        
+        // Delete application in database
+        applicationRepository.delete(application);
         
         return ResponseEntity.noContent().build();
     }

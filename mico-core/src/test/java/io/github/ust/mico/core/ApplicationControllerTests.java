@@ -387,23 +387,19 @@ public class ApplicationControllerTests {
                 .setVersion(updatedApplication.getVersion())
                 .setDescription(updatedApplication.getDescription());
 
-        updatedApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
-                .setApplication(updatedApplication)
-                .setService(existingService));
-        
         expectedApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
                 .setApplication(expectedApplication)
                 .setService(existingService));
 
-        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION))
-                .willReturn(Optional.of(existingApplication));
-        given(applicationRepository.save(eq(expectedApplication))).willReturn(expectedApplication);
+        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingApplication));
+        given(applicationRepository.save(eq(updatedApplication.setId(ID)))).willReturn(expectedApplication);
 
         ResultActions resultUpdate = mvc
                 .perform(put(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION)
                         .content(mapper.writeValueAsBytes(updatedApplication))
                         .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andDo(print()).andExpect(jsonPath(ID_PATH, is(existingApplication.getId().intValue())))
+                .andDo(print())
+                .andExpect(jsonPath(ID_PATH, is(existingApplication.getId().intValue())))
                 .andExpect(jsonPath(DESCRIPTION_PATH, is(updatedApplication.getDescription())))
                 .andExpect(jsonPath(SHORT_NAME_PATH, is(updatedApplication.getShortName())))
                 .andExpect(jsonPath(VERSION_PATH, is(updatedApplication.getVersion())))
