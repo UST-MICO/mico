@@ -89,6 +89,10 @@ import { MicoDataContainerComponent } from './data-view/mico-data-container/mico
 import { MicoDataBooleanComponent } from './data-view/mico-data-boolean/mico-data-boolean.component';
 import { CreateApplicationComponent } from './dialogs/create-application/create-application.component';
 import { CreateNextVersionComponent } from './dialogs/create-next-version/create-next-version.component';
+import { MicoDataArrayComponent } from './data-view/mico-data-array/mico-data-array.component';
+import { MicoDataObjectComponent } from './data-view/mico-data-object/mico-data-object.component';
+import { AppDetailStatusComponent } from './app-detail-status/app-detail-status.component';
+import { ServiceDetailStatusComponent } from './service-detail-status/service-detail-status.component';
 
 @NgModule({
     declarations: [
@@ -121,7 +125,11 @@ import { CreateNextVersionComponent } from './dialogs/create-next-version/create
         MicoDataContainerComponent,
         MicoDataBooleanComponent,
         CreateApplicationComponent,
-        CreateNextVersionComponent
+        CreateNextVersionComponent,
+        MicoDataArrayComponent,
+        MicoDataObjectComponent,
+        AppDetailStatusComponent,
+        ServiceDetailStatusComponent
     ],
     entryComponents: [
         // dialogs

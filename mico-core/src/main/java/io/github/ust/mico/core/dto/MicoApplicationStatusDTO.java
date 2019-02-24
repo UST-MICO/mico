@@ -24,24 +24,26 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import io.github.ust.mico.core.model.MicoService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+/**
+ * DTO for deployment information of a {@link io.github.ust.mico.core.model.MicoApplication}.
+ * A list contains all {@link MicoService} the {@link io.github.ust.mico.core.model.MicoApplication} consists of.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-// TODO: Class comment.
-public class MicoServiceDeploymentInformationDTO {
+public class MicoApplicationStatusDTO {
 
-    // TODO: Add comments for fields.
-    
-    private int requestedReplicas;
-    private int availableReplicas;
-    private List<MicoServiceInterfaceDTO> interfacesInformation = new ArrayList<MicoServiceInterfaceDTO>();
-    private List<KubernetesPodInfoDTO> podInfo = new ArrayList<KubernetesPodInfoDTO>();
+    /**
+     * List of deployment information of {@link MicoService}s, which belong to a {@link io.github.ust.mico.core.model.MicoApplication}.
+     */
+    private List<MicoServiceStatusDTO> serviceStatus = new ArrayList<>();
 
 }

@@ -81,6 +81,7 @@ public class ServiceInterfaceControllerTests {
     private static final String SELF_HREF = buildPath(JSON_PATH_LINKS_SECTION, SELF, HREF);
     private static final String INTERFACES_HREF = buildPath(JSON_PATH_LINKS_SECTION, "interfaces", HREF);
     private static final String INTERFACE_NAME = "interface-name";
+    private static final String INTERFACE_NAME_INVALID = "interface_NAME";
     private static final int INTERFACE_PORT = 1024;
     private static final MicoPortType INTERFACE_PORT_TYPE = MicoPortType.TCP;
     private static final int INTERFACE_TARGET_PORT = 1025;
@@ -143,6 +144,20 @@ public class ServiceInterfaceControllerTests {
             .content(mapper.writeValueAsBytes(serviceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isConflict())
+            .andReturn();
+    }
+
+    @Test
+    public void postInvalidServiceInterface() throws Exception {
+        MicoServiceInterface serviceInterface = getInvalidTestServiceInterface();
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
+            Optional.of(new MicoService().setShortName(SHORT_NAME).setVersion(VERSION))
+        );
+        mvc.perform(post(INTERFACES_URL)
+            .content(mapper.writeValueAsBytes(serviceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isUnprocessableEntity())
+            .andExpect(status().reason("The name of the service interface is not valid."))
             .andReturn();
     }
 
@@ -316,6 +331,17 @@ public class ServiceInterfaceControllerTests {
     private MicoServiceInterface getTestServiceInterface() {
         return new MicoServiceInterface()
             .setServiceInterfaceName(INTERFACE_NAME)
+            .setPorts(CollectionUtils.listOf(new MicoServicePort()
+                .setNumber(INTERFACE_PORT)
+                .setType(INTERFACE_PORT_TYPE)
+                .setTargetPort(INTERFACE_TARGET_PORT)))
+            .setDescription(INTERFACE_DESCRIPTION)
+            .setPublicDns(INTERFACE_PUBLIC_DNS);
+    }
+
+    private MicoServiceInterface getInvalidTestServiceInterface() {
+        return new MicoServiceInterface()
+            .setServiceInterfaceName(INTERFACE_NAME_INVALID)
             .setPorts(CollectionUtils.listOf(new MicoServicePort()
                 .setNumber(INTERFACE_PORT)
                 .setType(INTERFACE_PORT_TYPE)

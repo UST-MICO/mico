@@ -23,11 +23,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
 import { Subscription } from 'rxjs';
-import { MatDialog } from '@angular/material';
-import { ServicePickerComponent } from '../dialogs/service-picker/service-picker.component';
 import { versionComparator } from '../api/semantic-version';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 import { CreateNextVersionComponent } from '../dialogs/create-next-version/create-next-version.component';
+import { MatDialog } from '@angular/material';
 
 @Component({
     selector: 'mico-app-detail',
@@ -39,19 +38,18 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     constructor(
         private apiService: ApiService,
         private route: ActivatedRoute,
-        private dialog: MatDialog,
         private router: Router,
+        private dialog: MatDialog,
     ) { }
 
     subRouteParams: Subscription;
     subApplicationVersions: Subscription;
     subDeploy: Subscription;
-    subDependeesDialog: Subscription;
-    subDeployInformation: Subscription;
     subPublicIps: Subscription[] = [];
     subApplication: Subscription;
     subServiceDependency: Subscription;
     subCreateNextVersion: Subscription;
+
 
     // immutable application  object which is updated, when new data is pushed
     application: ApiObject;
@@ -66,7 +64,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
     isLatestVersion = () => {
         if (this.allVersions != null) {
-            if (this.selectedVersion === this.getLatestVersion(this.allVersions)) {
+            if (this.selectedVersion === this.getLatestVersion()) {
                 return true;
             }
         }
@@ -82,8 +80,8 @@ export class AppDetailComponent implements OnInit, OnDestroy {
             this.subApplicationVersions = this.apiService.getApplicationVersions(this.shortName)
                 .subscribe(versions => {
 
-                    this.allVersions = versions;
-                    const latestVersion = this.getLatestVersion(versions);
+                    this.allVersions = JSON.parse(JSON.stringify(versions)).sort((n1, n2) => versionComparator(n1.version, n2.version));
+                    const latestVersion = this.getLatestVersion();
 
                     if (givenVersion == null) {
                         this.subscribeApplication(latestVersion);
@@ -122,16 +120,6 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         this.subApplication = this.apiService.getApplication(this.shortName, version).subscribe(val => {
             this.application = val;
 
-            // application is found now, so try to get some more information
-            // Deployment information
-
-            this.subDeployInformation = this.apiService
-                .getApplicationDeploymentInformation(this.application.shortName, this.application.version)
-                .subscribe(deploymentInformation => {
-                    console.log(deploymentInformation);
-                });
-
-
             // public ip
 
             this.application.services.forEach(service => {
@@ -158,8 +146,6 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         this.unsubscribe(this.subRouteParams);
         this.unsubscribe(this.subApplicationVersions);
         this.unsubscribe(this.subDeploy);
-        this.unsubscribe(this.subDependeesDialog);
-        this.unsubscribe(this.subDeployInformation);
         this.subPublicIps.forEach(subscription => {
             this.unsubscribe(subscription);
         });
@@ -184,72 +170,14 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     }
 
     /**
-     * takes a list of applications and returns the latest version number
+     * returns the last elements version of the allVersions list (list is sorted in ngOnInit)
      */
-    getLatestVersion(list) {
-        let version = '0.0.0';
-
-        list.forEach(element => {
-
-            if (versionComparator(element.version, version) > 0) {
-                version = element.version;
-            }
-        });
-        return version;
+    getLatestVersion() {
+        if (this.allVersions != null && this.allVersions.length > 0) {
+            return this.allVersions[this.allVersions.length - 1].version;
+        }
     }
 
-    addService() {
-
-        const dialogRef = this.dialog.open(ServicePickerComponent, {
-            data: {
-                filter: '',
-                choice: 'multi',
-                existingDependencies: this.application.services,
-                serviceId: '',
-            }
-        });
-        this.subDependeesDialog = dialogRef.afterClosed().subscribe(result => {
-
-            if (result === '') {
-                return;
-            }
-
-            // TODO consider if null check is still neccesary as soon as endpoint to add dependencies exists
-            if (this.application.services == null) {
-                this.application.services = [];
-            }
-
-            result.forEach(service => {
-                // this.application.services.push(element);
-                // TODO Consider adding all at once.
-                this.apiService.postApplicationServices(this.application.shortName, this.application.version, service)
-                    .subscribe();
-            });
-        });
-
-    }
-
-    deleteService(serviceShortName: string) {
-
-        const dialogRef = this.dialog.open(YesNoDialogComponent, {
-            data: {
-                object: serviceShortName,
-                question: 'deleteDependency'
-            }
-        });
-
-        this.subServiceDependency = dialogRef.afterClosed().subscribe(shouldDelete => {
-            if (shouldDelete) {
-
-                this.apiService.deleteApplicationServices(this.application.shortName, this.application.version, serviceShortName)
-                    .subscribe(val => {
-                        // TODO add some user output (as soon as the endpoint actually exists)
-
-                    });
-            }
-        });
-
-    }
 
     /**
     * call-back from the version picker

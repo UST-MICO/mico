@@ -294,9 +294,33 @@ export class ApiService {
         }));
     }
 
-    // TODO doc comment as soon as the endpoint is in this branch
-    getApplicationDeploymentInformation(shortName: string, version: string) {
-        const resource = 'applications/' + shortName + '/' + version + '/deploymentInformation';
+
+    /**
+     * returns runtime information about a specific application and its services
+     * @param shortName the applications shortName
+     * @param version the applications version
+     */
+    getApplicationStatus(shortName: string, version: string) {
+        const resource = 'applications/' + shortName + '/' + version + '/status';
+        const stream = this.getStreamSource(resource);
+
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+            stream.next(freezeObject(val));
+        });
+
+        return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
+            filter(data => data !== undefined)
+        );
+    }
+
+
+    /**
+     * returns runtime information about a specific service
+     * @param shortName the services shortName
+     * @param version the services version
+     */
+    getServiceStatus(shortName: string, version: string) {
+        const resource = 'services/' + shortName + '/' + version + '/status';
         const stream = this.getStreamSource(resource);
 
         this.rest.get<ApiObject>(resource).subscribe(val => {
