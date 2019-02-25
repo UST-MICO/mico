@@ -528,7 +528,7 @@ export class ApiService {
 
         this.rest.get<ApiObject>(resource).subscribe(val => {
             if (val.hasOwnProperty('_embedded')) {
-                stream.next(freezeObject(val._embedded.dependencies));
+                stream.next(freezeObject(val._embedded.micoServiceList));
             } else {
                 stream.next(freezeObject([]));
             }
