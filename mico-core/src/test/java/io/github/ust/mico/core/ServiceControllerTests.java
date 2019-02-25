@@ -58,6 +58,7 @@ import static io.github.ust.mico.core.JsonPathBuilder.HREF;
 import static io.github.ust.mico.core.JsonPathBuilder.LINKS;
 import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
 import static io.github.ust.mico.core.JsonPathBuilder.SELF;
+import static io.github.ust.mico.core.JsonPathBuilder.ROOT_EMBEDDED;
 import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
 import static io.github.ust.mico.core.TestConstants.*;
 import static org.hamcrest.CoreMatchers.endsWith;
@@ -88,8 +89,7 @@ public class ServiceControllerTests {
     private static final String JSON_PATH_LINKS_SECTION = buildPath(ROOT, LINKS);
     private static final String SELF_HREF = buildPath(JSON_PATH_LINKS_SECTION, SELF, HREF);
     private static final String SERVICES_HREF = buildPath(JSON_PATH_LINKS_SECTION, "services", HREF);
-    private static final String EMBEDDED = buildPath(ROOT, JsonPathBuilder.EMBEDDED);
-    private static final String SERVICE_LIST = buildPath(EMBEDDED, "micoServiceList");
+    public static final String SERVICE_LIST = buildPath(ROOT_EMBEDDED, "micoServiceList");
     private static final String ID_PATH = buildPath(ROOT, "id");
     private static final String SHORT_NAME_PATH = buildPath(ROOT, "shortName");
     private static final String DESCRIPTION_PATH = buildPath(ROOT, "description");
