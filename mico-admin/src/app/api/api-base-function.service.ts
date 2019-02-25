@@ -107,7 +107,6 @@ export class ApiBaseFunctionService {
         const request = this.http.get(url, options).pipe(
             catchError((error) => this.showError(error)),
             map((res: Response) => {
-                console.log('map', res);
                 return res.json();
             }));
 

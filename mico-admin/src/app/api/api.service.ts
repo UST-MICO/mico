@@ -466,7 +466,7 @@ export class ApiService {
 
         this.rest.get<ApiObject>(resource).subscribe(val => {
             if (val.hasOwnProperty('_embedded')) {
-                stream.next(freezeObject(val._embedded.serviceList));
+                stream.next(freezeObject(val._embedded.micoServiceList));
             } else {
                 stream.next(freezeObject([]));
             }
@@ -477,19 +477,61 @@ export class ApiService {
         );
     }
 
+    postServiceDependee(serviceShortName, serviceVersion, dependee) {
+        if (dependee == null) {
+            return;
+        }
+
+        return this.rest.post<ApiObject>('services/' + serviceShortName + '/' + serviceVersion + '/dependees',
+            { dependedService: dependee }, undefined, false).pipe(flatMap(val => {
+
+                const stream = this.getStreamSource<ApiObject>(val._links.self.href);
+                stream.next(val);
+
+                this.getService(serviceShortName, serviceVersion);
+                this.getServiceDependees(serviceShortName, serviceVersion);
+
+                return stream.asObservable().pipe(
+                    filter(service => service !== undefined)
+                );
+            }));
+    }
+
+    /**
+     * deletes a depends on relation of a service
+     */
+    deleteServiceDependee(serviceShortName: string, serviceVersion: string, dependeeShortName: string, dependeeVersion: string) {
+        return this.rest.delete<ApiObject>('services/' + serviceShortName + '/' + serviceVersion + '/dependees/' +
+            dependeeShortName + '/' + dependeeVersion)
+            .pipe(map(val => {
+                console.log('DELETE DEPENDEE', val);
+
+                this.getServices();
+                this.getService(serviceShortName, serviceVersion);
+                this.getServiceDependees(serviceShortName, serviceVersion);
+
+                return true;
+            }));
+
+    }
+
     /**
      * Get all services depending on a specific service
      *
      * @param shortName unique short name of the service
      * @param version service version to be returned
      */
-    getServiceDependers(shortName, version): Observable<ApiObject> {
+    getServiceDependers(shortName, version): Observable<ApiObject[]> {
 
         const resource = 'services/' + shortName + '/' + version + '/dependers';
-        const stream = this.getStreamSource<ApiObject>(resource);
+        const stream = this.getStreamSource<ApiObject[]>(resource);
 
         this.rest.get<ApiObject>(resource).subscribe(val => {
-            stream.next(freezeObject(val));
+            if (val.hasOwnProperty('_embedded')) {
+                stream.next(freezeObject(val._embedded.dependencies));
+            } else {
+                stream.next(freezeObject([]));
+            }
         });
 
         return stream.asObservable().pipe(
