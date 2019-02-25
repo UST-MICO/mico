@@ -66,7 +66,7 @@ public class MicoServicePort {
             @ExtensionProperty(name = "x-order", value = "10"),
             @ExtensionProperty(name = "description", value = "The port number of the externally exposed port.")
         })})
-    private int number;
+    private int port;
 
     /**
      * The type (protocol) of the port

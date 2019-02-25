@@ -229,7 +229,7 @@ public class ServiceController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The dependee service was not found!");
         }
 
-        // check if dependency already set
+        // Check if dependency is already set
         String localShortName = newServiceDependee.getDependedService().getShortName();
         String localVersion = newServiceDependee.getDependedService().getVersion();
         boolean dependencyAlreadyExists = (service.getDependencies() != null) && service.getDependencies().stream().anyMatch(

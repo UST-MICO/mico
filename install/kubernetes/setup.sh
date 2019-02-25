@@ -8,7 +8,7 @@ read ip
 echo "Please provide the user name for DockerHub:"
 read uname
 if [[ -z "$uname" ]]; then
-    echo ERROR: No username provided
+    echo "ERROR: No username provided"
     exit 1
 fi
 export DOCKERHUB_USERNAME_BASE64=$(echo -n $uname | base64 -w 0)
@@ -17,7 +17,7 @@ export DOCKERHUB_USERNAME_BASE64=$(echo -n $uname | base64 -w 0)
 echo "Please provide the password for DockerHub:"
 read pw
 if [[ -z "$pw" ]]; then
-    echo ERROR: No password provided
+    echo "ERROR: No password provided"
     exit 1
 fi
 export DOCKERHUB_PASSWORD_BASE64=$(echo -n $pw | base64 -w 0)

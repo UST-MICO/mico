@@ -41,6 +41,7 @@ import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -61,6 +62,7 @@ public class MicoStatusService {
     private final PrometheusConfig prometheusConfig;
     private final MicoKubernetesClient micoKubernetesClient;
     private final RestTemplate restTemplate;
+    private final MicoServiceRepository serviceRepository;
     private final MicoApplicationRepository micoApplicationRepository;
 
     private static final int MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT = 1;
@@ -69,10 +71,12 @@ public class MicoStatusService {
     private static final String PROMETHEUS_QUERY_PARAMETER_NAME = "query";
 
     @Autowired
-    public MicoStatusService(PrometheusConfig prometheusConfig, MicoKubernetesClient micoKubernetesClient, RestTemplate restTemplate, MicoApplicationRepository micoApplicationRepository) {
+    public MicoStatusService(PrometheusConfig prometheusConfig, MicoKubernetesClient micoKubernetesClient,
+            RestTemplate restTemplate, MicoServiceRepository serviceRepository, MicoApplicationRepository micoApplicationRepository) {
         this.prometheusConfig = prometheusConfig;
         this.micoKubernetesClient = micoKubernetesClient;
         this.restTemplate = restTemplate;
+        this.serviceRepository = serviceRepository;
         this.micoApplicationRepository = micoApplicationRepository;
     }
 
@@ -83,7 +87,7 @@ public class MicoStatusService {
      */
     public MicoApplicationStatusDTO getApplicationStatus(MicoApplication micoApplication) {
         MicoApplicationStatusDTO applicationStatus = new MicoApplicationStatusDTO();
-        List<MicoService> micoServices = micoApplication.getServices();
+        List<MicoService> micoServices = serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion());
         int podCount = 0;
         int requestedReplicasCount = 0;
         int availableReplicasCount = 0;
@@ -94,7 +98,6 @@ public class MicoStatusService {
             availableReplicasCount += micoServiceStatus.getAvailableReplicas();
             applicationStatus.getServiceStatus().add(micoServiceStatus);
         }
-
         applicationStatus.setTotalNumberMicoServices(micoServices.size());
         applicationStatus.setTotalNumberPods(podCount);
         applicationStatus.setTotalNumberAvailableReplicas(availableReplicasCount);
@@ -131,7 +134,7 @@ public class MicoStatusService {
         // Get status information for service interfaces of a service
         List<MicoServiceInterfaceDTO> micoServiceInterfaceDTOList = getServiceInterfaceStatus(micoService);
         serviceStatus.setInterfacesInformation(micoServiceInterfaceDTOList);
-        
+
         // Get status information for all pods of a service
         int averageCpuLoad = 0;
         int averageMemoryUsage = 0;
@@ -153,7 +156,6 @@ public class MicoStatusService {
      * Get status information for all {@link MicoServiceInterface} of a {@link MicoService}: service name,
      * @param micoService is a {@link MicoService}
      * @return a list of {@link MicoServiceInterfaceDTO}, each item contains status information for a {@link MicoServiceInterface}
-     * TODO add externalIP information
      */
     public List<MicoServiceInterfaceDTO> getServiceInterfaceStatus(MicoService micoService) {
         List<MicoServiceInterfaceDTO> interfacesInformation = new LinkedList<>();
@@ -180,7 +182,6 @@ public class MicoStatusService {
             }
             Service kubernetesService = kubernetesServiceOptional.get();
             String serviceName = kubernetesService.getMetadata().getName();
-            String loadBalancerIp = kubernetesService.getSpec().getLoadBalancerIP();
             MicoServiceInterfaceDTO interfaceInformation = new MicoServiceInterfaceDTO(serviceName);
             interfacesInformation.add(interfaceInformation);
         }
