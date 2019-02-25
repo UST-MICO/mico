@@ -53,9 +53,9 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
     ngOnInit() {
         this.subParam = this.route.params.subscribe(params => {
 
-            this.shortName = params['shortName'];
+            const shortName = params['shortName'];
             const version = params['version'];
-            this.update(this.shortName, version);
+            this.update(shortName, version);
         });
     }
 
@@ -86,7 +86,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
                 this.versions = serviceVersions;
 
                 if (givenVersion == null) {
-                    this.setLatestVersion(serviceVersions);
+                    this.setLatestVersion(shortName, serviceVersions);
                 } else {
                     let found = false;
                     found = serviceVersions.some(element => {
@@ -94,14 +94,14 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
                         if (element.version === givenVersion) {
                             this.selectedVersion = givenVersion;
                             this.service = element as Service;
-                            this.updateVersion(givenVersion);
+                            this.updateVersion(shortName, givenVersion);
                             return true;
                         }
                     });
 
                     if (!found) {
                         // given version was not found in the versions list, take latest instead
-                        this.setLatestVersion(serviceVersions);
+                        this.setLatestVersion(shortName, serviceVersions);
                     }
                 }
 
@@ -110,9 +110,10 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
 
     /**
      * takes a list of services and sets this.service to the service with the latest version
-     * this.version is set accoringly
+     * this.version is set accoringly. Passes the shortName so it can be set at the sime time
+     * as the version.
      */
-    setLatestVersion(list) {
+    setLatestVersion(shortName, list) {
 
         list.forEach(element => {
 
@@ -125,7 +126,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
             } else {
                 console.log(false);
             }
-            this.updateVersion(version);
+            this.updateVersion(shortName, version);
         });
     }
 
@@ -133,8 +134,9 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
     /**
      * call-back from the version picker
      */
-    updateVersion(version) {
+    updateVersion(shortName, version) {
         this.selectedVersion = version;
+        this.shortName = shortName;
         this.router.navigate(['service-detail', this.shortName, version]);
     }
 

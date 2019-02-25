@@ -122,7 +122,6 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
                         this.dependees = JSON.parse(JSON.stringify(val));
                     });
 
-                // TODO insert as soon as get/service/dependers is in master
 
                 if (this.subDependersCall != null) {
                     this.subDependersCall.unsubscribe();
