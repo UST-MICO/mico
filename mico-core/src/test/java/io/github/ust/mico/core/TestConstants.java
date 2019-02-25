@@ -38,6 +38,8 @@ public class TestConstants {
     public static final Long ID_3 = Long.valueOf(1003);
 
     public static final String APPLICATION_NAME= "application-test-name";
+    public static final String APPLICATION_NAME_OTHER= "other-application-test-name";
+
 
 
     public static final String VERSION = MicoVersion.forIntegers(1, 0, 0).toString();
@@ -50,6 +52,7 @@ public class TestConstants {
     public static final String VERSION_1_0_3_MATCHER = JsonPathBuilder.buildVersionMatcher(VERSION_1_0_3);
 
     public static final String SHORT_NAME = "short-name";
+    public static final String SHORT_NAME_OTHER = "other-short-name";
     public static final String SHORT_NAME_1 = "short-name-1";
     public static final String SHORT_NAME_2 = "short-name-2";
     public static final String SHORT_NAME_3 = "short-name-3";

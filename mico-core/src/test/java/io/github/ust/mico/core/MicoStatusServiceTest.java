@@ -19,34 +19,12 @@
 
 package io.github.ust.mico.core;
 
-import static io.github.ust.mico.core.TestConstants.APPLICATION_NAME;
-import static io.github.ust.mico.core.TestConstants.SERVICE_INTERFACE_NAME;
-import static io.github.ust.mico.core.TestConstants.SERVICE_NAME;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
-import static io.github.ust.mico.core.TestConstants.VERSION;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.web.client.RestTemplate;
 
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.PodListBuilder;
@@ -71,6 +49,29 @@ import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
 import io.github.ust.mico.core.util.CollectionUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.web.client.RestTemplate;
+
+import static io.github.ust.mico.core.TestConstants.APPLICATION_NAME;
+import static io.github.ust.mico.core.TestConstants.SERVICE_INTERFACE_NAME;
+import static io.github.ust.mico.core.TestConstants.SERVICE_NAME;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_OTHER;
+import static io.github.ust.mico.core.TestConstants.VERSION;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -95,6 +96,7 @@ public class MicoStatusServiceTest {
     private MicoStatusService micoStatusService;
 
     private MicoApplication micoApplication;
+    private MicoApplication otherMicoApplication;
     private MicoService micoService;
     private Optional<Deployment> deployment;
     private Optional<Service> kubernetesService;
@@ -104,19 +106,34 @@ public class MicoStatusServiceTest {
     private String podPhase = "Running";
     private String hostIp = "192.168.0.0";
     private String deploymentName = "deployment1";
-    private String podName1 = "pod1";
 
-    private int memoryUsage = 70;
-    private int cpuLoad = 30;
-    private String startTime = new Date().toString();
-    private int restarts = 0;
-    private boolean podAvailable = true;
+    // Metrics for pod 1
+    private String podName1 = "pod1";
+    private int memoryUsagePod1 = 70;
+    private int cpuLoadPod1 = 30;
+    private String startTimePod1 = new Date().toString();
+    private int restartsPod1 = 0;
+    private boolean podAvailablePod1 = true;
+
+    // Metrics for pod 2
+    private String podName2 = "pod2";
+    private int memoryUsagePod2 = 50;
+    private int cpuLoadPod2 = 10;
+    private String startTimePod2 = new Date().toString();
+    private int restartsPod2 = 0;
+    private boolean podAvailablePod2 = true;
+
 
     @Before
     public void setupMicoApplication() {
         micoApplication = new MicoApplication()
             .setName(APPLICATION_NAME)
             .setShortName(SHORT_NAME)
+            .setVersion(VERSION);
+
+        otherMicoApplication = new MicoApplication()
+            .setName(APPLICATION_NAME)
+            .setShortName(SHORT_NAME_OTHER)
             .setVersion(VERSION);
         
         micoService = new MicoService()
@@ -129,8 +146,12 @@ public class MicoStatusServiceTest {
                 ));
         
         micoApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
-                .setApplication(micoApplication)
-                .setService(micoService));
+            .setApplication(micoApplication)
+            .setService(micoService));
+
+        otherMicoApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
+            .setApplication(otherMicoApplication)
+            .setService(micoService));
 
         int availableReplicas = 0;
         int replicas = 1;
@@ -148,7 +169,12 @@ public class MicoStatusServiceTest {
             .addNewItem()
                 .withNewMetadata().withName(podName1).endMetadata()
                 .withNewSpec().withNodeName(nodeName).endSpec()
-                .withNewStatus().withStartTime(startTime).addNewContainerStatus().withNewRestartCount(restarts).endContainerStatus().withPhase(podPhase).withHostIP(hostIp).endStatus()
+                .withNewStatus().withStartTime(startTimePod1).addNewContainerStatus().withNewRestartCount(restartsPod1).endContainerStatus().withPhase(podPhase).withHostIP(hostIp).endStatus()
+            .endItem()
+            .addNewItem()
+            .withNewMetadata().withName(podName2).endMetadata()
+            .withNewSpec().withNodeName(nodeName).endSpec()
+            .withNewStatus().withStartTime(startTimePod2).addNewContainerStatus().withNewRestartCount(restartsPod2).endContainerStatus().withPhase(podPhase).withHostIP(hostIp).endStatus()
             .endItem()
             .build();
 }
@@ -156,24 +182,44 @@ public class MicoStatusServiceTest {
     @Test
     public void getApplicationStatus() {
         MicoApplicationStatusDTO micoApplicationStatus = new MicoApplicationStatusDTO();
-        micoApplicationStatus.setServiceStatus(Collections.singletonList(new MicoServiceStatusDTO()
-            .setName(SERVICE_NAME)
-            .setShortName(SHORT_NAME)
-            .setVersion(VERSION)
-            .setAvailableReplicas(0)
-            .setRequestedReplicas(1)
-            .setPodInfo(Collections.singletonList(new KubernetesPodInfoDTO()
-                .setPodName(podName1)
-                .setHostIp(hostIp)
-                .setNodeName(nodeName)
-                .setPhase(podPhase)
-                .setAge(startTime)
-                .setRestarts(restarts)
-                .setMetrics(new KuberenetesPodMetricsDTO()
-                    .setMemoryUsage(memoryUsage)
-                    .setCpuLoad(cpuLoad)
-                    .setAvailable(podAvailable))))
-            .setInterfacesInformation(Collections.singletonList(new MicoServiceInterfaceDTO().setName(SERVICE_INTERFACE_NAME)))));
+        micoApplicationStatus
+            .setTotalNumberRequestedReplicas(1)
+            .setTotalNumberAvailableReplicas(0)
+            .setTotalNumberPods(2)
+            .setTotalNumberMicoServices(1)
+            .setServiceStatus(Collections.singletonList(new MicoServiceStatusDTO()
+                .setName(SERVICE_NAME)
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION)
+                .setAvailableReplicas(0)
+                .setRequestedReplicas(1)
+                .setOtherApplications(Collections.singletonList(otherMicoApplication.getName()))
+                .setAverageMemoryUsage(60)
+                .setAverageCpuLoad(20)
+                // Add two pods
+                .setPodInfo(Arrays.asList(new KubernetesPodInfoDTO()
+                    .setPodName(podName1)
+                    .setHostIp(hostIp)
+                    .setNodeName(nodeName)
+                    .setPhase(podPhase)
+                    .setAge(startTimePod1)
+                    .setRestarts(restartsPod1)
+                    .setMetrics(new KuberenetesPodMetricsDTO()
+                        .setMemoryUsage(memoryUsagePod1)
+                        .setCpuLoad(cpuLoadPod1)
+                        .setAvailable(podAvailablePod1)),
+                    new KubernetesPodInfoDTO()
+                    .setPodName(podName2)
+                    .setHostIp(hostIp)
+                    .setNodeName(nodeName)
+                    .setPhase(podPhase)
+                    .setAge(startTimePod2)
+                    .setRestarts(restartsPod2)
+                    .setMetrics(new KuberenetesPodMetricsDTO()
+                        .setMemoryUsage(memoryUsagePod2)
+                        .setCpuLoad(cpuLoadPod2)
+                        .setAvailable(podAvailablePod2))))
+                .setInterfacesInformation(Collections.singletonList(new MicoServiceInterfaceDTO().setName(SERVICE_INTERFACE_NAME)))));
         try {
             given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(deployment);
             given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(kubernetesService);
@@ -182,11 +228,14 @@ public class MicoStatusServiceTest {
             e.printStackTrace();
         }
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
+        given(applicationRepository.findAllUsedByService(any(), any())).willReturn(Collections.singletonList(otherMicoApplication));
         given(serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion())).willReturn(CollectionUtils.listOf(micoService));
         given(prometheusConfig.getUri()).willReturn("http://localhost:9090/api/v1/query");
-        ResponseEntity responseEntityMemoryUsage = getPrometheusResponseEntity(memoryUsage);
-        ResponseEntity responseEntityCpuLoad = getPrometheusResponseEntity(cpuLoad);
-        given(restTemplate.getForEntity(any(), eq(PrometheusResponse.class))).willReturn(responseEntityMemoryUsage).willReturn(responseEntityCpuLoad);
+        ResponseEntity responseEntityMemoryUsagePod1 = getPrometheusResponseEntity(memoryUsagePod1);
+        ResponseEntity responseEntityCpuLoadPod1 = getPrometheusResponseEntity(cpuLoadPod1);
+        ResponseEntity responseEntityMemoryUsagePod2 = getPrometheusResponseEntity(memoryUsagePod2);
+        ResponseEntity responseEntityCpuLoadPod2 = getPrometheusResponseEntity(cpuLoadPod2);
+        given(restTemplate.getForEntity(any(), eq(PrometheusResponse.class))).willReturn(responseEntityMemoryUsagePod1).willReturn(responseEntityCpuLoadPod1).willReturn(responseEntityMemoryUsagePod2).willReturn(responseEntityCpuLoadPod2);
         assertEquals(micoApplicationStatus, micoStatusService.getApplicationStatus(micoApplication));
     }
 
@@ -209,17 +258,31 @@ public class MicoStatusServiceTest {
             .setVersion(VERSION)
             .setAvailableReplicas(0)
             .setRequestedReplicas(1)
-            .setPodInfo(Collections.singletonList(new KubernetesPodInfoDTO()
-                .setPodName(podName1)
-                .setHostIp(hostIp)
-                .setNodeName(nodeName)
-                .setPhase(podPhase)
-                .setRestarts(restarts)
-                .setAge(startTime)
-                .setMetrics(new KuberenetesPodMetricsDTO()
-                    .setMemoryUsage(memoryUsage)
-                    .setCpuLoad(cpuLoad)
-                    .setAvailable(podAvailable))))
+            .setOtherApplications(Collections.singletonList(otherMicoApplication.getName()))
+            .setAverageMemoryUsage(60)
+            .setAverageCpuLoad(20)
+            .setPodInfo(Arrays.asList(new KubernetesPodInfoDTO()
+                    .setPodName(podName1)
+                    .setHostIp(hostIp)
+                    .setNodeName(nodeName)
+                    .setPhase(podPhase)
+                    .setAge(startTimePod1)
+                    .setRestarts(restartsPod1)
+                    .setMetrics(new KuberenetesPodMetricsDTO()
+                        .setMemoryUsage(memoryUsagePod1)
+                        .setCpuLoad(cpuLoadPod1)
+                        .setAvailable(podAvailablePod1)),
+                new KubernetesPodInfoDTO()
+                    .setPodName(podName2)
+                    .setHostIp(hostIp)
+                    .setNodeName(nodeName)
+                    .setPhase(podPhase)
+                    .setAge(startTimePod2)
+                    .setRestarts(restartsPod2)
+                    .setMetrics(new KuberenetesPodMetricsDTO()
+                        .setMemoryUsage(memoryUsagePod2)
+                        .setCpuLoad(cpuLoadPod2)
+                        .setAvailable(podAvailablePod2))))
             .setInterfacesInformation(Collections.singletonList(new MicoServiceInterfaceDTO().setName(SERVICE_INTERFACE_NAME)));
         try {
             given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(deployment);
@@ -229,10 +292,13 @@ public class MicoStatusServiceTest {
             e.printStackTrace();
         }
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
+        given(applicationRepository.findAllUsedByService(any(), any())).willReturn(Collections.singletonList(otherMicoApplication));
         given(prometheusConfig.getUri()).willReturn("http://localhost:9090/api/v1/query");
-        ResponseEntity responseEntityMemoryUsage = getPrometheusResponseEntity(memoryUsage);
-        ResponseEntity responseEntityCpuLoad = getPrometheusResponseEntity(cpuLoad);
-        given(restTemplate.getForEntity(any(), eq(PrometheusResponse.class))).willReturn(responseEntityMemoryUsage).willReturn(responseEntityCpuLoad);
+        ResponseEntity responseEntityMemoryUsagePod1 = getPrometheusResponseEntity(memoryUsagePod1);
+        ResponseEntity responseEntityCpuLoadPod1 = getPrometheusResponseEntity(cpuLoadPod1);
+        ResponseEntity responseEntityMemoryUsagePod2 = getPrometheusResponseEntity(memoryUsagePod2);
+        ResponseEntity responseEntityCpuLoadPod2 = getPrometheusResponseEntity(cpuLoadPod2);
+        given(restTemplate.getForEntity(any(), eq(PrometheusResponse.class))).willReturn(responseEntityMemoryUsagePod1).willReturn(responseEntityCpuLoadPod1).willReturn(responseEntityMemoryUsagePod2).willReturn(responseEntityCpuLoadPod2);
         assertEquals(micoServiceStatus, micoStatusService.getServiceStatus(micoService));
     }
 

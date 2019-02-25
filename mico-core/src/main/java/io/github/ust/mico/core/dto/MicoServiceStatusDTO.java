@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -68,6 +67,11 @@ public class MicoServiceStatusDTO {
      * Each item in this list represents a Kubernetes Service.
      */
     private List<MicoServiceInterfaceDTO> interfacesInformation = new ArrayList<>();
+
+    /**
+     * List with names of all other {@link io.github.ust.mico.core.model.MicoApplication}s that are using a particular service
+     */
+    private List<String> otherApplications = new ArrayList<>();
 
     /**
      * List of {@link io.fabric8.kubernetes.api.model.Pod}s of a {@link io.github.ust.mico.core.model.MicoService}.

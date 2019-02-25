@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import io.github.ust.mico.core.model.MicoService;
 import lombok.AllArgsConstructor;
 import lombok.Data;

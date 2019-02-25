@@ -20,6 +20,7 @@
 package io.github.ust.mico.core.service;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -135,6 +136,14 @@ public class MicoStatusService {
         List<MicoServiceInterfaceDTO> micoServiceInterfaceDTOList = getServiceInterfaceStatus(micoService);
         serviceStatus.setInterfacesInformation(micoServiceInterfaceDTOList);
 
+        // Return the names of all other applications that are using this service too
+        List<MicoApplication> otherApplications = micoApplicationRepository.findAllUsedByService(micoService.getShortName(), micoService.getVersion());
+        List<String> otherApplicationsNames = new ArrayList<>();
+        for (MicoApplication micoApplication: otherApplications) {
+            otherApplicationsNames.add(micoApplication.getName());
+        }
+        serviceStatus.setOtherApplications(otherApplicationsNames);
+
         // Get status information for all pods of a service
         int averageCpuLoad = 0;
         int averageMemoryUsage = 0;
@@ -146,6 +155,8 @@ public class MicoStatusService {
             averageMemoryUsage += podInfo.getMetrics().getMemoryUsage();
             podInfos.add(podInfo);
         }
+        System.out.println(averageCpuLoad);
+        System.out.println(averageMemoryUsage);
         serviceStatus.setAverageCpuLoad(averageCpuLoad/podList.size());
         serviceStatus.setAverageMemoryUsage(averageMemoryUsage/podList.size());
         serviceStatus.setPodInfo(podInfos);
