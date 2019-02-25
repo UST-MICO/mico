@@ -46,14 +46,12 @@ export class DashboardComponent implements OnInit {
     displayedColumns: string[] = ['id', 'name', 'shortName'];
 
     ngOnInit() {
-        this.apiService.throwError().subscribe(val => {
-            console.log('Dashboard', val);
-        });
+
     }
 
     // TODO
     someAction() {
-        console.log('TODO something')
+        console.log('TODO something');
     }
 
 

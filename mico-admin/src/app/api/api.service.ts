@@ -650,21 +650,4 @@ export class ApiService {
             filter(data => data !== undefined)
         );
     }
-
-
-    throwError() {
-        // temporary method to test incorrect api calls
-        console.log('call throwError api method');
-        const stream = this.getStreamSource<ApiObject>('errorCall');
-        const url = 'service';
-        this.rest.delete<ApiObject>(url).subscribe(val => {
-
-            console.log('ApiService', val);
-            stream.next(freezeObject((val as ApiObject)));
-        });
-
-        return stream.asObservable().pipe(
-            filter(data => data !== undefined)
-        );
-    }
 }
