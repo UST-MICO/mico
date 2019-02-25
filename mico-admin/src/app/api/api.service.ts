@@ -441,23 +441,21 @@ export class ApiService {
         );
     }
 
-    postServiceViaGithub(data): Observable<Readonly<ApiObject>> {
-        if (data == null) {
-            return;
-        }
+    postServiceViaGithub(uri: string, version: string): Observable<Readonly<ApiObject>> {
 
-        return this.rest.post<ApiObject>('services/import/github', data, undefined, false).pipe(flatMap(val => {
+        return this.rest.post<ApiObject>('services/import/github', { uri: uri, version: version }, undefined, false)
+            .pipe(flatMap(val => {
 
-            const stream = this.getStreamSource<ApiObject>(val._links.self.href);
-            stream.next(val);
+                const stream = this.getStreamSource<ApiObject>(val._links.self.href);
+                stream.next(val);
 
-            this.getServices();
-            this.getServiceVersions(data.shortName);
+                this.getServices();
+                this.getServiceVersions(val.shortName);
 
-            return stream.asObservable().pipe(
-                filter(service => service !== undefined)
-            );
-        }));
+                return stream.asObservable().pipe(
+                    filter(service => service !== undefined)
+                );
+            }));
     }
 
 
