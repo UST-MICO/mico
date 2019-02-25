@@ -20,6 +20,7 @@
 package io.github.ust.mico.core.persistence;
 
 import org.springframework.data.neo4j.annotation.Depth;
+import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 
 import io.github.ust.mico.core.model.MicoApplication;
@@ -41,5 +42,8 @@ public interface MicoApplicationRepository extends Neo4jRepository<MicoApplicati
 
     @Depth(3)
     Optional<MicoApplication> findByShortNameAndVersion(String shortName, String version);
+    
+    @Query("MATCH (a:MicoApplication)-[i:INCLUDES_SERVICE]-(s:MicoService) WHERE s.shortName = {shortName} AND s.version = {version} RETURN COLLECT(a) AS applications")
+    List<MicoApplication> findAllUsedByService(@Param("shortName") String shortName, @Param("version") String version);
     
 }
