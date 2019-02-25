@@ -17,23 +17,93 @@
  * under the License.
  */
 
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, OnDestroy } from '@angular/core';
 
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
+import { MatDialog } from '@angular/material';
+import { ServicePickerComponent } from '../dialogs/service-picker/service-picker.component';
+import { Subscription } from 'rxjs';
+import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 
 @Component({
     selector: 'mico-app-detail-overview',
     templateUrl: './app-detail-overview.component.html',
     styleUrls: ['./app-detail-overview.component.css']
 })
-export class AppDetailOverviewComponent implements OnInit {
+export class AppDetailOverviewComponent implements OnInit, OnDestroy {
+
+    subDependeesDialog: Subscription;
+    subServiceDependency: Subscription;
 
     @Input() application: ApiObject;
 
-    constructor(private apiService: ApiService) { }
+    constructor(
+        private apiService: ApiService,
+        private dialog: MatDialog, ) { }
 
     ngOnInit() {
+    }
+
+    ngOnDestroy() {
+        this.unsubscribe(this.subDependeesDialog);
+        this.unsubscribe(this.subServiceDependency);
+    }
+
+    unsubscribe(subscription: Subscription) {
+        if (subscription != null) {
+            subscription.unsubscribe();
+        }
+    }
+
+    addService() {
+
+        const dialogRef = this.dialog.open(ServicePickerComponent, {
+            data: {
+                filter: '',
+                choice: 'multi',
+                existingDependencies: this.application.services,
+                serviceId: '',
+            }
+        });
+        this.subDependeesDialog = dialogRef.afterClosed().subscribe(result => {
+
+            if (result === '') {
+                return;
+            }
+
+            // TODO consider if null check is still neccesary as soon as endpoint to add dependencies exists
+            if (this.application.services == null) {
+                this.application.services = [];
+            }
+
+            result.forEach(service => {
+                // this.application.services.push(element);
+                // TODO Consider adding all at once.
+                this.apiService.postApplicationServices(this.application.shortName, this.application.version, service)
+                    .subscribe();
+            });
+        });
+
+    }
+
+    deleteService(serviceShortName: string) {
+
+        const dialogRef = this.dialog.open(YesNoDialogComponent, {
+            data: {
+                object: serviceShortName,
+                question: 'deleteDependency'
+            }
+        });
+
+        this.subServiceDependency = dialogRef.afterClosed().subscribe(shouldDelete => {
+            if (shouldDelete) {
+
+                this.apiService.deleteApplicationServices(this.application.shortName, this.application.version, serviceShortName)
+                    .subscribe();
+            }
+        });
+
     }
 
 }

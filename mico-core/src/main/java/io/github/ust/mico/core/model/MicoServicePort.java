@@ -19,6 +19,9 @@
 
 package io.github.ust.mico.core.model;
 
+import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
+import io.swagger.annotations.Extension;
+import io.swagger.annotations.ExtensionProperty;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
@@ -56,20 +59,38 @@ public class MicoServicePort {
     /**
      * The port number of the externally exposed port.
      */
-    @ApiModelProperty(required = true)
+    @ApiModelProperty(required = true, extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Exposed Port Number"),
+            @ExtensionProperty(name = "x-order", value = "10"),
+            @ExtensionProperty(name = "description", value = "The port number of the externally exposed port.")
+        })})
     private int number;
 
     /**
      * The type (protocol) of the port
      * (Pivio -> transport_protocol).
      */
-    @ApiModelProperty(required = true)
+    @ApiModelProperty(required = true, extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Type"),
+            @ExtensionProperty(name = "x-order", value = "30"),
+            @ExtensionProperty(name = "description", value = "The type (protocol) of the port. TCP or UDP.")
+        })})
     private MicoPortType type = MicoPortType.DEFAULT;
 
     /**
-     * The port of the container.
+     * The port inside the container.
      */
-    @ApiModelProperty(required = true)
+    @ApiModelProperty(required = true, extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Target Port Number"),
+            @ExtensionProperty(name = "x-order", value = "20"),
+            @ExtensionProperty(name = "description", value = "The port inside the container.")
+        })})
     private int targetPort;
 
 }

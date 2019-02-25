@@ -31,4 +31,5 @@ export class MicoDataStringComponent {
 
     @Input() config: ApiModel;
     @Input() dataValue: any;
+
 }

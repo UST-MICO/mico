@@ -1,1 +1,52 @@
-<mico-app-dependency-graph [shortName]="application?.shortName" [version]="application?.version"></mico-app-dependency-graph>
+<div class="flex">
+    <div class="flex-grow-1 ma2 ml0 flex flex-column">
+        <mico-app-dependency-graph [shortName]="application?.shortName" [version]="application?.version">
+        </mico-app-dependency-graph>
+    </div>
+
+    <!-- right side grid -->
+    <div class="w-25">
+        <mat-card class="ma1">
+            <mat-card-content>
+                <mat-action-list>
+                    <mat-divider></mat-divider>
+                    <div class="flex" (click)="addService()">
+                        <div class="flex-grow-1">
+                            <mat-list-item>
+                                <span mat-line><b>Services</b></span>
+                            </mat-list-item>
+                        </div>
+                        <div class="w-20">
+                            <mat-list-item>
+                                <mat-icon>add</mat-icon>
+                            </mat-list-item>
+                        </div>
+                    </div>
+
+                    <mat-divider></mat-divider>
+                    <!-- Service Interfaces -->
+                    <div *ngFor="let dependee of application?.services">
+                        <div class="flex">
+                            <div class="flex-grow-1"
+                                [routerLink]="['/service-detail',dependee.shortName,dependee.version]">
+                                <mat-list-item.large style="font-size:small">
+                                    <div class="pv2 pl4">
+                                        {{dependee.shortName}}<br />
+                                        {{dependee.version}}
+                                    </div>
+                                </mat-list-item.large>
+                            </div>
+                            <div class="w-20">
+                                <mat-list-item>
+                                    <mat-icon (click)="deleteService(dependee.shortName)">delete</mat-icon>
+                                </mat-list-item>
+                            </div>
+                        </div>
+                        <mat-divider></mat-divider>
+                    </div>
+                </mat-action-list>
+            </mat-card-content>
+
+        </mat-card>
+    </div>
+</div>

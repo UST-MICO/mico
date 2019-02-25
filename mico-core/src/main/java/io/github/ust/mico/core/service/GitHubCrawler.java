@@ -30,8 +30,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedList;
 
 @Slf4j
 public class GitHubCrawler {
@@ -49,6 +48,7 @@ public class GitHubCrawler {
 
     private MicoService crawlGitHubRepo(String uriBasicInfo, String uriReleaseInfo) throws IOException {
         log.debug("Crawl GitHub basic information from '{}' and release information from '{}'", uriBasicInfo, uriReleaseInfo);
+
         ResponseEntity<String> responseBasicInfo = restTemplate.getForEntity(uriBasicInfo, String.class);
         ResponseEntity<String> responseReleaseInfo = restTemplate.getForEntity(uriReleaseInfo, String.class);
         ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -65,6 +65,7 @@ public class GitHubCrawler {
                 .setServiceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
                 .setGitCloneUrl(basicInfoJson.get("clone_url").textValue())
                 .setGitReleaseInfoUrl(releaseInfoJson.get("url").textValue());
+
         } catch (IOException e) {
             log.error(e.getStackTrace().toString());
             log.error("Getting exception '{}'", e.getMessage());
@@ -73,63 +74,49 @@ public class GitHubCrawler {
     }
 
     public MicoService crawlGitHubRepoLatestRelease(String uri) throws IOException {
-        uri = makeUriToMatchGitHubApi(uri);
+        uri = adaptUriForGitHubApi(uri);
         String releaseUrl = uri + "/" + RELEASES + "/" + LATEST;
+
         return crawlGitHubRepo(uri, releaseUrl);
     }
 
     public MicoService crawlGitHubRepoSpecificRelease(String uri, String version) throws IOException {
-        uri = makeUriToMatchGitHubApi(uri);
+        uri = adaptUriForGitHubApi(uri);
         String releaseUrl = uri + "/" + RELEASES + "/" + TAGS + "/" + version;
+
         return crawlGitHubRepo(uri, releaseUrl);
     }
 
-    //TODO: Rename method - it is not crawling ALL releases
-    public List<MicoService> crawlGitHubRepoAllReleases(String uri) throws IOException {
-        uri = makeUriToMatchGitHubApi(uri);
-        String uriBasicInfo = uri;
-        String uriReleases = uri + "/" + RELEASES;
-        log.debug("Crawl GitHub basic information from '{}' and release information from '{}'", uriBasicInfo, uriReleases);
-        ResponseEntity<String> responseBasicInfo = restTemplate.getForEntity(uriBasicInfo, String.class);
-        ResponseEntity<String> responseReleaseInfo = restTemplate.getForEntity(uriReleases, String.class); //TODO: If LINK(next) exists in header, we need to do another Request
+    public String adaptUriForGitHubApi(String uri) {
+        uri = uri.trim();
+        if (uri.endsWith("/")) {
+            uri = uri.substring(0, uri.length() - 1);
+        }
+
+        return uri.replace(GITHUB_HTML_URL, GITHUB_API_URL);
+    }
+
+    public LinkedList<String> getVersionsFromGitHubRepo(String uri) throws IOException {
+        uri = adaptUriForGitHubApi(uri);
+        String releasesUrl = uri + "/" + RELEASES;
+        log.debug("Getting release tags from '{}'", releasesUrl);
+
+        ResponseEntity<String> response = restTemplate.getForEntity(releasesUrl, String.class);
         ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        ArrayList<MicoService> serviceList = new ArrayList<>();
 
         try {
-            JsonNode basicInfoJson = mapper.readTree(responseBasicInfo.getBody());
-            JsonNode releaseInfoJson = mapper.readTree(responseReleaseInfo.getBody());
+            JsonNode responseJson = mapper.readTree(response.getBody());
 
-            String shortName = basicInfoJson.get("name").textValue();
-            String description = basicInfoJson.get("description").textValue();
-            String fullName = basicInfoJson.get("full_name").textValue();
-            String gitCloneUrl = basicInfoJson.get("clone_url").textValue();
+            LinkedList<String> versionList = new LinkedList<>();
+            responseJson.forEach(release -> versionList.add(release.get("tag_name").textValue()));
 
-            for (JsonNode jsonNode : releaseInfoJson) {
+            return versionList;
 
-                serviceList.add(new MicoService()
-                    .setShortName(shortName)
-                    .setName(fullName)
-                    .setVersion(jsonNode.get("tag_name").textValue())
-                    .setDescription(description)
-                    .setServiceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
-                    .setGitCloneUrl(gitCloneUrl)
-                    .setGitReleaseInfoUrl(jsonNode.get("url").textValue()));
-
-            }
-            return serviceList;
         } catch (IOException e) {
             log.error(e.getStackTrace().toString());
             log.error("Getting exception '{}'", e.getMessage());
             throw e;
         }
-    }
-
-    public String makeUriToMatchGitHubApi(String uri) {
-        uri = uri.trim();
-        if (uri.endsWith("/")) {
-            uri = uri.substring(0, uri.length() - 1);
-        }
-        return uri.replace(GITHUB_HTML_URL, GITHUB_API_URL);
     }
 
 }
