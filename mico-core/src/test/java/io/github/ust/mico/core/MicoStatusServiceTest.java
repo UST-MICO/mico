@@ -38,6 +38,7 @@ import io.github.ust.mico.core.dto.KubernetesPodInfoDTO;
 import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
 import io.github.ust.mico.core.dto.MicoServiceInterfaceDTO;
 import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
+import io.github.ust.mico.core.dto.MicoUsingApplicationDTO;
 import io.github.ust.mico.core.dto.PrometheusResponse;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.MicoApplication;
@@ -61,6 +62,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
 import static io.github.ust.mico.core.TestConstants.APPLICATION_NAME;
+import static io.github.ust.mico.core.TestConstants.APPLICATION_NAME_OTHER;
 import static io.github.ust.mico.core.TestConstants.SERVICE_INTERFACE_NAME;
 import static io.github.ust.mico.core.TestConstants.SERVICE_NAME;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
@@ -132,7 +134,7 @@ public class MicoStatusServiceTest {
             .setVersion(VERSION);
 
         otherMicoApplication = new MicoApplication()
-            .setName(APPLICATION_NAME)
+            .setName(APPLICATION_NAME_OTHER)
             .setShortName(SHORT_NAME_OTHER)
             .setVersion(VERSION);
         
@@ -193,7 +195,7 @@ public class MicoStatusServiceTest {
                 .setVersion(VERSION)
                 .setAvailableReplicas(0)
                 .setRequestedReplicas(1)
-                .setOtherApplications(Collections.singletonList(otherMicoApplication.getName()))
+                .setUsingApplications(Collections.singletonList(new MicoUsingApplicationDTO(otherMicoApplication.getName(), otherMicoApplication.getShortName(), otherMicoApplication.getVersion())))
                 .setAverageMemoryUsage(60)
                 .setAverageCpuLoad(20)
                 // Add two pods
@@ -258,7 +260,7 @@ public class MicoStatusServiceTest {
             .setVersion(VERSION)
             .setAvailableReplicas(0)
             .setRequestedReplicas(1)
-            .setOtherApplications(Collections.singletonList(otherMicoApplication.getName()))
+            .setUsingApplications(Collections.singletonList(new MicoUsingApplicationDTO(otherMicoApplication.getName(), otherMicoApplication.getShortName(), otherMicoApplication.getVersion())))
             .setAverageMemoryUsage(60)
             .setAverageCpuLoad(20)
             .setPodInfo(Arrays.asList(new KubernetesPodInfoDTO()

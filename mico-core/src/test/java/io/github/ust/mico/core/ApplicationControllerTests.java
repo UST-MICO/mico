@@ -19,19 +19,71 @@
 
 package io.github.ust.mico.core;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import io.github.ust.mico.core.configuration.CorsConfig;
+import io.github.ust.mico.core.dto.KuberenetesPodMetricsDTO;
+import io.github.ust.mico.core.dto.KubernetesPodInfoDTO;
+import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
+import io.github.ust.mico.core.dto.MicoServiceInterfaceDTO;
+import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
+import io.github.ust.mico.core.dto.MicoUsingApplicationDTO;
+import io.github.ust.mico.core.dto.PrometheusResponse;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfoQueryResult;
+import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.service.MicoStatusService;
+import io.github.ust.mico.core.util.CollectionUtils;
+import io.github.ust.mico.core.web.ApplicationController;
+import org.hamcrest.collection.IsEmptyCollection;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.web.client.RestTemplate;
+
 import static io.github.ust.mico.core.JsonPathBuilder.EMBEDDED;
 import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
 import static io.github.ust.mico.core.JsonPathBuilder.SELF_HREF;
 import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
+import static io.github.ust.mico.core.TestConstants.APPLICATION_NAME;
+import static io.github.ust.mico.core.TestConstants.APPLICATION_NAME_OTHER;
 import static io.github.ust.mico.core.TestConstants.DESCRIPTION;
 import static io.github.ust.mico.core.TestConstants.GIT_TEST_REPO_URL;
 import static io.github.ust.mico.core.TestConstants.ID;
+import static io.github.ust.mico.core.TestConstants.ID_1;
 import static io.github.ust.mico.core.TestConstants.SERVICE_SHORT_NAME;
 import static io.github.ust.mico.core.TestConstants.SERVICE_VERSION;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1_MATCHER;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME_MATCHER;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_OTHER;
 import static io.github.ust.mico.core.TestConstants.VERSION;
 import static io.github.ust.mico.core.TestConstants.VERSION_1_0_1;
 import static io.github.ust.mico.core.TestConstants.VERSION_1_0_2;
@@ -53,54 +105,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
-import org.hamcrest.collection.IsEmptyCollection;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.hateoas.MediaTypes;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.web.client.RestTemplate;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-
-import io.github.ust.mico.core.configuration.CorsConfig;
-import io.github.ust.mico.core.dto.KuberenetesPodMetricsDTO;
-import io.github.ust.mico.core.dto.KubernetesPodInfoDTO;
-import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
-import io.github.ust.mico.core.dto.MicoServiceInterfaceDTO;
-import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
-import io.github.ust.mico.core.dto.PrometheusResponse;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfoQueryResult;
-import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.MicoStatusService;
-import io.github.ust.mico.core.util.CollectionUtils;
-import io.github.ust.mico.core.web.ApplicationController;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(ApplicationController.class)
@@ -465,8 +469,14 @@ public class ApplicationControllerTests {
      // Create a new application with one service
       MicoApplication application = new MicoApplication()
           .setId(ID)
-          .setName(TestConstants.APPLICATION_NAME)
+          .setName(APPLICATION_NAME)
           .setShortName(SHORT_NAME)
+          .setVersion(VERSION);
+
+      MicoApplication otherMicoApplication = new MicoApplication()
+          .setId(ID_1)
+          .setName(APPLICATION_NAME_OTHER)
+          .setShortName(SHORT_NAME_OTHER)
           .setVersion(VERSION);
       
       MicoServiceInterface serviceInterface = new MicoServiceInterface()
@@ -490,32 +500,41 @@ public class ApplicationControllerTests {
         int memoryUsage2 = 70;
         int cpuLoad2 = 40;
 
+        String startTimePod1 = new Date().toString();
+        int restartsPod1 = 0;
+        String startTimePod2 = new Date().toString();
+        int restartsPod2 = 0;
+
         MicoApplicationStatusDTO micoApplicationStatus = new MicoApplicationStatusDTO();
         MicoServiceStatusDTO micoServiceStatus = new MicoServiceStatusDTO();
 
         // Set information for first pod of a MicoService
         KubernetesPodInfoDTO kubernetesPodInfo1 = new KubernetesPodInfoDTO();
         kubernetesPodInfo1
-                .setHostIp(hostIp)
-                .setNodeName(nodeName)
-                .setPhase(podPhase)
-                .setPodName(podName1)
-                .setMetrics(new KuberenetesPodMetricsDTO()
-                        .setAvailable(false)
-                        .setCpuLoad(cpuLoad1)
-                        .setMemoryUsage(memoryUsage1));
+            .setHostIp(hostIp)
+            .setNodeName(nodeName)
+            .setPhase(podPhase)
+            .setPodName(podName1)
+            .setAge(startTimePod1)
+            .setRestarts(restartsPod1)
+            .setMetrics(new KuberenetesPodMetricsDTO()
+                .setAvailable(false)
+                .setCpuLoad(cpuLoad1)
+                .setMemoryUsage(memoryUsage1));
 
         // Set information for second pod of a MicoService
         KubernetesPodInfoDTO kubernetesPodInfo2 = new KubernetesPodInfoDTO();
         kubernetesPodInfo2
-                .setHostIp(hostIp)
-                .setNodeName(nodeName)
-                .setPhase(podPhase)
-                .setPodName(podName2)
-                .setMetrics(new KuberenetesPodMetricsDTO()
-                        .setAvailable(true)
-                        .setCpuLoad(cpuLoad2)
-                        .setMemoryUsage(memoryUsage2));
+            .setHostIp(hostIp)
+            .setNodeName(nodeName)
+            .setPhase(podPhase)
+            .setPodName(podName2)
+            .setAge(startTimePod2)
+            .setRestarts(restartsPod2)
+            .setMetrics(new KuberenetesPodMetricsDTO()
+                .setAvailable(true)
+                .setCpuLoad(cpuLoad2)
+                .setMemoryUsage(memoryUsage2));
 
         // Set deployment information for MicoService
         micoServiceStatus
@@ -523,13 +542,17 @@ public class ApplicationControllerTests {
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setAvailableReplicas(availableReplicas)
+            .setUsingApplications(Collections.singletonList(new MicoUsingApplicationDTO(otherMicoApplication.getName(), otherMicoApplication.getShortName(), otherMicoApplication.getVersion())))
             .setRequestedReplicas(replicas)
             .setInterfacesInformation(Collections.singletonList(new MicoServiceInterfaceDTO().setName(TestConstants.SERVICE_INTERFACE_NAME)))
-            .setPodInfo(Arrays.asList(kubernetesPodInfo1, kubernetesPodInfo2));
+            .setPodInfo(Arrays.asList(kubernetesPodInfo1, kubernetesPodInfo2))
+            .setAverageCpuLoad(25)
+            .setAverageMemoryUsage(60);
 
         micoApplicationStatus.getServiceStatus().add(micoServiceStatus);
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
+        given(applicationRepository.findAllUsedByService(any(), any())).willReturn(Collections.singletonList(otherMicoApplication));
         given(serviceRepository.findAllByApplication(SHORT_NAME, VERSION)).willReturn(CollectionUtils.listOf(service));
 
         // Mock MicoStatusService

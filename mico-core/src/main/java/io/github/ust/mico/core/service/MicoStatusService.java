@@ -20,7 +20,6 @@
 package io.github.ust.mico.core.service;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +34,7 @@ import io.github.ust.mico.core.dto.KubernetesPodInfoDTO;
 import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
 import io.github.ust.mico.core.dto.MicoServiceInterfaceDTO;
 import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
+import io.github.ust.mico.core.dto.MicoUsingApplicationDTO;
 import io.github.ust.mico.core.dto.PrometheusResponse;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.PrometheusRequestFailedException;
@@ -97,6 +97,13 @@ public class MicoStatusService {
             podCount += micoServiceStatus.getPodInfo().size();
             requestedReplicasCount += micoServiceStatus.getRequestedReplicas();
             availableReplicasCount += micoServiceStatus.getAvailableReplicas();
+            // Remove the current application's name to retrieve a list with only the names of other applications that are sharing a service
+            for (MicoUsingApplicationDTO micoUsingApplicationDTO: micoServiceStatus.getUsingApplications()) {
+                if (micoUsingApplicationDTO.getName().equals(micoApplication.getName())) {
+                    micoServiceStatus.getUsingApplications().remove(micoUsingApplicationDTO);
+                    break;
+                }
+            }
             applicationStatus.getServiceStatus().add(micoServiceStatus);
         }
         applicationStatus.setTotalNumberMicoServices(micoServices.size());
@@ -136,13 +143,12 @@ public class MicoStatusService {
         List<MicoServiceInterfaceDTO> micoServiceInterfaceDTOList = getServiceInterfaceStatus(micoService);
         serviceStatus.setInterfacesInformation(micoServiceInterfaceDTOList);
 
-        // Return the names of all other applications that are using this service too
-        List<MicoApplication> otherApplications = micoApplicationRepository.findAllUsedByService(micoService.getShortName(), micoService.getVersion());
-        List<String> otherApplicationsNames = new ArrayList<>();
-        for (MicoApplication micoApplication: otherApplications) {
-            otherApplicationsNames.add(micoApplication.getName());
+        // Return the names of all applications that are using this service
+        List<MicoApplication> usingApplications = micoApplicationRepository.findAllUsedByService(micoService.getShortName(), micoService.getVersion());
+        for (MicoApplication micoApplication: usingApplications) {
+            MicoUsingApplicationDTO usingApplication = new MicoUsingApplicationDTO(micoApplication.getName(), micoApplication.getShortName(), micoApplication.getVersion());
+            serviceStatus.getUsingApplications().add(usingApplication);
         }
-        serviceStatus.setOtherApplications(otherApplicationsNames);
 
         // Get status information for all pods of a service
         int averageCpuLoad = 0;
@@ -155,8 +161,6 @@ public class MicoStatusService {
             averageMemoryUsage += podInfo.getMetrics().getMemoryUsage();
             podInfos.add(podInfo);
         }
-        System.out.println(averageCpuLoad);
-        System.out.println(averageMemoryUsage);
         serviceStatus.setAverageCpuLoad(averageCpuLoad/podList.size());
         serviceStatus.setAverageMemoryUsage(averageMemoryUsage/podList.size());
         serviceStatus.setPodInfo(podInfos);

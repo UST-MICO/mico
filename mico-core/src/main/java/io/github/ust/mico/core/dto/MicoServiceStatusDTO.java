@@ -69,9 +69,9 @@ public class MicoServiceStatusDTO {
     private List<MicoServiceInterfaceDTO> interfacesInformation = new ArrayList<>();
 
     /**
-     * List with names of all other {@link io.github.ust.mico.core.model.MicoApplication}s that are using a particular service
+     * List of {@link MicoUsingApplicationDTO}, representing all applications that are using one service together.
      */
-    private List<String> otherApplications = new ArrayList<>();
+    private List<MicoUsingApplicationDTO> usingApplications = new ArrayList<>();
 
     /**
      * List of {@link io.fabric8.kubernetes.api.model.Pod}s of a {@link io.github.ust.mico.core.model.MicoService}.
