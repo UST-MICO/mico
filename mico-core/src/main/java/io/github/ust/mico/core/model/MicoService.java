@@ -59,6 +59,7 @@ public class MicoService {
      */
     @Id
     @GeneratedValue
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
 

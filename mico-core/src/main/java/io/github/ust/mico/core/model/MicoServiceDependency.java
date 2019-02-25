@@ -19,6 +19,7 @@
 
 package io.github.ust.mico.core.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.neo4j.ogm.annotation.EndNode;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -52,6 +53,7 @@ public class MicoServiceDependency {
      */
     @Id
     @GeneratedValue
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
 
