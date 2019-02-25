@@ -37,6 +37,7 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
     picked = 'latest';
     possibleVersions = [];
     selectedVersion;
+    latestVersion;
 
 
     // manual: 0, github: 1
@@ -87,11 +88,11 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
 
                 return {
                     tab: this.mapTabIndexToString(this.selectedTab),
-                    data: { uri: this.githubData.vcsroot, version: '' }
+                    data: { uri: this.githubData.vcsroot, version: this.latestVersion }
                 };
             }
 
-            if (this.picked === 'selected') {
+            if (this.picked === 'specific') {
 
                 return {
                     tab: this.mapTabIndexToString(this.selectedTab),
@@ -116,7 +117,9 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
 
             this.apiService.getServiceVersionsViaGithub(this.githubData.vcsroot).subscribe(val => {
                 this.possibleVersions = JSON.parse(JSON.stringify(val)).sort((n1, n2) => versionComparator(n1, n2));
-                this.selectedVersion = this.possibleVersions[this.possibleVersions.length - 1];
+
+                this.latestVersion = this.possibleVersions[this.possibleVersions.length - 1];
+                this.selectedVersion = this.latestVersion;
             });
 
         }
