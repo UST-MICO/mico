@@ -28,6 +28,7 @@ import io.fabric8.kubernetes.api.model.apps.DeploymentList;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.util.CollectionUtils;
@@ -59,13 +60,16 @@ public class MicoKubernetesClientTests {
     private static final String LABEL_RUN_KEY = "run";
 
     @MockBean
-    MicoKubernetesConfig micoKubernetesConfig;
+    private MicoKubernetesConfig micoKubernetesConfig;
 
     @MockBean
     private ClusterAwarenessFabric8 cluster;
 
     @Autowired
-    MicoKubernetesClient micoKubernetesClient;
+    private MicoKubernetesClient micoKubernetesClient;
+
+    @MockBean
+    private MicoServiceRepository serviceRepository;
 
     private static String testNamespace = "test-namespace";
 
@@ -219,21 +223,23 @@ public class MicoKubernetesClientTests {
 
     @Test
     public void isApplicationDeployed() throws KubernetesResourceException {
-
         MicoService micoService = getMicoServiceWithInterface();
         String deploymentUid = UIDUtils.uidFor(micoService);
         Deployment existingDeployment = getDeploymentObject(micoService, deploymentUid);
         Map<String, String> labels = CollectionUtils.mapOf(
             LABEL_APP_KEY, micoService.getShortName(),
             LABEL_VERSION_KEY, micoService.getVersion());
+      
         DeploymentList deploymentList = new DeploymentList();
         deploymentList.setItems(CollectionUtils.listOf(existingDeployment));
+        
         given(cluster.getDeploymentsByLabels(labels, testNamespace)).willReturn(deploymentList);
+        given(serviceRepository.findAllByApplication(SHORT_NAME, VERSION))
+                .willReturn(CollectionUtils.listOf(micoService));
 
         MicoApplication micoApplication = new MicoApplication()
-            .setShortName(SHORT_NAME)
-            .setVersion(VERSION)
-            .setServices(CollectionUtils.listOf(micoService));
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION);
 
         boolean result = micoKubernetesClient.isApplicationDeployed(micoApplication);
 
@@ -290,7 +296,7 @@ public class MicoKubernetesClientTests {
             .setServiceInterfaceName(SERVICE_INTERFACE_NAME)
             .setPorts(CollectionUtils.listOf(
                 new MicoServicePort()
-                    .setNumber(80)
+                    .setPort(80)
                     .setTargetPort(80)
                 )
             );

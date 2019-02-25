@@ -19,14 +19,15 @@
 
 package io.github.ust.mico.core;
 
-import io.github.ust.mico.core.service.GitHubCrawler;
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.junit.Assert.assertEquals;
+import io.github.ust.mico.core.service.GitHubCrawler;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -36,7 +37,6 @@ public class GitHubCrawlerTests extends Neo4jTestClass {
     private static final String REPO_URI_HTML = "https://github.com/octokit/octokit.rb";
     private static final String REPO_URI_WITH_SLASH = "https://github.com/octokit/octokit.rb/";
     private static final String REPO_URI_WITH_SPACES = " https://github.com/octokit/octokit.rb ";
-    private static final String RELEASE = "v4.12.0";
 
     @Test
     public void testMakeUriToMatchGitHubApi() {

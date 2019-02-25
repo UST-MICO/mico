@@ -21,6 +21,7 @@ import io.github.ust.mico.core.exception.PrometheusRequestFailedException;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -41,6 +42,7 @@ public class MicoStatusService {
     private final PrometheusConfig prometheusConfig;
     private final MicoKubernetesClient micoKubernetesClient;
     private final RestTemplate restTemplate;
+    private final MicoServiceRepository serviceRepository;
 
     private static final int MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT = 1;
     private static final String PROMETHEUS_QUERY_FOR_MEMORY_USAGE = "sum(container_memory_working_set_bytes{pod_name=\"%s\",container_name=\"\"})";
@@ -48,10 +50,12 @@ public class MicoStatusService {
     private static final String PROMETHEUS_QUERY_PARAMETER_NAME = "query";
 
     @Autowired
-    public MicoStatusService(PrometheusConfig prometheusConfig, MicoKubernetesClient micoKubernetesClient, RestTemplate restTemplate) {
+    public MicoStatusService(PrometheusConfig prometheusConfig, MicoKubernetesClient micoKubernetesClient,
+            RestTemplate restTemplate, MicoServiceRepository serviceRepository) {
         this.prometheusConfig = prometheusConfig;
         this.micoKubernetesClient = micoKubernetesClient;
         this.restTemplate = restTemplate;
+        this.serviceRepository = serviceRepository;
     }
 
     /**
@@ -60,13 +64,13 @@ public class MicoStatusService {
      * @return {@link MicoApplicationStatusDTO} containing a list of {@link MicoServiceStatusDTO} for status information of a single {@link MicoService}
      */
     public MicoApplicationStatusDTO getApplicationStatus(MicoApplication micoApplication) {
-        MicoApplicationStatusDTO applicationDeploymentInformation = new MicoApplicationStatusDTO();
-        List<MicoService> micoServices = micoApplication.getServices();
+        MicoApplicationStatusDTO applicationStatus = new MicoApplicationStatusDTO();
+        List<MicoService> micoServices = serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion());
         for (MicoService micoService: micoServices) {
-            MicoServiceStatusDTO micoServiceDeploymentInformation = getServiceStatus(micoService);
-            applicationDeploymentInformation.getServiceStatus().add(micoServiceDeploymentInformation);
+            MicoServiceStatusDTO micoServiceStatus = getServiceStatus(micoService);
+            applicationStatus.getServiceStatus().add(micoServiceStatus);
         }
-        return applicationDeploymentInformation;
+        return applicationStatus;
     }
 
     /**
@@ -88,16 +92,16 @@ public class MicoStatusService {
         }
 
         Deployment deployment = deploymentOptional.get();
-        MicoServiceStatusDTO serviceDeploymentInformation = new MicoServiceStatusDTO();
-        serviceDeploymentInformation.setName(micoService.getName());
-        serviceDeploymentInformation.setShortName(micoService.getShortName());
-        serviceDeploymentInformation.setVersion(micoService.getVersion());
-        serviceDeploymentInformation.setAvailableReplicas(deployment.getStatus().getAvailableReplicas());
-        serviceDeploymentInformation.setRequestedReplicas(deployment.getSpec().getReplicas());
+        MicoServiceStatusDTO serviceStatus = new MicoServiceStatusDTO();
+        serviceStatus.setName(micoService.getName());
+        serviceStatus.setShortName(micoService.getShortName());
+        serviceStatus.setVersion(micoService.getVersion());
+        serviceStatus.setAvailableReplicas(deployment.getStatus().getAvailableReplicas());
+        serviceStatus.setRequestedReplicas(deployment.getSpec().getReplicas());
 
         // Get status information for service interfaces of a serivce
         List<MicoServiceInterfaceDTO> micoServiceInterfaceDTOList = getServiceInterfaceStatus(micoService);
-        serviceDeploymentInformation.setInterfacesInformation(micoServiceInterfaceDTOList);
+        serviceStatus.setInterfacesInformation(micoServiceInterfaceDTOList);
 
         // Get status information for all pods of a service
         List<Pod> podList = micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(micoService);
@@ -106,8 +110,8 @@ public class MicoStatusService {
             KubernetesPodInfoDTO podInfo = getUiPodInfo(pod);
             podInfos.add(podInfo);
         }
-        serviceDeploymentInformation.setPodInfo(podInfos);
-        return serviceDeploymentInformation;
+        serviceStatus.setPodInfo(podInfos);
+        return serviceStatus;
     }
 
     /**

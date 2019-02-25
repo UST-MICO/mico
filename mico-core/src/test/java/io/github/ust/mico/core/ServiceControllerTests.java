@@ -735,7 +735,9 @@ public class ServiceControllerTests {
                 .setVersion(VERSION_1_0_1)
                 .setDescription(DESCRIPTION_1);
 
-        MicoServiceDependency dependency1 = new MicoServiceDependency().setService(service).setDependedService(service1);
+        MicoServiceDependency dependency1 = new MicoServiceDependency()
+                .setService(service)
+                .setDependedService(service1);
 
         service.setDependencies(Collections.singletonList(dependency1));
 
