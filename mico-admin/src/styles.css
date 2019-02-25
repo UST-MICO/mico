@@ -481,3 +481,10 @@ body {
 .mat-card .mat-divider-horizontal {
     position: relative !important;
 }
+
+/*
+Quick fix to avoid scroll bars
+*/
+.mat-tab-body.mat-tab-body-active{
+    overflow-y: hidden !important;
+}

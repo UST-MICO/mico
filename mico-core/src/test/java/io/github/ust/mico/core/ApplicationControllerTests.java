@@ -26,9 +26,6 @@ import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
 import static io.github.ust.mico.core.TestConstants.DESCRIPTION;
 import static io.github.ust.mico.core.TestConstants.GIT_TEST_REPO_URL;
 import static io.github.ust.mico.core.TestConstants.ID;
-import static io.github.ust.mico.core.TestConstants.ID_1;
-import static io.github.ust.mico.core.TestConstants.ID_2;
-import static io.github.ust.mico.core.TestConstants.ID_3;
 import static io.github.ust.mico.core.TestConstants.SERVICE_SHORT_NAME;
 import static io.github.ust.mico.core.TestConstants.SERVICE_VERSION;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
@@ -37,6 +34,7 @@ import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1_MATCHER;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME_MATCHER;
 import static io.github.ust.mico.core.TestConstants.VERSION;
 import static io.github.ust.mico.core.TestConstants.VERSION_1_0_1;
+import static io.github.ust.mico.core.TestConstants.VERSION_1_0_2;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
@@ -44,6 +42,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -72,6 +71,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -87,6 +88,7 @@ import io.github.ust.mico.core.dto.KubernetesPodInfoDTO;
 import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
 import io.github.ust.mico.core.dto.MicoServiceInterfaceDTO;
 import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
+import io.github.ust.mico.core.dto.PrometheusResponse;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
@@ -146,36 +148,36 @@ public class ApplicationControllerTests {
     @Test
     public void getAllApplications() throws Exception {
         given(applicationRepository.findAll(3)).willReturn(
-            Arrays.asList(new MicoApplication().setId(ID_1).setShortName(SHORT_NAME).setVersion(VERSION_1_0_1),
-                new MicoApplication().setId(ID_2).setShortName(SHORT_NAME).setVersion(VERSION),
-                new MicoApplication().setId(ID_3).setShortName(SHORT_NAME_1).setVersion(VERSION)));
+                Arrays.asList(new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION_1_0_1),
+                        new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION),
+                        new MicoApplication().setShortName(SHORT_NAME_1).setVersion(VERSION)));
 
         mvc.perform(get("/applications").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print())
-            .andExpect(status().isOk())
-            .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andExpect(jsonPath(APPLICATION_LIST + "[*]", hasSize(3)))
-            .andExpect(jsonPath(APPLICATION_LIST + "[?(" + SHORT_NAME_MATCHER + "&& @.version=='" + VERSION_1_0_1 + "')]", hasSize(1)))
-            .andExpect(jsonPath(APPLICATION_LIST + "[?(" + SHORT_NAME_MATCHER + "&& @.version=='" + VERSION + "')]", hasSize(1)))
-            .andExpect(jsonPath(APPLICATION_LIST + "[?(" + SHORT_NAME_1_MATCHER + "&& @.version=='" + VERSION + "')]", hasSize(1)))
-            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "self.href", is("http://localhost/applications")))
-            .andReturn();
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andExpect(jsonPath(APPLICATION_LIST + "[*]", hasSize(3)))
+                .andExpect(jsonPath(APPLICATION_LIST + "[?(" + SHORT_NAME_MATCHER + "&& @.version=='" + VERSION_1_0_1 + "')]", hasSize(1)))
+                .andExpect(jsonPath(APPLICATION_LIST + "[?(" + SHORT_NAME_MATCHER + "&& @.version=='" + VERSION + "')]", hasSize(1)))
+                .andExpect(jsonPath(APPLICATION_LIST + "[?(" + SHORT_NAME_1_MATCHER + "&& @.version=='" + VERSION + "')]", hasSize(1)))
+                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "self.href", is("http://localhost/applications")))
+                .andReturn();
     }
 
     @Test
     public void getApplicationByShortNameAndVersion() throws Exception {
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
-            Optional.of(new MicoApplication().setId(ID).setShortName(SHORT_NAME).setVersion(VERSION)));
+                Optional.of(new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION)));
 
         mvc.perform(get("/applications/" + SHORT_NAME + "/" + VERSION).accept(MediaTypes.HAL_JSON_VALUE))
-            .andDo(print())
-            .andExpect(status().isOk())
-            .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
-            .andExpect(jsonPath(VERSION_PATH, is(VERSION)))
-            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/applications/" + SHORT_NAME + "/" + VERSION)))
-            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "applications.href", is("http://localhost/applications")))
-            .andReturn();
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
+                .andExpect(jsonPath(VERSION_PATH, is(VERSION)))
+                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/applications/" + SHORT_NAME + "/" + VERSION)))
+                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "applications.href", is("http://localhost/applications")))
+                .andReturn();
     }
 
     @Test
@@ -184,12 +186,12 @@ public class ApplicationControllerTests {
             CollectionUtils.listOf(new MicoApplication().setId(ID).setShortName(SHORT_NAME).setVersion(VERSION)));
 
         mvc.perform(get("/applications/" + SHORT_NAME + "/").accept(MediaTypes.HAL_JSON_VALUE))
-            .andDo(print())
-            .andExpect(status().isOk())
-            .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andExpect(jsonPath(APPLICATION_LIST + "[?(" + SHORT_NAME_MATCHER + "&& @.version=='" + VERSION + "')]", hasSize(1)))
-            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/applications/" + SHORT_NAME)))
-            .andReturn();
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andExpect(jsonPath(APPLICATION_LIST + "[?(" + SHORT_NAME_MATCHER + "&& @.version=='" + VERSION + "')]", hasSize(1)))
+                .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/applications/" + SHORT_NAME)))
+                .andReturn();
     }
 
     @Test
@@ -198,9 +200,9 @@ public class ApplicationControllerTests {
             CollectionUtils.listOf(new MicoApplication().setId(ID).setShortName(SHORT_NAME).setVersion(VERSION)));
 
         mvc.perform(get("/applications/" + SHORT_NAME + "/").accept(MediaTypes.HAL_JSON_VALUE))
-            .andDo(print())
-            .andExpect(status().isOk())
-            .andReturn();
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andReturn();
     }
 
     @Test
@@ -289,9 +291,9 @@ public class ApplicationControllerTests {
         prettyPrint(application);
 
         final ResultActions result = mvc.perform(post(BASE_PATH)
-            .content(mapper.writeValueAsBytes(application))
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print());
+                .content(mapper.writeValueAsBytes(application))
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print());
 
         result.andExpect(status().isUnprocessableEntity());
     }
@@ -299,9 +301,9 @@ public class ApplicationControllerTests {
     @Test
     public void createApplicationWithInconsistentServiceData() throws Exception {
         MicoService invalidMicoService = new MicoService()
-            .setShortName(SHORT_NAME)
-            .setVersion(VERSION)
-            .setGitCloneUrl("http://example.com/INVALID");
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION)
+                .setGitCloneUrl("http://example.com/INVALID");
 
         MicoApplication application = new MicoApplication()
             .setId(ID)
@@ -320,9 +322,9 @@ public class ApplicationControllerTests {
         prettyPrint(application);
 
         final ResultActions result = mvc.perform(post(BASE_PATH)
-            .content(mapper.writeValueAsBytes(application))
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print());
+                .content(mapper.writeValueAsBytes(application))
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print());
 
         result.andExpect(status().isConflict());
     }
@@ -330,15 +332,15 @@ public class ApplicationControllerTests {
     @Test
     public void updateApplication() throws Exception {
         MicoApplication existingApplication = new MicoApplication()
-            .setId(ID)
-            .setShortName(SHORT_NAME)
-            .setVersion(VERSION)
-            .setDescription(DESCRIPTION);
+                .setId(ID)
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION)
+                .setDescription(DESCRIPTION);
 
         MicoApplication updatedApplication = new MicoApplication()
-            .setShortName(SHORT_NAME)
-            .setVersion(VERSION)
-            .setDescription("newDesc");
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION)
+                .setDescription("newDesc");
 
         MicoApplication expectedApplication = new MicoApplication()
             .setId(existingApplication.getId())
@@ -434,9 +436,9 @@ public class ApplicationControllerTests {
         given(serviceRepository.findAllByApplication(SHORT_NAME, VERSION)).willReturn(CollectionUtils.listOf(service));
 
         ResultActions resultUpdate = mvc.perform(put(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION)
-            .content(mapper.writeValueAsBytes(updatedApplication))
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print());
+                .content(mapper.writeValueAsBytes(updatedApplication))
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print());
 
         resultUpdate.andExpect(status().isUnprocessableEntity());
     }
@@ -449,9 +451,9 @@ public class ApplicationControllerTests {
         ArgumentCaptor<MicoApplication> appCaptor = ArgumentCaptor.forClass(MicoApplication.class);
 
         mvc.perform(delete("/applications/" + SHORT_NAME + "/" + VERSION).accept(MediaTypes.HAL_JSON_VALUE))
-            .andDo(print())
-            .andExpect(status().isNoContent())
-            .andReturn();
+                .andDo(print())
+                .andExpect(status().isNoContent())
+                .andReturn();
 
         verify(applicationRepository).delete(appCaptor.capture());
         assertEquals("Wrong short name.", app.getShortName(), appCaptor.getValue().getShortName());
@@ -494,26 +496,26 @@ public class ApplicationControllerTests {
         // Set information for first pod of a MicoService
         KubernetesPodInfoDTO kubernetesPodInfo1 = new KubernetesPodInfoDTO();
         kubernetesPodInfo1
-            .setHostIp(hostIp)
-            .setNodeName(nodeName)
-            .setPhase(podPhase)
-            .setPodName(podName1)
-            .setMetrics(new KuberenetesPodMetricsDTO()
-                .setAvailable(false)
-                .setCpuLoad(cpuLoad1)
-                .setMemoryUsage(memoryUsage1));
+                .setHostIp(hostIp)
+                .setNodeName(nodeName)
+                .setPhase(podPhase)
+                .setPodName(podName1)
+                .setMetrics(new KuberenetesPodMetricsDTO()
+                        .setAvailable(false)
+                        .setCpuLoad(cpuLoad1)
+                        .setMemoryUsage(memoryUsage1));
 
         // Set information for second pod of a MicoService
         KubernetesPodInfoDTO kubernetesPodInfo2 = new KubernetesPodInfoDTO();
         kubernetesPodInfo2
-            .setHostIp(hostIp)
-            .setNodeName(nodeName)
-            .setPhase(podPhase)
-            .setPodName(podName2)
-            .setMetrics(new KuberenetesPodMetricsDTO()
-                .setAvailable(true)
-                .setCpuLoad(cpuLoad2)
-                .setMemoryUsage(memoryUsage2));
+                .setHostIp(hostIp)
+                .setNodeName(nodeName)
+                .setPhase(podPhase)
+                .setPodName(podName2)
+                .setMetrics(new KuberenetesPodMetricsDTO()
+                        .setAvailable(true)
+                        .setCpuLoad(cpuLoad2)
+                        .setMemoryUsage(memoryUsage2));
 
         // Set deployment information for MicoService
         micoServiceStatus
@@ -599,8 +601,8 @@ public class ApplicationControllerTests {
             .setGitCloneUrl(GIT_TEST_REPO_URL);
         
         MicoService providedService = new MicoService()
-            .setShortName(SERVICE_SHORT_NAME)
-            .setVersion(SERVICE_VERSION);
+                .setShortName(SERVICE_SHORT_NAME)
+                .setVersion(SERVICE_VERSION);
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION))
                 .willReturn(Optional.of(application));
@@ -612,10 +614,10 @@ public class ApplicationControllerTests {
         ArgumentCaptor<MicoApplication> micoApplicationCaptor = ArgumentCaptor.forClass(MicoApplication.class);
 
         mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/services")
-            .content(mapper.writeValueAsBytes(providedService))
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print())
-            .andExpect(status().isNoContent());
+                .content(mapper.writeValueAsBytes(providedService))
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print())
+                .andExpect(status().isNoContent());
 
         verify(applicationRepository, times(1)).save(micoApplicationCaptor.capture());
         List<MicoService> savedServices = serviceRepository.findAllByApplication(SHORT_NAME, VERSION);
@@ -636,18 +638,18 @@ public class ApplicationControllerTests {
             .setDescription(DESCRIPTION);
         
         MicoService providedService = new MicoService()
-            .setShortName(SERVICE_SHORT_NAME)
-            .setVersion(SERVICE_VERSION)
-            .setDescription("NewDesc");
+                .setShortName(SERVICE_SHORT_NAME)
+                .setVersion(SERVICE_VERSION)
+                .setDescription("NewDesc");
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
         given(serviceRepository.findByShortNameAndVersion(SERVICE_SHORT_NAME, SERVICE_VERSION)).willReturn(Optional.of(existingService));
 
         mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/services")
-            .content(mapper.writeValueAsBytes(providedService))
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print())
-            .andExpect(status().isConflict());
+                .content(mapper.writeValueAsBytes(providedService))
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print())
+                .andExpect(status().isConflict());
     }
 
     @Test
@@ -676,12 +678,43 @@ public class ApplicationControllerTests {
         ArgumentCaptor<MicoApplication> micoApplicationCaptor = ArgumentCaptor.forClass(MicoApplication.class);
 
         mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/services/" + SERVICE_SHORT_NAME))
-            .andDo(print())
-            .andExpect(status().isNoContent());
+                .andDo(print())
+                .andExpect(status().isNoContent());
         verify(applicationRepository, times(1)).save(micoApplicationCaptor.capture());
         List<MicoService> savedServices = serviceRepository.findAllByApplication(SHORT_NAME, VERSION);
         assertTrue("Expected services are empty", savedServices.isEmpty());
     }
+
+    @Test
+    public void deleteAllApplications() throws Exception {
+        MicoApplication micoApplicationOne = new MicoApplication()
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION);
+        MicoApplication micoApplicationTwo = new MicoApplication()
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION_1_0_1);
+        MicoApplication micoApplicationThree = new MicoApplication()
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION_1_0_2);
+
+        given(applicationRepository.findByShortName(SHORT_NAME)).willReturn(CollectionUtils.listOf(micoApplicationOne, micoApplicationTwo, micoApplicationThree));
+        
+        mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME))
+                .andDo(print())
+                .andExpect(status().isNoContent())
+                .andReturn();
+    }
+
+    private ResponseEntity getPrometheusResponseEntity(int value) {
+        PrometheusResponse prometheusResponse = new PrometheusResponse();
+        prometheusResponse.setStatus(PrometheusResponse.PROMETHEUS_SUCCESSFUL_RESPONSE);
+        prometheusResponse.setValue(value);
+        ResponseEntity responseEntity = mock(ResponseEntity.class);
+        given(responseEntity.getStatusCode()).willReturn(HttpStatus.OK);
+        given(responseEntity.getBody()).willReturn(prometheusResponse);
+        return responseEntity;
+    }
+
     private void prettyPrint(Object object) {
         ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
         try {

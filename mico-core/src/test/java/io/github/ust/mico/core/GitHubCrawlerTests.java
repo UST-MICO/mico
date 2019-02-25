@@ -43,8 +43,8 @@ public class GitHubCrawlerTests extends Neo4jTestClass {
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
 
-        assertEquals(REPO_URI_API, crawler.makeUriToMatchGitHubApi(REPO_URI_HTML));
-        assertEquals(REPO_URI_API, crawler.makeUriToMatchGitHubApi(REPO_URI_WITH_SLASH));
-        assertEquals(REPO_URI_API, crawler.makeUriToMatchGitHubApi(REPO_URI_WITH_SPACES));
+        assertEquals(REPO_URI_API, crawler.adaptUriForGitHubApi(REPO_URI_HTML));
+        assertEquals(REPO_URI_API, crawler.adaptUriForGitHubApi(REPO_URI_WITH_SLASH));
+        assertEquals(REPO_URI_API, crawler.adaptUriForGitHubApi(REPO_URI_WITH_SPACES));
     }
 }

@@ -91,6 +91,8 @@ import { CreateApplicationComponent } from './dialogs/create-application/create-
 import { CreateNextVersionComponent } from './dialogs/create-next-version/create-next-version.component';
 import { MicoDataArrayComponent } from './data-view/mico-data-array/mico-data-array.component';
 import { MicoDataObjectComponent } from './data-view/mico-data-object/mico-data-object.component';
+import { AppDetailStatusComponent } from './app-detail-status/app-detail-status.component';
+import { ServiceDetailStatusComponent } from './service-detail-status/service-detail-status.component';
 
 @NgModule({
     declarations: [
@@ -125,7 +127,9 @@ import { MicoDataObjectComponent } from './data-view/mico-data-object/mico-data-
         CreateApplicationComponent,
         CreateNextVersionComponent,
         MicoDataArrayComponent,
-        MicoDataObjectComponent
+        MicoDataObjectComponent,
+        AppDetailStatusComponent,
+        ServiceDetailStatusComponent
     ],
     entryComponents: [
         // dialogs
