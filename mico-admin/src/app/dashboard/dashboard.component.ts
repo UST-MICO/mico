@@ -49,11 +49,6 @@ export class DashboardComponent implements OnInit {
 
     }
 
-    // TODO
-    someAction() {
-        console.log('TODO something');
-    }
-
 
     /**
      * receives a list of applications from the apiService
@@ -128,6 +123,15 @@ export class DashboardComponent implements OnInit {
         });
     }
 
+    openUserGuide() {
+        window.open('https://mico-docs.readthedocs.io/en/latest/');
+    }
 
+    openDevGuide() {
+        window.open('https://mico-dev.readthedocs.io/en/latest/');
+    }
+    suggestFeature() {
+        window.open('https://github.com/UST-MICO/mico/issues/new');
+    }
 
 }
