@@ -427,6 +427,20 @@ export class ApiService {
 
     }
 
+    getServiceVersionsViaGithub(uri: string): Observable<Readonly<ApiObject[]>> {
+        const resource = 'services/import/github' + '?uri=' + uri;
+        const stream = this.getStreamSource<ApiObject[]>(resource);
+
+
+        this.rest.get<ApiObject[]>(resource).subscribe(val => {
+            stream.next(freezeObject(val));
+        });
+
+        return stream.asObservable().pipe(
+            filter(data => data !== undefined)
+        );
+    }
+
     postServiceViaGithub(data): Observable<Readonly<ApiObject>> {
         if (data == null) {
             return;
