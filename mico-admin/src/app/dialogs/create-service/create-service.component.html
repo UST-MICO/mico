@@ -18,12 +18,21 @@
                 </mat-step>
                 <mat-step label="Choose The Version">
                     <mat-radio-group [(ngModel)]="picked">
-                        <mat-radio-button value="latest">Latest Version</mat-radio-button>
-
-                        <div>
+                        <div class="ma2">
+                            <mat-radio-button value="latest">Latest Version</mat-radio-button>
+                        </div>
+                        <div class="ma2 mt0">
                             <mat-radio-button value="specific">Specific Version</mat-radio-button>
 
                             <!-- drop down -->
+                            <mat-form-field class="w25 ma2">
+                                <mat-select placeholder="Version" (ngModelChange)="updateSelectedVersion($event)"
+                                    [ngModel]="selectedVersion">
+                                    <mat-option *ngFor="let version of possibleVersions" [value]="version">
+                                        {{version}}
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
                         </div>
                     </mat-radio-group>
                 </mat-step>

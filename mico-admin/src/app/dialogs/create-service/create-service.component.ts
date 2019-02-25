@@ -21,6 +21,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ApiService } from 'src/app/api/api.service';
 import { Subscription } from 'rxjs';
 import { ApiModel } from 'src/app/api/apimodel';
+import { versionComparator } from 'src/app/api/semantic-version';
 
 @Component({
     selector: 'mico-create-service',
@@ -35,6 +36,7 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
     githubData;
     picked = 'latest';
     possibleVersions = [];
+    selectedVersion;
 
 
     // manual: 0, github: 1
@@ -75,11 +77,32 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
             return { tab: this.mapTabIndexToString(this.selectedTab), data: this.serviceData };
         } else if (this.selectedTab === 1) {
             // github
-            return { tab: this.mapTabIndexToString(this.selectedTab), data: this.githubData };
-        } else {
-            // error case
-            return { tab: this.mapTabIndexToString(this.selectedTab), data: undefined };
+
+            if (this.githubData == null || this.githubData.vcsroot == null) {
+                // not finished yet (on of the thousand calls angular performs...)
+                return { tab: this.mapTabIndexToString(this.selectedTab), data: undefined };
+            }
+
+            if (this.picked === 'latest') {
+
+                return {
+                    tab: this.mapTabIndexToString(this.selectedTab),
+                    data: { uri: this.githubData.vcsroot, version: '' }
+                };
+            }
+
+            if (this.picked === 'selected') {
+
+                return {
+                    tab: this.mapTabIndexToString(this.selectedTab),
+                    data: { uri: this.githubData.vcsroot, version: this.selectedVersion }
+                };
+            }
+
         }
+        // error case
+        return { tab: this.mapTabIndexToString(this.selectedTab), data: undefined };
+
     }
 
     tabChange(event) {
@@ -90,8 +113,16 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
     gitStepperChange(event) {
 
         if (event.selectedIndex === 1 && event.previouslySelectedIndex === 0) {
-            console.log('load versions');
+
+            this.apiService.getServiceVersionsViaGithub(this.githubData.vcsroot).subscribe(val => {
+                this.possibleVersions = JSON.parse(JSON.stringify(val)).sort((n1, n2) => versionComparator(n1, n2));
+                this.selectedVersion = this.possibleVersions[this.possibleVersions.length - 1];
+            });
 
         }
+    }
+
+    updateSelectedVersion(event) {
+        this.selectedVersion = event;
     }
 }
