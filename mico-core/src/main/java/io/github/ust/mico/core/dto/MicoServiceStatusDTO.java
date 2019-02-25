@@ -74,4 +74,14 @@ public class MicoServiceStatusDTO {
      */
     private List<KubernetesPodInfoDTO> podInfo = new ArrayList<>();
 
+    /**
+     * Average cpu load in all pods of a {@link io.github.ust.mico.core.model.MicoService}
+     */
+    private int averageCpuLoad;
+
+    /**
+     * Average memory usage in all pods of a {@link io.github.ust.mico.core.model.MicoService}
+     */
+    private int averageMemoryUsage;
+
 }

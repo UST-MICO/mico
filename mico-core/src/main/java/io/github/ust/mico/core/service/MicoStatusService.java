@@ -20,7 +20,6 @@
 package io.github.ust.mico.core.service;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -33,8 +32,8 @@ import io.github.ust.mico.core.configuration.PrometheusConfig;
 import io.github.ust.mico.core.dto.KuberenetesPodMetricsDTO;
 import io.github.ust.mico.core.dto.KubernetesPodInfoDTO;
 import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
-import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
 import io.github.ust.mico.core.dto.MicoServiceInterfaceDTO;
+import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
 import io.github.ust.mico.core.dto.PrometheusResponse;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.PrometheusRequestFailedException;
@@ -95,6 +94,7 @@ public class MicoStatusService {
             availableReplicasCount += micoServiceStatus.getAvailableReplicas();
             applicationStatus.getServiceStatus().add(micoServiceStatus);
         }
+
         applicationStatus.setTotalNumberMicoServices(micoServices.size());
         applicationStatus.setTotalNumberPods(podCount);
         applicationStatus.setTotalNumberAvailableReplicas(availableReplicasCount);
@@ -131,37 +131,23 @@ public class MicoStatusService {
         // Get status information for service interfaces of a service
         List<MicoServiceInterfaceDTO> micoServiceInterfaceDTOList = getServiceInterfaceStatus(micoService);
         serviceStatus.setInterfacesInformation(micoServiceInterfaceDTOList);
-
-        // Get information about concurrent use of a service by multiple applications
-        List<String> applicationsUsingService = findConcurrentUsageOfService(micoService, micoApplicationRepository.findAll());
-
+        
         // Get status information for all pods of a service
+        int averageCpuLoad = 0;
+        int averageMemoryUsage = 0;
         List<Pod> podList = micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(micoService);
         List<KubernetesPodInfoDTO> podInfos = new LinkedList<>();
         for (Pod pod : podList) {
             KubernetesPodInfoDTO podInfo = getUiPodInfo(pod);
+            averageCpuLoad += podInfo.getMetrics().getCpuLoad();
+            averageMemoryUsage += podInfo.getMetrics().getMemoryUsage();
             podInfos.add(podInfo);
         }
-
+        serviceStatus.setAverageCpuLoad(averageCpuLoad/podList.size());
+        serviceStatus.setAverageMemoryUsage(averageMemoryUsage/podList.size());
         serviceStatus.setPodInfo(podInfos);
         return serviceStatus;
     }
-
-    // TODO evaluate usage
-    private List<String> findConcurrentUsageOfService(MicoService micoService, List<MicoApplication> micoApplications) {
-        List<String> applicationNames = new ArrayList<>();
-        for (MicoApplication micoApplication: micoApplications) {
-            for (MicoService micoServiceInMicoApplication: micoApplication.getServices()) {
-                if (micoServiceInMicoApplication.getName().equals(micoService.getName()) && micoServiceInMicoApplication.getVersion().equals(micoService.getVersion())) {
-                    applicationNames.add(micoApplication.getName());
-                    continue;
-                }
-                log.info("Found concurrent usage of MicoService '{}' within MicoApplication '{}'.", micoService.getName(), micoServiceInMicoApplication.getName());
-            }
-        }
-        return applicationNames;
-    }
-
 
     /**
      * Get status information for all {@link MicoServiceInterface} of a {@link MicoService}: service name,

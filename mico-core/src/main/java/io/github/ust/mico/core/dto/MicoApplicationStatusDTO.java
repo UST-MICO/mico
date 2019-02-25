@@ -46,16 +46,24 @@ public class MicoApplicationStatusDTO {
      */
     private List<MicoServiceStatusDTO> serviceStatus = new ArrayList<>();
 
+    /**
+     * Number of {@link MicoService}s belonging to a {@link io.github.ust.mico.core.model.MicoApplication}
+     */
     private int totalNumberMicoServices;
 
+    /**
+     * Number of replicas of all services that are available in a {@link io.github.ust.mico.core.model.MicoApplication}
+     */
     private int totalNumberAvailableReplicas;
 
+    /**
+     * Number of replicas of all services that should be available in a {@link io.github.ust.mico.core.model.MicoApplication}
+     */
     private int totalNumberRequestedReplicas;
 
+    /**
+     * Number of pods of created by all {@link MicoService}s in a {@link io.github.ust.mico.core.model.MicoApplication}
+     */
     private int totalNumberPods;
-
-
-
-
 
 }
