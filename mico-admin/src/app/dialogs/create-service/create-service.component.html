@@ -8,13 +8,24 @@
         </mat-tab>
         <mat-tab label="GitHub">
 
-            <mat-vertical-stepper>
+            <mat-vertical-stepper (selectionChange)="gitStepperChange($event)">
                 <mat-step label="Choose The Repository">
-                    <!-- TODO replace with mico-form-question-->
                     <mico-form [modelUrl]="'local/serviceFromGitPOST'" (data)="githubData = $event"></mico-form>
+
+                    <div>
+                        <button mat-button matStepperNext>Next</button>
+                    </div>
                 </mat-step>
                 <mat-step label="Choose The Version">
-                    Content 2
+                    <mat-radio-group [(ngModel)]="picked">
+                        <mat-radio-button value="latest">Latest Version</mat-radio-button>
+
+                        <div>
+                            <mat-radio-button value="specific">Specific Version</mat-radio-button>
+
+                            <!-- drop down -->
+                        </div>
+                    </mat-radio-group>
                 </mat-step>
             </mat-vertical-stepper>
 

@@ -30,8 +30,11 @@ import { ApiModel } from 'src/app/api/apimodel';
 export class CreateServiceDialogComponent implements OnInit, OnDestroy {
 
     serviceData;
-    // TODO link with form as soon as the according endpoint exists.
+
+    // github crawler specific data
     githubData;
+    picked = 'latest';
+    possibleVersions = [];
 
 
     // manual: 0, github: 1
@@ -42,7 +45,7 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
 
     constructor(private apiService: ApiService) {
         this.subModelDefinitions = this.apiService.getModelDefinitions().subscribe(val => {
-            this.filterList = (val['MicoService'] as ApiModel).required.filter((val) => val !== 'serviceInterfaces');
+            this.filterList = (val['MicoService'] as ApiModel).required.filter((value) => value !== 'serviceInterfaces');
         });
     }
 
@@ -83,4 +86,12 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
         this.selectedTab = event.index;
     }
 
+
+    gitStepperChange(event) {
+
+        if (event.selectedIndex === 1 && event.previouslySelectedIndex === 0) {
+            console.log('load versions');
+
+        }
+    }
 }
