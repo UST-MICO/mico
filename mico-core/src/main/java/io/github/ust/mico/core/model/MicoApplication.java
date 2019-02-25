@@ -22,22 +22,22 @@ package io.github.ust.mico.core.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
-import io.swagger.annotations.Extension;
-import io.swagger.annotations.ExtensionProperty;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
+import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.exception.VersionNotSupportedException;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.Extension;
+import io.swagger.annotations.ExtensionProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Singular;
 import lombok.experimental.Accessors;
 
 /**
@@ -122,32 +122,21 @@ public class MicoApplication {
     // ----------------------
 
     /**
-     * The services this application is composed of.
+     * The list of service deployment information
+     * this application uses for the deployment of the required services.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Mico Services"),
+            @ExtensionProperty(name = "title", value = "Service Deployment Information"),
             @ExtensionProperty(name = "x-order", value = "130"),
-            @ExtensionProperty(name = "description", value = "The services this application is composed of.")
+            @ExtensionProperty(name = "description", value = "The list of service deployment information " +
+                "this application uses for the deployment of the required services.")
         }
     )})
-    @Singular
-    @Relationship(type = "INCLUDES")
-    private List<MicoService> services = new ArrayList<>();
-
-    /**
-     * The information necessary for deploying this application.
-     */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Deployment Info"),
-            @ExtensionProperty(name = "x-order", value = "120"),
-            @ExtensionProperty(name = "description", value = "The information necessary for deploying this application.")
-        }
-    )})
-    private MicoApplicationDeploymentInfo deploymentInfo = new MicoApplicationDeploymentInfo();
+    @JsonManagedReference
+    @Relationship(type = "INCLUDES_SERVICE")
+    private List<MicoServiceDeploymentInfo> serviceDeploymentInfos = new ArrayList<>();
 
     /**
      * Human readable contact information for support purposes.
