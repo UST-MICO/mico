@@ -25,6 +25,7 @@ import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.UIDUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -68,11 +69,14 @@ public class MicoKubernetesClient {
 
     private final MicoKubernetesConfig micoKubernetesConfig;
     private final ClusterAwarenessFabric8 cluster;
+    private final MicoServiceRepository serviceRepository;
 
     @Autowired
-    public MicoKubernetesClient(MicoKubernetesConfig micoKubernetesConfig, ClusterAwarenessFabric8 cluster) {
+    public MicoKubernetesClient(MicoKubernetesConfig micoKubernetesConfig, ClusterAwarenessFabric8 cluster,
+            MicoServiceRepository serviceRepository) {
         this.micoKubernetesConfig = micoKubernetesConfig;
         this.cluster = cluster;
+        this.serviceRepository = serviceRepository;
     }
 
     /**
@@ -209,7 +213,7 @@ public class MicoKubernetesClient {
     public boolean isApplicationDeployed(MicoApplication micoApplication) throws KubernetesResourceException {
         boolean result = false;
 
-        for (MicoService micoService : micoApplication.getServices()) {
+        for (MicoService micoService : serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion())) {
             Optional<Deployment> deployment = getDeploymentOfMicoService(micoService);
             if (deployment.isPresent()) {
                 result = true;
@@ -367,7 +371,7 @@ public class MicoKubernetesClient {
 
         for (MicoServicePort servicePort : serviceInterface.getPorts()) {
             ports.add(new ServicePortBuilder()
-                .withNewPort(servicePort.getNumber())
+                .withNewPort(servicePort.getPort())
                 .withNewTargetPort(servicePort.getTargetPort())
                 .withProtocol(servicePort.getType().toString())
                 .build());
