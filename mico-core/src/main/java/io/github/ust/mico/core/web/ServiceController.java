@@ -319,19 +319,19 @@ public class ServiceController {
 
     @PostMapping(PATH_GITHUB_ENDPOINT)
     public ResponseEntity<Resource<MicoService>> importMicoServiceFromGitHub(@Valid @RequestBody GitHubCrawlingInfoDTO crawlingInfo) {
-        String uri = crawlingInfo.getUrl();
+        String url = crawlingInfo.getUrl();
         String version = crawlingInfo.getVersion();
-        log.debug("Start importing MicoService from URL '{}'", uri);
+        log.debug("Start importing MicoService from URL '{}'", url);
 
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
 
         try {
             if (version.equals("latest") || version.equals("")) {
-                MicoService service = crawler.crawlGitHubRepoLatestRelease(uri);
+                MicoService service = crawler.crawlGitHubRepoLatestRelease(url);
                 return createService(service, null);
             } else {
-                MicoService service = crawler.crawlGitHubRepoSpecificRelease(uri, version);
+                MicoService service = crawler.crawlGitHubRepoSpecificRelease(url, version);
                 return createService(service, null);
             }
         } catch (IOException e) {
@@ -343,14 +343,14 @@ public class ServiceController {
 
     @GetMapping(PATH_GITHUB_ENDPOINT)
     @ResponseBody
-    public LinkedList<String> getVersionsFromGitHub(@RequestParam String uri) {
-        log.debug("Start getting versions from URL '{}'", uri);
+    public LinkedList<String> getVersionsFromGitHub(@RequestParam String url) {
+        log.debug("Start getting versions from URL '{}'", url);
 
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
 
         try {
-            return crawler.getVersionsFromGitHubRepo(uri);
+            return crawler.getVersionsFromGitHubRepo(url);
 
         } catch (IOException e) {
             log.error(e.getStackTrace().toString());

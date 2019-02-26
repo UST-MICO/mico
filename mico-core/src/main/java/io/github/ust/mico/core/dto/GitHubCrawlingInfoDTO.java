@@ -46,6 +46,7 @@ public class GitHubCrawlingInfoDTO {
 
     /**
      * The url to the GitHub repository to crawl from.
+     * Must not be {@code null} nor empty.
      */
     @ApiModelProperty(required = true, extensions = {
             @Extension(name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION, properties = {
@@ -57,6 +58,8 @@ public class GitHubCrawlingInfoDTO {
 
     /**
      * The GitHub release tag. Defaults to 'latest'.
+     * Must not be {@code null} nor empty, but can be ommited,
+     * in which the default value will be used.
      */
     @ApiModelProperty(extensions = {
             @Extension(name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION, properties = {
