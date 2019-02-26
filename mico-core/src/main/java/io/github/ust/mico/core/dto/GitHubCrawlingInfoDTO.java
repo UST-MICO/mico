@@ -23,12 +23,15 @@ import javax.validation.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.service.GitHubCrawler;
+import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.Extension;
+import io.swagger.annotations.ExtensionProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
-
 
 /**
  * DTO for the information needed by the {@link GitHubCrawler}
@@ -42,13 +45,24 @@ import lombok.experimental.Accessors;
 public class GitHubCrawlingInfoDTO {
 
     /**
-     * Link to the GitHub repo to crawl from (required).
+     * The url to the GitHub repository to crawl from.
      */
-    private String uri;
+    @ApiModelProperty(required = true, extensions = {
+            @Extension(name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION, properties = {
+                    @ExtensionProperty(name = "title", value = "URL"),
+                    @ExtensionProperty(name = "x-order", value = "10"),
+                    @ExtensionProperty(name = "description", value = "The url to the GitHub repository to crawl from.") }) })
+    @NotEmpty
+    private String url;
 
     /**
      * The GitHub release tag. Defaults to 'latest'.
      */
+    @ApiModelProperty(extensions = {
+            @Extension(name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION, properties = {
+                    @ExtensionProperty(name = "title", value = "Version"),
+                    @ExtensionProperty(name = "x-order", value = "20"),
+                    @ExtensionProperty(name = "description", value = "The GitHub release tag. Defaults to 'latest'.") }) })
     @NotEmpty
     private String version = "latest";
 }
