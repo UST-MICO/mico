@@ -20,12 +20,17 @@
 package io.github.ust.mico.core.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.Extension;
+import io.swagger.annotations.ExtensionProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for a using application that holds name, shortName, and version of a {@link io.github.ust.mico.core.model.MicoApplication}.
+ * DTO for a using application that holds name, shortName, and version of a {@link MicoApplication}.
  * Used when the using applications of shared services are requested.
  */
 @Data
@@ -35,18 +40,42 @@ import lombok.experimental.Accessors;
 public class MicoUsingApplicationDTO {
 
     /**
-     * Name of the {@link io.github.ust.mico.core.model.MicoApplication}.
+     * Name of the {@link MicoApplication}.
      */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Name"),
+            @ExtensionProperty(name = "x-order", value = "30"),
+            @ExtensionProperty(name = "description", value = "Name of the MicoApplication.")
+        }
+    )})
     private String name;
 
     /**
-     * Short name of the {@link io.github.ust.mico.core.model.MicoApplication}.
+     * Short name of the {@link MicoApplication}.
      */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "ShortName"),
+            @ExtensionProperty(name = "x-order", value = "10"),
+            @ExtensionProperty(name = "description", value = "Short name of the MicoApplication.")
+        }
+    )})
     private String shortName;
 
     /**
-     * Version of the {@link io.github.ust.mico.core.model.MicoApplication}.
+     * Version of the {@link MicoApplication}.
      */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Version"),
+            @ExtensionProperty(name = "x-order", value = "20"),
+            @ExtensionProperty(name = "description", value = "Version of the MicoApplication.")
+        }
+    )})
     private String version;
 
 }

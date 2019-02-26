@@ -94,19 +94,19 @@ public class TestConstants {
     public static final String AVAILABLE_REPLICAS = buildPath(SERVICE_STATUS_PATH, "availableReplicas");
     public static final String INTERFACES_INFORMATION = buildPath(SERVICE_STATUS_PATH, "interfacesInformation");
     public static final String INTERFACES_INFORMATION_NAME = buildPath(SERVICE_STATUS_PATH, "interfacesInformation[0].name");
-    public static final String POD_INFO = buildPath(SERVICE_STATUS_PATH, "podInfo");
-    public static final String POD_INFO_POD_NAME_1 = buildPath(SERVICE_STATUS_PATH, "podInfo[0].podName");
-    public static final String POD_INFO_PHASE_1 = buildPath(SERVICE_STATUS_PATH, "podInfo[0].phase");
-    public static final String POD_INFO_NODE_NAME_1 = buildPath(SERVICE_STATUS_PATH, "podInfo[0].nodeName");
-    public static final String POD_INFO_METRICS_MEMORY_USAGE_1 = buildPath(SERVICE_STATUS_PATH, "podInfo[0].metrics.memoryUsage");
-    public static final String POD_INFO_METRICS_CPU_LOAD_1 = buildPath(SERVICE_STATUS_PATH, "podInfo[0].metrics.cpuLoad");
-    public static final String POD_INFO_METRICS_AVAILABLE_1 = buildPath(SERVICE_STATUS_PATH, "podInfo[0].metrics.available");
-    public static final String POD_INFO_POD_NAME_2 = buildPath(SERVICE_STATUS_PATH, "podInfo[1].podName");
-    public static final String POD_INFO_PHASE_2 = buildPath(SERVICE_STATUS_PATH, "podInfo[1].phase");
-    public static final String POD_INFO_NODE_NAME_2 = buildPath(SERVICE_STATUS_PATH, "podInfo[1].nodeName");
-    public static final String POD_INFO_METRICS_MEMORY_USAGE_2 = buildPath(SERVICE_STATUS_PATH, "podInfo[1].metrics.memoryUsage");
-    public static final String POD_INFO_METRICS_CPU_LOAD_2 = buildPath(SERVICE_STATUS_PATH, "podInfo[1].metrics.cpuLoad");
-    public static final String POD_INFO_METRICS_AVAILABLE_2 = buildPath(SERVICE_STATUS_PATH, "podInfo[1].metrics.available");
+    public static final String POD_INFO = buildPath(SERVICE_STATUS_PATH, "podsInformation");
+    public static final String POD_INFO_POD_NAME_1 = buildPath(SERVICE_STATUS_PATH, "podsInformation[0].podName");
+    public static final String POD_INFO_PHASE_1 = buildPath(SERVICE_STATUS_PATH, "podsInformation[0].phase");
+    public static final String POD_INFO_NODE_NAME_1 = buildPath(SERVICE_STATUS_PATH, "podsInformation[0].nodeName");
+    public static final String POD_INFO_METRICS_MEMORY_USAGE_1 = buildPath(SERVICE_STATUS_PATH, "podsInformation[0].metrics.memoryUsage");
+    public static final String POD_INFO_METRICS_CPU_LOAD_1 = buildPath(SERVICE_STATUS_PATH, "podsInformation[0].metrics.cpuLoad");
+    public static final String POD_INFO_METRICS_AVAILABLE_1 = buildPath(SERVICE_STATUS_PATH, "podsInformation[0].metrics.available");
+    public static final String POD_INFO_POD_NAME_2 = buildPath(SERVICE_STATUS_PATH, "podsInformation[1].podName");
+    public static final String POD_INFO_PHASE_2 = buildPath(SERVICE_STATUS_PATH, "podsInformation[1].phase");
+    public static final String POD_INFO_NODE_NAME_2 = buildPath(SERVICE_STATUS_PATH, "podsInformation[1].nodeName");
+    public static final String POD_INFO_METRICS_MEMORY_USAGE_2 = buildPath(SERVICE_STATUS_PATH, "podsInformation[1].metrics.memoryUsage");
+    public static final String POD_INFO_METRICS_CPU_LOAD_2 = buildPath(SERVICE_STATUS_PATH, "podsInformation[1].metrics.cpuLoad");
+    public static final String POD_INFO_METRICS_AVAILABLE_2 = buildPath(SERVICE_STATUS_PATH, "podsInformation[1].metrics.available");
 
     /*
      * For tests in ServiceControllerTests, a MicoServiceStatusDTO is used.
@@ -117,19 +117,19 @@ public class TestConstants {
     public static final String SERVICE_DTO_AVAILABLE_REPLICAS = buildPath(ROOT, "availableReplicas");
     public static final String SERVICE_DTO_INTERFACES_INFORMATION = buildPath(ROOT, "interfacesInformation");
     public static final String SERVICE_DTO_INTERFACES_INFORMATION_NAME = buildPath(ROOT, "interfacesInformation[0].name");
-    public static final String SERVICE_DTO_POD_INFO = buildPath(ROOT, "podInfo");
-    public static final String SERVICE_DTO_POD_INFO_POD_NAME_1 = buildPath(ROOT, "podInfo[0].podName");
-    public static final String SERVICE_DTO_POD_INFO_PHASE_1 = buildPath(ROOT, "podInfo[0].phase");
-    public static final String SERVICE_DTO_POD_INFO_NODE_NAME_1 = buildPath(ROOT, "podInfo[0].nodeName");
-    public static final String SERVICE_DTO_POD_INFO_METRICS_MEMORY_USAGE_1 = buildPath(ROOT, "podInfo[0].metrics.memoryUsage");
-    public static final String SERVICE_DTO_POD_INFO_METRICS_CPU_LOAD_1 = buildPath(ROOT, "podInfo[0].metrics.cpuLoad");
-    public static final String SERVICE_DTO_POD_INFO_METRICS_AVAILABLE_1 = buildPath(ROOT, "podInfo[0].metrics.available");
-    public static final String SERVICE_DTO_POD_INFO_POD_NAME_2 = buildPath(ROOT, "podInfo[1].podName");
-    public static final String SERVICE_DTO_POD_INFO_PHASE_2 = buildPath(ROOT, "podInfo[1].phase");
-    public static final String SERVICE_DTO_POD_INFO_NODE_NAME_2 = buildPath(ROOT, "podInfo[1].nodeName");
-    public static final String SERVICE_DTO_POD_INFO_METRICS_MEMORY_USAGE_2 = buildPath(ROOT, "podInfo[1].metrics.memoryUsage");
-    public static final String SERVICE_DTO_POD_INFO_METRICS_CPU_LOAD_2 = buildPath(ROOT, "podInfo[1].metrics.cpuLoad");
-    public static final String SERVICE_DTO_POD_INFO_METRICS_AVAILABLE_2 = buildPath(ROOT, "podInfo[1].metrics.available");
+    public static final String SERVICE_DTO_POD_INFO = buildPath(ROOT, "podsInformation");
+    public static final String SERVICE_DTO_POD_INFO_POD_NAME_1 = buildPath(ROOT, "podsInformation[0].podName");
+    public static final String SERVICE_DTO_POD_INFO_PHASE_1 = buildPath(ROOT, "podsInformation[0].phase");
+    public static final String SERVICE_DTO_POD_INFO_NODE_NAME_1 = buildPath(ROOT, "podsInformation[0].nodeName");
+    public static final String SERVICE_DTO_POD_INFO_METRICS_MEMORY_USAGE_1 = buildPath(ROOT, "podsInformation[0].metrics.memoryUsage");
+    public static final String SERVICE_DTO_POD_INFO_METRICS_CPU_LOAD_1 = buildPath(ROOT, "podsInformation[0].metrics.cpuLoad");
+    public static final String SERVICE_DTO_POD_INFO_METRICS_AVAILABLE_1 = buildPath(ROOT, "podsInformation[0].metrics.available");
+    public static final String SERVICE_DTO_POD_INFO_POD_NAME_2 = buildPath(ROOT, "podsInformation[1].podName");
+    public static final String SERVICE_DTO_POD_INFO_PHASE_2 = buildPath(ROOT, "podsInformation[1].phase");
+    public static final String SERVICE_DTO_POD_INFO_NODE_NAME_2 = buildPath(ROOT, "podsInformation[1].nodeName");
+    public static final String SERVICE_DTO_POD_INFO_METRICS_MEMORY_USAGE_2 = buildPath(ROOT, "podsInformation[1].metrics.memoryUsage");
+    public static final String SERVICE_DTO_POD_INFO_METRICS_CPU_LOAD_2 = buildPath(ROOT, "podsInformation[1].metrics.cpuLoad");
+    public static final String SERVICE_DTO_POD_INFO_METRICS_AVAILABLE_2 = buildPath(ROOT, "podsInformation[1].metrics.available");
 
     /**
      * Git repository that is used for testing.

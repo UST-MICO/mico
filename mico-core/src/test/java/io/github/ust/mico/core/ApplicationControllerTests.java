@@ -545,14 +545,14 @@ public class ApplicationControllerTests {
             .setUsingApplications(Collections.singletonList(new MicoUsingApplicationDTO(otherMicoApplication.getName(), otherMicoApplication.getShortName(), otherMicoApplication.getVersion())))
             .setRequestedReplicas(replicas)
             .setInterfacesInformation(Collections.singletonList(new MicoServiceInterfaceDTO().setName(TestConstants.SERVICE_INTERFACE_NAME)))
-            .setPodInfo(Arrays.asList(kubernetesPodInfo1, kubernetesPodInfo2))
+            .setPodsInformation(Arrays.asList(kubernetesPodInfo1, kubernetesPodInfo2))
             .setAverageCpuLoad(25)
             .setAverageMemoryUsage(60);
 
         micoApplicationStatus.getServiceStatus().add(micoServiceStatus);
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
-        given(applicationRepository.findAllUsedByService(any(), any())).willReturn(Collections.singletonList(otherMicoApplication));
+        given(applicationRepository.findAllByUsedService(any(), any())).willReturn(Collections.singletonList(otherMicoApplication));
         given(serviceRepository.findAllByApplication(SHORT_NAME, VERSION)).willReturn(CollectionUtils.listOf(service));
 
         // Mock MicoStatusService

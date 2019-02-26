@@ -162,7 +162,7 @@ public class ServiceControllerTests {
                 .setAvailableReplicas(availableReplicas)
                 .setRequestedReplicas(requestedReplicas)
                 .setInterfacesInformation(Collections.singletonList(new MicoServiceInterfaceDTO().setName(SERVICE_INTERFACE_NAME)))
-                .setPodInfo(Arrays.asList(kubernetesPodInfo1, kubernetesPodInfo2));
+                .setPodsInformation(Arrays.asList(kubernetesPodInfo1, kubernetesPodInfo2));
 
         given(micoStatusService.getServiceStatus(any(MicoService.class))).willReturn(micoServiceStatus);
         given(serviceRepository.findByShortNameAndVersion(ArgumentMatchers.anyString(), ArgumentMatchers.any())).willReturn(Optional.of(micoService));

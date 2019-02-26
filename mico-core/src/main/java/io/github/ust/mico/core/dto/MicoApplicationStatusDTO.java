@@ -23,15 +23,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
+import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
+import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.Extension;
+import io.swagger.annotations.ExtensionProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for deployment information of a {@link io.github.ust.mico.core.model.MicoApplication}.
- * A list contains all {@link MicoService} the {@link io.github.ust.mico.core.model.MicoApplication} consists of.
+ * DTO for status information of a {@link MicoApplication}.
+ * A list contains all {@link MicoService} the {@link MicoApplication} consists of.
  */
 @Data
 @NoArgsConstructor
@@ -41,28 +46,68 @@ import lombok.experimental.Accessors;
 public class MicoApplicationStatusDTO {
 
     /**
-     * List of deployment information of {@link MicoService}s, which belong to a {@link io.github.ust.mico.core.model.MicoApplication}.
+     * List of status information of {@link MicoService}s, which belong to a {@link MicoApplication}.
      */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "ServiceStatus"),
+            @ExtensionProperty(name = "x-order", value = "10"),
+            @ExtensionProperty(name = "description", value = "List of status information of MicoServices, which belong to a MicoApplication.")
+        }
+    )})
     private List<MicoServiceStatusDTO> serviceStatus = new ArrayList<>();
 
     /**
-     * Number of {@link MicoService}s belonging to a {@link io.github.ust.mico.core.model.MicoApplication}
+     * Number of {@link MicoService}s belonging to a {@link MicoApplication}
      */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "TotalNumberMicoServices"),
+            @ExtensionProperty(name = "x-order", value = "20"),
+            @ExtensionProperty(name = "description", value = "Number of MicoServices of a MicoApplication.")
+        }
+    )})
     private int totalNumberMicoServices;
 
     /**
-     * Number of replicas of all services that are available in a {@link io.github.ust.mico.core.model.MicoApplication}
+     * Number of replicas of all services that are available in a {@link MicoApplication}
      */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "TotalNumberAvailableReplicas"),
+            @ExtensionProperty(name = "x-order", value = "30"),
+            @ExtensionProperty(name = "description", value = "Number of replicas of all services that are available in a MicoApplication.")
+        }
+    )})
     private int totalNumberAvailableReplicas;
 
     /**
-     * Number of replicas of all services that should be available in a {@link io.github.ust.mico.core.model.MicoApplication}
+     * Number of replicas of all services that should be available in a {@link MicoApplication}
      */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "TotalNumberRequestedReplicas"),
+            @ExtensionProperty(name = "x-order", value = "40"),
+            @ExtensionProperty(name = "description", value = "Number of replicas of all services that should be available in a MicoApplication.")
+        }
+    )})
     private int totalNumberRequestedReplicas;
 
     /**
-     * Number of pods of created by all {@link MicoService}s in a {@link io.github.ust.mico.core.model.MicoApplication}
+     * Number of pods of created by all {@link MicoService}s in a {@link MicoApplication}
      */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "TotalNumberPods"),
+            @ExtensionProperty(name = "x-order", value = "50"),
+            @ExtensionProperty(name = "description", value = "Number of pods of created by all MicoServices in a MicoApplication.")
+        }
+    )})
     private int totalNumberPods;
 
 }

@@ -43,6 +43,7 @@ import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.util.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -83,7 +84,7 @@ public class MicoStatusService {
 
     /**
      * Get status information for a {@link MicoApplication}
-     * @param micoApplication
+     * @param micoApplication the application the status is requested for
      * @return {@link MicoApplicationStatusDTO} containing a list of {@link MicoServiceStatusDTO} for status information of a single {@link MicoService}
      */
     public MicoApplicationStatusDTO getApplicationStatus(MicoApplication micoApplication) {
@@ -94,12 +95,12 @@ public class MicoStatusService {
         int availableReplicasCount = 0;
         for (MicoService micoService: micoServices) {
             MicoServiceStatusDTO micoServiceStatus = getServiceStatus(micoService);
-            podCount += micoServiceStatus.getPodInfo().size();
+            podCount += micoServiceStatus.getPodsInformation().size();
             requestedReplicasCount += micoServiceStatus.getRequestedReplicas();
             availableReplicasCount += micoServiceStatus.getAvailableReplicas();
             // Remove the current application's name to retrieve a list with only the names of other applications that are sharing a service
             for (MicoUsingApplicationDTO micoUsingApplicationDTO: micoServiceStatus.getUsingApplications()) {
-                if (micoUsingApplicationDTO.getName().equals(micoApplication.getName())) {
+                if (micoUsingApplicationDTO.getShortName().equals(micoApplication.getShortName()) && micoUsingApplicationDTO.getVersion().equals(micoApplication.getVersion())) {
                     micoServiceStatus.getUsingApplications().remove(micoUsingApplicationDTO);
                     break;
                 }
@@ -119,32 +120,33 @@ public class MicoStatusService {
      * @return {@link MicoServiceStatusDTO} which contains status information for a specific {@link MicoService}
      */
     public MicoServiceStatusDTO getServiceStatus(MicoService micoService) {
-        Optional<Deployment> deploymentOptional = null;
+        Optional<Deployment> deploymentOptional = Optional.empty();
+        MicoServiceStatusDTO serviceStatus = new MicoServiceStatusDTO();
         try {
             deploymentOptional = micoKubernetesClient.getDeploymentOfMicoService(micoService);
         } catch (KubernetesResourceException e) {
             log.error("Error while retrieving Kubernetes deployment of MicoService '{}' '{}'. Continue with next one. Caused by: {}",
                 micoService.getShortName(), micoService.getVersion(), e.getMessage());
         }
-        if (!deploymentOptional.isPresent()) {
+        if (deploymentOptional.isPresent()) {
+            Deployment deployment = deploymentOptional.get();
+            serviceStatus.setAvailableReplicas(deployment.getStatus().getAvailableReplicas());
+            serviceStatus.setRequestedReplicas(deployment.getSpec().getReplicas());
+        } else {
             log.warn("There is no deployment of the MicoService '{}' '{}'. Continue with next one.",
                 micoService.getShortName(), micoService.getVersion());
+            return serviceStatus.setErrorMessages(CollectionUtils.listOf("No deployment of " + micoService.getShortName() + " " + micoService.getVersion() + " is available."));
         }
-
-        Deployment deployment = deploymentOptional.get();
-        MicoServiceStatusDTO serviceStatus = new MicoServiceStatusDTO();
         serviceStatus.setName(micoService.getName());
         serviceStatus.setShortName(micoService.getShortName());
         serviceStatus.setVersion(micoService.getVersion());
-        serviceStatus.setAvailableReplicas(deployment.getStatus().getAvailableReplicas());
-        serviceStatus.setRequestedReplicas(deployment.getSpec().getReplicas());
 
         // Get status information for service interfaces of a service
         List<MicoServiceInterfaceDTO> micoServiceInterfaceDTOList = getServiceInterfaceStatus(micoService);
         serviceStatus.setInterfacesInformation(micoServiceInterfaceDTOList);
 
         // Return the names of all applications that are using this service
-        List<MicoApplication> usingApplications = micoApplicationRepository.findAllUsedByService(micoService.getShortName(), micoService.getVersion());
+        List<MicoApplication> usingApplications = micoApplicationRepository.findAllByUsedService(micoService.getShortName(), micoService.getVersion());
         for (MicoApplication micoApplication: usingApplications) {
             MicoUsingApplicationDTO usingApplication = new MicoUsingApplicationDTO(micoApplication.getName(), micoApplication.getShortName(), micoApplication.getVersion());
             serviceStatus.getUsingApplications().add(usingApplication);
@@ -163,7 +165,7 @@ public class MicoStatusService {
         }
         serviceStatus.setAverageCpuLoad(averageCpuLoad/podList.size());
         serviceStatus.setAverageMemoryUsage(averageMemoryUsage/podList.size());
-        serviceStatus.setPodInfo(podInfos);
+        serviceStatus.setPodsInformation(podInfos);
         return serviceStatus;
     }
 

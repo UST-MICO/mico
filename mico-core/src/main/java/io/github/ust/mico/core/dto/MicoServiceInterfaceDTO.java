@@ -20,14 +20,19 @@
 package io.github.ust.mico.core.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
+import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.Extension;
+import io.swagger.annotations.ExtensionProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * Represents a service in Kubernetes for a {@link io.github.ust.mico.core.model.MicoService}.
+ * Represents a service in Kubernetes for a {@link MicoService}.
  */
 @Data
 @NoArgsConstructor
@@ -37,8 +42,16 @@ import lombok.experimental.Accessors;
 public class MicoServiceInterfaceDTO {
 
     /**
-     * Name of the {@link io.github.ust.mico.core.model.MicoServiceInterface}.
+     * Name of the {@link MicoServiceInterface}.
      */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Name"),
+            @ExtensionProperty(name = "x-order", value = "10"),
+            @ExtensionProperty(name = "description", value = "Name of the MicoServiceInterface.")
+        }
+    )})
     private String name;
     
 }

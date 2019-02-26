@@ -199,7 +199,7 @@ public class MicoStatusServiceTest {
                 .setAverageMemoryUsage(60)
                 .setAverageCpuLoad(20)
                 // Add two pods
-                .setPodInfo(Arrays.asList(new KubernetesPodInfoDTO()
+                .setPodsInformation(Arrays.asList(new KubernetesPodInfoDTO()
                     .setPodName(podName1)
                     .setHostIp(hostIp)
                     .setNodeName(nodeName)
@@ -230,7 +230,7 @@ public class MicoStatusServiceTest {
             e.printStackTrace();
         }
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
-        given(applicationRepository.findAllUsedByService(any(), any())).willReturn(Collections.singletonList(otherMicoApplication));
+        given(applicationRepository.findAllByUsedService(any(), any())).willReturn(Collections.singletonList(otherMicoApplication));
         given(serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion())).willReturn(CollectionUtils.listOf(micoService));
         given(prometheusConfig.getUri()).willReturn("http://localhost:9090/api/v1/query");
         ResponseEntity responseEntityMemoryUsagePod1 = getPrometheusResponseEntity(memoryUsagePod1);
@@ -238,6 +238,27 @@ public class MicoStatusServiceTest {
         ResponseEntity responseEntityMemoryUsagePod2 = getPrometheusResponseEntity(memoryUsagePod2);
         ResponseEntity responseEntityCpuLoadPod2 = getPrometheusResponseEntity(cpuLoadPod2);
         given(restTemplate.getForEntity(any(), eq(PrometheusResponse.class))).willReturn(responseEntityMemoryUsagePod1).willReturn(responseEntityCpuLoadPod1).willReturn(responseEntityMemoryUsagePod2).willReturn(responseEntityCpuLoadPod2);
+        assertEquals(micoApplicationStatus, micoStatusService.getApplicationStatus(micoApplication));
+    }
+
+    @Test
+    public void getApplicationStatusWithMissingDeployment() {
+        MicoApplicationStatusDTO micoApplicationStatus = new MicoApplicationStatusDTO();
+        micoApplicationStatus
+            .setTotalNumberRequestedReplicas(0)
+            .setTotalNumberAvailableReplicas(0)
+            .setTotalNumberPods(0)
+            .setTotalNumberMicoServices(1)
+            .setServiceStatus(Collections.singletonList(new MicoServiceStatusDTO().setErrorMessages(CollectionUtils.listOf("No deployment of " + micoService.getShortName() + " " + micoService.getVersion() + " is available."))));
+        try {
+            given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(Optional.empty());
+            given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(kubernetesService);
+            given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(any(MicoService.class))).willReturn(podList.getItems());
+        } catch (KubernetesResourceException e) {
+            e.printStackTrace();
+        }
+        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
+        given(serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion())).willReturn(CollectionUtils.listOf(micoService));
         assertEquals(micoApplicationStatus, micoStatusService.getApplicationStatus(micoApplication));
     }
 
@@ -263,7 +284,7 @@ public class MicoStatusServiceTest {
             .setUsingApplications(Collections.singletonList(new MicoUsingApplicationDTO(otherMicoApplication.getName(), otherMicoApplication.getShortName(), otherMicoApplication.getVersion())))
             .setAverageMemoryUsage(60)
             .setAverageCpuLoad(20)
-            .setPodInfo(Arrays.asList(new KubernetesPodInfoDTO()
+            .setPodsInformation(Arrays.asList(new KubernetesPodInfoDTO()
                     .setPodName(podName1)
                     .setHostIp(hostIp)
                     .setNodeName(nodeName)
@@ -294,7 +315,7 @@ public class MicoStatusServiceTest {
             e.printStackTrace();
         }
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
-        given(applicationRepository.findAllUsedByService(any(), any())).willReturn(Collections.singletonList(otherMicoApplication));
+        given(applicationRepository.findAllByUsedService(any(), any())).willReturn(Collections.singletonList(otherMicoApplication));
         given(prometheusConfig.getUri()).willReturn("http://localhost:9090/api/v1/query");
         ResponseEntity responseEntityMemoryUsagePod1 = getPrometheusResponseEntity(memoryUsagePod1);
         ResponseEntity responseEntityCpuLoadPod1 = getPrometheusResponseEntity(cpuLoadPod1);
