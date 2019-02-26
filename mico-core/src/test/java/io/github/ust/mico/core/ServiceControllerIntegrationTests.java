@@ -31,6 +31,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.ResultMatcher;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -78,6 +81,11 @@ public class ServiceControllerIntegrationTests extends Neo4jTestClass {
         MicoService micoService1 = new MicoService().setShortName(SHORT_NAME_1).setVersion(VERSION_1_0_1);
         MicoService micoService2 = new MicoService().setShortName(SHORT_NAME_2).setVersion(VERSION_1_0_1);
         MicoService micoService3 = new MicoService().setShortName(SHORT_NAME_3).setVersion(VERSION_1_0_1);
+        List<MicoService> fullDependencyList = new LinkedList<>();
+        fullDependencyList.add(micoService0);
+        fullDependencyList.add(micoService1);
+        fullDependencyList.add(micoService2);
+        fullDependencyList.add(micoService3);
         String independentServiceShortName = SHORT_NAME_3 + "Independent";
         MicoService micoServiceIndependent = new MicoService().setShortName(independentServiceShortName).setVersion(VERSION_1_0_1);
 
@@ -88,22 +96,25 @@ public class ServiceControllerIntegrationTests extends Neo4jTestClass {
         micoServiceDependenciesOfService0.add(micoServiceDependency0To1);
         micoServiceDependenciesOfService0.add(micoServiceDependency0To2);
         micoService0.setDependencies(micoServiceDependenciesOfService0);
-
         MicoServiceDependency micoServiceDependency1To3 = new MicoServiceDependency().setService(micoService1).setDependedService(micoService3);
         micoService1.setDependencies(Collections.singletonList(micoServiceDependency1To3));
 
         //save to db
-        serviceRepository.save(micoService0);
-        serviceRepository.save(micoService1);
-        serviceRepository.save(micoService2);
-        serviceRepository.save(micoService3);
+        fullDependencyList.forEach(serviceRepository::save);
         serviceRepository.save(micoServiceIndependent);
+
+        //Add a matcher for each mico service
+        ResultMatcher[] fulldependencyMatcherList = new ResultMatcher[fullDependencyList.size()];
+        for (int i = 0; i < fullDependencyList.size(); i++) {
+            fulldependencyMatcherList[i] = jsonPath(SERVICE_LIST + "[?(@.shortName=='" + fullDependencyList.get(i).getShortName() + "')]", hasSize(1));
+        }
 
         mvc.perform(get(SERVICES_PATH + "/" + SHORT_NAME + "/" + "/" + VERSION_1_0_1 + "/dependencyGraph").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath(SERVICE_LIST, hasSize(4)))
-            .andExpect(jsonPath(SERVICE_LIST + "[?(@.shortName=='" + independentServiceShortName + "')]", hasSize(0)))
+            .andExpect(jsonPath(SERVICE_LIST + "[?(@.shortName=='" + independentServiceShortName + "')]", hasSize(0))) //Check that the independent service is not in the result list
+            .andExpect(ResultMatcher.matchAll(fulldependencyMatcherList))
             .andReturn();
     }
 }
