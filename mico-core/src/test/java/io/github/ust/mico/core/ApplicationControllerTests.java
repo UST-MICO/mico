@@ -90,8 +90,10 @@ import io.github.ust.mico.core.dto.MicoServiceInterfaceDTO;
 import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
 import io.github.ust.mico.core.dto.PrometheusResponse;
 import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoLabel;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo.ImagePullPolicy;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfoQueryResult;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
@@ -683,6 +685,44 @@ public class ApplicationControllerTests {
         verify(applicationRepository, times(1)).save(micoApplicationCaptor.capture());
         List<MicoService> savedServices = serviceRepository.findAllByApplication(SHORT_NAME, VERSION);
         assertTrue("Expected services are empty", savedServices.isEmpty());
+    }
+    
+    @Test
+    public void getServiceDeploymentInformation() throws Exception {
+        MicoApplication application = new MicoApplication()
+                .setId(ID)
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION);
+        
+        MicoService service = new MicoService()
+                .setShortName(SERVICE_SHORT_NAME)
+                .setVersion(SERVICE_VERSION);
+        
+        int replicas = 3;
+        List<MicoLabel<String, String>> labels = CollectionUtils.listOf(new MicoLabel<String, String>("key-1", "value-1"));
+        ImagePullPolicy imagePullPolicy = ImagePullPolicy.IF_NOT_PRESENT;
+        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
+                .setApplication(application)
+                .setService(service)
+                .setReplicas(replicas)
+                .setLabels(labels)
+                .setImagePullPolicy(imagePullPolicy);
+        
+        application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
+        
+        given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName()))
+                        .willReturn(Optional.of(new MicoServiceDeploymentInfoQueryResult(application, serviceDeploymentInfo, service)));
+        
+        mvc.perform(get(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/services/" + service.getShortName()))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath(TestConstants.SDI_REPLICAS_PATH, is(replicas)))
+                .andExpect(jsonPath(TestConstants.SDI_LABELS_PATH + "[0].key", is(labels.get(0).getKey())))
+                .andExpect(jsonPath(TestConstants.SDI_LABELS_PATH + "[0].value", is(labels.get(0).getValue())))
+                .andExpect(jsonPath(TestConstants.SDI_IMAGE_PULLPOLICY_PATH, is(imagePullPolicy.toString())))
+                .andReturn();
+        
+        verify(serviceDeploymentInfoRepository, times(1)).findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName());
     }
 
     @Test
