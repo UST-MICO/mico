@@ -30,27 +30,14 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for a using application that holds name, shortName, and version of a {@link MicoApplication}.
- * Used when the using applications of shared services are requested.
+ * DTO that holds name, shortName, and version of a {@link MicoApplication}. Utilized, when the using aplications of
+ * shared services are requested.
  */
 @Data
 @AllArgsConstructor
 @Accessors(chain = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MicoUsingApplicationDTO {
-
-    /**
-     * Name of the {@link MicoApplication}.
-     */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Name"),
-            @ExtensionProperty(name = "x-order", value = "30"),
-            @ExtensionProperty(name = "description", value = "Name of the MicoApplication.")
-        }
-    )})
-    private String name;
+public class BasicMicoApplicationDTO {
 
     /**
      * Short name of the {@link MicoApplication}.
@@ -78,4 +65,16 @@ public class MicoUsingApplicationDTO {
     )})
     private String version;
 
+    /**
+     * Name of the {@link MicoApplication}.
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Name"),
+            @ExtensionProperty(name = "x-order", value = "30"),
+            @ExtensionProperty(name = "description", value = "Name of the MicoApplication.")
+        }
+    )})
+    private String name;
 }

@@ -36,7 +36,6 @@ import lombok.experimental.Accessors;
 
 /**
  * DTO for status information of a {@link MicoApplication}.
- * A list contains all {@link MicoService} the {@link MicoApplication} consists of.
  */
 @Data
 @NoArgsConstructor
@@ -46,7 +45,7 @@ import lombok.experimental.Accessors;
 public class MicoApplicationStatusDTO {
 
     /**
-     * List of status information of {@link MicoService}s, which belong to a {@link MicoApplication}.
+     * List of status information of {@link MicoService MicoServices}, which belong to a {@link MicoApplication}.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -56,10 +55,10 @@ public class MicoApplicationStatusDTO {
             @ExtensionProperty(name = "description", value = "List of status information of MicoServices, which belong to a MicoApplication.")
         }
     )})
-    private List<MicoServiceStatusDTO> serviceStatus = new ArrayList<>();
+    private List<MicoServiceStatusDTO> serviceStatuses = new ArrayList<>();
 
     /**
-     * Number of {@link MicoService}s belonging to a {@link MicoApplication}
+     * Number of {@link MicoService MicoServices} belonging to a {@link MicoApplication}.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -69,10 +68,10 @@ public class MicoApplicationStatusDTO {
             @ExtensionProperty(name = "description", value = "Number of MicoServices of a MicoApplication.")
         }
     )})
-    private int totalNumberMicoServices;
+    private int totalNumberOfMicoServices;
 
     /**
-     * Number of replicas of all services that are available in a {@link MicoApplication}
+     * Total number of replicas of all services that are available in a {@link MicoApplication}.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -82,10 +81,10 @@ public class MicoApplicationStatusDTO {
             @ExtensionProperty(name = "description", value = "Number of replicas of all services that are available in a MicoApplication.")
         }
     )})
-    private int totalNumberAvailableReplicas;
+    private int totalNumberOfAvailableReplicas;
 
     /**
-     * Number of replicas of all services that should be available in a {@link MicoApplication}
+     * Total number of replicas of all services that should be available in a {@link MicoApplication}.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -95,10 +94,10 @@ public class MicoApplicationStatusDTO {
             @ExtensionProperty(name = "description", value = "Number of replicas of all services that should be available in a MicoApplication.")
         }
     )})
-    private int totalNumberRequestedReplicas;
+    private int totalNumberOfRequestedReplicas;
 
     /**
-     * Number of pods of created by all {@link MicoService}s in a {@link MicoApplication}
+     * Total number of pods created by all {@link MicoService MicoServices} in a {@link MicoApplication}.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -108,6 +107,5 @@ public class MicoApplicationStatusDTO {
             @ExtensionProperty(name = "description", value = "Number of pods of created by all MicoServices in a MicoApplication.")
         }
     )})
-    private int totalNumberPods;
-
+    private int totalNumberOfPods;
 }

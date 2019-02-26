@@ -21,7 +21,6 @@ package io.github.ust.mico.core.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
-import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
@@ -32,7 +31,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * Represents a service in Kubernetes for a {@link MicoService}.
+ * DTO for status information of a {@link MicoServiceInterface}, that is mapped to a Kubernetes Service.
  */
 @Data
 @NoArgsConstructor
@@ -53,5 +52,4 @@ public class MicoServiceInterfaceDTO {
         }
     )})
     private String name;
-    
 }

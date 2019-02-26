@@ -21,6 +21,7 @@ package io.github.ust.mico.core.dto;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -35,7 +36,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for status information of {@link MicoService}.
+ * DTO for status information of a {@link MicoService}.
  */
 @Data
 @NoArgsConstructor
@@ -58,7 +59,7 @@ public class MicoServiceStatusDTO {
     private String name;
 
     /**
-     * shortName of a {@link MicoService}.
+     * ShortName of a {@link MicoService}.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -84,7 +85,7 @@ public class MicoServiceStatusDTO {
     private String version;
 
     /**
-     * Counter for number of replicas that should be available.
+     * Counter for the number of replicas that should be available.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -97,8 +98,8 @@ public class MicoServiceStatusDTO {
     private int requestedReplicas;
 
     /**
-     * Counter for replicas that are actually available.
-      */
+     * Counter for the number of replicas that are actually available.
+     */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
@@ -123,20 +124,20 @@ public class MicoServiceStatusDTO {
     private List<MicoServiceInterfaceDTO> interfacesInformation = new ArrayList<>();
 
     /**
-     * List of {@link MicoUsingApplicationDTO}, representing all applications that are using one service together.
+     * List of {@link BasicMicoApplicationDTO}, representing all applications that are using one service together.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "UsingApplications"),
             @ExtensionProperty(name = "x-order", value = "70"),
-            @ExtensionProperty(name = "description", value = "List of MicoUsingApplicationDTO, representing all applications that are using one service together.")
+            @ExtensionProperty(name = "description", value = "List of BasicMicoApplicationDTO, representing all applications that are using one service together.")
         }
     )})
-    private List<MicoUsingApplicationDTO> usingApplications = new ArrayList<>();
+    private List<BasicMicoApplicationDTO> usingApplications = new ArrayList<>();
 
     /**
-     * List of all {@link Pod}s of all replicas of a deployment of a {@link MicoService}.
+     * List of all {@link Pod Pods} of all replicas of a deployment of a {@link MicoService}.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -146,37 +147,38 @@ public class MicoServiceStatusDTO {
             @ExtensionProperty(name = "description", value = "List of all pods of all replicas of a deployment of a MicoService.")
         }
     )})
-    private List<KubernetesPodInfoDTO> podsInformation = new ArrayList<>();
+    private List<KubernetesPodInformationDTO> podsInformation = new ArrayList<>();
 
     /**
-     * Average cpu load in all pods of a {@link MicoService}.
+     * Each entry in this map represents a node with its average CPU load. The average CPU load is computed from all
+     * pods of the deployment of a {@link MicoService}, which are running on this node.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "AverageCpuLoad"),
-            @ExtensionProperty(name = "x-order", value = "90"),
-            @ExtensionProperty(name = "description", value = "Average cpu load through all pods of a MicoService.")
+            @ExtensionProperty(name = "title", value = "AverageCpuLoadPerNode"),
+            @ExtensionProperty(name = "x-order", value = "92"),
+            @ExtensionProperty(name = "description", value = "Each entry in this map represents a node with its average CPU load. The average CPU load is computed from all pods of the deployment of a {@link MicoService} running on this node.")
         }
     )})
-    private int averageCpuLoad;
+    private Map<String, Integer> averageCpuLoadPerNode;
 
     /**
-     * Average memory usage in all pods of a {@link MicoService}
+     * Each entry in this map represents a node with its average memory usage. The average memory usage is computed from
+     * all pods of the deployment of a {@link MicoService}, which are running on this node.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "AverageMemoryUsage"),
-            @ExtensionProperty(name = "x-order", value = "91"),
-            @ExtensionProperty(name = "description", value = "Average memory usage through all pods of a MicoService.")
+            @ExtensionProperty(name = "x-order", value = "93"),
+            @ExtensionProperty(name = "description", value = "Each entry in this map represents a node with its average memory usage. The average memory usage is computed from all pods of the deployment of a {@link MicoService}, which are running on this node.")
         }
     )})
-    private int averageMemoryUsage;
+    private Map<String, Integer> averageMemoryUsagePerNode;
 
     /**
-     * Contains error messages for services that are not deployed
-     * or not available due to other reasons.
+     * Contains error messages for services that are not deployed or not available due to other reasons.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -187,5 +189,4 @@ public class MicoServiceStatusDTO {
         }
     )})
     private List<String> errorMessages = new ArrayList<>();
-
 }

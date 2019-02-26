@@ -19,21 +19,21 @@
 
 package io.github.ust.mico.core.persistence;
 
-import org.springframework.data.neo4j.annotation.Depth;
-import org.springframework.data.neo4j.annotation.Query;
-import org.springframework.data.neo4j.repository.Neo4jRepository;
-
-import io.github.ust.mico.core.model.MicoApplication;
-import org.springframework.data.repository.query.Param;
-
 import java.util.List;
 import java.util.Optional;
 
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoService;
+import org.springframework.data.neo4j.annotation.Depth;
+import org.springframework.data.neo4j.annotation.Query;
+import org.springframework.data.neo4j.repository.Neo4jRepository;
+import org.springframework.data.repository.query.Param;
+
 public interface MicoApplicationRepository extends Neo4jRepository<MicoApplication, Long> {
-    
+
     @Override
     List<MicoApplication> findAll();
-    
+
     @Override
     List<MicoApplication> findAll(@Depth int depth);
 
@@ -44,12 +44,12 @@ public interface MicoApplicationRepository extends Neo4jRepository<MicoApplicati
     Optional<MicoApplication> findByShortNameAndVersion(String shortName, String version);
 
     /**
-     * Find all applications that are using the same service
-     * @param shortName of the used service
-     * @param version of the used service
+     * Find all applications that are using the given service
+     *
+     * @param shortName the shortName of the {@link MicoService}
+     * @param version   the version of the {@link MicoService}
      * @return a list of {@link MicoApplication}
      */
     @Query("MATCH (a:MicoApplication)-[i:INCLUDES_SERVICE]-(s:MicoService) WHERE s.shortName = {shortName} AND s.version = {version} RETURN COLLECT(a) AS applications")
     List<MicoApplication> findAllByUsedService(@Param("shortName") String shortName, @Param("version") String version);
-    
 }

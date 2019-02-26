@@ -31,7 +31,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * Contains information about CPU/ memory load of a {@link Pod}.
+ * Contains information about CPU/memory load of a {@link Pod}.
  */
 @Data
 @NoArgsConstructor
@@ -54,7 +54,7 @@ public class KuberenetesPodMetricsDTO {
     private int memoryUsage;
 
     /**
-     * Cpu load of a pod.
+     * CPU load of a pod.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -67,7 +67,7 @@ public class KuberenetesPodMetricsDTO {
     private int cpuLoad;
 
     /**
-     * States if a pod is available or not.
+     * Indicates if a pod is available or not.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -78,5 +78,4 @@ public class KuberenetesPodMetricsDTO {
         }
     )})
     private boolean available;
-    
 }

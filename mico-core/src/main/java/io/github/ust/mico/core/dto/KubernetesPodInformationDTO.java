@@ -38,7 +38,7 @@ import lombok.experimental.Accessors;
 @AllArgsConstructor
 @Accessors(chain = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class KubernetesPodInfoDTO {
+public class KubernetesPodInformationDTO {
 
     /**
      * Name of the {@link Pod}.
@@ -54,8 +54,7 @@ public class KubernetesPodInfoDTO {
     private String podName;
 
     /**
-     * States the lifecycle of a pod:
-     * Pending, Running, Succeeded, Failed, Unknown, Completed, CrashLoopBackOff
+     * States the lifecycle of a pod: Pending, Running, Succeeded, Failed, Unknown, Completed, CrashLoopBackOff
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -94,7 +93,7 @@ public class KubernetesPodInfoDTO {
     private String nodeName;
 
     /**
-     * Counter for restarts of all container of this pod.
+     * Counter for restarts of all containers of this pod.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -117,10 +116,10 @@ public class KubernetesPodInfoDTO {
             @ExtensionProperty(name = "description", value = "The start time of a pod.")
         }
     )})
-    private String age;
+    private String startTime;
 
     /**
-     * Information about used hardware resources (CPU/RAM)
+     * Information about used hardware resources (CPU/RAM).
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -131,5 +130,4 @@ public class KubernetesPodInfoDTO {
         }
     )})
     private KuberenetesPodMetricsDTO metrics;
-    
 }

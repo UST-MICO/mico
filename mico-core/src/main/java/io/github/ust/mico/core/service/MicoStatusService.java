@@ -21,7 +21,9 @@ package io.github.ust.mico.core.service;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import io.fabric8.kubernetes.api.model.ContainerStatus;
@@ -29,12 +31,12 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.github.ust.mico.core.configuration.PrometheusConfig;
+import io.github.ust.mico.core.dto.BasicMicoApplicationDTO;
 import io.github.ust.mico.core.dto.KuberenetesPodMetricsDTO;
-import io.github.ust.mico.core.dto.KubernetesPodInfoDTO;
+import io.github.ust.mico.core.dto.KubernetesPodInformationDTO;
 import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
 import io.github.ust.mico.core.dto.MicoServiceInterfaceDTO;
 import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
-import io.github.ust.mico.core.dto.MicoUsingApplicationDTO;
 import io.github.ust.mico.core.dto.PrometheusResponse;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.PrometheusRequestFailedException;
@@ -55,26 +57,26 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 /**
- * Provide functionality to retrieve status information for a {@link MicoApplication} or a particular {@link MicoService}
+ * Provide functionality to retrieve status information for a {@link MicoApplication} or a particular {@link
+ * MicoService}
  */
 @Slf4j
 @Component
 public class MicoStatusService {
 
+    private static final int MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT = 1;
+    private static final String PROMETHEUS_QUERY_FOR_MEMORY_USAGE = "sum(container_memory_working_set_bytes{pod_name=\"%s\",container_name=\"\"})";
+    private static final String PROMETHEUS_QUERY_FOR_CPU_USAGE = "sum(container_cpu_load_average_10s{pod_name=\"%s\"})";
+    private static final String PROMETHEUS_QUERY_PARAMETER_NAME = "query";
     private final PrometheusConfig prometheusConfig;
     private final MicoKubernetesClient micoKubernetesClient;
     private final RestTemplate restTemplate;
     private final MicoServiceRepository serviceRepository;
     private final MicoApplicationRepository micoApplicationRepository;
 
-    private static final int MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT = 1;
-    private static final String PROMETHEUS_QUERY_FOR_MEMORY_USAGE = "sum(container_memory_working_set_bytes{pod_name=\"%s\",container_name=\"\"})";
-    private static final String PROMETHEUS_QUERY_FOR_CPU_USAGE = "sum(container_cpu_load_average_10s{pod_name=\"%s\"})";
-    private static final String PROMETHEUS_QUERY_PARAMETER_NAME = "query";
-
     @Autowired
     public MicoStatusService(PrometheusConfig prometheusConfig, MicoKubernetesClient micoKubernetesClient,
-            RestTemplate restTemplate, MicoServiceRepository serviceRepository, MicoApplicationRepository micoApplicationRepository) {
+                             RestTemplate restTemplate, MicoServiceRepository serviceRepository, MicoApplicationRepository micoApplicationRepository) {
         this.prometheusConfig = prometheusConfig;
         this.micoKubernetesClient = micoKubernetesClient;
         this.restTemplate = restTemplate;
@@ -84,8 +86,10 @@ public class MicoStatusService {
 
     /**
      * Get status information for a {@link MicoApplication}
+     *
      * @param micoApplication the application the status is requested for
-     * @return {@link MicoApplicationStatusDTO} containing a list of {@link MicoServiceStatusDTO} for status information of a single {@link MicoService}
+     * @return {@link MicoApplicationStatusDTO} containing a list of {@link MicoServiceStatusDTO} for status information
+     * of a single {@link MicoService}
      */
     public MicoApplicationStatusDTO getApplicationStatus(MicoApplication micoApplication) {
         MicoApplicationStatusDTO applicationStatus = new MicoApplicationStatusDTO();
@@ -93,86 +97,106 @@ public class MicoStatusService {
         int podCount = 0;
         int requestedReplicasCount = 0;
         int availableReplicasCount = 0;
-        for (MicoService micoService: micoServices) {
+        for (MicoService micoService : micoServices) {
             MicoServiceStatusDTO micoServiceStatus = getServiceStatus(micoService);
             podCount += micoServiceStatus.getPodsInformation().size();
             requestedReplicasCount += micoServiceStatus.getRequestedReplicas();
             availableReplicasCount += micoServiceStatus.getAvailableReplicas();
             // Remove the current application's name to retrieve a list with only the names of other applications that are sharing a service
-            for (MicoUsingApplicationDTO micoUsingApplicationDTO: micoServiceStatus.getUsingApplications()) {
-                if (micoUsingApplicationDTO.getShortName().equals(micoApplication.getShortName()) && micoUsingApplicationDTO.getVersion().equals(micoApplication.getVersion())) {
-                    micoServiceStatus.getUsingApplications().remove(micoUsingApplicationDTO);
-                    break;
-                }
-            }
-            applicationStatus.getServiceStatus().add(micoServiceStatus);
+            micoServiceStatus.getUsingApplications().remove(new BasicMicoApplicationDTO(micoApplication.getShortName(), micoApplication.getVersion(), micoApplication.getName()));
+            applicationStatus.getServiceStatuses().add(micoServiceStatus);
         }
-        applicationStatus.setTotalNumberMicoServices(micoServices.size());
-        applicationStatus.setTotalNumberPods(podCount);
-        applicationStatus.setTotalNumberAvailableReplicas(availableReplicasCount);
-        applicationStatus.setTotalNumberRequestedReplicas(requestedReplicasCount);
+        applicationStatus
+            .setTotalNumberOfMicoServices(micoServices.size())
+            .setTotalNumberOfPods(podCount)
+            .setTotalNumberOfAvailableReplicas(availableReplicasCount)
+            .setTotalNumberOfRequestedReplicas(requestedReplicasCount);
         return applicationStatus;
     }
 
     /**
-     * Get status information for a single {@link MicoService}: # available replicas, # requested replicas, pod metrics (cpu load, memory load)
+     * Get status information for a single {@link MicoService}: # available replicas, # requested replicas, pod metrics
+     * (cpu load, memory load)
+     *
      * @param micoService is a {@link MicoService}
      * @return {@link MicoServiceStatusDTO} which contains status information for a specific {@link MicoService}
      */
     public MicoServiceStatusDTO getServiceStatus(MicoService micoService) {
-        Optional<Deployment> deploymentOptional = Optional.empty();
         MicoServiceStatusDTO serviceStatus = new MicoServiceStatusDTO();
         try {
-            deploymentOptional = micoKubernetesClient.getDeploymentOfMicoService(micoService);
+            Optional<Deployment> deploymentOptional = micoKubernetesClient.getDeploymentOfMicoService(micoService);
+            if (deploymentOptional.isPresent()) {
+                Deployment deployment = deploymentOptional.get();
+                serviceStatus.setAvailableReplicas(deployment.getStatus().getAvailableReplicas());
+                serviceStatus.setRequestedReplicas(deployment.getSpec().getReplicas());
+            } else {
+                log.warn("There is no deployment of the MicoService '{}' '{}'. Continue with next one.",
+                    micoService.getShortName(), micoService.getVersion());
+                return serviceStatus.setErrorMessages(CollectionUtils.listOf("No deployment of " + micoService.getShortName() + " " + micoService.getVersion() + " is available."));
+            }
         } catch (KubernetesResourceException e) {
             log.error("Error while retrieving Kubernetes deployment of MicoService '{}' '{}'. Continue with next one. Caused by: {}",
                 micoService.getShortName(), micoService.getVersion(), e.getMessage());
+            return serviceStatus.setErrorMessages(CollectionUtils.listOf("Error while retrieving Kubernetes deployment of MicoService " + micoService.getShortName() + " "
+                + micoService.getVersion() + " .  Caused by: " + e.getMessage()));
         }
-        if (deploymentOptional.isPresent()) {
-            Deployment deployment = deploymentOptional.get();
-            serviceStatus.setAvailableReplicas(deployment.getStatus().getAvailableReplicas());
-            serviceStatus.setRequestedReplicas(deployment.getSpec().getReplicas());
-        } else {
-            log.warn("There is no deployment of the MicoService '{}' '{}'. Continue with next one.",
-                micoService.getShortName(), micoService.getVersion());
-            return serviceStatus.setErrorMessages(CollectionUtils.listOf("No deployment of " + micoService.getShortName() + " " + micoService.getVersion() + " is available."));
-        }
-        serviceStatus.setName(micoService.getName());
-        serviceStatus.setShortName(micoService.getShortName());
-        serviceStatus.setVersion(micoService.getVersion());
+        serviceStatus
+            .setName(micoService.getName())
+            .setShortName(micoService.getShortName())
+            .setVersion(micoService.getVersion());
 
         // Get status information for service interfaces of a service
-        List<MicoServiceInterfaceDTO> micoServiceInterfaceDTOList = getServiceInterfaceStatus(micoService);
-        serviceStatus.setInterfacesInformation(micoServiceInterfaceDTOList);
+        serviceStatus.setInterfacesInformation(getServiceInterfaceStatus(micoService));
 
         // Return the names of all applications that are using this service
         List<MicoApplication> usingApplications = micoApplicationRepository.findAllByUsedService(micoService.getShortName(), micoService.getVersion());
-        for (MicoApplication micoApplication: usingApplications) {
-            MicoUsingApplicationDTO usingApplication = new MicoUsingApplicationDTO(micoApplication.getName(), micoApplication.getShortName(), micoApplication.getVersion());
+        for (MicoApplication micoApplication : usingApplications) {
+            BasicMicoApplicationDTO usingApplication = new BasicMicoApplicationDTO(micoApplication.getShortName(), micoApplication.getVersion(), micoApplication.getName());
             serviceStatus.getUsingApplications().add(usingApplication);
         }
 
         // Get status information for all pods of a service
-        int averageCpuLoad = 0;
-        int averageMemoryUsage = 0;
         List<Pod> podList = micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(micoService);
-        List<KubernetesPodInfoDTO> podInfos = new ArrayList<>();
+        List<KubernetesPodInformationDTO> podInfos = new ArrayList<>();
+        // Get all the nodes on which the pods of a deployment of a MicoService are running
+        Map<String, List<Pod>> podsPerNodeMap = new HashMap<>();
         for (Pod pod : podList) {
-            KubernetesPodInfoDTO podInfo = getUiPodInfo(pod);
-            averageCpuLoad += podInfo.getMetrics().getCpuLoad();
-            averageMemoryUsage += podInfo.getMetrics().getMemoryUsage();
-            podInfos.add(podInfo);
+            if (podsPerNodeMap.containsKey(pod.getSpec().getNodeName())) {
+                podsPerNodeMap.computeIfPresent(pod.getSpec().getNodeName(), (s, pods) -> {
+                    pods.add(pod);
+                    return (pods);
+                });
+            } else {
+                podsPerNodeMap.computeIfAbsent(pod.getSpec().getNodeName(), pods -> CollectionUtils.listOf(pod));
+            }
         }
-        serviceStatus.setAverageCpuLoad(averageCpuLoad/podList.size());
-        serviceStatus.setAverageMemoryUsage(averageMemoryUsage/podList.size());
+
+        Map<String, Integer> averageCpuUsagePerNode = new HashMap<>();
+        Map<String, Integer> averageMemoryUsagePerNode = new HashMap<>();
+        for (String nodeName : podsPerNodeMap.keySet()) {
+            int sumCpuLoadOnNode = 0;
+            int sumMemoryUsageOnNode = 0;
+            for (Pod pod : podsPerNodeMap.get(nodeName)) {
+                KubernetesPodInformationDTO podInformation = getUiPodInfo(pod);
+                sumCpuLoadOnNode += podInformation.getMetrics().getCpuLoad();
+                sumMemoryUsageOnNode += podInformation.getMetrics().getMemoryUsage();
+                podInfos.add(podInformation);
+            }
+            averageCpuUsagePerNode.put(nodeName, sumCpuLoadOnNode / podsPerNodeMap.get(nodeName).size());
+            averageMemoryUsagePerNode.put(nodeName, sumMemoryUsageOnNode / podsPerNodeMap.get(nodeName).size());
+        }
+        serviceStatus.setAverageCpuLoadPerNode(averageCpuUsagePerNode);
+        serviceStatus.setAverageMemoryUsagePerNode(averageMemoryUsagePerNode);
         serviceStatus.setPodsInformation(podInfos);
         return serviceStatus;
     }
 
     /**
      * Get status information for all {@link MicoServiceInterface} of a {@link MicoService}: service name,
+     *
      * @param micoService is a {@link MicoService}
-     * @return a list of {@link MicoServiceInterfaceDTO}, each item contains status information for a {@link MicoServiceInterface}
+     * @return a list of {@link MicoServiceInterfaceDTO}, each item contains status information for a {@link
+     * MicoServiceInterface}
      */
     public List<MicoServiceInterfaceDTO> getServiceInterfaceStatus(MicoService micoService) {
         List<MicoServiceInterfaceDTO> interfacesInformation = new ArrayList<>();
@@ -206,17 +230,19 @@ public class MicoStatusService {
     }
 
     /**
-     * Get information and metrics for a {@link Pod} representing an instance of a {@link MicoService}
+     * Get information and metrics for a {@link Pod} representing an instance of a {@link MicoService}.
+     *
      * @param pod is a {@link Pod} of Kubernetes
-     * @return a {@link KubernetesPodInfoDTO} which has node name, pod name, phase, host ip, memory usage, and cpu load as status information
+     * @return a {@link KubernetesPodInformationDTO} which has node name, pod name, phase, host ip, memory usage, and
+     * cpu load as status information
      */
-    private KubernetesPodInfoDTO getUiPodInfo(Pod pod) {
+    private KubernetesPodInformationDTO getUiPodInfo(Pod pod) {
         String nodeName = pod.getSpec().getNodeName();
         String podName = pod.getMetadata().getName();
         String phase = pod.getStatus().getPhase();
         String hostIp = pod.getStatus().getHostIP();
         int restarts = 0;
-        for (ContainerStatus containerStatus: pod.getStatus().getContainerStatuses()) {
+        for (ContainerStatus containerStatus : pod.getStatus().getContainerStatuses()) {
             restarts += containerStatus.getRestartCount();
         }
         String age = pod.getStatus().getStartTime();
@@ -233,7 +259,7 @@ public class MicoStatusService {
         }
         podMetrics.setMemoryUsage(memoryUsage);
         podMetrics.setCpuLoad(cpuLoad);
-        return new KubernetesPodInfoDTO(podName, phase, hostIp, nodeName, restarts, age, podMetrics);
+        return new KubernetesPodInformationDTO(podName, phase, hostIp, nodeName, restarts, age, podMetrics);
     }
 
     private int getMemoryUsageForPod(String podName) throws PrometheusRequestFailedException {

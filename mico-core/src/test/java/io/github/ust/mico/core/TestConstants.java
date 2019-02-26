@@ -37,9 +37,8 @@ public class TestConstants {
     public static final Long ID_2 = Long.valueOf(1002);
     public static final Long ID_3 = Long.valueOf(1003);
 
-    public static final String APPLICATION_NAME= "application-test-name";
-    public static final String APPLICATION_NAME_OTHER= "other-application-test-name";
-
+    public static final String APPLICATION_NAME = "application-test-name";
+    public static final String APPLICATION_NAME_OTHER = "other-application-test-name";
 
 
     public static final String VERSION = MicoVersion.forIntegers(1, 0, 0).toString();
@@ -85,10 +84,10 @@ public class TestConstants {
      * All paths are build on the path for the status of this service.
      */
     /**
-     * Path of a single {@link io.github.ust.mico.core.dto.MicoServiceStatusDTO} in a {@link io.github.ust.mico.core.dto.MicoApplicationStatusDTO}.
-     * Contains status information for this service.
+     * Path of a single {@link io.github.ust.mico.core.dto.MicoServiceStatusDTO} in a {@link
+     * io.github.ust.mico.core.dto.MicoApplicationStatusDTO}. Contains status information for this service.
      */
-    public static final String SERVICE_STATUS_PATH = buildPath(ROOT, "serviceStatus[0]");
+    public static final String SERVICE_STATUS_PATH = buildPath(ROOT, "serviceStatuses[0]");
     public static final String SERVICE_INFORMATION_NAME = buildPath(SERVICE_STATUS_PATH, "name");
     public static final String REQUESTED_REPLICAS = buildPath(SERVICE_STATUS_PATH, "requestedReplicas");
     public static final String AVAILABLE_REPLICAS = buildPath(SERVICE_STATUS_PATH, "availableReplicas");
@@ -132,18 +131,16 @@ public class TestConstants {
     public static final String SERVICE_DTO_POD_INFO_METRICS_AVAILABLE_2 = buildPath(ROOT, "podsInformation[1].metrics.available");
 
     /**
-     * Git repository that is used for testing.
-     * It must contain a Dockerfile and at least one release.
+     * Git repository that is used for testing. It must contain a Dockerfile and at least one release.
      */
     public static final String GIT_TEST_REPO_URL = "https://github.com/UST-MICO/hello.git";
     /**
-     * Path to the Dockerfile.
-     * It must be relative to the root of the Git repository.
+     * Path to the Dockerfile. It must be relative to the root of the Git repository.
      */
     public static final String DOCKERFILE = "Dockerfile";
     /**
-     * Release tag of the release that should be used for testing.
-     * Must be in in supported version format (semantic version).
+     * Release tag of the release that should be used for testing. Must be in in supported version format (semantic
+     * version).
      */
     public static final String RELEASE = "v1.0.0";
 
