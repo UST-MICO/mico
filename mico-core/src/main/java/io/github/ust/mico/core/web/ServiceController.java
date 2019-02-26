@@ -358,6 +358,19 @@ public class ServiceController {
         }
     }
 
+   @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependencyGraph")
+    public ResponseEntity<Resources<Resource<MicoService>>> getDependencyGraph(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                               @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        MicoService micoService = getServiceFromDatabase(shortName, version);
+        List<MicoService> micoServices = serviceRepository.getAllDependeesOfMicoService(micoService.getShortName(), micoService.getVersion());
+        List<Resource<MicoService>> resourceList = getServiceResourcesList(micoServices);
+        return ResponseEntity.ok(
+            new Resources<>(resourceList,
+                linkTo(methodOn(ServiceController.class).getDependencyGraph(shortName, version)).withSelfRel()));
+    }
+
+
+
     public List<MicoService> getDependers(MicoService serviceToLookFor) {
         List<MicoService> serviceList = serviceRepository.findAll(2);
 
