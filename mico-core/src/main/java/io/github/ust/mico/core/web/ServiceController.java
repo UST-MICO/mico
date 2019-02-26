@@ -19,6 +19,7 @@
 
 package io.github.ust.mico.core.web;
 
+import io.github.ust.mico.core.dto.GitHubCrawlingInfoDTO;
 import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
@@ -317,9 +318,9 @@ public class ServiceController {
     }
 
     @PostMapping(PATH_GITHUB_ENDPOINT)
-    public ResponseEntity<Resource<MicoService>> importMicoServiceFromGitHub(@RequestBody CrawlingInformation crawlingInformation) {
-        String uri = crawlingInformation.getUri();
-        String version = crawlingInformation.getVersion();
+    public ResponseEntity<Resource<MicoService>> importMicoServiceFromGitHub(@RequestBody GitHubCrawlingInfoDTO crawlingInfo) {
+        String uri = crawlingInfo.getUri();
+        String version = crawlingInfo.getVersion();
         log.debug("Start importing MicoService from URL '{}'", uri);
 
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
