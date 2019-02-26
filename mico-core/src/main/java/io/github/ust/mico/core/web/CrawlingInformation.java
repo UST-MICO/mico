@@ -1,28 +1,30 @@
 package io.github.ust.mico.core.web;
 
-import lombok.Getter;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 
 /**
  * This class is used for providing information to the GitHub crawler via the API endpoints.
  */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Accessors(chain = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CrawlingInformation {
 
     /**
-     * Required.
-     * <p>
-     * Link to the GitHub repo to crawl from
+     * Link to the GitHub repo to crawl from (required).
      */
-    @Getter
     private String uri;
 
     /**
-     * Optional.
-     * <p>
-     * Can be one of the following:
-     * - 'latest'
-     * - specific version (e.g., 'v1.0.0')
+     * The GitHub release tag. Defaults to 'latest'.
      */
-    @Getter
-    private String version = "";
+    private String version = "latest";
 }
