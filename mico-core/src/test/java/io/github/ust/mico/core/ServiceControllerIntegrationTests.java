@@ -45,6 +45,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @RunWith(SpringRunner.class)
 @EnableAutoConfiguration
@@ -77,6 +78,8 @@ public class ServiceControllerIntegrationTests extends Neo4jTestClass {
         MicoService micoService1 = new MicoService().setShortName(SHORT_NAME_1).setVersion(VERSION_1_0_1);
         MicoService micoService2 = new MicoService().setShortName(SHORT_NAME_2).setVersion(VERSION_1_0_1);
         MicoService micoService3 = new MicoService().setShortName(SHORT_NAME_3).setVersion(VERSION_1_0_1);
+        String independentServiceShortName = SHORT_NAME_3 + "Independent";
+        MicoService micoServiceIndependent = new MicoService().setShortName(independentServiceShortName).setVersion(VERSION_1_0_1);
 
         //Set dependencies
         MicoServiceDependency micoServiceDependency0To1 = new MicoServiceDependency().setService(micoService0).setDependedService(micoService1);
@@ -94,11 +97,13 @@ public class ServiceControllerIntegrationTests extends Neo4jTestClass {
         serviceRepository.save(micoService1);
         serviceRepository.save(micoService2);
         serviceRepository.save(micoService3);
+        serviceRepository.save(micoServiceIndependent);
 
         mvc.perform(get(SERVICES_PATH + "/" + SHORT_NAME + "/" + "/" + VERSION_1_0_1 + "/dependencyGraph").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath(SERVICE_LIST, hasSize(4)))
+            .andExpect(jsonPath(SERVICE_LIST + "[?(@.shortName=='" + independentServiceShortName + "')]", hasSize(0)))
             .andReturn();
     }
 }
