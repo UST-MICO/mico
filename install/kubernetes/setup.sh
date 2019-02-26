@@ -42,6 +42,7 @@ envsubst < mico-build-bot.yaml | kubectl apply -f -
 
 # Install MICO components
 kubectl apply -f neo4j.yaml
+kubectl apply -f redis.yaml
 kubectl apply -f mico-core.yaml
 if [[ -z "$ip" ]]; then
     sed '/${MICO_PUBLIC_IP}/d' mico-admin.yaml | kubectl apply -f -

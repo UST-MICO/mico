@@ -60,6 +60,7 @@ kubectl create clusterrolebinding ${MICO_TEST_NAMESPACE}-cluster-admin \
 
 # Apply required components
 kubectl apply -f neo4j.yaml
+kubectl apply -f redis.yaml
 kubectl apply -f mico-core.yaml
 kubectl apply -f mico-admin.yaml
 kubectl apply -f mico-build-bot.yaml
