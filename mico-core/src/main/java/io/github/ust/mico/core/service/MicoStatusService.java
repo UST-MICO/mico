@@ -20,7 +20,7 @@
 package io.github.ust.mico.core.service;
 
 import java.net.URI;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -156,7 +156,7 @@ public class MicoStatusService {
         int averageCpuLoad = 0;
         int averageMemoryUsage = 0;
         List<Pod> podList = micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(micoService);
-        List<KubernetesPodInfoDTO> podInfos = new LinkedList<>();
+        List<KubernetesPodInfoDTO> podInfos = new ArrayList<>();
         for (Pod pod : podList) {
             KubernetesPodInfoDTO podInfo = getUiPodInfo(pod);
             averageCpuLoad += podInfo.getMetrics().getCpuLoad();
@@ -175,7 +175,7 @@ public class MicoStatusService {
      * @return a list of {@link MicoServiceInterfaceDTO}, each item contains status information for a {@link MicoServiceInterface}
      */
     public List<MicoServiceInterfaceDTO> getServiceInterfaceStatus(MicoService micoService) {
-        List<MicoServiceInterfaceDTO> interfacesInformation = new LinkedList<>();
+        List<MicoServiceInterfaceDTO> interfacesInformation = new ArrayList<>();
         List<MicoServiceInterface> serviceInterfaces = micoService.getServiceInterfaces();
         if (serviceInterfaces.size() < MINIMAL_EXTERNAL_MICO_INTERFACE_COUNT) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
@@ -216,9 +216,9 @@ public class MicoStatusService {
         String phase = pod.getStatus().getPhase();
         String hostIp = pod.getStatus().getHostIP();
         int restarts = 0;
-        for (ContainerStatus containterStatus: pod.getStatus().getContainerStatuses()) {{
-            restarts += containterStatus.getRestartCount();
-        }}
+        for (ContainerStatus containerStatus: pod.getStatus().getContainerStatuses()) {
+            restarts += containerStatus.getRestartCount();
+        }
         String age = pod.getStatus().getStartTime();
         int memoryUsage = -1;
         int cpuLoad = -1;
