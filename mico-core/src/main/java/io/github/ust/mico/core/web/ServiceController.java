@@ -318,7 +318,7 @@ public class ServiceController {
     }
 
     @PostMapping(PATH_GITHUB_ENDPOINT)
-    public ResponseEntity<Resource<MicoService>> importMicoServiceFromGitHub(@RequestBody GitHubCrawlingInfoDTO crawlingInfo) {
+    public ResponseEntity<Resource<MicoService>> importMicoServiceFromGitHub(@Valid @RequestBody GitHubCrawlingInfoDTO crawlingInfo) {
         String uri = crawlingInfo.getUri();
         String version = crawlingInfo.getVersion();
         log.debug("Start importing MicoService from URL '{}'", uri);
