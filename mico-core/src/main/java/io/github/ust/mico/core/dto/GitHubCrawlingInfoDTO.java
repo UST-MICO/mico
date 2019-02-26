@@ -19,6 +19,8 @@
 
 package io.github.ust.mico.core.dto;
 
+import javax.validation.constraints.NotEmpty;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import io.github.ust.mico.core.service.GitHubCrawler;
@@ -47,5 +49,6 @@ public class GitHubCrawlingInfoDTO {
     /**
      * The GitHub release tag. Defaults to 'latest'.
      */
+    @NotEmpty
     private String version = "latest";
 }
