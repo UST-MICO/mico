@@ -77,8 +77,8 @@ public class ServiceController {
         List<MicoService> services = serviceRepository.findAll(2);
         List<Resource<MicoService>> serviceResources = getServiceResourcesList(services);
         return ResponseEntity.ok(
-                new Resources<>(serviceResources,
-                        linkTo(methodOn(ServiceController.class).getServiceList()).withSelfRel()));
+            new Resources<>(serviceResources,
+                linkTo(methodOn(ServiceController.class).getServiceList()).withSelfRel()));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
@@ -95,13 +95,13 @@ public class ServiceController {
                                                                @RequestBody MicoService service) {
         if (!service.getShortName().equals(shortName) || !service.getVersion().equals(version)) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                    "The shortName and/or version of the given service object inside the request body do not match the shortName and/or version inside the URI.");
+                "The shortName and/or version of the given service object inside the request body do not match the shortName and/or version inside the URI.");
         }
 
         // Including interfaces must not be updated through this API. There is an own API for that purpose.
         if (service.getServiceInterfaces().size() > 0) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                    "Update of a service is only allowed without providing interfaces.");
+                "Update of a service is only allowed without providing interfaces.");
         }
 
         MicoService existingService = getServiceFromDatabase(shortName, version);
@@ -110,7 +110,7 @@ public class ServiceController {
         MicoService updatedService = serviceRepository.save(service);
 
         return ResponseEntity.ok(new Resource<>(updatedService,
-                linkTo(methodOn(ServiceController.class).updateService(shortName, version, service)).withSelfRel()));
+            linkTo(methodOn(ServiceController.class).updateService(shortName, version, service)).withSelfRel()));
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
@@ -118,9 +118,9 @@ public class ServiceController {
                                               @PathVariable(PATH_VARIABLE_VERSION) String version) {
         MicoService service = getServiceFromDatabase(shortName, version);
 
-        if (!getDependers(service).isEmpty()) {
+        if (service.getDependencies().stream().map(MicoServiceDependency::getService).count() > 0) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                    "Service '" + service.getShortName() + "' '" + service.getVersion() + "' has dependers, therefore it can't be deleted.");
+                "Service '" + service.getShortName() + "' '" + service.getVersion() + "' has dependers, therefore it can't be deleted.");
         }
 
         serviceRepository.deleteServiceByShortNameAndVersion(shortName, version);
@@ -147,7 +147,7 @@ public class ServiceController {
         Optional<MicoService> micoServiceOptional = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (micoServiceOptional.isPresent()) {
             log.debug("Retrieve status information of Mico service '{}' '{}'",
-                    shortName, version);
+                shortName, version);
             serviceStatus = micoStatusService.getServiceStatus(micoServiceOptional.get());
         } else {
             log.error("MicoService not found in service repository.");
@@ -160,8 +160,8 @@ public class ServiceController {
         List<MicoService> services = serviceRepository.findByShortName(shortName);
         List<Resource<MicoService>> serviceResources = getServiceResourcesList(services);
         return ResponseEntity.ok(
-                new Resources<>(serviceResources,
-                        linkTo(methodOn(ServiceController.class).getVersionsOfService(shortName)).withSelfRel()));
+            new Resources<>(serviceResources,
+                linkTo(methodOn(ServiceController.class).getVersionsOfService(shortName)).withSelfRel()));
     }
 
     //TODO: Ambiguous endpoint with /services/shortName
@@ -183,10 +183,10 @@ public class ServiceController {
         }
 
         Optional<MicoService> serviceOptional = serviceRepository.
-                findByShortNameAndVersion(newService.getShortName(), newService.getVersion());
+            findByShortNameAndVersion(newService.getShortName(), newService.getVersion());
         if (serviceOptional.isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Service '" + newService.getShortName() + "' '" + newService.getVersion() + "' already exists.");
+                "Service '" + newService.getShortName() + "' '" + newService.getVersion() + "' already exists.");
         }
         for (MicoServiceInterface serviceInterface : newService.getServiceInterfaces()) {
             validateProvidedInterface(newService.getShortName(), newService.getVersion(), serviceInterface);
@@ -195,26 +195,20 @@ public class ServiceController {
         MicoService savedService = serviceRepository.save(newService);
 
         return ResponseEntity
-                .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
-                .body(new Resource<>(newService, getServiceLinks(newService)));
+            .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+            .body(new Resource<>(newService, getServiceLinks(newService)));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
     public ResponseEntity<Resources<Resource<MicoService>>> getDependees(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                          @PathVariable(PATH_VARIABLE_VERSION) String version) {
         MicoService service = getServiceFromDatabase(shortName, version);
-        List<MicoServiceDependency> dependees = service.getDependencies();
-        if (dependees == null) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Service dependees should not be null");
-        }
-
-        LinkedList<MicoService> services = getDependentServices(dependees);
-
-        List<Resource<MicoService>> resourceList = getServiceResourcesList(services);
+        List<MicoService> dependencies = service.getDependencies().stream().map(dependee -> dependee.getDependedService()).collect(Collectors.toList());
+        List<Resource<MicoService>> resourceList = getServiceResourcesList(dependencies);
 
         return ResponseEntity.ok(
-                new Resources<>(resourceList,
-                        linkTo(methodOn(ServiceController.class).getDependees(shortName, version)).withSelfRel()));
+            new Resources<>(resourceList,
+                linkTo(methodOn(ServiceController.class).getDependees(shortName, version)).withSelfRel()));
     }
 
     /**
@@ -227,7 +221,7 @@ public class ServiceController {
         MicoService service = getServiceFromDatabase(shortName, version);
 
         Optional<MicoService> serviceDependeeOpt = serviceRepository.findByShortNameAndVersion(newServiceDependee.getDependedService().getShortName(),
-                newServiceDependee.getDependedService().getVersion());
+            newServiceDependee.getDependedService().getVersion());
         if (!serviceDependeeOpt.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The dependee service was not found!");
         }
@@ -236,28 +230,28 @@ public class ServiceController {
         String localShortName = newServiceDependee.getDependedService().getShortName();
         String localVersion = newServiceDependee.getDependedService().getVersion();
         boolean dependencyAlreadyExists = (service.getDependencies() != null) && service.getDependencies().stream().anyMatch(
-                dependency -> dependency.getDependedService().getShortName().equals(localShortName)
-                        && dependency.getDependedService().getVersion().equals(localVersion));
+            dependency -> dependency.getDependedService().getShortName().equals(localShortName)
+                && dependency.getDependedService().getVersion().equals(localVersion));
         if (dependencyAlreadyExists) {
             return ResponseEntity
-                    .created(linkTo(methodOn(ServiceController.class).getServiceById(service.getId())).toUri())
-                    .body(new Resource<>(service, getServiceLinks(service)));
+                .created(linkTo(methodOn(ServiceController.class).getServiceById(service.getId())).toUri())
+                .body(new Resource<>(service, getServiceLinks(service)));
         }
 
         final MicoServiceDependency processedServiceDependee = new MicoServiceDependency()
-                .setDependedService(serviceDependeeOpt.get())
-                .setService(service);
+            .setDependedService(serviceDependeeOpt.get())
+            .setService(service);
 
         log.info("New dependency for MicoService '{}' '{}' -[:DEPENDS_ON]-> '{}' '{}'", shortName, version,
-                processedServiceDependee.getDependedService().getShortName(),
-                processedServiceDependee.getDependedService().getVersion());
+            processedServiceDependee.getDependedService().getShortName(),
+            processedServiceDependee.getDependedService().getVersion());
 
         service.getDependencies().add(processedServiceDependee);
         MicoService savedService = serviceRepository.save(service);
 
         return ResponseEntity
-                .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
-                .body(new Resource<>(savedService, getServiceLinks(savedService)));
+            .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+            .body(new Resource<>(savedService, getServiceLinks(savedService)));
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
@@ -270,12 +264,12 @@ public class ServiceController {
         MicoService savedService = serviceRepository.save(service);
 
         return ResponseEntity
-                .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
-                .body(new Resource<>(savedService, getServiceLinks(savedService)));
+            .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+            .body(new Resource<>(savedService, getServiceLinks(savedService)));
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees"
-            + "/{" + PATH_DELETE_SHORT_NAME + "}/{" + PATH_DELETE_VERSION + "}")
+        + "/{" + PATH_DELETE_SHORT_NAME + "}/{" + PATH_DELETE_VERSION + "}")
     public ResponseEntity<Resource<MicoService>> deleteDependee(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                 @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                 @PathVariable(PATH_DELETE_SHORT_NAME) String shortNameToDelete,
@@ -303,8 +297,8 @@ public class ServiceController {
         MicoService savedService = serviceRepository.save(service);
 
         return ResponseEntity
-                .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
-                .body(new Resource<>(savedService, getServiceLinks(savedService)));
+            .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+            .body(new Resource<>(savedService, getServiceLinks(savedService)));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependers")
@@ -315,8 +309,8 @@ public class ServiceController {
 
         List<Resource<MicoService>> resourceList = getServiceResourcesList(dependers);
         return ResponseEntity.ok(
-                new Resources<>(resourceList,
-                        linkTo(methodOn(ServiceController.class).getDependers(shortName, version)).withSelfRel()));
+            new Resources<>(resourceList,
+                linkTo(methodOn(ServiceController.class).getDependers(shortName, version)).withSelfRel()));
     }
 
     @PostMapping(PATH_GITHUB_ENDPOINT)
@@ -434,66 +428,9 @@ public class ServiceController {
         return micoServiceList;
     }
 
-    //Get the dependees of a service, check if they exists, if true get the ids and set the dependees
-    public MicoService setServiceDependees(MicoService newService) {
-        MicoService serviceToGetId = getService(newService);
-        if (serviceToGetId == null) {
-            MicoService savedService = serviceRepository.save(new MicoService().setShortName(newService.getShortName()).setVersion(newService.getVersion()));
-
-            List<MicoServiceDependency> dependees = savedService.getDependencies();
-            LinkedList<MicoService> services = getDependentServices(dependees);
-
-            List<MicoServiceDependency> newDependees = new LinkedList<>();
-
-            if (services != null) {
-                services.forEach(service -> newDependees.add(new MicoServiceDependency().setService(savedService).setDependedService(service)));
-            }
-
-            savedService.setDependencies(newDependees);
-
-            return savedService;
-        } else {
-            newService.setId(serviceToGetId.getId());
-            List<MicoServiceDependency> dependees = newService.getDependencies();
-            LinkedList<MicoService> services = getDependentServices(dependees);
-
-            List<MicoServiceDependency> newDependees = new LinkedList<>();
-
-            services.forEach(service -> newDependees.add(new MicoServiceDependency().setService(newService).setDependedService(service)));
-
-            newService.setDependencies(newDependees);
-
-            return newService;
-        }
-    }
-
-    private LinkedList<MicoService> getDependentServices(List<MicoServiceDependency> dependees) {
-        if (dependees == null) {
-            return null;
-        }
-
-        LinkedList<MicoService> services = new LinkedList<>();
-
-        dependees.forEach(dependee -> {
-            String shortName = dependee.getDependedService().getShortName();
-            String version = dependee.getDependedService().getVersion();
-
-            Optional<MicoService> dependeeServiceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
-            MicoService dependeeService = dependeeServiceOpt.orElse(null);
-            if (dependeeService == null) {
-                MicoService newService = serviceRepository.save(new MicoService().setShortName(shortName).setVersion(version));
-                services.add(newService);
-            } else {
-                services.add(dependeeService);
-            }
-        });
-
-        return services;
-    }
-
     static List<Resource<MicoService>> getServiceResourcesList(List<MicoService> services) {
         return services.stream().map(service -> new Resource<>(service, getServiceLinks(service)))
-                .collect(Collectors.toList());
+            .collect(Collectors.toList());
     }
 
     private static Iterable<Link> getServiceLinks(MicoService service) {
@@ -512,54 +449,54 @@ public class ServiceController {
      * @throws ResponseStatusException if a {@link MicoServiceInterface} does not exist or there is a conflict
      */
     private MicoServiceInterface validateProvidedInterface(
-            String serviceName, String serviceVersion, MicoServiceInterface providedInterface) throws ResponseStatusException {
+        String serviceName, String serviceVersion, MicoServiceInterface providedInterface) throws ResponseStatusException {
 
         // Check if the provided interface exists
         Optional<MicoServiceInterface> existingInterfaceOptional = serviceRepository.findInterfaceOfServiceByName(
-                providedInterface.getServiceInterfaceName(), serviceName, serviceVersion);
+            providedInterface.getServiceInterfaceName(), serviceName, serviceVersion);
         if (!existingInterfaceOptional.isPresent()) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                    "Provided interface '" + providedInterface.getServiceInterfaceName() + "' of service '" +
-                            serviceName + "' '" + serviceVersion + "' does not exist!");
+                "Provided interface '" + providedInterface.getServiceInterfaceName() + "' of service '" +
+                    serviceName + "' '" + serviceVersion + "' does not exist!");
         }
 
         // If more than the name of the interface is provided,
         // check if the data is consistent. If not throw a 409 conflict error.
         MicoServiceInterface existingInterface = existingInterfaceOptional.get();
         if (providedInterface.getId() != null
-                && !providedInterface.getId().equals(existingInterface.getId())) {
+            && !providedInterface.getId().equals(existingInterface.getId())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Provided interface '" + providedInterface.getServiceInterfaceName() + "' of service '" +
-                            serviceName + "' '" + serviceVersion +
-                            "' has a conflict in the property 'id' with the existing interface!");
+                "Provided interface '" + providedInterface.getServiceInterfaceName() + "' of service '" +
+                    serviceName + "' '" + serviceVersion +
+                    "' has a conflict in the property 'id' with the existing interface!");
         }
         if (providedInterface.getDescription() != null
-                && !providedInterface.getDescription().equals(existingInterface.getDescription())) {
+            && !providedInterface.getDescription().equals(existingInterface.getDescription())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Provided interface '" + providedInterface.getServiceInterfaceName() + "' of service '" +
-                            serviceName + "' '" + serviceVersion +
-                            "' has a conflict in the property 'description' with the existing interface!");
+                "Provided interface '" + providedInterface.getServiceInterfaceName() + "' of service '" +
+                    serviceName + "' '" + serviceVersion +
+                    "' has a conflict in the property 'description' with the existing interface!");
         }
         if (providedInterface.getProtocol() != null
-                && !providedInterface.getProtocol().equals(existingInterface.getProtocol())) {
+            && !providedInterface.getProtocol().equals(existingInterface.getProtocol())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Provided interface '" + providedInterface.getServiceInterfaceName() + "' of service '" +
-                            serviceName + "' '" + serviceVersion +
-                            "' has a conflict in the property 'protocol' with the existing interface!");
+                "Provided interface '" + providedInterface.getServiceInterfaceName() + "' of service '" +
+                    serviceName + "' '" + serviceVersion +
+                    "' has a conflict in the property 'protocol' with the existing interface!");
         }
         if (providedInterface.getPublicDns() != null
-                && !providedInterface.getPublicDns().equals(existingInterface.getPublicDns())) {
+            && !providedInterface.getPublicDns().equals(existingInterface.getPublicDns())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Provided interface '" + providedInterface.getServiceInterfaceName() + "' of service '" +
-                            serviceName + "' '" + serviceVersion +
-                            "' has a conflict in the property 'publicDns' with the existing interface!");
+                "Provided interface '" + providedInterface.getServiceInterfaceName() + "' of service '" +
+                    serviceName + "' '" + serviceVersion +
+                    "' has a conflict in the property 'publicDns' with the existing interface!");
         }
         if (providedInterface.getTransportProtocol() != null
-                && !providedInterface.getTransportProtocol().equals(existingInterface.getTransportProtocol())) {
+            && !providedInterface.getTransportProtocol().equals(existingInterface.getTransportProtocol())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Provided interface '" + providedInterface.getServiceInterfaceName() + "' of service '" +
-                            serviceName + "' '" + serviceVersion +
-                            "' has a conflict in the property 'transportProtocol' with the existing interface!");
+                "Provided interface '" + providedInterface.getServiceInterfaceName() + "' of service '" +
+                    serviceName + "' '" + serviceVersion +
+                    "' has a conflict in the property 'transportProtocol' with the existing interface!");
         }
         return existingInterface;
     }
