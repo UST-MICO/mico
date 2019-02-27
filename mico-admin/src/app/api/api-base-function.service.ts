@@ -19,7 +19,7 @@
 
 import { environment } from '../../environments/environment';
 import { Injectable } from '@angular/core';
-import { Http, Response, Headers, RequestOptions, ResponseContentType } from '@angular/http';
+import { Http, Response, Headers, RequestOptions } from '@angular/http';
 import { Observable, throwError } from 'rxjs';
 import { map, catchError, } from 'rxjs/operators';
 import { ApiObject, ApiLinksObject, LinkObject, isApiObject, isApiLinksObject, isLinkObject } from './apiobject';
@@ -84,14 +84,22 @@ export class ApiBaseFunctionService {
     }
 
 
-    private showError = (error) => {
+    private showError = (error, httpVerb) => {
         if (error.hasOwnProperty('_body')) {
-            const message = JSON.parse(error._body).message;
-            const path = JSON.parse(error._body).path;
+            try {
+                const message = JSON.parse(error._body).message;
+                const path = JSON.parse(error._body).path;
 
-            this.snackBar.open('An error occured in ' + path + ': ' + message, 'Ok', {
-                duration: 0,
-            });
+                this.snackBar.open('An error occured in ' + httpVerb + ' ' + path + ': ' + message, 'Ok', {
+                    duration: 0,
+                });
+            } catch (e) {
+                console.log(e);
+                this.snackBar.open('An error occured in a' + httpVerb + 'Method. The error could not be handled correctly. ' +
+                    'See the console for details.', 'Ok', {
+                        duration: 0,
+                    });
+            }
         }
         return throwError(error);
     }
@@ -105,7 +113,7 @@ export class ApiBaseFunctionService {
         }
 
         const request = this.http.get(url, options).pipe(
-            catchError((error) => this.showError(error)),
+            catchError((error) => this.showError(error, 'GET')),
             map((res: Response) => {
                 return res.json();
             }));
@@ -124,7 +132,7 @@ export class ApiBaseFunctionService {
         }
         return this.http.post(url, tempData, this.headers(token))
             .pipe(
-                catchError((error) => this.showError(error)),
+                catchError((error) => this.showError(error, 'POST')),
                 map((res: Response) => {
                     if (res.hasOwnProperty('_body')) {
                         if ((res as any)._body == null || (res as any)._body.length < 1) {
@@ -145,7 +153,7 @@ export class ApiBaseFunctionService {
         }
         return this.http.put(url, tempData, this.headers(token))
             .pipe(
-                catchError((error) => this.showError(error)),
+                catchError((error) => this.showError(error, 'PUT')),
                 map((res: Response) => {
                     return res.json();
                 }));
@@ -156,8 +164,12 @@ export class ApiBaseFunctionService {
 
         return this.http.delete(url, this.headers(token))
             .pipe(
-                catchError((error) => this.showError(error)),
+                catchError((error) => this.showError(error, 'DELETE')),
                 map((res: Response) => {
+
+                    this.snackBar.open('Element deleted successfully', 'Ok', {
+                        duration: 5,
+                    });
 
                     if (res.hasOwnProperty('_body')) {
                         if ((res as any)._body == null || (res as any)._body.length < 1) {
