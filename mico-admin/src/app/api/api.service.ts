@@ -428,11 +428,11 @@ export class ApiService {
     }
 
     /**
-     * takes an uri to a github repository and returns the available versions of the repository.
-     * @param uri uri to the github repository
+     * takes an url to a github repository and returns the available versions of the repository.
+     * @param url uri to the github repository
      */
-    getServiceVersionsViaGithub(uri: string): Observable<Readonly<ApiObject[]>> {
-        const resource = 'services/import/github' + '?uri=' + uri;
+    getServiceVersionsViaGithub(url: string): Observable<Readonly<ApiObject[]>> {
+        const resource = 'services/import/github' + '?url=' + url;
         const stream = this.getStreamSource<ApiObject[]>(resource);
 
 
@@ -445,9 +445,9 @@ export class ApiService {
         );
     }
 
-    postServiceViaGithub(uri: string, version: string): Observable<Readonly<ApiObject>> {
+    postServiceViaGithub(url: string, version: string): Observable<Readonly<ApiObject>> {
 
-        return this.rest.post<ApiObject>('services/import/github', { uri: uri, version: version }, undefined, false)
+        return this.rest.post<ApiObject>('services/import/github', { url: url, version: version }, undefined, false)
             .pipe(flatMap(val => {
 
                 const stream = this.getStreamSource<ApiObject>(val._links.self.href);
