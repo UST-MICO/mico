@@ -136,7 +136,7 @@ public class ServiceController {
         for(MicoService micoService : micoServiceList){
             if (micoKubernetesClient.isServiceDeployed(micoService)) {
                 log.info("Micoservice '{}' in version '{}' is deployed. It is not possible to delete a deployed service.",micoService.getShortName(),micoService.getVersion());
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Application is currently deployed!");
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Service is currently deployed!");
             }
         }
         micoServiceList.forEach(service -> serviceRepository.delete(service));
