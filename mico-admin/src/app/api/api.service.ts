@@ -282,7 +282,14 @@ export class ApiService {
 
     }
 
-
+    /**
+     * Adds an includes relationship from an appliction to a service
+     * uses: POST applications/{shortName}/{version}/services
+     *
+     * @param applicationShortName the applications shortName
+     * @param applicationVersion the applications version
+     * @param serviceData the service as json the application includes
+     */
     postApplicationServices(applicationShortName: string, applicationVersion: string, serviceData: any) {
 
         if (serviceData == null) {
@@ -300,6 +307,14 @@ export class ApiService {
         }));
     }
 
+    /**
+     * Deletes an includes relationship from an application to a service
+     * uses: DELETE applications/{shortName}/{version}/services
+     *
+     * @param applicationShortName the applications shortName
+     * @param applicationVersion the applications version
+     * @param serviceShortName the services shortName
+     */
     deleteApplicationServices(applicationShortName: string, applicationVersion: string, serviceShortName) {
 
         return this.rest.delete<ApiObject>('applications/' + applicationShortName + '/' + applicationVersion
@@ -320,7 +335,9 @@ export class ApiService {
     // ==========
 
     /**
-     * commands the mico-core application to deploy application {shortName}, {version}
+     * commands the mico-core application to deploy an application
+     * uses: POST applications/{shortName}/{version}/deploy
+     *
      * @param shortName the applications shortName
      * @param version the applications version
      */
@@ -336,7 +353,9 @@ export class ApiService {
 
 
     /**
-     * returns runtime information about a specific application and its services
+     * returns runtime information (status) about a specific application and its services
+     * uses GET applications/{shortName}/{version}/status
+     *
      * @param shortName the applications shortName
      * @param version the applications version
      */
@@ -355,7 +374,33 @@ export class ApiService {
 
 
     /**
-     * returns runtime information about a specific service
+     * Gets the public IP of a deployed service
+     * uses: services/{shortName}/{version}/interaces/{interfaceName}/publicIP
+     *
+     * @param serviceShortName shortName of the service
+     * @param serviceVersion version of the service
+     * @param interfaceShortName name of the serviceInterface
+     */
+    getServiceInterfacePublicIp(serviceShortName: string, serviceVersion: string, interfaceShortName: string) {
+
+        const resource = 'services/' + serviceShortName + '/' + serviceVersion + '/interfaces/' + interfaceShortName + '/publicIP';
+        const stream = this.getStreamSource<ApiObject>(resource);
+
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+
+            stream.next(freezeObject((val as ApiObject)));
+        });
+
+        return stream.asObservable().pipe(
+            filter(data => data !== undefined)
+        );
+    }
+
+
+    /**
+     * returns runtime information (status) about a specific service
+     * uses GET services/{shortName}/{version}/status
+     *
      * @param shortName the services shortName
      * @param version the services version
      */
@@ -378,7 +423,8 @@ export class ApiService {
     // =============
 
     /**
-     * Get service list
+     * Get a list of all services
+     * uses: GET services
      */
     getServices(): Observable<Readonly<ApiObject[]>> {
         const resource = 'services';
@@ -400,6 +446,9 @@ export class ApiService {
 
     /**
      * Get all versions of a service based on its shortName
+     * uses: GET services/{shortName}
+     *
+     * @param shortName the serices shortName
      */
     getServiceVersions(shortName): Observable<ApiObject[]> {
 
@@ -426,6 +475,8 @@ export class ApiService {
 
     /**
      * delete all versions of a service
+     * uses: DELETE services/{shortName}
+     *
      * @param shortName shortName of the service versions to be deleted
      */
     deleteAllServiceVersions(shortName: string) {
@@ -440,6 +491,7 @@ export class ApiService {
 
     /**
      * Get a specific version of a service
+     * uses: GET services/{shortName}/{version}
      *
      * @param shortName unique short name of the service
      * @param version service version to be returned
@@ -458,6 +510,12 @@ export class ApiService {
         );
     }
 
+    /**
+     * Creates a new service
+     * uses: POST services
+     *
+     * @param data object holding the services information
+     */
     postService(data): Observable<Readonly<ApiObject>> {
 
         if (data == null) {
@@ -483,7 +541,9 @@ export class ApiService {
 
     /**
      * takes an url to a github repository and returns the available versions of the repository.
-     * @param url uri to the github repository
+     * uses: GET services/import/github
+     *
+     * @param url url to the github repository
      */
     getServiceVersionsViaGithub(url: string): Observable<Readonly<ApiObject[]>> {
         const resource = 'services/import/github' + '?url=' + url;
@@ -499,6 +559,13 @@ export class ApiService {
         );
     }
 
+    /**
+     * crawls a specific version from a github repository
+     * uses: POST services/import/github
+     *
+     * @param url url to the github repository
+     * @param version version to be crawled
+     */
     postServiceViaGithub(url: string, version: string): Observable<Readonly<ApiObject>> {
 
         return this.rest.post<ApiObject>('services/import/github', { url: url, version: version }, undefined, false)
@@ -516,7 +583,14 @@ export class ApiService {
             }));
     }
 
-
+    /**
+     * Updates a services information
+     * uses: PUT service/{shortName}/{version}
+     *
+     * @param shortName the services shortName
+     * @param version the services version
+     * @param data object holding the services updated version
+     */
     putService(shortName, version, data): Observable<Readonly<ApiObject>> {
 
         if (data == null) {
@@ -548,6 +622,7 @@ export class ApiService {
 
     /**
      * Get all services a specific service depends on.
+     * uses: GET services/{shortName}/{version}/dependees
      *
      * @param shortName unique short name of the service
      * @param version service version to be returned
@@ -570,6 +645,14 @@ export class ApiService {
         );
     }
 
+    /**
+     * Adds a depends on relation from a service to an other service (dependee)
+     * uses: POST services/{shortName}/{version}/dependees
+     *
+     * @param serviceShortName shortName of the depending service
+     * @param serviceVersion version of the depending service
+     * @param dependee object holding the dependee
+     */
     postServiceDependee(serviceShortName, serviceVersion, dependee) {
         if (dependee == null) {
             return;
@@ -592,7 +675,14 @@ export class ApiService {
 
     /**
      * deletes a depends on relation of a service
+     * uses: DELETE services/{shortName}/{version}/dependees
+     *
+     * @param serviceShortName shortName of the depending service
+     * @param serviceVersion version of the depending service
+     * @param dependeeShortName shortName of the depended service
+     * @param dependeeVersion version of the depended service
      */
+
     deleteServiceDependee(serviceShortName: string, serviceVersion: string, dependeeShortName: string, dependeeVersion: string) {
         return this.rest.delete<ApiObject>('services/' + serviceShortName + '/' + serviceVersion + '/dependees/' +
             dependeeShortName + '/' + dependeeVersion)
@@ -610,6 +700,7 @@ export class ApiService {
 
     /**
      * Get all services depending on a specific service
+     * uses: GET services/{shortName}/{version}/dependers
      *
      * @param shortName unique short name of the service
      * @param version service version to be returned
@@ -636,6 +727,13 @@ export class ApiService {
     // SERVICE INTERFACE CALLS
     // =======================
 
+    /**
+     * get all service interfaces of a specified service
+     * uses: GET services/{shortName}/{version}/interfaces
+     *
+     * @param shortName shortName of the service
+     * @param version version of the service
+     */
     getServiceInterfaces(shortName, version): Observable<ApiObject[]> {
         const resource = 'services/' + shortName + '/' + version + '/interfaces';
         const stream = this.getStreamSource<ApiObject[]>(resource);
@@ -655,6 +753,14 @@ export class ApiService {
         );
     }
 
+    /**
+     * Adds a new service interface to a service
+     * uses: POST services/{shortName}/{version}/interfaces
+     *
+     * @param shortName shortName of the service
+     * @param version version of the service
+     * @param data object holding the interfaces information
+     */
     postServiceInterface(shortName, version, data) {
         if (data == null) {
             return;
@@ -676,6 +782,14 @@ export class ApiService {
             }));
     }
 
+    /**
+     * Deletes a service interface
+     * uses: DELETE services/{shortName}/{version}/interfaces/{serviceInterfaceName}
+     *
+     * @param shortName the services shortName
+     * @param version the services version
+     * @param serviceInterfaceName the interfaces name
+     */
     deleteServiceInterface(shortName: string, version: string, serviceInterfaceName: string) {
 
         return this.rest.delete<ApiObject>('services/' + shortName + '/' + version + '/interfaces/' + serviceInterfaceName)
@@ -687,20 +801,5 @@ export class ApiService {
 
                 return true;
             }));
-    }
-
-    getServiceInterfacePublicIp(serviceShortName: string, serviceVersion: string, interfaceShortName: string) {
-
-        const resource = 'services/' + serviceShortName + '/' + serviceVersion + '/interfaces/' + interfaceShortName + '/publicIP';
-        const stream = this.getStreamSource<ApiObject>(resource);
-
-        this.rest.get<ApiObject>(resource).subscribe(val => {
-
-            stream.next(freezeObject((val as ApiObject)));
-        });
-
-        return stream.asObservable().pipe(
-            filter(data => data !== undefined)
-        );
     }
 }
