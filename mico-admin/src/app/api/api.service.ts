@@ -170,6 +170,20 @@ export class ApiService {
     }
 
     /**
+     * delete all versions of an application
+     * @param shortName shortName of the application versions to be deleted
+     */
+    deleteAllApplicationVersions(shortName: string) {
+
+        return this.rest.delete<ApiObject>('applications/' + shortName)
+            .pipe(map(val => {
+
+                this.getApplications();
+                return true;
+            }));
+    }
+
+    /**
      * get an application based on its shortName and version
      *
      * @param shortName of the application
@@ -392,10 +406,8 @@ export class ApiService {
 
         return this.rest.delete<ApiObject>('services/' + shortName)
             .pipe(map(val => {
-                console.log('DELETE ALL SERVICE VERSIONS', val);
 
                 this.getServices();
-
                 return true;
             }));
     }
