@@ -94,7 +94,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
                         if (element.version === givenVersion) {
                             this.selectedVersion = givenVersion;
                             this.service = element as Service;
-                            this.updateVersion(shortName, givenVersion);
+                            this.setVersion(shortName, givenVersion);
                             return true;
                         }
                     });
@@ -126,7 +126,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
             } else {
                 console.log(false);
             }
-            this.updateVersion(shortName, version);
+            this.setVersion(shortName, version);
         });
     }
 
@@ -134,7 +134,19 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
     /**
      * call-back from the version picker
      */
-    updateVersion(shortName, version) {
+    updateVersion(version) {
+        this.selectedVersion = version;
+        this.router.navigate(['service-detail', this.shortName, version]);
+    }
+
+    /**
+     * setter for shortName and version to ensure they are set at the same time when they are retrieved via url parameters.
+     * Had triggered some errors due to @Input() usage, when both was changed, but the fields where not set at the same time.
+     *
+     * @param shortName shortName to be set
+     * @param version version to be set
+     */
+    setVersion(shortName, version) {
         this.selectedVersion = version;
         this.shortName = shortName;
         this.router.navigate(['service-detail', this.shortName, version]);
