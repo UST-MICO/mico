@@ -427,6 +427,10 @@ export class ApiService {
 
     }
 
+    /**
+     * takes an uri to a github repository and returns the available versions of the repository.
+     * @param uri uri to the github repository
+     */
     getServiceVersionsViaGithub(uri: string): Observable<Readonly<ApiObject[]>> {
         const resource = 'services/import/github' + '?uri=' + uri;
         const stream = this.getStreamSource<ApiObject[]>(resource);
