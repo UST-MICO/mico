@@ -48,6 +48,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpModule } from '@angular/http';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatStepperModule } from '@angular/material/stepper';
 
 import { RoutingModule } from './routing.module';
 
@@ -177,7 +178,8 @@ import { ServiceDetailStatusComponent } from './service-detail-status/service-de
         OwlDateTimeModule,
         OwlNativeDateTimeModule,
         MatSnackBarModule,
-        MatRadioModule
+        MatRadioModule,
+        MatStepperModule
     ],
     providers: [],
     bootstrap: [AppComponent],
