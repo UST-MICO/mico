@@ -23,6 +23,8 @@ import { Subscription } from 'rxjs';
 import { from } from 'rxjs';
 import { groupBy, mergeMap, toArray, map } from 'rxjs/operators';
 import { ApiObject } from '../api/apiobject';
+import { MatDialog } from '@angular/material';
+import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 
 
 @Component({
@@ -35,14 +37,15 @@ export class ServiceListComponent implements OnInit, OnDestroy {
     private subServices: Subscription;
 
     constructor(
-        private apiService: ApiService
+        private apiService: ApiService,
+        private dialog: MatDialog,
     ) {
         this.getServices();
     }
 
     services;
 
-    displayedColumns: string[] = ['id', 'name', 'shortName', 'description'];
+    displayedColumns: string[] = ['id', 'name', 'shortName', 'description', 'controls'];
 
     ngOnInit() {
     }
@@ -53,6 +56,10 @@ export class ServiceListComponent implements OnInit, OnDestroy {
         }
     }
 
+    /**
+     * retrieves all services and versions
+     * uses: GET services
+     */
     getServices(): void {
 
         // group services by shortName
@@ -71,6 +78,27 @@ export class ServiceListComponent implements OnInit, OnDestroy {
 
             });
 
+    }
+
+    /**
+     * deletes all versions of a service, if the user confirms a dialog and the service is not deployed.
+     * uses: DELETE services/{shortName}
+     * @param service shortName of the services to be deleted
+     */
+    deleteService(service) {
+        const dialogRef = this.dialog.open(YesNoDialogComponent, {
+            data: {
+                object: service,
+                question: 'deleteAllServiceVersions'
+            }
+        });
+
+        const subDeleteServiceVersions = dialogRef.afterClosed().subscribe(shouldDelete => {
+            if (shouldDelete) {
+                this.apiService.deleteAllServiceVersions(service.shortName).subscribe();
+                subDeleteServiceVersions.unsubscribe();
+            }
+        });
     }
 
 }

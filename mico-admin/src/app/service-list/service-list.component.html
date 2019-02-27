@@ -9,19 +9,29 @@
         <mat-table [dataSource]="services" class="mat-elevation-z2">
             <ng-container matColumnDef="id">
                 <mat-header-cell *matHeaderCellDef>ID</mat-header-cell>
-                <mat-cell *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">{{element.id}}</mat-cell>
+                <mat-cell *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">{{element.id}}
+                </mat-cell>
             </ng-container>
             <ng-container matColumnDef="name">
                 <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
-                <mat-cell *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">{{element.name}}</mat-cell>
+                <mat-cell *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">
+                    {{element.name}}</mat-cell>
             </ng-container>
             <ng-container matColumnDef="shortName">
                 <mat-header-cell *matHeaderCellDef>Short Name</mat-header-cell>
-                <mat-cell *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">{{element.shortName}}</mat-cell>
+                <mat-cell *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">
+                    {{element.shortName}}</mat-cell>
             </ng-container>
             <ng-container matColumnDef="description">
                 <mat-header-cell *matHeaderCellDef>Description</mat-header-cell>
-                <mat-cell *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">{{element.description}}</mat-cell>
+                <mat-cell *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">
+                    {{element.description}}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="controls">
+                <mat-header-cell *matHeaderCellDef>Controls</mat-header-cell>
+                <mat-cell *matCellDef="let element">
+                    <button mat-raised-button (click)="deleteService(element)">delete</button>
+                </mat-cell>
             </ng-container>
             <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
             <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
