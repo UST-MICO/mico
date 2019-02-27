@@ -19,40 +19,29 @@
 
 package io.github.ust.mico.core;
 
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicInteger;
-
+import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.exception.DeploymentException;
+import io.github.ust.mico.core.exception.KubernetesResourceException;
+import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
+import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import io.fabric8.kubernetes.api.model.ContainerStatus;
-import io.fabric8.kubernetes.api.model.ObjectReferenceBuilder;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodList;
-import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.api.model.SecretBuilder;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceAccount;
-import io.fabric8.kubernetes.api.model.ServiceAccountBuilder;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
-import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Component
@@ -60,6 +49,9 @@ public class IntegrationTestsUtils {
 
     @Autowired
     private ClusterAwarenessFabric8 cluster;
+
+    @Autowired
+    private MicoKubernetesClient micoKubernetesClient;
 
     @Autowired
     private MicoKubernetesConfig kubernetesConfig;
@@ -190,6 +182,7 @@ public class IntegrationTestsUtils {
             }
 
             if (runningPods.get() == numberOfPodsInNamespace) {
+                log.info("All pods are running!");
                 completionFuture.complete(true);
             }
         }, initialDelay, period, TimeUnit.SECONDS);
@@ -243,24 +236,28 @@ public class IntegrationTestsUtils {
     /**
      * Create a future that polls the deployment until it is created.
      *
-     * @param deploymentName the name of the deployment
-     * @param namespace      the Kubernetes namespace
-     * @param initialDelay   the initial delay in seconds
-     * @param period         the period in seconds
-     * @param timeout        the timeout in seconds
+     * @param micoService  the {@link MicoService}
+     * @param initialDelay the initial delay in seconds
+     * @param period       the period in seconds
+     * @param timeout      the timeout in seconds
      * @return CompletableFuture with a boolean. True indicates that it finished successful.
      * @throws InterruptedException if the build process is interrupted unexpectedly
      * @throws TimeoutException     if the build does not finish or fail in the expected time
      * @throws ExecutionException   if the build process fails unexpectedly
      */
-    CompletableFuture<Deployment> waitUntilDeploymentIsCreated(String deploymentName, String namespace, int initialDelay, int period, int timeout) throws InterruptedException, ExecutionException, TimeoutException {
+    CompletableFuture<Deployment> waitUntilDeploymentIsCreated(MicoService micoService, int initialDelay, int period, int timeout) throws InterruptedException, ExecutionException, TimeoutException {
         CompletableFuture<Deployment> completionFuture = new CompletableFuture<>();
 
         final ScheduledFuture<?> checkFuture = podStatusChecker.scheduleAtFixedRate(() -> {
-            Deployment deployment = cluster.getDeployment(deploymentName, namespace);
-            if (deployment != null) {
-                completionFuture.complete(deployment);
+
+            Optional<Deployment> deployment = Optional.empty();
+            try {
+                deployment = micoKubernetesClient.getDeploymentOfMicoService(micoService);
+            } catch (KubernetesResourceException e) {
+                log.error(e.getMessage(), e);
+                completionFuture.cancel(true);
             }
+            deployment.ifPresent(completionFuture::complete);
         }, initialDelay, period, TimeUnit.SECONDS);
 
         // Waits until timeout is reached or the future completes.
@@ -275,8 +272,7 @@ public class IntegrationTestsUtils {
     /**
      * Create a future that polls the deployment until it is created.
      *
-     * @param serviceName  the name of the service
-     * @param namespace    the Kubernetes namespace
+     * @param micoService  the {@link MicoService}
      * @param initialDelay the initial delay in seconds
      * @param period       the period in seconds
      * @param timeout      the timeout in seconds
@@ -285,13 +281,13 @@ public class IntegrationTestsUtils {
      * @throws TimeoutException     if the build does not finish or fail in the expected time
      * @throws ExecutionException   if the build process fails unexpectedly
      */
-    CompletableFuture<Service> waitUntilServiceIsCreated(String serviceName, String namespace, int initialDelay, int period, int timeout) throws InterruptedException, ExecutionException, TimeoutException {
+    CompletableFuture<Service> waitUntilServiceIsCreated(MicoService micoService, int initialDelay, int period, int timeout) throws InterruptedException, ExecutionException, TimeoutException {
         CompletableFuture<Service> completionFuture = new CompletableFuture<>();
 
         final ScheduledFuture<?> checkFuture = podStatusChecker.scheduleAtFixedRate(() -> {
-            Service service = cluster.getService(serviceName, namespace);
-            if (service != null) {
-                completionFuture.complete(service);
+            List<Service> services = micoKubernetesClient.getInterfacesOfMicoService(micoService);
+            if (!services.isEmpty()) {
+                completionFuture.complete(services.get(0));
             }
         }, initialDelay, period, TimeUnit.SECONDS);
 

@@ -19,18 +19,15 @@
 
 package io.github.ust.mico.core;
 
-import static io.github.ust.mico.core.TestConstants.ID;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
+import io.github.ust.mico.core.util.CollectionUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -38,24 +35,18 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoPortType;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.model.MicoServicePort;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
-import lombok.extern.slf4j.Slf4j;
+import java.util.concurrent.CompletableFuture;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Ignore
 // TODO Upgrade to JUnit5
@@ -64,8 +55,7 @@ import lombok.extern.slf4j.Slf4j;
 @SpringBootTest
 @RunWith(SpringRunner.class)
 @AutoConfigureMockMvc
-@OverrideAutoConfiguration(enabled = true) //Needed to override our neo4j config
-public class DeploymentControllerIntegrationTests {
+public class DeploymentControllerIntegrationTests extends Neo4jTestClass {
 
     private static final String BASE_PATH = "/applications";
 
@@ -78,11 +68,14 @@ public class DeploymentControllerIntegrationTests {
     @Autowired
     private IntegrationTestsUtils integrationTestsUtils;
 
-    @MockBean
+    @Autowired
     private MicoServiceRepository serviceRepository;
 
-    @MockBean
+    @Autowired
     private MicoApplicationRepository applicationRepository;
+
+    @Autowired
+    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
 
     private String namespace;
     private MicoService service;
@@ -98,20 +91,19 @@ public class DeploymentControllerIntegrationTests {
 
         try {
             integrationTestsUtils.setUpDockerRegistryConnection(namespace);
-        } catch(RuntimeException e) {
+        } catch (RuntimeException e) {
             tearDown();
             throw e;
         }
 
+        application = getTestApplication();
         service = getTestService();
-        application = getTestApplication(service);
 
-        //serviceRepository.save(service);
-        given(serviceRepository.findByShortNameAndVersion(service.getShortName(), service.getVersion())).willReturn(
-            Optional.of(service));
-        //applicationRepository.save(application);
-        given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion())).willReturn(
-            Optional.of(application));
+        applicationRepository.save(application);
+        serviceRepository.save(service);
+        serviceDeploymentInfoRepository.save(new MicoServiceDeploymentInfo()
+            .setService(service)
+            .setApplication(application));
     }
 
     /**
@@ -127,8 +119,6 @@ public class DeploymentControllerIntegrationTests {
 
         String applicationShortName = application.getShortName();
         String applicationVersion = application.getVersion();
-        String expectedDeploymentName = service.getShortName();
-        String expectedServiceName = service.getServiceInterfaces().get(0).getServiceInterfaceName();
 
         mvc.perform(post(BASE_PATH + "/" + applicationShortName + "/" + applicationVersion + "/deploy"))
             .andDo(print())
@@ -141,54 +131,50 @@ public class DeploymentControllerIntegrationTests {
 
         // Wait until the deployment is created
         CompletableFuture<Deployment> createdDeployment = integrationTestsUtils.waitUntilDeploymentIsCreated(
-            expectedDeploymentName, namespace, 1, 1, 10);
+            service, 1, 1, 10);
         assertNotNull("Kubernetes Deployment was not created!", createdDeployment.get());
         log.debug("Created Kubernetes Deployment: {}", createdDeployment.get().toString());
 
         // Wait until the service is created
         CompletableFuture<Service> createdService = integrationTestsUtils.waitUntilServiceIsCreated(
-            expectedServiceName, namespace, 1, 1, 10);
+            service, 1, 1, 10);
         assertNotNull("Kubernetes Service was not created!", createdService.get());
         log.debug("Created Kubernetes Service: {}", createdService.get().toString());
 
         // Assert deployment
-        Deployment actualDeployment = cluster.getDeployment(expectedDeploymentName, namespace);
-        assertNotNull("No deployment with name '" + expectedDeploymentName + "' exists", actualDeployment);
-        assertEquals("Deployment name is not like expected", expectedDeploymentName, actualDeployment.getMetadata().getName());
-
+        assertNotNull("Expected deployment does not exist", createdDeployment.get());
         // Assert service
-        Service actualService = cluster.getService(expectedServiceName, namespace);
-        assertNotNull("No service with name '" + expectedServiceName + "' exists", actualService);
-        assertEquals("Service name is not like expected", expectedServiceName, actualService.getMetadata().getName());
+        assertNotNull("Expected service does not exist", createdService.get());
 
-        log.info("ClusterIP: {}", actualService.getSpec().getClusterIP());
-        log.info("LoadBalancerIP: {}", actualService.getSpec().getLoadBalancerIP());
-        log.info("ExternalIPs: {}", actualService.getSpec().getExternalIPs());
+        log.info("ClusterIP: {}", createdService.get().getSpec().getClusterIP());
+        log.info("LoadBalancerIP: {}", createdService.get().getSpec().getLoadBalancerIP());
+        log.info("ExternalIPs: {}", createdService.get().getSpec().getExternalIPs());
     }
 
-    private MicoApplication getTestApplication(MicoService service) {
+    private MicoApplication getTestApplication() {
         return new MicoApplication()
-            .setId(ID)
             .setShortName("hello")
             .setName("hello-application")
-            .setVersion("v1.0.0");
+            .setVersion("v1.0.0")
+            .setDescription("Hello World Application");
     }
 
     private MicoService getTestService() {
         MicoService service = new MicoService()
-            .setId(ID)
-            .setShortName("hello")
+            .setShortName("hello-integration-test")
             .setName("UST-MICO/hello")
             .setVersion("v1.0.0")
+            .setDescription("Hello World Service for integration testing")
             .setGitCloneUrl("https://github.com/UST-MICO/hello.git")
             .setDockerfilePath("Dockerfile");
-        service.getServiceInterfaces().add(new MicoServiceInterface()
-                .setServiceInterfaceName("hello-service")
-                .setPorts(io.github.ust.mico.core.util.CollectionUtils.listOf(new MicoServicePort()
-                    .setPort(80)
-                    .setTargetPort(80)
-                    .setType(MicoPortType.TCP))));
+        MicoServiceInterface serviceInterface = new MicoServiceInterface()
+            .setServiceInterfaceName("hello-service")
+            .setPorts(CollectionUtils.listOf(new MicoServicePort()
+                .setPort(80)
+                .setTargetPort(80)
+                .setType(MicoPortType.TCP)));
+        service.getServiceInterfaces().add(serviceInterface);
+
         return service;
-                
     }
 }

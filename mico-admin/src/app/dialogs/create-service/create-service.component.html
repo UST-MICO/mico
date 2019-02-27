@@ -3,11 +3,42 @@
 
     <mat-tab-group (selectedTabChange)="tabChange($event)">
         <mat-tab label="Manual">
-            <mico-form [modelUrl]="'remote/MicoService'" [filter]="filterList" (data)="serviceData = $event"></mico-form>
+            <mico-form [modelUrl]="'remote/MicoService'" [filter]="filterList" (data)="serviceData = $event">
+            </mico-form>
         </mat-tab>
         <mat-tab label="GitHub">
-            <!-- TODO replace with mico-form-question-->
-            <mico-form [modelUrl]="'local/serviceFromGitPOST'" (data)="githubData = $event"></mico-form>
+
+            <mat-vertical-stepper (selectionChange)="gitStepperChange($event)">
+                <mat-step label="Choose The Repository">
+                    <mico-form [modelUrl]="'local/serviceFromGitPOST'" (data)="githubData = $event"></mico-form>
+
+                    <div>
+                        <button mat-button matStepperNext>Next</button>
+                    </div>
+                </mat-step>
+                <mat-step label="Choose The Version">
+                    <mat-radio-group [(ngModel)]="picked">
+                        <div class="ma2">
+                            <mat-radio-button value="latest">Latest Version</mat-radio-button>
+                        </div>
+                        <div class="ma2 mt0">
+                            <mat-radio-button value="specific">Specific Version</mat-radio-button>
+
+                            <!-- drop down -->
+                            <mat-form-field class="w25 ma2">
+                                <mat-select placeholder="Version" (ngModelChange)="updateSelectedVersion($event)"
+                                    [ngModel]="selectedVersion">
+                                    <mat-option *ngFor="let version of possibleVersions" [value]="version">
+                                        {{version}}
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                        </div>
+                    </mat-radio-group>
+                </mat-step>
+            </mat-vertical-stepper>
+
+
         </mat-tab>
     </mat-tab-group>
 </mat-dialog-content>
