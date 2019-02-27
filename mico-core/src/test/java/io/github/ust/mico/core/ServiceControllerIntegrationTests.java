@@ -130,4 +130,13 @@ public class ServiceControllerIntegrationTests extends Neo4jTestClass {
             .andExpect(jsonPath(SERVICE_LIST + "[?(@.shortName=='" + micoService0.getShortName() + "')]", hasSize(1)))
             .andReturn();
     }
+
+    @Test
+    public void getServiceDependencyGraphEmptyDatabase() throws Exception {
+        mvc.perform(get(SERVICES_PATH + "/" + SHORT_NAME + "/" + "/" + VERSION_1_0_1 + "/dependencyGraph").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isNotFound())
+            .andExpect(status().reason("Service 'short-name' '1.0.1' was not found!"))
+            .andReturn();
+    }
 }
