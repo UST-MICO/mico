@@ -123,6 +123,7 @@ export class ApiService {
 
     /**
      * Get application list
+     * uses: GET application
      */
     getApplications(): Observable<Readonly<ApiObject[]>> {
 
@@ -145,6 +146,8 @@ export class ApiService {
 
     /**
      * Get all versions of an application based on its shortName
+     * uses: GET application/{shortName}
+     *
      * @param shortName the shortName of the applicaton
      */
     getApplicationVersions(shortName: string) {
@@ -171,6 +174,8 @@ export class ApiService {
 
     /**
      * delete all versions of an application
+     * uses: DELETE application/{shortName}
+     *
      * @param shortName shortName of the application versions to be deleted
      */
     deleteAllApplicationVersions(shortName: string) {
@@ -185,6 +190,7 @@ export class ApiService {
 
     /**
      * get an application based on its shortName and version
+     * uses: GET applications/{shortName}/{version}
      *
      * @param shortName of the application
      * @param version of the application
@@ -202,6 +208,12 @@ export class ApiService {
         );
     }
 
+    /**
+     * Creates a new application
+     * uses: POST applications
+     *
+     * @param data object holding the applications information
+     */
     postApplication(data) {
         if (data == null) {
             return;
@@ -223,6 +235,14 @@ export class ApiService {
         }));
     }
 
+    /**
+     * Updates an existing application
+     * uses: PUT applications/{shortName}/{version}
+     *
+     * @param shortName shortName of the application
+     * @param version version of the application
+     * @param data object holding the updated application information
+     */
     putApplication(shortName, version, data): Observable<Readonly<ApiObject>> {
 
         if (data == null) {
@@ -242,6 +262,13 @@ export class ApiService {
         }));
     }
 
+    /**
+     * Deletes a specific application version
+     * uses: DELETE applications/{shortName}/{version}
+     *
+     * @param shortName shortName of the application
+     * @param version version of the application
+     */
     deleteApplication(shortName: string, version: string) {
 
         return this.rest.delete<any>('applications/' + shortName + '/' + version)
@@ -254,7 +281,6 @@ export class ApiService {
             }));
 
     }
-
 
 
     postApplicationServices(applicationShortName: string, applicationVersion: string, serviceData: any) {
