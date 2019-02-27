@@ -111,9 +111,9 @@ public class KubernetesPodInformationDTO {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Age"),
+            @ExtensionProperty(name = "title", value = "StartTime"),
             @ExtensionProperty(name = "x-order", value = "51"),
-            @ExtensionProperty(name = "description", value = "The start time of a pod.")
+            @ExtensionProperty(name = "description", value = "The time when the pod was started.")
         }
     )})
     private String startTime;

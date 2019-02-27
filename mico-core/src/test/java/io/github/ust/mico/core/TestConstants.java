@@ -19,6 +19,8 @@
 
 package io.github.ust.mico.core;
 
+import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
+import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
 import io.github.ust.mico.core.model.MicoVersion;
 
 import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
@@ -84,13 +86,15 @@ public class TestConstants {
      * All paths are build on the path for the status of this service.
      */
     /**
-     * Path of a single {@link io.github.ust.mico.core.dto.MicoServiceStatusDTO} in a {@link
-     * io.github.ust.mico.core.dto.MicoApplicationStatusDTO}. Contains status information for this service.
+     * Path of a single {@link MicoServiceStatusDTO} in a {@link MicoApplicationStatusDTO}. Contains status information for this service.
      */
     public static final String SERVICE_STATUS_PATH = buildPath(ROOT, "serviceStatuses[0]");
     public static final String SERVICE_INFORMATION_NAME = buildPath(SERVICE_STATUS_PATH, "name");
     public static final String REQUESTED_REPLICAS = buildPath(SERVICE_STATUS_PATH, "requestedReplicas");
     public static final String AVAILABLE_REPLICAS = buildPath(SERVICE_STATUS_PATH, "availableReplicas");
+    public static final String AVERAGE_CPU_LOAD_PER_NODE_PATH = buildPath(SERVICE_STATUS_PATH, "averageCpuLoadPerNode");
+    public static final String AVERAGE_MEMORY_USAGE_PER_NODE_PATH = buildPath(SERVICE_STATUS_PATH, "averageMemoryUsagePerNode");
+    public static final String ERROR_MESSAGES = buildPath(SERVICE_STATUS_PATH, "errorMessages");
     public static final String INTERFACES_INFORMATION = buildPath(SERVICE_STATUS_PATH, "interfacesInformation");
     public static final String INTERFACES_INFORMATION_NAME = buildPath(SERVICE_STATUS_PATH, "interfacesInformation[0].name");
     public static final String POD_INFO = buildPath(SERVICE_STATUS_PATH, "podsInformation");
@@ -106,6 +110,11 @@ public class TestConstants {
     public static final String POD_INFO_METRICS_MEMORY_USAGE_2 = buildPath(SERVICE_STATUS_PATH, "podsInformation[1].metrics.memoryUsage");
     public static final String POD_INFO_METRICS_CPU_LOAD_2 = buildPath(SERVICE_STATUS_PATH, "podsInformation[1].metrics.cpuLoad");
     public static final String POD_INFO_METRICS_AVAILABLE_2 = buildPath(SERVICE_STATUS_PATH, "podsInformation[1].metrics.available");
+    public static final String TOTAL_NUMBER_OF_MICO_SERVICES = buildPath(ROOT, "totalNumberOfMicoServices");
+    public static final String TOTAL_NUMBER_OF_AVAILABLE_REPLICAS = buildPath(ROOT, "totalNumberOfAvailableReplicas");
+    public static final String TOTAL_NUMBER_OF_REQUESTED_REPLICAS = buildPath(ROOT, "totalNumberOfRequestedReplicas");
+    public static final String TOTAL_NUMBER_OF_PODS = buildPath(ROOT, "totalNumberOfPods");
+
 
     /*
      * For tests in ServiceControllerTests, a MicoServiceStatusDTO is used.
@@ -114,6 +123,9 @@ public class TestConstants {
     public static final String SERVICE_DTO_SERVICE_NAME = buildAttributePath("name");
     public static final String SERVICE_DTO_REQUESTED_REPLICAS = buildPath(ROOT, "requestedReplicas");
     public static final String SERVICE_DTO_AVAILABLE_REPLICAS = buildPath(ROOT, "availableReplicas");
+    public static final String SERVICE_DTO_AVERAGE_CPU_LOAD_PER_NODE = buildPath(ROOT, "averageCpuLoadPerNode");
+    public static final String SERVICE_DTO_AVERAGE_MEMORY_USAGE_PER_NODE = buildPath(ROOT, "averageMemoryUsagePerNode");
+    public static final String SERVICE_DTO_ERROR_MESSAGES = buildPath(ROOT, "errorMessages");
     public static final String SERVICE_DTO_INTERFACES_INFORMATION = buildPath(ROOT, "interfacesInformation");
     public static final String SERVICE_DTO_INTERFACES_INFORMATION_NAME = buildPath(ROOT, "interfacesInformation[0].name");
     public static final String SERVICE_DTO_POD_INFO = buildPath(ROOT, "podsInformation");

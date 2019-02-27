@@ -27,6 +27,7 @@ import java.util.Optional;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.google.common.collect.ImmutableMap;
 import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.dto.BasicMicoApplicationDTO;
 import io.github.ust.mico.core.dto.KuberenetesPodMetricsDTO;
@@ -34,7 +35,6 @@ import io.github.ust.mico.core.dto.KubernetesPodInformationDTO;
 import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
 import io.github.ust.mico.core.dto.MicoServiceInterfaceDTO;
 import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
-import io.github.ust.mico.core.dto.PrometheusResponse;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
@@ -59,8 +59,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -70,6 +68,7 @@ import static io.github.ust.mico.core.JsonPathBuilder.EMBEDDED;
 import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
 import static io.github.ust.mico.core.JsonPathBuilder.SELF_HREF;
 import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
+import static io.github.ust.mico.core.TestConstants.*;
 import static io.github.ust.mico.core.TestConstants.APPLICATION_NAME;
 import static io.github.ust.mico.core.TestConstants.APPLICATION_NAME_OTHER;
 import static io.github.ust.mico.core.TestConstants.DESCRIPTION;
@@ -93,7 +92,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -477,7 +475,7 @@ public class ApplicationControllerTests {
             .setVersion(VERSION);
 
         MicoServiceInterface serviceInterface = new MicoServiceInterface()
-            .setServiceInterfaceName(TestConstants.SERVICE_INTERFACE_NAME);
+            .setServiceInterfaceName(SERVICE_INTERFACE_NAME);
 
         MicoService service = new MicoService()
             .setShortName(SERVICE_SHORT_NAME)
@@ -504,7 +502,11 @@ public class ApplicationControllerTests {
         int memoryUsage2 = 70;
         int cpuLoad2 = 40;
 
-        MicoApplicationStatusDTO micoApplicationStatus = new MicoApplicationStatusDTO();
+        MicoApplicationStatusDTO micoApplicationStatus = new MicoApplicationStatusDTO()
+            .setTotalNumberOfMicoServices(1)
+            .setTotalNumberOfAvailableReplicas(availableReplicas)
+            .setTotalNumberOfRequestedReplicas(replicas)
+            .setTotalNumberOfPods(2);
         MicoServiceStatusDTO micoServiceStatus = new MicoServiceStatusDTO();
 
         // Set information for first pod of a MicoService
@@ -537,17 +539,16 @@ public class ApplicationControllerTests {
 
         // Set deployment information for MicoService
         micoServiceStatus
-            .setName(TestConstants.SERVICE_NAME)
+            .setName(SERVICE_NAME)
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setAvailableReplicas(availableReplicas)
-            .setUsingApplications(CollectionUtils.listOf(new BasicMicoApplicationDTO(otherMicoApplication.getName(), otherMicoApplication.getShortName(), otherMicoApplication.getVersion())))
             .setRequestedReplicas(replicas)
-            .setInterfacesInformation(CollectionUtils.listOf(new MicoServiceInterfaceDTO().setName(TestConstants.SERVICE_INTERFACE_NAME)))
+            .setUsingApplications(CollectionUtils.listOf(new BasicMicoApplicationDTO(otherMicoApplication.getName(), otherMicoApplication.getShortName(), otherMicoApplication.getVersion())))
+            .setInterfacesInformation(CollectionUtils.listOf(new MicoServiceInterfaceDTO().setName(SERVICE_INTERFACE_NAME)))
             .setPodsInformation(Arrays.asList(kubernetesPodInfo1, kubernetesPodInfo2))
-            .setAverageCpuLoad(25)
-            .setAverageMemoryUsage(60);
-
+            .setAverageCpuLoadPerNode(ImmutableMap.of(nodeName, 25))
+            .setAverageMemoryUsagePerNode(ImmutableMap.of(nodeName, 60));
         micoApplicationStatus.getServiceStatuses().add(micoServiceStatus);
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
@@ -560,24 +561,31 @@ public class ApplicationControllerTests {
         mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/status"))
             .andDo(print())
             .andExpect(status().isOk())
-            .andExpect(jsonPath(TestConstants.SERVICE_INFORMATION_NAME, is(TestConstants.SERVICE_NAME)))
-            .andExpect(jsonPath(TestConstants.REQUESTED_REPLICAS, is(replicas)))
-            .andExpect(jsonPath(TestConstants.AVAILABLE_REPLICAS, is(availableReplicas)))
-            .andExpect(jsonPath(TestConstants.INTERFACES_INFORMATION, hasSize(1)))
-            .andExpect(jsonPath(TestConstants.INTERFACES_INFORMATION_NAME, is(TestConstants.SERVICE_INTERFACE_NAME)))
-            .andExpect(jsonPath(TestConstants.POD_INFO, hasSize(2)))
-            .andExpect(jsonPath(TestConstants.POD_INFO_POD_NAME_1, is(podName1)))
-            .andExpect(jsonPath(TestConstants.POD_INFO_PHASE_1, is(podPhase)))
-            .andExpect(jsonPath(TestConstants.POD_INFO_NODE_NAME_1, is(nodeName)))
-            .andExpect(jsonPath(TestConstants.POD_INFO_METRICS_MEMORY_USAGE_1, is(memoryUsage1)))
-            .andExpect(jsonPath(TestConstants.POD_INFO_METRICS_CPU_LOAD_1, is(cpuLoad1)))
-            .andExpect(jsonPath(TestConstants.POD_INFO_METRICS_AVAILABLE_1, is(false)))
-            .andExpect(jsonPath(TestConstants.POD_INFO_POD_NAME_2, is(podName2)))
-            .andExpect(jsonPath(TestConstants.POD_INFO_PHASE_2, is(podPhase)))
-            .andExpect(jsonPath(TestConstants.POD_INFO_NODE_NAME_2, is(nodeName)))
-            .andExpect(jsonPath(TestConstants.POD_INFO_METRICS_MEMORY_USAGE_2, is(memoryUsage2)))
-            .andExpect(jsonPath(TestConstants.POD_INFO_METRICS_CPU_LOAD_2, is(cpuLoad2)))
-            .andExpect(jsonPath(TestConstants.POD_INFO_METRICS_AVAILABLE_2, is(true)));
+            .andExpect(jsonPath(SERVICE_INFORMATION_NAME, is(SERVICE_NAME)))
+            .andExpect(jsonPath(TOTAL_NUMBER_OF_AVAILABLE_REPLICAS, is(availableReplicas)))
+            .andExpect(jsonPath(TOTAL_NUMBER_OF_REQUESTED_REPLICAS, is(replicas)))
+            .andExpect(jsonPath(TOTAL_NUMBER_OF_PODS, is(2)))
+            .andExpect(jsonPath(TOTAL_NUMBER_OF_MICO_SERVICES, is(1)))
+            .andExpect(jsonPath(AVERAGE_CPU_LOAD_PER_NODE_PATH, is(ImmutableMap.of(nodeName, 25))))
+            .andExpect(jsonPath(AVERAGE_MEMORY_USAGE_PER_NODE_PATH, is(ImmutableMap.of(nodeName, 60))))
+            .andExpect(jsonPath(REQUESTED_REPLICAS, is(replicas)))
+            .andExpect(jsonPath(AVAILABLE_REPLICAS, is(availableReplicas)))
+            .andExpect(jsonPath(INTERFACES_INFORMATION, hasSize(1)))
+            .andExpect(jsonPath(INTERFACES_INFORMATION_NAME, is(SERVICE_INTERFACE_NAME)))
+            .andExpect(jsonPath(POD_INFO, hasSize(2)))
+            .andExpect(jsonPath(POD_INFO_POD_NAME_1, is(podName1)))
+            .andExpect(jsonPath(POD_INFO_PHASE_1, is(podPhase)))
+            .andExpect(jsonPath(POD_INFO_NODE_NAME_1, is(nodeName)))
+            .andExpect(jsonPath(POD_INFO_METRICS_MEMORY_USAGE_1, is(memoryUsage1)))
+            .andExpect(jsonPath(POD_INFO_METRICS_CPU_LOAD_1, is(cpuLoad1)))
+            .andExpect(jsonPath(POD_INFO_METRICS_AVAILABLE_1, is(false)))
+            .andExpect(jsonPath(POD_INFO_POD_NAME_2, is(podName2)))
+            .andExpect(jsonPath(POD_INFO_PHASE_2, is(podPhase)))
+            .andExpect(jsonPath(POD_INFO_NODE_NAME_2, is(nodeName)))
+            .andExpect(jsonPath(POD_INFO_METRICS_MEMORY_USAGE_2, is(memoryUsage2)))
+            .andExpect(jsonPath(POD_INFO_METRICS_CPU_LOAD_2, is(cpuLoad2)))
+            .andExpect(jsonPath(POD_INFO_METRICS_AVAILABLE_2, is(true)))
+            .andExpect(jsonPath(ERROR_MESSAGES, is(CollectionUtils.listOf())));
     }
 
     @Test
@@ -725,16 +733,6 @@ public class ApplicationControllerTests {
             .andDo(print())
             .andExpect(status().isNoContent())
             .andReturn();
-    }
-
-    private ResponseEntity getPrometheusResponseEntity(int value) {
-        PrometheusResponse prometheusResponse = new PrometheusResponse();
-        prometheusResponse.setStatus(PrometheusResponse.PROMETHEUS_SUCCESSFUL_RESPONSE);
-        prometheusResponse.setValue(value);
-        ResponseEntity responseEntity = mock(ResponseEntity.class);
-        given(responseEntity.getStatusCode()).willReturn(HttpStatus.OK);
-        given(responseEntity.getBody()).willReturn(prometheusResponse);
-        return responseEntity;
     }
 
     private void prettyPrint(Object object) {

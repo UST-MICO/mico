@@ -159,35 +159,37 @@ public class MicoStatusService {
         List<Pod> podList = micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(micoService);
         List<KubernetesPodInformationDTO> podInfos = new ArrayList<>();
         // Get all the nodes on which the pods of a deployment of a MicoService are running
-        Map<String, List<Pod>> podsPerNodeMap = new HashMap<>();
+        Map<String, List<Pod>> podsPerNode = new HashMap<>();
         for (Pod pod : podList) {
-            if (podsPerNodeMap.containsKey(pod.getSpec().getNodeName())) {
-                podsPerNodeMap.computeIfPresent(pod.getSpec().getNodeName(), (s, pods) -> {
+            if (podsPerNode.containsKey(pod.getSpec().getNodeName())) {
+                podsPerNode.computeIfPresent(pod.getSpec().getNodeName(), (s, pods) -> {
                     pods.add(pod);
                     return (pods);
                 });
             } else {
-                podsPerNodeMap.computeIfAbsent(pod.getSpec().getNodeName(), pods -> CollectionUtils.listOf(pod));
+                podsPerNode.computeIfAbsent(pod.getSpec().getNodeName(), pods -> CollectionUtils.listOf(pod));
             }
         }
 
+        // Calculate for each node the average values for all pods running on this node
         Map<String, Integer> averageCpuUsagePerNode = new HashMap<>();
         Map<String, Integer> averageMemoryUsagePerNode = new HashMap<>();
-        for (String nodeName : podsPerNodeMap.keySet()) {
+        for (String nodeName : podsPerNode.keySet()) {
             int sumCpuLoadOnNode = 0;
             int sumMemoryUsageOnNode = 0;
-            for (Pod pod : podsPerNodeMap.get(nodeName)) {
+            for (Pod pod : podsPerNode.get(nodeName)) {
                 KubernetesPodInformationDTO podInformation = getUiPodInfo(pod);
                 sumCpuLoadOnNode += podInformation.getMetrics().getCpuLoad();
                 sumMemoryUsageOnNode += podInformation.getMetrics().getMemoryUsage();
                 podInfos.add(podInformation);
             }
-            averageCpuUsagePerNode.put(nodeName, sumCpuLoadOnNode / podsPerNodeMap.get(nodeName).size());
-            averageMemoryUsagePerNode.put(nodeName, sumMemoryUsageOnNode / podsPerNodeMap.get(nodeName).size());
+            averageCpuUsagePerNode.put(nodeName, sumCpuLoadOnNode / podsPerNode.get(nodeName).size());
+            averageMemoryUsagePerNode.put(nodeName, sumMemoryUsageOnNode / podsPerNode.get(nodeName).size());
         }
-        serviceStatus.setAverageCpuLoadPerNode(averageCpuUsagePerNode);
-        serviceStatus.setAverageMemoryUsagePerNode(averageMemoryUsagePerNode);
-        serviceStatus.setPodsInformation(podInfos);
+        serviceStatus
+            .setAverageCpuLoadPerNode(averageCpuUsagePerNode)
+            .setAverageMemoryUsagePerNode(averageMemoryUsagePerNode)
+            .setPodsInformation(podInfos);
         return serviceStatus;
     }
 

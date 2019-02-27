@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.Optional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableMap;
 import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.dto.KuberenetesPodMetricsDTO;
 import io.github.ust.mico.core.dto.KubernetesPodInformationDTO;
@@ -73,6 +74,9 @@ import static io.github.ust.mico.core.TestConstants.ID;
 import static io.github.ust.mico.core.TestConstants.ID_1;
 import static io.github.ust.mico.core.TestConstants.SERVICES_PATH;
 import static io.github.ust.mico.core.TestConstants.SERVICE_DTO_AVAILABLE_REPLICAS;
+import static io.github.ust.mico.core.TestConstants.SERVICE_DTO_AVERAGE_CPU_LOAD_PER_NODE;
+import static io.github.ust.mico.core.TestConstants.SERVICE_DTO_AVERAGE_MEMORY_USAGE_PER_NODE;
+import static io.github.ust.mico.core.TestConstants.SERVICE_DTO_ERROR_MESSAGES;
 import static io.github.ust.mico.core.TestConstants.SERVICE_DTO_INTERFACES_INFORMATION;
 import static io.github.ust.mico.core.TestConstants.SERVICE_DTO_INTERFACES_INFORMATION_NAME;
 import static io.github.ust.mico.core.TestConstants.SERVICE_DTO_POD_INFO;
@@ -207,6 +211,8 @@ public class ServiceControllerTests {
             .setShortName(SHORT_NAME)
             .setAvailableReplicas(availableReplicas)
             .setRequestedReplicas(requestedReplicas)
+            .setAverageCpuLoadPerNode(ImmutableMap.of(nodeName, 25))
+            .setAverageMemoryUsagePerNode(ImmutableMap.of(nodeName, 60))
             .setInterfacesInformation(CollectionUtils.listOf(new MicoServiceInterfaceDTO().setName(SERVICE_INTERFACE_NAME)))
             .setPodsInformation(Arrays.asList(kubernetesPodInfo1, kubernetesPodInfo2));
 
@@ -219,6 +225,8 @@ public class ServiceControllerTests {
             .andExpect(jsonPath(SERVICE_DTO_SERVICE_NAME, is(SERVICE_NAME)))
             .andExpect(jsonPath(SERVICE_DTO_REQUESTED_REPLICAS, is(requestedReplicas)))
             .andExpect(jsonPath(SERVICE_DTO_AVAILABLE_REPLICAS, is(availableReplicas)))
+            .andExpect(jsonPath(SERVICE_DTO_AVERAGE_CPU_LOAD_PER_NODE, is(ImmutableMap.of(nodeName, 25))))
+            .andExpect(jsonPath(SERVICE_DTO_AVERAGE_MEMORY_USAGE_PER_NODE, is(ImmutableMap.of(nodeName, 60))))
             .andExpect(jsonPath(SERVICE_DTO_INTERFACES_INFORMATION, hasSize(1)))
             .andExpect(jsonPath(SERVICE_DTO_INTERFACES_INFORMATION_NAME, is(SERVICE_INTERFACE_NAME)))
             .andExpect(jsonPath(SERVICE_DTO_POD_INFO, hasSize(2)))
@@ -233,7 +241,8 @@ public class ServiceControllerTests {
             .andExpect(jsonPath(SERVICE_DTO_POD_INFO_NODE_NAME_2, is(nodeName)))
             .andExpect(jsonPath(SERVICE_DTO_POD_INFO_METRICS_MEMORY_USAGE_2, is(memoryUsagePod2)))
             .andExpect(jsonPath(SERVICE_DTO_POD_INFO_METRICS_CPU_LOAD_2, is(cpuLoadPod2)))
-            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_METRICS_AVAILABLE_2, is(true)));
+            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_METRICS_AVAILABLE_2, is(true)))
+            .andExpect(jsonPath(SERVICE_DTO_ERROR_MESSAGES, is(CollectionUtils.listOf())));
     }
 
     @Test
