@@ -385,6 +385,22 @@ export class ApiService {
     }
 
     /**
+     * delete all versions of a service
+     * @param shortName shortName of the service versions to be deleted
+     */
+    deleteAllServiceVersions(shortName: string) {
+
+        return this.rest.delete<ApiObject>('services/' + shortName)
+            .pipe(map(val => {
+                console.log('DELETE ALL SERVICE VERSIONS', val);
+
+                this.getServices();
+
+                return true;
+            }));
+    }
+
+    /**
      * Get a specific version of a service
      *
      * @param shortName unique short name of the service
@@ -485,7 +501,6 @@ export class ApiService {
     deleteService(shortName, version) {
         return this.rest.delete<ApiObject>('services/' + shortName + '/' + version)
             .pipe(map(val => {
-                console.log('DELETE SERVICE', val);
 
                 this.getServices();
 
