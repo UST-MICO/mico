@@ -56,7 +56,6 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
     // dependers: services depending on the current service
     dependers: any[] = [];
     serviceInterfaces: any[] = [];
-    test = [];
 
     // will be used by the update form
     serviceData;
