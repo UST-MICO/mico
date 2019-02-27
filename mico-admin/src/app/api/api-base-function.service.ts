@@ -95,7 +95,7 @@ export class ApiBaseFunctionService {
                 });
             } catch (e) {
                 console.log(e);
-                this.snackBar.open('An error occured in a' + httpVerb + 'Method. The error could not be handled correctly. ' +
+                this.snackBar.open('An error occured in a ' + httpVerb + ' Method. The error could not be handled correctly. ' +
                     'See the console for details.', 'Ok', {
                         duration: 0,
                     });
@@ -167,7 +167,7 @@ export class ApiBaseFunctionService {
                 catchError((error) => this.showError(error, 'DELETE')),
                 map((res: Response) => {
 
-                    this.snackBar.open('Element deleted successfully', 'Ok', {
+                    this.snackBar.open('Element deleted successfully.', 'Ok', {
                         duration: 5,
                     });
 
