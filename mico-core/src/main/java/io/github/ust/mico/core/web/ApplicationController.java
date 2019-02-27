@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
@@ -45,6 +47,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
+import io.github.ust.mico.core.dto.MicoServiceDeploymentInfoDTO;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
@@ -69,6 +72,7 @@ public class ApplicationController {
 
     private static final String PATH_VARIABLE_SHORT_NAME = "shortName";
     private static final String PATH_VARIABLE_VERSION = "version";
+    private static final String PATH_VARIABLE_SERVICE_SHORT_NAME = "serviceShortName";
 
     @Autowired
     private MicoApplicationRepository applicationRepository;
@@ -280,6 +284,59 @@ public class ApplicationController {
         // TODO: Update Kubernetes deployment
 
         return ResponseEntity.noContent().build();
+    }
+    
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/services/{" + SERVICE_SHORT_NAME + "}")
+    public ResponseEntity<Resource<MicoServiceDeploymentInfoDTO>> getServiceDeploymentInformation(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                                                     @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName) {
+        // Retrieve service deployment info from database if there is any
+        Optional<MicoServiceDeploymentInfoQueryResult> serviceDeploymentInfoQueryResultOptional = serviceDeploymentInfoRepository.findByApplicationAndService(shortName, version, serviceShortName);
+        if (!serviceDeploymentInfoQueryResultOptional.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Service deployment information for service '" + serviceShortName + "' in application '" + shortName
+                            + "' in version '" + version + "' could not be found.");
+        }
+        
+        // Convert to service deployment info DTO and return it
+        MicoServiceDeploymentInfo serviceDeploymentInfo = serviceDeploymentInfoQueryResultOptional.get().getServiceDeploymentInfo();
+        return ResponseEntity.ok(new Resource<>(MicoServiceDeploymentInfoDTO.valueOf(serviceDeploymentInfo),
+                linkTo(methodOn(ApplicationController.class)
+                        .getServiceDeploymentInformation(shortName, version,serviceShortName)).withSelfRel()));
+    }
+    
+    @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/services/{" + SERVICE_SHORT_NAME + "}")
+    public ResponseEntity<Resource<MicoApplication>> updateServiceDeploymentInformation(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                                                     @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName,
+                                                                                     @Valid @RequestBody MicoServiceDeploymentInfoDTO serviceDeploymentInfoDTO) {
+        // Check whether the corresponding service to update the deployment information for
+        // is available in the database (done via the deployment information relationship)
+        MicoApplication application = getApplicationFromDatabase(shortName, version);
+        if (application.getServiceDeploymentInfos().stream().noneMatch(sdi -> sdi.getService().getShortName().equals(serviceShortName))) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Service deployment information for service '" + serviceShortName + "' in application '" + shortName
+                            + "' in version '" + version + "' could not be found.");
+        }
+        
+        // Search the corresponding deployment information ...
+        for (MicoServiceDeploymentInfo serviceDeploymentInfo : application.getServiceDeploymentInfos()) {
+            if (serviceDeploymentInfo.getService().getShortName().equals(serviceShortName)) {
+                // ... and update it with the values from the deployment information from the DTO
+                serviceDeploymentInfo.applyValuesFrom(serviceDeploymentInfoDTO);
+                log.info("Service deployment information for service '{}' in application '{}' in version '{}' has been updated.",
+                        serviceShortName, shortName, version);
+                break;
+            }
+        }
+        
+        MicoApplication updatedApplication = applicationRepository.save(application);
+        
+        // TODO: Update actual Kubernetes deployment (see issue mico#416).
+        
+        return ResponseEntity.ok(new Resource<>(updatedApplication,
+                linkTo(methodOn(ApplicationController.class).updateServiceDeploymentInformation(shortName, version,
+                        serviceShortName, serviceDeploymentInfoDTO)).withSelfRel()));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")

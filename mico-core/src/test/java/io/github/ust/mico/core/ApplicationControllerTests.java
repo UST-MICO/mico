@@ -19,19 +19,48 @@
 
 package io.github.ust.mico.core;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import io.github.ust.mico.core.configuration.CorsConfig;
-import io.github.ust.mico.core.dto.*;
-import io.github.ust.mico.core.model.*;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.MicoStatusService;
-import io.github.ust.mico.core.util.CollectionUtils;
-import io.github.ust.mico.core.web.ApplicationController;
+import static io.github.ust.mico.core.JsonPathBuilder.EMBEDDED;
+import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
+import static io.github.ust.mico.core.JsonPathBuilder.SELF_HREF;
+import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
+import static io.github.ust.mico.core.TestConstants.DESCRIPTION;
+import static io.github.ust.mico.core.TestConstants.GIT_TEST_REPO_URL;
+import static io.github.ust.mico.core.TestConstants.ID;
+import static io.github.ust.mico.core.TestConstants.SERVICE_SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.SERVICE_VERSION;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1_MATCHER;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_2;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_MATCHER;
+import static io.github.ust.mico.core.TestConstants.VERSION;
+import static io.github.ust.mico.core.TestConstants.VERSION_1_0_1;
+import static io.github.ust.mico.core.TestConstants.VERSION_1_0_2;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.hamcrest.collection.IsEmptyCollection;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,34 +74,36 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
-import static io.github.ust.mico.core.JsonPathBuilder.*;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
-import static io.github.ust.mico.core.TestConstants.VERSION;
-import static io.github.ust.mico.core.TestConstants.*;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import io.github.ust.mico.core.configuration.CorsConfig;
+import io.github.ust.mico.core.dto.KuberenetesPodMetricsDTO;
+import io.github.ust.mico.core.dto.KubernetesPodInfoDTO;
+import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
+import io.github.ust.mico.core.dto.MicoServiceDeploymentInfoDTO;
+import io.github.ust.mico.core.dto.MicoServiceInterfaceDTO;
+import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoLabel;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo.ImagePullPolicy;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfoQueryResult;
+import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.service.MicoStatusService;
+import io.github.ust.mico.core.util.CollectionUtils;
+import io.github.ust.mico.core.web.ApplicationController;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(ApplicationController.class)
@@ -659,6 +690,91 @@ public class ApplicationControllerTests {
         List<MicoService> savedServices = serviceRepository.findAllByApplication(SHORT_NAME, VERSION);
         assertTrue("Expected services are empty", savedServices.isEmpty());
     }
+    
+    @Test
+    public void getServiceDeploymentInformation() throws Exception {
+        MicoApplication application = new MicoApplication()
+                .setId(ID)
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION);
+        
+        MicoService service = new MicoService()
+                .setShortName(SERVICE_SHORT_NAME)
+                .setVersion(SERVICE_VERSION);
+        
+        List<MicoLabel<String, String>> labels = CollectionUtils.listOf(new MicoLabel<String, String>("key", "value"));
+        ImagePullPolicy imagePullPolicy = ImagePullPolicy.IF_NOT_PRESENT;
+        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
+                .setApplication(application)
+                .setService(service)
+                .setReplicas(3)
+                .setLabels(labels)
+                .setImagePullPolicy(imagePullPolicy);
+        
+        application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
+        
+        given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName()))
+                        .willReturn(Optional.of(new MicoServiceDeploymentInfoQueryResult(application, serviceDeploymentInfo, service)));
+        
+        mvc.perform(get(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/services/" + service.getShortName()))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath(TestConstants.SDI_REPLICAS_PATH, is(serviceDeploymentInfo.getReplicas())))
+                .andExpect(jsonPath(TestConstants.SDI_LABELS_PATH + "[0].key", is(labels.get(0).getKey())))
+                .andExpect(jsonPath(TestConstants.SDI_LABELS_PATH + "[0].value", is(labels.get(0).getValue())))
+                .andExpect(jsonPath(TestConstants.SDI_IMAGE_PULLPOLICY_PATH, is(imagePullPolicy.toString())))
+                .andReturn();
+    }
+    
+    @Test
+    public void updateServiceDeploymentInformation() throws Exception {
+        MicoApplication application = new MicoApplication()
+                .setId(ID)
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION);
+        
+        MicoApplication expectedApplication = new MicoApplication()
+                .setId(ID)
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION);
+        
+        MicoService service = new MicoService()
+                .setShortName(SERVICE_SHORT_NAME)
+                .setVersion(SERVICE_VERSION);
+        
+        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
+                .setApplication(application)
+                .setService(service)
+                .setReplicas(3)
+                .setLabels(CollectionUtils.listOf(new MicoLabel<String, String>("key", "value")))
+                .setImagePullPolicy(ImagePullPolicy.IF_NOT_PRESENT);
+        
+        MicoServiceDeploymentInfoDTO updatedServiceDeploymentInfoDTO = new MicoServiceDeploymentInfoDTO()
+                .setReplicas(5)
+                .setLabels(CollectionUtils.listOf(new MicoLabel<String, String>("key-updated", "value-updated")))
+                .setImagePullPolicy(ImagePullPolicy.NEVER);
+        
+        application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
+        expectedApplication.getServiceDeploymentInfos().add(serviceDeploymentInfo.applyValuesFrom(updatedServiceDeploymentInfoDTO));
+        
+        given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion()))
+                        .willReturn(Optional.of(application));
+        given(applicationRepository.save(eq(expectedApplication))).willReturn(expectedApplication);
+        
+        mvc.perform(put(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/services/" + service.getShortName())
+                    .content(mapper.writeValueAsBytes(updatedServiceDeploymentInfoDTO))
+                    .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath(SHORT_NAME_PATH, is(expectedApplication.getShortName())))
+                .andExpect(jsonPath(VERSION_PATH, is(expectedApplication.getVersion())))
+                .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[*]", hasSize(1)))
+                .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[0].replicas", is(updatedServiceDeploymentInfoDTO.getReplicas())))
+                .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[0].labels[0].key", is(updatedServiceDeploymentInfoDTO.getLabels().get(0).getKey())))
+                .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[0].labels[0].value", is(updatedServiceDeploymentInfoDTO.getLabels().get(0).getValue())))
+                .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[0].imagePullPolicy", is(updatedServiceDeploymentInfoDTO.getImagePullPolicy().toString())))
+                .andReturn();
+    }
 
     @Test
     public void deleteAllVersionsOfAnApplication() throws Exception {
@@ -716,16 +832,6 @@ public class ApplicationControllerTests {
             .andReturn();
 
         verify(applicationRepository, never()).deleteAll(micoApplicationListCaptor.capture());
-    }
-
-    private ResponseEntity getPrometheusResponseEntity(int value) {
-        PrometheusResponse prometheusResponse = new PrometheusResponse();
-        prometheusResponse.setStatus(PrometheusResponse.PROMETHEUS_SUCCESSFUL_RESPONSE);
-        prometheusResponse.setValue(value);
-        ResponseEntity responseEntity = mock(ResponseEntity.class);
-        given(responseEntity.getStatusCode()).willReturn(HttpStatus.OK);
-        given(responseEntity.getBody()).willReturn(prometheusResponse);
-        return responseEntity;
     }
 
     private void prettyPrint(Object object) {
