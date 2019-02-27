@@ -1,4 +1,5 @@
 <mat-dialog-content>
+    <!-- QuestionType Key mapping to the shown question -->
     <div [ngSwitch]="questionType" class="">
         <div *ngSwitchCase="'deleteDependency'">
             Do you really want to delete the dependency to <b>{{object}}</b>?
