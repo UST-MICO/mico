@@ -190,24 +190,25 @@ public class ApplicationController {
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
-    public ResponseEntity<Resource<MicoApplication>> deleteAllApplications(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) throws KubernetesResourceException {
+    public ResponseEntity<Resource<MicoApplication>> deleteAllVersionsOfAnApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) throws KubernetesResourceException {
         List<MicoApplication> micoApplicationList = applicationRepository.findByShortName(shortName);
 
-        // Check whether there are any applications in the database at all
+        // Check whether there is any version of the application in the database at all
         if (micoApplicationList.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        
-        // If at least one application is currently deployed,
-        // none of the applications shall be deleted
+
+        // If at least one version of the application is currently deployed,
+        // none of the versions shall be deleted
         for (MicoApplication application : micoApplicationList) {
             if (micoKubernetesClient.isApplicationDeployed(application)) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Application is currently deployed!");
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Application is currently deployed in version " + application.getVersion() + "!");
             }
         }
 
-        // No application deployed -> delete all applications
-        applicationRepository.deleteAll();
+        // No version of the application is deployed -> delete all
+        applicationRepository.deleteAll(micoApplicationList);
 
         return ResponseEntity.noContent().build();
     }

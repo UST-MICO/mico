@@ -19,50 +19,24 @@
 
 package io.github.ust.mico.core;
 
-import static io.github.ust.mico.core.JsonPathBuilder.EMBEDDED;
-import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
-import static io.github.ust.mico.core.JsonPathBuilder.SELF_HREF;
-import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
-import static io.github.ust.mico.core.TestConstants.DESCRIPTION;
-import static io.github.ust.mico.core.TestConstants.GIT_TEST_REPO_URL;
-import static io.github.ust.mico.core.TestConstants.ID;
-import static io.github.ust.mico.core.TestConstants.SERVICE_SHORT_NAME;
-import static io.github.ust.mico.core.TestConstants.SERVICE_VERSION;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1_MATCHER;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME_MATCHER;
-import static io.github.ust.mico.core.TestConstants.VERSION;
-import static io.github.ust.mico.core.TestConstants.VERSION_1_0_1;
-import static io.github.ust.mico.core.TestConstants.VERSION_1_0_2;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import io.github.ust.mico.core.configuration.CorsConfig;
+import io.github.ust.mico.core.dto.*;
+import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.service.MicoStatusService;
+import io.github.ust.mico.core.util.CollectionUtils;
+import io.github.ust.mico.core.web.ApplicationController;
 import org.hamcrest.collection.IsEmptyCollection;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -78,29 +52,27 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.web.client.RestTemplate;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
-import io.github.ust.mico.core.configuration.CorsConfig;
-import io.github.ust.mico.core.dto.KuberenetesPodMetricsDTO;
-import io.github.ust.mico.core.dto.KubernetesPodInfoDTO;
-import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
-import io.github.ust.mico.core.dto.MicoServiceInterfaceDTO;
-import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
-import io.github.ust.mico.core.dto.PrometheusResponse;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfoQueryResult;
-import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.MicoStatusService;
-import io.github.ust.mico.core.util.CollectionUtils;
-import io.github.ust.mico.core.web.ApplicationController;
+import static io.github.ust.mico.core.JsonPathBuilder.*;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.VERSION;
+import static io.github.ust.mico.core.TestConstants.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(ApplicationController.class)
@@ -144,6 +116,9 @@ public class ApplicationControllerTests {
 
     @Autowired
     private ObjectMapper mapper;
+
+    @Captor
+    ArgumentCaptor<List<MicoApplication>> micoApplicationListCaptor;
 
     @Test
     public void getAllApplications() throws Exception {
@@ -686,23 +661,61 @@ public class ApplicationControllerTests {
     }
 
     @Test
-    public void deleteAllApplications() throws Exception {
-        MicoApplication micoApplicationOne = new MicoApplication()
+    public void deleteAllVersionsOfAnApplication() throws Exception {
+        MicoApplication micoApplicationV1 = new MicoApplication()
                 .setShortName(SHORT_NAME)
                 .setVersion(VERSION);
-        MicoApplication micoApplicationTwo = new MicoApplication()
+        MicoApplication micoApplicationV2 = new MicoApplication()
                 .setShortName(SHORT_NAME)
                 .setVersion(VERSION_1_0_1);
-        MicoApplication micoApplicationThree = new MicoApplication()
+        MicoApplication micoApplicationV3 = new MicoApplication()
                 .setShortName(SHORT_NAME)
                 .setVersion(VERSION_1_0_2);
+        MicoApplication otherApplication = new MicoApplication()
+            .setShortName(SHORT_NAME_2)
+            .setVersion(VERSION);
 
-        given(applicationRepository.findByShortName(SHORT_NAME)).willReturn(CollectionUtils.listOf(micoApplicationOne, micoApplicationTwo, micoApplicationThree));
-        
+        given(applicationRepository.findByShortName(SHORT_NAME)).willReturn(CollectionUtils.listOf(micoApplicationV1, micoApplicationV2, micoApplicationV3));
+        given(applicationRepository.findByShortName(SHORT_NAME_2)).willReturn(CollectionUtils.listOf(otherApplication));
+        given(micoKubernetesClient.isApplicationDeployed(any(MicoApplication.class))).willReturn(false);
+
         mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME))
                 .andDo(print())
                 .andExpect(status().isNoContent())
                 .andReturn();
+
+        verify(applicationRepository, times(1)).deleteAll(micoApplicationListCaptor.capture());
+        List<MicoApplication> actualDeletedApplications = micoApplicationListCaptor.getValue();
+        assertEquals("Expected 3 applications were deleted", 3, actualDeletedApplications.size());
+        List<MicoApplication> otherApplications = actualDeletedApplications.stream()
+            .filter(app -> !app.getShortName().equals(SHORT_NAME)).collect(Collectors.toList());
+        assertEquals("Excepted no other application was deleted", 0, otherApplications.size());
+    }
+
+    @Test
+    public void deleteOnlyIfNoVersionOfTheApplicationIsDeployed() throws Exception {
+        MicoApplication micoApplicationV1 = new MicoApplication()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION);
+        MicoApplication micoApplicationV2 = new MicoApplication()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION_1_0_1);
+        MicoApplication micoApplicationV3 = new MicoApplication()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION_1_0_2);
+
+        given(applicationRepository.findByShortName(SHORT_NAME)).willReturn(CollectionUtils.listOf(micoApplicationV1, micoApplicationV2, micoApplicationV3));
+        given(micoKubernetesClient.isApplicationDeployed(micoApplicationV1)).willReturn(false);
+        given(micoKubernetesClient.isApplicationDeployed(micoApplicationV2)).willReturn(true);
+        given(micoKubernetesClient.isApplicationDeployed(micoApplicationV3)).willReturn(false);
+
+        mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME))
+            .andDo(print())
+            .andExpect(status().isConflict())
+            .andExpect(status().reason("Application is currently deployed in version 1.0.1!"))
+            .andReturn();
+
+        verify(applicationRepository, never()).deleteAll(micoApplicationListCaptor.capture());
     }
 
     private ResponseEntity getPrometheusResponseEntity(int value) {
