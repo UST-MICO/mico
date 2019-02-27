@@ -151,5 +151,5 @@ public class MicoServiceDeploymentInfoDTO {
                 .setImagePullPolicy(micoServiceDeploymentInfo.getImagePullPolicy())
                 .setRestartPolicy(micoServiceDeploymentInfo.getRestartPolicy());
     }
-
+    
 }

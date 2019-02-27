@@ -303,6 +303,48 @@ public class ApplicationController {
                 linkTo(methodOn(ApplicationController.class)
                         .getServiceDeploymentInformation(shortName, version,serviceShortName)).withSelfRel()));
     }
+    
+    @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/services/{" + SERVICE_SHORT_NAME + "}")
+    public ResponseEntity<Resource<MicoApplication>> updateServiceDeploymentInformation(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                                                     @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName,
+                                                                                     @RequestBody MicoServiceDeploymentInfoDTO serviceDeploymentInfoDTO) {
+        // Check whether corresponding application is available in the database
+        Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
+        if (!applicationOptional.isPresent()) {
+            log.error("Application '{}' in version '{}' could not be found.", shortName, version);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Application '" + shortName + "' in version '" + version + "' could not be found.");
+        }
+        
+        // Check whether the corresponding service to update the deployment information for
+        // is available in the database (done via the deployment information relationship)
+        MicoApplication application = applicationOptional.get();
+        if (application.getServiceDeploymentInfos().stream().noneMatch(sdi -> sdi.getService().getShortName().equals(serviceShortName))) {
+            log.error("Service  '{}' in application '{}' in version '{}' could not be found.",
+                    serviceShortName, shortName, version);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Service '" + serviceShortName + "' in application '" + shortName + "' in version '" + version + "' could not be found.");
+        }
+        
+        // Search the corresponding deployment information ...
+        for (MicoServiceDeploymentInfo serviceDeploymentInfo : application.getServiceDeploymentInfos()) {
+            if (serviceDeploymentInfo.getService().getShortName().equals(serviceShortName)) {
+                // ... and update it with the values from the deployment information from the DTO
+                serviceDeploymentInfo.applyValuesFrom(serviceDeploymentInfoDTO);
+                log.info("Service deployment information for service '{}' in application '{}' in version '{}' has been updated.",
+                        serviceShortName, shortName, version);
+                break;
+            }
+        }
+        
+        MicoApplication updatedApplication = applicationRepository.save(application);
+        System.out.println(updatedApplication == null);
+        
+        return ResponseEntity.ok(new Resource<>(updatedApplication,
+                linkTo(methodOn(ApplicationController.class).updateServiceDeploymentInformation(shortName, version,
+                        serviceShortName, serviceDeploymentInfoDTO)).withSelfRel()));
+    }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")
     public ResponseEntity<Resource<MicoApplicationStatusDTO>> getStatusOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,

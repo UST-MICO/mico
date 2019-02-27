@@ -86,6 +86,7 @@ import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.dto.KuberenetesPodMetricsDTO;
 import io.github.ust.mico.core.dto.KubernetesPodInfoDTO;
 import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
+import io.github.ust.mico.core.dto.MicoServiceDeploymentInfoDTO;
 import io.github.ust.mico.core.dto.MicoServiceInterfaceDTO;
 import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
 import io.github.ust.mico.core.dto.PrometheusResponse;
@@ -698,13 +699,12 @@ public class ApplicationControllerTests {
                 .setShortName(SERVICE_SHORT_NAME)
                 .setVersion(SERVICE_VERSION);
         
-        int replicas = 3;
-        List<MicoLabel<String, String>> labels = CollectionUtils.listOf(new MicoLabel<String, String>("key-1", "value-1"));
+        List<MicoLabel<String, String>> labels = CollectionUtils.listOf(new MicoLabel<String, String>("key", "value"));
         ImagePullPolicy imagePullPolicy = ImagePullPolicy.IF_NOT_PRESENT;
         MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
                 .setApplication(application)
                 .setService(service)
-                .setReplicas(replicas)
+                .setReplicas(3)
                 .setLabels(labels)
                 .setImagePullPolicy(imagePullPolicy);
         
@@ -716,13 +716,65 @@ public class ApplicationControllerTests {
         mvc.perform(get(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/services/" + service.getShortName()))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath(TestConstants.SDI_REPLICAS_PATH, is(replicas)))
+                .andExpect(jsonPath(TestConstants.SDI_REPLICAS_PATH, is(serviceDeploymentInfo.getReplicas())))
                 .andExpect(jsonPath(TestConstants.SDI_LABELS_PATH + "[0].key", is(labels.get(0).getKey())))
                 .andExpect(jsonPath(TestConstants.SDI_LABELS_PATH + "[0].value", is(labels.get(0).getValue())))
                 .andExpect(jsonPath(TestConstants.SDI_IMAGE_PULLPOLICY_PATH, is(imagePullPolicy.toString())))
                 .andReturn();
         
         verify(serviceDeploymentInfoRepository, times(1)).findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName());
+    }
+    
+    @Test
+    public void updateServiceDeploymentInformation() throws Exception {
+        MicoApplication application = new MicoApplication()
+                .setId(ID)
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION);
+        
+        MicoApplication expectedApplication = new MicoApplication()
+                .setId(ID)
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION);
+        
+        MicoService service = new MicoService()
+                .setShortName(SERVICE_SHORT_NAME)
+                .setVersion(SERVICE_VERSION);
+        
+        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
+                .setApplication(application)
+                .setService(service)
+                .setReplicas(3)
+                .setLabels(CollectionUtils.listOf(new MicoLabel<String, String>("key", "value")))
+                .setImagePullPolicy(ImagePullPolicy.IF_NOT_PRESENT);
+        
+        MicoServiceDeploymentInfoDTO updatedServiceDeploymentInfoDTO = new MicoServiceDeploymentInfoDTO()
+                .setReplicas(5)
+                .setLabels(CollectionUtils.listOf(new MicoLabel<String, String>("key-updated", "value-updated")))
+                .setImagePullPolicy(ImagePullPolicy.NEVER);
+        
+        application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
+        expectedApplication.getServiceDeploymentInfos().add(serviceDeploymentInfo.applyValuesFrom(updatedServiceDeploymentInfoDTO));
+        
+        given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion()))
+                        .willReturn(Optional.of(application));
+        given(applicationRepository.save(eq(expectedApplication))).willReturn(expectedApplication);
+        
+        mvc.perform(put(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/services/" + service.getShortName())
+                    .content(mapper.writeValueAsBytes(updatedServiceDeploymentInfoDTO))
+                    .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath(SHORT_NAME_PATH, is(expectedApplication.getShortName())))
+                .andExpect(jsonPath(VERSION_PATH, is(expectedApplication.getVersion())))
+                .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[*]", hasSize(1)))
+                .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[0].replicas", is(updatedServiceDeploymentInfoDTO.getReplicas())))
+                .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[0].labels[0].key", is(updatedServiceDeploymentInfoDTO.getLabels().get(0).getKey())))
+                .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[0].labels[0].value", is(updatedServiceDeploymentInfoDTO.getLabels().get(0).getValue())))
+                .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[0].imagePullPolicy", is(updatedServiceDeploymentInfoDTO.getImagePullPolicy().toString())))
+                .andReturn();
+        
+        verify(applicationRepository, times(1)).save(any());
     }
 
     @Test
