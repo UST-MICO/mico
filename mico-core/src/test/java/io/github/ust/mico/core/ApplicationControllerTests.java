@@ -42,7 +42,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -71,8 +70,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -89,7 +86,6 @@ import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
 import io.github.ust.mico.core.dto.MicoServiceDeploymentInfoDTO;
 import io.github.ust.mico.core.dto.MicoServiceInterfaceDTO;
 import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
-import io.github.ust.mico.core.dto.PrometheusResponse;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoLabel;
 import io.github.ust.mico.core.model.MicoService;
@@ -721,8 +717,6 @@ public class ApplicationControllerTests {
                 .andExpect(jsonPath(TestConstants.SDI_LABELS_PATH + "[0].value", is(labels.get(0).getValue())))
                 .andExpect(jsonPath(TestConstants.SDI_IMAGE_PULLPOLICY_PATH, is(imagePullPolicy.toString())))
                 .andReturn();
-        
-        verify(serviceDeploymentInfoRepository, times(1)).findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName());
     }
     
     @Test
@@ -773,8 +767,6 @@ public class ApplicationControllerTests {
                 .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[0].labels[0].value", is(updatedServiceDeploymentInfoDTO.getLabels().get(0).getValue())))
                 .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[0].imagePullPolicy", is(updatedServiceDeploymentInfoDTO.getImagePullPolicy().toString())))
                 .andReturn();
-        
-        verify(applicationRepository, times(1)).save(any());
     }
 
     @Test
@@ -795,16 +787,6 @@ public class ApplicationControllerTests {
                 .andDo(print())
                 .andExpect(status().isNoContent())
                 .andReturn();
-    }
-
-    private ResponseEntity getPrometheusResponseEntity(int value) {
-        PrometheusResponse prometheusResponse = new PrometheusResponse();
-        prometheusResponse.setStatus(PrometheusResponse.PROMETHEUS_SUCCESSFUL_RESPONSE);
-        prometheusResponse.setValue(value);
-        ResponseEntity responseEntity = mock(ResponseEntity.class);
-        given(responseEntity.getStatusCode()).willReturn(HttpStatus.OK);
-        given(responseEntity.getBody()).willReturn(prometheusResponse);
-        return responseEntity;
     }
 
     private void prettyPrint(Object object) {

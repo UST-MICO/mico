@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
@@ -290,8 +292,6 @@ public class ApplicationController {
         // Retrieve service deployment info from database if there is any
         Optional<MicoServiceDeploymentInfoQueryResult> serviceDeploymentInfoQueryResultOptional = serviceDeploymentInfoRepository.findByApplicationAndService(shortName, version, serviceShortName);
         if (!serviceDeploymentInfoQueryResultOptional.isPresent()) {
-            log.warn("Service deployment information for service '{}' in application '{}' in version '{}' could not be found.",
-                    serviceShortName, shortName, version);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "Service deployment information for service '" + serviceShortName + "' in application '" + shortName
                             + "' in version '" + version + "' could not be found.");
@@ -308,23 +308,14 @@ public class ApplicationController {
     public ResponseEntity<Resource<MicoApplication>> updateServiceDeploymentInformation(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                      @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                                      @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName,
-                                                                                     @RequestBody MicoServiceDeploymentInfoDTO serviceDeploymentInfoDTO) {
-        // Check whether corresponding application is available in the database
-        Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
-        if (!applicationOptional.isPresent()) {
-            log.error("Application '{}' in version '{}' could not be found.", shortName, version);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "Application '" + shortName + "' in version '" + version + "' could not be found.");
-        }
-        
+                                                                                     @Valid @RequestBody MicoServiceDeploymentInfoDTO serviceDeploymentInfoDTO) {
         // Check whether the corresponding service to update the deployment information for
         // is available in the database (done via the deployment information relationship)
-        MicoApplication application = applicationOptional.get();
+        MicoApplication application = getApplicationFromDatabase(shortName, version);
         if (application.getServiceDeploymentInfos().stream().noneMatch(sdi -> sdi.getService().getShortName().equals(serviceShortName))) {
-            log.error("Service  '{}' in application '{}' in version '{}' could not be found.",
-                    serviceShortName, shortName, version);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "Service '" + serviceShortName + "' in application '" + shortName + "' in version '" + version + "' could not be found.");
+                    "Service deployment information for service '" + serviceShortName + "' in application '" + shortName
+                            + "' in version '" + version + "' could not be found.");
         }
         
         // Search the corresponding deployment information ...
@@ -339,7 +330,8 @@ public class ApplicationController {
         }
         
         MicoApplication updatedApplication = applicationRepository.save(application);
-        System.out.println(updatedApplication == null);
+        
+        // TODO: Update actual Kubernetes deployment (see issue mico#416).
         
         return ResponseEntity.ok(new Resource<>(updatedApplication,
                 linkTo(methodOn(ApplicationController.class).updateServiceDeploymentInformation(shortName, version,
