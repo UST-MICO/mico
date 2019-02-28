@@ -28,6 +28,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
@@ -69,8 +70,9 @@ public class ApplicationController {
 
     private static final String SERVICE_SHORT_NAME = "serviceShortName";
 
-    public static final String PATH_SERVICES = "services";
     public static final String PATH_APPLICATIONS = "applications";
+    public static final String PATH_SERVICES = "services";
+    public static final String PATH_PROMOTE = "promote";
 
     private static final String PATH_VARIABLE_SHORT_NAME = "shortName";
     private static final String PATH_VARIABLE_VERSION = "version";
@@ -150,21 +152,34 @@ public class ApplicationController {
                 linkTo(methodOn(ApplicationController.class).updateApplication(shortName, version, applicationDto))
                         .withSelfRel()));
     }
+    
+    @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_PROMOTE)
+    public ResponseEntity<Resource<MicoApplicationDTO>> promoteApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                       @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                                       @NotEmpty @RequestBody String newVersion) {
+        // Application to promote (copy)
+        MicoApplication application = getApplicationFromDatabase(shortName, version);
+        
+        // Update the version and set id to null, otherwise the original application
+        // would be updated but we want a new application instance to be created.
+        application.setVersion(newVersion).setId(null);
+        
+        // Save the new (promoted) application in the database,
+        // all edges (deployment information) will be copied, too.
+        MicoApplication updatedApplication = applicationRepository.save(application);
+        
+        return ResponseEntity.ok(new Resource<>(
+                getApplicationDTOResourceWithDeploymentStatus(updatedApplication).getContent(),
+                linkTo(methodOn(ApplicationController.class).promoteApplication(shortName, version, newVersion))
+                        .withSelfRel()));
+    }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     public ResponseEntity<Void> deleteApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                        @PathVariable(PATH_VARIABLE_VERSION) String version) throws KubernetesResourceException {
-        Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
-        
-        // Check whether application is present, i.e., not already deleted
-        if (!applicationOptional.isPresent()) {
-            // TODO: Shoudn't this be a not found response?
-            return ResponseEntity.noContent().build();
-        }
-        
+        MicoApplication application = getApplicationFromDatabase(shortName, version);
         
         // Check whether application is currently deployed, i.e., it cannot be deleted
-        MicoApplication application = applicationOptional.get();
         if (micoKubernetesClient.isApplicationDeployed(application)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Application is currently deployed!");
         }
@@ -241,7 +256,7 @@ public class ApplicationController {
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/services/{" + SERVICE_SHORT_NAME + "}")
+    @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES + "/{" + SERVICE_SHORT_NAME + "}")
     public ResponseEntity<Void> deleteServiceFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                        @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                        @PathVariable(SERVICE_SHORT_NAME) String serviceShortName) {
