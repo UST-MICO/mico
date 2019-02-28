@@ -30,9 +30,7 @@ import static io.github.ust.mico.core.TestConstants.SERVICE_SHORT_NAME;
 import static io.github.ust.mico.core.TestConstants.SERVICE_VERSION;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1_MATCHER;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME_2;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME_MATCHER;
 import static io.github.ust.mico.core.TestConstants.VERSION;
 import static io.github.ust.mico.core.TestConstants.VERSION_1_0_1;
 import static io.github.ust.mico.core.TestConstants.VERSION_1_0_2;
@@ -114,7 +112,9 @@ public class ApplicationControllerTests {
 
     private static final String JSON_PATH_LINKS_SECTION = "$._links.";
 
-    public static final String APPLICATION_DTO_LIST = buildPath(EMBEDDED, "micoApplicationDTOList");
+    public static final String APPLICATION_DTO_LIST_PATH = buildPath(EMBEDDED, "micoApplicationDTOList");
+    public static final String APPLICATION_WITH_SERVICES_DTO_LIST_PATH = buildPath(EMBEDDED, "micoApplicationWithServicesDTOList");
+    public static final String APPLICATION_PATH = buildPath(ROOT, "application");
     public static final String SHORT_NAME_PATH = buildPath(ROOT, "shortName");
     public static final String VERSION_PATH = buildPath(ROOT, "version");
     public static final String DESCRIPTION_PATH = buildPath(ROOT, "description");
@@ -157,15 +157,20 @@ public class ApplicationControllerTests {
                 Arrays.asList(new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION_1_0_1),
                         new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION),
                         new MicoApplication().setShortName(SHORT_NAME_1).setVersion(VERSION)));
+        
+        System.out.println(APPLICATION_WITH_SERVICES_DTO_LIST_PATH + "[0].application.shortName(@.shortName=='" + SHORT_NAME + "')");
 
         mvc.perform(get("/applications").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andExpect(jsonPath(APPLICATION_DTO_LIST + "[*]", hasSize(3)))
-                .andExpect(jsonPath(APPLICATION_DTO_LIST + "[?(" + SHORT_NAME_MATCHER + "&& @.version=='" + VERSION_1_0_1 + "')]", hasSize(1)))
-                .andExpect(jsonPath(APPLICATION_DTO_LIST + "[?(" + SHORT_NAME_MATCHER + "&& @.version=='" + VERSION + "')]", hasSize(1)))
-                .andExpect(jsonPath(APPLICATION_DTO_LIST + "[?(" + SHORT_NAME_1_MATCHER + "&& @.version=='" + VERSION + "')]", hasSize(1)))
+                .andExpect(jsonPath(APPLICATION_WITH_SERVICES_DTO_LIST_PATH + "[*]", hasSize(3)))
+                .andExpect(jsonPath(APPLICATION_WITH_SERVICES_DTO_LIST_PATH + "[0].application.shortName", is(SHORT_NAME)))
+                .andExpect(jsonPath(APPLICATION_WITH_SERVICES_DTO_LIST_PATH + "[0].application.version", is(VERSION_1_0_1)))
+                .andExpect(jsonPath(APPLICATION_WITH_SERVICES_DTO_LIST_PATH + "[1].application.shortName", is(SHORT_NAME)))
+                .andExpect(jsonPath(APPLICATION_WITH_SERVICES_DTO_LIST_PATH + "[1].application.version", is(VERSION)))
+                .andExpect(jsonPath(APPLICATION_WITH_SERVICES_DTO_LIST_PATH + "[2].application.shortName", is(SHORT_NAME_1)))
+                .andExpect(jsonPath(APPLICATION_WITH_SERVICES_DTO_LIST_PATH + "[2].application.version", is(VERSION)))
                 .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "self.href", is("http://localhost/applications")))
                 .andReturn();
     }
@@ -179,8 +184,8 @@ public class ApplicationControllerTests {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
-                .andExpect(jsonPath(VERSION_PATH, is(VERSION)))
+                .andExpect(jsonPath(APPLICATION_PATH + ".shortName", is(SHORT_NAME)))
+                .andExpect(jsonPath(APPLICATION_PATH + ".version", is(VERSION)))
                 .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/applications/" + SHORT_NAME + "/" + VERSION)))
                 .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "applications.href", is("http://localhost/applications")))
                 .andReturn();
@@ -195,7 +200,8 @@ public class ApplicationControllerTests {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andExpect(jsonPath(APPLICATION_DTO_LIST + "[?(" + SHORT_NAME_MATCHER + "&& @.version=='" + VERSION + "')]", hasSize(1)))
+                .andExpect(jsonPath(APPLICATION_WITH_SERVICES_DTO_LIST_PATH + "[0].application.shortName", is(SHORT_NAME)))
+                .andExpect(jsonPath(APPLICATION_WITH_SERVICES_DTO_LIST_PATH + "[0].application.version", is(VERSION)))
                 .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/applications/" + SHORT_NAME)))
                 .andReturn();
     }
