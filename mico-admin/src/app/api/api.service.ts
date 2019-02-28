@@ -545,12 +545,11 @@ export class ApiService {
      *
      * @param url url to the github repository
      */
-    getServiceVersionsViaGithub(url: string): Observable<Readonly<ApiObject[]>> {
+    getServiceVersionsViaGithub(url: string): Observable<Readonly<String[]>> {
         const resource = 'services/import/github' + '?url=' + url;
-        const stream = this.getStreamSource<ApiObject[]>(resource);
+        const stream = this.getStreamSource<String[]>(resource);
 
-
-        this.rest.get<ApiObject[]>(resource).subscribe(val => {
+        this.rest.get<String[]>(resource).subscribe(val => {
             stream.next(freezeObject(val));
         });
 
