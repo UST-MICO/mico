@@ -120,10 +120,8 @@ public class ServiceController {
                                               @PathVariable(PATH_VARIABLE_VERSION) String version) throws KubernetesResourceException {
         MicoService service = getServiceFromDatabase(shortName, version);
 
-        if (micoKubernetesClient.isServiceDeployed(service)) {
-            log.info("Micoservice '{}' in version '{}' is deployed. It is not possible to delete a deployed service.",service.getShortName(),service.getVersion());
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Service is currently deployed!");
-        }
+        throwConflictIfServiceIsDeployed(service);
+
         if (!getDependers(service).isEmpty()) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
                     "Service '" + service.getShortName() + "' '" + service.getVersion() + "' has dependers, therefore it can't be deleted.");
@@ -133,15 +131,25 @@ public class ServiceController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Checks if a service is deployed and throws a ResponseStatusException with the http status CONFLICT (409) if
+     * the service is deployed.
+     * @param service Checks if this service is deployed
+     * @throws KubernetesResourceException if the service is deployed. It uses the http status CONFLICT
+     */
+    private void throwConflictIfServiceIsDeployed(MicoService service) throws KubernetesResourceException {
+        if (micoKubernetesClient.isServiceDeployed(service)) {
+            log.info("Micoservice '{}' in version '{}' is deployed. It is not possible to delete a deployed service.", service.getShortName(), service.getVersion());
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Service is currently deployed!");
+        }
+    }
+
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
     public ResponseEntity<Void> deleteAllVersionsOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) throws KubernetesResourceException {
         List<MicoService> micoServiceList = getAllVersionsOfServiceFromDatabase(shortName);
         log.debug("Got following services from database: {}", micoServiceList);
         for(MicoService micoService : micoServiceList){
-            if (micoKubernetesClient.isServiceDeployed(micoService)) {
-                log.info("Micoservice '{}' in version '{}' is deployed. It is not possible to delete a deployed service.",micoService.getShortName(),micoService.getVersion());
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Service is currently deployed!");
-            }
+            throwConflictIfServiceIsDeployed(micoService);
         }
         micoServiceList.forEach(service -> serviceRepository.delete(service));
 
