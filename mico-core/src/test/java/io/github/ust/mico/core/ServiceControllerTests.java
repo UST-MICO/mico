@@ -808,6 +808,23 @@ public class ServiceControllerTests {
     }
 
     @Test
+    public void deleteSpecificServiceWithDeployedService() throws Exception {
+        MicoService service = new MicoService()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setDescription(DESCRIPTION);
+
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME,VERSION)).willReturn(Optional.of(service));
+        given(micoKubernetesClient.isServiceDeployed(any())).willReturn(true);
+
+        mvc.perform(delete(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION)
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isConflict())
+            .andExpect(status().reason("Service is currently deployed!"));
+    }
+
+    @Test
     public void createServiceViaGitHubCrawler() {
         //TODO: Implementation
     }
