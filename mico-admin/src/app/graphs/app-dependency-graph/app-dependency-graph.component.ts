@@ -68,10 +68,9 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
             return false;
         };
         graph.addEventListener('nodeclick', this.onNodeClick);
-        graph.updateTemplates([SERVICE_NODE_TEMPLATE, APPLICATION_NODE_TEMPLATE], [STYLE_TEMPLATE], [ARROW_TEMPLATE]);
         graph.onCreateDraggedEdge = this.onCreateDraggedEdge;
+        graph.updateTemplates([SERVICE_NODE_TEMPLATE, APPLICATION_NODE_TEMPLATE], [STYLE_TEMPLATE], [ARROW_TEMPLATE]);
         this.resetGraph();
-
     }
 
     ngOnChanges(changes: SimpleChanges) {
@@ -123,11 +122,12 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
     }
 
     onCreateDraggedEdge = (edge: DraggedEdge) => {
-        edge.markers = [{template: 'arrow', positionOnLine: 1, scale: 0.5, rotate: {relativeAngle: 0}}, ];
+        edge.markerEnd = {template: 'arrow', positionOnLine: 1, lineOffset: 4, scale: 0.5, rotate: {relativeAngle: 0}};
         edge.validTargets.clear();
         if (edge.source === 'APPLICATION') {
             edge.type = 'includes';
-            edge.markers[0].scale = 1;
+            edge.markerEnd.lineOffset = 8;
+            edge.markerEnd.scale = 1;
         }
         return edge;
     }
@@ -230,14 +230,15 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
                     source: 'APPLICATION',
                     target: serviceId,
                     type: 'includes',
-                    markers: [{
+                    markerEnd: {
                         template: 'arrow',
                         positionOnLine: 1,
+                        lineOffset: 8,
                         scale: 1,
                         rotate: {
                             relativeAngle: 0,
                         },
-                    }],
+                    },
                 };
                 edgeMap.set(`sAPPLICATION-t${serviceId}`, edge);
                 graph.addEdge(edge, false);
@@ -260,6 +261,6 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
             return;
         }
 
-        this.graph.nativeElement.zoomToBoundingBox(false);
+        this.graph.nativeElement.zoomToBoundingBox(true);
     }
 }
