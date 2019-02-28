@@ -147,12 +147,14 @@ public class MicoApplicationDTO {
                 @ExtensionProperty(name = "description", value = "Holds the current deployment status of this application.")
             }
         )})
-    private MicoApplicationDeploymentStatus deploymentStatus;
+    private MicoApplicationDeploymentStatus deploymentStatus = MicoApplicationDeploymentStatus.UNKNOWN;
     
     
     /**
      * Creates a {@code MicoApplicationDTO} based on a
-     * {@link MicoApplication}.
+     * {@link MicoApplication}. Note that the deployment status
+     * needs to be set explicitly since it cannot be inferred
+     * from the given {@link MicoApplication} itself.
      * 
      * @param application the {@link MicoApplication}.
      * @return a {@link MicoApplicationDTO} with all the values
