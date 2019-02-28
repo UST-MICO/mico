@@ -117,9 +117,13 @@ public class ServiceController {
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     public ResponseEntity<Void> deleteService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                              @PathVariable(PATH_VARIABLE_VERSION) String version) {
+                                              @PathVariable(PATH_VARIABLE_VERSION) String version) throws KubernetesResourceException {
         MicoService service = getServiceFromDatabase(shortName, version);
 
+        if (micoKubernetesClient.isServiceDeployed(service)) {
+            log.info("Micoservice '{}' in version '{}' is deployed. It is not possible to delete a deployed service.",service.getShortName(),service.getVersion());
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Service is currently deployed!");
+        }
         if (!getDependers(service).isEmpty()) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
                     "Service '" + service.getShortName() + "' '" + service.getVersion() + "' has dependers, therefore it can't be deleted.");
