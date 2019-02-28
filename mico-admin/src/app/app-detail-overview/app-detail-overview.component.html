@@ -24,7 +24,7 @@
                     </div>
 
                     <mat-divider></mat-divider>
-                    <!-- Service Interfaces -->
+                    <!-- Included Services -->
                     <div *ngFor="let dependee of application?.services">
                         <div class="flex">
                             <div class="flex-grow-1"
@@ -41,6 +41,13 @@
                                     <mat-icon (click)="deleteService(dependee.shortName)">delete</mat-icon>
                                 </mat-list-item>
                             </div>
+                        </div>
+                        <div>
+                            Deployment Info:<br />
+                            <mico-app-detail-overview-deployment-information
+                                [applicationShortName]="application?.shortName"
+                                [applicationVersion]="application?.version" [service]="dependee">
+                            </mico-app-detail-overview-deployment-information>
                         </div>
                         <mat-divider></mat-divider>
                     </div>

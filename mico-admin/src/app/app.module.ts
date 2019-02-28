@@ -96,6 +96,7 @@ import { MicoDataArrayComponent } from './data-view/mico-data-array/mico-data-ar
 import { MicoDataObjectComponent } from './data-view/mico-data-object/mico-data-object.component';
 import { AppDetailStatusComponent } from './app-detail-status/app-detail-status.component';
 import { ServiceDetailStatusComponent } from './service-detail-status/service-detail-status.component';
+import { AppDetailOverviewDeploymentInformationComponent } from './app-detail-overview-deployment-information/app-detail-overview-deployment-information.component';
 
 @NgModule({
     declarations: [
@@ -135,6 +136,7 @@ import { ServiceDetailStatusComponent } from './service-detail-status/service-de
         MicoDataObjectComponent,
         AppDetailStatusComponent,
         ServiceDetailStatusComponent,
+        AppDetailOverviewDeploymentInformationComponent
     ],
     entryComponents: [
         // dialogs

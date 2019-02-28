@@ -329,6 +329,57 @@ export class ApiService {
             }));
     }
 
+    /**
+     * Returns the deployment information of an applications included service
+     * uses: GET applications/{applicationShortName}/{applicationVersion}/services/{serviceShortName}
+     *
+     * @param applicationShortName shortName of the application
+     * @param applicationVersion version of the application
+     * @param serviceShortName shortName of the service
+     */
+    getServiceDeploymentInformation(applicationShortName: string, applicationVersion: string, serviceShortName) {
+
+        const resource = 'applications/' + applicationShortName + '/' + applicationVersion + '/services/' + serviceShortName;
+        const stream = this.getStreamSource<ApiObject>(resource);
+
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+            console.log(val);
+            stream.next(freezeObject(val));
+        });
+
+        return stream.asObservable().pipe(
+            filter(data => data !== undefined)
+        );
+    }
+
+
+    /**
+     * Updates the deployment information of an applications service
+     * uses: PUT applications/{applicationShortName}/{applicationVersion}/services/{serviceShortName}
+     *
+     * @param applicationShortName shortName of the application
+     * @param applicationVersion version of the application
+     * @param serviceShortName shortName of the service
+     * @param data object holding the updated deployment information
+     */
+    putServiceDeploymentInformation(applicationShortName: string, applicationVersion: string, serviceShortName, data) {
+        if (data == null) {
+            return;
+        }
+
+        const resource = 'applications/' + applicationShortName + '/' + applicationVersion + '/services/' + serviceShortName;
+
+        return this.rest.put<ApiObject>(resource, data).pipe(flatMap(val => {
+
+            const stream = this.getStreamSource<ApiObject>(val._links.self.href);
+            stream.next(val);
+
+            return stream.asObservable().pipe(
+                filter(application => application !== undefined)
+            );
+        }));
+    }
+
 
     // ==========
     // DEPLOYMENT
@@ -792,7 +843,6 @@ export class ApiService {
      */
     putServiceInterface(shortName: string, version: string, serviceInterfaceName: string, serviceData: any) {
         const resource = 'services/' + shortName + '/' + version + '/interfaces/' + serviceInterfaceName;
-        const stream = this.getStreamSource<ApiObject>(resource);
 
         return this.rest.put<ApiObject>(resource, serviceData).pipe(flatMap(val => {
 

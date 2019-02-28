@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import { Component, OnInit, Input, OnDestroy } from '@angular/core';
+import { Component, Input, OnDestroy } from '@angular/core';
 
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
@@ -32,7 +32,7 @@ import { UtilsService } from '../util/utils.service';
     templateUrl: './app-detail-overview.component.html',
     styleUrls: ['./app-detail-overview.component.css']
 })
-export class AppDetailOverviewComponent implements OnInit, OnDestroy {
+export class AppDetailOverviewComponent implements OnDestroy {
 
     subDependeesDialog: Subscription;
     subServiceDependency: Subscription;
@@ -44,8 +44,6 @@ export class AppDetailOverviewComponent implements OnInit, OnDestroy {
         private dialog: MatDialog,
         private util: UtilsService ) { }
 
-    ngOnInit() {
-    }
 
     ngOnDestroy() {
         this.util.safeUnsubscribe(this.subDependeesDialog);
@@ -70,14 +68,7 @@ export class AppDetailOverviewComponent implements OnInit, OnDestroy {
                 return;
             }
 
-            // TODO consider if null check is still neccesary as soon as endpoint to add dependencies exists
-            if (this.application.services == null) {
-                this.application.services = [];
-            }
-
             result.forEach(service => {
-                // this.application.services.push(element);
-                // TODO Consider adding all at once.
                 this.apiService.postApplicationServices(this.application.shortName, this.application.version, service)
                     .subscribe();
             });
