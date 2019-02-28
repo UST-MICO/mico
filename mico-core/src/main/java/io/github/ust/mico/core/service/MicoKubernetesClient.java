@@ -72,11 +72,11 @@ public class MicoKubernetesClient {
     private final MicoServiceRepository serviceRepository;
 
     @Autowired
-    public MicoKubernetesClient(MicoKubernetesConfig micoKubernetesConfig, KubernetesClient kubernetesClient,
-                                MicoServiceRepository serviceRepository) {
+    public MicoKubernetesClient(MicoKubernetesConfig micoKubernetesConfig, MicoServiceRepository serviceRepository,
+                                KubernetesClient kubernetesClient) {
         this.micoKubernetesConfig = micoKubernetesConfig;
-        this.kubernetesClient = kubernetesClient;
         this.serviceRepository = serviceRepository;
+        this.kubernetesClient = kubernetesClient;
     }
 
     /**
