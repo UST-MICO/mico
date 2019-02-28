@@ -298,7 +298,7 @@ public class ApplicationController {
     }
     
     @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/services/{" + SERVICE_SHORT_NAME + "}")
-    public ResponseEntity<Resource<MicoApplication>> updateServiceDeploymentInformation(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+    public ResponseEntity<Resource<MicoServiceDeploymentInfoDTO>> updateServiceDeploymentInformation(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                      @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                                      @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName,
                                                                                      @Valid @RequestBody MicoServiceDeploymentInfoDTO serviceDeploymentInfoDTO) {
@@ -322,13 +322,12 @@ public class ApplicationController {
             }
         }
         
-        MicoApplication updatedApplication = applicationRepository.save(application);
+        applicationRepository.save(application);
         
         // TODO: Update actual Kubernetes deployment (see issue mico#416).
         
-        return ResponseEntity.ok(new Resource<>(updatedApplication,
-                linkTo(methodOn(ApplicationController.class).updateServiceDeploymentInformation(shortName, version,
-                        serviceShortName, serviceDeploymentInfoDTO)).withSelfRel()));
+        return ResponseEntity.ok(new Resource<>(serviceDeploymentInfoDTO, linkTo(methodOn(ApplicationController.class)
+                .getServiceDeploymentInformation(shortName, version, serviceShortName)).withSelfRel()));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")

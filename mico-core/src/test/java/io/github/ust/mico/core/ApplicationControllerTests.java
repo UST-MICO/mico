@@ -739,13 +739,10 @@ public class ApplicationControllerTests {
                     .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath(SHORT_NAME_PATH, is(expectedApplication.getShortName())))
-                .andExpect(jsonPath(VERSION_PATH, is(expectedApplication.getVersion())))
-                .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[*]", hasSize(1)))
-                .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[0].replicas", is(updatedServiceDeploymentInfoDTO.getReplicas())))
-                .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[0].labels[0].key", is(updatedServiceDeploymentInfoDTO.getLabels().get(0).getKey())))
-                .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[0].labels[0].value", is(updatedServiceDeploymentInfoDTO.getLabels().get(0).getValue())))
-                .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[0].imagePullPolicy", is(updatedServiceDeploymentInfoDTO.getImagePullPolicy().toString())))
+                .andExpect(jsonPath(TestConstants.SDI_REPLICAS_PATH, is(serviceDeploymentInfo.getReplicas())))
+                .andExpect(jsonPath(TestConstants.SDI_LABELS_PATH + "[0].key", is(updatedServiceDeploymentInfoDTO.getLabels().get(0).getKey())))
+                .andExpect(jsonPath(TestConstants.SDI_LABELS_PATH + "[0].value", is(updatedServiceDeploymentInfoDTO.getLabels().get(0).getValue())))
+                .andExpect(jsonPath(TestConstants.SDI_IMAGE_PULLPOLICY_PATH, is(updatedServiceDeploymentInfoDTO.getImagePullPolicy().toString())))
                 .andReturn();
     }
 
