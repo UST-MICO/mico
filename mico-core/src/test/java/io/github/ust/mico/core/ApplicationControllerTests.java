@@ -378,6 +378,43 @@ public class ApplicationControllerTests {
 
         resultUpdate.andExpect(status().isOk());
     }
+    
+    @Test
+    public void promoteApplication() throws Exception {
+        MicoService service = new MicoService()
+                .setShortName(SERVICE_SHORT_NAME)
+                .setVersion(SERVICE_VERSION);
+        
+        MicoApplication existingApplication = new MicoApplication()
+                .setId(ID)
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION)
+                .setDescription(DESCRIPTION);
+
+        existingApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
+                .setApplication(existingApplication)
+                .setService(service));
+        
+        String newVersion = VERSION_1_0_1;
+        Long newId = ID + 1;
+        
+        MicoApplication updatedApplication = existingApplication.setId(null).setVersion(newVersion);
+        MicoApplication expectedApplication = updatedApplication.setId(newId);
+
+        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingApplication));
+        given(applicationRepository.save(eq(updatedApplication))).willReturn(expectedApplication);
+
+        ResultActions resultUpdate = mvc
+                .perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/promote")
+                        .content(newVersion)
+                        .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print())
+                .andExpect(jsonPath(DESCRIPTION_PATH, is(updatedApplication.getDescription())))
+                .andExpect(jsonPath(SHORT_NAME_PATH, is(updatedApplication.getShortName())))
+                .andExpect(jsonPath(VERSION_PATH, is(newVersion)));
+
+        resultUpdate.andExpect(status().isOk());
+    }
 
     @Test
     public void deleteApplication() throws Exception {
