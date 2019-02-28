@@ -56,13 +56,13 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
         }
         const graph: GraphEditor = this.graph.nativeElement;
         graph.setNodeClass = (className, node) => {
-            if (className === node.type) {
+            if (className === node.type) { // set node class according to node type
                 return true;
             }
             return false;
         };
         graph.setEdgeClass = (className, edge) => {
-            if (className === edge.type) {
+            if (className === edge.type) { // set edge class according to edge type
                 return true;
             }
             return false;
@@ -87,12 +87,15 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
         }
     }
 
+    /**
+     * Handle node click events.
+     */
     onNodeClick = (event: CustomEvent) => {
         if (event.detail.node.id === 'APPLICATION') {
-            event.preventDefault();
+            event.preventDefault();  // prevent selecting application node
             return;
         }
-        if (event.detail.key === 'version') {
+        if (event.detail.key === 'version') {  // user clicked on service version
             event.preventDefault();
 
             const dialogRef = this.dialog.open(ChangeServiceVersionComponent, {
@@ -111,6 +114,12 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
         }
     }
 
+    /**
+     * Replace an existing service node with a new service.
+     *
+     * @param node service node of the old service
+     * @param newVersion new service version
+     */
     changeServiceVersion(node: Node, newVersion: ApiObject) {
         this.versionChangedFor = {node: node, newVersion: newVersion};
         this.api.deleteApplicationServices(this.shortName, this.version, node.service.shortName).subscribe((success) => {
@@ -121,6 +130,9 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
         });
     }
 
+    /**
+     * Update markerEnd and type of newly created edges.
+     */
     onCreateDraggedEdge = (edge: DraggedEdge) => {
         edge.markerEnd = {template: 'arrow', positionOnLine: 1, lineOffset: 4, scale: 0.5, rotate: {relativeAngle: 0}};
         edge.validTargets.clear();
