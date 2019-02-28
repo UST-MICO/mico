@@ -51,6 +51,9 @@ export const STYLE_TEMPLATE = {
             text-overflow: ellipsis;
             word-break: break-word;
         }
+        .application .text {
+            fill: white;
+        }
         .text.title {
             font-size: 8pt;
             text-decoration: underline;
@@ -78,10 +81,11 @@ export const STYLE_TEMPLATE = {
         }
         .includes .edge {
             stroke: #0099ff;
-            stroke-width: 2
+            stroke-width: 2;
+            stroke-linecap: round;
         }
         .includes .marker {
-            fill: #0099ff
+            fill: #0099ff;
         }
         .highlight-outgoing .edge {
             stroke: red;
@@ -99,7 +103,8 @@ export const STYLE_TEMPLATE = {
 
 export const APPLICATION_NODE_TEMPLATE = {
     id: 'application',
-    innerHTML: `<circle r="20" cx="0" cy="0"></circle>`
+    innerHTML: `<polygon points="-49,-15 0,-15 49,-15 58,0 49,15 0,15 -49,15 -58,0" data-link-handles="corners"></polygon>
+        <text class="text title" data-content="title" data-click="title" width="90" x="-45" y="-3"></text>`
 };
 
 export const SERVICE_NODE_TEMPLATE = {
