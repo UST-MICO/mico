@@ -19,10 +19,7 @@
 
 package io.github.ust.mico.core.dto;
 
-import javax.validation.constraints.NotEmpty;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.service.GitHubCrawler;
 import io.swagger.annotations.ApiModelProperty;
@@ -33,6 +30,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+import javax.validation.constraints.NotEmpty;
+
 /**
  * DTO for the information needed by the {@link GitHubCrawler}
  * for crawling a service from a GitHub repository.
@@ -42,7 +41,7 @@ import lombok.experimental.Accessors;
 @AllArgsConstructor
 @Accessors(chain = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class GitHubCrawlingInfoDTO {
+public class CrawlingInfoDTO {
 
     /**
      * The url to the GitHub repository to crawl from.
