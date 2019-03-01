@@ -28,7 +28,11 @@ export interface ApiModel {
     required?: string[];
     title?: string;
     description?: string;
-    items?: ApiModel | ApiModelRef
+    items?: ApiModel | ApiModelRef;
+    enum?: any[];
+    minLength?: number;
+    maxLength?: number;
+    pattern?: string;
     [propName: string]: any;
 }
 
