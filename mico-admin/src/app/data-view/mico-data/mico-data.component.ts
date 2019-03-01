@@ -46,7 +46,7 @@ export class MicoDataComponent implements OnInit, OnChanges {
     ngOnInit() { }
 
     ngOnChanges(changes: SimpleChanges) {
-        // check kfor relevant changes
+        // check for relevant changes
         if (changes.modelUrl != null || changes.filter != null || changes.isBlacklist != null) {
             this.models.getModel(this.modelUrl).pipe(
                 map(this.models.filterModel(this.filter, this.isBlacklist)),

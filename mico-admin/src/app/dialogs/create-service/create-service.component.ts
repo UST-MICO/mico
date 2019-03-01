@@ -120,8 +120,8 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
     }
 
     /**
-     * Checks if the stepper went from the first view to the secont (github repository -> version selection)
-     * and calls the backend for the repositories versions.
+     * Checks if the stepper went from the first to the second view (github repository -> version selection).
+     * If yes, it calls the backend for the repositories versions.
      * Uses: GET services/import/github
      *
      * @param event change event from the material stepper
