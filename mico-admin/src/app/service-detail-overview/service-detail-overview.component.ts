@@ -170,7 +170,7 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
     /**
      * Action triggered in ui to edit an existing interface.
      *
-     * @param serviceInterface
+     * @param serviceInterface the interface to update
      */
     editInterface(serviceInterface) {
         const dialogRef = this.dialog.open(UpdateServiceInterfaceComponent, {
