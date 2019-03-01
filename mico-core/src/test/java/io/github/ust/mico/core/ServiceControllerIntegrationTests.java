@@ -57,6 +57,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 public class ServiceControllerIntegrationTests extends Neo4jTestClass {
 
+    private static final String MICO_SERVICE_LIST_IN_DEPENDENCY_GRAPH_PATH = JsonPathBuilder.buildPath(ROOT, "micoServices");
+
     @Autowired
     private MicoServiceRepository serviceRepository;
 
@@ -104,24 +106,87 @@ public class ServiceControllerIntegrationTests extends Neo4jTestClass {
         fullDependencyList.forEach(serviceRepository::save);
         serviceRepository.save(micoServiceIndependent);
 
-        String micoServiceListPath = JsonPathBuilder.buildPath(ROOT, "micoServices");
+
         //Add a matcher for each mico service
-        ResultMatcher[] fulldependencyMatcherList = new ResultMatcher[fullDependencyList.size()];
-        for (int i = 0; i < fullDependencyList.size(); i++) {
-            fulldependencyMatcherList[i] = jsonPath(micoServiceListPath + "[?(@.shortName=='" + fullDependencyList.get(i).getShortName() + "')]", hasSize(1));
-        }
-        String edgeJsonPath = "[?(@.sourceShortName=='%s' && @.targetShortName== '%s')]";
-        String edgeListPath = JsonPathBuilder.buildPath(ROOT, "micoServiceDependencyGraphEdgeList");
+        ResultMatcher[] fulldependencyMatcherList = getResultMatchersMicoServiceList(fullDependencyList);
         mvc.perform(get(SERVICES_PATH + "/" + SHORT_NAME + "/" + "/" + VERSION_1_0_1 + "/dependencyGraph").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
-            .andExpect(jsonPath(micoServiceListPath, hasSize(4)))
+            .andExpect(jsonPath(MICO_SERVICE_LIST_IN_DEPENDENCY_GRAPH_PATH, hasSize(4)))
             .andExpect(ResultMatcher.matchAll(fulldependencyMatcherList))
-            .andExpect(jsonPath(micoServiceListPath + "[?(@.shortName=='" + independentServiceShortName + "')]", hasSize(0))) //Check that the independent service is not in the result list
-            .andExpect(jsonPath(edgeListPath + String.format(edgeJsonPath, micoService0.getShortName(), micoService1.getShortName()), hasSize(1)))
-            .andExpect(jsonPath(edgeListPath + String.format(edgeJsonPath, micoService0.getShortName(), micoService2.getShortName()), hasSize(1)))
-            .andExpect(jsonPath(edgeListPath + String.format(edgeJsonPath, micoService1.getShortName(), micoService3.getShortName()), hasSize(1)))
+            .andExpect(jsonPath(MICO_SERVICE_LIST_IN_DEPENDENCY_GRAPH_PATH + "[?(@.shortName=='" + independentServiceShortName + "')]", hasSize(0))) //Check that the independent service is not in the result list
+            .andExpect(jsonPath(getJsonPathForEdgeInDependencyGraph(micoService0, micoService1), hasSize(1)))
+            .andExpect(jsonPath(getJsonPathForEdgeInDependencyGraph(micoService0, micoService2), hasSize(1)))
+            .andExpect(jsonPath(getJsonPathForEdgeInDependencyGraph(micoService1, micoService3), hasSize(1)))
             .andReturn();
+    }
+
+    /**
+     * Based on https://github.com/UST-MICO/mico/pull/499#pullrequestreview-209043717
+     *
+     * @throws Exception
+     */
+    @Test
+    public void getServiceDependencyGraphWithCycle() throws Exception {
+        //Setup mico services
+        MicoService micoServiceA = new MicoService().setShortName("a").setVersion(VERSION_1_0_1);
+        MicoService micoServiceB = new MicoService().setShortName("b").setVersion(VERSION_1_0_1);
+        MicoService micoServiceC = new MicoService().setShortName("c").setVersion(VERSION_1_0_1);
+        List<MicoService> fullDependencyList = new LinkedList<>();
+        fullDependencyList.add(micoServiceA);
+        fullDependencyList.add(micoServiceB);
+        fullDependencyList.add(micoServiceC);
+
+        //Set dependencies
+        MicoServiceDependency micoServiceDependencyAtoB = new MicoServiceDependency().setService(micoServiceA).setDependedService(micoServiceB);
+        MicoServiceDependency micoServiceDependencyBToC = new MicoServiceDependency().setService(micoServiceB).setDependedService(micoServiceC);
+        MicoServiceDependency micoServiceDependencyCToB = new MicoServiceDependency().setService(micoServiceC).setDependedService(micoServiceB);
+        micoServiceA.setDependencies(Collections.singletonList(micoServiceDependencyAtoB));
+        micoServiceB.setDependencies(Collections.singletonList(micoServiceDependencyBToC));
+        micoServiceC.setDependencies(Collections.singletonList(micoServiceDependencyCToB));
+
+        //save to db
+        fullDependencyList.forEach(serviceRepository::save);
+
+        //Add a matcher for each mico service
+        ResultMatcher[] fulldependencyMatcherList = getResultMatchersMicoServiceList(fullDependencyList);
+        mvc.perform(get(SERVICES_PATH + "/" + micoServiceA.getShortName() + "/" + "/" + micoServiceA.getVersion() + "/dependencyGraph").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(MICO_SERVICE_LIST_IN_DEPENDENCY_GRAPH_PATH, hasSize(fullDependencyList.size())))
+            .andExpect(ResultMatcher.matchAll(fulldependencyMatcherList))
+            .andExpect(jsonPath(getJsonPathForEdgeInDependencyGraph(micoServiceA, micoServiceB), hasSize(1)))
+            .andExpect(jsonPath(getJsonPathForEdgeInDependencyGraph(micoServiceB, micoServiceC), hasSize(1)))
+            .andExpect(jsonPath(getJsonPathForEdgeInDependencyGraph(micoServiceC, micoServiceB), hasSize(1)))
+            .andReturn();
+    }
+
+    /**
+     * Generates the json path to match an edge in a service dependency graph. It
+     * matches the edge {source} -> {target}.
+     *
+     * @param source the mico service at the beginning of the edge
+     * @param target the mico service at the end of the edge
+     * @return a valid json path which matches the edge.
+     */
+    private String getJsonPathForEdgeInDependencyGraph(MicoService source, MicoService target) {
+        String edgeJsonPath = "[?(@.sourceShortName=='%s' && @.targetShortName== '%s')]";
+        String edgeListPath = JsonPathBuilder.buildPath(ROOT, "micoServiceDependencyGraphEdgeList");
+        return edgeListPath + String.format(edgeJsonPath, source.getShortName(), target.getShortName());
+    }
+
+    /**
+     * Generates an array of result matchers. Each matcher will match for one mico service in the given list.
+     *
+     * @param fullDependencyList
+     * @return
+     */
+    private ResultMatcher[] getResultMatchersMicoServiceList(List<MicoService> fullDependencyList) {
+        ResultMatcher[] fulldependencyMatcherList = new ResultMatcher[fullDependencyList.size()];
+        for (int i = 0; i < fullDependencyList.size(); i++) {
+            fulldependencyMatcherList[i] = jsonPath(MICO_SERVICE_LIST_IN_DEPENDENCY_GRAPH_PATH + "[?(@.shortName=='" + fullDependencyList.get(i).getShortName() + "')]", hasSize(1));
+        }
+        return fulldependencyMatcherList;
     }
 
     @Test
