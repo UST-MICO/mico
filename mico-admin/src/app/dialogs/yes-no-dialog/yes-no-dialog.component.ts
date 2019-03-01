@@ -27,7 +27,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 })
 /**
  * Wrapper for simple dialogs which can be answerded with yes/no (confirm/cancel).
- * Data can be injected via an data object and the question is specified by an questionType key.
+ * Data can be injected via an data object and the question is specified by a questionType key.
  */
 export class YesNoDialogComponent {
 
