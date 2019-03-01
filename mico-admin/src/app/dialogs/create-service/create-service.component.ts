@@ -48,14 +48,14 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
     filterListGithub: string[];
 
     constructor(private apiService: ApiService) {
+    }
+
+    ngOnInit() {
         this.subModelDefinitions = this.apiService.getModelDefinitions().subscribe(val => {
             this.filterListManual = (val['MicoService'] as ApiModel).required
                 .filter((value) => value !== 'serviceInterfaces');
             this.filterListGithub = (val['CrawlingInfoDTO'] as ApiModel).required;
         });
-    }
-
-    ngOnInit() {
     }
 
     ngOnDestroy() {
@@ -74,20 +74,25 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
         }
     }
 
+    /**
+     * return method of the dialog
+     */
     input() {
         // return information based on selected tab
         if (this.selectedTab === 0) {
-            // manual
+            // manually filled forms
             return { tab: this.mapTabIndexToString(this.selectedTab), data: this.serviceData };
+
         } else if (this.selectedTab === 1) {
             // github
 
             if (this.githubData == null || this.githubData.url == null) {
-                // not finished yet (one of the thousand calls angular performs...)
+                // dialog is not finished yet (one of the thousand calls angular performs...)
                 return { tab: this.mapTabIndexToString(this.selectedTab), data: undefined };
             }
 
             if (this.picked === 'latest') {
+                // crawl latest version
 
                 return {
                     tab: this.mapTabIndexToString(this.selectedTab),
@@ -96,6 +101,7 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
             }
 
             if (this.picked === 'specific') {
+                // crawl a specific version
 
                 return {
                     tab: this.mapTabIndexToString(this.selectedTab),
@@ -113,7 +119,13 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
         this.selectedTab = event.index;
     }
 
-
+    /**
+     * Checks if the stepper went from the first view to the secont (github repository -> version selection)
+     * and calls the backend for the repositories versions.
+     * Uses: GET services/import/github
+     *
+     * @param event change event from the material stepper
+     */
     gitStepperChange(event) {
 
         if (event.selectedIndex === 1 && event.previouslySelectedIndex === 0) {
@@ -128,6 +140,11 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
         }
     }
 
+    /**
+     * call back from the version selection drop down
+     *
+     * @param event newly selected version
+     */
     updateSelectedVersion(event) {
         this.selectedVersion = event;
     }
