@@ -24,6 +24,7 @@ import java.util.List;
 
 import javax.validation.constraints.Pattern;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
@@ -171,6 +172,7 @@ public class MicoService {
                 "order to run normally.")
         }
     )})
+    @JsonManagedReference
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Relationship(type = "DEPENDS_ON")
     private List<MicoServiceDependency> dependencies = new ArrayList<>();

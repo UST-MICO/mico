@@ -19,6 +19,7 @@
 
 package io.github.ust.mico.core.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -59,7 +60,7 @@ public class MicoServiceDependency {
      * This is the {@link MicoService} that requires (depends on)
      * the {@link MicoServiceDependency#dependedService}.
      */
-    @JsonIgnore
+    @JsonBackReference
     @StartNode
     @EqualsAndHashCode.Exclude
     private MicoService service;
@@ -68,6 +69,7 @@ public class MicoServiceDependency {
      * This is the {@link MicoService} depended by
      * {@link MicoServiceDependency#service}.
      */
+    @JsonBackReference
     @ApiModelProperty(required = true)
     @EndNode
     @EqualsAndHashCode.Exclude
