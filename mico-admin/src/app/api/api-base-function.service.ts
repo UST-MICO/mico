@@ -84,9 +84,16 @@ export class ApiBaseFunctionService {
     }
 
 
+    /**
+     * Takes a caught error and displays it in a snack bar.
+     *
+     * @param error the error object which was caught
+     * @param httpVerb the http verb from the method, where the error occured (e.g. GET)
+     */
     private showError = (error, httpVerb) => {
         if (error.hasOwnProperty('_body')) {
             try {
+                // handling for defined error messagges
                 const message = JSON.parse(error._body).message;
                 const path = JSON.parse(error._body).path;
 
@@ -94,7 +101,8 @@ export class ApiBaseFunctionService {
                     duration: 0,
                 });
             } catch (e) {
-                console.log(e);
+                // generic handling for errors
+                console.error(e);
                 this.snackBar.open('An error occured in a ' + httpVerb + ' Method. The error could not be handled correctly. ' +
                     'See the console for details.', 'Ok', {
                         duration: 0,
