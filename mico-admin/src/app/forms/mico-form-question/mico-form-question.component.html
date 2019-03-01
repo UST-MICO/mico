@@ -7,6 +7,13 @@
             <mat-hint align="end" *ngIf="property?.maxLength">{{input.value?.length || 0}}/{{property?.maxLength}}</mat-hint>
             <mat-error *ngIf="formControl.invalid">{{getErrorMessage()}}</mat-error>
         </mat-form-field>
+        <mat-form-field class="form-element" *ngSwitchCase="'enum'">
+            <mat-select matInput [formControlName]="property['x-key']" [placeholder]="property?.title" [required]="property['x-required']">
+                <mat-option *ngFor="let option of property?.enum" [value]="option">
+                    {{option}}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
         <mico-form-boolean *ngSwitchCase="'boolean'" [formControlName]="property['x-key']" [config]="property"></mico-form-boolean>
         <mico-form-number *ngSwitchCase="'number'" [formControlName]="property['x-key']" [config]="property"></mico-form-number>
         <mico-form-number *ngSwitchCase="'integer'" [formControlName]="property['x-key']" [config]="property"></mico-form-number>
