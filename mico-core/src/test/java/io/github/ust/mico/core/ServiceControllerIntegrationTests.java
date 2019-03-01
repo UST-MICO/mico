@@ -40,6 +40,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
+import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
 import static io.github.ust.mico.core.ServiceControllerTests.SERVICE_LIST;
 import static io.github.ust.mico.core.TestConstants.*;
 import static org.hamcrest.Matchers.hasSize;
@@ -103,6 +104,52 @@ public class ServiceControllerIntegrationTests extends Neo4jTestClass {
         fullDependencyList.forEach(serviceRepository::save);
         serviceRepository.save(micoServiceIndependent);
 
+        String micoServiceListPath = JsonPathBuilder.buildPath(ROOT,"micoServices");
+        //Add a matcher for each mico service
+        ResultMatcher[] fulldependencyMatcherList = new ResultMatcher[fullDependencyList.size()];
+        for (int i = 0; i < fullDependencyList.size(); i++) {
+            fulldependencyMatcherList[i] = jsonPath(micoServiceListPath + "[?(@.shortName=='" + fullDependencyList.get(i).getShortName() + "')]", hasSize(1));
+        }
+        mvc.perform(get(SERVICES_PATH + "/" + SHORT_NAME + "/" + "/" + VERSION_1_0_1 + "/dependencyGraph").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(micoServiceListPath, hasSize(4)))
+            .andExpect(jsonPath(micoServiceListPath + "[?(@.shortName=='" + independentServiceShortName + "')]", hasSize(0))) //Check that the independent service is not in the result list
+            .andExpect(ResultMatcher.matchAll(fulldependencyMatcherList))
+            .andReturn();
+    }
+
+
+/*    *//**
+     * Based on https://github.com/UST-MICO/mico/pull/499#pullrequestreview-209043717
+     * @throws Exception
+     *//*
+    @Test
+    public void getServiceDependencyGraphWithCycle() throws Exception {
+        //Setup mico services
+        MicoService micoServiceA = new MicoService().setShortName("a").setVersion(VERSION_1_0_1);
+        MicoService micoServiceB = new MicoService().setShortName("b").setVersion(VERSION_1_0_1);
+        MicoService micoServiceC = new MicoService().setShortName("c").setVersion(VERSION_1_0_1);
+*//*        List<MicoService> fullDependencyList = new LinkedList<>();
+        fullDependencyList.add(micoService0);
+        fullDependencyList.add(micoService1);
+        fullDependencyList.add(micoService2);
+        fullDependencyList.add(micoService3);*//*
+
+        //Set dependencies
+        MicoServiceDependency micoServiceDependencyAToB = new MicoServiceDependency().setService(micoServiceA).setDependedService(micoServiceB);
+        MicoServiceDependency micoServiceDependency0To2 = new MicoServiceDependency().setService(micoService0).setDependedService(micoService2);
+        List<MicoServiceDependency> micoServiceDependenciesOfService0 = new LinkedList<>();
+        micoServiceDependenciesOfService0.add(micoServiceDependency0To1);
+        micoServiceDependenciesOfService0.add(micoServiceDependency0To2);
+        micoService0.setDependencies(micoServiceDependenciesOfService0);
+        MicoServiceDependency micoServiceDependency1To3 = new MicoServiceDependency().setService(micoService1).setDependedService(micoService3);
+        micoService1.setDependencies(Collections.singletonList(micoServiceDependency1To3));
+
+        //save to db
+        fullDependencyList.forEach(serviceRepository::save);
+        serviceRepository.save(micoServiceIndependent);
+
         //Add a matcher for each mico service
         ResultMatcher[] fulldependencyMatcherList = new ResultMatcher[fullDependencyList.size()];
         for (int i = 0; i < fullDependencyList.size(); i++) {
@@ -116,7 +163,7 @@ public class ServiceControllerIntegrationTests extends Neo4jTestClass {
             .andExpect(jsonPath(SERVICE_LIST + "[?(@.shortName=='" + independentServiceShortName + "')]", hasSize(0))) //Check that the independent service is not in the result list
             .andExpect(ResultMatcher.matchAll(fulldependencyMatcherList))
             .andReturn();
-    }
+    }*/
 
     @Test
     public void getServiceDependencyGraphEmptyResult() throws Exception {
