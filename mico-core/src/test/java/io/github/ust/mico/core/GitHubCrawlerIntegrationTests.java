@@ -19,10 +19,11 @@
 
 package io.github.ust.mico.core;
 
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.service.GitHubCrawler;
-import org.junit.Ignore;
+import static org.junit.Assert.assertEquals;
+
+import java.io.IOException;
+import java.util.List;
+
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -31,10 +32,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.io.IOException;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.GitHubCrawler;
 
 @Category(IntegrationTests.class)
 @RunWith(SpringRunner.class)
@@ -97,22 +97,5 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
         assertEquals(service.getGitCloneUrl(), readService.getGitCloneUrl());
         assertEquals(service.getGitReleaseInfoUrl(), readService.getGitReleaseInfoUrl());
         assertEquals(service.getName(), readService.getName());
-    }
-
-    @Test
-    public void testGitHubCrawlerAllReleases() throws IOException {
-        RestTemplateBuilder restTemplate = new RestTemplateBuilder();
-        GitHubCrawler crawler = new GitHubCrawler(restTemplate);
-        List<MicoService> serviceList = crawler.crawlGitHubRepoAllReleases(REPO_URI_API);
-        serviceRepository.saveAll(serviceList);
-
-        MicoService readService = serviceRepository.findByShortNameAndVersion(serviceList.get(0).getShortName(), serviceList.get(0).getVersion()).get();
-        assertEquals(serviceList.get(0).getShortName(), readService.getShortName());
-        assertEquals(serviceList.get(0).getDescription(), readService.getDescription());
-        assertEquals(serviceList.get(0).getId(), readService.getId());
-        assertEquals(serviceList.get(0).getVersion(), readService.getVersion());
-        assertEquals(serviceList.get(0).getGitCloneUrl(), readService.getGitCloneUrl());
-        assertEquals(serviceList.get(0).getGitReleaseInfoUrl(), readService.getGitReleaseInfoUrl());
-        assertEquals(serviceList.get(0).getName(), readService.getName());
     }
 }

@@ -21,6 +21,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ApiService } from 'src/app/api/api.service';
 import { Subscription } from 'rxjs';
 import { ApiModel } from 'src/app/api/apimodel';
+import { versionComparator } from 'src/app/api/semantic-version';
 
 @Component({
     selector: 'mico-create-service',
@@ -30,8 +31,13 @@ import { ApiModel } from 'src/app/api/apimodel';
 export class CreateServiceDialogComponent implements OnInit, OnDestroy {
 
     serviceData;
-    // TODO link with form as soon as the according endpoint exists.
+
+    // github crawler specific data
     githubData;
+    picked = 'latest';
+    possibleVersions = [];
+    selectedVersion;
+    latestVersion;
 
 
     // manual: 0, github: 1
@@ -42,7 +48,7 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
 
     constructor(private apiService: ApiService) {
         this.subModelDefinitions = this.apiService.getModelDefinitions().subscribe(val => {
-            this.filterList = (val['MicoService'] as ApiModel).required.filter((val) => val !== 'serviceInterfaces');
+            this.filterList = (val['MicoService'] as ApiModel).required.filter((value) => value !== 'serviceInterfaces');
         });
     }
 
@@ -72,15 +78,54 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
             return { tab: this.mapTabIndexToString(this.selectedTab), data: this.serviceData };
         } else if (this.selectedTab === 1) {
             // github
-            return { tab: this.mapTabIndexToString(this.selectedTab), data: this.githubData };
-        } else {
-            // error case
-            return { tab: this.mapTabIndexToString(this.selectedTab), data: undefined };
+
+            if (this.githubData == null || this.githubData.vcsroot == null) {
+                // not finished yet (on of the thousand calls angular performs...)
+                return { tab: this.mapTabIndexToString(this.selectedTab), data: undefined };
+            }
+
+            if (this.picked === 'latest') {
+
+                return {
+                    tab: this.mapTabIndexToString(this.selectedTab),
+                    data: { uri: this.githubData.vcsroot, version: this.latestVersion }
+                };
+            }
+
+            if (this.picked === 'specific') {
+
+                return {
+                    tab: this.mapTabIndexToString(this.selectedTab),
+                    data: { uri: this.githubData.vcsroot, version: this.selectedVersion }
+                };
+            }
+
         }
+        // error case
+        return { tab: this.mapTabIndexToString(this.selectedTab), data: undefined };
+
     }
 
     tabChange(event) {
         this.selectedTab = event.index;
     }
 
+
+    gitStepperChange(event) {
+
+        if (event.selectedIndex === 1 && event.previouslySelectedIndex === 0) {
+
+            this.apiService.getServiceVersionsViaGithub(this.githubData.vcsroot).subscribe(val => {
+                this.possibleVersions = JSON.parse(JSON.stringify(val)).sort((n1, n2) => versionComparator(n1, n2));
+
+                this.latestVersion = this.possibleVersions[this.possibleVersions.length - 1];
+                this.selectedVersion = this.latestVersion;
+            });
+
+        }
+    }
+
+    updateSelectedVersion(event) {
+        this.selectedVersion = event;
+    }
 }

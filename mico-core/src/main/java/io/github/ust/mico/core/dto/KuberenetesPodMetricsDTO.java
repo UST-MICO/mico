@@ -26,15 +26,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+/**
+ * Contains information about CPU/ memory load of a {@link io.fabric8.kubernetes.api.model.Pod}.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-// TODO: Class comment.
 public class KuberenetesPodMetricsDTO {
-    
-    // TODO: Add comments for fields.
 
     private int memoryUsage;
     private int cpuLoad;

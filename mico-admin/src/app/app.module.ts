@@ -48,6 +48,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpModule } from '@angular/http';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatStepperModule } from '@angular/material/stepper';
 
 import { RoutingModule } from './routing.module';
 
@@ -92,6 +93,8 @@ import { CreateApplicationComponent } from './dialogs/create-application/create-
 import { CreateNextVersionComponent } from './dialogs/create-next-version/create-next-version.component';
 import { MicoDataArrayComponent } from './data-view/mico-data-array/mico-data-array.component';
 import { MicoDataObjectComponent } from './data-view/mico-data-object/mico-data-object.component';
+import { AppDetailStatusComponent } from './app-detail-status/app-detail-status.component';
+import { ServiceDetailStatusComponent } from './service-detail-status/service-detail-status.component';
 
 @NgModule({
     declarations: [
@@ -128,6 +131,8 @@ import { MicoDataObjectComponent } from './data-view/mico-data-object/mico-data-
         CreateNextVersionComponent,
         MicoDataArrayComponent,
         MicoDataObjectComponent,
+        AppDetailStatusComponent,
+        ServiceDetailStatusComponent,
     ],
     entryComponents: [
         // dialogs
@@ -176,7 +181,8 @@ import { MicoDataObjectComponent } from './data-view/mico-data-object/mico-data-
         OwlDateTimeModule,
         OwlNativeDateTimeModule,
         MatSnackBarModule,
-        MatRadioModule
+        MatRadioModule,
+        MatStepperModule
     ],
     providers: [],
     bootstrap: [AppComponent],

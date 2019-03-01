@@ -19,47 +19,31 @@
 
 package io.github.ust.mico.core.model;
 
-import java.util.HashMap;
 import java.util.Map;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * Represents the information necessary for deploying
- * a {@link MicoApplication}.
+ * Represents a simple key-value pair label.
+ * Necessary since Neo4j does not allow to persist
+ * {@link Map} implementations.
+ *
+ * @param <K> the type of the key.
+ * @param <V> the type of the value.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@NodeEntity
-public class MicoApplicationDeploymentInfo {
-
-    /**
-     * The id of this application deployment info.
-     */
-    @Id
-    @GeneratedValue
-    private Long id;
-
-
-    // ----------------------
-    // -> Required fields ---
-    // ----------------------
-
-    /**
-     * The service deployment info for each service this
-     * application is composed of (service id -> service deployment info).
-     */
-    @ApiModelProperty(required = true)
-    private Map<Long, MicoServiceDeploymentInfo> serviceDeploymentInfos = new HashMap<>();
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class MicoLabel<K, V> {
+    
+    private K key;
+    private V value;
 
 }

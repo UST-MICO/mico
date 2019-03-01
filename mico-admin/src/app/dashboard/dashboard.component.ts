@@ -49,11 +49,6 @@ export class DashboardComponent implements OnInit {
 
     }
 
-    // TODO
-    someAction() {
-        console.log('TODO something')
-    }
-
 
     /**
      * receives a list of applications from the apiService
@@ -90,8 +85,8 @@ export class DashboardComponent implements OnInit {
                         this.router.navigate(['service-detail', val.shortName, val.version]);
                     });
                 } else if (result.tab === 'github') {
-                    // TODO replace result.data.vcsroot when the inpuf form field is changed
-                    this.apiService.postServiceViaGithub(result.data.vcsroot).subscribe(val => {
+
+                    this.apiService.postServiceViaGithub(result.data.uri, result.data.version).subscribe(val => {
                         this.router.navigate(['service-detail', val.shortName, val.version]);
                     });
                 }
@@ -128,6 +123,15 @@ export class DashboardComponent implements OnInit {
         });
     }
 
+    openUserGuide() {
+        window.open('https://mico-docs.readthedocs.io/en/latest/');
+    }
 
+    openDevGuide() {
+        window.open('https://mico-dev.readthedocs.io/en/latest/');
+    }
+    suggestFeature() {
+        window.open('https://github.com/UST-MICO/mico/issues/new');
+    }
 
 }

@@ -1,12 +1,31 @@
 <div class="flex w100">
     <div class="ma3 flex-grow-1">
         <h3>Application {{application?.name}}</h3>
-        <button mat-raised-button (click)="deployApplication()">deploy</button>
+
+        <!-- BUTTONS -->
+        <mat-button-toggle mat-raised-button (click)="deployApplication()">
+            <span>
+                deploy
+            </span>
+            <mat-icon>cloud_upload</mat-icon>
+        </mat-button-toggle>
+
         <span *ngIf="isLatestVersion()" class="mh2">
-            <button mat-raised-button (click)="promoteNextVersion()">create next Version</button>
+            <mat-button-toggle mat-raised-button (click)="promoteNextVersion()">
+                <span>
+                    create next Version
+                </span>
+                <mat-icon>arrow_upward</mat-icon>
+            </mat-button-toggle>
         </span>
+
         <span class="mh2">
-            <button mat-raised-button (click)="deleteCurrentVersion()">delete Version</button>
+            <mat-button-toggle mat-raised-button (click)="deleteCurrentVersion()">
+                <span>
+                    delete version
+                </span>
+                <mat-icon>delete</mat-icon>
+            </mat-button-toggle>
         </span>
     </div>
 
@@ -14,7 +33,7 @@
     <mat-form-field class="w25 ma2">
         <mat-select placeholder="Application Version" (ngModelChange)="updateVersion($event)"
             [ngModel]="selectedVersion">
-            <mat-option *ngFor="let version of allVersions" [value]="version.version">
+            <mat-option *ngFor="let version of allVersions" [value]="version?.version">
                 {{version?.version}}
             </mat-option>
         </mat-select>
@@ -26,59 +45,14 @@
 
 <mat-card class="ma2">
     <mat-tab-group>
+        <!-- OVERVIEW TAB -->
         <mat-tab label="Overview">
-            <div class="flex">
-                <div class="flex-grow-1 ma2 ml0 flex flex-column">
-                    <mico-app-detail-overview [application]="application"></mico-app-detail-overview>
-                </div>
-                <div class="w-25 ma2 flex flex-column">
-                    <mat-card class="w-100">
-                        <mat-card-content>
-                            <mat-action-list>
-                                <mat-divider></mat-divider>
-                                <div class="flex" (click)="addService()">
-                                    <div class="flex-grow-1">
-                                        <mat-list-item>
-                                            <span mat-line><b>Services</b></span>
-                                        </mat-list-item>
-                                    </div>
-                                    <div class="w-20">
-                                        <mat-list-item>
-                                            <mat-icon>add</mat-icon>
-                                        </mat-list-item>
-                                    </div>
-                                </div>
-
-                                <mat-divider></mat-divider>
-                                <!-- Service Interfaces -->
-                                <div *ngFor="let dependee of application?.services">
-                                    <div class="flex">
-                                        <div class="flex-grow-1"
-                                            [routerLink]="['/service-detail',dependee.shortName,dependee.version]">
-                                            <mat-list-item.large style="font-size:small">
-                                                <div class="pv2 pl4">
-                                                    {{dependee.shortName}}<br />
-                                                    {{dependee.version}}
-                                                </div>
-                                            </mat-list-item.large>
-                                        </div>
-                                        <div class="w-20">
-                                            <mat-list-item>
-                                                <mat-icon (click)="deleteService(dependee.shortName)">delete</mat-icon>
-                                            </mat-list-item>
-                                        </div>
-                                    </div>
-                                    <mat-divider></mat-divider>
-                                </div>
-                            </mat-action-list>
-                        </mat-card-content>
-
-                    </mat-card>
-                </div>
-            </div>
+            <mico-app-detail-overview [application]="application"></mico-app-detail-overview>
         </mat-tab>
-        <mat-tab label="Application Data">
+        <!-- DATA TAB -->
+        <mat-tab label="Application Data" style="overflow-y: hidden">
             <div class="ma3">
+                <!-- edit button -->
                 <mat-button-toggle class="mt1 mb2 mr2 inline-flex items-center" value="edit" [checked]="edit"
                     (change)="edit = !edit">
                     <span class="mr2">Edit</span>
@@ -87,8 +61,9 @@
 
             </div>
             <ng-container *ngIf="edit">
-                <mico-form [modelUrl]="'remote/MicoApplication'" [filter]="['deploymentInfo', 'services']" [isBlacklist]="true" (data)="applicationData = $event"
-                    [startData]="application"></mico-form>
+                <!-- edit version (dynamic form) -->
+                <mico-form [modelUrl]="'remote/MicoApplication'" [filter]="['deploymentInfo', 'services']"
+                    [isBlacklist]="true" (data)="applicationData = $event" [startData]="application"></mico-form>
 
                 <div class="ma1 pa1">
                     <span class="ma1">
@@ -100,16 +75,16 @@
                 </div>
             </ng-container>
             <ng-container *ngIf="!edit">
+                <!-- display version (data-view) -->
                 <mico-data [modelUrl]="'remote/MicoApplication'" [startData]="application"></mico-data>
             </ng-container>
         </mat-tab>
-        <mat-tab label="Deployment">
-            App-Detail-Deployment...
+        <!-- STATUS TAB -->
+        <mat-tab label="Status">
+            <mico-app-detail-status [shortName]="shortName" [version]="selectedVersion"></mico-app-detail-status>
         </mat-tab>
     </mat-tab-group>
 </mat-card>
-
-<mat-card class="ma2">Endpoint: </mat-card>
 
 <mat-card class="ma2">
     <mat-card-title>

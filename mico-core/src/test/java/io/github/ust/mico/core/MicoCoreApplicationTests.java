@@ -89,7 +89,7 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
 
         assertEquals(1, serviceInterfacesTest.size());
         MicoServiceInterface serviceInterfaceTest = serviceInterfacesTest.get(0);
-        assertEquals(TEST_PORT, serviceInterfaceTest.getPorts().get(0).getNumber());
+        assertEquals(TEST_PORT, serviceInterfaceTest.getPorts().get(0).getPort());
         assertEquals(TEST_TARGET_PORT, serviceInterfaceTest.getPorts().get(0).getTargetPort());
         assertEquals(TEST_SERVICE_INTERFACE_DESCRIPTION, serviceInterfaceTest.getDescription());
         assertEquals(TEST_PROTOCOL, serviceInterfaceTest.getProtocol());
@@ -106,7 +106,7 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
                 .setServiceInterfaces(CollectionUtils.listOf(new MicoServiceInterface()
                         .setServiceInterfaceName(TEST_SERVICE_INTERFACE_NAME)
                         .setPorts(CollectionUtils.listOf(new MicoServicePort()
-                                .setNumber(8080)
+                                .setPort(8080)
                                 .setType(MicoPortType.TCP)
                                 .setTargetPort(8081)))
                         .setPublicDns(TEST_DNS)
@@ -145,7 +145,7 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
         .setServiceInterfaces(CollectionUtils.listOf(new MicoServiceInterface()
                 .setServiceInterfaceName(testInterface2Name)
                 .setPorts(CollectionUtils.listOf(new MicoServicePort()
-                        .setNumber(testInterface2Port)
+                        .setPort(testInterface2Port)
                         .setType(MicoPortType.TCP)
                         .setTargetPort(testInterface2TargetPort)))
                 .setPublicDns(testInterface2PublicDns)

@@ -19,30 +19,22 @@
 
 package io.github.ust.mico.core.model;
 
-import lombok.Value;
+import org.springframework.data.neo4j.annotation.QueryResult;
 
-/**
- * Represents a resource constraint specifying the CPU units
- * and memory. Can be used as a upper (limiting) and
- * lower (requesting) constraint.
- */
-@Value
-public class MicoResourceConstraint {
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
-    /**
-     * Measured in CPU units. One Kubernetes CPU (unit) is equivaletnt to:
-     * - 1 AWS vCPU
-     * - 1 GCP Core
-     * - 1 Azure vCore
-     * - 1 IBM vCPU
-     * - 1 Hyperthread on a bare-metal Intel processor with Hyperthreading
-     * Can also be specified as a fraction up to precision 0.001.
-     */
-    private final double cpuUnits;
-
-    /**
-     * Memory in bytes.
-     */
-    private final long memoryInBytes;
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Accessors(chain = true)
+@QueryResult
+public class MicoServiceDeploymentInfoQueryResult {
+    
+    private MicoApplication application;
+    private MicoServiceDeploymentInfo serviceDeploymentInfo;
+    private MicoService service;
 
 }
