@@ -42,9 +42,6 @@ import static io.github.ust.mico.core.TestConstants.*;
 @SpringBootTest
 public class ImageBuilderTests {
 
-    private static final String GIT_URI = "https://github.com/UST-MICO/hello.git";
-    private static final String RELEASE = "v1.0.0";
-
     @Rule
     public KubernetesServer mockServer = new KubernetesServer(false, true);
 
@@ -69,14 +66,14 @@ public class ImageBuilderTests {
     }
 
     @Test(expected = NotInitializedException.class)
-    public void withoutInitializingAnErrorIsThrown() throws NotInitializedException, VersionNotSupportedException {
+    public void withoutInitializingAnErrorIsThrown() throws NotInitializedException {
 
         MicoService micoService = new MicoService()
             .setShortName(SERVICE_SHORT_NAME)
             .setName(NAME)
-            .setVersion(MicoVersion.valueOf(RELEASE).toString())
-            .setGitCloneUrl(GIT_URI)
-            .setDockerfilePath("Dockerfile");
+            .setVersion(SERVICE_VERSION)
+            .setGitCloneUrl(GIT_TEST_REPO_URL)
+            .setDockerfilePath(DOCKERFILE_PATH);
 
         imageBuilder.build(micoService);
     }

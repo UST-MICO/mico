@@ -19,15 +19,7 @@
 
 package io.github.ust.mico.core;
 
-import static io.github.ust.mico.core.TestConstants.DESCRIPTION;
-import static io.github.ust.mico.core.TestConstants.DOCKERFILE;
-import static io.github.ust.mico.core.TestConstants.DOCKER_IMAGE_URI;
-import static io.github.ust.mico.core.TestConstants.GIT_TEST_REPO_URL;
-import static io.github.ust.mico.core.TestConstants.ID;
-import static io.github.ust.mico.core.TestConstants.RELEASE;
-import static io.github.ust.mico.core.TestConstants.SERVICE_INTERFACE_NAME;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
-import static io.github.ust.mico.core.TestConstants.VERSION;
+import static io.github.ust.mico.core.TestConstants.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -121,12 +113,11 @@ public class DeploymentControllerTests {
     @Test
     public void deployApplicationWithOneServiceAndOneServiceInterface() throws Exception {
         MicoService service = getTestService();
-        MicoApplication application = getTestApplication(service);
+        MicoApplication application = getTestApplication();
         application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
                 .setApplication(application)
                 .setService(service));
         
-
         service.setDockerImageUri(DOCKER_IMAGE_URI);
 
         given(applicationRepository.findByShortNameAndVersion(TestConstants.SHORT_NAME, VERSION)).willReturn(Optional.of(application));
@@ -179,10 +170,10 @@ public class DeploymentControllerTests {
             service, micoServiceThatIsUsedForInterfaceCreation);
     }
 
-    private MicoApplication getTestApplication(MicoService service) {
+    private MicoApplication getTestApplication() {
         return new MicoApplication()
             .setId(ID)
-            .setShortName(TestConstants.SHORT_NAME)
+            .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setDescription(DESCRIPTION);
     }
@@ -190,10 +181,10 @@ public class DeploymentControllerTests {
     private MicoService getTestService() {
         return new MicoService()
             .setId(ID)
-            .setShortName(SHORT_NAME)
+            .setShortName(SERVICE_SHORT_NAME)
             .setVersion(RELEASE)
             .setGitCloneUrl(GIT_TEST_REPO_URL)
-            .setDockerfilePath(DOCKERFILE)
+            .setDockerfilePath(DOCKERFILE_PATH)
             .setServiceInterfaces(CollectionUtils.listOf(
                 new MicoServiceInterface()
                     .setServiceInterfaceName(SERVICE_INTERFACE_NAME)

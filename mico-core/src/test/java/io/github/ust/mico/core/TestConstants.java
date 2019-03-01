@@ -21,9 +21,7 @@ package io.github.ust.mico.core;
 
 import io.github.ust.mico.core.model.MicoVersion;
 
-import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
-import static io.github.ust.mico.core.JsonPathBuilder.buildAttributePath;
-import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
+import static io.github.ust.mico.core.JsonPathBuilder.*;
 
 public class TestConstants {
 
@@ -32,12 +30,10 @@ public class TestConstants {
     public static final String DEPENDEES_SUBPATH = "/dependees";
     public static final String DEPENDERS_SUBPATH = "/dependers";
 
-    public static final Long ID = Long.valueOf(1000);
-    public static final Long ID_1 = Long.valueOf(1001);
-    public static final Long ID_2 = Long.valueOf(1002);
-    public static final Long ID_3 = Long.valueOf(1003);
-
-
+    public static final Long ID = 1000L;
+    public static final Long ID_1 = 1001L;
+    public static final Long ID_2 = 1002L;
+    public static final Long ID_3 = 1003L;
 
     public static final String VERSION = MicoVersion.forIntegers(1, 0, 0).toString();
     public static final String VERSION_1_0_1 = MicoVersion.forIntegers(1, 0, 1).toString();
@@ -137,7 +133,7 @@ public class TestConstants {
     public static final String SERVICE_DTO_POD_INFO_METRICS_MEMORY_USAGE_2 = buildPath(ROOT, "podInfo[1].metrics.memoryUsage");
     public static final String SERVICE_DTO_POD_INFO_METRICS_CPU_LOAD_2 = buildPath(ROOT, "podInfo[1].metrics.cpuLoad");
     public static final String SERVICE_DTO_POD_INFO_METRICS_AVAILABLE_2 = buildPath(ROOT, "podInfo[1].metrics.available");
-    
+
     public static final String SDI_REPLICAS_PATH = buildPath(ROOT, "replicas");
     public static final String SDI_LABELS_PATH = buildPath(ROOT, "labels");
     public static final String SDI_IMAGE_PULLPOLICY_PATH = buildPath(ROOT, "imagePullPolicy");
@@ -151,7 +147,7 @@ public class TestConstants {
      * Path to the Dockerfile.
      * It must be relative to the root of the Git repository.
      */
-    public static final String DOCKERFILE = "Dockerfile";
+    public static final String DOCKERFILE_PATH = "Dockerfile";
     /**
      * Release tag of the release that should be used for testing.
      * Must be in in supported version format (semantic version).
