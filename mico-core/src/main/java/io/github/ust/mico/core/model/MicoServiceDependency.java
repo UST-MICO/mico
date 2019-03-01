@@ -19,17 +19,9 @@
 
 package io.github.ust.mico.core.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import org.neo4j.ogm.annotation.EndNode;
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.RelationshipEntity;
-import org.neo4j.ogm.annotation.StartNode;
-
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.ust.mico.core.exception.VersionNotSupportedException;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -37,6 +29,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+import org.neo4j.ogm.annotation.*;
 
 /**
  * Represents a dependency of a {@link MicoService}.
@@ -45,6 +38,7 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @RelationshipEntity(type = "DEPENDS_ON")
 public class MicoServiceDependency {
 
@@ -66,7 +60,6 @@ public class MicoServiceDependency {
      * the {@link MicoServiceDependency#dependedService}.
      */
     @JsonIgnore
-    @JsonIdentityInfo(generator=ObjectIdGenerators.PropertyGenerator.class, property="id", scope=MicoService.class)
     @StartNode
     @EqualsAndHashCode.Exclude
     private MicoService service;
@@ -75,7 +68,6 @@ public class MicoServiceDependency {
      * This is the {@link MicoService} depended by
      * {@link MicoServiceDependency#service}.
      */
-    @JsonIdentityInfo(generator=ObjectIdGenerators.PropertyGenerator.class, property="id", scope=MicoService.class)
     @ApiModelProperty(required = true)
     @EndNode
     @EqualsAndHashCode.Exclude
