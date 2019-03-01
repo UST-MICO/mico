@@ -87,14 +87,27 @@
                         <!-- Service Interfaces -->
                         <div *ngFor="let interface of serviceInterfaces">
                             <div class="flex">
-                                <div class="flex-grow-1">
+                                <div class="flex-grow-1" (click)="editInterface(interface)">
                                     <mat-list-item.large style="font-size:small">
                                         <div class="pv2 pl4">
-                                            {{interface.serviceInterfaceName}}<br>
-                                            <div *ngFor="let port of interface.ports">
-                                                <i>#{{port.number}}</i><br>
-                                                {{port.targetPort}}<br>
-                                                {{port.type}}
+                                            <div class="mb1 flex flex-wrap">
+                                                <span class="mr2"><b>Name:</b> {{interface.serviceInterfaceName}}</span>
+                                                <span class="mr2"><b>DNS:</b> {{interface.publicDns}}</span>
+                                                <span class="mr2"><b>Protocol:</b> {{interface.protocol}}</span>
+                                                <span class="mr2"><b>Transport Protocol:</b> {{interface.transportProtocol}}</span>
+                                            </div>
+                                            <p class="mt0 mb1" [hidden]="interface.description == null || interface.description == ''">
+                                                {{interface.description}}
+                                            </p>
+                                            <div class="flex">
+                                                <div><b>Ports:</b></div>
+                                                <div class="ml2">
+                                                    <p class="mt0 mb1" *ngFor="let port of interface.ports">
+                                                        <b>{{port.type}}</b>
+                                                        <span class="ml1">{{port.targetPort}}</span>
+                                                        <span class="ml1">({{port.port}})</span>
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
                                     </mat-list-item.large>

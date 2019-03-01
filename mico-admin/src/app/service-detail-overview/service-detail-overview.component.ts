@@ -25,6 +25,7 @@ import { MatDialog } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 import { CreateServiceInterfaceComponent } from '../dialogs/create-service-interface/create-service-interface.component';
 import { Router } from '@angular/router';
+import { UpdateServiceInterfaceComponent } from '../dialogs/update-service-interface/update-service-interface.component';
 
 
 @Component({
@@ -164,6 +165,26 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
             }
             this.apiService.postServiceInterface(this.shortName, this.version, result).subscribe();
         });
+    }
+
+    /**
+     * Action triggered in ui to edit an existing interface.
+     *
+     * @param serviceInterface
+     */
+    editInterface(serviceInterface) {
+        const dialogRef = this.dialog.open(UpdateServiceInterfaceComponent, {
+            data: {
+                serviceInterface: serviceInterface,
+            }
+        });
+        this.subProvide = dialogRef.afterClosed().subscribe(result => {
+            if (result === '') {
+                return;
+            }
+            this.apiService.putServiceInterface(this.shortName, this.version, serviceInterface.serviceInterfaceName, result).subscribe();
+        });
+
     }
 
     /**

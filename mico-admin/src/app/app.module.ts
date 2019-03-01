@@ -82,6 +82,7 @@ import { ChangeServiceVersionComponent } from './dialogs/change-service-version/
 import { ServicePickerComponent } from './dialogs/service-picker/service-picker.component';
 import { YesNoDialogComponent } from './dialogs/yes-no-dialog/yes-no-dialog.component';
 import { CreateServiceInterfaceComponent } from './dialogs/create-service-interface/create-service-interface.component';
+import { UpdateServiceInterfaceComponent } from './dialogs/update-service-interface/update-service-interface.component';
 import { MetricChartComponent } from './metric-chart/metric-chart.component';
 import { ChartComponent } from './metric-chart/chart/chart.component';
 import { OwlDateTimeModule, OwlNativeDateTimeModule } from 'ng-pick-datetime';
@@ -121,6 +122,7 @@ import { ServiceDetailStatusComponent } from './service-detail-status/service-de
         ServicePickerComponent,
         YesNoDialogComponent,
         CreateServiceInterfaceComponent,
+        UpdateServiceInterfaceComponent,
         MetricChartComponent,
         ChartComponent,
         MicoDataComponent,
@@ -141,6 +143,7 @@ import { ServiceDetailStatusComponent } from './service-detail-status/service-de
         ServicePickerComponent,
         YesNoDialogComponent,
         CreateServiceInterfaceComponent,
+        UpdateServiceInterfaceComponent,
         CreateApplicationComponent,
         CreateNextVersionComponent,
     ],

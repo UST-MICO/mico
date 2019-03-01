@@ -771,7 +771,7 @@ export class ApiService {
                 console.log('RETURN', val);
 
                 const stream = this.getStreamSource<ApiObject>(val._links.self.href);
-                stream.next(val);
+                stream.next(freezeObject(val));
 
                 this.getServiceInterfaces(shortName, version);
 
@@ -779,6 +779,32 @@ export class ApiService {
                     filter(service => service !== undefined)
                 );
             }));
+    }
+
+    /**
+     * Updates a service interface
+     * uses: PUT services/{shortName}/{version}/interfaces/{serviceInterfaceName}
+     *
+     * @param shortName the services shortName
+     * @param version the services version
+     * @param serviceInterfaceName the interfaces name
+     * @param serviceInterfaceData the updated interface data
+     */
+    putServiceInterface(shortName: string, version: string, serviceInterfaceName: string, serviceData: any) {
+        const resource = 'services/' + shortName + '/' + version + '/interfaces/' + serviceInterfaceName;
+        const stream = this.getStreamSource<ApiObject>(resource);
+
+        return this.rest.put<ApiObject>(resource, serviceData).pipe(flatMap(val => {
+
+            const stream = this.getStreamSource<ApiObject>(val._links.self.href);
+            stream.next(freezeObject(val));
+
+            this.getServiceInterfaces(shortName, version);
+
+            return stream.asObservable().pipe(
+                filter(service => service !== undefined)
+            );
+        }));
     }
 
     /**
