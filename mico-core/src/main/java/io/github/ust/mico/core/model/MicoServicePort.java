@@ -75,19 +75,18 @@ public class MicoServicePort {
     private int port;
 
     /**
-     * The type (protocol) of the port
-     * (Pivio -> transport_protocol).
+     * The type (protocol) of the port (Pivio -> transport_protocol).
+     * Default port type is {@link MicoPortType#TCP}.
      */
     @ApiModelProperty(required = true, extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Type"),
-            @ExtensionProperty(name = "enum", value = "[\"TCP\", \"UDP\"]"),
             @ExtensionProperty(name = "x-order", value = "30"),
             @ExtensionProperty(name = "description", value = "The type (protocol) of the port. TCP or UDP.")
         }
     )})
-    private MicoPortType type = MicoPortType.DEFAULT;
+    private MicoPortType type = MicoPortType.TCP;
 
     /**
      * The port inside the container.

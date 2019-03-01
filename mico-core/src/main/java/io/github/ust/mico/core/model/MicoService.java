@@ -148,7 +148,6 @@ public class MicoService {
         properties = {
             @ExtensionProperty(name = "title", value = "Service Crawling Origin"),
             @ExtensionProperty(name = "default", value = "NOT_DEFINED"),
-            @ExtensionProperty(name = "enum", value = "[\"GITHUB\", \"DOCKER\", \"NOT_DEFINED\"]"),
             @ExtensionProperty(name = "x-order", value = "100"),
             @ExtensionProperty(name = "description", value = "Indicates where this service originates from.")
         }

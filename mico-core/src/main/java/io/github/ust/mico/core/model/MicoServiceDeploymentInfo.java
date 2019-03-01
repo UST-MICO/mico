@@ -166,39 +166,35 @@ public class MicoServiceDeploymentInfo {
 
     /**
      * Indicates whether and when to pull the image.
-     * Defaults to ImagePullPolicy#DEFAULT.
+     * Default image pull policy is {@link ImagePullPolicy#ALWAYS}.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Image Pull Policy"),
-            @ExtensionProperty(name = "enum", value = "[\"ALWAYS\", \"NEVER\", \"IF_NOT_PRESENT\"]"),
             @ExtensionProperty(name = "default", value = "ALWAYS"),
             @ExtensionProperty(name = "x-order", value = "60"),
-            @ExtensionProperty(name = "description", value = "Indicates whether and when to pull the image.\n" +
-                "Defaults to DEFAULT.")
+            @ExtensionProperty(name = "description", value = "Indicates whether and when to pull the image.")
         }
     )})
     @NotNull
-    private ImagePullPolicy imagePullPolicy = ImagePullPolicy.DEFAULT;
+    private ImagePullPolicy imagePullPolicy = ImagePullPolicy.ALWAYS;
 
     /**
      * Restart policy for all containers.
-     * Defaults to RestartPolicy#ALWAYS.
+     * Default restart policy is {@link RestartPolicy#ALWAYS}.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Restart Policy"),
-            @ExtensionProperty(name = "enum", value = "[\"ALWAYS\", \"ON_FAILURE\", \"NEVER\"]"),
             @ExtensionProperty(name = "default", value = "ALWAYS"),
             @ExtensionProperty(name = "x-order", value = "70"),
-            @ExtensionProperty(name = "description", value = "Restart policy for all containers.\n" +
-                " Defaults to ALWAYS.")
+            @ExtensionProperty(name = "description", value = "Restart policy for all containers.")
         }
     )})
     @NotNull
-    private RestartPolicy restartPolicy = RestartPolicy.DEFAULT;
+    private RestartPolicy restartPolicy = RestartPolicy.ALWAYS;
 
 
     /**
@@ -222,35 +218,25 @@ public class MicoServiceDeploymentInfo {
     /**
      * Enumeration for the different policies specifying
      * when to pull an image.
+     * Default image pull policy is {@link ImagePullPolicy#ALWAYS}.
      */
     public enum ImagePullPolicy {
 
         ALWAYS,
         NEVER,
-        IF_NOT_PRESENT;
-
-        /**
-         * Default image pull policy is {@link ImagePullPolicy#ALWAYS}.
-         */
-        public static ImagePullPolicy DEFAULT = ImagePullPolicy.ALWAYS;
-
+        IF_NOT_PRESENT
     }
 
 
     /**
      * Enumeration for all supported restart policies.
+     * Default restart policy is {@link RestartPolicy#ALWAYS}.
      */
     public enum RestartPolicy {
 
         ALWAYS,
         ON_FAILURE,
-        NEVER;
-
-        /**
-         * Default restart policy is {@link RestartPolicy#ALWAYS}.
-         */
-        public static RestartPolicy DEFAULT = RestartPolicy.ALWAYS;
-
+        NEVER
     }
 
 }
