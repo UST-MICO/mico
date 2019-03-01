@@ -24,15 +24,18 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceCrawlingOrigin;
+import io.github.ust.mico.core.util.KubernetesNameNormalizer;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.util.LinkedList;
 
 @Slf4j
+@Component
 public class GitHubCrawler {
 
     private static final String RELEASES = "releases";
@@ -40,10 +43,14 @@ public class GitHubCrawler {
     private static final String LATEST = "latest";
     private static final String GITHUB_HTML_URL = "https://github.com/";
     private static final String GITHUB_API_URL = "https://api.github.com/repos/";
-    private final RestTemplate restTemplate;
 
-    public GitHubCrawler(RestTemplateBuilder restTemplateBuilder) {
-        this.restTemplate = restTemplateBuilder.build();
+    private final RestTemplate restTemplate;
+    private final KubernetesNameNormalizer kubernetesNameNormalizer;
+
+    @Autowired
+    public GitHubCrawler(RestTemplate restTemplate, KubernetesNameNormalizer kubernetesNameNormalizer) {
+        this.restTemplate = restTemplate;
+        this.kubernetesNameNormalizer = kubernetesNameNormalizer;
     }
 
     private MicoService crawlGitHubRepo(String uriBasicInfo, String uriReleaseInfo) throws IOException {
@@ -57,8 +64,11 @@ public class GitHubCrawler {
             JsonNode basicInfoJson = mapper.readTree(responseBasicInfo.getBody());
             JsonNode releaseInfoJson = mapper.readTree(responseReleaseInfo.getBody());
 
+            String name = basicInfoJson.get("name").textValue();
+            String normalizedName = kubernetesNameNormalizer.normalizeName(name);
+
             return new MicoService()
-                .setShortName(basicInfoJson.get("name").textValue())
+                .setShortName(normalizedName)
                 .setName(basicInfoJson.get("full_name").textValue())
                 .setVersion(releaseInfoJson.get("tag_name").textValue())
                 .setDescription(basicInfoJson.get("description").textValue())

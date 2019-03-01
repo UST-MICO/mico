@@ -33,7 +33,6 @@ import io.github.ust.mico.core.service.MicoStatusService;
 import io.github.ust.mico.core.validation.MicoDataValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
@@ -76,6 +75,9 @@ public class ServiceController {
 
     @Autowired
     private MicoDataValidator micoDataValidator;
+
+    @Autowired
+    private GitHubCrawler crawler;
 
     @GetMapping()
     public ResponseEntity<Resources<Resource<MicoService>>> getServiceList() {
@@ -331,9 +333,6 @@ public class ServiceController {
         String version = crawlingInfo.getVersion();
         log.debug("Start importing MicoService from URL '{}'", url);
 
-        RestTemplateBuilder restTemplate = new RestTemplateBuilder();
-        GitHubCrawler crawler = new GitHubCrawler(restTemplate);
-
         try {
             if (version.equals("latest")) {
                 MicoService service = crawler.crawlGitHubRepoLatestRelease(url);
@@ -353,9 +352,6 @@ public class ServiceController {
     @ResponseBody
     public LinkedList<String> getVersionsFromGitHub(@RequestParam String url) {
         log.debug("Start getting versions from URL '{}'", url);
-
-        RestTemplateBuilder restTemplate = new RestTemplateBuilder();
-        GitHubCrawler crawler = new GitHubCrawler(restTemplate);
 
         try {
             return crawler.getVersionsFromGitHubRepo(url);
