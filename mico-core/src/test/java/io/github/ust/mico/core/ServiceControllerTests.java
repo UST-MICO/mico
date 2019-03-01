@@ -23,7 +23,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.dto.KuberenetesPodMetricsDTO;
 import io.github.ust.mico.core.dto.KubernetesPodInfoDTO;
@@ -725,32 +727,57 @@ public class ServiceControllerTests {
 
     @Test
     public void createNewDependee() throws Exception {
-        MicoService service = new MicoService()
+        MicoService existingService1 = new MicoService()
+                .setId(ID_1)
                 .setShortName(SHORT_NAME)
                 .setVersion(VERSION)
-                .setDescription(DESCRIPTION);
+                .setName(APPLICATION_NAME);
 
-        MicoService service1 = new MicoService()
+        MicoService existingService2 = new MicoService()
+                .setId(ID_2)
                 .setShortName(SHORT_NAME_1)
                 .setVersion(VERSION_1_0_1)
-                .setDescription(DESCRIPTION_1);
+                .setName(APPLICATION_NAME);
 
-        MicoServiceDependency dependency1 = new MicoServiceDependency()
-                .setService(service)
-                .setDependedService(service1);
+        MicoServiceDependency newDependency = new MicoServiceDependency()
+                .setService(new MicoService()
+                    .setShortName(SHORT_NAME)
+                    .setVersion(VERSION)
+                    .setName(APPLICATION_NAME))
+                .setDependedService(new MicoService()
+                    .setShortName(SHORT_NAME_1)
+                    .setVersion(VERSION_1_0_1)
+                    .setName(APPLICATION_NAME));
 
-        service.setDependencies(Collections.singletonList(dependency1));
+        MicoService expectedService = new MicoService()
+            .setId(ID_1)
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(APPLICATION_NAME)
+            .setDependencies(Collections.singletonList(newDependency));
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME_1, VERSION_1_0_1)).willReturn(Optional.of(service1));
-        given(serviceRepository.save(any(MicoService.class))).willReturn(service);
+        prettyPrint(expectedService);
+
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingService1));
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME_1, VERSION_1_0_1)).willReturn(Optional.of(existingService2));
+        given(serviceRepository.save(any(MicoService.class))).willReturn(expectedService);
 
         final ResultActions result = mvc.perform(post(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + DEPENDEES_SUBPATH)
-                .content(mapper.writeValueAsBytes(dependency1))
+                .content(mapper.writeValueAsBytes(newDependency))
                 .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andDo(print());
 
         result.andExpect(status().isCreated());
+    }
+
+    private void prettyPrint(Object object) {
+        ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+        try {
+            String json = mapper.writeValueAsString(object);
+            System.out.println(json);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
     }
 
     @Test

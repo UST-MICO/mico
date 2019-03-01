@@ -19,10 +19,7 @@
 
 package io.github.ust.mico.core.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import io.github.ust.mico.core.exception.VersionNotSupportedException;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -69,7 +66,7 @@ public class MicoServiceDependency {
      * This is the {@link MicoService} depended by
      * {@link MicoServiceDependency#service}.
      */
-    @JsonBackReference
+    @JsonIdentityInfo(generator=ObjectIdGenerators.PropertyGenerator.class, property="id", scope=MicoService.class)
     @ApiModelProperty(required = true)
     @EndNode
     @EqualsAndHashCode.Exclude
