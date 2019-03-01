@@ -24,14 +24,11 @@ import java.util.List;
 
 import javax.validation.constraints.Pattern;
 
+import com.fasterxml.jackson.annotation.*;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.exception.VersionNotSupportedException;
@@ -56,10 +53,11 @@ public class MicoService {
 
     /**
      * The id of this service.
+     * MUST be readable and writable from the perspective of the Jackson mapper
+     * to handle recursive service dependencies.
      */
     @Id
     @GeneratedValue
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
 
@@ -171,6 +169,7 @@ public class MicoService {
                 "order to run normally.")
         }
     )})
+    @JsonManagedReference
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Relationship(type = "DEPENDS_ON")
     private List<MicoServiceDependency> dependencies = new ArrayList<>();
