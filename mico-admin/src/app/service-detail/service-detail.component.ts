@@ -60,6 +60,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy() {
+        // unsubscribe if observable is not null
         if (this.subService != null) {
             this.subService.unsubscribe();
         }
@@ -68,6 +69,14 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
         }
     }
 
+    /**
+     * loads a defined service and displays the service
+     * Is to be called during initialization/when the url changes
+     * uses: GET services/{shortName}
+     *
+     * @param shortName shortName of the service to be loaded
+     * @param givenVersion version of the service to be loaded
+     */
     update(shortName, givenVersion) {
 
         if (this.selectedVersion === givenVersion && givenVersion != null) {
