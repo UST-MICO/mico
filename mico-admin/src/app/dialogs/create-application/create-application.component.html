@@ -1,5 +1,6 @@
 <h2 mat-dialog-title>Create a new Application</h2>
 <mat-dialog-content style="min-width: 35rem">
+    <!-- input fields-->
     <mico-form [modelUrl]="'remote/MicoApplication'" [filter]="filterList" (data)="applicationData = $event">
     </mico-form>
 
@@ -10,6 +11,7 @@
     </div>
     <mat-divider></mat-divider>
 
+    <!-- list of picked services-->
     <mat-list>
         <mat-list-item class="flex" *ngFor="let element of services">
             <div class="flex-grow-1">

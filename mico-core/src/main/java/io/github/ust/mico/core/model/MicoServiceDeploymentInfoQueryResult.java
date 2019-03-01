@@ -21,10 +21,14 @@ package io.github.ust.mico.core.model;
 
 import org.springframework.data.neo4j.annotation.QueryResult;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Accessors(chain = true)
 @QueryResult
 public class MicoServiceDeploymentInfoQueryResult {

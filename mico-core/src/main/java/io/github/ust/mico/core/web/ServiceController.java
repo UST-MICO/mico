@@ -21,6 +21,7 @@ package io.github.ust.mico.core.web;
 
 import io.github.ust.mico.core.dto.MicoServiceDependencyGraphDTO;
 import io.github.ust.mico.core.dto.MicoServiceDependencyGraphEdgeDTO;
+import io.github.ust.mico.core.dto.CrawlingInfoDTO;
 import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
@@ -319,20 +320,20 @@ public class ServiceController {
     }
 
     @PostMapping(PATH_GITHUB_ENDPOINT)
-    public ResponseEntity<Resource<MicoService>> importMicoServiceFromGitHub(@RequestBody CrawlingInformation crawlingInformation) {
-        String uri = crawlingInformation.getUri();
-        String version = crawlingInformation.getVersion();
-        log.debug("Start importing MicoService from URL '{}'", uri);
+    public ResponseEntity<Resource<MicoService>> importMicoServiceFromGitHub(@Valid @RequestBody CrawlingInfoDTO crawlingInfo) {
+        String url = crawlingInfo.getUrl();
+        String version = crawlingInfo.getVersion();
+        log.debug("Start importing MicoService from URL '{}'", url);
 
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
 
         try {
-            if (version.equals("latest") || version.equals("")) {
-                MicoService service = crawler.crawlGitHubRepoLatestRelease(uri);
+            if (version.equals("latest")) {
+                MicoService service = crawler.crawlGitHubRepoLatestRelease(url);
                 return createService(service, null);
             } else {
-                MicoService service = crawler.crawlGitHubRepoSpecificRelease(uri, version);
+                MicoService service = crawler.crawlGitHubRepoSpecificRelease(url, version);
                 return createService(service, null);
             }
         } catch (IOException e) {
@@ -344,14 +345,14 @@ public class ServiceController {
 
     @GetMapping(PATH_GITHUB_ENDPOINT)
     @ResponseBody
-    public LinkedList<String> getVersionsFromGitHub(@RequestParam String uri) {
-        log.debug("Start getting versions from URL '{}'", uri);
+    public LinkedList<String> getVersionsFromGitHub(@RequestParam String url) {
+        log.debug("Start getting versions from URL '{}'", url);
 
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
 
         try {
-            return crawler.getVersionsFromGitHubRepo(uri);
+            return crawler.getVersionsFromGitHubRepo(url);
 
         } catch (IOException e) {
             log.error(e.getStackTrace().toString());
