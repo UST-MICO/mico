@@ -19,8 +19,7 @@
 
 package io.github.ust.mico.core.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.dto.MicoServiceDeploymentInfoDTO;
 import io.swagger.annotations.ApiModelProperty;
@@ -145,7 +144,6 @@ public class MicoServiceDeploymentInfo {
      * subsets of objects. Labels can be attached to objects at creation time and
      * subsequently added and modified at any time.
      * Each key must be unique for a given object.
-     * It can be omitted or be set to an empty list, but {@code null} is not allowed.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -161,12 +159,13 @@ public class MicoServiceDeploymentInfo {
                 " Each key must be unique for a given object.")
         }
     )})
-    @NotNull
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<MicoLabel<String, String>> labels = new ArrayList<>();
 
     /**
      * Indicates whether and when to pull the image.
      * Default image pull policy is {@link ImagePullPolicy#ALWAYS}.
+     * {@code null} is ignored.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -177,12 +176,13 @@ public class MicoServiceDeploymentInfo {
             @ExtensionProperty(name = "description", value = "Indicates whether and when to pull the image.")
         }
     )})
-    @NotNull
+    @JsonSetter(nulls = Nulls.SKIP)
     private ImagePullPolicy imagePullPolicy = ImagePullPolicy.ALWAYS;
 
     /**
      * Restart policy for all containers.
      * Default restart policy is {@link RestartPolicy#ALWAYS}.
+     * {@code null} is ignored.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -193,7 +193,7 @@ public class MicoServiceDeploymentInfo {
             @ExtensionProperty(name = "description", value = "Restart policy for all containers.")
         }
     )})
-    @NotNull
+    @JsonSetter(nulls = Nulls.SKIP)
     private RestartPolicy restartPolicy = RestartPolicy.ALWAYS;
 
 

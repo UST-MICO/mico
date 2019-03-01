@@ -19,10 +19,7 @@
 
 package io.github.ust.mico.core.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.exception.VersionNotSupportedException;
 import io.github.ust.mico.core.util.Patterns;
@@ -135,13 +132,14 @@ public class MicoService {
                 "Is allowed to be empty (default).")
         }
     )})
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private String description = "";
 
     /**
      * Indicates where this service originates from, e.g.,
      * GitHub (downloaded and built by MICO) or DockerHub
      * (ready-to-use image).
-     * {@code null} is not allowed, if it is omitted the default value will be used.
+     * {@code null} is ignored.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -152,7 +150,7 @@ public class MicoService {
             @ExtensionProperty(name = "description", value = "Indicates where this service originates from.")
         }
     )})
-    @NotNull
+    @JsonSetter(nulls = Nulls.SKIP)
     private MicoServiceCrawlingOrigin serviceCrawlingOrigin = MicoServiceCrawlingOrigin.NOT_DEFINED;
 
 
@@ -162,7 +160,6 @@ public class MicoService {
 
     /**
      * The list of interfaces this service provides.
-     * It can be omitted or be set to an empty list, but {@code null} is not allowed.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -173,7 +170,7 @@ public class MicoService {
         }
     )})
     @Relationship(type = "PROVIDES_INTERFACES", direction = Relationship.UNDIRECTED)
-    @NotNull
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<MicoServiceInterface> serviceInterfaces = new ArrayList<>();
 
     /**

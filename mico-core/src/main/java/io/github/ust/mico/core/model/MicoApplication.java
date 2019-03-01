@@ -19,9 +19,7 @@
 
 package io.github.ust.mico.core.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.exception.VersionNotSupportedException;
 import io.github.ust.mico.core.util.Patterns;
@@ -127,6 +125,7 @@ public class MicoApplication {
                 " Is allowed to be empty (default).")
         }
     )})
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private String description = "";
 
 
@@ -137,7 +136,6 @@ public class MicoApplication {
     /**
      * The list of service deployment information
      * this application uses for the deployment of the required services.
-     * It can be omitted or be set to an empty list, but {@code null} is not allowed.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -150,7 +148,7 @@ public class MicoApplication {
     )})
     @JsonManagedReference
     @Relationship(type = "INCLUDES_SERVICE")
-    @NotNull
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<MicoServiceDeploymentInfo> serviceDeploymentInfos = new ArrayList<>();
 
     /**
