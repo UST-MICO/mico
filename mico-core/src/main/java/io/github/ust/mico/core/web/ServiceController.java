@@ -327,7 +327,7 @@ public class ServiceController {
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
 
         try {
-            if (version.equals("latest") || version.equals("")) {
+            if (version.equals("latest")) {
                 MicoService service = crawler.crawlGitHubRepoLatestRelease(url);
                 return createService(service, null);
             } else {

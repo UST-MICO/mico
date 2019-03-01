@@ -33,8 +33,8 @@ import lombok.experimental.Accessors;
 import javax.validation.constraints.NotEmpty;
 
 /**
- * DTO for the information needed by the {@link GitHubCrawler}
- * for crawling a service from a GitHub repository.
+ * DTO for the information needed by a Crawler (e.g., {@link GitHubCrawler})
+ * for crawling a service from a remote repository.
  */
 @Data
 @NoArgsConstructor
@@ -44,27 +44,27 @@ import javax.validation.constraints.NotEmpty;
 public class CrawlingInfoDTO {
 
     /**
-     * The url to the GitHub repository to crawl from.
+     * The url to the remote repository to crawl from.
      * Must not be {@code null} nor empty.
      */
     @ApiModelProperty(required = true, extensions = {
-            @Extension(name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION, properties = {
-                    @ExtensionProperty(name = "title", value = "URL"),
-                    @ExtensionProperty(name = "x-order", value = "10"),
-                    @ExtensionProperty(name = "description", value = "The url to the GitHub repository to crawl from.") }) })
+        @Extension(name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION, properties = {
+            @ExtensionProperty(name = "title", value = "URL"),
+            @ExtensionProperty(name = "x-order", value = "10"),
+            @ExtensionProperty(name = "description", value = "The url to the remote repository to crawl from.")})})
     @NotEmpty
     private String url;
 
     /**
-     * The GitHub release tag. Defaults to 'latest'.
-     * Must not be {@code null} nor empty, but can be ommited,
+     * The remote release tag. Defaults to 'latest'.
+     * Must not be {@code null} nor empty, but can be omitted,
      * in which the default value will be used.
      */
     @ApiModelProperty(extensions = {
-            @Extension(name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION, properties = {
-                    @ExtensionProperty(name = "title", value = "Version"),
-                    @ExtensionProperty(name = "x-order", value = "20"),
-                    @ExtensionProperty(name = "description", value = "The GitHub release tag. Defaults to 'latest'.") }) })
+        @Extension(name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION, properties = {
+            @ExtensionProperty(name = "title", value = "Version"),
+            @ExtensionProperty(name = "x-order", value = "20"),
+            @ExtensionProperty(name = "description", value = "The remote release tag. Defaults to 'latest'.")})})
     @NotEmpty
     private String version = "latest";
 }
