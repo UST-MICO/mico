@@ -63,6 +63,8 @@ public class CrawlingInfoDTO {
     @ApiModelProperty(extensions = {
         @Extension(name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION, properties = {
             @ExtensionProperty(name = "title", value = "Version"),
+            @ExtensionProperty(name = "default", value = "latest"),
+            @ExtensionProperty(name = "minLength", value = "1"),
             @ExtensionProperty(name = "x-order", value = "20"),
             @ExtensionProperty(name = "description", value = "The remote release tag. Defaults to 'latest'.")})})
     @NotEmpty

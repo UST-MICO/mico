@@ -20,6 +20,8 @@
 package io.github.ust.mico.core.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.util.Patterns;
 import io.swagger.annotations.ApiModelProperty;
@@ -129,6 +131,7 @@ public class MicoServiceInterface {
             @ExtensionProperty(name = "description", value = "Human readable description of this service interface.")
         }
     )})
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private String description = "";
 
     /**

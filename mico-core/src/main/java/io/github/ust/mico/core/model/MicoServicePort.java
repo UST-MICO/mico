@@ -20,6 +20,8 @@
 package io.github.ust.mico.core.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
@@ -82,10 +84,12 @@ public class MicoServicePort {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Type"),
+            @ExtensionProperty(name = "default", value = "TCP"),
             @ExtensionProperty(name = "x-order", value = "30"),
             @ExtensionProperty(name = "description", value = "The type (protocol) of the port. TCP or UDP.")
         }
     )})
+    @JsonSetter(nulls = Nulls.SKIP)
     private MicoPortType type = MicoPortType.TCP;
 
     /**
@@ -104,5 +108,4 @@ public class MicoServicePort {
     @Min(value = 1, message = "must be at least 1")
     @Max(value = 65535, message = "must be at most 65535")
     private int targetPort;
-
 }
