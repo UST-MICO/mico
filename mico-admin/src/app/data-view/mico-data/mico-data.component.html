@@ -1,4 +1,5 @@
 <mat-list>
+    <!-- data view (works quite analog to mico-forms) -->
     <mat-divider></mat-divider>
     <ng-container *ngIf="properties?.length; else emptyList">
         <div *ngFor="let property of properties;trackBy: trackByFn">
@@ -7,6 +8,7 @@
         </div>
 
     </ng-container>
+    <!-- error message -->
     <ng-template #emptyList>
         <div class="mt2 ml3">
             No properties defined.
