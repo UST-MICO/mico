@@ -114,6 +114,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                     }
                 }
 
+
                 // decide if the service was created manually or is to be created via github crawler
                 if (result.tab === 'manual') {
                     this.apiService.postService(result.data).subscribe(val => {
@@ -121,9 +122,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                     });
                 } else if (result.tab === 'github') {
 
-                    console.log(result);
-
-                    this.apiService.postServiceViaGithub(result.data.uri, result.data.version).subscribe(val => {
+                    this.apiService.postServiceViaGithub(result.data.url, result.data.version).subscribe(val => {
                         this.router.navigate(['service-detail', val.shortName, val.version]);
                     });
                 }
