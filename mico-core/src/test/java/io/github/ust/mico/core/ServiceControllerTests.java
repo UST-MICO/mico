@@ -31,6 +31,7 @@ import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.GitHubCrawler;
 import io.github.ust.mico.core.service.MicoStatusService;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.validation.MicoDataValidator;
@@ -84,7 +85,7 @@ public class ServiceControllerTests {
     private static final String JSON_PATH_LINKS_SECTION = buildPath(ROOT, LINKS);
     private static final String SELF_HREF = buildPath(JSON_PATH_LINKS_SECTION, SELF, HREF);
     private static final String SERVICES_HREF = buildPath(JSON_PATH_LINKS_SECTION, "services", HREF);
-    public static final String SERVICE_LIST = buildPath(ROOT_EMBEDDED, "micoServiceList");
+    private static final String SERVICE_LIST = buildPath(ROOT_EMBEDDED, "micoServiceList");
     private static final String ID_PATH = buildPath(ROOT, "id");
     private static final String SHORT_NAME_PATH = buildPath(ROOT, "shortName");
     private static final String DESCRIPTION_PATH = buildPath(ROOT, "description");
@@ -103,6 +104,9 @@ public class ServiceControllerTests {
 
     @MockBean
     MicoStatusService micoStatusService;
+
+    @MockBean
+    private GitHubCrawler crawler;
 
     // Use real implementation of validator class
     @SpyBean
@@ -779,26 +783,26 @@ public class ServiceControllerTests {
     @Test
     public void createNewDependee() throws Exception {
         MicoService existingService1 = new MicoService()
-                .setId(ID_1)
-                .setShortName(SHORT_NAME)
-                .setVersion(VERSION)
-                .setName(NAME);
+            .setId(ID_1)
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(NAME);
 
         MicoService existingService2 = new MicoService()
-                .setId(ID_2)
-                .setShortName(SHORT_NAME_1)
-                .setVersion(VERSION_1_0_1)
-                .setName(NAME);
+            .setId(ID_2)
+            .setShortName(SHORT_NAME_1)
+            .setVersion(VERSION_1_0_1)
+            .setName(NAME);
 
         MicoServiceDependency newDependency = new MicoServiceDependency()
-                .setService(new MicoService()
-                    .setShortName(SHORT_NAME)
-                    .setVersion(VERSION)
-                    .setName(NAME))
-                .setDependedService(new MicoService()
-                    .setShortName(SHORT_NAME_1)
-                    .setVersion(VERSION_1_0_1)
-                    .setName(NAME));
+            .setService(new MicoService()
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION)
+                .setName(NAME))
+            .setDependedService(new MicoService()
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME));
 
         MicoService expectedService = new MicoService()
             .setId(ID_1)
@@ -814,9 +818,9 @@ public class ServiceControllerTests {
         given(serviceRepository.save(any(MicoService.class))).willReturn(expectedService);
 
         final ResultActions result = mvc.perform(post(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + DEPENDEES_SUBPATH)
-                .content(mapper.writeValueAsBytes(newDependency))
-                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andDo(print());
+            .content(mapper.writeValueAsBytes(newDependency))
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print());
 
         result.andExpect(status().isCreated());
     }

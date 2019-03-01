@@ -76,7 +76,7 @@ public class MicoApplication {
         properties = {
             @ExtensionProperty(name = "title", value = "Short Name"),
             @ExtensionProperty(name = "pattern", value = Patterns.Constants.NOT_EMPTY_REGEX),
-            @ExtensionProperty(name = "x-order", value = "20"),
+            @ExtensionProperty(name = "x-order", value = "10"),
             @ExtensionProperty(name = "description", value = "Unique short name of the application.")
         }
     )})
@@ -85,13 +85,13 @@ public class MicoApplication {
 
     /**
      * The name of the artifact. Intended for humans.
-     * Required for the usage in the UI.
+     * Required only for the usage in the UI.
      */
     @ApiModelProperty(required = true, extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Name"),
-            @ExtensionProperty(name = "x-order", value = "10"),
+            @ExtensionProperty(name = "x-order", value = "30"),
             @ExtensionProperty(name = "description", value = "Human readable name of the application.")
         }
     )})
@@ -105,7 +105,7 @@ public class MicoApplication {
         properties = {
             @ExtensionProperty(name = "title", value = "Version"),
             @ExtensionProperty(name = "pattern", value = Patterns.Constants.SEMANTIC_VERSIONING_REGEX),
-            @ExtensionProperty(name = "x-order", value = "30"),
+            @ExtensionProperty(name = "x-order", value = "20"),
             @ExtensionProperty(name = "description", value = "The version of this application.")
         }
     )})
@@ -121,6 +121,7 @@ public class MicoApplication {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Description"),
+            @ExtensionProperty(name = "default", value = ""),
             @ExtensionProperty(name = "x-order", value = "40"),
             @ExtensionProperty(name = "description", value = "Human readable description of this application.\n" +
                 " Is allowed to be empty (default).")

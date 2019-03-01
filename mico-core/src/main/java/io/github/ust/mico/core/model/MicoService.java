@@ -39,6 +39,7 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
+import javax.validation.constraints.Max;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
@@ -80,7 +81,7 @@ public class MicoService {
         properties = {
             @ExtensionProperty(name = "title", value = "Short Name"),
             @ExtensionProperty(name = "pattern", value = Patterns.Constants.KUBERNETES_NAMING_REGEX),
-            @ExtensionProperty(name = "x-order", value = "20"),
+            @ExtensionProperty(name = "x-order", value = "10"),
             @ExtensionProperty(name = "description", value = "A unique name of the MicoService.")
         }
     )})
@@ -90,13 +91,13 @@ public class MicoService {
 
     /**
      * The name of the artifact. Intended for humans.
-     * Required for the usage in the UI.
+     * Required only for the usage in the UI.
      */
     @ApiModelProperty(required = true, extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Name"),
-            @ExtensionProperty(name = "x-order", value = "10"),
+            @ExtensionProperty(name = "x-order", value = "30"),
             @ExtensionProperty(name = "description", value = "A human readable name of the MicoService.")
         }
     )})
@@ -111,7 +112,7 @@ public class MicoService {
         properties = {
             @ExtensionProperty(name = "title", value = "Version"),
             @ExtensionProperty(name = "pattern", value = Patterns.Constants.SEMANTIC_VERSIONING_REGEX),
-            @ExtensionProperty(name = "x-order", value = "30"),
+            @ExtensionProperty(name = "x-order", value = "20"),
             @ExtensionProperty(name = "description", value = "The version of this service. Refers to GitHub release " +
                 "tag.")
         }
@@ -128,12 +129,13 @@ public class MicoService {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Description"),
+            @ExtensionProperty(name = "default", value = ""),
             @ExtensionProperty(name = "x-order", value = "40"),
-            @ExtensionProperty(name = "description", value = "Human readable description of this service.\n" +
-                " Is allowed to be empty (default).")
+            @ExtensionProperty(name = "description", value = "Human readable description of this service.\n " +
+                "Is allowed to be empty (default).")
         }
     )})
-    private String description;
+    private String description = "";
 
     /**
      * Indicates where this service originates from, e.g.,
@@ -145,7 +147,9 @@ public class MicoService {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Service Crawling Origin"),
-            @ExtensionProperty(name = "x-order", value = "50"),
+            @ExtensionProperty(name = "default", value = "NOT_DEFINED"),
+            @ExtensionProperty(name = "enum", value = "[\"GITHUB\", \"DOCKER\", \"NOT_DEFINED\"]"),
+            @ExtensionProperty(name = "x-order", value = "100"),
             @ExtensionProperty(name = "description", value = "Indicates where this service originates from.")
         }
     )})
@@ -182,6 +186,7 @@ public class MicoService {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Dependencies"),
+            @ExtensionProperty(name = "readOnly", value = "true"),
             @ExtensionProperty(name = "x-order", value = "90"),
             @ExtensionProperty(name = "description", value = "The list of services that this service requires in " +
                 "order to run normally.")

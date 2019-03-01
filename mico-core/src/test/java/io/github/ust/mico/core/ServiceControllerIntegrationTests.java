@@ -41,7 +41,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
-import static io.github.ust.mico.core.ServiceControllerTests.SERVICE_LIST;
 import static io.github.ust.mico.core.TestConstants.*;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertFalse;

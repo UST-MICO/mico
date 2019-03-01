@@ -88,8 +88,8 @@ public class MicoServiceInterface {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Ports"),
-            @ExtensionProperty(name = "pattern", value = Patterns.Constants.NOT_EMPTY_REGEX),
             @ExtensionProperty(name = "x-order", value = "200"),
+            @ExtensionProperty(name = "minItems", value = "1"),
             @ExtensionProperty(name = "description", value = "The list of the interfaces ports.\n" +
                 " Must not be empty.")
         }
@@ -124,11 +124,12 @@ public class MicoServiceInterface {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Description"),
+            @ExtensionProperty(name = "default", value = ""),
             @ExtensionProperty(name = "x-order", value = "110"),
             @ExtensionProperty(name = "description", value = "Human readable description of this service interface.")
         }
     )})
-    private String description;
+    private String description = "";
 
     /**
      * The protocol of this interface, e.g., HTTPS.

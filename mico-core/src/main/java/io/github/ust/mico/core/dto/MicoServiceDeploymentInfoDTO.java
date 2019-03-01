@@ -58,6 +58,7 @@ public class MicoServiceDeploymentInfoDTO {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Replicas"),
+            @ExtensionProperty(name = "minimum", value = "1"),
             @ExtensionProperty(name = "x-order", value = "30"),
             @ExtensionProperty(name = "description", value = "Number of desired instances.")
         }
@@ -74,6 +75,7 @@ public class MicoServiceDeploymentInfoDTO {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Time To Verify Ready State"),
+            @ExtensionProperty(name = "minimum", value = "0"),
             @ExtensionProperty(name = "x-order", value = "40"),
             @ExtensionProperty(name = "description", value = "Minimum number of seconds for which this service should be ready " +
                 "without any of its containers crashing, for it to be considered available. " +

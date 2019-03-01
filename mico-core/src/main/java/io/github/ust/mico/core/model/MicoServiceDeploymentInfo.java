@@ -32,6 +32,7 @@ import org.neo4j.ogm.annotation.*;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -108,6 +109,8 @@ public class MicoServiceDeploymentInfo {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Replicas"),
+            @ExtensionProperty(name = "minimum", value = "1"),
+            @ExtensionProperty(name = "default", value = "1"),
             @ExtensionProperty(name = "x-order", value = "30"),
             @ExtensionProperty(name = "description", value = "Number of desired instances. Defaults to 1.")
         }
@@ -125,11 +128,13 @@ public class MicoServiceDeploymentInfo {
         properties = {
             @ExtensionProperty(name = "title", value = "Time To Verify Ready State"),
             @ExtensionProperty(name = "x-order", value = "40"),
+            @ExtensionProperty(name = "default", value = "0"),
             @ExtensionProperty(name = "description", value = "Minimum number of seconds for which this service should be ready " +
                 "without any of its containers crashing, for it to be considered available. " +
                 "Defaults to 0 (considered available as soon as it is ready).")
         }
     )})
+    @PositiveOrZero(message = "must not be negative")
     private int minReadySecondsBeforeMarkedAvailable = 0;
 
     /**
@@ -167,6 +172,8 @@ public class MicoServiceDeploymentInfo {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Image Pull Policy"),
+            @ExtensionProperty(name = "enum", value = "[\"ALWAYS\", \"NEVER\", \"IF_NOT_PRESENT\"]"),
+            @ExtensionProperty(name = "default", value = "ALWAYS"),
             @ExtensionProperty(name = "x-order", value = "60"),
             @ExtensionProperty(name = "description", value = "Indicates whether and when to pull the image.\n" +
                 "Defaults to DEFAULT.")
@@ -183,6 +190,8 @@ public class MicoServiceDeploymentInfo {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Restart Policy"),
+            @ExtensionProperty(name = "enum", value = "[\"ALWAYS\", \"ON_FAILURE\", \"NEVER\"]"),
+            @ExtensionProperty(name = "default", value = "ALWAYS"),
             @ExtensionProperty(name = "x-order", value = "70"),
             @ExtensionProperty(name = "description", value = "Restart policy for all containers.\n" +
                 " Defaults to ALWAYS.")

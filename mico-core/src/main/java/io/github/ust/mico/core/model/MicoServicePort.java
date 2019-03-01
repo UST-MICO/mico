@@ -64,6 +64,8 @@ public class MicoServicePort {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Exposed Port Number"),
+            @ExtensionProperty(name = "minimum", value = "1"),
+            @ExtensionProperty(name = "maximum", value = "65535"),
             @ExtensionProperty(name = "x-order", value = "10"),
             @ExtensionProperty(name = "description", value = "The port number of the externally exposed port.")
         }
@@ -80,6 +82,7 @@ public class MicoServicePort {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Type"),
+            @ExtensionProperty(name = "enum", value = "[\"TCP\", \"UDP\"]"),
             @ExtensionProperty(name = "x-order", value = "30"),
             @ExtensionProperty(name = "description", value = "The type (protocol) of the port. TCP or UDP.")
         }
@@ -93,6 +96,8 @@ public class MicoServicePort {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Target Port Number"),
+            @ExtensionProperty(name = "minimum", value = "1"),
+            @ExtensionProperty(name = "maximum", value = "65535"),
             @ExtensionProperty(name = "x-order", value = "20"),
             @ExtensionProperty(name = "description", value = "The port inside the container.")
         }
