@@ -368,7 +368,10 @@ public class ServiceController {
        MicoServiceDependencyGraphDTO micoServiceDependencyGraph = new MicoServiceDependencyGraphDTO().setMicoServices(micoServices);
        LinkedList<MicoServiceDependencyGraphEdgeDTO> micoServiceDependencyGraphEdgeList = new LinkedList<>();
        for (MicoService micoService : micoServices) {
-           micoService.getDependencies().forEach(micoServiceDependency -> {
+           //Request each mico service again from the db, because the dependencies are not included
+           //in the result of the custom query. TODO improve query to also include the dependencies (Depth parameter)
+           MicoService micoServiceFromDB = getServiceFromDatabase(micoService.getShortName(), micoService.getVersion());
+           micoServiceFromDB.getDependencies().forEach(micoServiceDependency -> {
                MicoServiceDependencyGraphEdgeDTO edge = new MicoServiceDependencyGraphEdgeDTO(micoService,micoServiceDependency.getDependedService());
                micoServiceDependencyGraphEdgeList.add(edge);
            });
