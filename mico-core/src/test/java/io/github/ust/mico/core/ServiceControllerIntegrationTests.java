@@ -197,8 +197,8 @@ public class ServiceControllerIntegrationTests extends Neo4jTestClass {
         mvc.perform(get(SERVICES_PATH + "/" + SHORT_NAME + "/" + "/" + VERSION_1_0_1 + "/dependencyGraph").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
-            .andExpect(jsonPath(SERVICE_LIST, hasSize(1))) //Should only contain the root mico service it self
-            .andExpect(jsonPath(SERVICE_LIST + "[?(@.shortName=='" + micoService0.getShortName() + "')]", hasSize(1)))
+            .andExpect(jsonPath(MICO_SERVICE_LIST_IN_DEPENDENCY_GRAPH_PATH, hasSize(1))) //Should only contain the root mico service it self
+            .andExpect(jsonPath(MICO_SERVICE_LIST_IN_DEPENDENCY_GRAPH_PATH + "[?(@.shortName=='" + micoService0.getShortName() + "')]", hasSize(1)))
             .andReturn();
     }
 
