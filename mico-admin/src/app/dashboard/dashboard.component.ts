@@ -17,20 +17,22 @@
  * under the License.
  */
 
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
 import { MatDialog, MatSnackBar } from '@angular/material';
 import { CreateServiceDialogComponent } from '../dialogs/create-service/create-service.component';
 import { Router } from '@angular/router';
 import { CreateApplicationComponent } from '../dialogs/create-application/create-application.component';
+import { groupBy, mergeMap, toArray, map } from 'rxjs/operators';
+import { Subscription, from } from 'rxjs';
 
 @Component({
     selector: 'mico-dashboard',
     templateUrl: './dashboard.component.html',
     styleUrls: ['./dashboard.component.css']
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
 
     constructor(
         private apiService: ApiService,
@@ -41,24 +43,57 @@ export class DashboardComponent implements OnInit {
         this.getApplications();
     }
 
+    subApplications: Subscription;
     applications: Readonly<ApiObject[]>;
-
     displayedColumns: string[] = ['id', 'name', 'shortName'];
 
     ngOnInit() {
 
     }
 
-
     /**
-     * receives a list of applications from the apiService
+     * unsubscribe
      */
-    getApplications(): void {
-        this.apiService.getApplications()
-            .subscribe(applications => this.applications = applications);
+    ngOnDestroy() {
+        if (this.subApplications != null) {
+            this.subApplications.unsubscribe();
+        }
     }
 
 
+    /**
+     * receives a list of applications from the apiService and group them by the shortName
+     */
+    getApplications(): void {
+
+
+        // group applications by shortName
+        this.subApplications = this.apiService.getApplications()
+            .subscribe(val => {
+                from(val as unknown as ArrayLike<ApiObject>)
+                    .pipe(
+                        // group
+                        groupBy(application => application.shortName),
+                        // cast groups to arrays
+                        mergeMap(group => group.pipe(toArray())),
+                        // take first element from each group
+                        map(group => group[0]),
+                        // create an array from those first elements
+                        toArray()
+                    ).subscribe(applicationList => {
+                        this.applications = applicationList;
+                    });
+
+            });
+    }
+
+
+    /**
+     * dialog to create a new service. can be done:
+     * - manually
+     * - via github import
+     * uses: POST services or POST services/import/github
+     */
     newService(): void {
         const dialogRef = this.dialog.open(CreateServiceDialogComponent);
         dialogRef.afterClosed().subscribe(result => {
@@ -86,6 +121,8 @@ export class DashboardComponent implements OnInit {
                     });
                 } else if (result.tab === 'github') {
 
+                    console.log(result);
+
                     this.apiService.postServiceViaGithub(result.data.uri, result.data.version).subscribe(val => {
                         this.router.navigate(['service-detail', val.shortName, val.version]);
                     });
@@ -95,6 +132,10 @@ export class DashboardComponent implements OnInit {
         });
     }
 
+    /**
+     * create a new application
+     * uses: POST application
+     */
     newApplication() {
         const dialogRef = this.dialog.open(CreateApplicationComponent);
         dialogRef.afterClosed().subscribe(result => {
@@ -106,6 +147,7 @@ export class DashboardComponent implements OnInit {
                 for (const property in result.applicationProperties) {
                     if (result.applicationProperties[property] == null) {
 
+                        // show an error message containg the missing field
                         this.snackBar.open('Missing property: ' + property, 'Ok', {
                             duration: 8000,
                         });
@@ -123,10 +165,10 @@ export class DashboardComponent implements OnInit {
         });
     }
 
+    // links to our related pages
     openUserGuide() {
         window.open('https://mico-docs.readthedocs.io/en/latest/');
     }
-
     openDevGuide() {
         window.open('https://mico-dev.readthedocs.io/en/latest/');
     }
