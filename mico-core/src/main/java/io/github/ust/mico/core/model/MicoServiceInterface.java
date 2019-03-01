@@ -19,29 +19,26 @@
 
 package io.github.ust.mico.core.model;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.Pattern;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
+import io.github.ust.mico.core.util.Patterns;
+import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 import org.springframework.data.neo4j.annotation.QueryResult;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import io.swagger.annotations.ApiModelProperty;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.Accessors;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Pattern;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Represents a interface, e.g., REST API, of a {@link MicoService}.
@@ -75,26 +72,30 @@ public class MicoServiceInterface {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Service Interface Name"),
+            @ExtensionProperty(name = "pattern", value = Patterns.Constants.KUBERNETES_NAMING_REGEX),
             @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "pattern", value = "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"),
             @ExtensionProperty(name = "description", value = "The name of this MicoServiceInterface")
-        })})
-    @NotEmpty
-    @Pattern(regexp="^[a-z]([-a-z0-9]*[a-z0-9])?$")
+        }
+    )})
+    @Pattern(regexp = Patterns.Constants.KUBERNETES_NAMING_REGEX, message = Patterns.Constants.KUBERNETES_NAMING_MESSAGE)
     private String serviceInterfaceName;
 
     /**
      * The list of ports.
+     * Must not be empty.
      */
     @ApiModelProperty(required = true, extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Ports"),
+            @ExtensionProperty(name = "pattern", value = Patterns.Constants.NOT_EMPTY_REGEX),
             @ExtensionProperty(name = "x-order", value = "200"),
-            @ExtensionProperty(name = "description", value = "The list of the interfaces ports.")
+            @ExtensionProperty(name = "description", value = "The list of the interfaces ports.\n" +
+                " Must not be empty.")
         }
     )})
     @Relationship(type = "PROVIDES_PORTS", direction = Relationship.UNDIRECTED)
+    @NotEmpty
     private List<MicoServicePort> ports = new ArrayList<>();
 
 

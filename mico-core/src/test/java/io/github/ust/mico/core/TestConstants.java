@@ -37,7 +37,6 @@ public class TestConstants {
     public static final Long ID_2 = Long.valueOf(1002);
     public static final Long ID_3 = Long.valueOf(1003);
 
-    public static final String APPLICATION_NAME= "application-test-name";
 
 
     public static final String VERSION = MicoVersion.forIntegers(1, 0, 0).toString();
@@ -59,23 +58,34 @@ public class TestConstants {
     public static final String SHORT_NAME_1_MATCHER = JsonPathBuilder.buildSingleMatcher(SHORT_NAME_ATTRIBUTE, SHORT_NAME_1);
     public static final String SHORT_NAME_2_MATCHER = JsonPathBuilder.buildSingleMatcher(SHORT_NAME_ATTRIBUTE, SHORT_NAME_2);
     public static final String SHORT_NAME_3_MATCHER = JsonPathBuilder.buildSingleMatcher(SHORT_NAME_ATTRIBUTE, SHORT_NAME_3);
-    
-    public static final String DESCRIPTION = "Description Service";
-    public static final String DESCRIPTION_1 = "Description Service 1";
-    public static final String DESCRIPTION_2 = "Description Service 2";
-    public static final String DESCRIPTION_3 = "Description Service 3";
-    public static final String DESCRIPTION_ATTRIBUTE = buildAttributePath("description");
+
+    public static final String NAME = "test-name";
+    public static final String NAME_1 = "test-name";
+    public static final String NAME_2 = "test-name";
+    public static final String NAME_3 = "test-name";
+    public static final String NAME_ATTRIBUTE = JsonPathBuilder.buildAttributePath("name");
+    public static final String NAME_MATCHER = JsonPathBuilder.buildSingleMatcher(NAME_ATTRIBUTE, NAME);
+    public static final String NAME_1_MATCHER = JsonPathBuilder.buildSingleMatcher(NAME_ATTRIBUTE, NAME_1);
+    public static final String NAME_2_MATCHER = JsonPathBuilder.buildSingleMatcher(NAME_ATTRIBUTE, NAME_2);
+    public static final String NAME_3_MATCHER = JsonPathBuilder.buildSingleMatcher(NAME_ATTRIBUTE, NAME_3);
+
+    public static final String DESCRIPTION = "Description";
+    public static final String DESCRIPTION_1 = "Description 1";
+    public static final String DESCRIPTION_2 = "Description 2";
+    public static final String DESCRIPTION_3 = "Description 3";
+    public static final String DESCRIPTION_ATTRIBUTE = JsonPathBuilder.buildAttributePath("description");
     public static final String DESCRIPTION_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION);
     public static final String DESCRIPTION_1_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION_1);
     public static final String DESCRIPTION_2_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION_2);
     public static final String DESCRIPTION_3_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION_3);
 
-    public static final String SERVICE_SHORT_NAME = "serviceShortName";
-    public static final String SERVICE_VERSION = "1.0.0";
+    public static final String SERVICE_SHORT_NAME = "service-short-name";
+    public static final String SERVICE_SHORT_NAME_1 = "service-short-name-1";
 
+    public static final String SERVICE_VERSION = "1.0.0";
+    
     public static final String SERVICE_INTERFACE_NAME = "service-interface-name";
     public static final String SERVICE_INTERFACE_NAME_1 = "service-interface-name-1";
-    public static final String SERVICE_NAME = "test-service";
 
     /*
      * For tests in ApplicationControllerTests, one service is added to the list of MicoServiceStatusDTOs in MicoApplicationStatusDTO.

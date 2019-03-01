@@ -1,23 +1,23 @@
 package io.github.ust.mico.core;
 
-import static io.github.ust.mico.core.TestConstants.APPLICATION_NAME;
-import static io.github.ust.mico.core.TestConstants.SERVICE_INTERFACE_NAME;
-import static io.github.ust.mico.core.TestConstants.SERVICE_NAME;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
-import static io.github.ust.mico.core.TestConstants.VERSION;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-
-import java.util.Collections;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-
+import io.fabric8.kubernetes.api.model.PodList;
+import io.fabric8.kubernetes.api.model.PodListBuilder;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.github.ust.mico.core.configuration.PrometheusConfig;
+import io.github.ust.mico.core.dto.*;
+import io.github.ust.mico.core.exception.KubernetesResourceException;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.service.MicoStatusService;
+import io.github.ust.mico.core.util.CollectionUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,29 +29,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
-import io.fabric8.kubernetes.api.model.PodList;
-import io.fabric8.kubernetes.api.model.PodListBuilder;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
-import io.github.ust.mico.core.configuration.PrometheusConfig;
-import io.github.ust.mico.core.dto.KuberenetesPodMetricsDTO;
-import io.github.ust.mico.core.dto.KubernetesPodInfoDTO;
-import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
-import io.github.ust.mico.core.dto.MicoServiceInterfaceDTO;
-import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
-import io.github.ust.mico.core.dto.PrometheusResponse;
-import io.github.ust.mico.core.exception.KubernetesResourceException;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.MicoStatusService;
-import io.github.ust.mico.core.util.CollectionUtils;
+import java.util.*;
+
+import static io.github.ust.mico.core.TestConstants.*;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -96,22 +80,22 @@ public class MicoStatusServiceTest {
     @Before
     public void setupMicoApplication() {
         micoApplication = new MicoApplication()
-            .setName(APPLICATION_NAME)
             .setShortName(SHORT_NAME)
-            .setVersion(VERSION);
-        
+            .setVersion(VERSION)
+            .setName(NAME);
+
         micoService = new MicoService()
-                .setName(SERVICE_NAME)
-                .setShortName(SHORT_NAME)
-                .setVersion(VERSION)
-                .setServiceInterfaces(CollectionUtils.listOf(
-                    new MicoServiceInterface()
-                        .setServiceInterfaceName(SERVICE_INTERFACE_NAME)
-                ));
-        
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(NAME)
+            .setServiceInterfaces(CollectionUtils.listOf(
+                new MicoServiceInterface()
+                    .setServiceInterfaceName(SERVICE_INTERFACE_NAME)
+            ));
+
         micoApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
-                .setApplication(micoApplication)
-                .setService(micoService));
+            .setApplication(micoApplication)
+            .setService(micoService));
 
         int availableReplicas = 0;
         int replicas = 1;
@@ -127,23 +111,23 @@ public class MicoStatusServiceTest {
 
         podList = new PodListBuilder()
             .addNewItem()
-                .withNewMetadata().withName(podName1).endMetadata()
-                .withNewSpec().withNodeName(nodeName).endSpec()
-                .withNewStatus()
-                .withStartTime(startTime)
-                .addNewContainerStatus().withRestartCount(restarts).endContainerStatus()
-                .withPhase(podPhase)
-                .withHostIP(hostIp)
-                .endStatus()
+            .withNewMetadata().withName(podName1).endMetadata()
+            .withNewSpec().withNodeName(nodeName).endSpec()
+            .withNewStatus()
+            .withStartTime(startTime)
+            .addNewContainerStatus().withRestartCount(restarts).endContainerStatus()
+            .withPhase(podPhase)
+            .withHostIP(hostIp)
+            .endStatus()
             .endItem()
             .build();
-}
+    }
 
     @Test
     public void getApplicationStatus() {
         MicoApplicationStatusDTO micoApplicationStatus = new MicoApplicationStatusDTO();
         micoApplicationStatus.setServiceStatus(Collections.singletonList(new MicoServiceStatusDTO()
-            .setName(SERVICE_NAME)
+            .setName(NAME)
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setAvailableReplicas(0)
@@ -190,7 +174,7 @@ public class MicoStatusServiceTest {
     public void getServiceStatus() {
         MicoServiceStatusDTO micoServiceStatus = new MicoServiceStatusDTO();
         micoServiceStatus
-            .setName(SERVICE_NAME)
+            .setName(NAME)
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setAvailableReplicas(0)

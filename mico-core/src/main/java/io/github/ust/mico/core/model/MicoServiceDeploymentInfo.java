@@ -19,27 +19,21 @@
 
 package io.github.ust.mico.core.model;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.dto.MicoServiceDeploymentInfoDTO;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
-import org.neo4j.ogm.annotation.EndNode;
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.RelationshipEntity;
-import org.neo4j.ogm.annotation.StartNode;
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 import lombok.experimental.Accessors;
+import org.neo4j.ogm.annotation.*;
+
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Represents the information necessary for deploying
@@ -82,6 +76,7 @@ public class MicoServiceDeploymentInfo {
     @StartNode
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
+    @NotNull
     private MicoApplication application;
 
     /**
@@ -98,6 +93,7 @@ public class MicoServiceDeploymentInfo {
     @EndNode
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
+    @NotNull
     private MicoService service;
 
 
@@ -116,6 +112,7 @@ public class MicoServiceDeploymentInfo {
             @ExtensionProperty(name = "description", value = "Number of desired instances. Defaults to 1.")
         }
     )})
+    @Positive(message = "must be at least one replica")
     private int replicas = 1;
 
     /**
@@ -143,6 +140,7 @@ public class MicoServiceDeploymentInfo {
      * subsets of objects. Labels can be attached to objects at creation time and
      * subsequently added and modified at any time.
      * Each key must be unique for a given object.
+     * It can be omitted or be set to an empty list, but {@code null} is not allowed.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -158,6 +156,7 @@ public class MicoServiceDeploymentInfo {
                 " Each key must be unique for a given object.")
         }
     )})
+    @NotNull
     private List<MicoLabel<String, String>> labels = new ArrayList<>();
 
     /**
@@ -173,6 +172,7 @@ public class MicoServiceDeploymentInfo {
                 "Defaults to DEFAULT.")
         }
     )})
+    @NotNull
     private ImagePullPolicy imagePullPolicy = ImagePullPolicy.DEFAULT;
 
     /**
@@ -188,24 +188,25 @@ public class MicoServiceDeploymentInfo {
                 " Defaults to ALWAYS.")
         }
     )})
+    @NotNull
     private RestartPolicy restartPolicy = RestartPolicy.DEFAULT;
-    
-    
+
+
     /**
      * Applies the values of all properties of a
      * {@link MicoServiceDeploymentInfoDTO} to this
      * {@code MicoServiceDeploymentInfo}.
-     * 
+     *
      * @param serviceDeploymentInfoDTO the {@link MicoServiceDeploymentInfoDTO}.
      * @return this {@link MicoServiceDeploymentInfo} with the values
-     *         of the properties of the given {@link MicoServiceDeploymentInfoDTO}.
+     * of the properties of the given {@link MicoServiceDeploymentInfoDTO}.
      */
     public MicoServiceDeploymentInfo applyValuesFrom(MicoServiceDeploymentInfoDTO serviceDeploymentInfoDTO) {
         return setReplicas(serviceDeploymentInfoDTO.getReplicas())
-                .setMinReadySecondsBeforeMarkedAvailable(serviceDeploymentInfoDTO.getMinReadySecondsBeforeMarkedAvailable())
-                .setLabels(serviceDeploymentInfoDTO.getLabels())
-                .setImagePullPolicy(serviceDeploymentInfoDTO.getImagePullPolicy())
-                .setRestartPolicy(serviceDeploymentInfoDTO.getRestartPolicy());
+            .setMinReadySecondsBeforeMarkedAvailable(serviceDeploymentInfoDTO.getMinReadySecondsBeforeMarkedAvailable())
+            .setLabels(serviceDeploymentInfoDTO.getLabels())
+            .setImagePullPolicy(serviceDeploymentInfoDTO.getImagePullPolicy())
+            .setRestartPolicy(serviceDeploymentInfoDTO.getRestartPolicy());
     }
 
 

@@ -35,7 +35,6 @@ import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -170,11 +169,7 @@ public class ServiceInterfaceController {
     @PostMapping(SERVICE_INTERFACE_PATH)
     public ResponseEntity<Resource<MicoServiceInterface>> createServiceInterface(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                  @PathVariable(PATH_VARIABLE_VERSION) String version,
-                                                                                 @Valid @RequestBody MicoServiceInterface serviceInterface,
-                                                                                 BindingResult bindingResult) {
-        if (bindingResult != null && bindingResult.hasErrors()) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "The name of the service interface is not valid.");
-        }
+                                                                                 @Valid @RequestBody MicoServiceInterface serviceInterface) {
 
         MicoService service = getServiceFromDatabase(shortName, version);
         if (serviceInterfaceExists(serviceInterface, service)) {
@@ -201,7 +196,7 @@ public class ServiceInterfaceController {
     public ResponseEntity<Resource<MicoServiceInterface>> updateMicoServiceInterface(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                      @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                                      @PathVariable(PATH_VARIABLE_SERVICE_INTERFACE_NAME) String serviceInterfaceName,
-                                                                                     @RequestBody MicoServiceInterface modifiedMicoServiceInterface) {
+                                                                                     @Valid @RequestBody MicoServiceInterface modifiedMicoServiceInterface) {
 
         if (!modifiedMicoServiceInterface.getServiceInterfaceName().equals(serviceInterfaceName)) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "The variable '" + PATH_VARIABLE_SERVICE_INTERFACE_NAME + "' must be equal to the name specified in the request body");
@@ -246,7 +241,7 @@ public class ServiceInterfaceController {
      * @param service
      * @return
      */
-    private boolean serviceInterfaceExists(@RequestBody MicoServiceInterface serviceInterface, MicoService service) {
+    private boolean serviceInterfaceExists(MicoServiceInterface serviceInterface, MicoService service) {
         if (service.getServiceInterfaces() == null) {
             return false;
         }

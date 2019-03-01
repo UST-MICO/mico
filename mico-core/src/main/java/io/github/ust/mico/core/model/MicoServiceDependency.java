@@ -29,6 +29,8 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import org.neo4j.ogm.annotation.*;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * Represents a dependency of a {@link MicoService}.
  */
@@ -70,6 +72,7 @@ public class MicoServiceDependency {
     @ApiModelProperty(required = true)
     @EndNode
     @EqualsAndHashCode.Exclude
+    @NotNull
     private MicoService dependedService;
 
     /**

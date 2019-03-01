@@ -19,24 +19,21 @@
 
 package io.github.ust.mico.core;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Optional;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.dto.KuberenetesPodMetricsDTO;
 import io.github.ust.mico.core.dto.KubernetesPodInfoDTO;
-import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
 import io.github.ust.mico.core.dto.MicoServiceInterfaceDTO;
+import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoStatusService;
 import io.github.ust.mico.core.util.CollectionUtils;
+import io.github.ust.mico.core.validation.MicoDataValidator;
 import io.github.ust.mico.core.web.ServiceController;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -49,19 +46,21 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Optional;
+
 import static io.github.ust.mico.core.ApplicationControllerTests.INTERFACES_LIST_PATH;
-import static io.github.ust.mico.core.JsonPathBuilder.HREF;
-import static io.github.ust.mico.core.JsonPathBuilder.LINKS;
-import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
-import static io.github.ust.mico.core.JsonPathBuilder.SELF;
-import static io.github.ust.mico.core.JsonPathBuilder.ROOT_EMBEDDED;
-import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
+import static io.github.ust.mico.core.JsonPathBuilder.*;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.VERSION;
 import static io.github.ust.mico.core.TestConstants.*;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.is;
@@ -69,15 +68,9 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(ServiceController.class)
@@ -111,16 +104,19 @@ public class ServiceControllerTests {
     @MockBean
     MicoStatusService micoStatusService;
 
+    // Use real implementation of validator class
+    @SpyBean
+    private MicoDataValidator micoDataValidator;
+
     @Autowired
     private ObjectMapper mapper;
 
     @Test
     public void getStatusOfService() throws Exception {
         MicoService micoService = new MicoService()
-            .setName(SERVICE_NAME)
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
-            .setDescription(DESCRIPTION_1);
+            .setName(NAME);
 
         String nodeName = "testNode";
         String podPhase = "Running";
@@ -158,9 +154,9 @@ public class ServiceControllerTests {
                 .setMemoryUsage(memoryUsagePod2));
 
         micoServiceStatus
-            .setVersion(VERSION)
-            .setName(SERVICE_NAME)
             .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(NAME)
             .setAvailableReplicas(availableReplicas)
             .setRequestedReplicas(requestedReplicas)
             .setInterfacesInformation(Collections.singletonList(new MicoServiceInterfaceDTO().setName(SERVICE_INTERFACE_NAME)))
@@ -172,7 +168,7 @@ public class ServiceControllerTests {
         mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/status"))
             .andDo(print())
             .andExpect(status().isOk())
-            .andExpect(jsonPath(SERVICE_DTO_SERVICE_NAME, is(SERVICE_NAME)))
+            .andExpect(jsonPath(SERVICE_DTO_SERVICE_NAME, is(NAME)))
             .andExpect(jsonPath(SERVICE_DTO_REQUESTED_REPLICAS, is(requestedReplicas)))
             .andExpect(jsonPath(SERVICE_DTO_AVAILABLE_REPLICAS, is(availableReplicas)))
             .andExpect(jsonPath(SERVICE_DTO_INTERFACES_INFORMATION, hasSize(1)))
@@ -195,19 +191,22 @@ public class ServiceControllerTests {
     @Test
     public void getCompleteServiceList() throws Exception {
         given(serviceRepository.findAll(ArgumentMatchers.anyInt())).willReturn(
-                Arrays.asList(
-                        new MicoService().setShortName(SHORT_NAME_1).setVersion(VERSION_1_0_1).setDescription(DESCRIPTION_1),
-                        new MicoService().setShortName(SHORT_NAME_2).setVersion(VERSION_1_0_2).setDescription(DESCRIPTION_2),
-                        new MicoService().setShortName(SHORT_NAME_3).setVersion(VERSION_1_0_3).setDescription(DESCRIPTION_3)));
+            CollectionUtils.listOf(
+                new MicoService().setShortName(SHORT_NAME_1).setVersion(VERSION_1_0_1).setName(NAME_1).setDescription(DESCRIPTION_1),
+                new MicoService().setShortName(SHORT_NAME_2).setVersion(VERSION_1_0_2).setName(NAME_2).setDescription(DESCRIPTION_2),
+                new MicoService().setShortName(SHORT_NAME_3).setVersion(VERSION_1_0_3).setName(NAME_3).setDescription(DESCRIPTION_3)));
 
         mvc.perform(get("/services").accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
             .andExpect(jsonPath(SERVICE_LIST + "[*]", hasSize(3)))
-            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_1_MATCHER + " && " + VERSION_1_0_1_MATCHER + " && " + DESCRIPTION_1_MATCHER + ")]", hasSize(1)))
-            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_2_MATCHER + " && " + VERSION_1_0_2_MATCHER + " && " + DESCRIPTION_2_MATCHER + ")]", hasSize(1)))
-            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_3_MATCHER + " && " + VERSION_1_0_3_MATCHER + " && " + DESCRIPTION_3_MATCHER + ")]", hasSize(1)))
+            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_1_MATCHER + " && " + VERSION_1_0_1_MATCHER +
+                " && " + NAME_1_MATCHER + " && " + DESCRIPTION_1_MATCHER + ")]", hasSize(1)))
+            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_2_MATCHER + " && " + VERSION_1_0_2_MATCHER +
+                " && " + NAME_2_MATCHER + " && " + DESCRIPTION_2_MATCHER + ")]", hasSize(1)))
+            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_3_MATCHER + " && " + VERSION_1_0_3_MATCHER +
+                " && " + NAME_3_MATCHER + " && " + DESCRIPTION_3_MATCHER + ")]", hasSize(1)))
             .andExpect(jsonPath(SELF_HREF, is(BASE_URL + SERVICES_PATH)))
             .andReturn();
     }
@@ -215,7 +214,7 @@ public class ServiceControllerTests {
     @Test
     public void getServiceViaShortNameAndVersion() throws Exception {
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
-            Optional.of(new MicoService().setShortName(SHORT_NAME).setVersion(VERSION).setDescription(DESCRIPTION)));
+            Optional.of(new MicoService().setShortName(SHORT_NAME).setVersion(VERSION).setName(NAME).setDescription(DESCRIPTION)));
 
         String urlPath = SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION;
         mvc.perform(get(urlPath).accept(MediaTypes.HAL_JSON_VALUE))
@@ -235,7 +234,7 @@ public class ServiceControllerTests {
     @Test
     public void getServiceById() throws Exception {
         given(serviceRepository.findById(ID_1))
-            .willReturn(Optional.of(new MicoService().setShortName(SHORT_NAME).setVersion(VERSION).setDescription(DESCRIPTION)));
+            .willReturn(Optional.of(new MicoService().setShortName(SHORT_NAME).setVersion(VERSION).setName(NAME).setDescription(DESCRIPTION)));
 
         String urlPath = SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + ID;
         mvc.perform(get(urlPath).accept(MediaTypes.HAL_JSON_UTF8_VALUE))
@@ -256,6 +255,7 @@ public class ServiceControllerTests {
         MicoService service = new MicoService()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
+            .setName(NAME)
             .setDescription(DESCRIPTION);
 
         given(serviceRepository.save(any(MicoService.class))).willReturn(service);
@@ -269,36 +269,95 @@ public class ServiceControllerTests {
     }
 
     @Test
-
-    public void createInvalidService() throws Exception {
+    public void createServiceWithInvalidShortName() throws Exception {
         MicoService service = new MicoService()
-                .setShortName(SHORT_NAME_INVALID)
-                .setVersion(VERSION)
-                .setDescription(DESCRIPTION);
+            .setShortName(SHORT_NAME_INVALID)
+            .setVersion(VERSION)
+            .setName(NAME)
+            .setDescription(DESCRIPTION);
+
+        mvc.perform(post(SERVICES_PATH)
+            .content(mapper.writeValueAsBytes(service)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    public void createServiceWithoutRequiredName() throws Exception {
+        MicoService service = new MicoService()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(null)
+            .setDescription(DESCRIPTION);
+
+        mvc.perform(post(SERVICES_PATH)
+            .content(mapper.writeValueAsBytes(service)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    public void createServiceWithoutRequiredDescription() throws Exception {
+        MicoService service = new MicoService()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(NAME)
+            .setDescription(null);
+
+        mvc.perform(post(SERVICES_PATH)
+            .content(mapper.writeValueAsBytes(service)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    public void createServiceWithEmptyDescription() throws Exception {
+        MicoService service = new MicoService()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(NAME)
+            .setDescription("");
 
         given(serviceRepository.save(any(MicoService.class))).willReturn(service);
 
         mvc.perform(post(SERVICES_PATH)
-                .content(mapper.writeValueAsBytes(service)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andDo(print())
-                .andExpect(status().isUnprocessableEntity())
-                .andExpect(status().reason("The name of the service is not valid."))
-                .andReturn();
+            .content(mapper.writeValueAsBytes(service)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isCreated());
     }
 
+    @Test
+    public void createServiceWithInvalidGitCloneUrl() throws Exception {
+        MicoService service = new MicoService()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(NAME)
+            .setDescription(DESCRIPTION)
+            .setGitCloneUrl("invalid-url");
+
+        given(serviceRepository.save(any(MicoService.class))).willReturn(service);
+
+        mvc.perform(post(SERVICES_PATH)
+            .content(mapper.writeValueAsBytes(service)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
     public void createServiceWithExistingInterfaces() throws Exception {
         MicoServiceInterface serviceInterface1 = new MicoServiceInterface()
-                .setServiceInterfaceName(SERVICE_INTERFACE_NAME);
+            .setServiceInterfaceName(SERVICE_INTERFACE_NAME);
         MicoServiceInterface serviceInterface2 = new MicoServiceInterface()
             .setServiceInterfaceName(SERVICE_INTERFACE_NAME_1);
 
         MicoService service = new MicoService()
-                .setShortName(SHORT_NAME)
-                .setVersion(VERSION)
-                .setDescription(DESCRIPTION)
-                .setServiceInterfaces(CollectionUtils.listOf(
-                        serviceInterface1, serviceInterface2
-                ));
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(NAME)
+            .setDescription(DESCRIPTION)
+            .setServiceInterfaces(CollectionUtils.listOf(
+                serviceInterface1, serviceInterface2
+            ));
 
         given(serviceRepository.save(any(MicoService.class))).willReturn(service);
         given(serviceRepository.findInterfaceOfServiceByName(
@@ -329,6 +388,7 @@ public class ServiceControllerTests {
         MicoService service = new MicoService()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
+            .setName(NAME)
             .setDescription(DESCRIPTION)
             .setServiceInterfaces(CollectionUtils.listOf(
                 serviceInterface1, serviceInterface2
@@ -360,6 +420,7 @@ public class ServiceControllerTests {
         MicoService service = new MicoService()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
+            .setName(NAME)
             .setDescription(DESCRIPTION)
             .setServiceInterfaces(CollectionUtils.listOf(
                 invalidServiceInterface
@@ -377,7 +438,6 @@ public class ServiceControllerTests {
             .andDo(print());
 
         result.andExpect(status().isConflict());
-
     }
 
     @Test
@@ -385,6 +445,7 @@ public class ServiceControllerTests {
         MicoService service = new MicoService()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
+            .setName(NAME)
             .setDescription(DESCRIPTION);
 
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
@@ -401,11 +462,10 @@ public class ServiceControllerTests {
     public void deleteSpecificServiceDependee() throws Exception {
         String shortName = SHORT_NAME_1;
         String version = VERSION_1_0_1;
-        String description = DESCRIPTION_1;
         String shortNameToDelete = SHORT_NAME_2;
         String versionToDelete = VERSION_1_0_2;
-        MicoService service = new MicoService().setShortName(shortName).setVersion(version).setDescription(description);
-        MicoService serviceToDelete = new MicoService().setShortName(shortNameToDelete).setVersion(versionToDelete);
+        MicoService service = new MicoService().setShortName(shortName).setVersion(version).setName(NAME);
+        MicoService serviceToDelete = new MicoService().setShortName(shortNameToDelete).setVersion(versionToDelete).setName(NAME);
 
         given(serviceRepository.findByShortNameAndVersion(shortName, version)).willReturn(Optional.of(service));
         given(serviceRepository.save(any(MicoService.class))).willReturn(service);
@@ -423,13 +483,16 @@ public class ServiceControllerTests {
     public void deleteAllServices() throws Exception {
         MicoService micoServiceOne = new MicoService()
             .setShortName(SHORT_NAME)
-            .setVersion(VERSION);
+            .setVersion(VERSION)
+            .setName(NAME);
         MicoService micoServiceTwo = new MicoService()
             .setShortName(SHORT_NAME)
-            .setVersion(VERSION_1_0_1);
+            .setVersion(VERSION_1_0_1)
+            .setName(NAME);
         MicoService micoServiceThree = new MicoService()
             .setShortName(SHORT_NAME)
-            .setVersion(VERSION_1_0_2);
+            .setVersion(VERSION_1_0_2)
+            .setName(NAME);
 
         given(serviceRepository.findByShortName(SHORT_NAME)).willReturn(CollectionUtils.listOf(micoServiceOne, micoServiceTwo, micoServiceThree));
 
@@ -461,22 +524,25 @@ public class ServiceControllerTests {
     @Test
     public void getServiceDependers() throws Exception {
         MicoService service = new MicoService()
-                .setShortName(SHORT_NAME)
-                .setVersion(VERSION)
-                .setDescription(DESCRIPTION);
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(NAME)
+            .setDescription(DESCRIPTION);
 
         MicoService service1 = new MicoService()
-                .setShortName(SHORT_NAME_1)
-                .setVersion(VERSION_1_0_1)
-                .setDescription(DESCRIPTION_1);
+            .setShortName(SHORT_NAME_1)
+            .setVersion(VERSION_1_0_1)
+            .setName(NAME)
+            .setDescription(DESCRIPTION_1);
         MicoService service2 = new MicoService()
             .setShortName(SHORT_NAME_2)
             .setVersion(VERSION_1_0_2)
             .setDescription(DESCRIPTION_2);
         MicoService service3 = new MicoService()
-                .setShortName(SHORT_NAME_3)
-                .setVersion(VERSION_1_0_3)
-                .setDescription(DESCRIPTION_3);
+            .setShortName(SHORT_NAME_3)
+            .setVersion(VERSION_1_0_3)
+            .setName(NAME)
+            .setDescription(DESCRIPTION_3);
 
         MicoServiceDependency dependency1 = new MicoServiceDependency().setService(service1).setDependedService(service);
         MicoServiceDependency dependency2 = new MicoServiceDependency().setService(service2).setDependedService(service);
@@ -486,7 +552,7 @@ public class ServiceControllerTests {
         service2.setDependencies(Collections.singletonList(dependency2));
         service3.setDependencies(Collections.singletonList(dependency3));
 
-        given(serviceRepository.findAll(ArgumentMatchers.anyInt())).willReturn(Arrays.asList(service, service1, service2, service3));
+        given(serviceRepository.findAll(ArgumentMatchers.anyInt())).willReturn(CollectionUtils.listOf(service, service1, service2, service3));
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
 
         String urlPath = SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + DEPENDERS_SUBPATH;
@@ -499,25 +565,32 @@ public class ServiceControllerTests {
             .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_3_MATCHER + " && " + VERSION_1_0_3_MATCHER + " && " + DESCRIPTION_3_MATCHER + ")]", hasSize(1)))
             .andExpect(jsonPath(SELF_HREF, is(BASE_URL + urlPath)));
 
-
         result.andExpect(status().isOk());
-
     }
 
     @Test
     public void updateService() throws Exception {
         String updatedDescription = "updated description.";
-        MicoService service = new MicoService()
-                .setShortName(SHORT_NAME)
-                .setVersion(VERSION)
-                .setDescription(DESCRIPTION);
+        MicoService existingService = new MicoService()
+            .setId(ID)
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(NAME);
         MicoService updatedService = new MicoService()
-                .setShortName(SHORT_NAME)
-                .setVersion(VERSION)
-                .setDescription(updatedDescription);
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(NAME)
+            .setDescription(updatedDescription);
+        MicoService expectedService = new MicoService()
+            .setId(existingService.getId())
+            .setShortName(updatedService.getShortName())
+            .setVersion(updatedService.getVersion())
+            .setName(updatedService.getName())
+            .setDescription(updatedService.getDescription())
+            .setServiceInterfaces(existingService.getServiceInterfaces());
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
-        given(serviceRepository.save(any(MicoService.class))).willReturn(updatedService);
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingService));
+        given(serviceRepository.save(eq(expectedService))).willReturn(expectedService);
 
         StringBuilder urlPathBuilder = new StringBuilder(300);
         urlPathBuilder.append(SERVICES_PATH);
@@ -529,13 +602,13 @@ public class ServiceControllerTests {
         String urlPath = urlPathBuilder.toString();
 
         ResultActions resultUpdate = mvc.perform(put(urlPath)
-                .content(mapper.writeValueAsBytes(updatedService))
-                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andDo(print())
-                .andExpect(jsonPath(ID_PATH, is(service.getId())))
-                .andExpect(jsonPath(DESCRIPTION_PATH, is(updatedDescription)))
-                .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
-                .andExpect(jsonPath(VERSION_PATH, is(VERSION)));
+            .content(mapper.writeValueAsBytes(updatedService))
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(jsonPath(ID_PATH, is(existingService.getId().intValue())))
+            .andExpect(jsonPath(DESCRIPTION_PATH, is(updatedDescription)))
+            .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
+            .andExpect(jsonPath(VERSION_PATH, is(VERSION)));
 
         resultUpdate.andExpect(status().isOk());
     }
@@ -547,23 +620,25 @@ public class ServiceControllerTests {
             .setServiceInterfaceName(SERVICE_INTERFACE_NAME)
             .setDescription(DESCRIPTION);
         MicoService existingService = new MicoService()
-                .setId(ID)
-                .setShortName(SHORT_NAME)
-                .setVersion(VERSION)
-                .setDescription(DESCRIPTION)
-                .setServiceInterfaces(CollectionUtils.listOf(
-                        serviceInterface
-                ));
+            .setId(ID)
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(NAME)
+            .setServiceInterfaces(CollectionUtils.listOf(
+                serviceInterface
+            ));
         MicoService updatedService = new MicoService()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
+            .setName(NAME)
             .setDescription(updatedDescription);
         MicoService expectedService = new MicoService()
-                .setId(existingService.getId())
-                .setShortName(updatedService.getShortName())
-                .setVersion(updatedService.getVersion())
-                .setDescription(updatedService.getDescription())
-                .setServiceInterfaces(existingService.getServiceInterfaces());
+            .setId(existingService.getId())
+            .setShortName(updatedService.getShortName())
+            .setVersion(updatedService.getVersion())
+            .setName(updatedService.getName())
+            .setDescription(updatedService.getDescription())
+            .setServiceInterfaces(existingService.getServiceInterfaces());
 
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingService));
         given(serviceRepository.save(eq(expectedService))).willReturn(expectedService);
@@ -592,6 +667,7 @@ public class ServiceControllerTests {
         MicoService service = new MicoService()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
+            .setName(NAME)
             .setDescription(DESCRIPTION)
             .setServiceInterfaces(CollectionUtils.listOf(
                 serviceInterface
@@ -599,6 +675,7 @@ public class ServiceControllerTests {
         MicoService updatedService = new MicoService()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
+            .setName(NAME)
             .setDescription(updatedDescription)
             .setServiceInterfaces(CollectionUtils.listOf(
                 serviceInterface
@@ -615,13 +692,62 @@ public class ServiceControllerTests {
     }
 
     @Test
-    public void deleteService() throws Exception {
-        MicoService service = new MicoService()
-                .setShortName(SHORT_NAME)
-                .setVersion(VERSION)
-                .setDescription(DESCRIPTION);
+    public void updateApplicationWithoutRequiredName() throws Exception {
+        MicoService existingService = new MicoService()
+            .setId(ID)
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(NAME);
+        MicoService updatedService = new MicoService()
+            .setId(ID)
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(null);
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingService));
+
+        ResultActions resultUpdate = mvc.perform(put(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION)
+            .content(mapper.writeValueAsBytes(updatedService))
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print());
+
+        resultUpdate.andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    public void updateApplicationWithoutRequiredDescription() throws Exception {
+        MicoService existingService = new MicoService()
+            .setId(ID)
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(NAME)
+            .setDescription(DESCRIPTION);
+        MicoService updatedService = new MicoService()
+            .setId(ID)
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(NAME)
+            .setDescription(null);
+
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingService));
+
+        ResultActions resultUpdate = mvc.perform(put(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION)
+            .content(mapper.writeValueAsBytes(updatedService))
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print());
+
+        resultUpdate.andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    public void deleteService() throws Exception {
+        MicoService existingService = new MicoService()
+            .setId(ID)
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(NAME);
+
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingService));
 
         ResultActions resultDelete = mvc.perform(delete(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION)
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
@@ -633,10 +759,10 @@ public class ServiceControllerTests {
     @Test
     public void getVersionsOfService() throws Exception {
         given(serviceRepository.findByShortName(SHORT_NAME)).willReturn(
-                Arrays.asList(
-                        new MicoService().setShortName(SHORT_NAME).setVersion(VERSION),
-                        new MicoService().setShortName(SHORT_NAME).setVersion(VERSION_1_0_1),
-                        new MicoService().setShortName(SHORT_NAME).setVersion(VERSION_1_0_2)));
+            CollectionUtils.listOf(
+                new MicoService().setShortName(SHORT_NAME).setVersion(VERSION).setName(NAME),
+                new MicoService().setShortName(SHORT_NAME).setVersion(VERSION_1_0_1).setName(NAME),
+                new MicoService().setShortName(SHORT_NAME).setVersion(VERSION_1_0_2).setName(NAME)));
 
         mvc.perform(get("/services/" + SHORT_NAME + "/").accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
@@ -656,29 +782,29 @@ public class ServiceControllerTests {
                 .setId(ID_1)
                 .setShortName(SHORT_NAME)
                 .setVersion(VERSION)
-                .setName(APPLICATION_NAME);
+                .setName(NAME);
 
         MicoService existingService2 = new MicoService()
                 .setId(ID_2)
                 .setShortName(SHORT_NAME_1)
                 .setVersion(VERSION_1_0_1)
-                .setName(APPLICATION_NAME);
+                .setName(NAME);
 
         MicoServiceDependency newDependency = new MicoServiceDependency()
                 .setService(new MicoService()
                     .setShortName(SHORT_NAME)
                     .setVersion(VERSION)
-                    .setName(APPLICATION_NAME))
+                    .setName(NAME))
                 .setDependedService(new MicoService()
                     .setShortName(SHORT_NAME_1)
                     .setVersion(VERSION_1_0_1)
-                    .setName(APPLICATION_NAME));
+                    .setName(NAME));
 
         MicoService expectedService = new MicoService()
             .setId(ID_1)
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
-            .setName(APPLICATION_NAME)
+            .setName(NAME)
             .setDependencies(Collections.singletonList(newDependency));
 
         prettyPrint(expectedService);
@@ -708,24 +834,26 @@ public class ServiceControllerTests {
     @Test
     public void getDependees() throws Exception {
         MicoService service1 = new MicoService()
-                .setShortName(SHORT_NAME_1)
-                .setVersion(VERSION_1_0_1)
-                .setDescription(DESCRIPTION_1);
+            .setShortName(SHORT_NAME_1)
+            .setVersion(VERSION_1_0_1)
+            .setName(NAME_1)
+            .setDescription(DESCRIPTION_1);
         MicoService service2 = new MicoService()
-                .setShortName(SHORT_NAME_2)
-                .setVersion(VERSION_1_0_2)
-                .setDescription(DESCRIPTION_2);
+            .setShortName(SHORT_NAME_2)
+            .setVersion(VERSION_1_0_2)
+            .setName(NAME_2)
+            .setDescription(DESCRIPTION_2);
         MicoService service = new MicoService()
-                .setShortName(SHORT_NAME)
-                .setVersion(VERSION);
+            .setShortName(SHORT_NAME)
+            .setName(NAME)
+            .setVersion(VERSION);
         MicoServiceDependency dependency1 = new MicoServiceDependency().setService(service).setDependedService(service1);
         MicoServiceDependency dependency2 = new MicoServiceDependency().setService(service).setDependedService(service2);
-        service.setDependencies(Arrays.asList(dependency1, dependency2));
+        service.setDependencies(CollectionUtils.listOf(dependency1, dependency2));
 
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME_1, VERSION_1_0_1)).willReturn(Optional.of(service1));
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME_2, VERSION_1_0_2)).willReturn(Optional.of(service2));
-
 
         mvc.perform(get("/services/" + SHORT_NAME + "/" + VERSION + DEPENDEES_SUBPATH).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())

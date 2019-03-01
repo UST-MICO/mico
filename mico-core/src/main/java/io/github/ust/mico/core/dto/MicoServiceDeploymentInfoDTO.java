@@ -62,7 +62,7 @@ public class MicoServiceDeploymentInfoDTO {
             @ExtensionProperty(name = "description", value = "Number of desired instances.")
         }
     )})
-    @Positive(message = "At least one replica is required.")
+    @Positive(message = "must be at least one replica")
     private int replicas;
 
     /**
@@ -80,7 +80,7 @@ public class MicoServiceDeploymentInfoDTO {
                 "0 is considered available as soon as it is ready.")
         }
     )})
-    @PositiveOrZero(message = "Negative values are not allowed.")
+    @PositiveOrZero(message = "must not be negative")
     private int minReadySecondsBeforeMarkedAvailable;
 
     /**

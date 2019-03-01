@@ -22,6 +22,7 @@ package io.github.ust.mico.core;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.exception.NotInitializedException;
 import io.github.ust.mico.core.exception.VersionNotSupportedException;
+import io.github.ust.mico.core.model.MicoVersion;
 import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
 import org.junit.After;
 import org.junit.Before;
@@ -34,7 +35,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoVersion;
+
+import static io.github.ust.mico.core.TestConstants.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -70,7 +72,8 @@ public class ImageBuilderTests {
     public void withoutInitializingAnErrorIsThrown() throws NotInitializedException, VersionNotSupportedException {
 
         MicoService micoService = new MicoService()
-            .setShortName("service-short-name")
+            .setShortName(SERVICE_SHORT_NAME)
+            .setName(NAME)
             .setVersion(MicoVersion.valueOf(RELEASE).toString())
             .setGitCloneUrl(GIT_URI)
             .setDockerfilePath("Dockerfile");

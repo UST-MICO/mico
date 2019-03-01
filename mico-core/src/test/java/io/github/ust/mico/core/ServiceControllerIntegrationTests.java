@@ -67,7 +67,7 @@ public class ServiceControllerIntegrationTests extends Neo4jTestClass {
 
     @Test
     public void deleteService() throws Exception {
-        MicoService micoService = new MicoService().setShortName(SHORT_NAME).setVersion(VERSION_1_0_1);
+        MicoService micoService = new MicoService().setShortName(SHORT_NAME).setVersion(VERSION_1_0_1).setName(NAME);
         serviceRepository.save(micoService);
         mvc.perform(delete( SERVICES_PATH + "/" + SHORT_NAME + "/" + "/" + VERSION_1_0_1).accept(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
