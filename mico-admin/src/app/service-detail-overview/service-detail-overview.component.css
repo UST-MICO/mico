@@ -5,3 +5,7 @@
 .mat-list-item.large {
     height: 90px;
 }
+
+.pointer {
+    cursor: pointer;
+}
