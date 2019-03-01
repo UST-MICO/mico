@@ -3,14 +3,15 @@
 
     <mat-tab-group (selectedTabChange)="tabChange($event)">
         <mat-tab label="Manual">
-            <mico-form [modelUrl]="'remote/MicoService'" [filter]="filterList" (data)="serviceData = $event">
+            <mico-form [modelUrl]="'remote/MicoService'" [filter]="filterListManual" (data)="serviceData = $event">
             </mico-form>
         </mat-tab>
         <mat-tab label="GitHub">
 
             <mat-vertical-stepper (selectionChange)="gitStepperChange($event)">
                 <mat-step label="Choose The Repository">
-                    <mico-form [modelUrl]="'local/serviceFromGitPOST'" (data)="githubData = $event"></mico-form>
+                    <mico-form [modelUrl]="'remote/CrawlingInfoDTO'" [filter]="filterListGithub"
+                        (data)="githubData = $event"></mico-form>
 
                     <div>
                         <button mat-button matStepperNext>Next</button>

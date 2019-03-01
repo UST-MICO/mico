@@ -44,11 +44,14 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
     selectedTab = 0;
 
     subModelDefinitions: Subscription;
-    filterList: string[];
+    filterListManual: string[];
+    filterListGithub: string[];
 
     constructor(private apiService: ApiService) {
         this.subModelDefinitions = this.apiService.getModelDefinitions().subscribe(val => {
-            this.filterList = (val['MicoService'] as ApiModel).required.filter((value) => value !== 'serviceInterfaces');
+            this.filterListManual = (val['MicoService'] as ApiModel).required
+                .filter((value) => value !== 'serviceInterfaces');
+            this.filterListGithub = (val['CrawlingInfoDTO'] as ApiModel).required;
         });
     }
 
@@ -79,8 +82,8 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
         } else if (this.selectedTab === 1) {
             // github
 
-            if (this.githubData == null || this.githubData.vcsroot == null) {
-                // not finished yet (on of the thousand calls angular performs...)
+            if (this.githubData == null || this.githubData.url == null) {
+                // not finished yet (one of the thousand calls angular performs...)
                 return { tab: this.mapTabIndexToString(this.selectedTab), data: undefined };
             }
 
@@ -88,7 +91,7 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
 
                 return {
                     tab: this.mapTabIndexToString(this.selectedTab),
-                    data: { uri: this.githubData.vcsroot, version: this.latestVersion }
+                    data: { url: this.githubData.url, version: this.latestVersion }
                 };
             }
 
@@ -96,7 +99,7 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
 
                 return {
                     tab: this.mapTabIndexToString(this.selectedTab),
-                    data: { uri: this.githubData.vcsroot, version: this.selectedVersion }
+                    data: { url: this.githubData.url, version: this.selectedVersion }
                 };
             }
 
@@ -115,7 +118,7 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
 
         if (event.selectedIndex === 1 && event.previouslySelectedIndex === 0) {
 
-            this.apiService.getServiceVersionsViaGithub(this.githubData.vcsroot).subscribe(val => {
+            this.apiService.getServiceVersionsViaGithub(this.githubData.url).subscribe(val => {
                 this.possibleVersions = JSON.parse(JSON.stringify(val)).sort((n1, n2) => versionComparator(n1, n2));
 
                 this.latestVersion = this.possibleVersions[this.possibleVersions.length - 1];
