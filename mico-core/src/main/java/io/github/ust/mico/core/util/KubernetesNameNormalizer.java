@@ -65,7 +65,7 @@ public class KubernetesNameNormalizer {
             result = "short-name-" + s7;
         }
 
-        if (!result.matches(Patterns.Constants.KUBERNETES_NAMING_REGEX)) {
+        if (!result.matches(Patterns.KUBERNETES_NAMING_REGEX)) {
             throw new IllegalArgumentException("Name '" + name + "' could not be normalized correctly");
         }
 

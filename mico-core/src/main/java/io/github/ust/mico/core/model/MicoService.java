@@ -80,13 +80,13 @@ public class MicoService {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Short Name"),
-            @ExtensionProperty(name = "pattern", value = Patterns.Constants.KUBERNETES_NAMING_REGEX),
+            @ExtensionProperty(name = "pattern", value = Patterns.KUBERNETES_NAMING_REGEX),
             @ExtensionProperty(name = "x-order", value = "10"),
             @ExtensionProperty(name = "description", value = "A unique name of the MicoService.")
         }
     )})
     @NotEmpty
-    @Pattern(regexp = Patterns.Constants.KUBERNETES_NAMING_REGEX, message = Patterns.Constants.KUBERNETES_NAMING_MESSAGE)
+    @Pattern(regexp = Patterns.KUBERNETES_NAMING_REGEX, message = Patterns.KUBERNETES_NAMING_MESSAGE)
     private String shortName;
 
     /**
@@ -111,14 +111,14 @@ public class MicoService {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Version"),
-            @ExtensionProperty(name = "pattern", value = Patterns.Constants.SEMANTIC_VERSIONING_REGEX),
+            @ExtensionProperty(name = "pattern", value = Patterns.SEMANTIC_VERSIONING_REGEX),
             @ExtensionProperty(name = "x-order", value = "20"),
             @ExtensionProperty(name = "description", value = "The version of this service. Refers to GitHub release " +
                 "tag.")
         }
     )})
     @NotEmpty
-    @Pattern(regexp = Patterns.Constants.SEMANTIC_VERSIONING_REGEX, message = Patterns.Constants.SEMANTIC_VERSIONING_MESSAGE)
+    @Pattern(regexp = Patterns.SEMANTIC_VERSIONING_REGEX, message = Patterns.SEMANTIC_VERSIONING_MESSAGE)
     private String version;
 
     /**
@@ -275,12 +275,12 @@ public class MicoService {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Path to Dockerfile"),
-            @ExtensionProperty(name = "pattern", value = Patterns.Constants.RELATIVE_PATH_REGEX),
+            @ExtensionProperty(name = "pattern", value = Patterns.RELATIVE_PATH_REGEX),
             @ExtensionProperty(name = "x-order", value = "130"),
             @ExtensionProperty(name = "description", value = "The relative path to the Dockerfile.")
         }
     )})
-    @Pattern(regexp = Patterns.Constants.RELATIVE_PATH_REGEX, message = "must be relative to the Git clone url")
+    @Pattern(regexp = Patterns.RELATIVE_PATH_REGEX, message = "must be relative to the Git clone url")
     private String dockerfilePath;
 
     /**

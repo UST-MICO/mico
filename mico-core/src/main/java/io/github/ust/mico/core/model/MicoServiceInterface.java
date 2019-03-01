@@ -72,12 +72,12 @@ public class MicoServiceInterface {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Service Interface Name"),
-            @ExtensionProperty(name = "pattern", value = Patterns.Constants.KUBERNETES_NAMING_REGEX),
+            @ExtensionProperty(name = "pattern", value = Patterns.KUBERNETES_NAMING_REGEX),
             @ExtensionProperty(name = "x-order", value = "20"),
             @ExtensionProperty(name = "description", value = "The name of this MicoServiceInterface")
         }
     )})
-    @Pattern(regexp = Patterns.Constants.KUBERNETES_NAMING_REGEX, message = Patterns.Constants.KUBERNETES_NAMING_MESSAGE)
+    @Pattern(regexp = Patterns.KUBERNETES_NAMING_REGEX, message = Patterns.KUBERNETES_NAMING_MESSAGE)
     private String serviceInterfaceName;
 
     /**

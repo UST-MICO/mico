@@ -19,38 +19,42 @@
 
 package io.github.ust.mico.core.util;
 
-import lombok.Getter;
-
 /**
- * Enumeration for all patterns used e.g. for validations in MICO.
+ * Contains regular expressions that are used for pattern matching.
  */
-public enum Patterns {
-
-    NOT_EMPTY(Constants.NOT_EMPTY_REGEX),
-    KUBERNETES_NAMING(Constants.KUBERNETES_NAMING_REGEX),
-    RELATIVE_PATH(Constants.RELATIVE_PATH_REGEX),
-    SEMANTIC_VERSIONING(Constants.SEMANTIC_VERSIONING_REGEX);
-
-    Patterns(String value) {
-        if (!value.equals(this.name()))
-            throw new IllegalArgumentException();
-        this.value = value;
-    }
-
-    @Getter
-    private final String value;
+public class Patterns {
 
     /**
-     * Contains the patterns as string values.
-     * Must be public so that Java annotations are able to use these string values instead of the enums.
+     * Regex for strings that MUST NOT be empty.
      */
-    public static class Constants {
-        public static final String NOT_EMPTY_REGEX = ".*\\S.*";
-        public static final String KUBERNETES_NAMING_REGEX = "^[a-z]([-a-z0-9]*[a-z0-9])?$";
-        public static final String KUBERNETES_NAMING_MESSAGE = "must be a valid Kubernetes name: " +
-            "Consist of lower case alphanumeric characters, -, and .";
-        public static final String RELATIVE_PATH_REGEX = "^(?!/.*$).*";
-        public static final String SEMANTIC_VERSIONING_REGEX = "(^\\w+)?(\\d+)\\.(\\d+)\\.(\\d+)(-(?:[^.\\s]+\\.)*[^.\\s]+)?";
-        public static final String SEMANTIC_VERSIONING_MESSAGE = "must be using Semantic Versioning";
-    }
+    public static final String NOT_EMPTY_REGEX = ".*\\S.*";
+
+    /**
+     * Kubernetes resource names must be a valid DNS-1123 subdomain.
+     * The original regex is: [a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*
+     * We use a slightly different regex for the validation. We don't allow ot start with a digit (must be a letter).
+     * Furthermore we don't allow to use dots.
+     */
+    public static final String KUBERNETES_NAMING_REGEX = "^[a-z]([-a-z0-9]*[a-z0-9])?$";
+
+    /**
+     * Message is used if a match with the {@link Patterns#KUBERNETES_NAMING_REGEX} fails.
+     */
+    public static final String KUBERNETES_NAMING_MESSAGE = "must be a valid Kubernetes name: " +
+        "Consist of lower case alphanumeric characters, '-' or '.', and must start with a letter";
+
+    /**
+     * Regex for strings that MUST be a relative path.
+     */
+    public static final String RELATIVE_PATH_REGEX = "^(?!/.*$).*";
+
+    /**
+     * Regex for strings that MUST be a Semantic Versioning.
+     */
+    public static final String SEMANTIC_VERSIONING_REGEX = "(^\\w+)?(\\d+)\\.(\\d+)\\.(\\d+)(-(?:[^.\\s]+\\.)*[^.\\s]+)?";
+
+    /**
+     * Message is used if a match with the {@link Patterns#SEMANTIC_VERSIONING_REGEX} fails.
+     */
+    public static final String SEMANTIC_VERSIONING_MESSAGE = "must be using Semantic Versioning";
 }
