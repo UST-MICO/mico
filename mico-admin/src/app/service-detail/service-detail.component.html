@@ -2,8 +2,13 @@
 
     <div class="ma3 flex-grow-1">
         <h3>{{service?.name}}</h3>
-    </div>
 
+        <mat-button-toggle class="mt1 mb2 mr2 inline-flex items-center" (click)="deleteService()">
+            <span class="mr2">delete version</span>
+            <mat-icon>delete</mat-icon>
+        </mat-button-toggle>
+
+    </div>
     <!-- Drop Down Menu for version selection-->
     <mat-form-field class="w25 ma2">
         <mat-select placeholder="Service Version" (ngModelChange)="updateVersion($event)" [ngModel]="selectedVersion">

@@ -80,6 +80,9 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
         this.handleSubscriptions();
     }
 
+    /**
+     * unsubscribes all obervables which are not null
+     */
     handleSubscriptions() {
         this.unsubscribe(this.serviceSubscription);
         this.unsubscribe(this.subProvide);
@@ -93,6 +96,10 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
         this.unsubscribe(this.subDependersCall);
     }
 
+    /**
+     * generic function to unsubscribe from an obersvable if it is not null
+     * @param subscription obervable
+     */
     unsubscribe(subscription: Subscription) {
         if (subscription != null) {
             subscription.unsubscribe();
@@ -101,39 +108,27 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
 
     update() {
 
-        if (this.serviceSubscription != null) {
-            this.serviceSubscription.unsubscribe();
-        }
-        if (this.subServiceInterfaces != null) {
-            this.subServiceInterfaces.unsubscribe();
-        }
-
+        this.unsubscribe(this.serviceSubscription);
         this.serviceSubscription = this.apiService.getService(this.shortName, this.version)
             .subscribe(service => {
                 this.serviceData = service;
 
                 // get dependencies
-                if (this.subDependeesCall != null) {
-                    this.subDependeesCall.unsubscribe();
-                }
-
+                this.unsubscribe(this.subDependersCall);
                 this.subDependeesCall = this.apiService.getServiceDependees(this.shortName, this.version)
                     .subscribe(val => {
                         this.dependees = JSON.parse(JSON.stringify(val));
                     });
 
-
-                if (this.subDependersCall != null) {
-                    this.subDependersCall.unsubscribe();
-                }
-
+                this.unsubscribe(this.subDependersCall);
                 this.subDependeesCall = this.apiService.getServiceDependers(this.shortName, this.version)
                     .subscribe(val => {
                         this.dependers = val;
                     });
 
 
-
+                // get interfaces
+                this.unsubscribe(this.subServiceInterfaces);
                 this.subServiceInterfaces = this.apiService.getServiceInterfaces(this.shortName, this.version)
                     .subscribe(val => {
                         this.serviceInterfaces = val;
@@ -143,19 +138,24 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
 
     }
 
+    /**
+     * call back from the save button. Updates the services information.
+     */
     save() {
 
-        this.apiService.putService(this.shortName, this.version, this.serviceData).subscribe(val => {
-            this.serviceData = val;
-            this.shortName = val.shortName;
-            this.version = val.version;
-        });
+        const subPutNewServiceInformation = this.apiService.putService(this.shortName, this.version, this.serviceData)
+            .subscribe(val => {
+                this.serviceData = val;
+                this.shortName = val.shortName;
+                this.version = val.version;
+                this.unsubscribe(subPutNewServiceInformation);
+            });
         this.edit = false;
     }
 
 
     /**
-     * action triggered in ui to create a service interface
+     * action triggered in the ui to create a service interface
      */
     addProvides() {
         const dialogRef = this.dialog.open(CreateServiceInterfaceComponent);
@@ -206,11 +206,12 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
     }
 
     /**
-     * action triggered in ui
+     * action triggered in the ui
      * opens an dialog to select a new service the current service depends on.
      */
     addDependee() {
 
+        // open dialog
         const dialogRef = this.dialog.open(ServicePickerComponent, {
             data: {
                 filter: '',
@@ -219,6 +220,8 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
                 serviceId: this.shortName,
             }
         });
+
+        // handle result
         this.subDependeesDialog = dialogRef.afterClosed().subscribe(result => {
             if (result) {
                 this.apiService.postServiceDependee(this.shortName, this.version, result[0]).subscribe();
@@ -228,12 +231,12 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
 
 
     /**
-     * action triggered in ui
+     * action triggered in the ui
      * Opens a dialog to remove the dependency from the current service to the selected service.
      */
     deleteDependency(dependee) {
 
-
+        // open dialog
         const dialogRef = this.dialog.open(YesNoDialogComponent, {
             data: {
                 object: dependee.shortName,
@@ -241,27 +244,10 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
             }
         });
 
+        // handle result
         this.subDeleteDependency = dialogRef.afterClosed().subscribe(result => {
             if (result) {
                 this.apiService.deleteServiceDependee(this.shortName, this.version, dependee.shortName, dependee.version).subscribe();
-            }
-        });
-    }
-
-    deleteService() {
-
-        const dialogRef = this.dialog.open(YesNoDialogComponent, {
-            data: {
-                object: { shortName: this.shortName, version: this.version },
-                question: 'deleteService'
-            }
-        });
-
-        this.subDeleteDependency = dialogRef.afterClosed().subscribe(result => {
-            if (result) {
-
-                this.apiService.deleteService(this.shortName, this.version).subscribe();
-                this.router.navigate(['../service-detail/service-list']);
             }
         });
     }
