@@ -19,7 +19,10 @@
 
 package io.github.ust.mico.core.model;
 
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.dto.MicoServiceDeploymentInfoDTO;
 import io.swagger.annotations.ApiModelProperty;
@@ -35,9 +38,10 @@ import javax.validation.constraints.PositiveOrZero;
 import java.util.ArrayList;
 import java.util.List;
 
+// TODO: Always use MicoServiceDeploymentInfoDTO as the DTO. Currently not the case when MicoApplication is created.
 /**
- * Represents the information necessary for deploying
- * a {@link MicoApplication}.
+ * Represents the information necessary for deploying a {@link MicoApplication}.
+ * DTO is {@link MicoServiceDeploymentInfoDTO}.
  */
 @Data
 @NoArgsConstructor
