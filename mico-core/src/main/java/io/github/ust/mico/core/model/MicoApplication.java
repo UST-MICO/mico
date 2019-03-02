@@ -30,6 +30,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+import org.hibernate.validator.constraints.Length;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
@@ -68,17 +69,22 @@ public class MicoApplication {
     /**
      * A brief name for the application intended
      * for use as a unique identifier.
+     * To be consistent we want to be compatible with Kubernetes resource names,
+     * therefore it must match the Kubernetes naming pattern.
      */
     @ApiModelProperty(required = true, extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Short Name"),
-            @ExtensionProperty(name = "pattern", value = Patterns.NOT_EMPTY_REGEX),
+            @ExtensionProperty(name = "pattern", value = Patterns.KUBERNETES_NAMING_REGEX),
+            @ExtensionProperty(name = "minLength", value = "3"),
+            @ExtensionProperty(name = "maxLength", value = "254"),
             @ExtensionProperty(name = "x-order", value = "10"),
             @ExtensionProperty(name = "description", value = "Unique short name of the application.")
         }
     )})
-    @NotEmpty
+    @Length(min = 3, max = 254, message = "must have a length between 3 and 254")
+    @Pattern(regexp = Patterns.KUBERNETES_NAMING_REGEX, message = Patterns.KUBERNETES_NAMING_MESSAGE)
     private String shortName;
 
     /**

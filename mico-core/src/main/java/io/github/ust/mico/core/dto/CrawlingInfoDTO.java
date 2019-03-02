@@ -51,6 +51,7 @@ public class CrawlingInfoDTO {
         @Extension(name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION, properties = {
             @ExtensionProperty(name = "title", value = "URL"),
             @ExtensionProperty(name = "x-order", value = "10"),
+            @ExtensionProperty(name = "minLength", value = "1"),
             @ExtensionProperty(name = "description", value = "The url to the remote repository to crawl from.")})})
     @NotEmpty
     private String url;
