@@ -121,6 +121,7 @@ public class MicoServiceInterface {
     /**
      * Human readable description of this service interface,
      * e.g., the functionality provided.
+     * {@code null} values are skipped.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -128,10 +129,11 @@ public class MicoServiceInterface {
             @ExtensionProperty(name = "title", value = "Description"),
             @ExtensionProperty(name = "default", value = ""),
             @ExtensionProperty(name = "x-order", value = "110"),
-            @ExtensionProperty(name = "description", value = "Human readable description of this service interface.")
+            @ExtensionProperty(name = "description", value = "Human readable description of this service interface.\n " +
+                "Null values are skipped.")
         }
     )})
-    @JsonSetter(nulls = Nulls.AS_EMPTY)
+    @JsonSetter(nulls = Nulls.SKIP)
     private String description = "";
 
     /**

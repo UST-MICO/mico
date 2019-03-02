@@ -144,6 +144,7 @@ public class MicoServiceDeploymentInfo {
      * subsets of objects. Labels can be attached to objects at creation time and
      * subsequently added and modified at any time.
      * Each key must be unique for a given object.
+     * {@code null} values are skipped.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -156,10 +157,11 @@ public class MicoServiceDeploymentInfo {
                 " semantics to the core system. Labels can be used to organize and to select" +
                 " subsets of objects. Labels can be attached to objects at creation time and" +
                 " subsequently added and modified at any time.\n" +
-                " Each key must be unique for a given object.")
+                " Each key must be unique for a given object.\n" +
+                " Null values are skipped.")
         }
     )})
-    @JsonSetter(nulls = Nulls.AS_EMPTY)
+    @JsonSetter(nulls = Nulls.SKIP)
     private List<MicoLabel<String, String>> labels = new ArrayList<>();
 
     /**

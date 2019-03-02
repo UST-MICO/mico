@@ -37,7 +37,6 @@ import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
 import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import java.util.ArrayList;
 import java.util.List;
@@ -119,7 +118,7 @@ public class MicoApplication {
 
     /**
      * Human readable description of this application.
-     * Is allowed to be empty (default).
+     * Is allowed to be empty (default). {@code null} values are skipped.
      */
     @ApiModelProperty(required = true, extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -128,10 +127,10 @@ public class MicoApplication {
             @ExtensionProperty(name = "default", value = ""),
             @ExtensionProperty(name = "x-order", value = "40"),
             @ExtensionProperty(name = "description", value = "Human readable description of this application.\n" +
-                " Is allowed to be empty (default).")
+                " Is allowed to be empty (default). Null values are skipped.")
         }
     )})
-    @JsonSetter(nulls = Nulls.AS_EMPTY)
+    @JsonSetter(nulls = Nulls.SKIP)
     private String description = "";
 
 
@@ -142,6 +141,7 @@ public class MicoApplication {
     /**
      * The list of service deployment information
      * this application uses for the deployment of the required services.
+     * {@code null} values are skipped.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -149,12 +149,12 @@ public class MicoApplication {
             @ExtensionProperty(name = "title", value = "Service Deployment Information"),
             @ExtensionProperty(name = "x-order", value = "130"),
             @ExtensionProperty(name = "description", value = "The list of service deployment information " +
-                "this application uses for the deployment of the required services.")
+                "this application uses for the deployment of the required services.\n " +
+                "Null values are skipped.")
         }
     )})
-    @JsonManagedReference
+    @JsonSetter(nulls = Nulls.SKIP)
     @Relationship(type = "INCLUDES_SERVICE")
-    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<MicoServiceDeploymentInfo> serviceDeploymentInfos = new ArrayList<>();
 
     /**

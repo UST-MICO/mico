@@ -50,10 +50,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.github.ust.mico.core.JsonPathBuilder.*;
@@ -63,6 +60,7 @@ import static io.github.ust.mico.core.TestConstants.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -260,11 +258,6 @@ public class ApplicationControllerTests {
             .setService(service2));
 
         given(applicationRepository.save(any(MicoApplication.class))).willReturn(application);
-        // TODO given
-        // Only one of the two MicoService exists -> exception
-        /*given(serviceRepository.findByShortNameAndVersion(
-            eq(existingMicoServices.get(0).getShortName()), eq(existingMicoServices.get(0).getVersion())))
-            .willReturn(Optional.of(existingMicoServices.get(0))); */
 
         final ResultActions result = mvc.perform(post(BASE_PATH)
             .content(mapper.writeValueAsBytes(application))
@@ -322,39 +315,65 @@ public class ApplicationControllerTests {
     }
 
     @Test
-    public void createApplicationWithoutRequiredDescription() throws Exception {
-        MicoApplication application = new MicoApplication()
-            .setId(ID)
+    public void createApplicationWithDescriptionSetToNull() throws Exception {
+        MicoApplication newApplication = new MicoApplication()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setName(NAME)
             .setDescription(null);
 
-        final ResultActions result = mvc.perform(post(BASE_PATH)
-            .content(mapper.writeValueAsBytes(application))
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print());
+        MicoApplication expectedApplication = new MicoApplication()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(NAME)
+            .setDescription("")
+            .setServiceDeploymentInfos(new ArrayList<>());
 
-        result.andExpect(status().isUnprocessableEntity());
+        ArgumentCaptor<MicoApplication> applicationArgumentCaptor = ArgumentCaptor.forClass(MicoApplication.class);
+
+        given(applicationRepository.save(any(MicoApplication.class))).willReturn(expectedApplication);
+
+        mvc.perform(post(BASE_PATH)
+            .content(mapper.writeValueAsBytes(newApplication))
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isCreated());
+
+        verify(applicationRepository, times(1)).save(applicationArgumentCaptor.capture());
+        MicoApplication savedMicoApplication = applicationArgumentCaptor.getValue();
+        assertNotNull(savedMicoApplication);
+        assertEquals("Actual application does not match expected", expectedApplication, savedMicoApplication);
     }
 
     @Test
     public void createApplicationWithEmptyDescription() throws Exception {
-        MicoApplication application = new MicoApplication()
-            .setId(ID)
+        MicoApplication newApplication = new MicoApplication()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setName(NAME)
             .setDescription("");
 
-        given(applicationRepository.save(any(MicoApplication.class))).willReturn(application);
+        MicoApplication expectedApplication = new MicoApplication()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(NAME)
+            .setDescription("")
+            .setServiceDeploymentInfos(new ArrayList<>());
 
-        final ResultActions result = mvc.perform(post(BASE_PATH)
-            .content(mapper.writeValueAsBytes(application))
+        ArgumentCaptor<MicoApplication> applicationArgumentCaptor = ArgumentCaptor.forClass(MicoApplication.class);
+
+        given(applicationRepository.save(any(MicoApplication.class))).willReturn(expectedApplication);
+
+        mvc.perform(post(BASE_PATH)
+            .content(mapper.writeValueAsBytes(newApplication))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print());
+            .andDo(print())
+            .andExpect(status().isCreated());
 
-        result.andExpect(status().isCreated());
+        verify(applicationRepository, times(1)).save(applicationArgumentCaptor.capture());
+        MicoApplication savedMicoApplication = applicationArgumentCaptor.getValue();
+        assertNotNull(savedMicoApplication);
+        assertEquals("Actual application does not match expected", expectedApplication, savedMicoApplication);
     }
 
     @Test
@@ -501,7 +520,7 @@ public class ApplicationControllerTests {
     }
 
     @Test
-    public void updateApplicationWithoutRequiredDescription() throws Exception {
+    public void updateApplicationWithDescriptionSetToNull() throws Exception {
         MicoApplication existingApplication = new MicoApplication()
             .setId(ID)
             .setShortName(SHORT_NAME)
@@ -515,14 +534,29 @@ public class ApplicationControllerTests {
             .setName(NAME)
             .setDescription(null);
 
-        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingApplication));
+        MicoApplication expectedApplication = new MicoApplication()
+            .setId(existingApplication.getId())
+            .setShortName(existingApplication.getShortName())
+            .setVersion(existingApplication.getVersion())
+            .setName(updatedApplication.getName())
+            .setDescription("")
+            .setServiceDeploymentInfos(existingApplication.getServiceDeploymentInfos());
 
-        ResultActions resultUpdate = mvc.perform(put(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION)
+        ArgumentCaptor<MicoApplication> applicationArgumentCaptor = ArgumentCaptor.forClass(MicoApplication.class);
+
+        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingApplication));
+        given(applicationRepository.save(any(MicoApplication.class))).willReturn(expectedApplication);
+
+         mvc.perform(put(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION)
             .content(mapper.writeValueAsBytes(updatedApplication))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print());
+            .andDo(print())
+            .andExpect(status().isOk());
 
-        resultUpdate.andExpect(status().isUnprocessableEntity());
+        verify(applicationRepository, times(1)).save(applicationArgumentCaptor.capture());
+        MicoApplication savedMicoApplication = applicationArgumentCaptor.getValue();
+        assertNotNull(savedMicoApplication);
+        assertEquals("Actual application does not match expected", expectedApplication, savedMicoApplication);
     }
 
     @Test
@@ -675,17 +709,19 @@ public class ApplicationControllerTests {
     }
 
     @Test
-    public void addServiceOnlyWithNameAndVersionToApplication() throws Exception {
+    public void addServiceOnlyWithShortNameAndVersionToApplication() throws Exception {
         MicoApplication application = new MicoApplication()
             .setId(ID)
             .setShortName(SHORT_NAME)
+            .setName(NAME)
             .setVersion(VERSION);
 
         MicoService existingService = new MicoService()
+            .setId(ID_1)
             .setShortName(SERVICE_SHORT_NAME)
             .setVersion(SERVICE_VERSION)
-            .setDescription(DESCRIPTION)
-            .setGitCloneUrl(GIT_TEST_REPO_URL);
+            .setName(NAME)
+            .setDescription(DESCRIPTION);
 
         MicoService providedService = new MicoService()
             .setShortName(SERVICE_SHORT_NAME)

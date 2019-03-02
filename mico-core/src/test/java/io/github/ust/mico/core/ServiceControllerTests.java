@@ -39,6 +39,7 @@ import io.github.ust.mico.core.web.ServiceController;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -66,9 +67,13 @@ import static io.github.ust.mico.core.TestConstants.*;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -301,17 +306,32 @@ public class ServiceControllerTests {
     }
 
     @Test
-    public void createServiceWithoutRequiredDescription() throws Exception {
-        MicoService service = new MicoService()
+    public void createServiceWithDescriptionSetToNull() throws Exception {
+        MicoService newService = new MicoService()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setName(NAME)
             .setDescription(null);
 
+        MicoService expectedService = new MicoService()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(NAME)
+            .setDescription("");
+
+        ArgumentCaptor<MicoService> serviceArgumentCaptor = ArgumentCaptor.forClass(MicoService.class);
+
+        given(serviceRepository.save(any(MicoService.class))).willReturn(expectedService);
+
         mvc.perform(post(SERVICES_PATH)
-            .content(mapper.writeValueAsBytes(service)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .content(mapper.writeValueAsBytes(newService)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
-            .andExpect(status().isUnprocessableEntity());
+            .andExpect(status().isCreated());
+
+        verify(serviceRepository, times(1)).save(serviceArgumentCaptor.capture());
+        MicoService savedMicoService = serviceArgumentCaptor.getValue();
+        assertNotNull(savedMicoService);
+        assertEquals("Actual service does not match expected", expectedService, savedMicoService);
     }
 
     @Test
@@ -322,12 +342,25 @@ public class ServiceControllerTests {
             .setName(NAME)
             .setDescription("");
 
-        given(serviceRepository.save(any(MicoService.class))).willReturn(service);
+        MicoService expectedService = new MicoService()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(NAME)
+            .setDescription("");
+
+        ArgumentCaptor<MicoService> serviceArgumentCaptor = ArgumentCaptor.forClass(MicoService.class);
+
+        given(serviceRepository.save(any(MicoService.class))).willReturn(expectedService);
 
         mvc.perform(post(SERVICES_PATH)
             .content(mapper.writeValueAsBytes(service)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isCreated());
+
+        verify(serviceRepository, times(1)).save(serviceArgumentCaptor.capture());
+        MicoService savedMicoService = serviceArgumentCaptor.getValue();
+        assertNotNull(savedMicoService);
+        assertEquals("Actual service does not match expected", expectedService, savedMicoService);
     }
 
     @Test
@@ -719,7 +752,7 @@ public class ServiceControllerTests {
     }
 
     @Test
-    public void updateApplicationWithoutRequiredDescription() throws Exception {
+    public void updateApplicationWithDescriptionSetToNull() throws Exception {
         MicoService existingService = new MicoService()
             .setId(ID)
             .setShortName(SHORT_NAME)
@@ -727,20 +760,33 @@ public class ServiceControllerTests {
             .setName(NAME)
             .setDescription(DESCRIPTION);
         MicoService updatedService = new MicoService()
-            .setId(ID)
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setName(NAME)
             .setDescription(null);
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingService));
+        MicoService expectedService = new MicoService()
+            .setId(existingService.getId())
+            .setShortName(existingService.getShortName())
+            .setVersion(existingService.getVersion())
+            .setName(existingService.getName())
+            .setDescription("");
 
-        ResultActions resultUpdate = mvc.perform(put(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION)
+        ArgumentCaptor<MicoService> serviceArgumentCaptor = ArgumentCaptor.forClass(MicoService.class);
+
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingService));
+        given(serviceRepository.save(any(MicoService.class))).willReturn(expectedService);
+
+        mvc.perform(put(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION)
             .content(mapper.writeValueAsBytes(updatedService))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print());
+            .andDo(print())
+            .andExpect(status().isOk());
 
-        resultUpdate.andExpect(status().isUnprocessableEntity());
+        verify(serviceRepository, times(1)).save(serviceArgumentCaptor.capture());
+        MicoService savedMicoService = serviceArgumentCaptor.getValue();
+        assertNotNull(savedMicoService);
+        assertEquals("Actual service does not match expected", expectedService, savedMicoService);
     }
 
     @Test

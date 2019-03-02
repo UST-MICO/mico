@@ -413,7 +413,7 @@ public class ApplicationController {
                 "Provided service '" + providedService.getShortName() + "' '" + providedService.getVersion() +
                     "' has a conflict in the property 'gitCloneUrl' with the existing service!");
         }
-        if (providedService.getDescription() != null
+        if (providedService.getDescription() != null && !providedService.getDescription().equals("")
             && !providedService.getDescription().equals(existingService.getDescription())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "Provided service '" + providedService.getShortName() + "' '" + providedService.getVersion() +

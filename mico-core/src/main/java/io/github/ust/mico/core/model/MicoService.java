@@ -123,7 +123,7 @@ public class MicoService {
 
     /**
      * Human readable description of this service.
-     * Is allowed to be empty (default).
+     * Is allowed to be empty (default). {@code null} values are skipped.
      */
     @ApiModelProperty(required = true, extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -132,10 +132,10 @@ public class MicoService {
             @ExtensionProperty(name = "default", value = ""),
             @ExtensionProperty(name = "x-order", value = "40"),
             @ExtensionProperty(name = "description", value = "Human readable description of this service.\n " +
-                "Is allowed to be empty (default).")
+                "Is allowed to be empty (default). Null values are skipped.")
         }
     )})
-    @JsonSetter(nulls = Nulls.AS_EMPTY)
+    @JsonSetter(nulls = Nulls.SKIP)
     private String description = "";
 
     /**
@@ -163,17 +163,19 @@ public class MicoService {
 
     /**
      * The list of interfaces this service provides.
+     * {@code null} values are skipped.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Service Interfaces"),
             @ExtensionProperty(name = "x-order", value = "60"),
-            @ExtensionProperty(name = "description", value = "The list of interfaces this service provides.")
+            @ExtensionProperty(name = "description", value = "The list of interfaces this service provides.\n " +
+                "Null values are skipped.")
         }
     )})
     @Relationship(type = "PROVIDES_INTERFACES", direction = Relationship.UNDIRECTED)
-    @JsonSetter(nulls = Nulls.AS_EMPTY)
+    @JsonSetter(nulls = Nulls.SKIP)
     private List<MicoServiceInterface> serviceInterfaces = new ArrayList<>();
 
     /**
