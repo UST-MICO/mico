@@ -36,6 +36,7 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
+import javax.validation.Valid;
 import javax.validation.constraints.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -172,6 +173,7 @@ public class MicoService {
     )})
     @Relationship(type = "PROVIDES_INTERFACES", direction = Relationship.UNDIRECTED)
     @JsonSetter(nulls = Nulls.SKIP)
+    @Valid
     private List<MicoServiceInterface> serviceInterfaces = new ArrayList<>();
 
     /**
@@ -192,6 +194,7 @@ public class MicoService {
     @JsonManagedReference
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Relationship(type = "DEPENDS_ON")
+    @Valid
     private List<MicoServiceDependency> dependencies = new ArrayList<>();
 
     /**
@@ -206,6 +209,7 @@ public class MicoService {
         }
     )})
     @Relationship(type = "PREDECESSOR")
+    @Valid
     private MicoService predecessor;
 
     /**

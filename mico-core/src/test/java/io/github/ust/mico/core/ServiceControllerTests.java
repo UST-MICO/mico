@@ -30,6 +30,7 @@ import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.model.MicoServicePort;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.GitHubCrawler;
 import io.github.ust.mico.core.service.MicoStatusService;
@@ -382,10 +383,15 @@ public class ServiceControllerTests {
 
     @Test
     public void createServiceWithExistingInterfaces() throws Exception {
+
+        MicoServicePort servicePort = new MicoServicePort().setPort(80).setTargetPort(80);
+
         MicoServiceInterface serviceInterface1 = new MicoServiceInterface()
-            .setServiceInterfaceName(SERVICE_INTERFACE_NAME);
+            .setServiceInterfaceName(SERVICE_INTERFACE_NAME)
+            .setPorts(CollectionUtils.listOf(servicePort));
         MicoServiceInterface serviceInterface2 = new MicoServiceInterface()
-            .setServiceInterfaceName(SERVICE_INTERFACE_NAME_1);
+            .setServiceInterfaceName(SERVICE_INTERFACE_NAME_1)
+            .setPorts(CollectionUtils.listOf(servicePort));
 
         MicoService service = new MicoService()
             .setShortName(SHORT_NAME)
@@ -447,12 +453,15 @@ public class ServiceControllerTests {
 
     @Test
     public void createServiceWithInconsistentInterfaceData() throws Exception {
+        MicoServicePort servicePort = new MicoServicePort().setPort(80).setTargetPort(80);
         MicoServiceInterface existingServiceInterface = new MicoServiceInterface()
             .setServiceInterfaceName(SERVICE_INTERFACE_NAME)
-            .setDescription(DESCRIPTION);
+            .setDescription(DESCRIPTION)
+            .setPorts(CollectionUtils.listOf(servicePort));
         MicoServiceInterface invalidServiceInterface = new MicoServiceInterface()
             .setServiceInterfaceName(SERVICE_INTERFACE_NAME)
-            .setDescription("INVALID");
+            .setDescription("INVALID")
+            .setPorts(CollectionUtils.listOf(servicePort));
 
         MicoService service = new MicoService()
             .setShortName(SHORT_NAME)

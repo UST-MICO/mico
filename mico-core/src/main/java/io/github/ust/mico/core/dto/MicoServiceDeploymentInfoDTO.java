@@ -35,6 +35,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.util.ArrayList;
@@ -112,6 +113,7 @@ public class MicoServiceDeploymentInfoDTO {
         }
     )})
     @JsonSetter(nulls = Nulls.SKIP)
+    @Valid
     private List<MicoLabel> labels = new ArrayList<>();
 
     /**

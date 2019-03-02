@@ -37,6 +37,7 @@ import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 import org.springframework.data.neo4j.annotation.QueryResult;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Pattern;
 import java.util.ArrayList;
@@ -98,6 +99,7 @@ public class MicoServiceInterface {
     )})
     @Relationship(type = "PROVIDES_PORTS", direction = Relationship.UNDIRECTED)
     @NotEmpty
+    @Valid
     private List<MicoServicePort> ports = new ArrayList<>();
 
 

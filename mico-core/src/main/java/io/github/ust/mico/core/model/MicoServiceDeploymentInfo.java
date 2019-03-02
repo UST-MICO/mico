@@ -81,6 +81,7 @@ public class MicoServiceDeploymentInfo {
     @StartNode
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
+    @Valid
     private MicoApplication application;
 
     /**
@@ -98,6 +99,7 @@ public class MicoServiceDeploymentInfo {
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @NotNull
+    @Valid
     private MicoService service;
 
 

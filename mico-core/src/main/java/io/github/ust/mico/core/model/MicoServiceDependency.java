@@ -29,6 +29,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import org.neo4j.ogm.annotation.*;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -62,6 +63,7 @@ public class MicoServiceDependency {
     @JsonBackReference
     @StartNode
     @EqualsAndHashCode.Exclude
+    @Valid
     private MicoService service;
 
     /**
@@ -73,6 +75,7 @@ public class MicoServiceDependency {
     @EndNode
     @EqualsAndHashCode.Exclude
     @NotNull
+    @Valid
     private MicoService dependedService;
 
     /**
