@@ -27,14 +27,16 @@ import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * DTO that holds name, shortName, and version of a {@link MicoApplication}. Utilized, when the using aplications of
+ * DTO that holds name, shortName, and version of a {@link MicoApplication}. Utilized, when the using applications of
  * shared services are requested.
  */
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 @Accessors(chain = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BasicMicoApplicationDTO {

@@ -30,10 +30,10 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.collect.ImmutableMap;
 import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.dto.BasicMicoApplicationDTO;
-import io.github.ust.mico.core.dto.KuberenetesPodMetricsDTO;
+import io.github.ust.mico.core.dto.KubernetesPodMetricsDTO;
 import io.github.ust.mico.core.dto.KubernetesPodInformationDTO;
 import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
-import io.github.ust.mico.core.dto.MicoServiceInterfaceDTO;
+import io.github.ust.mico.core.dto.MicoServiceInterfaceStatusDTO;
 import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
@@ -518,7 +518,7 @@ public class ApplicationControllerTests {
             .setPodName(podName1)
             .setStartTime(startTimePod1)
             .setRestarts(restartsPod1)
-            .setMetrics(new KuberenetesPodMetricsDTO()
+            .setMetrics(new KubernetesPodMetricsDTO()
                 .setAvailable(false)
                 .setCpuLoad(cpuLoad1)
                 .setMemoryUsage(memoryUsage1));
@@ -532,7 +532,7 @@ public class ApplicationControllerTests {
             .setPodName(podName2)
             .setStartTime(startTimePod2)
             .setRestarts(restartsPod2)
-            .setMetrics(new KuberenetesPodMetricsDTO()
+            .setMetrics(new KubernetesPodMetricsDTO()
                 .setAvailable(true)
                 .setCpuLoad(cpuLoad2)
                 .setMemoryUsage(memoryUsage2));
@@ -545,7 +545,7 @@ public class ApplicationControllerTests {
             .setAvailableReplicas(availableReplicas)
             .setRequestedReplicas(replicas)
             .setUsingApplications(CollectionUtils.listOf(new BasicMicoApplicationDTO(otherMicoApplication.getName(), otherMicoApplication.getShortName(), otherMicoApplication.getVersion())))
-            .setInterfacesInformation(CollectionUtils.listOf(new MicoServiceInterfaceDTO().setName(SERVICE_INTERFACE_NAME)))
+            .setInterfacesInformation(CollectionUtils.listOf(new MicoServiceInterfaceStatusDTO().setName(SERVICE_INTERFACE_NAME)))
             .setPodsInformation(Arrays.asList(kubernetesPodInfo1, kubernetesPodInfo2))
             .setAverageCpuLoadPerNode(ImmutableMap.of(nodeName, 25))
             .setAverageMemoryUsagePerNode(ImmutableMap.of(nodeName, 60));

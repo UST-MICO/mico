@@ -26,9 +26,9 @@ import java.util.Optional;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import io.github.ust.mico.core.configuration.CorsConfig;
-import io.github.ust.mico.core.dto.KuberenetesPodMetricsDTO;
+import io.github.ust.mico.core.dto.KubernetesPodMetricsDTO;
 import io.github.ust.mico.core.dto.KubernetesPodInformationDTO;
-import io.github.ust.mico.core.dto.MicoServiceInterfaceDTO;
+import io.github.ust.mico.core.dto.MicoServiceInterfaceStatusDTO;
 import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
@@ -190,7 +190,7 @@ public class ServiceControllerTests {
             .setNodeName(nodeName)
             .setPhase(podPhase)
             .setPodName(podName1)
-            .setMetrics(new KuberenetesPodMetricsDTO()
+            .setMetrics(new KubernetesPodMetricsDTO()
                 .setAvailable(false)
                 .setCpuLoad(cpuLoadPod1)
                 .setMemoryUsage(memoryUsagePod1));
@@ -200,7 +200,7 @@ public class ServiceControllerTests {
             .setNodeName(nodeName)
             .setPhase(podPhase)
             .setPodName(podName2)
-            .setMetrics(new KuberenetesPodMetricsDTO()
+            .setMetrics(new KubernetesPodMetricsDTO()
                 .setAvailable(true)
                 .setCpuLoad(cpuLoadPod2)
                 .setMemoryUsage(memoryUsagePod2));
@@ -213,7 +213,7 @@ public class ServiceControllerTests {
             .setRequestedReplicas(requestedReplicas)
             .setAverageCpuLoadPerNode(ImmutableMap.of(nodeName, 25))
             .setAverageMemoryUsagePerNode(ImmutableMap.of(nodeName, 60))
-            .setInterfacesInformation(CollectionUtils.listOf(new MicoServiceInterfaceDTO().setName(SERVICE_INTERFACE_NAME)))
+            .setInterfacesInformation(CollectionUtils.listOf(new MicoServiceInterfaceStatusDTO().setName(SERVICE_INTERFACE_NAME)))
             .setPodsInformation(Arrays.asList(kubernetesPodInfo1, kubernetesPodInfo2));
 
         given(micoStatusService.getServiceStatus(any(MicoService.class))).willReturn(micoServiceStatus);

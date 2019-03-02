@@ -27,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -92,7 +93,8 @@ public class MicoServiceStatusDTO {
         properties = {
             @ExtensionProperty(name = "title", value = "RequestedReplicas"),
             @ExtensionProperty(name = "x-order", value = "40"),
-            @ExtensionProperty(name = "description", value = "Counter for number of replicas of a MicoService that should be available.")
+            @ExtensionProperty(name = "description", value = "Counter for number of replicas " +
+                "of a MicoService that should be available.")
         }
     )})
     private int requestedReplicas;
@@ -105,23 +107,25 @@ public class MicoServiceStatusDTO {
         properties = {
             @ExtensionProperty(name = "title", value = "AvailableReplicas"),
             @ExtensionProperty(name = "x-order", value = "50"),
-            @ExtensionProperty(name = "description", value = "Counter for replicas of a MicoService that are actually available.")
+            @ExtensionProperty(name = "description", value = "Counter for replicas of " +
+                "a MicoService that are actually available.")
         }
     )})
     private int availableReplicas;
 
     /**
-     * Each item in this list represents a Kubernetes Service.
+     * Each {@link MicoServiceInterface} in this list is deployed as a Kubernetes Service for this {@link MicoService}.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "InterfacesInformation"),
             @ExtensionProperty(name = "x-order", value = "60"),
-            @ExtensionProperty(name = "description", value = "Each item in this list represents a Kubernetes Service.")
+            @ExtensionProperty(name = "description", value = "Each link MicoServiceInterface in this list is " +
+                "deployed as a Kubernetes Service for this MicoService.")
         }
     )})
-    private List<MicoServiceInterfaceDTO> interfacesInformation = new ArrayList<>();
+    private List<MicoServiceInterfaceStatusDTO> interfacesInformation = new ArrayList<>();
 
     /**
      * List of {@link BasicMicoApplicationDTO}, representing all applications that are using one service together.
@@ -131,7 +135,8 @@ public class MicoServiceStatusDTO {
         properties = {
             @ExtensionProperty(name = "title", value = "UsingApplications"),
             @ExtensionProperty(name = "x-order", value = "70"),
-            @ExtensionProperty(name = "description", value = "List of BasicMicoApplicationDTO, representing all applications that are using one service together.")
+            @ExtensionProperty(name = "description", value = "List of BasicMicoApplicationDTOs, " +
+                "representing all applications that are using one service together.")
         }
     )})
     private List<BasicMicoApplicationDTO> usingApplications = new ArrayList<>();
@@ -144,7 +149,8 @@ public class MicoServiceStatusDTO {
         properties = {
             @ExtensionProperty(name = "title", value = "PodsInformation"),
             @ExtensionProperty(name = "x-order", value = "80"),
-            @ExtensionProperty(name = "description", value = "List of all pods of all replicas of a deployment of a MicoService.")
+            @ExtensionProperty(name = "description", value = "List of all pods of all replicas" +
+                " of a deployment of a MicoService.")
         }
     )})
     private List<KubernetesPodInformationDTO> podsInformation = new ArrayList<>();
@@ -158,7 +164,10 @@ public class MicoServiceStatusDTO {
         properties = {
             @ExtensionProperty(name = "title", value = "AverageCpuLoadPerNode"),
             @ExtensionProperty(name = "x-order", value = "92"),
-            @ExtensionProperty(name = "description", value = "Each entry in this map represents a node with its average CPU load. The average CPU load is computed from all pods of the deployment of a {@link MicoService} running on this node.")
+            @ExtensionProperty(name = "description", value = "Each entry in this map represents " +
+                "a node with its average CPU load. \n" +
+                "The average CPU load is computed from all pods of the deployment " +
+                " of a {@link MicoService} running on this node.")
         }
     )})
     private Map<String, Integer> averageCpuLoadPerNode;
@@ -170,9 +179,12 @@ public class MicoServiceStatusDTO {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "AverageMemoryUsage"),
+            @ExtensionProperty(name = "title", value = "AverageMemoryUsagePerNode"),
             @ExtensionProperty(name = "x-order", value = "93"),
-            @ExtensionProperty(name = "description", value = "Each entry in this map represents a node with its average memory usage. The average memory usage is computed from all pods of the deployment of a {@link MicoService}, which are running on this node.")
+            @ExtensionProperty(name = "description", value = "Each entry in this map represents a " +
+                "node with its average memory usage.\n" +
+                " The average memory usage is computed from all pods of the deployment" +
+                " of a {@link MicoService}, which are running on this node.")
         }
     )})
     private Map<String, Integer> averageMemoryUsagePerNode;
@@ -185,7 +197,7 @@ public class MicoServiceStatusDTO {
         properties = {
             @ExtensionProperty(name = "title", value = "ErrorMessages"),
             @ExtensionProperty(name = "x-order", value = "100"),
-            @ExtensionProperty(name = "description", value = "Each item in this list represents a Kubernetes Service.")
+            @ExtensionProperty(name = "description", value = "Contains error messages for services that are not deployed or not available due to other reasons.")
         }
     )})
     private List<String> errorMessages = new ArrayList<>();

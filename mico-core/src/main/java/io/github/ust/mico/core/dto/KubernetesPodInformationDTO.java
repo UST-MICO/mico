@@ -129,5 +129,5 @@ public class KubernetesPodInformationDTO {
             @ExtensionProperty(name = "description", value = "Information about used hardware resources.")
         }
     )})
-    private KuberenetesPodMetricsDTO metrics;
+    private KubernetesPodMetricsDTO metrics;
 }

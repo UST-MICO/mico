@@ -41,33 +41,7 @@ public class PrometheusResponse {
     
     public static final String PROMETHEUS_SUCCESSFUL_RESPONSE = "success";
 
-    @JsonProperty("status")
     private String status;
-
-    @JsonProperty("error)")
-    private String error;
-
-    @JsonProperty("errorType")
-    private String errorType;
-
-    @AllArgsConstructor
-    private class Data {
-
-        @JsonProperty("data")
-        private List<ResultData> dataList;
-
-    }
-
-    @AllArgsConstructor
-    private class ResultData {
-
-        @JsonProperty("values")
-        private List<String> values;
-
-        @JsonProperty("metric")
-        private Map<String, String> metric;
-    }
-
     private int value;
 
     public boolean wasSuccessful(){
@@ -78,7 +52,6 @@ public class PrometheusResponse {
     @JsonProperty("data")
     @SuppressWarnings("unchecked")
     private void unpackNested(Map<String, Object> data) {
-        //List<ResultData> resultListTest = data.get("result");
         //TODO find a better mapping solution
         List<Object> resultList = (List<Object>) data.get("result");
         Map<String,Object> resultEntry = (Map<String,Object>) resultList.get(0);

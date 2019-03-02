@@ -34,11 +34,11 @@ import lombok.experimental.Accessors;
  * Contains information about CPU/memory load of a {@link Pod}.
  */
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Accessors(chain = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class KuberenetesPodMetricsDTO {
+public class KubernetesPodMetricsDTO {
 
     /**
      * Memory usage of a pod.
@@ -61,7 +61,7 @@ public class KuberenetesPodMetricsDTO {
         properties = {
             @ExtensionProperty(name = "title", value = "CpuLoad"),
             @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "Cpu load of a pod.")
+            @ExtensionProperty(name = "description", value = "CPU load of a pod.")
         }
     )})
     private int cpuLoad;
