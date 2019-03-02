@@ -46,12 +46,16 @@ export class MicoDataComponent implements OnInit, OnChanges {
     ngOnInit() { }
 
     ngOnChanges(changes: SimpleChanges) {
+        // check for relevant changes
         if (changes.modelUrl != null || changes.filter != null || changes.isBlacklist != null) {
             this.models.getModel(this.modelUrl).pipe(
                 map(this.models.filterModel(this.filter, this.isBlacklist)),
                 first(),
             ).subscribe(model => {
+
+                // handling of custom properties
                 const props = [];
+
                 if (model.properties != null) {
                     for (const key in model.properties) {
                         if (!model.properties.hasOwnProperty(key)) {
@@ -61,6 +65,8 @@ export class MicoDataComponent implements OnInit, OnChanges {
                     }
                 }
                 this.model = model;
+
+                // sort elements by their x-order
                 this.properties = props.sort((a, b) => {
                     const orderA = a['x-order'] != null ? a['x-order'] : 0;
                     const orderB = b['x-order'] != null ? b['x-order'] : 0;

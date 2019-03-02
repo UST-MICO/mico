@@ -25,6 +25,7 @@ import java.util.List;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Pattern;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -56,9 +57,9 @@ public class MicoServiceInterface {
     /**
      * The id of this service interface.
      */
-    @JsonIgnore
     @Id
     @GeneratedValue
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
 

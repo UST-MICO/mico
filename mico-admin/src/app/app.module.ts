@@ -48,6 +48,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpModule } from '@angular/http';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatStepperModule } from '@angular/material/stepper';
 
 import { RoutingModule } from './routing.module';
 
@@ -77,9 +78,11 @@ import { AppDetailComponent } from './app-detail/app-detail.component';
 import { ServiceListComponent } from './service-list/service-list.component';
 import { ServiceDetailComponent } from './service-detail/service-detail.component';
 import { CreateServiceDialogComponent } from './dialogs/create-service/create-service.component';
+import { ChangeServiceVersionComponent } from './dialogs/change-service-version/change-service-version.component';
 import { ServicePickerComponent } from './dialogs/service-picker/service-picker.component';
 import { YesNoDialogComponent } from './dialogs/yes-no-dialog/yes-no-dialog.component';
 import { CreateServiceInterfaceComponent } from './dialogs/create-service-interface/create-service-interface.component';
+import { UpdateServiceInterfaceComponent } from './dialogs/update-service-interface/update-service-interface.component';
 import { MetricChartComponent } from './metric-chart/metric-chart.component';
 import { ChartComponent } from './metric-chart/chart/chart.component';
 import { OwlDateTimeModule, OwlNativeDateTimeModule } from 'ng-pick-datetime';
@@ -115,9 +118,11 @@ import { ServiceDetailStatusComponent } from './service-detail-status/service-de
         ServiceListComponent,
         ServiceDetailComponent,
         CreateServiceDialogComponent,
+        ChangeServiceVersionComponent,
         ServicePickerComponent,
         YesNoDialogComponent,
         CreateServiceInterfaceComponent,
+        UpdateServiceInterfaceComponent,
         MetricChartComponent,
         ChartComponent,
         MicoDataComponent,
@@ -129,14 +134,16 @@ import { ServiceDetailStatusComponent } from './service-detail-status/service-de
         MicoDataArrayComponent,
         MicoDataObjectComponent,
         AppDetailStatusComponent,
-        ServiceDetailStatusComponent
+        ServiceDetailStatusComponent,
     ],
     entryComponents: [
         // dialogs
         CreateServiceDialogComponent,
+        ChangeServiceVersionComponent,
         ServicePickerComponent,
         YesNoDialogComponent,
         CreateServiceInterfaceComponent,
+        UpdateServiceInterfaceComponent,
         CreateApplicationComponent,
         CreateNextVersionComponent,
     ],
@@ -177,7 +184,8 @@ import { ServiceDetailStatusComponent } from './service-detail-status/service-de
         OwlDateTimeModule,
         OwlNativeDateTimeModule,
         MatSnackBarModule,
-        MatRadioModule
+        MatRadioModule,
+        MatStepperModule
     ],
     providers: [],
     bootstrap: [AppComponent],

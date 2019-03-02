@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,14 +31,17 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.collect.ImmutableMap;
 import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.dto.BasicMicoApplicationDTO;
-import io.github.ust.mico.core.dto.KubernetesPodMetricsDTO;
 import io.github.ust.mico.core.dto.KubernetesPodInformationDTO;
+import io.github.ust.mico.core.dto.KubernetesPodMetricsDTO;
 import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
+import io.github.ust.mico.core.dto.MicoServiceDeploymentInfoDTO;
 import io.github.ust.mico.core.dto.MicoServiceInterfaceStatusDTO;
 import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
 import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoLabel;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo.ImagePullPolicy;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfoQueryResult;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
@@ -51,6 +55,7 @@ import org.hamcrest.collection.IsEmptyCollection;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -68,20 +73,47 @@ import static io.github.ust.mico.core.JsonPathBuilder.EMBEDDED;
 import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
 import static io.github.ust.mico.core.JsonPathBuilder.SELF_HREF;
 import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
-import static io.github.ust.mico.core.TestConstants.*;
 import static io.github.ust.mico.core.TestConstants.APPLICATION_NAME;
 import static io.github.ust.mico.core.TestConstants.APPLICATION_NAME_OTHER;
+import static io.github.ust.mico.core.TestConstants.AVAILABLE_REPLICAS;
+import static io.github.ust.mico.core.TestConstants.AVERAGE_CPU_LOAD_PER_NODE_PATH;
+import static io.github.ust.mico.core.TestConstants.AVERAGE_MEMORY_USAGE_PER_NODE_PATH;
 import static io.github.ust.mico.core.TestConstants.DESCRIPTION;
+import static io.github.ust.mico.core.TestConstants.ERROR_MESSAGES;
 import static io.github.ust.mico.core.TestConstants.GIT_TEST_REPO_URL;
 import static io.github.ust.mico.core.TestConstants.ID;
 import static io.github.ust.mico.core.TestConstants.ID_1;
+import static io.github.ust.mico.core.TestConstants.INTERFACES_INFORMATION;
+import static io.github.ust.mico.core.TestConstants.INTERFACES_INFORMATION_NAME;
+import static io.github.ust.mico.core.TestConstants.POD_INFO;
+import static io.github.ust.mico.core.TestConstants.POD_INFO_METRICS_AVAILABLE_1;
+import static io.github.ust.mico.core.TestConstants.POD_INFO_METRICS_AVAILABLE_2;
+import static io.github.ust.mico.core.TestConstants.POD_INFO_METRICS_CPU_LOAD_1;
+import static io.github.ust.mico.core.TestConstants.POD_INFO_METRICS_CPU_LOAD_2;
+import static io.github.ust.mico.core.TestConstants.POD_INFO_METRICS_MEMORY_USAGE_1;
+import static io.github.ust.mico.core.TestConstants.POD_INFO_METRICS_MEMORY_USAGE_2;
+import static io.github.ust.mico.core.TestConstants.POD_INFO_NODE_NAME_1;
+import static io.github.ust.mico.core.TestConstants.POD_INFO_NODE_NAME_2;
+import static io.github.ust.mico.core.TestConstants.POD_INFO_PHASE_1;
+import static io.github.ust.mico.core.TestConstants.POD_INFO_PHASE_2;
+import static io.github.ust.mico.core.TestConstants.POD_INFO_POD_NAME_1;
+import static io.github.ust.mico.core.TestConstants.POD_INFO_POD_NAME_2;
+import static io.github.ust.mico.core.TestConstants.REQUESTED_REPLICAS;
+import static io.github.ust.mico.core.TestConstants.SERVICE_INFORMATION_NAME;
+import static io.github.ust.mico.core.TestConstants.SERVICE_INTERFACE_NAME;
+import static io.github.ust.mico.core.TestConstants.SERVICE_NAME;
 import static io.github.ust.mico.core.TestConstants.SERVICE_SHORT_NAME;
 import static io.github.ust.mico.core.TestConstants.SERVICE_VERSION;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1_MATCHER;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_2;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME_MATCHER;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME_OTHER;
+import static io.github.ust.mico.core.TestConstants.TOTAL_NUMBER_OF_AVAILABLE_REPLICAS;
+import static io.github.ust.mico.core.TestConstants.TOTAL_NUMBER_OF_MICO_SERVICES;
+import static io.github.ust.mico.core.TestConstants.TOTAL_NUMBER_OF_PODS;
+import static io.github.ust.mico.core.TestConstants.TOTAL_NUMBER_OF_REQUESTED_REPLICAS;
 import static io.github.ust.mico.core.TestConstants.VERSION;
 import static io.github.ust.mico.core.TestConstants.VERSION_1_0_1;
 import static io.github.ust.mico.core.TestConstants.VERSION_1_0_2;
@@ -92,6 +124,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -143,6 +176,9 @@ public class ApplicationControllerTests {
 
     @Autowired
     private ObjectMapper mapper;
+
+    @Captor
+    ArgumentCaptor<List<MicoApplication>> micoApplicationListCaptor;
 
     @Test
     public void getAllApplications() throws Exception {
@@ -716,23 +752,146 @@ public class ApplicationControllerTests {
     }
 
     @Test
-    public void deleteAllApplications() throws Exception {
-        MicoApplication micoApplicationOne = new MicoApplication()
+    public void getServiceDeploymentInformation() throws Exception {
+        MicoApplication application = new MicoApplication()
+                .setId(ID)
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION);
+
+        MicoService service = new MicoService()
+                .setShortName(SERVICE_SHORT_NAME)
+                .setVersion(SERVICE_VERSION);
+
+        List<MicoLabel<String, String>> labels = CollectionUtils.listOf(new MicoLabel<String, String>("key", "value"));
+        ImagePullPolicy imagePullPolicy = ImagePullPolicy.IF_NOT_PRESENT;
+        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
+                .setApplication(application)
+                .setService(service)
+                .setReplicas(3)
+                .setLabels(labels)
+                .setImagePullPolicy(imagePullPolicy);
+
+        application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
+
+        given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName()))
+                        .willReturn(Optional.of(new MicoServiceDeploymentInfoQueryResult(application, serviceDeploymentInfo, service)));
+
+        mvc.perform(get(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/services/" + service.getShortName()))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath(TestConstants.SDI_REPLICAS_PATH, is(serviceDeploymentInfo.getReplicas())))
+                .andExpect(jsonPath(TestConstants.SDI_LABELS_PATH + "[0].key", is(labels.get(0).getKey())))
+                .andExpect(jsonPath(TestConstants.SDI_LABELS_PATH + "[0].value", is(labels.get(0).getValue())))
+                .andExpect(jsonPath(TestConstants.SDI_IMAGE_PULLPOLICY_PATH, is(imagePullPolicy.toString())))
+                .andReturn();
+    }
+
+    @Test
+    public void updateServiceDeploymentInformation() throws Exception {
+        MicoApplication application = new MicoApplication()
+                .setId(ID)
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION);
+
+        MicoApplication expectedApplication = new MicoApplication()
+                .setId(ID)
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION);
+
+        MicoService service = new MicoService()
+                .setShortName(SERVICE_SHORT_NAME)
+                .setVersion(SERVICE_VERSION);
+
+        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
+                .setApplication(application)
+                .setService(service)
+                .setReplicas(3)
+                .setLabels(CollectionUtils.listOf(new MicoLabel<String, String>("key", "value")))
+                .setImagePullPolicy(ImagePullPolicy.IF_NOT_PRESENT);
+
+        MicoServiceDeploymentInfoDTO updatedServiceDeploymentInfoDTO = new MicoServiceDeploymentInfoDTO()
+                .setReplicas(5)
+                .setLabels(CollectionUtils.listOf(new MicoLabel<String, String>("key-updated", "value-updated")))
+                .setImagePullPolicy(ImagePullPolicy.NEVER);
+
+        application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
+        expectedApplication.getServiceDeploymentInfos().add(serviceDeploymentInfo.applyValuesFrom(updatedServiceDeploymentInfoDTO));
+
+        given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion()))
+                        .willReturn(Optional.of(application));
+        given(applicationRepository.save(eq(expectedApplication))).willReturn(expectedApplication);
+
+        mvc.perform(put(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/services/" + service.getShortName())
+                    .content(mapper.writeValueAsBytes(updatedServiceDeploymentInfoDTO))
+                    .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath(SHORT_NAME_PATH, is(expectedApplication.getShortName())))
+                .andExpect(jsonPath(VERSION_PATH, is(expectedApplication.getVersion())))
+                .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[*]", hasSize(1)))
+                .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[0].replicas", is(updatedServiceDeploymentInfoDTO.getReplicas())))
+                .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[0].labels[0].key", is(updatedServiceDeploymentInfoDTO.getLabels().get(0).getKey())))
+                .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[0].labels[0].value", is(updatedServiceDeploymentInfoDTO.getLabels().get(0).getValue())))
+                .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[0].imagePullPolicy", is(updatedServiceDeploymentInfoDTO.getImagePullPolicy().toString())))
+                .andReturn();
+    }
+
+    @Test
+    public void deleteAllVersionsOfAnApplication() throws Exception {
+        MicoApplication micoApplicationV1 = new MicoApplication()
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION);
+        MicoApplication micoApplicationV2 = new MicoApplication()
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION_1_0_1);
+        MicoApplication micoApplicationV3 = new MicoApplication()
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION_1_0_2);
+        MicoApplication otherApplication = new MicoApplication()
+            .setShortName(SHORT_NAME_2)
+            .setVersion(VERSION);
+
+        given(applicationRepository.findByShortName(SHORT_NAME)).willReturn(CollectionUtils.listOf(micoApplicationV1, micoApplicationV2, micoApplicationV3));
+        given(applicationRepository.findByShortName(SHORT_NAME_2)).willReturn(CollectionUtils.listOf(otherApplication));
+        given(micoKubernetesClient.isApplicationDeployed(any(MicoApplication.class))).willReturn(false);
+
+        mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME))
+                .andDo(print())
+                .andExpect(status().isNoContent())
+                .andReturn();
+
+        verify(applicationRepository, times(1)).deleteAll(micoApplicationListCaptor.capture());
+        List<MicoApplication> actualDeletedApplications = micoApplicationListCaptor.getValue();
+        assertEquals("Expected 3 applications were deleted", 3, actualDeletedApplications.size());
+        List<MicoApplication> otherApplications = actualDeletedApplications.stream()
+            .filter(app -> !app.getShortName().equals(SHORT_NAME)).collect(Collectors.toList());
+        assertEquals("Excepted no other application was deleted", 0, otherApplications.size());
+    }
+
+    @Test
+    public void deleteOnlyIfNoVersionOfTheApplicationIsDeployed() throws Exception {
+        MicoApplication micoApplicationV1 = new MicoApplication()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION);
-        MicoApplication micoApplicationTwo = new MicoApplication()
+        MicoApplication micoApplicationV2 = new MicoApplication()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION_1_0_1);
-        MicoApplication micoApplicationThree = new MicoApplication()
+        MicoApplication micoApplicationV3 = new MicoApplication()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION_1_0_2);
 
-        given(applicationRepository.findByShortName(SHORT_NAME)).willReturn(CollectionUtils.listOf(micoApplicationOne, micoApplicationTwo, micoApplicationThree));
+        given(applicationRepository.findByShortName(SHORT_NAME)).willReturn(CollectionUtils.listOf(micoApplicationV1, micoApplicationV2, micoApplicationV3));
+        given(micoKubernetesClient.isApplicationDeployed(micoApplicationV1)).willReturn(false);
+        given(micoKubernetesClient.isApplicationDeployed(micoApplicationV2)).willReturn(true);
+        given(micoKubernetesClient.isApplicationDeployed(micoApplicationV3)).willReturn(false);
 
         mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME))
             .andDo(print())
-            .andExpect(status().isNoContent())
+            .andExpect(status().isConflict())
+            .andExpect(status().reason("Application is currently deployed in version 1.0.1!"))
             .andReturn();
+
+        verify(applicationRepository, never()).deleteAll(micoApplicationListCaptor.capture());
     }
 
     private void prettyPrint(Object object) {

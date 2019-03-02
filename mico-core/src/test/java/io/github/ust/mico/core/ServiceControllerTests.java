@@ -23,8 +23,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.dto.KubernetesPodMetricsDTO;
 import io.github.ust.mico.core.dto.KubernetesPodInformationDTO;
@@ -59,7 +61,9 @@ import static io.github.ust.mico.core.JsonPathBuilder.HREF;
 import static io.github.ust.mico.core.JsonPathBuilder.LINKS;
 import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
 import static io.github.ust.mico.core.JsonPathBuilder.SELF;
+import static io.github.ust.mico.core.JsonPathBuilder.ROOT_EMBEDDED;
 import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
+import static io.github.ust.mico.core.TestConstants.APPLICATION_NAME;
 import static io.github.ust.mico.core.TestConstants.BASE_URL;
 import static io.github.ust.mico.core.TestConstants.DEPENDEES_SUBPATH;
 import static io.github.ust.mico.core.TestConstants.DEPENDERS_SUBPATH;
@@ -72,6 +76,7 @@ import static io.github.ust.mico.core.TestConstants.DESCRIPTION_3;
 import static io.github.ust.mico.core.TestConstants.DESCRIPTION_3_MATCHER;
 import static io.github.ust.mico.core.TestConstants.ID;
 import static io.github.ust.mico.core.TestConstants.ID_1;
+import static io.github.ust.mico.core.TestConstants.ID_2;
 import static io.github.ust.mico.core.TestConstants.SERVICES_PATH;
 import static io.github.ust.mico.core.TestConstants.SERVICE_DTO_AVAILABLE_REPLICAS;
 import static io.github.ust.mico.core.TestConstants.SERVICE_DTO_AVERAGE_CPU_LOAD_PER_NODE;
@@ -142,8 +147,7 @@ public class ServiceControllerTests {
     private static final String JSON_PATH_LINKS_SECTION = buildPath(ROOT, LINKS);
     private static final String SELF_HREF = buildPath(JSON_PATH_LINKS_SECTION, SELF, HREF);
     private static final String SERVICES_HREF = buildPath(JSON_PATH_LINKS_SECTION, "services", HREF);
-    private static final String EMBEDDED = buildPath(ROOT, JsonPathBuilder.EMBEDDED);
-    private static final String SERVICE_LIST = buildPath(EMBEDDED, "micoServiceList");
+    public static final String SERVICE_LIST = buildPath(ROOT_EMBEDDED, "micoServiceList");
     private static final String ID_PATH = buildPath(ROOT, "id");
     private static final String SHORT_NAME_PATH = buildPath(ROOT, "shortName");
     private static final String DESCRIPTION_PATH = buildPath(ROOT, "description");
@@ -778,32 +782,57 @@ public class ServiceControllerTests {
 
     @Test
     public void createNewDependee() throws Exception {
-        MicoService service = new MicoService()
+        MicoService existingService1 = new MicoService()
+                .setId(ID_1)
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION)
+                .setName(APPLICATION_NAME);
+
+        MicoService existingService2 = new MicoService()
+                .setId(ID_2)
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(APPLICATION_NAME);
+
+        MicoServiceDependency newDependency = new MicoServiceDependency()
+                .setService(new MicoService()
+                    .setShortName(SHORT_NAME)
+                    .setVersion(VERSION)
+                    .setName(APPLICATION_NAME))
+                .setDependedService(new MicoService()
+                    .setShortName(SHORT_NAME_1)
+                    .setVersion(VERSION_1_0_1)
+                    .setName(APPLICATION_NAME));
+
+        MicoService expectedService = new MicoService()
+            .setId(ID_1)
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
-            .setDescription(DESCRIPTION);
+            .setName(APPLICATION_NAME)
+            .setDependencies(Collections.singletonList(newDependency));
 
-        MicoService service1 = new MicoService()
-            .setShortName(SHORT_NAME_1)
-            .setVersion(VERSION_1_0_1)
-            .setDescription(DESCRIPTION_1);
+        prettyPrint(expectedService);
 
-        MicoServiceDependency dependency1 = new MicoServiceDependency()
-            .setService(service)
-            .setDependedService(service1);
-
-        service.setDependencies(Collections.singletonList(dependency1));
-
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME_1, VERSION_1_0_1)).willReturn(Optional.of(service1));
-        given(serviceRepository.save(any(MicoService.class))).willReturn(service);
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingService1));
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME_1, VERSION_1_0_1)).willReturn(Optional.of(existingService2));
+        given(serviceRepository.save(any(MicoService.class))).willReturn(expectedService);
 
         final ResultActions result = mvc.perform(post(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + DEPENDEES_SUBPATH)
-            .content(mapper.writeValueAsBytes(dependency1))
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print());
+                .content(mapper.writeValueAsBytes(newDependency))
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print());
 
         result.andExpect(status().isCreated());
+    }
+
+    private void prettyPrint(Object object) {
+        ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+        try {
+            String json = mapper.writeValueAsString(object);
+            System.out.println(json);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
     }
 
     @Test

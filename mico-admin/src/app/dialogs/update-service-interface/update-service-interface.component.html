@@ -1,0 +1,12 @@
+<h2 mat-dialog-title>Update Service Interface "{{serviceInterfaceName}}"</h2>
+<mat-dialog-content style="min-width: 35rem">
+    <!-- form for the data on interface level (name, etc.)-->
+    <mico-form [modelUrl]="'remote/MicoServiceInterface'" [startData]="interfaceData"
+        [filter]="['id', 'serviceInterfaceName']" [isBlacklist]="true"
+        (data)="interfaceData = $event" (valid)="valid = $event" #form></mico-form>
+</mat-dialog-content>
+<mat-dialog-actions>
+    <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
+    <button mat-button mat-dialog-close>Cancel</button>
+    <button mat-button [mat-dialog-close]="confirmButton()">Update</button>
+</mat-dialog-actions>

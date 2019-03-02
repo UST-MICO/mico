@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,25 +17,32 @@
  * under the License.
  */
 
+package io.github.ust.mico.core.dto;
 
-export interface ApiModelRef {
-    $ref: string;
-}
+import io.github.ust.mico.core.model.MicoService;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
-export interface ApiModel {
-    type: string;
-    properties?: {[propName: string]: ApiModel | ApiModelRef};
-    required?: string[];
-    title?: string;
-    description?: string;
-    items?: ApiModel | ApiModelRef;
-    enum?: any[];
-    minLength?: number;
-    maxLength?: number;
-    pattern?: string;
-    [propName: string]: any;
-}
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Accessors(chain = true)
+public class MicoServiceDependencyGraphEdgeDTO {
 
-export interface ApiModelAllOf {
-    allOf: (ApiModel|ApiModelRef)[];
+
+    private String sourceShortName;
+    private String sourceVersion;
+    private String targetShortName;
+    private String targetVersion;
+
+    public MicoServiceDependencyGraphEdgeDTO(MicoService source, MicoService target){
+        this.sourceShortName = source.getShortName();
+        this.sourceVersion = source.getVersion();
+        this.targetShortName = target.getShortName();
+        this.targetVersion = target.getVersion();
+    }
+
+
 }

@@ -24,7 +24,9 @@ import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 /**
  * Configuration of the build bot ({@link io.github.ust.mico.core.service.imagebuilder.ImageBuilder})
@@ -64,6 +66,10 @@ public class MicoKubernetesBuildBotConfig {
 
     /**
      * The timeout in seconds after which the build is stopped.
+     * Minimum is set to 30 seconds because that is the minimum time for a build.
+     * Defaults to 10 minutes (600 seconds).
      */
-    private int buildTimeout;
+    @Min(value = 30, message = "should be at least set to 30 seconds")
+    @NotNull
+    private int buildTimeout = 600;
 }

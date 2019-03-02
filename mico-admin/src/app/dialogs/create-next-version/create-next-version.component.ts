@@ -28,6 +28,7 @@ import { incrementVersion, versionComponents } from 'src/app/api/semantic-versio
 })
 export class CreateNextVersionComponent implements OnInit {
 
+    // possible next versions
     major;
     minor;
     patch;
@@ -40,6 +41,7 @@ export class CreateNextVersionComponent implements OnInit {
     ) {
         const version = data.version;
 
+        // calculate all possible version increments
         this.major = incrementVersion(version, versionComponents.major);
         this.minor = incrementVersion(version, versionComponents.minor);
         this.patch = incrementVersion(version, versionComponents.patch);
@@ -50,6 +52,9 @@ export class CreateNextVersionComponent implements OnInit {
     ngOnInit() {
     }
 
+    /**
+     * return method of the dialog
+     */
     confirm() {
         return this.picked;
     }

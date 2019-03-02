@@ -63,7 +63,7 @@ public class TestConstants {
     public static final String SHORT_NAME_1_MATCHER = JsonPathBuilder.buildSingleMatcher(SHORT_NAME_ATTRIBUTE, SHORT_NAME_1);
     public static final String SHORT_NAME_2_MATCHER = JsonPathBuilder.buildSingleMatcher(SHORT_NAME_ATTRIBUTE, SHORT_NAME_2);
     public static final String SHORT_NAME_3_MATCHER = JsonPathBuilder.buildSingleMatcher(SHORT_NAME_ATTRIBUTE, SHORT_NAME_3);
-
+    
     public static final String DESCRIPTION = "Description Service";
     public static final String DESCRIPTION_1 = "Description Service 1";
     public static final String DESCRIPTION_2 = "Description Service 2";
@@ -141,6 +141,10 @@ public class TestConstants {
     public static final String SERVICE_DTO_POD_INFO_METRICS_MEMORY_USAGE_2 = buildPath(ROOT, "podsInformation[1].metrics.memoryUsage");
     public static final String SERVICE_DTO_POD_INFO_METRICS_CPU_LOAD_2 = buildPath(ROOT, "podsInformation[1].metrics.cpuLoad");
     public static final String SERVICE_DTO_POD_INFO_METRICS_AVAILABLE_2 = buildPath(ROOT, "podsInformation[1].metrics.available");
+    
+    public static final String SDI_REPLICAS_PATH = buildPath(ROOT, "replicas");
+    public static final String SDI_LABELS_PATH = buildPath(ROOT, "labels");
+    public static final String SDI_IMAGE_PULLPOLICY_PATH = buildPath(ROOT, "imagePullPolicy");
 
     /**
      * Git repository that is used for testing. It must contain a Dockerfile and at least one release.
