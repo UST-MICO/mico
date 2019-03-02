@@ -32,6 +32,7 @@ import lombok.*;
 import lombok.experimental.Accessors;
 import org.neo4j.ogm.annotation.*;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
@@ -80,7 +81,6 @@ public class MicoServiceDeploymentInfo {
     @StartNode
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    @NotNull
     private MicoApplication application;
 
     /**
@@ -166,7 +166,8 @@ public class MicoServiceDeploymentInfo {
         }
     )})
     @JsonSetter(nulls = Nulls.SKIP)
-    private List<MicoLabel<String, String>> labels = new ArrayList<>();
+    @Valid
+    private List<MicoLabel> labels = new ArrayList<>();
 
     /**
      * Indicates whether and when to pull the image.

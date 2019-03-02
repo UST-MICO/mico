@@ -820,7 +820,7 @@ public class ApplicationControllerTests {
             .setShortName(SERVICE_SHORT_NAME)
             .setVersion(SERVICE_VERSION);
 
-        List<MicoLabel<String, String>> labels = CollectionUtils.listOf(new MicoLabel<String, String>("key", "value"));
+        List<MicoLabel> labels = CollectionUtils.listOf(new MicoLabel("key", "value"));
         ImagePullPolicy imagePullPolicy = ImagePullPolicy.IF_NOT_PRESENT;
         MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
             .setApplication(application)
@@ -864,12 +864,12 @@ public class ApplicationControllerTests {
             .setApplication(application)
             .setService(service)
             .setReplicas(3)
-            .setLabels(CollectionUtils.listOf(new MicoLabel<String, String>("key", "value")))
+            .setLabels(CollectionUtils.listOf(new MicoLabel("key", "value")))
             .setImagePullPolicy(ImagePullPolicy.IF_NOT_PRESENT);
 
         MicoServiceDeploymentInfoDTO updatedServiceDeploymentInfoDTO = new MicoServiceDeploymentInfoDTO()
             .setReplicas(5)
-            .setLabels(CollectionUtils.listOf(new MicoLabel<String, String>("key-updated", "value-updated")))
+            .setLabels(CollectionUtils.listOf(new MicoLabel("key-updated", "value-updated")))
             .setImagePullPolicy(ImagePullPolicy.NEVER);
 
         application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
@@ -951,4 +951,38 @@ public class ApplicationControllerTests {
 
         verify(applicationRepository, never()).deleteAll(micoApplicationListCaptor.capture());
     }
+
+
+    @Test
+    public void createDeploymentInfoWithInvalidLabels() throws Exception {
+
+        List<MicoLabel> labels = CollectionUtils.listOf(new MicoLabel("invalid-key!", "value"));
+
+        MicoService service = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(VERSION);
+        MicoApplication application = new MicoApplication()
+            .setId(ID)
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(NAME)
+            .setDescription(DESCRIPTION);
+        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
+            .setApplication(application)
+            .setService(service)
+            .setLabels(labels)
+        );
+
+        given(applicationRepository.save(any(MicoApplication.class))).willReturn(application);
+        given(serviceRepository.findByShortNameAndVersion(
+            eq(service.getShortName()), eq(service.getVersion())))
+            .willReturn(Optional.of(service));
+
+        final ResultActions result = mvc.perform(post(BASE_PATH)
+            .content(mapper.writeValueAsBytes(application))
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print());
+
+        result.andExpect(status().isUnprocessableEntity());
+    }
+
+
 }

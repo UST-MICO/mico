@@ -30,14 +30,15 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
-import org.hibernate.validator.constraints.Length;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -82,7 +83,7 @@ public class MicoApplication {
             @ExtensionProperty(name = "description", value = "Unique short name of the application.")
         }
     )})
-    @Length(min = 3, max = 254, message = "must have a length between 3 and 254")
+    @Size(min = 3, max = 254, message = "must have a length between 3 and 254")
     @Pattern(regexp = Patterns.KUBERNETES_NAMING_REGEX, message = Patterns.KUBERNETES_NAMING_MESSAGE)
     private String shortName;
 
@@ -155,6 +156,7 @@ public class MicoApplication {
     )})
     @JsonSetter(nulls = Nulls.SKIP)
     @Relationship(type = "INCLUDES_SERVICE")
+    @Valid
     private List<MicoServiceDeploymentInfo> serviceDeploymentInfos = new ArrayList<>();
 
     /**

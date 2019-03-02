@@ -112,7 +112,7 @@ public class MicoServiceDeploymentInfoDTO {
         }
     )})
     @JsonSetter(nulls = Nulls.SKIP)
-    private List<MicoLabel<String, String>> labels = new ArrayList<>();
+    private List<MicoLabel> labels = new ArrayList<>();
 
     /**
      * Indicates whether and when to pull the image.
