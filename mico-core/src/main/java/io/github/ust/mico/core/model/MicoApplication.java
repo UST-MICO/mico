@@ -19,7 +19,24 @@
 
 package io.github.ust.mico.core.model;
 
-import com.fasterxml.jackson.annotation.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
+
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Relationship;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
+
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.exception.VersionNotSupportedException;
 import io.github.ust.mico.core.util.Patterns;
@@ -30,17 +47,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
-
-import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Represents an application as a set of {@link MicoService}s
@@ -108,13 +114,13 @@ public class MicoApplication {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Version"),
-            @ExtensionProperty(name = "pattern", value = Patterns.SEMANTIC_VERSIONING_REGEX),
+            @ExtensionProperty(name = "pattern", value = Patterns.SEMANTIC_VERSION_WITH_PREFIX_REGEX),
             @ExtensionProperty(name = "x-order", value = "20"),
             @ExtensionProperty(name = "description", value = "The version of this application.")
         }
     )})
     @NotEmpty
-    @Pattern(regexp = Patterns.SEMANTIC_VERSIONING_REGEX, message = Patterns.SEMANTIC_VERSIONING_MESSAGE)
+    @Pattern(regexp = Patterns.SEMANTIC_VERSION_WITH_PREFIX_REGEX, message = Patterns.SEMANTIC_VERSIONING_MESSAGE)
     private String version;
 
     /**

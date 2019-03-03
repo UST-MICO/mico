@@ -19,10 +19,13 @@
 
 package io.github.ust.mico.core.model;
 
+import java.util.regex.Pattern;
+
 import com.github.zafarkhaja.semver.ParseException;
 import com.github.zafarkhaja.semver.UnexpectedCharacterException;
 import com.github.zafarkhaja.semver.Version;
 import io.github.ust.mico.core.exception.VersionNotSupportedException;
+import io.github.ust.mico.core.util.Patterns;
 import lombok.Getter;
 
 /**
@@ -59,7 +62,7 @@ public class MicoVersion implements Comparable<MicoVersion> {
      * result of parsing the specified version string. Prefixes
      * are possible as everything before the first digit in the
      * given version string is treated as a prefix to the actual
-     * semantic version.
+     * semantic version. Note that the prefix can only consist of letters.
      *
      * @param version the version string to parse (may include a prefix).
      * @return a new instance of the {@code MicoVersion} class.
@@ -69,6 +72,12 @@ public class MicoVersion implements Comparable<MicoVersion> {
     public static MicoVersion valueOf(String version) throws VersionNotSupportedException {
         String[] arr = version.split("\\d+", 2);
         String prefix = arr[0].trim();
+        
+        // Only letters allowed for prefix
+        if (!Pattern.matches(Patterns.LETTERS_PREFIX_REGEX, prefix)) {
+            throw new VersionNotSupportedException("Illegal prefix, only letters are allowed");
+        }
+        
         Version semanticVersion;
         try {
             semanticVersion = Version.valueOf(version.substring(prefix.length()).trim());

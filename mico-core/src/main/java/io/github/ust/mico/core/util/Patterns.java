@@ -88,14 +88,24 @@ public class Patterns {
      * Regex for strings that MUST be a relative path.
      */
     public static final String RELATIVE_PATH_REGEX = "^(?!/.*$).*";
-
+    
     /**
-     * Regex for strings that MUST be a Semantic Versioning.
+     * Regex for a prefix consisting of letters (may be empty).
      */
-    public static final String SEMANTIC_VERSIONING_REGEX = "(^\\w+)?(\\d+)\\.(\\d+)\\.(\\d+)(-(?:[^.\\s]+\\.)*[^.\\s]+)?";
+    public static final String LETTERS_PREFIX_REGEX = "^([a-zA-Z]+)?$";
+    
+    /**
+     * Regex for a semantic version. 
+     */
+    public static final String SEMANTIC_VERSION_REGEX = "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(-(((0|[1-9]\\d*|\\d*[A-Z-a-z-][\\dA-Za-z-]*))(\\.(0|[1-9]\\d*|\\d*[A-Za-z-][\\dA-Za-z-]*))*))?(\\+([\\dA-Za-z-]+(\\.[\\dA-Za-z-]*)*))?$";
 
     /**
-     * Message is used if a match with the {@link Patterns#SEMANTIC_VERSIONING_REGEX} fails.
+     * Regex for a semantic version with a prefix (optional) consisting of letters. 
+     */
+    public static final String SEMANTIC_VERSION_WITH_PREFIX_REGEX = "^([a-zA-Z]+)?(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(-(((0|[1-9]\\d*|\\d*[A-Z-a-z-][\\dA-Za-z-]*))(\\.(0|[1-9]\\d*|\\d*[A-Za-z-][\\dA-Za-z-]*))*))?(\\+([\\dA-Za-z-]+(\\.[\\dA-Za-z-]*)*))?$";
+
+    /**
+     * Message is used if a match with the {@link Patterns#SEMANTIC_VERSION_WITH_PREFIX_REGEX} fails.
      */
     public static final String SEMANTIC_VERSIONING_MESSAGE = "must be using Semantic Versioning";
 }
