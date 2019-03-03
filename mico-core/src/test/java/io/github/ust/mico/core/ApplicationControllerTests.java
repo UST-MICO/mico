@@ -20,6 +20,7 @@
 package io.github.ust.mico.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableMap;
 import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.dto.*;
 import io.github.ust.mico.core.model.*;
@@ -88,7 +89,6 @@ public class ApplicationControllerTests {
     public static final String SERVICE_LIST_PATH = buildPath(ROOT, "services");
     public static final String INTERFACES_LIST_PATH = buildPath(ROOT, "serviceInterfaces");
     public static final String ID_PATH = buildPath(ROOT, "id");
-
     private static final String BASE_PATH = "/applications";
     private static final String PATH_SERVICES = "services";
     private static final String PATH_DEPLOYMENT_INFORMATION = "deploymentInformation";
@@ -615,6 +615,12 @@ public class ApplicationControllerTests {
             .setShortName(SHORT_NAME)
             .setVersion(VERSION);
 
+        MicoApplication otherMicoApplication = new MicoApplication()
+            .setId(ID_1)
+            .setName(NAME)
+            .setShortName(SHORT_NAME_OTHER)
+            .setVersion(VERSION);
+
         MicoServiceInterface serviceInterface = new MicoServiceInterface()
             .setServiceInterfaceName(SERVICE_INTERFACE_NAME);
 
@@ -623,42 +629,57 @@ public class ApplicationControllerTests {
             .setVersion(SERVICE_VERSION)
             .setServiceInterfaces(CollectionUtils.listOf(serviceInterface));
 
-        // Test properties for pods of the service
         String nodeName = "testNode";
         String podPhase = "Running";
         String hostIp = "192.168.0.0";
-        String podName1 = "pod1";
-        String podName2 = "pod2";
         int availableReplicas = 1;
         int replicas = 2;
+
+        // Properties for pod 1
+        String podName1 = "pod1";
+        String startTimePod1 = new Date().toString();
+        int restartsPod1 = 0;
         int memoryUsage1 = 50;
         int cpuLoad1 = 10;
+
+        // Properties for pod 2
+        String podName2 = "pod2";
+        String startTimePod2 = new Date().toString();
+        int restartsPod2 = 0;
         int memoryUsage2 = 70;
         int cpuLoad2 = 40;
 
-        MicoApplicationStatusDTO micoApplicationStatus = new MicoApplicationStatusDTO();
+        MicoApplicationStatusDTO micoApplicationStatus = new MicoApplicationStatusDTO()
+            .setTotalNumberOfMicoServices(1)
+            .setTotalNumberOfAvailableReplicas(availableReplicas)
+            .setTotalNumberOfRequestedReplicas(replicas)
+            .setTotalNumberOfPods(2);
         MicoServiceStatusDTO micoServiceStatus = new MicoServiceStatusDTO();
 
         // Set information for first pod of a MicoService
-        KubernetesPodInfoDTO kubernetesPodInfo1 = new KubernetesPodInfoDTO();
+        KubernetesPodInformationDTO kubernetesPodInfo1 = new KubernetesPodInformationDTO();
         kubernetesPodInfo1
             .setHostIp(hostIp)
             .setNodeName(nodeName)
             .setPhase(podPhase)
             .setPodName(podName1)
-            .setMetrics(new KuberenetesPodMetricsDTO()
+            .setStartTime(startTimePod1)
+            .setRestarts(restartsPod1)
+            .setMetrics(new KubernetesPodMetricsDTO()
                 .setAvailable(false)
                 .setCpuLoad(cpuLoad1)
                 .setMemoryUsage(memoryUsage1));
 
         // Set information for second pod of a MicoService
-        KubernetesPodInfoDTO kubernetesPodInfo2 = new KubernetesPodInfoDTO();
+        KubernetesPodInformationDTO kubernetesPodInfo2 = new KubernetesPodInformationDTO();
         kubernetesPodInfo2
             .setHostIp(hostIp)
             .setNodeName(nodeName)
             .setPhase(podPhase)
             .setPodName(podName2)
-            .setMetrics(new KuberenetesPodMetricsDTO()
+            .setStartTime(startTimePod2)
+            .setRestarts(restartsPod2)
+            .setMetrics(new KubernetesPodMetricsDTO()
                 .setAvailable(true)
                 .setCpuLoad(cpuLoad2)
                 .setMemoryUsage(memoryUsage2));
@@ -670,12 +691,19 @@ public class ApplicationControllerTests {
             .setVersion(SERVICE_VERSION)
             .setAvailableReplicas(availableReplicas)
             .setRequestedReplicas(replicas)
-            .setInterfacesInformation(Collections.singletonList(new MicoServiceInterfaceDTO().setName(SERVICE_INTERFACE_NAME)))
-            .setPodInfo(Arrays.asList(kubernetesPodInfo1, kubernetesPodInfo2));
-
-        micoApplicationStatus.getServiceStatus().add(micoServiceStatus);
+            .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationDTO()
+                .setName(otherMicoApplication.getName())
+                .setShortName(otherMicoApplication.getShortName())
+                .setVersion(otherMicoApplication.getVersion())
+                .setDescription(otherMicoApplication.getDescription())))
+            .setInterfacesInformation(CollectionUtils.listOf(new MicoServiceInterfaceStatusDTO().setName(SERVICE_INTERFACE_NAME)))
+            .setPodsInformation(Arrays.asList(kubernetesPodInfo1, kubernetesPodInfo2))
+            .setAverageCpuLoadPerNode(ImmutableMap.of(nodeName, 25))
+            .setAverageMemoryUsagePerNode(ImmutableMap.of(nodeName, 60));
+        micoApplicationStatus.getServiceStatuses().add(micoServiceStatus);
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
+        given(applicationRepository.findAllByUsedService(any(), any())).willReturn(CollectionUtils.listOf(otherMicoApplication));
         given(serviceRepository.findAllByApplication(SHORT_NAME, VERSION)).willReturn(CollectionUtils.listOf(service));
 
         // Mock MicoStatusService
@@ -685,6 +713,12 @@ public class ApplicationControllerTests {
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath(SERVICE_INFORMATION_NAME, is(NAME)))
+            .andExpect(jsonPath(TOTAL_NUMBER_OF_AVAILABLE_REPLICAS, is(availableReplicas)))
+            .andExpect(jsonPath(TOTAL_NUMBER_OF_REQUESTED_REPLICAS, is(replicas)))
+            .andExpect(jsonPath(TOTAL_NUMBER_OF_PODS, is(2)))
+            .andExpect(jsonPath(TOTAL_NUMBER_OF_MICO_SERVICES, is(1)))
+            .andExpect(jsonPath(AVERAGE_CPU_LOAD_PER_NODE_PATH, is(ImmutableMap.of(nodeName, 25))))
+            .andExpect(jsonPath(AVERAGE_MEMORY_USAGE_PER_NODE_PATH, is(ImmutableMap.of(nodeName, 60))))
             .andExpect(jsonPath(REQUESTED_REPLICAS, is(replicas)))
             .andExpect(jsonPath(AVAILABLE_REPLICAS, is(availableReplicas)))
             .andExpect(jsonPath(INTERFACES_INFORMATION, hasSize(1)))
@@ -701,7 +735,8 @@ public class ApplicationControllerTests {
             .andExpect(jsonPath(POD_INFO_NODE_NAME_2, is(nodeName)))
             .andExpect(jsonPath(POD_INFO_METRICS_MEMORY_USAGE_2, is(memoryUsage2)))
             .andExpect(jsonPath(POD_INFO_METRICS_CPU_LOAD_2, is(cpuLoad2)))
-            .andExpect(jsonPath(POD_INFO_METRICS_AVAILABLE_2, is(true)));
+            .andExpect(jsonPath(POD_INFO_METRICS_AVAILABLE_2, is(true)))
+            .andExpect(jsonPath(ERROR_MESSAGES, is(CollectionUtils.listOf())));
     }
 
     @Test
