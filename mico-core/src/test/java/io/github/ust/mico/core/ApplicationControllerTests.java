@@ -123,6 +123,10 @@ public class ApplicationControllerTests {
     public static final String ID_PATH = buildPath(ROOT, "id");
 
     private static final String BASE_PATH = "/applications";
+    private static final String PATH_SERVICES = "services";
+    private static final String PATH_DEPLOYMENT_INFORMATION = "deploymentInformation";
+    private static final String PATH_PROMOTE = "promote";
+    private static final String PATH_STATUS = "status";
 
     @MockBean
     private MicoApplicationRepository applicationRepository;
@@ -409,7 +413,7 @@ public class ApplicationControllerTests {
         given(applicationRepository.save(eq(updatedApplication))).willReturn(expectedApplication);
 
         ResultActions resultUpdate = mvc
-                .perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/promote")
+                .perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_PROMOTE)
                         .content(newVersion)
                         .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andDo(print())
@@ -512,7 +516,7 @@ public class ApplicationControllerTests {
         // Mock MicoStatusService
         given(micoStatusService.getApplicationStatus(any(MicoApplication.class))).willReturn(micoApplicationStatus);
 
-        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/status"))
+        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_STATUS))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath(TestConstants.SERVICE_INFORMATION_NAME, is(TestConstants.SERVICE_NAME)))
@@ -552,7 +556,7 @@ public class ApplicationControllerTests {
         given(serviceRepository.findAllByApplication(SHORT_NAME, VERSION)).willReturn(CollectionUtils.listOf(service));
         ArgumentCaptor<MicoApplication> micoApplicationCaptor = ArgumentCaptor.forClass(MicoApplication.class);
 
-        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/services")
+        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES)
             .content(mapper.writeValueAsBytes(service))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -590,7 +594,7 @@ public class ApplicationControllerTests {
         
         ArgumentCaptor<MicoApplication> micoApplicationCaptor = ArgumentCaptor.forClass(MicoApplication.class);
 
-        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/services")
+        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES)
                 .content(mapper.writeValueAsBytes(providedService))
                 .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andDo(print())
@@ -622,7 +626,7 @@ public class ApplicationControllerTests {
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
         given(serviceRepository.findByShortNameAndVersion(SERVICE_SHORT_NAME, SERVICE_VERSION)).willReturn(Optional.of(existingService));
 
-        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/services")
+        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES)
                 .content(mapper.writeValueAsBytes(providedService))
                 .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andDo(print())
@@ -654,7 +658,7 @@ public class ApplicationControllerTests {
         
         ArgumentCaptor<MicoApplication> micoApplicationCaptor = ArgumentCaptor.forClass(MicoApplication.class);
 
-        mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/services/" + SERVICE_SHORT_NAME))
+        mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME))
                 .andDo(print())
                 .andExpect(status().isNoContent());
         verify(applicationRepository, times(1)).save(micoApplicationCaptor.capture());
@@ -687,7 +691,7 @@ public class ApplicationControllerTests {
         given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName()))
                         .willReturn(Optional.of(new MicoServiceDeploymentInfoQueryResult(application, serviceDeploymentInfo, service)));
         
-        mvc.perform(get(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/services/" + service.getShortName()))
+        mvc.perform(get(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName()))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath(TestConstants.SDI_REPLICAS_PATH, is(serviceDeploymentInfo.getReplicas())))
@@ -732,7 +736,7 @@ public class ApplicationControllerTests {
                         .willReturn(Optional.of(application));
         given(applicationRepository.save(eq(expectedApplication))).willReturn(expectedApplication);
         
-        mvc.perform(put(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/services/" + service.getShortName())
+        mvc.perform(put(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName())
                     .content(mapper.writeValueAsBytes(updatedServiceDeploymentInfoDTO))
                     .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andDo(print())

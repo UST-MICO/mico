@@ -73,6 +73,7 @@ public class ApplicationController {
 
     public static final String PATH_APPLICATIONS = "applications";
     public static final String PATH_SERVICES = "services";
+    public static final String PATH_DEPLOYMENT_INFORMATION = "deploymentInformation";    
     public static final String PATH_PROMOTE = "promote";
 
     private static final String PATH_VARIABLE_SHORT_NAME = "shortName";
@@ -278,7 +279,7 @@ public class ApplicationController {
         return ResponseEntity.noContent().build();
     }
     
-    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/services/{" + SERVICE_SHORT_NAME + "}")
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPLOYMENT_INFORMATION + "/{" + SERVICE_SHORT_NAME + "}")
     public ResponseEntity<Resource<MicoServiceDeploymentInfoDTO>> getServiceDeploymentInformation(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                      @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                                      @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName) {
@@ -297,7 +298,7 @@ public class ApplicationController {
                         .getServiceDeploymentInformation(shortName, version,serviceShortName)).withSelfRel()));
     }
     
-    @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/services/{" + SERVICE_SHORT_NAME + "}")
+    @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPLOYMENT_INFORMATION + "/{" + SERVICE_SHORT_NAME + "}")
     public ResponseEntity<Resource<MicoServiceDeploymentInfoDTO>> updateServiceDeploymentInformation(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                      @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                                      @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName,
