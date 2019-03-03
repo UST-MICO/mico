@@ -19,13 +19,9 @@
 
 package io.github.ust.mico.core.dto;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.fabric8.kubernetes.api.model.Pod;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoService;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -35,77 +31,103 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for status information of a {@link MicoApplication}.
+ * Represents basic information for a Pod in Kubernetes.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MicoApplicationStatusDTO {
+public class KubernetesPodInformationDTO {
 
     /**
-     * List of status information of {@link MicoService MicoServices}, which belong to a {@link MicoApplication}.
+     * Name of the {@link Pod}.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Service Status"),
+            @ExtensionProperty(name = "title", value = "Pod Name"),
             @ExtensionProperty(name = "x-order", value = "10"),
-            @ExtensionProperty(name = "description", value = "List of status information of MicoServices, which belong to a MicoApplication.")
+            @ExtensionProperty(name = "description", value = "Name of the Pod.")
         }
     )})
-    private List<MicoServiceStatusDTO> serviceStatuses = new ArrayList<>();
+    private String podName;
 
     /**
-     * Number of {@link MicoService MicoServices} belonging to a {@link MicoApplication}.
+     * States the lifecycle of a pod: Pending, Running, Succeeded, Failed, Unknown, Completed, CrashLoopBackOff
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Total Number Of MicoServices"),
+            @ExtensionProperty(name = "title", value = "Phase"),
             @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "Number of MicoServices of a MicoApplication.")
+            @ExtensionProperty(name = "description", value = "States the lifecycle of a pod: Pending, Running, Succeeded, Failed, Unknown, Completed, CrashLoopBackOff")
         }
     )})
-    private int totalNumberOfMicoServices;
+    private String phase;
 
     /**
-     * Total number of replicas of all services that are available in a {@link MicoApplication}.
+     * IP address of the host to which the pod is assigned.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Total Number Of Available Replicas"),
+            @ExtensionProperty(name = "title", value = "Host IP"),
             @ExtensionProperty(name = "x-order", value = "30"),
-            @ExtensionProperty(name = "description", value = "Number of replicas of all services that are available in a MicoApplication.")
+            @ExtensionProperty(name = "description", value = "IP address of the host to which the pod is assigned.")
         }
     )})
-    private int totalNumberOfAvailableReplicas;
+    private String hostIp;
 
     /**
-     * Total number of replicas of all services that should be available in a {@link MicoApplication}.
+     * Name of the node the pod is running on.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Total Number Of Requested Replicas"),
+            @ExtensionProperty(name = "title", value = "Node Name"),
             @ExtensionProperty(name = "x-order", value = "40"),
-            @ExtensionProperty(name = "description", value = "Number of replicas of all services that should be available in a MicoApplication.")
+            @ExtensionProperty(name = "description", value = "Name of the node the pod is running on.")
         }
     )})
-    private int totalNumberOfRequestedReplicas;
+    private String nodeName;
 
     /**
-     * Total number of pods created by all {@link MicoService MicoServices} in a {@link MicoApplication}.
+     * Counter for restarts of all containers of this pod.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Total Number Of Pods"),
+            @ExtensionProperty(name = "title", value = "Restarts"),
             @ExtensionProperty(name = "x-order", value = "50"),
-            @ExtensionProperty(name = "description", value = "Number of pods created by all MicoServices in a MicoApplication.")
+            @ExtensionProperty(name = "description", value = "Counter for restarts of all containers of a pod.")
         }
     )})
-    private int totalNumberOfPods;
+    private int restarts;
+
+    /**
+     * The point in time the pod has been started.
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Start Time"),
+            @ExtensionProperty(name = "x-order", value = "51"),
+            @ExtensionProperty(name = "description", value = "The point in time the pod has been started.")
+        }
+    )})
+    private String startTime;
+
+    /**
+     * Information about used hardware resources (CPU/RAM).
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Metrics"),
+            @ExtensionProperty(name = "x-order", value = "60"),
+            @ExtensionProperty(name = "description", value = "Information about used hardware resources.")
+        }
+    )})
+    private KubernetesPodMetricsDTO metrics;
 }

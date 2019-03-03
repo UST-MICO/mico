@@ -24,7 +24,6 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -41,7 +40,7 @@ public class PrometheusResponse {
     // TODO: Add comments for fields.
     
     public static final String PROMETHEUS_SUCCESSFUL_RESPONSE = "success";
-    
+
     private String status;
     private int value;
 
