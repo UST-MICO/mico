@@ -23,14 +23,12 @@ import io.github.ust.mico.core.dto.MicoServiceDependencyGraphDTO;
 import io.github.ust.mico.core.dto.MicoServiceDependencyGraphEdgeDTO;
 import io.github.ust.mico.core.dto.CrawlingInfoDTO;
 import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
-import io.github.ust.mico.core.dto.ValidationErrorDTO;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.GitHubCrawler;
 import io.github.ust.mico.core.service.MicoStatusService;
-import io.github.ust.mico.core.validation.MicoDataValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
@@ -39,7 +37,6 @@ import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -74,9 +71,6 @@ public class ServiceController {
     private MicoStatusService micoStatusService;
 
     @Autowired
-    private MicoDataValidator micoDataValidator;
-
-    @Autowired
     private GitHubCrawler crawler;
 
     @GetMapping()
@@ -98,13 +92,7 @@ public class ServiceController {
     @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     public ResponseEntity<?> updateService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                            @PathVariable(PATH_VARIABLE_VERSION) String version,
-                                           @Valid @RequestBody MicoService service,
-                                           Errors validationErrors) {
-        micoDataValidator.validateMicoService(shortName, version, service, validationErrors);
-        if (validationErrors.hasErrors()) {
-            return new ResponseEntity<>(new ValidationErrorDTO(validationErrors), ValidationErrorDTO.HTTP_STATUS);
-        }
-
+                                           @Valid @RequestBody MicoService service) {
         // Including interfaces must not be updated through this API. There is an own API for that purpose.
         if (service.getServiceInterfaces().size() > 0) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
@@ -117,7 +105,7 @@ public class ServiceController {
         MicoService updatedService = serviceRepository.save(service);
 
         return ResponseEntity.ok(new Resource<>(updatedService,
-            linkTo(methodOn(ServiceController.class).updateService(shortName, version, service, validationErrors)).withSelfRel()));
+            linkTo(methodOn(ServiceController.class).updateService(shortName, version, service)).withSelfRel()));
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
@@ -183,17 +171,12 @@ public class ServiceController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createService(@Valid @RequestBody MicoService newService,
-                                           Errors validationErrors) {
+    public ResponseEntity<?> createService(@Valid @RequestBody MicoService newService) {
         Optional<MicoService> serviceOptional = serviceRepository.
             findByShortNameAndVersion(newService.getShortName(), newService.getVersion());
         if (serviceOptional.isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "Service '" + newService.getShortName() + "' '" + newService.getVersion() + "' already exists.");
-        }
-        micoDataValidator.validateMicoService(newService, validationErrors);
-        if (validationErrors.hasErrors()) {
-            return new ResponseEntity<>(new ValidationErrorDTO(validationErrors), ValidationErrorDTO.HTTP_STATUS);
         }
         for (MicoServiceInterface serviceInterface : newService.getServiceInterfaces()) {
             validateProvidedInterface(newService.getShortName(), newService.getVersion(), serviceInterface);
@@ -327,8 +310,7 @@ public class ServiceController {
     }
 
     @PostMapping(PATH_GITHUB_ENDPOINT)
-    public ResponseEntity<?> importMicoServiceFromGitHub(@RequestBody CrawlingInfoDTO crawlingInfo,
-                                                         Errors validationErrors) {
+    public ResponseEntity<?> importMicoServiceFromGitHub(@RequestBody CrawlingInfoDTO crawlingInfo) {
         String url = crawlingInfo.getUrl();
         String version = crawlingInfo.getVersion();
         log.debug("Start importing MicoService from URL '{}'", url);
@@ -336,10 +318,10 @@ public class ServiceController {
         try {
             if (version.equals("latest")) {
                 MicoService service = crawler.crawlGitHubRepoLatestRelease(url);
-                return createService(service, validationErrors);
+                return createService(service);
             } else {
                 MicoService service = crawler.crawlGitHubRepoSpecificRelease(url, version);
-                return createService(service, validationErrors);
+                return createService(service);
             }
         } catch (IOException e) {
             log.error(e.getStackTrace().toString());

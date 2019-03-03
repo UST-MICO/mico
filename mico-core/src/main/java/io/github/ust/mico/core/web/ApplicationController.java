@@ -31,7 +31,6 @@ import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
-import io.github.ust.mico.core.validation.MicoDataValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
@@ -40,7 +39,6 @@ import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -83,9 +81,6 @@ public class ApplicationController {
     @Autowired
     private MicoStatusService micoStatusService;
 
-    @Autowired
-    private MicoDataValidator micoDataValidator;
-
     @GetMapping()
     public ResponseEntity<Resources<Resource<MicoApplicationWithServicesDTO>>> getAllApplications() {
         return ResponseEntity.ok(
@@ -110,18 +105,13 @@ public class ApplicationController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createApplication(@Valid @RequestBody MicoApplicationDTO newApplicationDto,
-                                               Errors validationErrors) {
+    public ResponseEntity<?> createApplication(@Valid @RequestBody MicoApplicationDTO newApplicationDto) {
         // Check whether application already exists (not allowed)
         Optional<MicoApplication> applicationOptional = applicationRepository.
             findByShortNameAndVersion(newApplicationDto.getShortName(), newApplicationDto.getVersion());
         if (applicationOptional.isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "Application '" + newApplicationDto.getShortName() + "' '" + newApplicationDto.getVersion() + "' already exists.");
-        }
-        micoDataValidator.validateMicoApplication(newApplicationDto, validationErrors);
-        if (validationErrors.hasErrors()) {
-            return new ResponseEntity<>(new ValidationErrorDTO(validationErrors), ValidationErrorDTO.HTTP_STATUS);
         }
 
         MicoApplication savedApplication = applicationRepository.save(MicoApplication.valueOf(newApplicationDto));
@@ -135,12 +125,7 @@ public class ApplicationController {
     @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     public ResponseEntity<?> updateApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                @PathVariable(PATH_VARIABLE_VERSION) String version,
-                                               @Valid @RequestBody MicoApplicationDTO applicationDto,
-                                               Errors validationErrors) {
-        micoDataValidator.validateMicoApplication(shortName, version, applicationDto, validationErrors);
-        if (validationErrors.hasErrors()) {
-            return new ResponseEntity<>(new ValidationErrorDTO(validationErrors), ValidationErrorDTO.HTTP_STATUS);
-        }
+                                               @Valid @RequestBody MicoApplicationDTO applicationDto) {
 
         MicoApplication existingApplication = getApplicationFromDatabase(shortName, version);
         MicoApplication updatedApplication = applicationRepository.save(MicoApplication.valueOf(applicationDto).setId(existingApplication.getId()));

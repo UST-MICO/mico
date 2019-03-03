@@ -21,7 +21,6 @@ package io.github.ust.mico.core.dto;
 
 import lombok.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.validation.Errors;
 import org.springframework.validation.FieldError;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -63,10 +62,6 @@ public class ValidationErrorDTO {
      * because the request was syntactically correct, but semantically incorrect.
      */
     public final static HttpStatus HTTP_STATUS = UNPROCESSABLE_ENTITY;
-
-    public ValidationErrorDTO(Errors errors) {
-        this(errors.getFieldErrors());
-    }
 
     public ValidationErrorDTO(List<FieldError> fieldErrorList) {
         this.fieldErrors = fieldErrorList.stream()
