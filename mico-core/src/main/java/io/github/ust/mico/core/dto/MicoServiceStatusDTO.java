@@ -167,7 +167,7 @@ public class MicoServiceStatusDTO {
             @ExtensionProperty(name = "description", value = "Each entry in this map represents " +
                 "a node with its average CPU load. \n" +
                 "The average CPU load is computed from all pods of the deployment " +
-                " of a {@link MicoService} running on this node.")
+                "of a MicoService running on this node.")
         }
     )})
     private Map<String, Integer> averageCpuLoadPerNode;
@@ -182,9 +182,9 @@ public class MicoServiceStatusDTO {
             @ExtensionProperty(name = "title", value = "AverageMemoryUsagePerNode"),
             @ExtensionProperty(name = "x-order", value = "93"),
             @ExtensionProperty(name = "description", value = "Each entry in this map represents a " +
-                "node with its average memory usage.\n" +
-                " The average memory usage is computed from all pods of the deployment" +
-                " of a {@link MicoService}, which are running on this node.")
+                "node with its average memory usage.\n " +
+                "The average memory usage is computed from all pods of the deployment" +
+                "of a MicoService, which are running on this node.")
         }
     )})
     private Map<String, Integer> averageMemoryUsagePerNode;

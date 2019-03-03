@@ -19,12 +19,6 @@
 
 package io.github.ust.mico.core;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-
 import com.google.common.collect.ImmutableMap;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.PodListBuilder;
@@ -33,13 +27,7 @@ import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.github.ust.mico.core.configuration.PrometheusConfig;
-import io.github.ust.mico.core.dto.BasicMicoApplicationDTO;
-import io.github.ust.mico.core.dto.KubernetesPodInformationDTO;
-import io.github.ust.mico.core.dto.KubernetesPodMetricsDTO;
-import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
-import io.github.ust.mico.core.dto.MicoServiceInterfaceStatusDTO;
-import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
-import io.github.ust.mico.core.dto.PrometheusResponse;
+import io.github.ust.mico.core.dto.*;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
@@ -61,17 +49,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
-import static io.github.ust.mico.core.TestConstants.APPLICATION_NAME;
-import static io.github.ust.mico.core.TestConstants.APPLICATION_NAME_OTHER;
-import static io.github.ust.mico.core.TestConstants.SERVICE_INTERFACE_NAME;
-import static io.github.ust.mico.core.TestConstants.SERVICE_NAME;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME_OTHER;
-import static io.github.ust.mico.core.TestConstants.VERSION;
+import java.util.*;
+
+import static io.github.ust.mico.core.TestConstants.*;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
@@ -186,12 +169,12 @@ public class MicoStatusServiceTest {
             .withNewMetadata().withName(SERVICE_INTERFACE_NAME).endMetadata()
             .withNewSpec().endSpec()
             .withNewStatus()
-                .withNewLoadBalancer()
-                    .addNewIngress().withIp("192.168.2.112").endIngress()
-                    .addNewIngress().withIp("192.168.2.113").endIngress()
-                .endLoadBalancer()
+            .withNewLoadBalancer()
+            .addNewIngress().withIp("192.168.2.112").endIngress()
+            .addNewIngress().withIp("192.168.2.113").endIngress()
+            .endLoadBalancer()
             .endStatus()
-        .build());
+            .build());
 
         kubernetesServiceWithoutIps = Optional.of(new ServiceBuilder()
             .withNewMetadata().withName(SERVICE_INTERFACE_NAME).endMetadata()
@@ -377,9 +360,9 @@ public class MicoStatusServiceTest {
                             .setMemoryUsage(memoryUsagePod1)
                             .setCpuLoad(cpuLoadPod1)
                             .setAvailable(podAvailablePod1))))
-                .setErrorMessages(CollectionUtils.listOf("There is no Kubernetes service of the MicoServiceInterface " +
-                    SERVICE_INTERFACE_NAME + " of MicoService " +
-                    micoService.getShortName() + micoService.getVersion() + "."))
+                .setErrorMessages(CollectionUtils.listOf("There is no Kubernetes service for the interface '" +
+                    SERVICE_INTERFACE_NAME + "' of MicoService '" +
+                    micoService.getShortName() + "' '" + micoService.getVersion() + "'."))
                 .setInterfacesInformation(CollectionUtils.listOf(
                     new MicoServiceInterfaceStatusDTO()
                         .setName(SERVICE_INTERFACE_NAME)
@@ -528,17 +511,41 @@ public class MicoStatusServiceTest {
     }
 
     @Test
-    public void getServiceInterfaceStatus() {
-        MicoServiceInterfaceStatusDTO micoServiceInterface = new MicoServiceInterfaceStatusDTO()
+    public void getServiceInterfaceStatus() throws KubernetesResourceException {
+
+        given(micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, SERVICE_INTERFACE_NAME))
+            .willReturn(kubernetesService);
+
+        MicoServiceInterfaceStatusDTO expectedServiceInterface = new MicoServiceInterfaceStatusDTO()
             .setName(SERVICE_INTERFACE_NAME)
             .setExternalIps(CollectionUtils.listOf("192.168.2.112", "192.168.2.113"));
-        try {
-            given(micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, micoServiceInterface.getName())).willReturn(kubernetesService);
-            List<MicoServiceInterfaceStatusDTO> micoServiceInterfaceStatusDTOList = new LinkedList<>();
-            micoServiceInterfaceStatusDTOList.add(micoServiceInterface);
-            assertEquals(micoServiceInterfaceStatusDTOList, micoStatusService.getServiceInterfaceStatus(micoService));
-        } catch (KubernetesResourceException e) {
-            e.printStackTrace();
-        }
+        List<MicoServiceInterfaceStatusDTO> expectedInterfaceStatusDTO = new LinkedList<>();
+        expectedInterfaceStatusDTO.add(expectedServiceInterface);
+        List<String> errorMessages = new ArrayList<>();
+
+        List<MicoServiceInterfaceStatusDTO> actualInterfaceStatusDTO = micoStatusService.getServiceInterfaceStatus(micoService, errorMessages);
+
+        assertTrue("Expected there are no errors", errorMessages.isEmpty());
+        assertEquals(expectedInterfaceStatusDTO, actualInterfaceStatusDTO);
+    }
+
+    @Test
+    public void getServiceInterfaceStatusWithErrors() throws KubernetesResourceException {
+
+        given(micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, SERVICE_INTERFACE_NAME))
+            .willThrow(new KubernetesResourceException("Unexpected error"));
+
+        MicoServiceInterfaceStatusDTO expectedServiceInterface = new MicoServiceInterfaceStatusDTO()
+            .setName(SERVICE_INTERFACE_NAME)
+            .setExternalIps(new ArrayList<>()); // Expect that there are no IPs
+        List<MicoServiceInterfaceStatusDTO> expectedInterfaceStatusDTO = new LinkedList<>();
+        expectedInterfaceStatusDTO.add(expectedServiceInterface);
+
+        List<String> errorMessages = new ArrayList<>();
+
+        List<MicoServiceInterfaceStatusDTO> actualInterfaceStatusDTO = micoStatusService.getServiceInterfaceStatus(micoService, errorMessages);
+
+        assertEquals("Expected one error", 1, errorMessages.size());
+        assertEquals(expectedInterfaceStatusDTO, actualInterfaceStatusDTO);
     }
 }
