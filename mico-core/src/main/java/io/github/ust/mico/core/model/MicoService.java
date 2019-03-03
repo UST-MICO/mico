@@ -176,13 +176,11 @@ public class MicoService {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Service Interfaces"),
-            @ExtensionProperty(name = "readOnly", value = "true"),
             @ExtensionProperty(name = "x-order", value = "60"),
             @ExtensionProperty(name = "description", value = "The list of interfaces this service provides.\n " +
                 "Is read only. Use special API for updating.")
         }
     )})
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Relationship(type = "PROVIDES_INTERFACES", direction = Relationship.UNDIRECTED)
     @Valid
     private List<MicoServiceInterface> serviceInterfaces = new ArrayList<>();
