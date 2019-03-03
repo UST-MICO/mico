@@ -19,7 +19,6 @@
 
 package io.github.ust.mico.core.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.ust.mico.core.dto.MicoApplicationDTO;
@@ -33,7 +32,6 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
-import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -96,9 +94,7 @@ public class MicoApplication {
      * this application uses for the deployment of the required services.
      * {@code null} values are skipped.
      */
-    @JsonBackReference
     @Relationship(type = "INCLUDES_SERVICE")
-    @Valid
     private List<MicoServiceDeploymentInfo> serviceDeploymentInfos = new ArrayList<>();
 
     /**
