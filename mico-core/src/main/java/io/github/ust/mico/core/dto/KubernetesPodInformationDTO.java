@@ -46,7 +46,7 @@ public class KubernetesPodInformationDTO {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "PodName"),
+            @ExtensionProperty(name = "title", value = "Pod Name"),
             @ExtensionProperty(name = "x-order", value = "10"),
             @ExtensionProperty(name = "description", value = "Name of the Pod.")
         }
@@ -72,7 +72,7 @@ public class KubernetesPodInformationDTO {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "HostIP"),
+            @ExtensionProperty(name = "title", value = "Host IP"),
             @ExtensionProperty(name = "x-order", value = "30"),
             @ExtensionProperty(name = "description", value = "IP address of the host to which the pod is assigned.")
         }
@@ -85,7 +85,7 @@ public class KubernetesPodInformationDTO {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "NodeName"),
+            @ExtensionProperty(name = "title", value = "Node Name"),
             @ExtensionProperty(name = "x-order", value = "40"),
             @ExtensionProperty(name = "description", value = "Name of the node the pod is running on.")
         }
@@ -100,20 +100,20 @@ public class KubernetesPodInformationDTO {
         properties = {
             @ExtensionProperty(name = "title", value = "Restarts"),
             @ExtensionProperty(name = "x-order", value = "50"),
-            @ExtensionProperty(name = "description", value = "Counter for restarts of all container of a pod.")
+            @ExtensionProperty(name = "description", value = "Counter for restarts of all containers of a pod.")
         }
     )})
     private int restarts;
 
     /**
-     * Contains the start time of the pod.
+     * The point in time the pod has been started.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "StartTime"),
+            @ExtensionProperty(name = "title", value = "Start Time"),
             @ExtensionProperty(name = "x-order", value = "51"),
-            @ExtensionProperty(name = "description", value = "The time when the pod was started.")
+            @ExtensionProperty(name = "description", value = "The point in time the pod has been started.")
         }
     )})
     private String startTime;

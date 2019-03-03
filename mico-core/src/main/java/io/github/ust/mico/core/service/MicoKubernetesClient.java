@@ -56,7 +56,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class MicoKubernetesClient {
 
-
     /**
      * The label `app` references to the shortName of the {@link MicoService}. It is used as a selector for Kubernetes
      * deployments, services and pods.
@@ -238,11 +237,10 @@ public class MicoKubernetesClient {
     }
 
     /**
-     * Looks up if the {@link MicoService} is already deployed to the Kubernetes cluster. If so, it returns the
-     * Kubernetes {@link Deployment} object. Labels are used for the lookup.
+     * Checks if the {@link MicoService} is already deployed to the Kubernetes cluster. Labels are used for the lookup.
      *
      * @param micoService the {@link MicoService}
-     * @return the Kubernetes {@link Deployment}
+     * @return an {@link Optional<Deployment>} with the {@link Deployment} of the Kubernetes service, or an empty {@link Optional<Deployment>} if there is no Kubernetes deployment of the {@link MicoService}.
      */
     public Optional<Deployment> getDeploymentOfMicoService(MicoService micoService) throws KubernetesResourceException {
         Map<String, String> labels = CollectionUtils.mapOf(
@@ -254,12 +252,11 @@ public class MicoKubernetesClient {
         List<Deployment> deploymentList = cluster.getDeploymentsByLabels(labels, namespace).getItems();
         log.debug("Found {} Kubernetes deployment(s) that match the labels '{}': '{}'", deploymentList.size(), labels.toString(), deploymentList);
 
-        Optional<Deployment> result;
         if (deploymentList.isEmpty()) {
             log.debug("No Kubernetes deployment found for MicoService '{}' '{}'", micoService.getShortName(), micoService.getVersion());
-            result = Optional.empty();
+            return Optional.empty();
         } else if (deploymentList.size() == 1) {
-            result = Optional.of(deploymentList.get(0));
+            return Optional.of(deploymentList.get(0));
         } else {
             // It should be not possible that there are multiple deployments for the same version of a MicoService.
             log.warn("MicoService '{}' in version '{}' is deployed multiple times: {}",
@@ -267,16 +264,15 @@ public class MicoKubernetesClient {
             throw new KubernetesResourceException("There are multiple Kubernetes Deployments for MicoService '"
                 + micoService.getShortName() + "' '" + micoService.getVersion() + "'.");
         }
-        return result;
     }
 
     /**
-     * Looks up if the {@link MicoServiceInterface} is already created for the {@link MicoService} in the Kubernetes
-     * cluster. If so, it returns the Kubernetes {@link Service} object. Labels are used for the lookup.
+     * Check if the {@link MicoServiceInterface} is already created for the {@link MicoService} in the Kubernetes
+     * cluster. Labels are used for the lookup.
      *
      * @param micoService              the {@link MicoService}
      * @param micoServiceInterfaceName the name of a {@link MicoServiceInterface}
-     * @return the Kubernetes {@link Service}
+     * @return an {@link Optional<Service>} with the Kubernetes {@link Service}, or an emtpy {@link Optional<Service>} if there is no Kubernetes deployment of the {@link Service}.
      */
     public Optional<Service> getInterfaceByNameOfMicoService(MicoService micoService, String micoServiceInterfaceName) throws KubernetesResourceException {
         Map<String, String> labels = CollectionUtils.mapOf(
@@ -288,13 +284,12 @@ public class MicoKubernetesClient {
         List<Service> serviceList = cluster.getServicesByLabels(labels, namespace).getItems();
         log.debug("Found {} Kubernetes service(s) that match the labels '{}': '{}'", serviceList.size(), labels.toString(), serviceList);
 
-        Optional<Service> result;
         if (serviceList.isEmpty()) {
             log.debug("No Kubernetes Service found for MicoServiceInterface '{}' of MicoService '{}' '{}'",
                 micoServiceInterfaceName, micoService.getShortName(), micoService.getVersion());
-            result = Optional.empty();
+            return Optional.empty();
         } else if (serviceList.size() == 1) {
-            result = Optional.of(serviceList.get(0));
+            return Optional.of(serviceList.get(0));
         } else {
             // It should be not possible that there are multiple services for the same interface of a MicoService.
             log.warn("MicoServiceInterface '{}' of MicoService '{}' in version '{}' is deployed multiple times: {}",
@@ -302,7 +297,6 @@ public class MicoKubernetesClient {
             throw new KubernetesResourceException("There are multiple Kubernetes Services for MicoServiceInterface '"
                 + micoServiceInterfaceName + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "'.");
         }
-        return result;
     }
 
     /**

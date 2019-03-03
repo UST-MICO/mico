@@ -19,10 +19,29 @@
 
 package io.github.ust.mico.core.service;
 
-import io.fabric8.kubernetes.api.model.*;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import javax.validation.constraints.NotNull;
+
+import io.fabric8.kubernetes.api.model.ContainerStatus;
+import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
+import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.github.ust.mico.core.configuration.PrometheusConfig;
-import io.github.ust.mico.core.dto.*;
+import io.github.ust.mico.core.dto.KubernetesPodInformationDTO;
+import io.github.ust.mico.core.dto.KubernetesPodMetricsDTO;
+import io.github.ust.mico.core.dto.MicoApplicationDTO;
+import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
+import io.github.ust.mico.core.dto.MicoServiceInterfaceStatusDTO;
+import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
+import io.github.ust.mico.core.dto.PrometheusResponse;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.PrometheusRequestFailedException;
 import io.github.ust.mico.core.model.MicoApplication;
@@ -39,12 +58,8 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import javax.validation.constraints.NotNull;
-import java.net.URI;
-import java.util.*;
-
 /**
- * Provide functionality to retrieve status information for a {@link MicoApplication} or a particular {@link
+ * Provides functionality to retrieve status information for a {@link MicoApplication} or a particular {@link
  * MicoService}
  */
 @Slf4j
@@ -89,7 +104,11 @@ public class MicoStatusService {
             requestedReplicasCount += micoServiceStatus.getRequestedReplicas();
             availableReplicasCount += micoServiceStatus.getAvailableReplicas();
             // Remove the current application's name to retrieve a list with only the names of other applications that are sharing a service
-            micoServiceStatus.getUsingApplications().remove(new BasicMicoApplicationDTO(micoApplication.getShortName(), micoApplication.getVersion(), micoApplication.getName()));
+            micoServiceStatus.getApplicationsUsingThisService().remove(new MicoApplicationDTO()
+            .setName(micoApplication.getName())
+            .setShortName(micoApplication.getShortName())
+            .setVersion(micoApplication.getVersion())
+            .setDescription(micoApplication.getDescription()));
             applicationStatus.getServiceStatuses().add(micoServiceStatus);
         }
         applicationStatus
@@ -143,8 +162,12 @@ public class MicoStatusService {
         // Return the names of all applications that are using this service
         List<MicoApplication> usingApplications = micoApplicationRepository.findAllByUsedService(micoService.getShortName(), micoService.getVersion());
         for (MicoApplication micoApplication : usingApplications) {
-            BasicMicoApplicationDTO usingApplication = new BasicMicoApplicationDTO(micoApplication.getShortName(), micoApplication.getVersion(), micoApplication.getName());
-            serviceStatus.getUsingApplications().add(usingApplication);
+            MicoApplicationDTO usingApplication = new MicoApplicationDTO()
+                .setName(micoApplication.getName())
+                .setShortName(micoApplication.getShortName())
+                .setVersion(micoApplication.getVersion())
+                .setDescription(micoApplication.getDescription());
+            serviceStatus.getApplicationsUsingThisService().add(usingApplication);
         }
 
         // Get status information for all pods of a service

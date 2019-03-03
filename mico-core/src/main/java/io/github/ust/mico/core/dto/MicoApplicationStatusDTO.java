@@ -50,7 +50,7 @@ public class MicoApplicationStatusDTO {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "ServiceStatus"),
+            @ExtensionProperty(name = "title", value = "Service Status"),
             @ExtensionProperty(name = "x-order", value = "10"),
             @ExtensionProperty(name = "description", value = "List of status information of MicoServices, which belong to a MicoApplication.")
         }
@@ -63,7 +63,7 @@ public class MicoApplicationStatusDTO {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "TotalNumberOfMicoServices"),
+            @ExtensionProperty(name = "title", value = "Total Number Of MicoServices"),
             @ExtensionProperty(name = "x-order", value = "20"),
             @ExtensionProperty(name = "description", value = "Number of MicoServices of a MicoApplication.")
         }
@@ -76,7 +76,7 @@ public class MicoApplicationStatusDTO {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "TotalNumberOfAvailableReplicas"),
+            @ExtensionProperty(name = "title", value = "Total Number Of Available Replicas"),
             @ExtensionProperty(name = "x-order", value = "30"),
             @ExtensionProperty(name = "description", value = "Number of replicas of all services that are available in a MicoApplication.")
         }
@@ -89,7 +89,7 @@ public class MicoApplicationStatusDTO {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "TotalNumberOfRequestedReplicas"),
+            @ExtensionProperty(name = "title", value = "Total Number Of Requested Replicas"),
             @ExtensionProperty(name = "x-order", value = "40"),
             @ExtensionProperty(name = "description", value = "Number of replicas of all services that should be available in a MicoApplication.")
         }
@@ -102,7 +102,7 @@ public class MicoApplicationStatusDTO {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "TotalNumberOfPods"),
+            @ExtensionProperty(name = "title", value = "Total Number Of Pods"),
             @ExtensionProperty(name = "x-order", value = "50"),
             @ExtensionProperty(name = "description", value = "Number of pods created by all MicoServices in a MicoApplication.")
         }

@@ -46,7 +46,7 @@ public class KubernetesPodMetricsDTO {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "MemoryUsage"),
+            @ExtensionProperty(name = "title", value = "Memory Usage"),
             @ExtensionProperty(name = "x-order", value = "10"),
             @ExtensionProperty(name = "description", value = "Memory usage of a pod.")
         }
@@ -59,7 +59,7 @@ public class KubernetesPodMetricsDTO {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "CpuLoad"),
+            @ExtensionProperty(name = "title", value = "CPU Load"),
             @ExtensionProperty(name = "x-order", value = "20"),
             @ExtensionProperty(name = "description", value = "CPU load of a pod.")
         }
@@ -74,7 +74,7 @@ public class KubernetesPodMetricsDTO {
         properties = {
             @ExtensionProperty(name = "title", value = "Available"),
             @ExtensionProperty(name = "x-order", value = "30"),
-            @ExtensionProperty(name = "description", value = "States if a pod is available.")
+            @ExtensionProperty(name = "description", value = "Indicates if a pod is available.")
         }
     )})
     private boolean available;

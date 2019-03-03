@@ -158,7 +158,7 @@ public class TestConstants {
     public static final String DOCKERFILE = "Dockerfile";
     /**
      * Release tag of the release that should be used for testing. Must be in in supported version format (semantic
-     * version).
+     * version with a prefix that only consists of letters).
      */
     public static final String RELEASE = "v1.0.0";
 

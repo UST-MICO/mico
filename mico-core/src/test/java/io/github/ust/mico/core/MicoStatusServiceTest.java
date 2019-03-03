@@ -19,6 +19,13 @@
 
 package io.github.ust.mico.core;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+
 import com.google.common.collect.ImmutableMap;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.PodListBuilder;
@@ -27,7 +34,13 @@ import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.github.ust.mico.core.configuration.PrometheusConfig;
-import io.github.ust.mico.core.dto.*;
+import io.github.ust.mico.core.dto.KubernetesPodInformationDTO;
+import io.github.ust.mico.core.dto.KubernetesPodMetricsDTO;
+import io.github.ust.mico.core.dto.MicoApplicationDTO;
+import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
+import io.github.ust.mico.core.dto.MicoServiceInterfaceStatusDTO;
+import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
+import io.github.ust.mico.core.dto.PrometheusResponse;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
@@ -49,12 +62,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.*;
-
-import static io.github.ust.mico.core.TestConstants.*;
+import static io.github.ust.mico.core.TestConstants.APPLICATION_NAME;
+import static io.github.ust.mico.core.TestConstants.APPLICATION_NAME_OTHER;
+import static io.github.ust.mico.core.TestConstants.SERVICE_INTERFACE_NAME;
+import static io.github.ust.mico.core.TestConstants.SERVICE_NAME;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_OTHER;
+import static io.github.ust.mico.core.TestConstants.VERSION;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
@@ -245,7 +264,11 @@ public class MicoStatusServiceTest {
                 .setVersion(VERSION)
                 .setAvailableReplicas(1)
                 .setRequestedReplicas(1)
-                .setUsingApplications(CollectionUtils.listOf(new BasicMicoApplicationDTO(otherMicoApplication.getShortName(), otherMicoApplication.getVersion(), otherMicoApplication.getName())))
+                .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationDTO()
+                    .setName(otherMicoApplication.getName())
+                    .setShortName(otherMicoApplication.getShortName())
+                    .setVersion(otherMicoApplication.getVersion())
+                    .setDescription(otherMicoApplication.getDescription())))
                 .setAverageMemoryUsagePerNode(ImmutableMap.of(nodeName1, 60, nodeName2, 57))
                 .setAverageCpuLoadPerNode(ImmutableMap.of(nodeName1, 20, nodeName2, 7))
                 // Add four pods (on two different nodes)
@@ -345,7 +368,11 @@ public class MicoStatusServiceTest {
                 .setVersion(VERSION)
                 .setAvailableReplicas(1)
                 .setRequestedReplicas(1)
-                .setUsingApplications(CollectionUtils.listOf(new BasicMicoApplicationDTO(otherMicoApplication.getShortName(), otherMicoApplication.getVersion(), otherMicoApplication.getName())))
+                .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationDTO()
+                    .setName(otherMicoApplication.getName())
+                    .setShortName(otherMicoApplication.getShortName())
+                    .setVersion(otherMicoApplication.getVersion())
+                    .setDescription(otherMicoApplication.getDescription())))
                 .setAverageMemoryUsagePerNode(ImmutableMap.of(nodeName1, 70))
                 .setAverageCpuLoadPerNode(ImmutableMap.of(nodeName1, 30))
                 // Add four pods (on two different nodes)
@@ -431,7 +458,11 @@ public class MicoStatusServiceTest {
             .setVersion(VERSION)
             .setAvailableReplicas(1)
             .setRequestedReplicas(1)
-            .setUsingApplications(CollectionUtils.listOf(new BasicMicoApplicationDTO(otherMicoApplication.getShortName(), otherMicoApplication.getVersion(), otherMicoApplication.getName())))
+            .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationDTO()
+                .setName(otherMicoApplication.getName())
+                .setShortName(otherMicoApplication.getShortName())
+                .setVersion(otherMicoApplication.getVersion())
+                .setDescription(otherMicoApplication.getDescription())))
             .setAverageMemoryUsagePerNode(ImmutableMap.of(nodeName1, 60, nodeName2, 57))
             .setAverageCpuLoadPerNode(ImmutableMap.of(nodeName1, 20, nodeName2, 7))
             // Add four pods (on two different nodes)

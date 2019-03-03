@@ -61,9 +61,9 @@ public class MicoServiceInterfaceStatusDTO {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "externalIps"),
+            @ExtensionProperty(name = "title", value = "External IPs"),
             @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "List of external IP addresses of this  MicoServiceInterface.")
+            @ExtensionProperty(name = "description", value = "List of external IP addresses of this MicoServiceInterface.")
         }
     )})
     private List<String> externalIps;
