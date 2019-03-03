@@ -66,7 +66,7 @@ public class MicoServiceDeploymentInfoDTO {
         }
     )})
     @Positive(message = "must be at least one replica")
-    private int replicas = 1;
+    private int replicas;
 
     /**
      * Minimum number of seconds for which this service should be ready
@@ -86,7 +86,7 @@ public class MicoServiceDeploymentInfoDTO {
         }
     )})
     @PositiveOrZero(message = "must not be negative")
-    private int minReadySecondsBeforeMarkedAvailable = 0;
+    private int minReadySecondsBeforeMarkedAvailable;
 
     /**
      * Those labels are key-value pairs that are attached to the deployment
@@ -148,7 +148,7 @@ public class MicoServiceDeploymentInfoDTO {
         }
     )})
     @JsonSetter(nulls = Nulls.SKIP)
-    private RestartPolicy restartPolicy;
+    private RestartPolicy restartPolicy = RestartPolicy.ALWAYS;
 
 
     /**

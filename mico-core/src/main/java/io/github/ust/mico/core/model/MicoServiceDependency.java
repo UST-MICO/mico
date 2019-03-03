@@ -20,12 +20,12 @@
 package io.github.ust.mico.core.model;
 
 import com.fasterxml.jackson.annotation.*;
+import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.exception.VersionNotSupportedException;
 import io.swagger.annotations.ApiModelProperty;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import io.swagger.annotations.Extension;
+import io.swagger.annotations.ExtensionProperty;
+import lombok.*;
 import lombok.experimental.Accessors;
 import org.neo4j.ogm.annotation.*;
 
@@ -60,8 +60,10 @@ public class MicoServiceDependency {
      * This is the {@link MicoService} that requires (depends on)
      * the {@link MicoServiceDependency#dependedService}.
      */
+    // TODO: Create a new DTO that does not include the service property. Covered by mico#512
     @JsonBackReference
     @StartNode
+    @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @Valid
     private MicoService service;
@@ -70,10 +72,11 @@ public class MicoServiceDependency {
      * This is the {@link MicoService} depended by
      * {@link MicoServiceDependency#service}.
      */
-    @JsonIdentityInfo(generator=ObjectIdGenerators.PropertyGenerator.class, property="id", scope=MicoService.class)
     @ApiModelProperty(required = true)
+    @JsonIdentityInfo(generator=ObjectIdGenerators.PropertyGenerator.class, property="id", scope=MicoService.class)
     @EndNode
     @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     @NotNull
     @Valid
     private MicoService dependedService;

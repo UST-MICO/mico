@@ -227,7 +227,6 @@ public class MicoServiceDeploymentInfo {
     /**
      * Enumeration for the different policies specifying
      * when to pull an image.
-     * Default image pull policy is {@link ImagePullPolicy#ALWAYS}.
      */
     public enum ImagePullPolicy {
 
@@ -239,7 +238,6 @@ public class MicoServiceDeploymentInfo {
 
     /**
      * Enumeration for all supported restart policies.
-     * Default restart policy is {@link RestartPolicy#ALWAYS}.
      */
     public enum RestartPolicy {
 

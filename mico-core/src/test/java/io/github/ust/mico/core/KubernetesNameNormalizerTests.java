@@ -38,7 +38,6 @@ public class KubernetesNameNormalizerTests {
 
     @Test
     public void normalizeName() {
-
         collector.checkThat("simple name should be the same",
             normalizer.normalizeName("name"),
             equalTo("name"));

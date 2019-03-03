@@ -170,19 +170,20 @@ public class MicoService {
 
     /**
      * The list of interfaces this service provides.
-     * {@code null} values are skipped.
+     * Is read only. Use special API for updating.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Service Interfaces"),
+            @ExtensionProperty(name = "readOnly", value = "true"),
             @ExtensionProperty(name = "x-order", value = "60"),
             @ExtensionProperty(name = "description", value = "The list of interfaces this service provides.\n " +
-                "Null values are skipped.")
+                "Is read only. Use special API for updating.")
         }
     )})
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Relationship(type = "PROVIDES_INTERFACES", direction = Relationship.UNDIRECTED)
-    @JsonSetter(nulls = Nulls.SKIP)
     @Valid
     private List<MicoServiceInterface> serviceInterfaces = new ArrayList<>();
 
@@ -198,7 +199,8 @@ public class MicoService {
             @ExtensionProperty(name = "readOnly", value = "true"),
             @ExtensionProperty(name = "x-order", value = "90"),
             @ExtensionProperty(name = "description", value = "The list of services that this service requires in " +
-                "order to run normally.")
+                "order to run normally.\n " +
+                "Is read only. Use special API for updating.")
         }
     )})
     @JsonManagedReference

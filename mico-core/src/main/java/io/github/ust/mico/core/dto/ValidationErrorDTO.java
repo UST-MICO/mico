@@ -35,10 +35,25 @@ import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 @Value
 public class ValidationErrorDTO {
 
+    /**
+     * The {@link HttpStatus#value()}
+     */
     private final int status;
+    /**
+     * The {@link HttpStatus#getReasonPhrase()}
+     */
     private final String error;
-    private final String message;
+    /**
+     * Error message statically set to 'Validation Error'
+     */
+    private final String message = "Validation Error";
+    /**
+     * Contains the validation error messages of all fields
+     */
     private final List<String> fieldErrors;
+    /**
+     * The path of the endpoint
+     */
     private final String path;
 
     /**
@@ -60,7 +75,6 @@ public class ValidationErrorDTO {
 
         this.status = HTTP_STATUS.value();
         this.error = HTTP_STATUS.getReasonPhrase();
-        this.message = "Validation Error";
 
         HttpServletRequest currentRequest =
             ((ServletRequestAttributes) RequestContextHolder.

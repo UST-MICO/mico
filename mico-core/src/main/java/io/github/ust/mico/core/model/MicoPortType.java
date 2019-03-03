@@ -22,7 +22,6 @@ package io.github.ust.mico.core.model;
 /**
  * Enumeration for all port types, e.g., TCP,
  * supported by MICO.
- * Default port type is {@link MicoPortType#TCP}.
  */
 public enum MicoPortType {
 

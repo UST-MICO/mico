@@ -268,7 +268,7 @@ public class ApplicationController {
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/services/{" + PATH_VARIABLE_SERVICE_SHORT_NAME + "}")
+    @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES + "/{" + PATH_VARIABLE_SERVICE_SHORT_NAME + "}")
     public ResponseEntity<Void> deleteServiceFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                        @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                        @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName) {
@@ -295,7 +295,7 @@ public class ApplicationController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/services/{" + PATH_VARIABLE_SERVICE_SHORT_NAME + "}")
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES + "/{" + PATH_VARIABLE_SERVICE_SHORT_NAME + "}")
     public ResponseEntity<Resource<MicoServiceDeploymentInfoDTO>> getServiceDeploymentInformation(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                                   @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                                                   @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName) {
@@ -314,7 +314,7 @@ public class ApplicationController {
                 .getServiceDeploymentInformation(shortName, version, serviceShortName)).withSelfRel()));
     }
 
-    @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/services/{" + PATH_VARIABLE_SERVICE_SHORT_NAME + "}")
+    @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES + "/{" + PATH_VARIABLE_SERVICE_SHORT_NAME + "}")
     public ResponseEntity<Resource<MicoApplication>> updateServiceDeploymentInformation(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                         @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                                         @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName,

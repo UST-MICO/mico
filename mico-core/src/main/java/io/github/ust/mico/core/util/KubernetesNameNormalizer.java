@@ -25,6 +25,9 @@ import org.springframework.stereotype.Component;
 import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
 
+/**
+ * Normalizes names to be valid Kubernetes resource names.
+ */
 @Slf4j
 @Component
 public class KubernetesNameNormalizer {

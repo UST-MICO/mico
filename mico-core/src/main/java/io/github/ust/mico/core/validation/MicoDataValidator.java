@@ -37,6 +37,12 @@ import org.springframework.validation.Errors;
 @Component
 public class MicoDataValidator {
 
+    /**
+     * Validates the name and the description of a {@link MicoApplication}
+     *
+     * @param application the {@link MicoApplication}
+     * @param errors      the {@link Errors}
+     */
     public void validateMicoApplication(MicoApplication application, Errors errors) {
         if (StringUtils.isEmpty(application.getName())) {
             errors.rejectValue("name", "micoApplication.name.empty", "must not be empty");
@@ -46,6 +52,14 @@ public class MicoDataValidator {
         }
     }
 
+    /**
+     * Validates a {@link MicoApplication} and also if the required properties short name and version match the provided ones.
+     *
+     * @param shortName   the short name of a {@link MicoApplication}
+     * @param version     the version of a {@link MicoApplication}
+     * @param application the {@link MicoApplication}
+     * @param errors      the {@link Errors}
+     */
     public void validateMicoApplication(String shortName, String version, MicoApplication application, Errors errors) {
         if (!application.getShortName().equals(shortName)) {
             errors.rejectValue("shortName", "micoApplication.shortName.inconsistent",
@@ -58,6 +72,12 @@ public class MicoDataValidator {
         this.validateMicoApplication(application, errors);
     }
 
+    /**
+     * Validates the name, the description and the Git clone url of a {@link MicoService}
+     *
+     * @param micoService the {@link MicoService}
+     * @param errors      the {@link Errors}
+     */
     public void validateMicoService(MicoService micoService, Errors errors) {
         if (StringUtils.isEmpty(micoService.getName())) {
             errors.rejectValue("name", "micoService.name.empty", "must not be empty");
@@ -75,15 +95,23 @@ public class MicoDataValidator {
         }
     }
 
-    public void validateMicoService(String shortName, String version, MicoService service, Errors errors) {
-        if (!service.getShortName().equals(shortName)) {
+    /**
+     * Validates a {@link MicoService} and also if the required properties short name and version match the provided ones.
+     *
+     * @param shortName   the short name of a {@link MicoService}
+     * @param version     the version of a {@link MicoService}
+     * @param micoService the {@link MicoService}
+     * @param errors      the {@link Errors}
+     */
+    public void validateMicoService(String shortName, String version, MicoService micoService, Errors errors) {
+        if (!micoService.getShortName().equals(shortName)) {
             errors.rejectValue("shortName", "micoService.shortName.inconsistent",
                 "does not match request parameter");
         }
-        if (!service.getVersion().equals(version)) {
+        if (!micoService.getVersion().equals(version)) {
             errors.rejectValue("version", "micoService.version.inconsistent",
                 "does not match request parameter");
         }
-        this.validateMicoService(service, errors);
+        this.validateMicoService(micoService, errors);
     }
 }
