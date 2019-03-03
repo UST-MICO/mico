@@ -77,6 +77,8 @@ public class TestConstants {
     public static final String SERVICE_INTERFACE_NAME_1 = "service-interface-name-1";
     public static final String SERVICE_NAME = "test-service";
 
+    public static final String OWNER = "owner";
+
     /*
      * For tests in ApplicationControllerTests, one service is added to the list of MicoServiceStatusDTOs in MicoApplicationStatusDTO.
      * All paths are build on the path for the status of this service.

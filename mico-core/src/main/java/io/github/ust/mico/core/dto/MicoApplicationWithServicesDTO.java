@@ -107,7 +107,9 @@ public class MicoApplicationWithServicesDTO extends MicoApplicationDTO {
                 .setShortName(application.getShortName())
                 .setName(application.getName())
                 .setVersion(application.getVersion())
-                .setDescription(application.getDescription());
+                .setDescription(application.getDescription())
+                .setContact(application.getContact())
+                .setOwner(application.getOwner());
     }
 
 }
