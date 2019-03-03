@@ -93,6 +93,15 @@ public class ServiceController {
     public ResponseEntity<?> updateService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                            @PathVariable(PATH_VARIABLE_VERSION) String version,
                                            @Valid @RequestBody MicoService service) {
+        if (!service.getShortName().equals(shortName)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "ShortName of the provided service does not match the request parameter");
+        }
+        if (!service.getVersion().equals(version)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "Version of the provided service does not match the request parameter");
+        }
+
         // Including interfaces must not be updated through this API. There is an own API for that purpose.
         if (service.getServiceInterfaces().size() > 0) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,

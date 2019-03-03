@@ -126,7 +126,14 @@ public class ApplicationController {
     public ResponseEntity<?> updateApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                @Valid @RequestBody MicoApplicationDTO applicationDto) {
-
+        if (!applicationDto.getShortName().equals(shortName)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "ShortName of the provided application does not match the request parameter");
+        }
+        if (!applicationDto.getVersion().equals(version)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "Version of the provided application does not match the request parameter");
+        }
         MicoApplication existingApplication = getApplicationFromDatabase(shortName, version);
         MicoApplication updatedApplication = applicationRepository.save(MicoApplication.valueOf(applicationDto).setId(existingApplication.getId()));
 
