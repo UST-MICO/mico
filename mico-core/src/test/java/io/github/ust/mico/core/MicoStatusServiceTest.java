@@ -129,7 +129,12 @@ public class MicoStatusServiceTest {
             .addNewItem()
                 .withNewMetadata().withName(podName1).endMetadata()
                 .withNewSpec().withNodeName(nodeName).endSpec()
-                .withNewStatus().withStartTime(startTime).addNewContainerStatus().withNewRestartCount(restarts).endContainerStatus().withPhase(podPhase).withHostIP(hostIp).endStatus()
+                .withNewStatus()
+                .withStartTime(startTime)
+                .addNewContainerStatus().withRestartCount(restarts).endContainerStatus()
+                .withPhase(podPhase)
+                .withHostIP(hostIp)
+                .endStatus()
             .endItem()
             .build();
 }

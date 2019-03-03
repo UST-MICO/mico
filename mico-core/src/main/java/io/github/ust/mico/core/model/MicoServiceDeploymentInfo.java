@@ -19,24 +19,15 @@
 
 package io.github.ust.mico.core.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.github.ust.mico.core.dto.MicoServiceDeploymentInfoDTO;
+import lombok.*;
+import lombok.experimental.Accessors;
+import org.neo4j.ogm.annotation.*;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import org.neo4j.ogm.annotation.EndNode;
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.RelationshipEntity;
-import org.neo4j.ogm.annotation.StartNode;
-
-import com.fasterxml.jackson.annotation.JsonBackReference;
-
-import io.github.ust.mico.core.dto.MicoServiceDeploymentInfoDTO;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import lombok.experimental.Accessors;
 
 /**
  * Represents the information necessary for deploying
@@ -54,6 +45,7 @@ public class MicoServiceDeploymentInfo {
      */
     @Id
     @GeneratedValue
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
 
@@ -118,23 +110,23 @@ public class MicoServiceDeploymentInfo {
      * Defaults to RestartPolicy#ALWAYS.
      */
     private RestartPolicy restartPolicy = RestartPolicy.DEFAULT;
-    
-    
+
+
     /**
      * Applies the values of all properties of a
      * {@link MicoServiceDeploymentInfoDTO} to this
      * {@code MicoServiceDeploymentInfo}.
-     * 
+     *
      * @param serviceDeploymentInfoDTO the {@link MicoServiceDeploymentInfoDTO}.
      * @return this {@link MicoServiceDeploymentInfo} with the values
-     *         of the properties of the given {@link MicoServiceDeploymentInfoDTO}.
+     * of the properties of the given {@link MicoServiceDeploymentInfoDTO}.
      */
     public MicoServiceDeploymentInfo applyValuesFrom(MicoServiceDeploymentInfoDTO serviceDeploymentInfoDTO) {
         return setReplicas(serviceDeploymentInfoDTO.getReplicas())
-                .setMinReadySecondsBeforeMarkedAvailable(serviceDeploymentInfoDTO.getMinReadySecondsBeforeMarkedAvailable())
-                .setLabels(serviceDeploymentInfoDTO.getLabels())
-                .setImagePullPolicy(serviceDeploymentInfoDTO.getImagePullPolicy())
-                .setRestartPolicy(serviceDeploymentInfoDTO.getRestartPolicy());
+            .setMinReadySecondsBeforeMarkedAvailable(serviceDeploymentInfoDTO.getMinReadySecondsBeforeMarkedAvailable())
+            .setLabels(serviceDeploymentInfoDTO.getLabels())
+            .setImagePullPolicy(serviceDeploymentInfoDTO.getImagePullPolicy())
+            .setRestartPolicy(serviceDeploymentInfoDTO.getRestartPolicy());
     }
 
 

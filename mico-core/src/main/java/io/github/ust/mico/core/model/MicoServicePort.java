@@ -19,6 +19,7 @@
 
 package io.github.ust.mico.core.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -47,9 +48,9 @@ public class MicoServicePort {
     /**
      * The id of this service port.
      */
-    @JsonIgnore
     @Id
     @GeneratedValue
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
     // ----------------------

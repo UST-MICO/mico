@@ -17,11 +17,13 @@
  * under the License.
  */
 
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
 import { Subscription, from } from 'rxjs';
 import { groupBy, mergeMap, toArray, map } from 'rxjs/operators';
+import { MatDialog } from '@angular/material';
+import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 
 @Component({
     selector: 'mico-app-list',
@@ -33,18 +35,22 @@ export class AppListComponent implements OnInit {
     subApplication: Subscription;
 
     constructor(
-        private apiService: ApiService
-    ) {
-        this.getApplications();
-    }
+        private apiService: ApiService,
+        private dialog: MatDialog
+    ) { }
 
     applications: Readonly<ApiObject[]>;
 
     displayedColumns: string[] = ['id', 'name', 'shortName', 'description', 'controls'];
 
     ngOnInit() {
+        this.getApplications();
     }
 
+    /**
+     * retreives all applications and groups them by their shortName
+     * uses: GET applications
+     */
     getApplications(): void {
 
         // group applications by shortName
@@ -52,7 +58,7 @@ export class AppListComponent implements OnInit {
             .subscribe(val => {
                 from(val as unknown as ArrayLike<ApiObject>)
                     .pipe(
-                        groupBy(service => service.shortName),
+                        groupBy(application => application.shortName),
                         mergeMap(group => group.pipe(toArray())),
                         map(group => group[0]),
                         toArray()
@@ -63,8 +69,25 @@ export class AppListComponent implements OnInit {
             });
     }
 
+    /**
+     * deletes all versions of an application, if the user confirms a dialog and the application is not deployed.
+     * uses: DELETE applications/{shortName}
+     * @param application shortName of the applications to be deleted
+     */
     deleteApplication(application) {
-        // TODO delete whole application (all versions and add a dialog before)
-        this.apiService.deleteApplication(application.shortName, application.version).subscribe();
+
+        const dialogRef = this.dialog.open(YesNoDialogComponent, {
+            data: {
+                object: application,
+                question: 'deleteAllServiceVersions'
+            }
+        });
+
+        const subDeleteServiceVersions = dialogRef.afterClosed().subscribe(shouldDelete => {
+            if (shouldDelete) {
+                this.apiService.deleteAllApplicationVersions(application.shortName).subscribe();
+                subDeleteServiceVersions.unsubscribe();
+            }
+        });
     }
 }

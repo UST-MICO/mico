@@ -1,0 +1,34 @@
+<mat-dialog-content style="overflow: visible; min-width: 48rem">
+    <h2>Change Service Version</h2>
+
+    <table mat-table [dataSource]="dataSource" style="width: 100%">
+
+
+        <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef> Name </th>
+            <td mat-cell *matCellDef="let element"> {{element.name}} </td>
+        </ng-container>
+        <ng-container matColumnDef="version">
+            <th mat-header-cell *matHeaderCellDef> Version </th>
+            <td mat-cell *matCellDef="let element"> {{element.version}} </td>
+        </ng-container>
+        <ng-container matColumnDef="description">
+            <th mat-header-cell *matHeaderCellDef> Description </th>
+            <td mat-cell *matCellDef="let element">
+                {{element.description}}
+            </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="['name', 'version', 'description']"></tr>
+
+        <tr mat-row *matRowDef="let row; columns: ['name', 'version', 'description'];" (click)="selection.toggle(row)"
+            class="table-row" [ngClass]="{'highlight': selected?.version == row.version}" >
+        </tr>
+    </table>
+
+</mat-dialog-content>
+<mat-dialog-actions>
+    <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
+    <button mat-button [mat-dialog-close]="confirm()">Confirm</button>
+    <button mat-button mat-dialog-close>Cancel</button>
+</mat-dialog-actions>
