@@ -120,14 +120,14 @@ public class DeploymentControllerTests {
         
         service.setDockerImageUri(DOCKER_IMAGE_URI);
 
-        given(applicationRepository.findByShortNameAndVersion(TestConstants.SHORT_NAME, VERSION)).willReturn(Optional.of(application));
+        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(serviceRepository.save(any(MicoService.class))).willReturn(service);
         given(serviceRepository.findAllByApplication(SHORT_NAME, VERSION)).willReturn(CollectionUtils.listOf(service));
 
         given(factory.runAsync(ArgumentMatchers.any(), onSuccessArgumentCaptor.capture(), onErrorArgumentCaptor.capture()))
             .willReturn(CompletableFuture.completedFuture(service));
 
-        mvc.perform(post(BASE_PATH + "/" + TestConstants.SHORT_NAME + "/" + VERSION + "/deploy"))
+        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/deploy"))
             .andDo(print())
             .andExpect(status().isOk());
 

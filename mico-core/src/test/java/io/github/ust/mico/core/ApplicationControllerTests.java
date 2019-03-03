@@ -32,7 +32,6 @@ import io.github.ust.mico.core.service.MicoStatusService;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.validation.MicoDataValidator;
 import io.github.ust.mico.core.web.ApplicationController;
-import org.hamcrest.collection.IsEmptyCollection;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -48,6 +47,7 @@ import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.*;
@@ -78,16 +78,23 @@ public class ApplicationControllerTests {
 
     private static final String JSON_PATH_LINKS_SECTION = "$._links.";
 
-    public static final String APPLICATION_LIST = buildPath(EMBEDDED, "micoApplicationList");
+    public static final String APPLICATION_DTO_LIST_PATH = buildPath(EMBEDDED, "micoApplicationDTOList");
+    public static final String APPLICATION_WITH_SERVICES_DTO_LIST_PATH = buildPath(EMBEDDED, "micoApplicationWithServicesDTOList");
+    public static final String APPLICATION_PATH = buildPath(ROOT, "application");
     public static final String SHORT_NAME_PATH = buildPath(ROOT, "shortName");
     public static final String VERSION_PATH = buildPath(ROOT, "version");
     public static final String NAME_PATH = buildPath(ROOT, "name");
     public static final String DESCRIPTION_PATH = buildPath(ROOT, "description");
-    public static final String SERVICE_DEPLOYMENT_INFO_LIST_PATH = buildPath(ROOT, "serviceDeploymentInfos");
+    public static final String OWNER_PATH = buildPath(ROOT, "owner");
+    public static final String SERVICE_LIST_PATH = buildPath(ROOT, "services");
     public static final String INTERFACES_LIST_PATH = buildPath(ROOT, "serviceInterfaces");
     public static final String ID_PATH = buildPath(ROOT, "id");
 
     private static final String BASE_PATH = "/applications";
+    private static final String PATH_SERVICES = "services";
+    private static final String PATH_DEPLOYMENT_INFORMATION = "deploymentInformation";
+    private static final String PATH_PROMOTE = "promote";
+    private static final String PATH_STATUS = "status";
 
     @MockBean
     private MicoApplicationRepository applicationRepository;
@@ -115,7 +122,7 @@ public class ApplicationControllerTests {
     private ObjectMapper mapper;
 
     @Captor
-    ArgumentCaptor<List<MicoApplication>> micoApplicationListCaptor;
+    private ArgumentCaptor<List<MicoApplication>> micoApplicationListCaptor;
 
     @Test
     public void getAllApplications() throws Exception {
@@ -124,16 +131,33 @@ public class ApplicationControllerTests {
                 new MicoApplication().setId(ID_1).setShortName(SHORT_NAME).setVersion(VERSION_1_0_1),
                 new MicoApplication().setId(ID_2).setShortName(SHORT_NAME).setVersion(VERSION),
                 new MicoApplication().setId(ID_3).setShortName(SHORT_NAME_1).setVersion(VERSION)));
-
-        mvc.perform(get("/applications").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
+        mvc.perform(get(BASE_PATH).accept(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andExpect(jsonPath(APPLICATION_LIST + "[*]", hasSize(3)))
-            .andExpect(jsonPath(APPLICATION_LIST + "[?(" + SHORT_NAME_MATCHER + "&& @.version=='" + VERSION_1_0_1 + "')]", hasSize(1)))
-            .andExpect(jsonPath(APPLICATION_LIST + "[?(" + SHORT_NAME_MATCHER + "&& @.version=='" + VERSION + "')]", hasSize(1)))
-            .andExpect(jsonPath(APPLICATION_LIST + "[?(" + SHORT_NAME_1_MATCHER + "&& @.version=='" + VERSION + "')]", hasSize(1)))
+            .andExpect(jsonPath(APPLICATION_WITH_SERVICES_DTO_LIST_PATH + "[*]", hasSize(3)))
+            .andExpect(jsonPath(APPLICATION_WITH_SERVICES_DTO_LIST_PATH + "[0].shortName", is(SHORT_NAME)))
+            .andExpect(jsonPath(APPLICATION_WITH_SERVICES_DTO_LIST_PATH + "[0].version", is(VERSION_1_0_1)))
+            .andExpect(jsonPath(APPLICATION_WITH_SERVICES_DTO_LIST_PATH + "[1].shortName", is(SHORT_NAME)))
+            .andExpect(jsonPath(APPLICATION_WITH_SERVICES_DTO_LIST_PATH + "[1].version", is(VERSION)))
+            .andExpect(jsonPath(APPLICATION_WITH_SERVICES_DTO_LIST_PATH + "[2].shortName", is(SHORT_NAME_1)))
+            .andExpect(jsonPath(APPLICATION_WITH_SERVICES_DTO_LIST_PATH + "[2].version", is(VERSION)))
             .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "self.href", is("http://localhost/applications")))
+            .andReturn();
+    }
+
+    @Test
+    public void getApplicationByShortName() throws Exception {
+        given(applicationRepository.findByShortName(SHORT_NAME)).willReturn(
+            CollectionUtils.listOf(new MicoApplication().setId(ID).setShortName(SHORT_NAME).setVersion(VERSION)));
+
+        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/").accept(MediaTypes.HAL_JSON_VALUE))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andExpect(jsonPath(APPLICATION_WITH_SERVICES_DTO_LIST_PATH + "[0].shortName", is(SHORT_NAME)))
+            .andExpect(jsonPath(APPLICATION_WITH_SERVICES_DTO_LIST_PATH + "[0].version", is(VERSION)))
+            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/applications/" + SHORT_NAME)))
             .andReturn();
     }
 
@@ -142,7 +166,7 @@ public class ApplicationControllerTests {
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
             Optional.of(new MicoApplication().setId(ID).setShortName(SHORT_NAME).setVersion(VERSION)));
 
-        mvc.perform(get("/applications/" + SHORT_NAME + "/" + VERSION).accept(MediaTypes.HAL_JSON_VALUE))
+        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
@@ -154,17 +178,46 @@ public class ApplicationControllerTests {
     }
 
     @Test
-    public void getApplicationByShortName() throws Exception {
-        given(applicationRepository.findByShortName(SHORT_NAME)).willReturn(
-            CollectionUtils.listOf(new MicoApplication().setId(ID).setShortName(SHORT_NAME).setVersion(VERSION)));
+    public void getApplicationByShortNameAndVersionWithServices() throws Exception {
+        MicoService existingService = new MicoService()
+            .setId(ID_1)
+            .setShortName(SERVICE_SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(NAME)
+            .setDescription(DESCRIPTION);
+        MicoApplication existingApplication = new MicoApplication()
+            .setId(ID)
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(NAME)
+            .setDescription(DESCRIPTION)
+            .setOwner(OWNER);
+        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
+            .setApplication(existingApplication)
+            .setService(existingService);
+        existingApplication.getServiceDeploymentInfos().add(serviceDeploymentInfo);
 
-        mvc.perform(get("/applications/" + SHORT_NAME + "/").accept(MediaTypes.HAL_JSON_VALUE))
+        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
+            Optional.of(existingApplication));
+
+        MvcResult mvcResult = mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andExpect(jsonPath(APPLICATION_LIST + "[?(" + SHORT_NAME_MATCHER + "&& @.version=='" + VERSION + "')]", hasSize(1)))
-            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/applications/" + SHORT_NAME)))
+            .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
+            .andExpect(jsonPath(VERSION_PATH, is(VERSION)))
+            .andExpect(jsonPath(OWNER_PATH, is(OWNER)))
+            .andExpect(jsonPath(SERVICE_LIST_PATH, hasSize(1)))
+            .andExpect(jsonPath(SERVICE_LIST_PATH + "[0].shortName", is(SERVICE_SHORT_NAME)))
+            .andExpect(jsonPath(SERVICE_LIST_PATH + "[0].version", is(VERSION)))
+            .andExpect(jsonPath(SERVICE_LIST_PATH + "[0].name", is(NAME)))
+            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/applications/" + SHORT_NAME + "/" + VERSION)))
+            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "applications.href", is("http://localhost/applications")))
             .andReturn();
+
+        String contentAsString = mvcResult.getResponse().getContentAsString();
+        MicoApplicationWithServicesDTO micoApplicationWithServicesDTO = mapper.readValue(contentAsString, MicoApplicationWithServicesDTO.class);
+        System.out.println("Deserialized application with services DTO:\n" + micoApplicationWithServicesDTO);
     }
 
     @Test
@@ -172,7 +225,7 @@ public class ApplicationControllerTests {
         given(applicationRepository.findByShortName(SHORT_NAME)).willReturn(
             CollectionUtils.listOf(new MicoApplication().setId(ID).setShortName(SHORT_NAME).setVersion(VERSION)));
 
-        mvc.perform(get("/applications/" + SHORT_NAME + "/").accept(MediaTypes.HAL_JSON_VALUE))
+        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/").accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andReturn();
@@ -190,81 +243,56 @@ public class ApplicationControllerTests {
         given(applicationRepository.save(any(MicoApplication.class))).willReturn(application);
 
         final ResultActions result = mvc.perform(post(BASE_PATH)
-            .content(mapper.writeValueAsBytes(application))
+            .content(mapper.writeValueAsBytes(MicoApplicationDTO.valueOf(application)))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(jsonPath(SHORT_NAME_PATH, is(application.getShortName())))
-            .andExpect(jsonPath(VERSION_PATH, is(application.getVersion())))
-            .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH, IsEmptyCollection.empty()));
+            .andExpect(jsonPath(VERSION_PATH, is(application.getVersion())));
 
         result.andExpect(status().isCreated());
     }
 
     @Test
     public void createApplicationWithExistingServices() throws Exception {
-        MicoService service1 = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(VERSION);
-        MicoService service2 = new MicoService().setShortName(SERVICE_SHORT_NAME_1).setVersion(VERSION);
+        MicoService existingService1 = new MicoService().setShortName(SHORT_NAME).setVersion(VERSION);
+        MicoService existingService2 = new MicoService().setShortName(SHORT_NAME_1).setVersion(VERSION);
 
-        MicoApplication application = new MicoApplication()
+        MicoApplication existingApplication = new MicoApplication()
             .setId(ID)
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setName(NAME)
             .setDescription(DESCRIPTION);
 
-        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
-            .setApplication(application)
-            .setService(service1));
-        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
-            .setApplication(application)
-            .setService(service2));
+        existingApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
+            .setApplication(existingApplication)
+            .setService(existingService1));
+        existingApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
+            .setApplication(existingApplication)
+            .setService(existingService2));
 
-        given(applicationRepository.save(any(MicoApplication.class))).willReturn(application);
+        given(applicationRepository.save(any(MicoApplication.class))).willReturn(existingApplication);
         given(serviceRepository.findByShortNameAndVersion(
-            eq(service1.getShortName()), eq(service1.getVersion())))
-            .willReturn(Optional.of(service1));
+            eq(existingService1.getShortName()), eq(existingService1.getVersion())))
+            .willReturn(Optional.of(existingService1));
         given(serviceRepository.findByShortNameAndVersion(
-            eq(service2.getShortName()), eq(service2.getVersion())))
-            .willReturn(Optional.of(service2));
+            eq(existingService2.getShortName()), eq(existingService2.getVersion())))
+            .willReturn(Optional.of(existingService2));
 
-        final ResultActions result = mvc.perform(post(BASE_PATH)
-            .content(mapper.writeValueAsBytes(application))
+        MicoApplicationDTO newApplication = new MicoApplicationDTO()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(NAME)
+            .setDescription(DESCRIPTION);
+
+        mvc.perform(post(BASE_PATH)
+            .content(mapper.writeValueAsBytes(newApplication))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
-            .andExpect(jsonPath(SHORT_NAME_PATH, is(application.getShortName())))
-            .andExpect(jsonPath(VERSION_PATH, is(application.getVersion())))
-            .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[*]", hasSize(2)));
-
-        result.andExpect(status().isCreated());
-    }
-
-    @Test
-    public void createApplicationWithNotExistingServices() throws Exception {
-        MicoService service1 = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
-        MicoService service2 = new MicoService().setShortName(SERVICE_SHORT_NAME_1).setVersion(SERVICE_VERSION);
-
-        MicoApplication application = new MicoApplication()
-            .setId(ID)
-            .setShortName(SHORT_NAME)
-            .setVersion(VERSION)
-            .setName(NAME)
-            .setDescription(DESCRIPTION);
-
-        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
-            .setApplication(application)
-            .setService(service1));
-        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
-            .setApplication(application)
-            .setService(service2));
-
-        given(applicationRepository.save(any(MicoApplication.class))).willReturn(application);
-
-        final ResultActions result = mvc.perform(post(BASE_PATH)
-            .content(mapper.writeValueAsBytes(application))
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print());
-
-        result.andExpect(status().isUnprocessableEntity());
+            .andExpect(jsonPath(SHORT_NAME_PATH, is(existingApplication.getShortName())))
+            .andExpect(jsonPath(VERSION_PATH, is(existingApplication.getVersion())))
+            .andExpect(status().isCreated())
+            .andReturn();
     }
 
     @Test
@@ -290,7 +318,7 @@ public class ApplicationControllerTests {
             eq(application.getVersion()))).willReturn(Optional.of(application));
 
         final ResultActions result = mvc.perform(post(BASE_PATH)
-            .content(mapper.writeValueAsBytes(application))
+            .content(mapper.writeValueAsBytes(MicoApplicationDTO.valueOf(application)))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print());
 
@@ -400,14 +428,12 @@ public class ApplicationControllerTests {
         given(applicationRepository.save(eq(expectedApplication))).willReturn(expectedApplication);
 
         ResultActions resultUpdate = mvc.perform(put(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION)
-            .content(mapper.writeValueAsBytes(updatedApplication))
+            .content(mapper.writeValueAsBytes(MicoApplicationDTO.valueOf(updatedApplication)))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
-            .andExpect(jsonPath(ID_PATH, is(existingApplication.getId().intValue())))
             .andExpect(jsonPath(DESCRIPTION_PATH, is(updatedApplication.getDescription())))
             .andExpect(jsonPath(SHORT_NAME_PATH, is(updatedApplication.getShortName())))
-            .andExpect(jsonPath(VERSION_PATH, is(updatedApplication.getVersion())))
-            .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[*]", IsEmptyCollection.empty()));
+            .andExpect(jsonPath(VERSION_PATH, is(updatedApplication.getVersion())));
 
         resultUpdate.andExpect(status().isOk());
     }
@@ -448,50 +474,52 @@ public class ApplicationControllerTests {
 
         ResultActions resultUpdate = mvc
             .perform(put(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION)
-                .content(mapper.writeValueAsBytes(updatedApplication))
+                .content(mapper.writeValueAsBytes(MicoApplicationDTO.valueOf(updatedApplication)))
                 .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
-            .andExpect(jsonPath(ID_PATH, is(existingApplication.getId().intValue())))
             .andExpect(jsonPath(DESCRIPTION_PATH, is(updatedApplication.getDescription())))
             .andExpect(jsonPath(SHORT_NAME_PATH, is(updatedApplication.getShortName())))
             .andExpect(jsonPath(VERSION_PATH, is(updatedApplication.getVersion())))
-            .andExpect(jsonPath(NAME_PATH, is(updatedApplication.getName())))
-            .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[*]", hasSize(1)));
+            .andExpect(jsonPath(NAME_PATH, is(updatedApplication.getName())));
 
         resultUpdate.andExpect(status().isOk());
     }
 
     @Test
-    public void updateApplicationIsOnlyAllowedWithoutServices() throws Exception {
-        MicoApplication application = new MicoApplication()
+    public void promoteApplication() throws Exception {
+        MicoService service = new MicoService()
+            .setShortName(SERVICE_SHORT_NAME)
+            .setVersion(SERVICE_VERSION);
+
+        MicoApplication existingApplication = new MicoApplication()
             .setId(ID)
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setDescription(DESCRIPTION);
 
-        MicoApplication updatedApplication = new MicoApplication()
-            .setShortName(SHORT_NAME)
-            .setVersion(VERSION)
-            .setDescription("newDesc");
-
-        MicoService service = new MicoService()
-            .setShortName(SERVICE_SHORT_NAME)
-            .setVersion(SERVICE_VERSION)
-            .setGitCloneUrl(GIT_TEST_REPO_URL);
-
-        updatedApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
-            .setApplication(updatedApplication)
+        existingApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
+            .setApplication(existingApplication)
             .setService(service));
 
-        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
-        given(serviceRepository.findAllByApplication(SHORT_NAME, VERSION)).willReturn(CollectionUtils.listOf(service));
+        String newVersion = VERSION_1_0_1;
+        Long newId = ID + 1;
 
-        ResultActions resultUpdate = mvc.perform(put(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION)
-            .content(mapper.writeValueAsBytes(updatedApplication))
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print());
+        MicoApplication updatedApplication = existingApplication.setId(null).setVersion(newVersion);
+        MicoApplication expectedApplication = updatedApplication.setId(newId);
 
-        resultUpdate.andExpect(status().isUnprocessableEntity());
+        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingApplication));
+        given(applicationRepository.save(eq(updatedApplication))).willReturn(expectedApplication);
+
+        ResultActions resultUpdate = mvc
+            .perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_PROMOTE)
+                .content(newVersion)
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(jsonPath(DESCRIPTION_PATH, is(updatedApplication.getDescription())))
+            .andExpect(jsonPath(SHORT_NAME_PATH, is(updatedApplication.getShortName())))
+            .andExpect(jsonPath(VERSION_PATH, is(newVersion)));
+
+        resultUpdate.andExpect(status().isOk());
     }
 
     @Test
@@ -547,7 +575,7 @@ public class ApplicationControllerTests {
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingApplication));
         given(applicationRepository.save(any(MicoApplication.class))).willReturn(expectedApplication);
 
-         mvc.perform(put(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION)
+        mvc.perform(put(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION)
             .content(mapper.writeValueAsBytes(updatedApplication))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -571,7 +599,7 @@ public class ApplicationControllerTests {
 
         ArgumentCaptor<MicoApplication> appCaptor = ArgumentCaptor.forClass(MicoApplication.class);
 
-        mvc.perform(delete("/applications/" + SHORT_NAME + "/" + VERSION).accept(MediaTypes.HAL_JSON_VALUE))
+        mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isNoContent())
             .andReturn();
@@ -586,12 +614,12 @@ public class ApplicationControllerTests {
         // Create a new application with one service
         MicoApplication application = new MicoApplication()
             .setId(ID)
-            .setName(TestConstants.NAME)
+            .setName(NAME)
             .setShortName(SHORT_NAME)
             .setVersion(VERSION);
 
         MicoServiceInterface serviceInterface = new MicoServiceInterface()
-            .setServiceInterfaceName(TestConstants.SERVICE_INTERFACE_NAME);
+            .setServiceInterfaceName(SERVICE_INTERFACE_NAME);
 
         MicoService service = new MicoService()
             .setShortName(SERVICE_SHORT_NAME)
@@ -640,12 +668,12 @@ public class ApplicationControllerTests {
 
         // Set deployment information for MicoService
         micoServiceStatus
-            .setName(TestConstants.NAME)
+            .setName(NAME)
             .setShortName(SERVICE_SHORT_NAME)
             .setVersion(SERVICE_VERSION)
             .setAvailableReplicas(availableReplicas)
             .setRequestedReplicas(replicas)
-            .setInterfacesInformation(Collections.singletonList(new MicoServiceInterfaceDTO().setName(TestConstants.SERVICE_INTERFACE_NAME)))
+            .setInterfacesInformation(Collections.singletonList(new MicoServiceInterfaceDTO().setName(SERVICE_INTERFACE_NAME)))
             .setPodInfo(Arrays.asList(kubernetesPodInfo1, kubernetesPodInfo2));
 
         micoApplicationStatus.getServiceStatus().add(micoServiceStatus);
@@ -656,27 +684,27 @@ public class ApplicationControllerTests {
         // Mock MicoStatusService
         given(micoStatusService.getApplicationStatus(any(MicoApplication.class))).willReturn(micoApplicationStatus);
 
-        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/status"))
+        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_STATUS))
             .andDo(print())
             .andExpect(status().isOk())
-            .andExpect(jsonPath(TestConstants.SERVICE_INFORMATION_NAME, is(TestConstants.NAME)))
-            .andExpect(jsonPath(TestConstants.REQUESTED_REPLICAS, is(replicas)))
-            .andExpect(jsonPath(TestConstants.AVAILABLE_REPLICAS, is(availableReplicas)))
-            .andExpect(jsonPath(TestConstants.INTERFACES_INFORMATION, hasSize(1)))
-            .andExpect(jsonPath(TestConstants.INTERFACES_INFORMATION_NAME, is(TestConstants.SERVICE_INTERFACE_NAME)))
-            .andExpect(jsonPath(TestConstants.POD_INFO, hasSize(2)))
-            .andExpect(jsonPath(TestConstants.POD_INFO_POD_NAME_1, is(podName1)))
-            .andExpect(jsonPath(TestConstants.POD_INFO_PHASE_1, is(podPhase)))
-            .andExpect(jsonPath(TestConstants.POD_INFO_NODE_NAME_1, is(nodeName)))
-            .andExpect(jsonPath(TestConstants.POD_INFO_METRICS_MEMORY_USAGE_1, is(memoryUsage1)))
-            .andExpect(jsonPath(TestConstants.POD_INFO_METRICS_CPU_LOAD_1, is(cpuLoad1)))
-            .andExpect(jsonPath(TestConstants.POD_INFO_METRICS_AVAILABLE_1, is(false)))
-            .andExpect(jsonPath(TestConstants.POD_INFO_POD_NAME_2, is(podName2)))
-            .andExpect(jsonPath(TestConstants.POD_INFO_PHASE_2, is(podPhase)))
-            .andExpect(jsonPath(TestConstants.POD_INFO_NODE_NAME_2, is(nodeName)))
-            .andExpect(jsonPath(TestConstants.POD_INFO_METRICS_MEMORY_USAGE_2, is(memoryUsage2)))
-            .andExpect(jsonPath(TestConstants.POD_INFO_METRICS_CPU_LOAD_2, is(cpuLoad2)))
-            .andExpect(jsonPath(TestConstants.POD_INFO_METRICS_AVAILABLE_2, is(true)));
+            .andExpect(jsonPath(SERVICE_INFORMATION_NAME, is(NAME)))
+            .andExpect(jsonPath(REQUESTED_REPLICAS, is(replicas)))
+            .andExpect(jsonPath(AVAILABLE_REPLICAS, is(availableReplicas)))
+            .andExpect(jsonPath(INTERFACES_INFORMATION, hasSize(1)))
+            .andExpect(jsonPath(INTERFACES_INFORMATION_NAME, is(SERVICE_INTERFACE_NAME)))
+            .andExpect(jsonPath(POD_INFO, hasSize(2)))
+            .andExpect(jsonPath(POD_INFO_POD_NAME_1, is(podName1)))
+            .andExpect(jsonPath(POD_INFO_PHASE_1, is(podPhase)))
+            .andExpect(jsonPath(POD_INFO_NODE_NAME_1, is(nodeName)))
+            .andExpect(jsonPath(POD_INFO_METRICS_MEMORY_USAGE_1, is(memoryUsage1)))
+            .andExpect(jsonPath(POD_INFO_METRICS_CPU_LOAD_1, is(cpuLoad1)))
+            .andExpect(jsonPath(POD_INFO_METRICS_AVAILABLE_1, is(false)))
+            .andExpect(jsonPath(POD_INFO_POD_NAME_2, is(podName2)))
+            .andExpect(jsonPath(POD_INFO_PHASE_2, is(podPhase)))
+            .andExpect(jsonPath(POD_INFO_NODE_NAME_2, is(nodeName)))
+            .andExpect(jsonPath(POD_INFO_METRICS_MEMORY_USAGE_2, is(memoryUsage2)))
+            .andExpect(jsonPath(POD_INFO_METRICS_CPU_LOAD_2, is(cpuLoad2)))
+            .andExpect(jsonPath(POD_INFO_METRICS_AVAILABLE_2, is(true)));
     }
 
     @Test
@@ -696,7 +724,7 @@ public class ApplicationControllerTests {
         given(serviceRepository.findAllByApplication(SHORT_NAME, VERSION)).willReturn(CollectionUtils.listOf(service));
         ArgumentCaptor<MicoApplication> micoApplicationCaptor = ArgumentCaptor.forClass(MicoApplication.class);
 
-        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/services")
+        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES)
             .content(mapper.writeValueAsBytes(service))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -736,7 +764,7 @@ public class ApplicationControllerTests {
 
         ArgumentCaptor<MicoApplication> micoApplicationCaptor = ArgumentCaptor.forClass(MicoApplication.class);
 
-        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/services")
+        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES)
             .content(mapper.writeValueAsBytes(providedService))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -768,7 +796,7 @@ public class ApplicationControllerTests {
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
         given(serviceRepository.findByShortNameAndVersion(SERVICE_SHORT_NAME, SERVICE_VERSION)).willReturn(Optional.of(existingService));
 
-        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/services")
+        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES)
             .content(mapper.writeValueAsBytes(providedService))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -834,13 +862,13 @@ public class ApplicationControllerTests {
         given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName()))
             .willReturn(Optional.of(new MicoServiceDeploymentInfoQueryResult(application, serviceDeploymentInfo, service)));
 
-        mvc.perform(get(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/services/" + service.getShortName()))
+        mvc.perform(get(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName()))
             .andDo(print())
             .andExpect(status().isOk())
-            .andExpect(jsonPath(TestConstants.SDI_REPLICAS_PATH, is(serviceDeploymentInfo.getReplicas())))
-            .andExpect(jsonPath(TestConstants.SDI_LABELS_PATH + "[0].key", is(labels.get(0).getKey())))
-            .andExpect(jsonPath(TestConstants.SDI_LABELS_PATH + "[0].value", is(labels.get(0).getValue())))
-            .andExpect(jsonPath(TestConstants.SDI_IMAGE_PULLPOLICY_PATH, is(imagePullPolicy.toString())))
+            .andExpect(jsonPath(SDI_REPLICAS_PATH, is(serviceDeploymentInfo.getReplicas())))
+            .andExpect(jsonPath(SDI_LABELS_PATH + "[0].key", is(labels.get(0).getKey())))
+            .andExpect(jsonPath(SDI_LABELS_PATH + "[0].value", is(labels.get(0).getValue())))
+            .andExpect(jsonPath(SDI_IMAGE_PULLPOLICY_PATH, is(imagePullPolicy.toString())))
             .andReturn();
     }
 
@@ -879,18 +907,15 @@ public class ApplicationControllerTests {
             .willReturn(Optional.of(application));
         given(applicationRepository.save(eq(expectedApplication))).willReturn(expectedApplication);
 
-        mvc.perform(put(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/services/" + service.getShortName())
+        mvc.perform(put(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName())
             .content(mapper.writeValueAsBytes(updatedServiceDeploymentInfoDTO))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
-            .andExpect(jsonPath(SHORT_NAME_PATH, is(expectedApplication.getShortName())))
-            .andExpect(jsonPath(VERSION_PATH, is(expectedApplication.getVersion())))
-            .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[*]", hasSize(1)))
-            .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[0].replicas", is(updatedServiceDeploymentInfoDTO.getReplicas())))
-            .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[0].labels[0].key", is(updatedServiceDeploymentInfoDTO.getLabels().get(0).getKey())))
-            .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[0].labels[0].value", is(updatedServiceDeploymentInfoDTO.getLabels().get(0).getValue())))
-            .andExpect(jsonPath(SERVICE_DEPLOYMENT_INFO_LIST_PATH + "[0].imagePullPolicy", is(updatedServiceDeploymentInfoDTO.getImagePullPolicy().toString())))
+            .andExpect(jsonPath(SDI_REPLICAS_PATH, is(serviceDeploymentInfo.getReplicas())))
+            .andExpect(jsonPath(SDI_LABELS_PATH + "[0].key", is(updatedServiceDeploymentInfoDTO.getLabels().get(0).getKey())))
+            .andExpect(jsonPath(SDI_LABELS_PATH + "[0].value", is(updatedServiceDeploymentInfoDTO.getLabels().get(0).getValue())))
+            .andExpect(jsonPath(SDI_IMAGE_PULLPOLICY_PATH, is(updatedServiceDeploymentInfoDTO.getImagePullPolicy().toString())))
             .andReturn();
     }
 
@@ -954,35 +979,42 @@ public class ApplicationControllerTests {
 
 
     @Test
-    public void createDeploymentInfoWithInvalidLabels() throws Exception {
+    public void invalidLabelsThrowAnException() throws Exception {
 
         List<MicoLabel> labels = CollectionUtils.listOf(new MicoLabel("invalid-key!", "value"));
 
-        MicoService service = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(VERSION);
         MicoApplication application = new MicoApplication()
             .setId(ID)
             .setShortName(SHORT_NAME)
-            .setVersion(VERSION)
-            .setName(NAME)
-            .setDescription(DESCRIPTION);
-        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
+            .setVersion(VERSION);
+
+        MicoApplication expectedApplication = new MicoApplication()
+            .setId(ID)
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION);
+
+        MicoService service = new MicoService()
+            .setShortName(SERVICE_SHORT_NAME)
+            .setVersion(SERVICE_VERSION);
+
+        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
             .setApplication(application)
-            .setService(service)
-            .setLabels(labels)
-        );
+            .setService(service);
 
-        given(applicationRepository.save(any(MicoApplication.class))).willReturn(application);
-        given(serviceRepository.findByShortNameAndVersion(
-            eq(service.getShortName()), eq(service.getVersion())))
-            .willReturn(Optional.of(service));
+        MicoServiceDeploymentInfoDTO updatedServiceDeploymentInfoDTO = new MicoServiceDeploymentInfoDTO()
+            .setLabels(labels);
 
-        final ResultActions result = mvc.perform(post(BASE_PATH)
-            .content(mapper.writeValueAsBytes(application))
+        application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
+        expectedApplication.getServiceDeploymentInfos().add(serviceDeploymentInfo.applyValuesFrom(updatedServiceDeploymentInfoDTO));
+
+        given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion()))
+            .willReturn(Optional.of(application));
+
+        final ResultActions result = mvc.perform(put(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName())
+            .content(mapper.writeValueAsBytes(updatedServiceDeploymentInfoDTO))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print());
 
         result.andExpect(status().isUnprocessableEntity());
     }
-
-
 }

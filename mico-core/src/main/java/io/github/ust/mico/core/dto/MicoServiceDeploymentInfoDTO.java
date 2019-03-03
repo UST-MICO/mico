@@ -96,7 +96,7 @@ public class MicoServiceDeploymentInfoDTO {
      * subsets of objects. Labels can be attached to objects at creation time and
      * subsequently added and modified at any time.
      * Each key must be unique for a given object.
-     * {@code null} values are skipped.
+     * {@code null} is ignored.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -109,7 +109,8 @@ public class MicoServiceDeploymentInfoDTO {
                 " semantics to the core system. Labels can be used to organize and to select" +
                 " subsets of objects. Labels can be attached to objects at creation time and" +
                 " subsequently added and modified at any time.\n" +
-                " Each key must be unique for a given object.")
+                " Each key must be unique for a given object.\n" +
+                " Null is ignored.")
         }
     )})
     @JsonSetter(nulls = Nulls.SKIP)
@@ -127,7 +128,8 @@ public class MicoServiceDeploymentInfoDTO {
             @ExtensionProperty(name = "title", value = "Image Pull Policy"),
             @ExtensionProperty(name = "default", value = "ALWAYS"),
             @ExtensionProperty(name = "x-order", value = "60"),
-            @ExtensionProperty(name = "description", value = "Indicates whether and when to pull the image.")
+            @ExtensionProperty(name = "description", value = "Indicates whether and when to pull the image.\n " +
+                "Null is ignored.")
         }
     )})
     @JsonSetter(nulls = Nulls.SKIP)
@@ -144,7 +146,8 @@ public class MicoServiceDeploymentInfoDTO {
             @ExtensionProperty(name = "title", value = "Restart Policy"),
             @ExtensionProperty(name = "default", value = "ALWAYS"),
             @ExtensionProperty(name = "x-order", value = "70"),
-            @ExtensionProperty(name = "description", value = "Restart policy for all containers.")
+            @ExtensionProperty(name = "description", value = "Restart policy for all containers.\n " +
+                "Null is ignored.")
         }
     )})
     @JsonSetter(nulls = Nulls.SKIP)

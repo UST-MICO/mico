@@ -21,25 +21,14 @@ package io.github.ust.mico.core.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSetter;
-import com.fasterxml.jackson.annotation.Nulls;
-import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.dto.MicoServiceDeploymentInfoDTO;
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.Extension;
-import io.swagger.annotations.ExtensionProperty;
 import lombok.*;
 import lombok.experimental.Accessors;
 import org.neo4j.ogm.annotation.*;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
-import javax.validation.constraints.PositiveOrZero;
 import java.util.ArrayList;
 import java.util.List;
 
-// TODO: Always use MicoServiceDeploymentInfoDTO as the DTO. Currently not the case when MicoApplication is created.
 /**
  * Represents the information necessary for deploying a {@link MicoApplication}.
  * DTO is {@link MicoServiceDeploymentInfoDTO}.
@@ -68,38 +57,18 @@ public class MicoServiceDeploymentInfo {
      * The {@link MicoApplication} that uses a {@link MicoService}
      * this deployment information refers to.
      */
-    @ApiModelProperty(required = true, extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Application"),
-            @ExtensionProperty(name = "x-order", value = "10"),
-            @ExtensionProperty(name = "description", value = "The application that uses a service " +
-                "this deployment information refers to.")
-        }
-    )})
     @JsonBackReference
     @StartNode
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    @Valid
     private MicoApplication application;
 
     /**
      * The {@link MicoService} this deployment information refers to.
      */
-    @ApiModelProperty(required = true, extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Service"),
-            @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "The service this deployment information refers to.")
-        }
-    )})
     @EndNode
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    @NotNull
-    @Valid
     private MicoService service;
 
 
@@ -110,17 +79,6 @@ public class MicoServiceDeploymentInfo {
     /**
      * Number of desired instances. Defaults to 1.
      */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Replicas"),
-            @ExtensionProperty(name = "minimum", value = "1"),
-            @ExtensionProperty(name = "default", value = "1"),
-            @ExtensionProperty(name = "x-order", value = "30"),
-            @ExtensionProperty(name = "description", value = "Number of desired instances. Defaults to 1.")
-        }
-    )})
-    @Positive(message = "must be at least one replica")
     private int replicas = 1;
 
     /**
@@ -128,18 +86,6 @@ public class MicoServiceDeploymentInfo {
      * without any of its containers crashing, for it to be considered available.
      * Defaults to 0 (considered available as soon as it is ready).
      */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Time To Verify Ready State"),
-            @ExtensionProperty(name = "x-order", value = "40"),
-            @ExtensionProperty(name = "default", value = "0"),
-            @ExtensionProperty(name = "description", value = "Minimum number of seconds for which this service should be ready " +
-                "without any of its containers crashing, for it to be considered available. " +
-                "Defaults to 0 (considered available as soon as it is ready).")
-        }
-    )})
-    @PositiveOrZero(message = "must not be negative")
     private int minReadySecondsBeforeMarkedAvailable = 0;
 
     /**
@@ -150,59 +96,19 @@ public class MicoServiceDeploymentInfo {
      * subsets of objects. Labels can be attached to objects at creation time and
      * subsequently added and modified at any time.
      * Each key must be unique for a given object.
-     * {@code null} values are skipped.
      */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Labels"),
-            @ExtensionProperty(name = "x-order", value = "50"),
-            @ExtensionProperty(name = "description", value = "Those labels are key-value pairs that are attached to the deployment" +
-                " of this service. Intended to be used to specify identifying attributes" +
-                " that are meaningful and relevant to users, but do not directly imply" +
-                " semantics to the core system. Labels can be used to organize and to select" +
-                " subsets of objects. Labels can be attached to objects at creation time and" +
-                " subsequently added and modified at any time.\n" +
-                " Each key must be unique for a given object.\n" +
-                " Null values are skipped.")
-        }
-    )})
-    @JsonSetter(nulls = Nulls.SKIP)
-    @Valid
     private List<MicoLabel> labels = new ArrayList<>();
 
     /**
      * Indicates whether and when to pull the image.
      * Default image pull policy is {@link ImagePullPolicy#ALWAYS}.
-     * {@code null} is ignored.
      */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Image Pull Policy"),
-            @ExtensionProperty(name = "default", value = "ALWAYS"),
-            @ExtensionProperty(name = "x-order", value = "60"),
-            @ExtensionProperty(name = "description", value = "Indicates whether and when to pull the image.")
-        }
-    )})
-    @JsonSetter(nulls = Nulls.SKIP)
     private ImagePullPolicy imagePullPolicy = ImagePullPolicy.ALWAYS;
 
     /**
      * Restart policy for all containers.
      * Default restart policy is {@link RestartPolicy#ALWAYS}.
-     * {@code null} is ignored.
      */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Restart Policy"),
-            @ExtensionProperty(name = "default", value = "ALWAYS"),
-            @ExtensionProperty(name = "x-order", value = "70"),
-            @ExtensionProperty(name = "description", value = "Restart policy for all containers.")
-        }
-    )})
-    @JsonSetter(nulls = Nulls.SKIP)
     private RestartPolicy restartPolicy = RestartPolicy.ALWAYS;
 
 

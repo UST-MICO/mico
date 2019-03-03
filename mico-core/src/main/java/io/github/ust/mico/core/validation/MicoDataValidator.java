@@ -19,6 +19,7 @@
 
 package io.github.ust.mico.core.validation;
 
+import io.github.ust.mico.core.dto.MicoApplicationDTO;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import org.apache.commons.validator.routines.UrlValidator;
@@ -27,49 +28,48 @@ import org.springframework.util.StringUtils;
 import org.springframework.validation.Errors;
 
 /**
- * Validates the data of MICO entities like {@link MicoApplication} or {@link MicoService}.
+ * Validates the data of MICO entities like {@link MicoApplicationDTO} or {@link MicoService}.
  * It is used in conjunction with standard validation annotations like {@code @NotEmpty} or {@code @Pattern}
  * to be able to validate data only when it is necessary.
  * For example the validation of the {@code name} property of a {@link MicoService} object
  * is only required during its creation or when it is updated, but must not validated if the already existing object
- * should be added to a {@link MicoApplication} object ({@code shortName} and {@code version} should be enough).
+ * should be added to a {@link MicoApplicationDTO} object ({@code shortName} and {@code version} should be enough).
  */
 @Component
 public class MicoDataValidator {
 
     /**
-     * Validates the name and the description of a {@link MicoApplication}
-     *
-     * @param application the {@link MicoApplication}
+     * Validates the name and the description of a {@link MicoApplicationDTO}
+     *  @param applicationDto the {@link MicoApplicationDTO}
      * @param errors      the {@link Errors}
      */
-    public void validateMicoApplication(MicoApplication application, Errors errors) {
-        if (StringUtils.isEmpty(application.getName())) {
+    public void validateMicoApplication(MicoApplicationDTO applicationDto, Errors errors) {
+        if (StringUtils.isEmpty(applicationDto.getName())) {
             errors.rejectValue("name", "micoApplication.name.empty", "must not be empty");
         }
-        if (application.getDescription() == null) {
+        if (applicationDto.getDescription() == null) {
             errors.rejectValue("description", "micoApplication.description.isNull", "must not be null");
         }
     }
 
     /**
-     * Validates a {@link MicoApplication} and also if the required properties short name and version match the provided ones.
+     * Validates a {@link MicoApplicationDTO} and also if the required properties short name and version match the provided ones.
      *
-     * @param shortName   the short name of a {@link MicoApplication}
-     * @param version     the version of a {@link MicoApplication}
-     * @param application the {@link MicoApplication}
+     * @param shortName   the short name of a {@link MicoApplicationDTO}
+     * @param version     the version of a {@link MicoApplicationDTO}
+     * @param applicationDto the {@link MicoApplicationDTO}
      * @param errors      the {@link Errors}
      */
-    public void validateMicoApplication(String shortName, String version, MicoApplication application, Errors errors) {
-        if (!application.getShortName().equals(shortName)) {
+    public void validateMicoApplication(String shortName, String version, MicoApplicationDTO applicationDto, Errors errors) {
+        if (!applicationDto.getShortName().equals(shortName)) {
             errors.rejectValue("shortName", "micoApplication.shortName.inconsistent",
                 "does not match request parameter");
         }
-        if (!application.getVersion().equals(version)) {
+        if (!applicationDto.getVersion().equals(version)) {
             errors.rejectValue("version", "micoApplication.version.inconsistent",
                 "does not match request parameter");
         }
-        this.validateMicoApplication(application, errors);
+        this.validateMicoApplication(applicationDto, errors);
     }
 
     /**
