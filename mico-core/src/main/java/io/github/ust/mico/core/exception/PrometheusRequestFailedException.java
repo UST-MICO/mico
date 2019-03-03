@@ -25,10 +25,11 @@ public class PrometheusRequestFailedException extends Exception{
 
     public static final long serialVersionUID = 381515548494367817L;
 
+    // TODO: Either remove those fields or actually use them
     private final HttpStatus httpStatus;
     private final String prometheusResponseStatus;
 
-    public PrometheusRequestFailedException(String message,HttpStatus httpStatus,String prometheusResponseStatus){
+    public PrometheusRequestFailedException(String message, HttpStatus httpStatus, String prometheusResponseStatus){
         super(message);
         this.httpStatus = httpStatus;
         this.prometheusResponseStatus = prometheusResponseStatus;
