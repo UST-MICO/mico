@@ -231,6 +231,7 @@ public class MicoStatusServiceTest {
     }
 
     @Test
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public void getApplicationStatus() {
         MicoApplicationStatusDTO micoApplicationStatus = new MicoApplicationStatusDTO();
         micoApplicationStatus
@@ -408,6 +409,8 @@ public class MicoStatusServiceTest {
         assertEquals(micoApplicationStatus, micoStatusService.getApplicationStatus(micoApplication));
     }
 
+
+    @SuppressWarnings("rawtypes")
     private ResponseEntity getPrometheusResponseEntity(int value) {
         PrometheusResponse prometheusResponse = new PrometheusResponse();
         prometheusResponse.setStatus(PrometheusResponse.PROMETHEUS_SUCCESSFUL_RESPONSE);
@@ -419,6 +422,7 @@ public class MicoStatusServiceTest {
     }
 
     @Test
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public void getServiceStatus() {
         MicoServiceStatusDTO micoServiceStatus = new MicoServiceStatusDTO();
         micoServiceStatus
