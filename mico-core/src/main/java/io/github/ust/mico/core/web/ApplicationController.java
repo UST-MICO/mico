@@ -360,7 +360,7 @@ public class ApplicationController {
     
     private Resource<MicoApplicationWithServicesDTO> getApplicationWithServicesDTOResourceWithDeploymentStatus(MicoApplication application) {
         MicoApplicationWithServicesDTO dto = MicoApplicationWithServicesDTO.valueOf(application);
-        dto.getApplication().setDeploymentStatus(getApplicationDeploymentStatus(application));
+        dto.setDeploymentStatus(getApplicationDeploymentStatus(application));
         return new Resource<MicoApplicationWithServicesDTO>(dto, getApplicationLinks(application));
     }
     

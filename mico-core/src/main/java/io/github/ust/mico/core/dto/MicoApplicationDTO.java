@@ -115,7 +115,7 @@ public class MicoApplicationDTO {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Contact"),
-            @ExtensionProperty(name = "x-order", value = "110"),
+            @ExtensionProperty(name = "x-order", value = "210"),
             @ExtensionProperty(name = "description", value = "Human readable contact information for support purposes.")
         }
     )})
@@ -129,7 +129,7 @@ public class MicoApplicationDTO {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Owner"),
-            @ExtensionProperty(name = "x-order", value = "100"),
+            @ExtensionProperty(name = "x-order", value = "200"),
             @ExtensionProperty(name = "description", value = "Human readable information for the application owner, " +
                 "who is responsible for this application.")
         }
@@ -143,7 +143,7 @@ public class MicoApplicationDTO {
             name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
             properties = {
                 @ExtensionProperty(name = "title", value = "Deployment Status"),
-                @ExtensionProperty(name = "x-order", value = "120"),
+                @ExtensionProperty(name = "x-order", value = "220"),
                 @ExtensionProperty(name = "description", value = "Holds the current deployment status of this application.")
             }
         )})
