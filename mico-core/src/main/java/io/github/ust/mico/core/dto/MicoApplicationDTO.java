@@ -19,12 +19,8 @@
 
 package io.github.ust.mico.core.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
-import com.fasterxml.jackson.annotation.JsonSetter;
-import com.fasterxml.jackson.annotation.Nulls;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.util.Patterns;
@@ -155,53 +151,56 @@ public class MicoApplicationDTO {
         }
     )})
     private String owner;
-    
+
     /**
      * Indicates whether the {@link MicoApplication} is currently deployed.
+     * Default is {@link MicoApplicationDeploymentStatus#UNKNOWN}.
+     * Is read only and will be updated by the backend at every request.
      */
     @ApiModelProperty(extensions = {@Extension(
-            name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-            properties = {
-                @ExtensionProperty(name = "title", value = "Deployment Status"),
-                @ExtensionProperty(name = "x-order", value = "220"),
-                @ExtensionProperty(name = "description", value = "Holds the current deployment status of this application.")
-            }
-        )})
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Deployment Status"),
+            @ExtensionProperty(name = "readOnly", value = "true"),
+            @ExtensionProperty(name = "x-order", value = "220"),
+            @ExtensionProperty(name = "description", value = "Holds the current deployment status of this application.")
+        }
+    )})
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private MicoApplicationDeploymentStatus deploymentStatus = MicoApplicationDeploymentStatus.UNKNOWN;
-    
-    
+
     /**
      * Creates a {@code MicoApplicationDTO} based on a
      * {@link MicoApplication}. Note that the deployment status
      * needs to be set explicitly since it cannot be inferred
      * from the given {@link MicoApplication} itself.
-     * 
+     *
      * @param application the {@link MicoApplication}.
      * @return a {@link MicoApplicationDTO} with all the values
-     *         of the given {@code MicoApplication}.
+     * of the given {@code MicoApplication}.
      */
     public static MicoApplicationDTO valueOf(MicoApplication application) {
         return new MicoApplicationDTO()
-                .setShortName(application.getShortName())
-                .setName(application.getName())
-                .setVersion(application.getVersion())
-                .setDescription(application.getDescription())
-                .setContact(application.getContact())
-                .setOwner(application.getOwner());
+            .setShortName(application.getShortName())
+            .setName(application.getName())
+            .setVersion(application.getVersion())
+            .setDescription(application.getDescription())
+            .setContact(application.getContact())
+            .setOwner(application.getOwner());
     }
-    
-    
+
+
     public enum MicoApplicationDeploymentStatus {
-        
+
         DEPLOYED,
         NOT_DEPLOYED,
         UNKNOWN;
-        
+
         @Override
         public String toString() {
             return super.toString().toLowerCase();
         }
-        
+
     }
 
 }
