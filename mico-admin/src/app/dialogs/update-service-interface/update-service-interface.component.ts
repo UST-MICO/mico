@@ -17,35 +17,38 @@
  * under the License.
  */
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Inject } from '@angular/core';
+import { MAT_DIALOG_DATA } from '@angular/material';
 
 @Component({
-    selector: 'mico-create-service-interface',
-    templateUrl: './create-service-interface.component.html',
-    styleUrls: ['./create-service-interface.component.css']
+    selector: 'mico-update-service-interface',
+    templateUrl: './update-service-interface.component.html',
+    styleUrls: ['./update-service-interface.component.css']
 })
-export class CreateServiceInterfaceComponent implements OnInit {
+export class UpdateServiceInterfaceComponent {
 
-    constructor() { }
+
+    constructor(@Inject(MAT_DIALOG_DATA) public data: any) {
+        this.serviceInterfaceName = data.serviceInterface.serviceInterfaceName;
+        this.interfaceData = JSON.parse(JSON.stringify(data.serviceInterface));
+    }
+
+    serviceInterfaceName;
 
     // form elements are stored in here
-    serviceData;
-    portData: any[];
+    interfaceData;
 
-    ngOnInit() {
-    }
+    valid: boolean = false;
 
     /**
      * return method of the dialog
      */
     confirmButton() {
-        if (this.serviceData == null || this.portData == null || this.portData.length <= 0) {
+        if (this.valid) {
             return null;
         }
-
-        const tempReturn = this.serviceData;
-        tempReturn.ports = this.portData;
-        return tempReturn;
+        this.interfaceData.serviceInterfaceName = this.serviceInterfaceName;
+        return this.interfaceData;
     }
 
 }

@@ -24,6 +24,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.*;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
+import io.github.ust.mico.core.dto.MicoServiceDeploymentInfoDTO;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -56,6 +57,7 @@ public class MicoServiceDeploymentInfo {
      */
     @Id
     @GeneratedValue
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
 
@@ -187,6 +189,24 @@ public class MicoServiceDeploymentInfo {
         }
     )})
     private RestartPolicy restartPolicy = RestartPolicy.DEFAULT;
+    
+    
+    /**
+     * Applies the values of all properties of a
+     * {@link MicoServiceDeploymentInfoDTO} to this
+     * {@code MicoServiceDeploymentInfo}.
+     * 
+     * @param serviceDeploymentInfoDTO the {@link MicoServiceDeploymentInfoDTO}.
+     * @return this {@link MicoServiceDeploymentInfo} with the values
+     *         of the properties of the given {@link MicoServiceDeploymentInfoDTO}.
+     */
+    public MicoServiceDeploymentInfo applyValuesFrom(MicoServiceDeploymentInfoDTO serviceDeploymentInfoDTO) {
+        return setReplicas(serviceDeploymentInfoDTO.getReplicas())
+                .setMinReadySecondsBeforeMarkedAvailable(serviceDeploymentInfoDTO.getMinReadySecondsBeforeMarkedAvailable())
+                .setLabels(serviceDeploymentInfoDTO.getLabels())
+                .setImagePullPolicy(serviceDeploymentInfoDTO.getImagePullPolicy())
+                .setRestartPolicy(serviceDeploymentInfoDTO.getRestartPolicy());
+    }
 
 
     /**

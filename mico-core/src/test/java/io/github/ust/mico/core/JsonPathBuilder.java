@@ -36,6 +36,7 @@ public class JsonPathBuilder {
     public static final String FIRST_ELEMENT = "[0]";
     public static final String VERSION = "version";
     public static final String SHORT_NAME = "shortName";
+    public static final String ROOT_EMBEDDED = buildPath(ROOT,EMBEDDED);
 
     public static String buildPath(String ...path) {
         StringBuilder resultPath = new StringBuilder(500);

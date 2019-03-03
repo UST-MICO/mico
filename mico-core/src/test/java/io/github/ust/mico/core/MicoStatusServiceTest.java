@@ -111,9 +111,14 @@ public class MicoStatusServiceTest {
 
         podList = new PodListBuilder()
             .addNewItem()
-            .withNewMetadata().withName(podName1).endMetadata()
-            .withNewSpec().withNodeName(nodeName).endSpec()
-            .withNewStatus().withStartTime(startTime).addNewContainerStatus().withNewRestartCount(restarts).endContainerStatus().withPhase(podPhase).withHostIP(hostIp).endStatus()
+                .withNewMetadata().withName(podName1).endMetadata()
+                .withNewSpec().withNodeName(nodeName).endSpec()
+                .withNewStatus()
+                .withStartTime(startTime)
+                .addNewContainerStatus().withRestartCount(restarts).endContainerStatus()
+                .withPhase(podPhase)
+                .withHostIP(hostIp)
+                .endStatus()
             .endItem()
             .build();
     }

@@ -19,10 +19,11 @@
 
 import { environment } from '../../environments/environment';
 import { Injectable } from '@angular/core';
-import { Http, Response, Headers, RequestOptions, ResponseContentType } from '@angular/http';
-import { Observable } from 'rxjs';
-import { map, } from 'rxjs/operators';
+import { Http, Response, Headers, RequestOptions } from '@angular/http';
+import { Observable, throwError } from 'rxjs';
+import { map, catchError, } from 'rxjs/operators';
 import { ApiObject, ApiLinksObject, LinkObject, isApiObject, isApiLinksObject, isLinkObject } from './apiobject';
+import { MatSnackBar } from '@angular/material';
 
 
 
@@ -31,7 +32,7 @@ import { ApiObject, ApiLinksObject, LinkObject, isApiObject, isApiLinksObject, i
 })
 export class ApiBaseFunctionService {
 
-    constructor(private http: Http) { }
+    constructor(private http: Http, private snackBar: MatSnackBar) { }
 
     private extractUrl(url: string | LinkObject | ApiLinksObject | ApiObject): string {
         if (typeof url === 'string' || url instanceof String) {
@@ -83,6 +84,34 @@ export class ApiBaseFunctionService {
     }
 
 
+    /**
+     * Takes a caught error and displays it in a snack bar.
+     *
+     * @param error the error object which was caught
+     * @param httpVerb the http verb from the method, where the error occured (e.g. GET)
+     */
+    private showError = (error, httpVerb) => {
+        if (error.hasOwnProperty('_body')) {
+            try {
+                // handling for defined error messagges
+                const message = JSON.parse(error._body).message;
+                const path = JSON.parse(error._body).path;
+
+                this.snackBar.open('An error occured in ' + httpVerb + ' ' + path + ': ' + message, 'Ok', {
+                    duration: 0,
+                });
+            } catch (e) {
+                // generic handling for errors
+                console.error(e);
+                this.snackBar.open('An error occured in a ' + httpVerb + ' Method. The error could not be handled correctly. ' +
+                    'See the console for details.', 'Ok', {
+                        duration: 0,
+                    });
+            }
+        }
+        return throwError(error);
+    }
+
     get<T>(url: string | LinkObject | ApiLinksObject | ApiObject, token?: string, params?): Observable<T> {
         url = this.extractUrl(url);
 
@@ -91,9 +120,11 @@ export class ApiBaseFunctionService {
             options.params = params;
         }
 
-        const request = this.http.get(url, options).pipe(map((res: Response) => {
-            return res.json();
-        }));
+        const request = this.http.get(url, options).pipe(
+            catchError((error) => this.showError(error, 'GET')),
+            map((res: Response) => {
+                return res.json();
+            }));
 
         return request;
     }
@@ -108,16 +139,18 @@ export class ApiBaseFunctionService {
             }
         }
         return this.http.post(url, tempData, this.headers(token))
-            .pipe(map((res: Response) => {
-                if (res.hasOwnProperty('_body')) {
-                    if ((res as any)._body == null || (res as any)._body.length < 1) {
-                        // handle empty results
-                        return undefined;
+            .pipe(
+                catchError((error) => this.showError(error, 'POST')),
+                map((res: Response) => {
+                    if (res.hasOwnProperty('_body')) {
+                        if ((res as any)._body == null || (res as any)._body.length < 1) {
+                            // handle empty results
+                            return undefined;
+                        }
                     }
-                }
-                return res.json();
+                    return res.json();
 
-            }));
+                }));
     }
 
     put<T>(url: string | LinkObject | ApiLinksObject | ApiObject, data, token?: string, isJson = true): Observable<T> {
@@ -127,24 +160,32 @@ export class ApiBaseFunctionService {
             tempData = JSON.stringify(tempData);
         }
         return this.http.put(url, tempData, this.headers(token))
-            .pipe(map((res: Response) => {
-                return res.json();
-            }));
+            .pipe(
+                catchError((error) => this.showError(error, 'PUT')),
+                map((res: Response) => {
+                    return res.json();
+                }));
     }
 
     delete<T>(url: string | LinkObject | ApiLinksObject | ApiObject, token?: string): Observable<T> {
         url = this.extractUrl(url);
 
         return this.http.delete(url, this.headers(token))
-            .pipe(map((res: Response) => {
+            .pipe(
+                catchError((error) => this.showError(error, 'DELETE')),
+                map((res: Response) => {
 
-                if (res.hasOwnProperty('_body')) {
-                    if ((res as any)._body == null || (res as any)._body.length < 1) {
-                        // handle empty results
-                        return undefined;
+                    this.snackBar.open('Element deleted successfully.', 'Ok', {
+                        duration: 5,
+                    });
+
+                    if (res.hasOwnProperty('_body')) {
+                        if ((res as any)._body == null || (res as any)._body.length < 1) {
+                            // handle empty results
+                            return undefined;
+                        }
                     }
-                }
-                return res.json();
-            }));
+                    return res.json();
+                }));
     }
 }

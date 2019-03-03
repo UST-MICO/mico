@@ -17,20 +17,16 @@
  * under the License.
  */
 
-import { Component, Input, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, OnDestroy, OnChanges } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ApiService } from '../api/api.service';
-import { ApiObject } from '../api/apiobject';
 import { ServicePickerComponent } from '../dialogs/service-picker/service-picker.component';
 import { MatDialog } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 import { CreateServiceInterfaceComponent } from '../dialogs/create-service-interface/create-service-interface.component';
 import { Router } from '@angular/router';
+import { UpdateServiceInterfaceComponent } from '../dialogs/update-service-interface/update-service-interface.component';
 
-export interface Dependency {
-    id;
-    version;
-}
 
 @Component({
     selector: 'mico-service-detail-overview',
@@ -48,6 +44,7 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
     private subServiceInterfaces: Subscription;
     private subVersion: Subscription;
     private subDependeesCall: Subscription;
+    private subDependersCall: Subscription;
 
     constructor(
         private apiService: ApiService,
@@ -56,10 +53,10 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
     ) { }
 
     // dependees: services the current service depends on
-    dependees: any = [];
+    dependees: any[] = [];
     // dependers: services depending on the current service
-    dependers: any = [];
-    serviceInterfaces: any = [];
+    dependers: any[] = [];
+    serviceInterfaces: any[] = [];
 
     // will be used by the update form
     serviceData;
@@ -93,6 +90,7 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
         this.unsubscribe(this.subServiceInterfaces);
         this.unsubscribe(this.subVersion);
         this.unsubscribe(this.subDependeesCall);
+        this.unsubscribe(this.subDependersCall);
     }
 
     unsubscribe(subscription: Subscription) {
@@ -121,11 +119,10 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
 
                 this.subDependeesCall = this.apiService.getServiceDependees(this.shortName, this.version)
                     .subscribe(val => {
-                        this.dependees = val;
+                        this.dependees = JSON.parse(JSON.stringify(val));
                     });
 
-                // TODO insert as soon as get/service/dependers is in master
-                /*
+
                 if (this.subDependersCall != null) {
                     this.subDependersCall.unsubscribe();
                 }
@@ -134,7 +131,7 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
                     .subscribe(val => {
                         this.dependers = val;
                     });
-*/
+
 
 
                 this.subServiceInterfaces = this.apiService.getServiceInterfaces(this.shortName, this.version)
@@ -156,19 +153,6 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
         this.edit = false;
     }
 
-    getServiceMetaData(service) {
-        // TODO change method calls to hold a proper service
-        let service_object;
-        this.apiService.getService(service.id, service.version).subscribe(val => service_object = val);
-        const tempObject = {
-            'id': service.id,
-            'version': service.version,
-            'name': service_object.name,
-            'shortName': service_object.shortName,
-            'status': service_object.status,
-        };
-        return tempObject;
-    }
 
     /**
      * action triggered in ui to create a service interface
@@ -181,6 +165,26 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
             }
             this.apiService.postServiceInterface(this.shortName, this.version, result).subscribe();
         });
+    }
+
+    /**
+     * Action triggered in ui to edit an existing interface.
+     *
+     * @param serviceInterface the interface to update
+     */
+    editInterface(serviceInterface) {
+        const dialogRef = this.dialog.open(UpdateServiceInterfaceComponent, {
+            data: {
+                serviceInterface: serviceInterface,
+            }
+        });
+        this.subProvide = dialogRef.afterClosed().subscribe(result => {
+            if (result == null || result === '') {
+                return;
+            }
+            this.apiService.putServiceInterface(this.shortName, this.version, serviceInterface.serviceInterfaceName, result).subscribe();
+        });
+
     }
 
     /**
@@ -210,14 +214,15 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
         const dialogRef = this.dialog.open(ServicePickerComponent, {
             data: {
                 filter: '',
-                choice: 'multi',
+                choice: 'single',
                 existingDependencies: this.dependees,
                 serviceId: this.shortName,
             }
         });
         this.subDependeesDialog = dialogRef.afterClosed().subscribe(result => {
-            console.log(result);
-            // TODO use result in a useful way
+            if (result) {
+                this.apiService.postServiceDependee(this.shortName, this.version, result[0]).subscribe();
+            }
         });
     }
 
@@ -226,18 +231,19 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
      * action triggered in ui
      * Opens a dialog to remove the dependency from the current service to the selected service.
      */
-    deleteDependency(id) {
+    deleteDependency(dependee) {
+
+
         const dialogRef = this.dialog.open(YesNoDialogComponent, {
             data: {
-                object: this.getServiceMetaData(id).shortName,
+                object: dependee.shortName,
                 question: 'deleteDependency'
             }
         });
 
         this.subDeleteDependency = dialogRef.afterClosed().subscribe(result => {
             if (result) {
-                console.log('delete ' + id);
-                // TODO really delete the dependency
+                this.apiService.deleteServiceDependee(this.shortName, this.version, dependee.shortName, dependee.version).subscribe();
             }
         });
     }

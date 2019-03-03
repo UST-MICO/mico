@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 
 @Component({
@@ -25,7 +25,11 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
     templateUrl: './yes-no-dialog.component.html',
     styleUrls: ['./yes-no-dialog.component.css']
 })
-export class YesNoDialogComponent implements OnInit {
+/**
+ * Wrapper for simple dialogs which can be answerded with yes/no (confirm/cancel).
+ * Data can be injected via an data object and the question is specified by an questionType key.
+ */
+export class YesNoDialogComponent {
 
     object: any;
     questionType: String;
@@ -33,9 +37,6 @@ export class YesNoDialogComponent implements OnInit {
     constructor(public dialogRef: MatDialogRef<YesNoDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: any) {
         this.object = data.object;
         this.questionType = data.question;
-    }
-
-    ngOnInit() {
     }
 
     confirm() {

@@ -113,7 +113,7 @@ public class MicoKubernetesClient {
             .addToLabels(LABEL_RUN_KEY, deploymentUid)
             .endMetadata()
             .withNewSpec()
-            .withNewReplicas(deploymentInfo.getReplicas())
+            .withReplicas(deploymentInfo.getReplicas())
             .withNewSelector()
             .addToMatchLabels(LABEL_RUN_KEY, deploymentUid)
             .endSelector()
@@ -371,7 +371,7 @@ public class MicoKubernetesClient {
 
         for (MicoServicePort servicePort : serviceInterface.getPorts()) {
             ports.add(new ServicePortBuilder()
-                .withNewPort(servicePort.getPort())
+                .withPort(servicePort.getPort())
                 .withNewTargetPort(servicePort.getTargetPort())
                 .withProtocol(servicePort.getType().toString())
                 .build());

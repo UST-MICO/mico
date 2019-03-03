@@ -1,4 +1,5 @@
 <mat-dialog-content>
+    <!-- QuestionType Key mapping to the shown question -->
     <div [ngSwitch]="questionType" class="">
         <div *ngSwitchCase="'deleteDependency'">
             Do you really want to delete the dependency to <b>{{object}}</b>?
@@ -8,6 +9,9 @@
         </div>
         <div *ngSwitchCase="'deleteService'">
             Do you really want to delete the service: <b>{{object.shortName}} {{object.version}}</b>?
+        </div>
+        <div *ngSwitchCase="'deleteAllServiceVersions'">
+            Do you really want to delete all versions of <b>{{object.shortName}}</b>?
         </div>
         <!-- add further questions -->
 

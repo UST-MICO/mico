@@ -51,7 +51,7 @@
     </div>
 
     <!-- Controling Grid-->
-    <div class="w-25 ma2 flex-column">
+    <div class="w-30 ma2 flex-column">
 
         <div class="w-100" style="display: flex; justify-content: flex-end">
             <mat-button-toggle class="mt1 mb2 mr2 inline-flex items-center" (click)="deleteService()">
@@ -87,14 +87,27 @@
                         <!-- Service Interfaces -->
                         <div *ngFor="let interface of serviceInterfaces">
                             <div class="flex">
-                                <div class="flex-grow-1">
+                                <div class="flex-grow-1 pointer" (click)="editInterface(interface)">
                                     <mat-list-item.large style="font-size:small">
                                         <div class="pv2 pl4">
-                                            {{interface.serviceInterfaceName}}<br>
-                                            <div *ngFor="let port of interface.ports">
-                                                <i>#{{port.number}}</i><br>
-                                                {{port.targetPort}}<br>
-                                                {{port.type}}
+                                            <div class="mb1 flex flex-wrap">
+                                                <span class="mr2"><b>Name:</b> {{interface.serviceInterfaceName}}</span>
+                                                <span class="mr2"><b>DNS:</b> {{interface.publicDns}}</span>
+                                                <span class="mr2"><b>Protocol:</b> {{interface.protocol}}</span>
+                                                <span class="mr2"><b>Transport Protocol:</b> {{interface.transportProtocol}}</span>
+                                            </div>
+                                            <p class="mt0 mb1" [hidden]="interface.description == null || interface.description == ''">
+                                                {{interface.description}}
+                                            </p>
+                                            <div class="flex">
+                                                <div><b>Ports:</b></div>
+                                                <div class="ml2">
+                                                    <p class="mt0 mb1" *ngFor="let port of interface.ports">
+                                                        <b>{{port.type}}</b>
+                                                        <span class="ml1">{{port.targetPort}}</span>
+                                                        <span class="ml1">(internal: {{port.port}})</span>
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
                                     </mat-list-item.large>
@@ -123,19 +136,20 @@
                             </div>
                         </div>
                         <mat-divider></mat-divider>
-                        <!-- list internal dependencies-->
-                        <div *ngFor="let dependencie of dependees">
+                        <!-- list of dependees-->
+                        <div *ngFor="let dependee of dependees">
                             <div class="flex">
                                 <div class="flex-grow-1">
                                     <mat-list-item
-                                        [routerLink]="['/service-detail/', dependencie.shortName, dependencie.version]">
+                                        [routerLink]="['/service-detail/', dependee.shortName, dependee.version]">
                                         <span mat-line
-                                            [routerLink]="['/service-detail/', dependencie.shortName, dependencie.version]">{{dependencie.name}}</span>
+                                            [routerLink]="['/service-detail/', dependee.shortName, dependee.version]">{{dependee?.name}}</span>
                                     </mat-list-item>
                                 </div>
                                 <div class="w-20">
                                     <mat-list-item>
-                                        <mat-icon (click)="deleteDependency(dependencie.shortName)">delete</mat-icon>
+                                        <mat-icon (click)="deleteDependency(dependee)">
+                                            delete</mat-icon>
                                     </mat-list-item>
                                 </div>
                             </div>
@@ -151,14 +165,15 @@
                             </div>
                         </div>
                         <mat-divider></mat-divider>
-                        <!-- list external dependencies-->
-                        <div *ngFor="let dependencie of dependers">
+                        <!-- list of dependers-->
+                        <div *ngFor="let depender of dependers">
                             <div class="flex">
                                 <div class="flex-grow-1">
                                     <mat-list-item
-                                        [routerLink]="['/service-detail/', dependencie.shortName, dependencie.version]">
+                                        [routerLink]="['/service-detail/', depender.shortName, depender.version]">
                                         <span mat-line
-                                            [routerLink]="['/service-detail/', dependencie.shortName, dependencie.version]">{{dependencie.name}}</span>
+                                            [routerLink]="['/service-detail/', depender.shortName, depender.version]">
+                                            {{depender.name}}</span>
                                     </mat-list-item>
                                 </div>
                             </div>
@@ -168,7 +183,5 @@
                 </mat-card-content>
             </mat-card>
         </div>
-
     </div>
-
 </div>

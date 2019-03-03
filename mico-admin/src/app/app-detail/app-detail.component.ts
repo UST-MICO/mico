@@ -24,7 +24,6 @@ import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
 import { Subscription } from 'rxjs';
 import { versionComparator } from '../api/semantic-version';
-import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 import { CreateNextVersionComponent } from '../dialogs/create-next-version/create-next-version.component';
 import { MatDialog } from '@angular/material';
 
@@ -62,6 +61,9 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     applicationData;
     edit: Boolean = false;
 
+    /**
+     * checks if the selected version is the latest application version
+     */
     isLatestVersion = () => {
         if (this.allVersions != null) {
             if (this.selectedVersion === this.getLatestVersion()) {
@@ -77,12 +79,15 @@ export class AppDetailComponent implements OnInit, OnDestroy {
             this.shortName = params['shortName'];
             const givenVersion = params['version'];
 
+            // get all application versions
             this.subApplicationVersions = this.apiService.getApplicationVersions(this.shortName)
                 .subscribe(versions => {
 
+                    // sort by version
                     this.allVersions = JSON.parse(JSON.stringify(versions)).sort((n1, n2) => versionComparator(n1.version, n2.version));
                     const latestVersion = this.getLatestVersion();
 
+                    // call the selected version, latest if no version is specified
                     if (givenVersion == null) {
                         this.subscribeApplication(latestVersion);
                     } else {
@@ -106,6 +111,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
     /**
      * subscribe to the given shortName/version and subscribe to its interfaces
+     *
      * @param shortName shortName of the application to be displayed
      * @param version version of the application to be displayed
      */
@@ -117,15 +123,16 @@ export class AppDetailComponent implements OnInit, OnDestroy {
             this.subApplication.unsubscribe();
         }
 
+        // get the application
         this.subApplication = this.apiService.getApplication(this.shortName, version).subscribe(val => {
             this.application = val;
 
-            // public ip
-
+            // get the public ips
             this.application.services.forEach(service => {
 
                 if (service.serviceInterfaces != null) {
 
+                    // assumption: one public ip per interface
                     service.serviceInterfaces.forEach(micoInterface => {
                         this.subPublicIps.push(this.apiService
                             .getServiceInterfacePublicIp(service.shortName, service.version, micoInterface.serviceInterfaceName)
@@ -142,6 +149,9 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         });
     }
 
+    /**
+     * unsubscribe from all subscriptions
+     */
     ngOnDestroy() {
         this.unsubscribe(this.subRouteParams);
         this.unsubscribe(this.subApplicationVersions);
@@ -154,12 +164,19 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         this.unsubscribe(this.subCreateNextVersion);
     }
 
+    /**
+     * abstract unsubscribe routine wiht null check
+     */
     unsubscribe(subscription: Subscription) {
         if (subscription != null) {
             subscription.unsubscribe();
         }
     }
 
+    /**
+     * calls the deploy endpoint
+     * uses: POST application/{shortName}/{version}/deploy
+     */
     deployApplication() {
         this.subDeploy = this.apiService.postApplicationDeployCommand(this.application.shortName, this.application.version)
             .subscribe(val => {
@@ -189,20 +206,25 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         } else {
             this.router.navigate(['app-detail', this.application.shortName]);
         }
-
     }
 
+    /**
+     * stores changes done via the mico-forms in the ui
+     * toggles back to display mode
+     */
     saveApplicationChanges() {
-        console.log(this.applicationData);
         this.apiService.putApplication(this.shortName, this.selectedVersion, this.applicationData)
-            .subscribe(val => {
-                console.log(val);
-            });
+            .subscribe();
         this.edit = false;
     }
 
+    /**
+     * opens a dialog to choose the version part to be increased.
+     * Triggers the creation of the next version afterwards.
+     */
     promoteNextVersion() {
 
+        // open dialog
         const dialogRef = this.dialog.open(CreateNextVersionComponent, {
             data: {
                 version: this.selectedVersion,
@@ -213,10 +235,12 @@ export class AppDetailComponent implements OnInit, OnDestroy {
             this.unsubscribe(this.subCreateNextVersion);
         }
 
+        // handle dialog result
         this.subCreateNextVersion = dialogRef.afterClosed().subscribe(nextVersion => {
 
             if (nextVersion) {
 
+                // deep copy of the application (will be done in the backend soon)
                 const nextApplication = JSON.parse(JSON.stringify(this.application));
                 nextApplication.version = nextVersion;
                 nextApplication.id = null;
@@ -229,14 +253,19 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         });
     }
 
+    /**
+     * removes the current application version
+     */
     deleteCurrentVersion() {
-        this.apiService.deleteApplication(this.application.shortName, this.selectedVersion).subscribe(val => {
+        this.apiService.deleteApplication(this.application.shortName, this.selectedVersion)
+            .subscribe(val => {
 
-            if (this.allVersions.length > 0) {
-                this.updateVersion(null);
-            } else {
-                this.router.navigate(['../app-list']);
-            }
-        });
+                // stay on the application page if there exists another version
+                if (this.allVersions.length > 0) {
+                    this.updateVersion(null);
+                } else {
+                    this.router.navigate(['../app-list']);
+                }
+            });
     }
 }

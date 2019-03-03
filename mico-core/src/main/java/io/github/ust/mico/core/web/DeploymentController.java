@@ -110,10 +110,9 @@ public class DeploymentController {
                         micoService.getShortName(), micoService.getVersion(), dockerImageUri);
 
                     micoService.setDockerImageUri(dockerImageUri);
-
-                    serviceRepository.save(micoService);
+                    MicoService savedMicoService = serviceRepository.save(micoService);
                     try {
-                        createKubernetesResources(micoApplication, micoService);
+                        createKubernetesResources(micoApplication, savedMicoService);
                     } catch (KubernetesResourceException kre) {
                         log.error(kre.getMessage(), kre);
                         exceptionHandler(kre);

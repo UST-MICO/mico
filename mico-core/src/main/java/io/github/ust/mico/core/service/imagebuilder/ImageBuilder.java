@@ -202,6 +202,7 @@ public class ImageBuilder {
                     .arg("--dockerfile=" + dockerfile)
                     .arg("--destination=" + destination)
                     .build())
+                .timeout(buildBotConfig.getBuildTimeout() + "s")
                 .build())
             .build();
 
