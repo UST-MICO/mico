@@ -214,7 +214,7 @@ public class MicoKubernetesClient {
         boolean result = false;
 
         for (MicoService micoService : serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion())) {
-            if (isServiceDeployed(micoService)) {
+            if (isMicoServiceDeployed(micoService)) {
                 result = true;
                 break;
             }
@@ -230,10 +230,10 @@ public class MicoKubernetesClient {
      * Checks if a MICO service is already deployed.
      *
      * @param micoService the {@link MicoService}
-     * @return if true the servicegit s is deployed.
+     * @return if true the mico services is deployed.
      * @throws KubernetesResourceException if there is an error while retrieving the Kubernetes objects
      */
-    public boolean isServiceDeployed(MicoService micoService) throws KubernetesResourceException {
+    public boolean isMicoServiceDeployed(MicoService micoService) throws KubernetesResourceException {
         boolean result = false;
         Optional<Deployment> deployment = getDeploymentOfMicoService(micoService);
         if (deployment.isPresent()) {

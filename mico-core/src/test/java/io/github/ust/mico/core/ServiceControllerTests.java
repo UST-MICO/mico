@@ -798,7 +798,7 @@ public class ServiceControllerTests {
             .setDescription(DESCRIPTION);
 
         given(serviceRepository.findByShortName(SHORT_NAME)).willReturn(Collections.singletonList(service));
-        given(micoKubernetesClient.isServiceDeployed(any())).willReturn(true);
+        given(micoKubernetesClient.isMicoServiceDeployed(any())).willReturn(true);
 
         mvc.perform(delete(SERVICES_PATH + "/" + SHORT_NAME)
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
@@ -815,7 +815,7 @@ public class ServiceControllerTests {
             .setDescription(DESCRIPTION);
 
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME,VERSION)).willReturn(Optional.of(service));
-        given(micoKubernetesClient.isServiceDeployed(any())).willReturn(true);
+        given(micoKubernetesClient.isMicoServiceDeployed(any())).willReturn(true);
 
         mvc.perform(delete(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION)
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))

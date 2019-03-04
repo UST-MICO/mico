@@ -138,7 +138,7 @@ public class ServiceController {
      * @throws KubernetesResourceException if the service is deployed. It uses the http status CONFLICT
      */
     private void throwConflictIfServiceIsDeployed(MicoService service) throws KubernetesResourceException {
-        if (micoKubernetesClient.isServiceDeployed(service)) {
+        if (micoKubernetesClient.isMicoServiceDeployed(service)) {
             log.info("Micoservice '{}' in version '{}' is deployed. It is not possible to delete a deployed service.", service.getShortName(), service.getVersion());
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Service is currently deployed!");
         }
