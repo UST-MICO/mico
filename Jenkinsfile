@@ -14,11 +14,17 @@ pipeline {
     agent any
     stages {
         stage('Checkout') {
+            when {
+                branch 'master'
+            }
             steps {
                 git url: 'https://github.com/UST-MICO/mico.git'
             }
         }
         stage('Docker build') {
+            when {
+                branch 'master'
+            }
             parallel {
                 stage('mico-core') {
                     steps {
@@ -37,6 +43,9 @@ pipeline {
             }
         }
         stage('Unit tests') {
+            when {
+                branch 'master'
+            }
             steps {
                 script {
                     docker.build(micoCoreRegistry + ":unit-tests", "-f Dockerfile.mico-core.unittests .")
@@ -45,6 +54,9 @@ pipeline {
             }
         }
         stage('Integration tests') {
+            when {
+                branch 'master'
+            }
             steps {
                 script {
                     docker.build(micoCoreRegistry + ":integration-tests", "-f Dockerfile.mico-core.integrationtests .")
@@ -53,6 +65,9 @@ pipeline {
             }
         }
         stage('Push images') {
+            when {
+                branch 'master'
+            }
             steps {
                 script{
                     docker.withRegistry('', 'dockerhub') {
@@ -65,6 +80,9 @@ pipeline {
             }
         }
         stage('Deploy on Kubernetes') {
+            when {
+                branch 'master'
+            }
             parallel {
                 stage('mico-core') {
                     steps{
@@ -81,6 +99,9 @@ pipeline {
             }
         }
         stage('Docker clean up') {
+            when {
+                branch 'master'
+            }
             steps {
                 // Delete all images that are older than 10 days
                 sh '''docker image prune -a --force --filter "until=240h"'''
