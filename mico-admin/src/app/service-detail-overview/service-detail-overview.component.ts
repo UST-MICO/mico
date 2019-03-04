@@ -36,10 +36,6 @@ import { UpdateServiceInterfaceComponent } from '../dialogs/update-service-inter
 export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
 
     private serviceSubscription: Subscription;
-    private subProvide: Subscription;
-    private subDependeesDialog: Subscription;
-    private subDependersDialog: Subscription;
-    private subDeleteDependency: Subscription;
     private subDeleteServiceInterface: Subscription;
     private subServiceInterfaces: Subscription;
     private subVersion: Subscription;
@@ -85,10 +81,6 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
      */
     handleSubscriptions() {
         this.unsubscribe(this.serviceSubscription);
-        this.unsubscribe(this.subProvide);
-        this.unsubscribe(this.subDependeesDialog);
-        this.unsubscribe(this.subDependersDialog);
-        this.unsubscribe(this.subDeleteDependency);
         this.unsubscribe(this.subDeleteServiceInterface);
         this.unsubscribe(this.subServiceInterfaces);
         this.unsubscribe(this.subVersion);
@@ -159,11 +151,12 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
      */
     addProvides() {
         const dialogRef = this.dialog.open(CreateServiceInterfaceComponent);
-        this.subProvide = dialogRef.afterClosed().subscribe(result => {
-            if (result === '') {
+        const subDialog = dialogRef.afterClosed().subscribe(result => {
+            if (!result) {
                 return;
             }
             this.apiService.postServiceInterface(this.shortName, this.version, result).subscribe();
+            subDialog.unsubscribe();
         });
     }
 
@@ -198,10 +191,12 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
             }
         });
 
-        this.subDeleteServiceInterface = dialogRef.afterClosed().subscribe(shouldDelete => {
-            if (shouldDelete) {
-                this.apiService.deleteServiceInterface(this.shortName, this.version, interfaceName).subscribe();
+        const subDialog = dialogRef.afterClosed().subscribe(result => {
+            if (!result) {
+                return;
             }
+            this.apiService.deleteServiceInterface(this.shortName, this.version, interfaceName).subscribe();
+            subDialog.unsubscribe();
         });
     }
 
@@ -222,10 +217,12 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
         });
 
         // handle result
-        this.subDependeesDialog = dialogRef.afterClosed().subscribe(result => {
-            if (result) {
-                this.apiService.postServiceDependee(this.shortName, this.version, result[0]).subscribe();
+        const subDialog = dialogRef.afterClosed().subscribe(result => {
+            if (!result) {
+                return;
             }
+            this.apiService.postServiceDependee(this.shortName, this.version, result[0]).subscribe();
+            subDialog.unsubscribe();
         });
     }
 
@@ -245,10 +242,12 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
         });
 
         // handle result
-        this.subDeleteDependency = dialogRef.afterClosed().subscribe(result => {
-            if (result) {
-                this.apiService.deleteServiceDependee(this.shortName, this.version, dependee.shortName, dependee.version).subscribe();
+        const subDialog = dialogRef.afterClosed().subscribe(result => {
+            if (!result) {
+                return;
             }
+            this.apiService.deleteServiceDependee(this.shortName, this.version, dependee.shortName, dependee.version).subscribe();
+            subDialog.unsubscribe();
         });
     }
 }
