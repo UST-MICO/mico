@@ -19,6 +19,9 @@
 
 package io.github.ust.mico.core.web;
 
+import io.github.ust.mico.core.dto.MicoServiceDependencyGraphDTO;
+import io.github.ust.mico.core.dto.MicoServiceDependencyGraphEdgeDTO;
+import io.github.ust.mico.core.dto.CrawlingInfoDTO;
 import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.MicoService;
@@ -336,20 +339,20 @@ public class ServiceController {
     }
 
     @PostMapping(PATH_GITHUB_ENDPOINT)
-    public ResponseEntity<Resource<MicoService>> importMicoServiceFromGitHub(@RequestBody CrawlingInformation crawlingInformation) {
-        String uri = crawlingInformation.getUri();
-        String version = crawlingInformation.getVersion();
-        log.debug("Start importing MicoService from URL '{}'", uri);
+    public ResponseEntity<Resource<MicoService>> importMicoServiceFromGitHub(@Valid @RequestBody CrawlingInfoDTO crawlingInfo) {
+        String url = crawlingInfo.getUrl();
+        String version = crawlingInfo.getVersion();
+        log.debug("Start importing MicoService from URL '{}'", url);
 
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
 
         try {
-            if (version.equals("latest") || version.equals("")) {
-                MicoService service = crawler.crawlGitHubRepoLatestRelease(uri);
+            if (version.equals("latest")) {
+                MicoService service = crawler.crawlGitHubRepoLatestRelease(url);
                 return createService(service, null);
             } else {
-                MicoService service = crawler.crawlGitHubRepoSpecificRelease(uri, version);
+                MicoService service = crawler.crawlGitHubRepoSpecificRelease(url, version);
                 return createService(service, null);
             }
         } catch (IOException e) {
@@ -361,14 +364,14 @@ public class ServiceController {
 
     @GetMapping(PATH_GITHUB_ENDPOINT)
     @ResponseBody
-    public LinkedList<String> getVersionsFromGitHub(@RequestParam String uri) {
-        log.debug("Start getting versions from URL '{}'", uri);
+    public LinkedList<String> getVersionsFromGitHub(@RequestParam String url) {
+        log.debug("Start getting versions from URL '{}'", url);
 
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         GitHubCrawler crawler = new GitHubCrawler(restTemplate);
 
         try {
-            return crawler.getVersionsFromGitHubRepo(uri);
+            return crawler.getVersionsFromGitHubRepo(url);
 
         } catch (IOException e) {
             log.error(e.getStackTrace().toString());
@@ -376,6 +379,29 @@ public class ServiceController {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
+
+   @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependencyGraph")
+    public ResponseEntity<Resource<MicoServiceDependencyGraphDTO>> getDependencyGraph(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                               @PathVariable(PATH_VARIABLE_VERSION) String version) {
+       MicoService micoServiceRoot = getServiceFromDatabase(shortName, version);
+       List<MicoService> micoServices = serviceRepository.getAllDependeesOfMicoService(micoServiceRoot.getShortName(), micoServiceRoot.getVersion());
+       MicoServiceDependencyGraphDTO micoServiceDependencyGraph = new MicoServiceDependencyGraphDTO().setMicoServices(micoServices);
+       LinkedList<MicoServiceDependencyGraphEdgeDTO> micoServiceDependencyGraphEdgeList = new LinkedList<>();
+       for (MicoService micoService : micoServices) {
+           //Request each mico service again from the db, because the dependencies are not included
+           //in the result of the custom query. TODO improve query to also include the dependencies (Depth parameter)
+           MicoService micoServiceFromDB = getServiceFromDatabase(micoService.getShortName(), micoService.getVersion());
+           micoServiceFromDB.getDependencies().forEach(micoServiceDependency -> {
+               MicoServiceDependencyGraphEdgeDTO edge = new MicoServiceDependencyGraphEdgeDTO(micoService,micoServiceDependency.getDependedService());
+               micoServiceDependencyGraphEdgeList.add(edge);
+           });
+       }
+       micoServiceDependencyGraph.setMicoServiceDependencyGraphEdgeList(micoServiceDependencyGraphEdgeList);
+       return ResponseEntity.ok(new Resource<>(micoServiceDependencyGraph,
+           linkTo(methodOn(ServiceController.class).getDependencyGraph(shortName, version)).withSelfRel()));
+   }
+
+
 
     public List<MicoService> getDependers(MicoService serviceToLookFor) {
         List<MicoService> serviceList = serviceRepository.findAll(2);

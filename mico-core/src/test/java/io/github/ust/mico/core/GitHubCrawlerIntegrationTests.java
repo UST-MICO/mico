@@ -22,7 +22,6 @@ package io.github.ust.mico.core;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

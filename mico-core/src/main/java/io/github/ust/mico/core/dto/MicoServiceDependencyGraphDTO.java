@@ -19,26 +19,21 @@
 
 package io.github.ust.mico.core.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
+import io.github.ust.mico.core.model.MicoService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
-/**
- * Represents a service in Kubernetes for a {@link io.github.ust.mico.core.model.MicoService}.
- */
+import java.util.LinkedList;
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class MicoServiceInterfaceDTO {
+public class MicoServiceDependencyGraphDTO {
 
-    /**
-     * Name of the {@link io.github.ust.mico.core.model.MicoServiceInterface}.
-     */
-    private String name;
-    
+   private List<MicoService> micoServices = new LinkedList<>();
+   private List<MicoServiceDependencyGraphEdgeDTO> micoServiceDependencyGraphEdgeList = new LinkedList<>();
 }

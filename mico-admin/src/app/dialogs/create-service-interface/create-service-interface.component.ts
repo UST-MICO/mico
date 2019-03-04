@@ -35,13 +35,14 @@ export class CreateServiceInterfaceComponent implements OnInit {
     ngOnInit() {
     }
 
+    /**
+     * return method of the dialog
+     */
     confirmButton() {
-        if (this.serviceData == null) {
+        if (this.serviceData == null || this.portData == null || this.portData.length <= 0) {
             return null;
         }
-        if (this.portData == null || this.portData.length <= 0) {
-            return null;
-        }
+
         const tempReturn = this.serviceData;
         tempReturn.ports = this.portData;
         return tempReturn;

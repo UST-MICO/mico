@@ -19,54 +19,15 @@
 
 import { Component, OnInit, ViewChild, Input, OnChanges, SimpleChanges } from '@angular/core';
 import GraphEditor from '@ustutt/grapheditor-webcomponent/lib/grapheditor';
-import { Edge } from '@ustutt/grapheditor-webcomponent/lib/edge';
+import { Edge, DraggedEdge } from '@ustutt/grapheditor-webcomponent/lib/edge';
 import { Node } from '@ustutt/grapheditor-webcomponent/lib/node';
 import { ApiObject } from 'src/app/api/apiobject';
 import { ApiService } from 'src/app/api/api.service';
 import { Subscription } from 'rxjs';
+import { STYLE_TEMPLATE, APPLICATION_NODE_TEMPLATE, SERVICE_NODE_TEMPLATE, ARROW_TEMPLATE } from './app-dependency-graph-constants';
+import { MatDialog } from '@angular/material';
+import { ChangeServiceVersionComponent } from 'src/app/dialogs/change-service-version/change-service-version.component';
 
-const STYLE_TEMPLATE = {
-    id: 'style',
-    innerHTML: `
-        svg {position: absolute;}
-        .ghost {opacity: 0.5;}
-        .node {fill: #cccccc}
-        .node.application {fill: #005c99}
-        .link-handle {display: none; fill: black; opacity: 0.1; transition:r 0.25s ease-out;}
-        .edge-group:not(.includes) .link-handle {display: initial}
-        .link-handle:hover {opacity: 0.7; r: 5;}
-        .text {fill: black; font-size: 6pt; text-overflow: ellipsis; word-break: break-word}
-        .text.title {font-size: 8pt; text-decoration: underline; text-overflow: ellipsis; word-break: break-all;}
-        .text.version {word-break: break-all;}
-        .node:not(.application):not(.selected).hovered {fill: #efefef;}
-        .node.application.hovered {fill: #0099ff;}
-        .hovered .link-handle {display: initial;}
-        .node.selected {fill: #ccff99; }
-        .includes .edge {stroke: #0099ff; stroke-width: 2}
-        .includes .marker {fill: #0099ff}
-        .highlight-outgoing .edge {stroke: red;}
-        .highlight-incoming .edge {stroke: green;}
-        .highlight-outgoing .marker {fill: red;}
-        .highlight-incoming .marker {fill: green;}`
-};
-
-const APPLICATION_NODE_TEMPLATE = {
-    id: 'application',
-    innerHTML: `<circle r="20" cx="0" cy="0"></circle>`
-};
-
-const SERVICE_NODE_TEMPLATE = {
-    id: 'default',
-    innerHTML: `<rect width="100" height="60" x="-50" y="-30"></rect>
-        <text class="text title" data-content="title" data-click="title" width="90" x="-45" y="-16"></text>
-        <text class="text description" data-content="description" data-click="description" width="90" height="30" x="-45" y="-5"></text>
-        <text class="text version" data-content="version" data-click="version" width="40" x="-45" y="25"></text>`
-};
-
-const ARROW_TEMPLATE = {
-    id: 'arrow',
-    innerHTML: `<path d="M -9 -5 L 1 0 L -9 5 z" />`
-};
 
 @Component({
     selector: 'mico-app-dependency-graph',
@@ -85,7 +46,9 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
     private nodeMap: Map<string, Node>;
     private edgeMap: Map<string, Edge>;
 
-    constructor(private api: ApiService) {}
+    private versionChangedFor: { node: Node, newVersion: ApiObject};
+
+    constructor(private api: ApiService, private dialog: MatDialog) {}
 
     ngOnInit() {
         if (this.graph == null) {
@@ -93,29 +56,21 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
         }
         const graph: GraphEditor = this.graph.nativeElement;
         graph.setNodeClass = (className, node) => {
-            if (className === node.type) {
+            if (className === node.type) { // set node class according to node type
                 return true;
             }
             return false;
         };
         graph.setEdgeClass = (className, edge) => {
-            if (className === edge.type) {
+            if (className === edge.type) { // set edge class according to edge type
                 return true;
             }
             return false;
         };
-        graph.addEventListener('nodeclick', (event) => {
-            if ((event as any).detail.node.id === 'APPLICATION') {
-                event.preventDefault();
-            }
-        });
+        graph.addEventListener('nodeclick', this.onNodeClick);
+        graph.onCreateDraggedEdge = this.onCreateDraggedEdge;
         graph.updateTemplates([SERVICE_NODE_TEMPLATE, APPLICATION_NODE_TEMPLATE], [STYLE_TEMPLATE], [ARROW_TEMPLATE]);
-        graph.onCreateDraggedEdge = (edge) => {
-            edge.markers = [{template: 'arrow', positionOnLine: 1, scale: 0.5, rotate: {relativeAngle: 0}}, ];
-            return edge;
-        };
         this.resetGraph();
-
     }
 
     ngOnChanges(changes: SimpleChanges) {
@@ -133,12 +88,70 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
     }
 
     /**
+     * Handle node click events.
+     */
+    onNodeClick = (event: CustomEvent) => {
+        if (event.detail.node.id === 'APPLICATION') {
+            event.preventDefault();  // prevent selecting application node
+            return;
+        }
+        if (event.detail.key === 'version') {  // user clicked on service version
+            event.preventDefault();
+
+            const dialogRef = this.dialog.open(ChangeServiceVersionComponent, {
+                data: {
+                    service: event.detail.node.service,
+                }
+            });
+
+            dialogRef.afterClosed().subscribe((selected) => {
+                if (selected == null || selected === '' || event.detail.node.service.version === selected.version) {
+                    return;
+                }
+                this.changeServiceVersion(event.detail.node, selected);
+            });
+            return;
+        }
+    }
+
+    /**
+     * Replace an existing service node with a new service.
+     *
+     * @param node service node of the old service
+     * @param newVersion new service version
+     */
+    changeServiceVersion(node: Node, newVersion: ApiObject) {
+        this.versionChangedFor = {node: node, newVersion: newVersion};
+        this.api.deleteApplicationServices(this.shortName, this.version, node.service.shortName).subscribe((success) => {
+            if (!success) {
+                return;
+            }
+            this.api.postApplicationServices(this.shortName, this.version, newVersion).subscribe();
+        });
+    }
+
+    /**
+     * Update markerEnd and type of newly created edges.
+     */
+    onCreateDraggedEdge = (edge: DraggedEdge) => {
+        edge.markerEnd = {template: 'arrow', positionOnLine: 1, lineOffset: 4, scale: 0.5, rotate: {relativeAngle: 0}};
+        edge.validTargets.clear();
+        if (edge.source === 'APPLICATION') {
+            edge.type = 'includes';
+            edge.markerEnd.lineOffset = 8;
+            edge.markerEnd.scale = 1;
+        }
+        return edge;
+    }
+
+    /**
      * Reset the graph (all edges and nodes) and clears cache/layout data.
      */
     resetGraph() {
         this.nodeMap = new Map<string, Node>();
         this.edgeMap = new Map<string, Edge>();
         this.lastX = 0;
+        this.versionChangedFor = null;
         const graph: GraphEditor = this.graph.nativeElement;
 
         graph.setNodes([]);
@@ -213,6 +226,15 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
                 };
                 // super basic layout algorithm:
                 this.lastX += 110;
+                if (this.versionChangedFor != null) {
+                    if (this.versionChangedFor.newVersion.shortName === service.shortName &&
+                        this.versionChangedFor.newVersion.version === service.version) {
+                        node.x = this.versionChangedFor.node.x;
+                        node.y = this.versionChangedFor.node.y;
+                        this.lastX -= 110;
+                        this.versionChangedFor = null;
+                    }
+                }
                 nodeMap.set(serviceId, node);
                 graph.addNode(node, false);
                 // add edge from root to service node
@@ -220,14 +242,15 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
                     source: 'APPLICATION',
                     target: serviceId,
                     type: 'includes',
-                    markers: [{
+                    markerEnd: {
                         template: 'arrow',
                         positionOnLine: 1,
+                        lineOffset: 8,
                         scale: 1,
                         rotate: {
                             relativeAngle: 0,
                         },
-                    }],
+                    },
                 };
                 edgeMap.set(`sAPPLICATION-t${serviceId}`, edge);
                 graph.addEdge(edge, false);
@@ -250,6 +273,6 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
             return;
         }
 
-        this.graph.nativeElement.zoomToBoundingBox(false);
+        this.graph.nativeElement.zoomToBoundingBox(true);
     }
 }

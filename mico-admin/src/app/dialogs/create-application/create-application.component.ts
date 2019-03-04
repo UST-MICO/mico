@@ -40,30 +40,43 @@ export class CreateApplicationComponent implements OnInit, OnDestroy {
     filterList: string[];
 
     constructor(private apiService: ApiService, private dialog: MatDialog) {
+    }
+
+    ngOnInit() {
+        // only show required fields
         this.subModelDefinitions = this.apiService.getModelDefinitions().subscribe(val => {
             this.filterList = (val['MicoApplication'] as ApiModel).required;
         });
     }
 
-    ngOnInit() {
-    }
-
     ngOnDestroy() {
+        // unsubscribe obervables
         this.unsubscribe(this.subDependeesDialog);
         this.unsubscribe(this.subModelDefinitions);
     }
 
+    /**
+     * generic unsubscribe function
+     * @param subscription observable to be unnsubscribed if not null
+     */
     unsubscribe(subscription: Subscription) {
         if (subscription != null) {
             subscription.unsubscribe();
         }
     }
 
+    /**
+     * return function of the dialog
+     */
     save() {
         return { applicationProperties: this.applicationData, services: this.services };
     }
 
+    /**
+     * add service picker
+     */
     pickServices() {
+        // open dialog
         const dialogRef = this.dialog.open(ServicePickerComponent, {
             data: {
                 filter: '',
@@ -72,6 +85,8 @@ export class CreateApplicationComponent implements OnInit, OnDestroy {
                 serviceId: '',
             }
         });
+
+        // handle result
         this.subDependeesDialog = dialogRef.afterClosed().subscribe(result => {
             if (result) {
                 result.forEach(element => {
@@ -81,6 +96,10 @@ export class CreateApplicationComponent implements OnInit, OnDestroy {
         });
     }
 
+    /**
+     * delete a service dependencie
+     * @param element service where the dependencie shall be deleted
+     */
     deleteDependency(element) {
         const index = this.services.indexOf(element);
         if (index > -1) {

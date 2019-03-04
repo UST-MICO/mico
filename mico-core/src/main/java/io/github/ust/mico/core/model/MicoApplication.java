@@ -22,19 +22,17 @@ package io.github.ust.mico.core.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 
-import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
+import io.github.ust.mico.core.dto.MicoApplicationDTO;
 import io.github.ust.mico.core.exception.VersionNotSupportedException;
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.Extension;
-import io.swagger.annotations.ExtensionProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -56,6 +54,7 @@ public class MicoApplication {
      */
     @Id
     @GeneratedValue
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
 
@@ -67,53 +66,21 @@ public class MicoApplication {
      * A brief name for the application intended
      * for use as a unique identifier.
      */
-    @ApiModelProperty(required = true, extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Short Name"),
-            @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "Unique short name of the application.")
-        }
-    )})
     private String shortName;
 
     /**
      * The name of the artifact. Intended for humans.
      */
-    @ApiModelProperty(required = true, extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Name"),
-            @ExtensionProperty(name = "x-order", value = "10"),
-            @ExtensionProperty(name = "description", value = "Human readable name of the application.")
-        }
-    )})
     private String name;
 
     /**
      * The version of this application.
      */
-    @ApiModelProperty(required = true, extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Version"),
-            @ExtensionProperty(name = "x-order", value = "30"),
-            @ExtensionProperty(name = "description", value = "Version number of the application.")
-        }
-    )})
     private String version;
 
     /**
      * Human readable description of this application.
      */
-    @ApiModelProperty(required = true, extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Description"),
-            @ExtensionProperty(name = "x-order", value = "40"),
-            @ExtensionProperty(name = "description", value = "Human readable description of this application.")
-        }
-    )})
     private String description;
 
 
@@ -125,46 +92,31 @@ public class MicoApplication {
      * The list of service deployment information
      * this application uses for the deployment of the required services.
      */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Service Deployment Information"),
-            @ExtensionProperty(name = "x-order", value = "130"),
-            @ExtensionProperty(name = "description", value = "The list of service deployment information " +
-                "this application uses for the deployment of the required services.")
-        }
-    )})
-    @JsonManagedReference
+    @JsonBackReference
     @Relationship(type = "INCLUDES_SERVICE")
     private List<MicoServiceDeploymentInfo> serviceDeploymentInfos = new ArrayList<>();
 
     /**
      * Human readable contact information for support purposes.
      */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Contact"),
-            @ExtensionProperty(name = "x-order", value = "110"),
-            @ExtensionProperty(name = "description", value = "Human readable contact information for support purposes.")
-        }
-    )})
     private String contact;
 
     /**
      * Human readable information for the application owner
      * who is responsible for this application.
      */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Owner"),
-            @ExtensionProperty(name = "x-order", value = "100"),
-            @ExtensionProperty(name = "description", value = "Human readable information for the application owner, " +
-                "who is responsible for this application.")
-        }
-    )})
     private String owner;
+    
+    
+    public static MicoApplication valueOf(MicoApplicationDTO applicationDto) {
+        return new MicoApplication()
+                .setShortName(applicationDto.getShortName())
+                .setName(applicationDto.getName())
+                .setVersion(applicationDto.getVersion())
+                .setDescription(applicationDto.getDescription())
+                .setContact(applicationDto.getContact())
+                .setOwner(applicationDto.getOwner());
+    }
 
     @JsonIgnore
     public MicoVersion getMicoVersion() throws VersionNotSupportedException {

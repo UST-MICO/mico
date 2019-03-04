@@ -44,15 +44,18 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
     selectedTab = 0;
 
     subModelDefinitions: Subscription;
-    filterList: string[];
+    filterListManual: string[];
+    filterListGithub: string[];
 
     constructor(private apiService: ApiService) {
-        this.subModelDefinitions = this.apiService.getModelDefinitions().subscribe(val => {
-            this.filterList = (val['MicoService'] as ApiModel).required.filter((value) => value !== 'serviceInterfaces');
-        });
     }
 
     ngOnInit() {
+        this.subModelDefinitions = this.apiService.getModelDefinitions().subscribe(val => {
+            this.filterListManual = (val['MicoService'] as ApiModel).required
+                .filter((value) => value !== 'serviceInterfaces');
+            this.filterListGithub = (val['CrawlingInfoDTO'] as ApiModel).required;
+        });
     }
 
     ngOnDestroy() {
@@ -71,32 +74,38 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
         }
     }
 
+    /**
+     * return method of the dialog
+     */
     input() {
         // return information based on selected tab
         if (this.selectedTab === 0) {
-            // manual
+            // manually filled forms
             return { tab: this.mapTabIndexToString(this.selectedTab), data: this.serviceData };
+
         } else if (this.selectedTab === 1) {
             // github
 
-            if (this.githubData == null || this.githubData.vcsroot == null) {
-                // not finished yet (on of the thousand calls angular performs...)
+            if (this.githubData == null || this.githubData.url == null) {
+                // dialog is not finished yet (one of the thousand calls angular performs...)
                 return { tab: this.mapTabIndexToString(this.selectedTab), data: undefined };
             }
 
             if (this.picked === 'latest') {
+                // crawl latest version
 
                 return {
                     tab: this.mapTabIndexToString(this.selectedTab),
-                    data: { uri: this.githubData.vcsroot, version: this.latestVersion }
+                    data: { url: this.githubData.url, version: this.latestVersion }
                 };
             }
 
             if (this.picked === 'specific') {
+                // crawl a specific version
 
                 return {
                     tab: this.mapTabIndexToString(this.selectedTab),
-                    data: { uri: this.githubData.vcsroot, version: this.selectedVersion }
+                    data: { url: this.githubData.url, version: this.selectedVersion }
                 };
             }
 
@@ -110,12 +119,18 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
         this.selectedTab = event.index;
     }
 
-
+    /**
+     * Checks if the stepper went from the first to the second view (github repository -> version selection).
+     * If yes, it calls the backend for the repositories versions.
+     * Uses: GET services/import/github
+     *
+     * @param event change event from the material stepper
+     */
     gitStepperChange(event) {
 
         if (event.selectedIndex === 1 && event.previouslySelectedIndex === 0) {
 
-            this.apiService.getServiceVersionsViaGithub(this.githubData.vcsroot).subscribe(val => {
+            this.apiService.getServiceVersionsViaGithub(this.githubData.url).subscribe(val => {
                 this.possibleVersions = JSON.parse(JSON.stringify(val)).sort((n1, n2) => versionComparator(n1, n2));
 
                 this.latestVersion = this.possibleVersions[this.possibleVersions.length - 1];
@@ -125,6 +140,11 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
         }
     }
 
+    /**
+     * call back from the version selection drop down
+     *
+     * @param event newly selected version
+     */
     updateSelectedVersion(event) {
         this.selectedVersion = event;
     }

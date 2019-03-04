@@ -19,12 +19,28 @@
 
 package io.github.ust.mico.core.service;
 
-import io.fabric8.kubernetes.api.model.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.ContainerPort;
+import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.ServicePort;
+import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
-import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.model.MicoServicePort;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.UIDUtils;
@@ -32,38 +48,32 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 /**
- * Provides accessor methods for creating deployments and services in Kubernetes
- * as well as getter methods to retrieve existing Kubernetes deployments and services.
+ * Provides accessor methods for creating deployments and services in Kubernetes as well as getter methods to retrieve
+ * existing Kubernetes deployments and services.
  */
 @Slf4j
 @Component
 public class MicoKubernetesClient {
 
-
     /**
-     * The label `app` references to the shortName of the {@link MicoService}.
-     * It is used as a selector for Kubernetes deployments, services and pods.
+     * The label `app` references to the shortName of the {@link MicoService}. It is used as a selector for Kubernetes
+     * deployments, services and pods.
      */
     private static final String LABEL_APP_KEY = "app";
     /**
-     * The label `version` references to the version of the {@link MicoService}.
-     * It is used as a selector for Kubernetes deployments, services and pods.
+     * The label `version` references to the version of the {@link MicoService}. It is used as a selector for Kubernetes
+     * deployments, services and pods.
      */
     private static final String LABEL_VERSION_KEY = "version";
     /**
-     * The label `interface` references to the name of the {@link MicoServiceInterface}.
-     * It is used as a selector for Kubernetes services.
+     * The label `interface` references to the name of the {@link MicoServiceInterface}. It is used as a selector for
+     * Kubernetes services.
      */
     private static final String LABEL_INTERFACE_KEY = "interface";
     /**
-     * The label `run` references to the UID that is created for each {@link MicoService}.
-     * It is used for the association between Kubernetes Services and Pods.
+     * The label `run` references to the UID that is created for each {@link MicoService}. It is used for the
+     * association between Kubernetes Services and Pods.
      */
     private static final String LABEL_RUN_KEY = "run";
 
@@ -73,7 +83,7 @@ public class MicoKubernetesClient {
 
     @Autowired
     public MicoKubernetesClient(MicoKubernetesConfig micoKubernetesConfig, ClusterAwarenessFabric8 cluster,
-            MicoServiceRepository serviceRepository) {
+                                MicoServiceRepository serviceRepository) {
         this.micoKubernetesConfig = micoKubernetesConfig;
         this.cluster = cluster;
         this.serviceRepository = serviceRepository;
@@ -113,7 +123,7 @@ public class MicoKubernetesClient {
             .addToLabels(LABEL_RUN_KEY, deploymentUid)
             .endMetadata()
             .withNewSpec()
-            .withNewReplicas(deploymentInfo.getReplicas())
+            .withReplicas(deploymentInfo.getReplicas())
             .withNewSelector()
             .addToMatchLabels(LABEL_RUN_KEY, deploymentUid)
             .endSelector()
@@ -246,12 +256,10 @@ public class MicoKubernetesClient {
     }
 
     /**
-     * Looks up if the {@link MicoService} is already deployed to the Kubernetes cluster.
-     * If so, it returns the Kubernetes {@link Deployment} object.
-     * Labels are used for the lookup.
+     * Checks if the {@link MicoService} is already deployed to the Kubernetes cluster. Labels are used for the lookup.
      *
      * @param micoService the {@link MicoService}
-     * @return the Kubernetes {@link Deployment}
+     * @return an {@link Optional<Deployment>} with the {@link Deployment} of the Kubernetes service, or an empty {@link Optional<Deployment>} if there is no Kubernetes deployment of the {@link MicoService}.
      */
     public Optional<Deployment> getDeploymentOfMicoService(MicoService micoService) throws KubernetesResourceException {
         Map<String, String> labels = CollectionUtils.mapOf(
@@ -263,12 +271,11 @@ public class MicoKubernetesClient {
         List<Deployment> deploymentList = cluster.getDeploymentsByLabels(labels, namespace).getItems();
         log.debug("Found {} Kubernetes deployment(s) that match the labels '{}': '{}'", deploymentList.size(), labels.toString(), deploymentList);
 
-        Optional<Deployment> result;
         if (deploymentList.isEmpty()) {
             log.debug("No Kubernetes deployment found for MicoService '{}' '{}'", micoService.getShortName(), micoService.getVersion());
-            result = Optional.empty();
+            return Optional.empty();
         } else if (deploymentList.size() == 1) {
-            result = Optional.of(deploymentList.get(0));
+            return Optional.of(deploymentList.get(0));
         } else {
             // It should be not possible that there are multiple deployments for the same version of a MicoService.
             log.warn("MicoService '{}' in version '{}' is deployed multiple times: {}",
@@ -276,17 +283,15 @@ public class MicoKubernetesClient {
             throw new KubernetesResourceException("There are multiple Kubernetes Deployments for MicoService '"
                 + micoService.getShortName() + "' '" + micoService.getVersion() + "'.");
         }
-        return result;
     }
 
     /**
-     * Looks up if the {@link MicoServiceInterface} is already created for the {@link MicoService} in the Kubernetes cluster.
-     * If so, it returns the Kubernetes {@link Service} object.
-     * Labels are used for the lookup.
+     * Check if the {@link MicoServiceInterface} is already created for the {@link MicoService} in the Kubernetes
+     * cluster. Labels are used for the lookup.
      *
      * @param micoService              the {@link MicoService}
      * @param micoServiceInterfaceName the name of a {@link MicoServiceInterface}
-     * @return the Kubernetes {@link Service}
+     * @return an {@link Optional<Service>} with the Kubernetes {@link Service}, or an emtpy {@link Optional<Service>} if there is no Kubernetes deployment of the {@link Service}.
      */
     public Optional<Service> getInterfaceByNameOfMicoService(MicoService micoService, String micoServiceInterfaceName) throws KubernetesResourceException {
         Map<String, String> labels = CollectionUtils.mapOf(
@@ -298,13 +303,12 @@ public class MicoKubernetesClient {
         List<Service> serviceList = cluster.getServicesByLabels(labels, namespace).getItems();
         log.debug("Found {} Kubernetes service(s) that match the labels '{}': '{}'", serviceList.size(), labels.toString(), serviceList);
 
-        Optional<Service> result;
         if (serviceList.isEmpty()) {
             log.debug("No Kubernetes Service found for MicoServiceInterface '{}' of MicoService '{}' '{}'",
                 micoServiceInterfaceName, micoService.getShortName(), micoService.getVersion());
-            result = Optional.empty();
+            return Optional.empty();
         } else if (serviceList.size() == 1) {
-            result = Optional.of(serviceList.get(0));
+            return Optional.of(serviceList.get(0));
         } else {
             // It should be not possible that there are multiple services for the same interface of a MicoService.
             log.warn("MicoServiceInterface '{}' of MicoService '{}' in version '{}' is deployed multiple times: {}",
@@ -312,13 +316,11 @@ public class MicoKubernetesClient {
             throw new KubernetesResourceException("There are multiple Kubernetes Services for MicoServiceInterface '"
                 + micoServiceInterfaceName + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "'.");
         }
-        return result;
     }
 
     /**
-     * Looks up if there are any interfaces created for the {@link MicoService} in the Kubernetes cluster.
-     * If so, it returns them as a list of Kubernetes {@link Service} objects.
-     * Labels are used for the lookup.
+     * Looks up if there are any interfaces created for the {@link MicoService} in the Kubernetes cluster. If so, it
+     * returns them as a list of Kubernetes {@link Service} objects. Labels are used for the lookup.
      *
      * @param micoService the {@link MicoService}
      * @return the list of Kubernetes {@link Service} objects
@@ -336,9 +338,8 @@ public class MicoKubernetesClient {
     }
 
     /**
-     * Looks up if the {@link MicoService} is already deployed to the Kubernetes cluster.
-     * If so, it returns the list of Kubernetes {@link Pod} objects that belongs to the {@link Deployment}.
-     * Labels are used for the lookup.
+     * Looks up if the {@link MicoService} is already deployed to the Kubernetes cluster. If so, it returns the list of
+     * Kubernetes {@link Pod} objects that belongs to the {@link Deployment}. Labels are used for the lookup.
      *
      * @param micoService the {@link MicoService}
      * @return the list of Kubernetes {@link Pod} objects
@@ -356,8 +357,8 @@ public class MicoKubernetesClient {
     }
 
     /**
-     * Creates a list of ports based on a MICO service. This list of ports
-     * is intended for use with a container inside a Kubernetes deployment.
+     * Creates a list of ports based on a MICO service. This list of ports is intended for use with a container inside a
+     * Kubernetes deployment.
      *
      * @param service the {@link MicoService}.
      * @return an {@link ArrayList} with the {@link ContainerPort} instances.
@@ -378,9 +379,8 @@ public class MicoKubernetesClient {
     }
 
     /**
-     * Creates a list of service ports (port, target port and type) based on a MICO
-     * service interface. This list of service ports is intended for use with a
-     * Kubernetes service.
+     * Creates a list of service ports (port, target port and type) based on a MICO service interface. This list of
+     * service ports is intended for use with a Kubernetes service.
      *
      * @param serviceInterface the {@link MicoServiceInterface}.
      * @return an {@link ArrayList} with the {@link ServicePort} instances.
@@ -390,7 +390,7 @@ public class MicoKubernetesClient {
 
         for (MicoServicePort servicePort : serviceInterface.getPorts()) {
             ports.add(new ServicePortBuilder()
-                .withNewPort(servicePort.getPort())
+                .withPort(servicePort.getPort())
                 .withNewTargetPort(servicePort.getTargetPort())
                 .withProtocol(servicePort.getType().toString())
                 .build());
@@ -398,5 +398,4 @@ public class MicoKubernetesClient {
 
         return ports;
     }
-
 }
