@@ -14,12 +14,14 @@ export class AppDetailOverviewDeploymentInformationComponent implements OnChange
     @Input() applicationShortName: string;
     @Input() applicationVersion: string;
 
+    deploymentInformation;
+
     ngOnChanges() {
         if (this.service != null && this.applicationShortName != null && this.applicationVersion != null) {
 
             this.apiService.getServiceDeploymentInformation(this.applicationShortName, this.applicationVersion, this.service.shortName)
                 .subscribe(val => {
-                    console.log(val);
+                    this.deploymentInformation = JSON.parse(JSON.stringify(val));
                 });
         }
     }
