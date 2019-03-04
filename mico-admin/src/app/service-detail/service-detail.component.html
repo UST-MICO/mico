@@ -28,6 +28,10 @@
             <mico-service-detail-overview [shortName]="shortName" [version]="selectedVersion">
             </mico-service-detail-overview>
         </mat-tab>
+        <mat-tab label="Dependency Graph">
+            <mico-service-dependency-graph [shortName]="shortName" [version]="selectedVersion">
+            </mico-service-dependency-graph>
+        </mat-tab>
         <!-- DEPLOYMENT TAB-->
         <mat-tab label="Deployment">
             Service-Detail-Deployment...
