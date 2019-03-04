@@ -1,0 +1,14 @@
+<mat-dialog-content style="overflow: visible">
+    <h2>Deployment Information</h2>
+
+    <mico-form [modelUrl]="'remote/MicoServiceDeploymentInfoDTO'" (data)="changedDeploymentInformation = $event"
+        [startData]="deploymentInformation">
+
+    </mico-form>
+
+</mat-dialog-content>
+<mat-dialog-actions>
+    <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
+    <button mat-button [mat-dialog-close]="confirm()">Confirm</button>
+    <button mat-button mat-dialog-close>Cancel</button>
+</mat-dialog-actions>
