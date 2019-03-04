@@ -45,7 +45,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     subApplications: Subscription;
     applications: Readonly<ApiObject[]>;
-    displayedColumns: string[] = ['id', 'name', 'shortName'];
+    displayedColumns: string[] = ['name', 'shortName'];
 
     ngOnInit() {
         this.getApplications();
