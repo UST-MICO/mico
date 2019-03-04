@@ -339,11 +339,10 @@ export class ApiService {
      */
     getServiceDeploymentInformation(applicationShortName: string, applicationVersion: string, serviceShortName) {
 
-        const resource = 'applications/' + applicationShortName + '/' + applicationVersion + '/deploymentInormation/' + serviceShortName;
+        const resource = 'applications/' + applicationShortName + '/' + applicationVersion + '/deploymentInformation/' + serviceShortName;
         const stream = this.getStreamSource<ApiObject>(resource);
 
         this.rest.get<ApiObject>(resource).subscribe(val => {
-            console.log(val);
             stream.next(freezeObject(val));
         });
 
@@ -367,7 +366,7 @@ export class ApiService {
             return;
         }
 
-        const resource = 'applications/' + applicationShortName + '/' + applicationVersion + '/deploymentInormation/' + serviceShortName;
+        const resource = 'applications/' + applicationShortName + '/' + applicationVersion + '/deploymentInformation/' + serviceShortName;
 
         return this.rest.put<ApiObject>(resource, data).pipe(flatMap(val => {
 
