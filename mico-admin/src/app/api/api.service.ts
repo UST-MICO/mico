@@ -320,7 +320,6 @@ export class ApiService {
         return this.rest.delete<ApiObject>('applications/' + applicationShortName + '/' + applicationVersion
             + '/services/' + serviceShortName)
             .pipe(map(val => {
-                console.log('DELETE includes', val);
 
                 this.getApplicationVersions(applicationShortName);
                 this.getApplication(applicationShortName, applicationVersion);
@@ -736,7 +735,6 @@ export class ApiService {
         return this.rest.delete<ApiObject>('services/' + serviceShortName + '/' + serviceVersion + '/dependees/' +
             dependeeShortName + '/' + dependeeVersion)
             .pipe(map(val => {
-                console.log('DELETE DEPENDEE', val);
 
                 this.getServices();
                 this.getService(serviceShortName, serviceVersion);
@@ -818,8 +816,6 @@ export class ApiService {
         return this.rest.post<ApiObject>('services/' + shortName + '/' + version + '/interfaces',
             data).pipe(flatMap(val => {
 
-                console.log('RETURN', val);
-
                 const stream = this.getStreamSource<ApiObject>(val._links.self.href);
                 stream.next(freezeObject(val));
 
@@ -868,8 +864,6 @@ export class ApiService {
 
         return this.rest.delete<ApiObject>('services/' + shortName + '/' + version + '/interfaces/' + serviceInterfaceName)
             .pipe(map(val => {
-                console.log('DELETE INTERFACE', val);
-
 
                 this.getServiceInterfaces(shortName, version);
 
