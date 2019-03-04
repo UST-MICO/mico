@@ -37,7 +37,7 @@ public class KubernetesNameNormalizer {
     private final static String REGEX_WHITESPACE = "\\s+";
     private final static String REGEX_CHARS_REPLACED_BY_A_DASH = "[._]+";
     private final static String REGEX_MULTIPLE_DASHES = "[-]+";
-    private final static String REGEX_FIRST_CHAR_IS_A_DASH = "^-";
+    private final static String REGEX_FIRST_OR_LAST_CHAR_IS_A_DASH = "^-|-$";
     private final static String REGEX_MATCH_VALID_FIRST_CHAR = "^[a-z]+.*";
 
     /**
@@ -62,8 +62,8 @@ public class KubernetesNameNormalizer {
         String s6 = s5.replaceAll(REGEX_NOT_VALID_CHAR, "");
         // Replace multiple subsequent dashes with one dash
         String s7 = s6.replaceAll(REGEX_MULTIPLE_DASHES, "-");
-        // Remove a dash if it is the first character
-        String s8 = s7.replaceAll(REGEX_FIRST_CHAR_IS_A_DASH, "");
+        // Remove a dash if it is the first or last character
+        String s8 = s7.replaceAll(REGEX_FIRST_OR_LAST_CHAR_IS_A_DASH, "");
         // Check if name begins with a valid character
         if (s8.matches(REGEX_MATCH_VALID_FIRST_CHAR)) {
             result = s8;

@@ -81,5 +81,9 @@ public class KubernetesNameNormalizerTests {
         collector.checkThat("First character is a dash",
             normalizer.normalizeName("-name"),
             equalTo("name"));
+
+        collector.checkThat("Last character is a dash",
+            normalizer.normalizeName("name-"),
+            equalTo("name"));
     }
 }
