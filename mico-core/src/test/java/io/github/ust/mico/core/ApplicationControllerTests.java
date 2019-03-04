@@ -500,7 +500,7 @@ public class ApplicationControllerTests {
                 .andExpect(jsonPath(SHORT_NAME_PATH, is(updatedApplication.getShortName())))
                 .andExpect(jsonPath(VERSION_PATH, is(newVersion)));
 
-        resultUpdate.andExpect(status().isOk());
+        resultUpdate.andExpect(status().isCreated());
     }
 
     @Test
