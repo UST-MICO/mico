@@ -67,15 +67,20 @@ export class ModelsService {
      */
     private resolveModel = (modelUrl: string): Observable<ApiModelAllOf | ApiModel> => {
         modelUrl = this.canonizeModelUri(modelUrl);
+
         if (modelUrl.startsWith('local/')) {
+            // remove 'local/'
             const modelID = modelUrl.substring(6);
             // deep clone model because they will be frozen later...
             const model = JSON.parse(JSON.stringify(this.localModels[modelID]));
             return of(model);
+
         } else if (modelUrl.startsWith('remote/')) {
 
+            // remove 'remote/'
             const modelID = modelUrl.substring(7);
 
+            // retrieve models from swagger api
             return this.apiService.getModelDefinitions().pipe(
                 map(remoteModels => {
                     // TODO remove in the end of the project
@@ -86,6 +91,7 @@ export class ModelsService {
             );
         } else if (modelUrl.startsWith('nested/')) {
 
+            // remove 'nested/'
             const modelID = modelUrl.substring(7);
 
             const model = JSON.parse(JSON.stringify(this.nestedModelCache.get(modelID)));
