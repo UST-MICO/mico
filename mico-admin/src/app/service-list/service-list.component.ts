@@ -51,6 +51,7 @@ export class ServiceListComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy() {
+        // unsubscribe observables
         if (this.subServices != null) {
             this.subServices.unsubscribe();
         }
@@ -75,7 +76,6 @@ export class ServiceListComponent implements OnInit, OnDestroy {
                     ).subscribe(serviceList => {
                         this.services = serviceList;
                     });
-
             });
 
     }
@@ -86,6 +86,7 @@ export class ServiceListComponent implements OnInit, OnDestroy {
      * @param service shortName of the services to be deleted
      */
     deleteService(service) {
+        // open dialog
         const dialogRef = this.dialog.open(YesNoDialogComponent, {
             data: {
                 object: service,
@@ -93,6 +94,7 @@ export class ServiceListComponent implements OnInit, OnDestroy {
             }
         });
 
+        // handle dialog result
         const subDeleteServiceVersions = dialogRef.afterClosed().subscribe(shouldDelete => {
             if (shouldDelete) {
                 this.apiService.deleteAllServiceVersions(service.shortName).subscribe();
