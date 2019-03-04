@@ -34,6 +34,7 @@ import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.model.MicoServicePort;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.GitHubCrawler;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.web.ServiceController;
@@ -115,6 +116,9 @@ public class ServiceControllerTests {
 
     @Autowired
     private ObjectMapper mapper;
+
+    @MockBean
+    private MicoKubernetesClient micoKubernetesClient;
 
     @Test
     public void getStatusOfService() throws Exception {
@@ -917,6 +921,38 @@ public class ServiceControllerTests {
             .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_2_MATCHER + " && " + VERSION_1_0_2_MATCHER + ")]", hasSize(1)))
             .andExpect(jsonPath(SELF_HREF, is(BASE_URL + SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + DEPENDEES_SUBPATH)))
             .andReturn();
+    }
+
+    @Test
+    public void deleteServiceWithDeployedService() throws Exception {
+        MicoService service = new MicoService()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setDescription(DESCRIPTION);
+
+        given(serviceRepository.findByShortName(SHORT_NAME)).willReturn(Collections.singletonList(service));
+        given(micoKubernetesClient.isMicoServiceDeployed(any())).willReturn(true);
+
+        mvc.perform(delete(SERVICES_PATH + "/" + SHORT_NAME)
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isConflict());
+    }
+
+    @Test
+    public void deleteSpecificServiceWithDeployedService() throws Exception {
+        MicoService service = new MicoService()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setDescription(DESCRIPTION);
+
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME,VERSION)).willReturn(Optional.of(service));
+        given(micoKubernetesClient.isMicoServiceDeployed(any())).willReturn(true);
+
+        mvc.perform(delete(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION)
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isConflict());
     }
 
     @Test
