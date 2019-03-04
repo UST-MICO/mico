@@ -23,11 +23,13 @@ import io.github.ust.mico.core.dto.MicoServiceDependencyGraphDTO;
 import io.github.ust.mico.core.dto.MicoServiceDependencyGraphEdgeDTO;
 import io.github.ust.mico.core.dto.CrawlingInfoDTO;
 import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
+import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.GitHubCrawler;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,6 +74,9 @@ public class ServiceController {
     @Autowired
     private MicoStatusService micoStatusService;
 
+    @Autowired
+    private MicoKubernetesClient micoKubernetesClient;
+
     @GetMapping()
     public ResponseEntity<Resources<Resource<MicoService>>> getServiceList() {
         List<MicoService> services = serviceRepository.findAll(2);
@@ -115,8 +120,10 @@ public class ServiceController {
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     public ResponseEntity<Void> deleteService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                              @PathVariable(PATH_VARIABLE_VERSION) String version) {
+                                              @PathVariable(PATH_VARIABLE_VERSION) String version) throws KubernetesResourceException {
         MicoService service = getServiceFromDatabase(shortName, version);
+
+        throwConflictIfServiceIsDeployed(service);
 
         if (!getDependers(service).isEmpty()) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
@@ -127,14 +134,26 @@ public class ServiceController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Checks if a service is deployed and throws a ResponseStatusException with the http status CONFLICT (409) if
+     * the service is deployed.
+     * @param service Checks if this service is deployed
+     * @throws KubernetesResourceException if the service is deployed. It uses the http status CONFLICT
+     */
+    private void throwConflictIfServiceIsDeployed(MicoService service) throws KubernetesResourceException {
+        if (micoKubernetesClient.isMicoServiceDeployed(service)) {
+            log.info("Micoservice '{}' in version '{}' is deployed. It is not possible to delete a deployed service.", service.getShortName(), service.getVersion());
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Service is currently deployed!");
+        }
+    }
+
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
-    public ResponseEntity<Void> deleteAllVersionsOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
+    public ResponseEntity<Void> deleteAllVersionsOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) throws KubernetesResourceException {
         List<MicoService> micoServiceList = getAllVersionsOfServiceFromDatabase(shortName);
         log.debug("Got following services from database: {}", micoServiceList);
-        micoServiceList.forEach(service -> {
-            //TODO: check for deployment
-        });
-
+        for(MicoService micoService : micoServiceList){
+            throwConflictIfServiceIsDeployed(micoService);
+        }
         micoServiceList.forEach(service -> serviceRepository.delete(service));
 
         return ResponseEntity.noContent().build();

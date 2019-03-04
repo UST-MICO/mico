@@ -224,8 +224,7 @@ public class MicoKubernetesClient {
         boolean result = false;
 
         for (MicoService micoService : serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion())) {
-            Optional<Deployment> deployment = getDeploymentOfMicoService(micoService);
-            if (deployment.isPresent()) {
+            if (isMicoServiceDeployed(micoService)) {
                 result = true;
                 break;
             }
@@ -233,6 +232,26 @@ public class MicoKubernetesClient {
         String deploymentStatus = result ? "deployed" : "not deployed";
         log.info("MicoApplication '{}' in version '{}' is {}.",
             micoApplication.getShortName(), micoApplication.getVersion(), deploymentStatus);
+        return result;
+    }
+
+
+    /**
+     * Checks if a MICO service is already deployed.
+     *
+     * @param micoService the {@link MicoService}
+     * @return {@code true} if the {@link MicoService} is deployed.
+     * @throws KubernetesResourceException if there is an error while retrieving the Kubernetes objects
+     */
+    public boolean isMicoServiceDeployed(MicoService micoService) throws KubernetesResourceException {
+        boolean result = false;
+        Optional<Deployment> deployment = getDeploymentOfMicoService(micoService);
+        if (deployment.isPresent()) {
+                result = true;
+        }
+        String deploymentStatus = result ? "deployed" : "not deployed";
+        log.info("MicoService '{}' in version '{}' is {}.",
+            micoService.getShortName(), micoService.getVersion(), deploymentStatus);
         return result;
     }
 
