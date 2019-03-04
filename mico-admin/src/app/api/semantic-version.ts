@@ -40,18 +40,22 @@ export function versionComparator(versionA: string, versionB: string): number {
     }
 
     let result = 0;
+    // compare major
     result = parseInt(mA[2], 10) - parseInt(mB[2], 10);
     if (result !== 0) {
         return (result > 0) ? 1 : -1;
     }
+    // compare minor
     result = parseInt(mA[3], 10) - parseInt(mB[3], 10);
     if (result !== 0) {
         return (result > 0) ? 1 : -1;
     }
+    // compare fix
     result = parseInt(mA[4], 10) - parseInt(mB[4], 10);
     if (result !== 0) {
         return (result > 0) ? 1 : -1;
     }
+    // compare prefix if both versions have one
     if (mA[5] != null && mB[5] != null) {
         if (mA[5] > mB[5]) {
             return 1;
