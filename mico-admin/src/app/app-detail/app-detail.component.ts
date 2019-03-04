@@ -25,7 +25,7 @@ import { ApiObject } from '../api/apiobject';
 import { Subscription } from 'rxjs';
 import { versionComparator } from '../api/semantic-version';
 import { CreateNextVersionComponent } from '../dialogs/create-next-version/create-next-version.component';
-import { MatDialog } from '@angular/material';
+import { MatDialog, MatSnackBar } from '@angular/material';
 
 @Component({
     selector: 'mico-app-detail',
@@ -39,6 +39,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         private route: ActivatedRoute,
         private router: Router,
         private dialog: MatDialog,
+        private snackBar: MatSnackBar,
     ) { }
 
     subRouteParams: Subscription;
@@ -183,6 +184,10 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                 // TODO wait for propper return value from deploy endpoint
                 // add some deployment monitoring (e.g. state)
                 console.log(val);
+                this.snackBar.open('Application deployment initialized.', 'Ok', {
+                    duration: 5,
+                });
+
             });
     }
 
