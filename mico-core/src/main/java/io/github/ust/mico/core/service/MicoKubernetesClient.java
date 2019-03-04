@@ -240,7 +240,7 @@ public class MicoKubernetesClient {
      * Checks if a MICO service is already deployed.
      *
      * @param micoService the {@link MicoService}
-     * @return if true the mico services is deployed.
+     * @return {@code true} if the {@link MicoService} is deployed.
      * @throws KubernetesResourceException if there is an error while retrieving the Kubernetes objects
      */
     public boolean isMicoServiceDeployed(MicoService micoService) throws KubernetesResourceException {
