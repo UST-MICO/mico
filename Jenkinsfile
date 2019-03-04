@@ -110,15 +110,16 @@ pipeline {
     }
 
     post {
-        always {
+        changed {
             wrap([$class: 'BuildUser']) {
     	       slackSend channel: '#ci-pipeline',
                     color: COLOR_MAP[currentBuild.currentResult],
-                    message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} by ${BUILD_USER}\n More info at: ${env.BUILD_URL}"
-
-                // Clean workspace
-                cleanWs()
+                    message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} by ${BUILD_USER} changed the completion status\n More info at: ${env.BUILD_URL}"
             }
+        }
+        always {
+            // Clean workspace
+            cleanWs()
         }
     }
 }
