@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Provides accessor methods for creating deployments and services in Kubernetes as well as getter methods to retrieve
@@ -126,10 +127,15 @@ public class MicoKubernetesClient {
             .withNewSpec()
             .withContainers(
                 new ContainerBuilder()
-                    // TODO: Use containers from mico service deployment info
                     .withName(micoService.getShortName())
                     .withImage(micoService.getDockerImageUri())
                     .withPorts(createContainerPorts(micoService))
+                    .withEnv(deploymentInfo.getEnvironmentVariables().stream().map(
+                        environmentVariable -> new EnvVarBuilder()
+                            .withName(environmentVariable.getName())
+                            .withValue(environmentVariable.getValue())
+                            .build())
+                        .collect(Collectors.toList()))
                     .build())
             .endSpec()
             .endTemplate()

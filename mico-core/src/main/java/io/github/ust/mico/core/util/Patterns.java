@@ -88,6 +88,17 @@ public class Patterns {
         "Begin and end with an alphanumeric character ([a-z0-9A-Z]) with dashes (-), underscores (_), dots (.), and alphanumerics between.";
 
     /**
+     * Kubernetes environment variable names must only contain letters, numbers and underscores, and must not start with a digit.
+     */
+    public static final String KUBERNETES_ENV_VAR_NAME_REGEX = "[_a-zA-Z][_a-zA-Z0-9]*";
+
+    /**
+     * Message is used if a match with the {@link Patterns#KUBERNETES_ENV_VAR_NAME_REGEX} fails.
+     */
+    public static final String KUBERNETES_ENV_VAR_NAME_MESSAGE = "must only contain letters, numbers and underscores, " +
+        "and must not start with a digit.";
+
+    /**
      * Regex for strings that MUST be a relative path.
      */
     public static final String RELATIVE_PATH_REGEX = "^(?!/.*$).*";
