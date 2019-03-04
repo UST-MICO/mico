@@ -43,6 +43,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -65,6 +66,7 @@ public class ServiceController {
     public static final String PATH_VARIABLE_IMPORT = "import";
     public static final String PATH_VARIABLE_GITHUB = "github";
     public static final String PATH_GITHUB_ENDPOINT = "/" + PATH_VARIABLE_IMPORT + "/" + PATH_VARIABLE_GITHUB;
+    public static final String PATH_PROMOTE = "promote";
 
     @Autowired
     private MicoServiceRepository serviceRepository;
@@ -341,6 +343,25 @@ public class ServiceController {
             log.error("Getting exception '{}'", e.getMessage());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
+    }
+
+    @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_PROMOTE)
+    public ResponseEntity<Resource<MicoService>> promoteApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                    @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                                    @NotEmpty @RequestBody String newVersion) {
+        // Service to promote (copy)
+        MicoService micoService = getServiceFromDatabase(shortName, version);
+
+        // Due to the merge capability of neo4j, we need to set the id to null
+        // to prevent neo4j from overwriting the old version
+        micoService.setVersion(newVersion).setId(null);
+        
+        // Save the new (promoted) service in the database
+        MicoService updatedService = serviceRepository.save(micoService);
+
+        return ResponseEntity
+                .created(linkTo(methodOn(ServiceController.class).getServiceById(updatedService.getId())).toUri())
+                .body(new Resource<>(updatedService, getServiceLinks(updatedService)));
     }
 
     @GetMapping(PATH_GITHUB_ENDPOINT)
