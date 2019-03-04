@@ -12,23 +12,23 @@
                 </mat-cell>
             </ng-container>
             <ng-container matColumnDef="name">
-                <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
-                <mat-cell *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">
+                <mat-header-cell class="ph1" *matHeaderCellDef>Name</mat-header-cell>
+                <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">
                     {{element.name}}</mat-cell>
             </ng-container>
             <ng-container matColumnDef="shortName">
-                <mat-header-cell *matHeaderCellDef>Short Name</mat-header-cell>
-                <mat-cell *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">
+                <mat-header-cell class="ph1" *matHeaderCellDef>Short Name</mat-header-cell>
+                <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">
                     {{element.shortName}}</mat-cell>
             </ng-container>
             <ng-container matColumnDef="description">
-                <mat-header-cell *matHeaderCellDef>Description</mat-header-cell>
-                <mat-cell *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">
+                <mat-header-cell class="ph1" *matHeaderCellDef>Description</mat-header-cell>
+                <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">
                     {{element.description}}</mat-cell>
             </ng-container>
             <ng-container matColumnDef="controls">
-                <mat-header-cell *matHeaderCellDef>Controls</mat-header-cell>
-                <mat-cell *matCellDef="let element">
+                <mat-header-cell class="ph1" *matHeaderCellDef>Controls</mat-header-cell>
+                <mat-cell *matCellDef="let element" class="ph1">
                     <button mat-raised-button (click)="deleteService(element)">delete</button>
                 </mat-cell>
             </ng-container>
