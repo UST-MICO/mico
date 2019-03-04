@@ -885,8 +885,7 @@ public class ServiceControllerTests {
         mvc.perform(delete(SERVICES_PATH + "/" + SHORT_NAME)
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
-            .andExpect(status().isConflict())
-            .andExpect(status().reason("Service is currently deployed!"));
+            .andExpect(status().isConflict());
     }
 
     @Test
@@ -902,8 +901,7 @@ public class ServiceControllerTests {
         mvc.perform(delete(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION)
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
-            .andExpect(status().isConflict())
-            .andExpect(status().reason("Service is currently deployed!"));
+            .andExpect(status().isConflict());
     }
 
     @Test
