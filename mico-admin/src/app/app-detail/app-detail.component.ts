@@ -166,7 +166,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     }
 
     /**
-     * abstract unsubscribe routine wiht null check
+     * generic unsubscribe routine wiht null check
      */
     unsubscribe(subscription: Subscription) {
         if (subscription != null) {

@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, OnDestroy } from '@angular/core';
+import { Component, Input, OnDestroy, OnChanges } from '@angular/core';
 import { ApiService } from '../api/api.service';
 import { Subscription } from 'rxjs';
 
@@ -7,7 +7,7 @@ import { Subscription } from 'rxjs';
     templateUrl: './service-detail-status.component.html',
     styleUrls: ['./service-detail-status.component.css']
 })
-export class ServiceDetailStatusComponent implements OnInit, OnDestroy {
+export class ServiceDetailStatusComponent implements OnChanges, OnDestroy {
 
     @Input() shortName;
     @Input() version;
@@ -20,17 +20,19 @@ export class ServiceDetailStatusComponent implements OnInit, OnDestroy {
         private apiService: ApiService
     ) { }
 
-    ngOnInit() {
+    ngOnChanges() {
         if (this.shortName == null || this.version == null) {
             return;
         }
 
+        // get and set serviceStatus
         this.apiService.getServiceStatus(this.shortName, this.version).subscribe(val => {
             this.serviceStatus = JSON.parse(JSON.stringify(val));
         });
     }
 
     ngOnDestroy() {
+        // unsubscribe from observables
         if (this.subServiceStatus != null) {
             this.subServiceStatus.unsubscribe();
         }

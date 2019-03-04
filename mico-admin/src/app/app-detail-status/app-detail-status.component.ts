@@ -21,23 +21,27 @@ export class AppDetailStatusComponent implements OnChanges, OnDestroy {
     applicationStatus;
 
     ngOnChanges() {
-        if (this.version != null) {
-
-            if (this.subApplicationStatus != null) {
-                this.unsubscribe(this.subApplicationStatus);
-            }
-
-            this.subApplicationStatus = this.apiService.getApplicationStatus(this.shortName, this.version)
-                .subscribe(val => {
-                    this.applicationStatus = val;
-                });
+        if (this.shortName == null || this.version == null) {
+            return;
         }
+
+        // get and set applicationStatus
+        this.unsubscribe(this.subApplicationStatus);
+        this.subApplicationStatus = this.apiService.getApplicationStatus(this.shortName, this.version)
+            .subscribe(val => {
+                this.applicationStatus = val;
+            });
+
     }
 
     ngOnDestroy() {
+        // unsubscribe from observables
         this.unsubscribe(this.subApplicationStatus);
     }
 
+    /**
+     * generic unsubscribe routine wiht null check
+     */
     unsubscribe(subscription: Subscription) {
         if (subscription != null) {
             subscription.unsubscribe();
