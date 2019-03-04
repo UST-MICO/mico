@@ -22,6 +22,11 @@
                 <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/app-detail', element.shortName]">
                     {{element.shortName}}</mat-cell>
             </ng-container>
+            <ng-container matColumnDef="version">
+                <mat-header-cell class="ph1" *matHeaderCellDef>Version</mat-header-cell>
+                <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/app-detail', element.shortName]">
+                    {{element.version}}</mat-cell>
+            </ng-container>
             <ng-container matColumnDef="description">
                 <mat-header-cell class="ph1" *matHeaderCellDef>Description</mat-header-cell>
                 <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/app-detail', element.shortName]">

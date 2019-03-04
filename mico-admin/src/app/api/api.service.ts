@@ -133,7 +133,7 @@ export class ApiService {
         this.rest.get<ApiObject>(resource).subscribe(val => {
             // return actual application list
             if (val.hasOwnProperty('_embedded')) {
-                stream.next(freezeObject(val._embedded.micoApplicationList));
+                stream.next(freezeObject(val._embedded.micoApplicationWithServicesDTOList));
             } else {
                 stream.next(freezeObject([]));
             }
@@ -159,7 +159,7 @@ export class ApiService {
             let list: ApiObject[];
 
             if (val.hasOwnProperty('_embedded')) {
-                list = val._embedded.micoApplicationList;
+                list = val._embedded.micoApplicationWithServicesDTOList;
             } else {
                 list = [];
             }
@@ -339,7 +339,7 @@ export class ApiService {
      */
     getServiceDeploymentInformation(applicationShortName: string, applicationVersion: string, serviceShortName) {
 
-        const resource = 'applications/' + applicationShortName + '/' + applicationVersion + '/services/' + serviceShortName;
+        const resource = 'applications/' + applicationShortName + '/' + applicationVersion + '/deploymentInormation/' + serviceShortName;
         const stream = this.getStreamSource<ApiObject>(resource);
 
         this.rest.get<ApiObject>(resource).subscribe(val => {
@@ -367,7 +367,7 @@ export class ApiService {
             return;
         }
 
-        const resource = 'applications/' + applicationShortName + '/' + applicationVersion + '/services/' + serviceShortName;
+        const resource = 'applications/' + applicationShortName + '/' + applicationVersion + '/deploymentInormation/' + serviceShortName;
 
         return this.rest.put<ApiObject>(resource, data).pipe(flatMap(val => {
 

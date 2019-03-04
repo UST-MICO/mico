@@ -43,7 +43,7 @@ export class AppListComponent implements OnInit {
 
     applications: Readonly<ApiObject[]>;
 
-    displayedColumns: string[] = ['id', 'name', 'shortName', 'description', 'controls'];
+    displayedColumns: string[] = ['name', 'shortName', 'version', 'description', 'controls'];
 
     ngOnInit() {
         this.getApplications();
@@ -62,7 +62,7 @@ export class AppListComponent implements OnInit {
                     .pipe(
                         groupBy(application => application.shortName),
                         mergeMap(group => group.pipe(toArray())),
-                        map(group => group[0]),
+                        map(group => group[group.length - 1]),
                         toArray()
                     ).subscribe(applicationList => {
                         this.applications = applicationList;

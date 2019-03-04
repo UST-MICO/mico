@@ -50,7 +50,7 @@ export class CreateApplicationComponent implements OnInit, OnDestroy {
     ngOnInit() {
         // only show required fields
         this.subModelDefinitions = this.apiService.getModelDefinitions().subscribe(val => {
-            this.filterList = (val['MicoApplication'] as ApiModel).required;
+            this.filterList = (val['MicoApplicationDTO'] as ApiModel).required;
         });
     }
 
