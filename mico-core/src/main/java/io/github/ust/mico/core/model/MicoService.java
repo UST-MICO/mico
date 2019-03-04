@@ -87,12 +87,12 @@ public class MicoService {
             @ExtensionProperty(name = "title", value = "Short Name"),
             @ExtensionProperty(name = "pattern", value = Patterns.KUBERNETES_NAMING_REGEX),
             @ExtensionProperty(name = "minLength", value = "3"),
-            @ExtensionProperty(name = "maxLength", value = "254"),
+            @ExtensionProperty(name = "maxLength", value = "253"),
             @ExtensionProperty(name = "x-order", value = "10"),
             @ExtensionProperty(name = "description", value = "A unique name of the MicoService.")
         }
     )})
-    @Size(min = 3, max = 254, message = "must have a length between 3 and 254")
+    @Size(min = 3, max = 253, message = "must have a length between 3 and 253")
     @Pattern(regexp = Patterns.KUBERNETES_NAMING_REGEX, message = Patterns.KUBERNETES_NAMING_MESSAGE)
     private String shortName;
 
@@ -219,7 +219,7 @@ public class MicoService {
         }
     )})
     @Relationship(type = "PREDECESSOR")
-    @Valid
+    // TODO: Not required by the UI. Omit it in the DTO. Covered in mico#512
     private MicoService predecessor;
 
     /**
@@ -273,11 +273,14 @@ public class MicoService {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Git Release Info Url"),
+            @ExtensionProperty(name = "readOnly", value = "true"),
             @ExtensionProperty(name = "x-order", value = "120"),
             @ExtensionProperty(name = "description", value = "The URL to the get the information about a specific " +
                 "git release.")
         }
     )})
+    // TODO: Not required by the UI. Omit it in the DTO. Covered in mico#512
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String gitReleaseInfoUrl;
 
     /**

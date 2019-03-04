@@ -37,6 +37,7 @@ public class KubernetesNameNormalizer {
     private final static String REGEX_WHITESPACE = "\\s+";
     private final static String REGEX_CHARS_REPLACED_BY_A_DASH = "[._]+";
     private final static String REGEX_MULTIPLE_DASHES = "[-]+";
+    private final static String REGEX_FIRST_CHAR_IS_A_DASH = "^-";
     private final static String REGEX_MATCH_VALID_FIRST_CHAR = "^[a-z]+.*";
 
     /**
@@ -54,21 +55,23 @@ public class KubernetesNameNormalizer {
         // Convert to lower case
         String s3 = s2.toLowerCase();
         // Replace '_' and '.' and with a dash
-        String s4 = new String(s3.replaceAll(REGEX_CHARS_REPLACED_BY_A_DASH, "-").getBytes(StandardCharsets.US_ASCII), StandardCharsets.US_ASCII);
+        String s4 = s3.replaceAll(REGEX_CHARS_REPLACED_BY_A_DASH, "-");
         // Replace whitespace characters to dashes
-        String s5 = new String(s4.replaceAll(REGEX_WHITESPACE, "-").getBytes(StandardCharsets.US_ASCII), StandardCharsets.US_ASCII);
-        // Replace multiple subsequent dashes with one dash
-        String s6 = new String(s5.replaceAll(REGEX_MULTIPLE_DASHES, "-").getBytes(StandardCharsets.US_ASCII), StandardCharsets.US_ASCII);
+        String s5 = s4.replaceAll(REGEX_WHITESPACE, "-");
         // Remove all invalid characters
-        String s7 = new String(s6.replaceAll(REGEX_NOT_VALID_CHAR, "").getBytes(StandardCharsets.US_ASCII), StandardCharsets.US_ASCII);
+        String s6 = s5.replaceAll(REGEX_NOT_VALID_CHAR, "");
+        // Replace multiple subsequent dashes with one dash
+        String s7 = s6.replaceAll(REGEX_MULTIPLE_DASHES, "-");
+        // Remove a dash if it is the first character
+        String s8 = s7.replaceAll(REGEX_FIRST_CHAR_IS_A_DASH, "");
         // Check if name begins with a valid character
-        if (s7.matches(REGEX_MATCH_VALID_FIRST_CHAR)) {
-            result = s7;
+        if (s8.matches(REGEX_MATCH_VALID_FIRST_CHAR)) {
+            result = s8;
         } else {
-            result = "short-name-" + s7;
+            result = "short-name-" + s8;
         }
 
-        if (!result.matches(Patterns.KUBERNETES_NAMING_REGEX)) {
+        if (!result.matches(Patterns.KUBERNETES_NAMING_REGEX) || result.length() > 253) {
             throw new IllegalArgumentException("Name '" + name + "' could not be normalized correctly");
         }
 

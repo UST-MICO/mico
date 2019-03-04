@@ -59,9 +59,9 @@ public class TestConstants {
     public static final String SHORT_NAME_3_MATCHER = JsonPathBuilder.buildSingleMatcher(SHORT_NAME_ATTRIBUTE, SHORT_NAME_3);
 
     public static final String NAME = "test-name";
-    public static final String NAME_1 = "test-name";
-    public static final String NAME_2 = "test-name";
-    public static final String NAME_3 = "test-name";
+    public static final String NAME_1 = "test-name-1";
+    public static final String NAME_2 = "test-name-2";
+    public static final String NAME_3 = "test-name-3";
     public static final String NAME_ATTRIBUTE = JsonPathBuilder.buildAttributePath("name");
     public static final String NAME_MATCHER = JsonPathBuilder.buildSingleMatcher(NAME_ATTRIBUTE, NAME);
     public static final String NAME_1_MATCHER = JsonPathBuilder.buildSingleMatcher(NAME_ATTRIBUTE, NAME_1);

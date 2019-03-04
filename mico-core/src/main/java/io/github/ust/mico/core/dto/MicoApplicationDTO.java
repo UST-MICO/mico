@@ -63,12 +63,12 @@ public class MicoApplicationDTO {
             @ExtensionProperty(name = "title", value = "Short Name"),
             @ExtensionProperty(name = "pattern", value = Patterns.KUBERNETES_NAMING_REGEX),
             @ExtensionProperty(name = "minLength", value = "3"),
-            @ExtensionProperty(name = "maxLength", value = "254"),
+            @ExtensionProperty(name = "maxLength", value = "253"),
             @ExtensionProperty(name = "x-order", value = "10"),
             @ExtensionProperty(name = "description", value = "Unique short name of the application.")
         }
     )})
-    @Size(min = 3, max = 254, message = "must have a length between 3 and 254")
+    @Size(min = 3, max = 253, message = "must have a length between 3 and 253")
     @Pattern(regexp = Patterns.KUBERNETES_NAMING_REGEX, message = Patterns.KUBERNETES_NAMING_MESSAGE)
     private String shortName;
 

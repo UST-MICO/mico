@@ -46,19 +46,22 @@ public class Patterns {
     /**
      * Kubernetes label prefix (optional segment of label keys) is optional.
      * If specified, the prefix must be a DNS subdomain: a series of DNS labels separated by dots (.),
-     * not longer than 253 characters in total, followed by a slash (/).
+     * not longer than 253 characters in total.
      */
-    public static final String KUBERNETES_LABEL_PREFIX_REGEX = "[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*";
+    private static final String KUBERNETES_LABEL_PREFIX_REGEX = "[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*";
 
     /**
-     * Kubernetes label names (part of both key and values) must be 63 characters or less and must be empty or begin and end
-     * with an alphanumeric character ([a-z0-9A-Z]) with dashes (-), underscores (_), dots (.), and alphanumerics between.
+     * Kubernetes label names (part of both key and values)  must consist of alphanumeric characters, '-', '_' or '.',
+     * and must start and end with an alphanumeric character. Max length is 63 characters.
      */
-    public static final String KUBERNETES_LABEL_NAME_REGEX = "[a-z0-9A-Z]+[a-z0-9A-Z-_.]*[a-z0-9A-Z]+";
+    private static final String KUBERNETES_LABEL_NAME_REGEX = "[a-z0-9A-Z][a-z0-9A-Z-_.]*[a-z0-9A-Z]";
 
     /**
-     * Kubernetes label names (part of both key and values) must be 63 characters or less and must be empty or begin and end
-     * with an alphanumeric character ([a-z0-9A-Z]) with dashes (-), underscores (_), dots (.), and alphanumerics between.
+     * Valid label keys have two segments: an optional prefix and name, separated by a slash (/).
+     * The name segment is required and must be 63 characters or less, beginning and ending with an alphanumeric character ([a-z0-9A-Z])
+     * with dashes (-), underscores (_), dots (.), and alphanumerics between.
+     * The prefix is optional. If specified, the prefix must be a DNS subdomain:
+     * a series of DNS labels separated by dots (.), not longer than 253 characters in total, followed by a slash (/).
      */
     public static final String KUBERNETES_LABEL_KEY_REGEX = "^(" + KUBERNETES_LABEL_PREFIX_REGEX + "\\/)?" + KUBERNETES_LABEL_NAME_REGEX + "$";
 
@@ -92,17 +95,27 @@ public class Patterns {
     /**
      * Regex for a prefix consisting of letters (may be empty).
      */
-    public static final String LETTERS_PREFIX_REGEX = "^([a-zA-Z]+)?$";
-    
+    public static final String LETTERS_PREFIX_REGEX = "^[a-zA-Z]*$";
+
+    private static final String SEMANTIC_VERSION_MAJOR_MINOR_PATCH_REGEX =
+        "(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)";
+    private static final String SEMANTIC_VERSION_PRE_RELEASE_TAG_REGEX =
+        "(((0|[1-9]\\d*|\\d*[A-Z-a-z-][\\dA-Za-z-]*))(\\.(0|[1-9]\\d*|\\d*[A-Za-z-][\\dA-Za-z-]*))*)";
+    private static final String SEMANTIC_VERSION_BUILD_METADATA_TAG_REGEX =
+        "([\\dA-Za-z-]+(\\.[\\dA-Za-z-]*)*)";
+    private static final String SEMANTIC_VERSION_TEMP_REGEX = SEMANTIC_VERSION_MAJOR_MINOR_PATCH_REGEX +
+        "(-" + SEMANTIC_VERSION_PRE_RELEASE_TAG_REGEX + ")?" +
+        "(\\+" + SEMANTIC_VERSION_BUILD_METADATA_TAG_REGEX + ")?";
+
     /**
-     * Regex for a semantic version. 
+     * Regex for a semantic version.
      */
-    public static final String SEMANTIC_VERSION_REGEX = "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(-(((0|[1-9]\\d*|\\d*[A-Z-a-z-][\\dA-Za-z-]*))(\\.(0|[1-9]\\d*|\\d*[A-Za-z-][\\dA-Za-z-]*))*))?(\\+([\\dA-Za-z-]+(\\.[\\dA-Za-z-]*)*))?$";
+    public static final String SEMANTIC_VERSION_REGEX = "^" + SEMANTIC_VERSION_TEMP_REGEX + "$";
 
     /**
      * Regex for a semantic version with a prefix (optional) consisting of letters. 
      */
-    public static final String SEMANTIC_VERSION_WITH_PREFIX_REGEX = "^([a-zA-Z]+)?(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(-(((0|[1-9]\\d*|\\d*[A-Z-a-z-][\\dA-Za-z-]*))(\\.(0|[1-9]\\d*|\\d*[A-Za-z-][\\dA-Za-z-]*))*))?(\\+([\\dA-Za-z-]+(\\.[\\dA-Za-z-]*)*))?$";
+    public static final String SEMANTIC_VERSION_WITH_PREFIX_REGEX = "^[a-zA-Z]*" + SEMANTIC_VERSION_REGEX + "$";
 
     /**
      * Message is used if a match with the {@link Patterns#SEMANTIC_VERSION_WITH_PREFIX_REGEX} fails.

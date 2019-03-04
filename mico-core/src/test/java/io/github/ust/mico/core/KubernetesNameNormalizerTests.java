@@ -77,5 +77,9 @@ public class KubernetesNameNormalizerTests {
         collector.checkThat("First character MUST be a letter",
             normalizer.normalizeName("1-name"),
             equalTo("short-name-1-name"));
+
+        collector.checkThat("First character is a dash",
+            normalizer.normalizeName("-name"),
+            equalTo("name"));
     }
 }
