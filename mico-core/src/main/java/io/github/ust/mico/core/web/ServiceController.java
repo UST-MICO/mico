@@ -346,16 +346,16 @@ public class ServiceController {
     }
 
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_PROMOTE)
-    public ResponseEntity<Resource<MicoService>> promoteApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                    @PathVariable(PATH_VARIABLE_VERSION) String version,
-                                                                    @NotEmpty @RequestBody String newVersion) {
+    public ResponseEntity<Resource<MicoService>> promoteService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                                @NotEmpty @RequestBody String newVersion) {
         // Service to promote (copy)
         MicoService micoService = getServiceFromDatabase(shortName, version);
 
         // Due to the merge capability of neo4j, we need to set the id to null
         // to prevent neo4j from overwriting the old version
         micoService.setVersion(newVersion).setId(null);
-        
+
         // Save the new (promoted) service in the database
         MicoService updatedService = serviceRepository.save(micoService);
 
@@ -382,27 +382,26 @@ public class ServiceController {
         }
     }
 
-   @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependencyGraph")
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependencyGraph")
     public ResponseEntity<Resource<MicoServiceDependencyGraphDTO>> getDependencyGraph(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                               @PathVariable(PATH_VARIABLE_VERSION) String version) {
-       MicoService micoServiceRoot = getServiceFromDatabase(shortName, version);
-       List<MicoService> micoServices = serviceRepository.getAllDependeesOfMicoService(micoServiceRoot.getShortName(), micoServiceRoot.getVersion());
-       MicoServiceDependencyGraphDTO micoServiceDependencyGraph = new MicoServiceDependencyGraphDTO().setMicoServices(micoServices);
-       LinkedList<MicoServiceDependencyGraphEdgeDTO> micoServiceDependencyGraphEdgeList = new LinkedList<>();
-       for (MicoService micoService : micoServices) {
-           //Request each mico service again from the db, because the dependencies are not included
-           //in the result of the custom query. TODO improve query to also include the dependencies (Depth parameter)
-           MicoService micoServiceFromDB = getServiceFromDatabase(micoService.getShortName(), micoService.getVersion());
-           micoServiceFromDB.getDependencies().forEach(micoServiceDependency -> {
-               MicoServiceDependencyGraphEdgeDTO edge = new MicoServiceDependencyGraphEdgeDTO(micoService,micoServiceDependency.getDependedService());
-               micoServiceDependencyGraphEdgeList.add(edge);
-           });
-       }
-       micoServiceDependencyGraph.setMicoServiceDependencyGraphEdgeList(micoServiceDependencyGraphEdgeList);
-       return ResponseEntity.ok(new Resource<>(micoServiceDependencyGraph,
-           linkTo(methodOn(ServiceController.class).getDependencyGraph(shortName, version)).withSelfRel()));
-   }
-
+                                                                                      @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        MicoService micoServiceRoot = getServiceFromDatabase(shortName, version);
+        List<MicoService> micoServices = serviceRepository.getAllDependeesOfMicoService(micoServiceRoot.getShortName(), micoServiceRoot.getVersion());
+        MicoServiceDependencyGraphDTO micoServiceDependencyGraph = new MicoServiceDependencyGraphDTO().setMicoServices(micoServices);
+        LinkedList<MicoServiceDependencyGraphEdgeDTO> micoServiceDependencyGraphEdgeList = new LinkedList<>();
+        for (MicoService micoService : micoServices) {
+            //Request each mico service again from the db, because the dependencies are not included
+            //in the result of the custom query. TODO improve query to also include the dependencies (Depth parameter)
+            MicoService micoServiceFromDB = getServiceFromDatabase(micoService.getShortName(), micoService.getVersion());
+            micoServiceFromDB.getDependencies().forEach(micoServiceDependency -> {
+                MicoServiceDependencyGraphEdgeDTO edge = new MicoServiceDependencyGraphEdgeDTO(micoService, micoServiceDependency.getDependedService());
+                micoServiceDependencyGraphEdgeList.add(edge);
+            });
+        }
+        micoServiceDependencyGraph.setMicoServiceDependencyGraphEdgeList(micoServiceDependencyGraphEdgeList);
+        return ResponseEntity.ok(new Resource<>(micoServiceDependencyGraph,
+                linkTo(methodOn(ServiceController.class).getDependencyGraph(shortName, version)).withSelfRel()));
+    }
 
 
     public List<MicoService> getDependers(MicoService serviceToLookFor) {
