@@ -1,4 +1,4 @@
-import { Component, Input, OnDestroy, OnChanges } from '@angular/core';
+import { Component, OnChanges, Input, OnDestroy } from '@angular/core';
 import { ApiService } from '../api/api.service';
 import { Subscription } from 'rxjs';
 import { UtilsService } from '../util/utils.service';
@@ -16,6 +16,7 @@ export class ServiceDetailStatusComponent implements OnChanges, OnDestroy {
     subServiceStatus: Subscription;
 
     serviceStatus;
+    blackList = ['shortName', 'version', 'name'];
 
     constructor(
         private apiService: ApiService,
