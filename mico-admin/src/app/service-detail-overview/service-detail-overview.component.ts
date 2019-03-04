@@ -90,7 +90,7 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
 
     /**
      * generic function to unsubscribe from an obersvable if it is not null
-     * @param subscription obervable
+     * @param subscription observable
      */
     unsubscribe(subscription: Subscription) {
         if (subscription != null) {
