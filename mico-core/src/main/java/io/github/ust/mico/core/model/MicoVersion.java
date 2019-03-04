@@ -74,7 +74,7 @@ public class MicoVersion implements Comparable<MicoVersion> {
         String prefix = arr[0].trim();
         
         // Only letters allowed for prefix
-        if (!Pattern.matches(Patterns.LETTERS_PREFIX_REGEX, prefix)) {
+        if (!Pattern.matches(Patterns.ONLY_LETTERS_OR_EMPTY_REGEX, prefix)) {
             throw new VersionNotSupportedException("Illegal prefix, only letters are allowed");
         }
         

@@ -93,9 +93,9 @@ public class Patterns {
     public static final String RELATIVE_PATH_REGEX = "^(?!/.*$).*";
     
     /**
-     * Regex for a prefix consisting of letters (may be empty).
+     * Regex to ensure to only use letters (may be empty).
      */
-    public static final String LETTERS_PREFIX_REGEX = "^[a-zA-Z]*$";
+    public static final String ONLY_LETTERS_OR_EMPTY_REGEX = "^[a-zA-Z]*$";
 
     private static final String SEMANTIC_VERSION_MAJOR_MINOR_PATCH_REGEX =
         "(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)";
