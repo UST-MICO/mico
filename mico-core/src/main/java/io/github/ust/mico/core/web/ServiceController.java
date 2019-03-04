@@ -351,6 +351,7 @@ public class ServiceController {
                                                                 @NotEmpty @RequestBody String newVersion) {
         // Service to promote (copy)
         MicoService micoService = getServiceFromDatabase(shortName, version);
+        log.debug("Received following MicoService from database: {}", micoService);
 
         // Due to the merge capability of neo4j, we need to set the id to null
         // to prevent neo4j from overwriting the old version
@@ -358,6 +359,7 @@ public class ServiceController {
 
         // Save the new (promoted) service in the database
         MicoService updatedService = serviceRepository.save(micoService);
+        log.debug("Saved following MicoService in database: {}", updatedService);
 
         return ResponseEntity
                 .created(linkTo(methodOn(ServiceController.class).getServiceById(updatedService.getId())).toUri())
