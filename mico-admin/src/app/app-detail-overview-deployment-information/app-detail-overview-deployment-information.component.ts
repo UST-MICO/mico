@@ -1,5 +1,7 @@
 import { Component, Input, OnChanges } from '@angular/core';
 import { ApiService } from '../api/api.service';
+import { DeploymentInformationDialogComponent } from '../dialogs/deployment-information-dialog/deployment-information-dialog.component';
+import { MatDialog } from '@angular/material';
 
 @Component({
     selector: 'mico-app-detail-overview-deployment-information',
@@ -8,7 +10,8 @@ import { ApiService } from '../api/api.service';
 })
 export class AppDetailOverviewDeploymentInformationComponent implements OnChanges {
 
-    constructor(private apiService: ApiService) { }
+    constructor(private apiService: ApiService,
+        private dialog: MatDialog) { }
 
     @Input() service;
     @Input() applicationShortName: string;
@@ -24,6 +27,25 @@ export class AppDetailOverviewDeploymentInformationComponent implements OnChange
                     this.deploymentInformation = JSON.parse(JSON.stringify(val));
                 });
         }
+    }
+
+    openSettings() {
+        const dialogRef = this.dialog.open(DeploymentInformationDialogComponent, {
+            data: {
+                deploymentInformation: this.deploymentInformation,
+            }
+        });
+
+        const subDialog = dialogRef.afterClosed().subscribe(val => {
+
+            if (val) {
+
+                this.apiService.putServiceDeploymentInformation(this.applicationShortName, this.applicationVersion,
+                    this.service.shortName, val)
+                    .subscribe();
+                subDialog.unsubscribe();
+            }
+        });
     }
 
 }

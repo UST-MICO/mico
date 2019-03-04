@@ -97,6 +97,7 @@ import { MicoDataObjectComponent } from './data-view/mico-data-object/mico-data-
 import { AppDetailStatusComponent } from './app-detail-status/app-detail-status.component';
 import { ServiceDetailStatusComponent } from './service-detail-status/service-detail-status.component';
 import { AppDetailOverviewDeploymentInformationComponent } from './app-detail-overview-deployment-information/app-detail-overview-deployment-information.component';
+import { DeploymentInformationDialogComponent } from './dialogs/deployment-information-dialog/deployment-information-dialog.component';
 
 @NgModule({
     declarations: [
@@ -136,7 +137,8 @@ import { AppDetailOverviewDeploymentInformationComponent } from './app-detail-ov
         MicoDataObjectComponent,
         AppDetailStatusComponent,
         ServiceDetailStatusComponent,
-        AppDetailOverviewDeploymentInformationComponent
+        AppDetailOverviewDeploymentInformationComponent,
+        DeploymentInformationDialogComponent
     ],
     entryComponents: [
         // dialogs
@@ -148,6 +150,7 @@ import { AppDetailOverviewDeploymentInformationComponent } from './app-detail-ov
         UpdateServiceInterfaceComponent,
         CreateApplicationComponent,
         CreateNextVersionComponent,
+        DeploymentInformationDialogComponent,
     ],
     imports: [
         BrowserModule,
