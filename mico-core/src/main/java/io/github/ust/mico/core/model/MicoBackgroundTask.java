@@ -21,6 +21,7 @@ package io.github.ust.mico.core.model;
 import lombok.Data;
 import org.neo4j.ogm.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
+import org.springframework.data.redis.core.index.Indexed;
 
 import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;
@@ -39,7 +40,9 @@ public class MicoBackgroundTask implements Serializable {
     @Id
     String id;
     CompletableFuture job;
+    @Indexed
     String micoServiceShortName;
+    @Indexed
     String micoServiceVersion;
     Status status;
     String errorMessage;
