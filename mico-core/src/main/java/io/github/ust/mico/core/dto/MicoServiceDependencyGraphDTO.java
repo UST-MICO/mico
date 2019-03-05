@@ -19,14 +19,14 @@
 
 package io.github.ust.mico.core.dto;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import io.github.ust.mico.core.model.MicoService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
-
-import java.util.LinkedList;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -36,4 +36,5 @@ public class MicoServiceDependencyGraphDTO {
 
    private List<MicoService> micoServices = new LinkedList<>();
    private List<MicoServiceDependencyGraphEdgeDTO> micoServiceDependencyGraphEdgeList = new LinkedList<>();
+   
 }

@@ -31,7 +31,6 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class MicoServiceDependencyGraphEdgeDTO {
 
-
     private String sourceShortName;
     private String sourceVersion;
     private String targetShortName;
@@ -43,6 +42,5 @@ public class MicoServiceDependencyGraphEdgeDTO {
         this.targetShortName = target.getShortName();
         this.targetVersion = target.getVersion();
     }
-
 
 }

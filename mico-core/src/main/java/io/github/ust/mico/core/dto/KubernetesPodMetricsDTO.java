@@ -19,7 +19,6 @@
 
 package io.github.ust.mico.core.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.swagger.annotations.ApiModelProperty;
@@ -37,7 +36,6 @@ import lombok.experimental.Accessors;
 @AllArgsConstructor
 @NoArgsConstructor
 @Accessors(chain = true)
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class KubernetesPodMetricsDTO {
 
     /**

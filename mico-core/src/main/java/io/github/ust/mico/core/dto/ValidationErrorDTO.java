@@ -19,17 +19,19 @@
 
 package io.github.ust.mico.core.dto;
 
-import lombok.Value;
+import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.servlet.http.HttpServletRequest;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
+import lombok.Value;
 
 @Value
 public class ValidationErrorDTO {
