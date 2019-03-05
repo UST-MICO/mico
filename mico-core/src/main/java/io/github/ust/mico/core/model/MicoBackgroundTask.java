@@ -29,23 +29,26 @@ import java.util.concurrent.CompletableFuture;
 @RedisHash("BackgroundJob")
 public class MicoBackgroundTask implements Serializable {
     public enum Type {
-        IMPORT, BUILD
+        BUILD
     }
 
     public enum Status {
-        PENDING, RUNNING, CANCELLED, ERROR, DONE
+        PENDING, RUNNING, ERROR, DONE
     }
 
     @Id
     String id;
     CompletableFuture job;
-    MicoService service;
+    String micoServiceShortName;
+    String micoServiceVersion;
     Status status;
+    String errorMessage;
     Type type;
 
-    public MicoBackgroundTask(CompletableFuture job, MicoService service, Type type) {
+    public MicoBackgroundTask(CompletableFuture job, String micoServiceShortName, String micoServiceVersion, Type type) {
         this.job = job;
-        this.service = service;
+        this.micoServiceShortName = micoServiceShortName;
+        this.micoServiceVersion = micoServiceVersion;
         this.type = type;
         this.status = Status.PENDING;
     }

@@ -20,7 +20,6 @@ package io.github.ust.mico.core;
 
 import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.model.MicoBackgroundTask;
-import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.persistence.MicoBackgroundTaskRepository;
 import io.github.ust.mico.core.util.EmbeddedRedisServer;
 import io.github.ust.mico.core.web.BackgroundTaskController;
@@ -65,7 +64,7 @@ public class BackgroundTaskControllerTest {
     private static final String JSON_PATH_LINKS_SECTION = "$._links.";
 
     public static final String BACKGROUNDTASK_LIST = buildPath(EMBEDDED, "micoBackgroundTaskList");
-    public static final String SHORT_NAME_PATH = buildPath(ROOT, "service", "shortName");
+    public static final String SHORT_NAME_PATH = buildPath(ROOT, "micoServiceShortName");
     public static final String STATUS_PATH = buildPath(ROOT, "status");
     public static final String LINKS_CANCEL_HREF = buildPath(LINKS, "cancel", HREF);
     public static final String LINKS_JOBS_HREF = buildPath(LINKS, "jobs", HREF);
@@ -86,18 +85,18 @@ public class BackgroundTaskControllerTest {
     @Test
     public void getAllJobs() throws Exception {
         jobRepository.saveAll(
-            Arrays.asList(new MicoBackgroundTask(CompletableFuture.completedFuture(true), new MicoService().setShortName(SHORT_NAME).setVersion(VERSION), MicoBackgroundTask.Type.BUILD),
-                new MicoBackgroundTask(CompletableFuture.completedFuture(true), new MicoService().setShortName(SHORT_NAME_1).setVersion(VERSION), MicoBackgroundTask.Type.BUILD),
-                new MicoBackgroundTask(CompletableFuture.completedFuture(true), new MicoService().setShortName(SHORT_NAME_2).setVersion(VERSION), MicoBackgroundTask.Type.BUILD)));
+            Arrays.asList(new MicoBackgroundTask(CompletableFuture.completedFuture(true), SHORT_NAME, VERSION, MicoBackgroundTask.Type.BUILD),
+                new MicoBackgroundTask(CompletableFuture.completedFuture(true), SHORT_NAME_1, VERSION, MicoBackgroundTask.Type.BUILD),
+                new MicoBackgroundTask(CompletableFuture.completedFuture(true), SHORT_NAME_2, VERSION, MicoBackgroundTask.Type.BUILD)));
 
         mvc.perform(get("/jobs").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
             .andExpect(jsonPath(BACKGROUNDTASK_LIST + "[*]", hasSize(3)))
-            .andExpect(jsonPath(BACKGROUNDTASK_LIST + "[?(@.service.shortName=='" + SHORT_NAME + "' && @.service.version=='" + VERSION + "')]", hasSize(1)))
-            .andExpect(jsonPath(BACKGROUNDTASK_LIST + "[?(@.service.shortName=='" + SHORT_NAME_1 + "' && @.service.version=='" + VERSION + "')]", hasSize(1)))
-            .andExpect(jsonPath(BACKGROUNDTASK_LIST + "[?(@.service.shortName=='" + SHORT_NAME_2 + "' && @.service.version=='" + VERSION + "')]", hasSize(1)))
+            .andExpect(jsonPath(BACKGROUNDTASK_LIST + "[?(@.micoServiceShortName=='" + SHORT_NAME + "' && @.micoServiceVersion=='" + VERSION + "')]", hasSize(1)))
+            .andExpect(jsonPath(BACKGROUNDTASK_LIST + "[?(@.micoServiceShortName=='" + SHORT_NAME_1 + "' && @.micoServiceVersion=='" + VERSION + "')]", hasSize(1)))
+            .andExpect(jsonPath(BACKGROUNDTASK_LIST + "[?(@.micoServiceShortName=='" + SHORT_NAME_2 + "' && @.micoServiceVersion=='" + VERSION + "')]", hasSize(1)))
             .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/jobs")))
             .andReturn();
 
@@ -106,7 +105,7 @@ public class BackgroundTaskControllerTest {
     @Test
     public void getJobById() throws Exception {
 
-        MicoBackgroundTask doneJob = new MicoBackgroundTask(CompletableFuture.completedFuture(true), new MicoService().setShortName(SHORT_NAME).setVersion(VERSION), MicoBackgroundTask.Type.BUILD);
+        MicoBackgroundTask doneJob = new MicoBackgroundTask(CompletableFuture.completedFuture(true), SHORT_NAME, VERSION, MicoBackgroundTask.Type.BUILD);
         doneJob.setStatus(MicoBackgroundTask.Status.DONE);
         String id = jobRepository.save(doneJob).getId();
 
@@ -116,7 +115,7 @@ public class BackgroundTaskControllerTest {
             .andExpect(redirectedUrl("/services/short-name/1.0.0"))
             .andReturn();
 
-        MicoBackgroundTask pendingJob = new MicoBackgroundTask(CompletableFuture.completedFuture(true), new MicoService().setShortName(SHORT_NAME).setVersion(VERSION), MicoBackgroundTask.Type.BUILD);
+        MicoBackgroundTask pendingJob = new MicoBackgroundTask(CompletableFuture.completedFuture(true), SHORT_NAME, VERSION, MicoBackgroundTask.Type.BUILD);
         id = jobRepository.save(pendingJob).getId();
 
         mvc.perform(get("/jobs/" + id).accept(MediaTypes.HAL_JSON_UTF8_VALUE))
@@ -129,7 +128,7 @@ public class BackgroundTaskControllerTest {
             .andExpect(jsonPath(LINKS_JOBS_HREF, is("http://localhost/jobs")))
             .andReturn();
 
-        MicoBackgroundTask runningJob = new MicoBackgroundTask(CompletableFuture.completedFuture(true), new MicoService().setShortName(SHORT_NAME).setVersion(VERSION), MicoBackgroundTask.Type.BUILD);
+        MicoBackgroundTask runningJob = new MicoBackgroundTask(CompletableFuture.completedFuture(true), SHORT_NAME, VERSION, MicoBackgroundTask.Type.BUILD);
         runningJob.setStatus(MicoBackgroundTask.Status.RUNNING);
         id = jobRepository.save(runningJob).getId();
 
@@ -146,7 +145,7 @@ public class BackgroundTaskControllerTest {
 
     @Test
     public void deleteJob() throws Exception {
-        MicoBackgroundTask pendingJob = new MicoBackgroundTask(CompletableFuture.completedFuture(true), new MicoService().setShortName(SHORT_NAME).setVersion(VERSION), MicoBackgroundTask.Type.BUILD);
+        MicoBackgroundTask pendingJob = new MicoBackgroundTask(CompletableFuture.completedFuture(true), SHORT_NAME, VERSION, MicoBackgroundTask.Type.BUILD);
         String id = jobRepository.save(pendingJob).getId();
         mvc.perform(delete("/jobs/" + id).accept(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())

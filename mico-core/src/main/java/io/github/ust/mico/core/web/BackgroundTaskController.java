@@ -61,11 +61,10 @@ public class BackgroundTaskController {
 
     @GetMapping("/{" + PATH_ID + "}")
     public ResponseEntity<Resource<MicoBackgroundTask>> getJobById(@PathVariable(PATH_ID) String id) {
-        // TODO If job info is no longer available (for whatever reason)
-        //HTTP/1.1 410 Gone (once job information is no longer available, when the server expires the resource)
         Optional<MicoBackgroundTask> jobOptional = jobRepository.findById(id);
         if (!jobOptional.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Job with id'" + id + "' was not found!");
+            // likely to be permanent
+            throw new ResponseStatusException(HttpStatus.GONE, "Job with id '" + id + "' was not found!");
         }
         if (jobOptional.get().getStatus() == MicoBackgroundTask.Status.DONE) {
             HttpHeaders responseHeaders = new HttpHeaders();
@@ -90,10 +89,7 @@ public class BackgroundTaskController {
     }
 
     private URI getLocationForJob(MicoBackgroundTask job) throws URISyntaxException {
-        //// If job has been finished
-        //HTTP/1.1 303 See Other
-        // TODO Location: /services/{shortName}/{version} // depends on "type"
-        return new URI("/services/" + job.getService().getShortName() + "/" + job.getService().getVersion());
+        return new URI("/services/" + job.getMicoServiceShortName() + "/" + job.getMicoServiceVersion());
     }
 
     private List<Resource<MicoBackgroundTask>> getJobResourceList(List<MicoBackgroundTask> applications) {
