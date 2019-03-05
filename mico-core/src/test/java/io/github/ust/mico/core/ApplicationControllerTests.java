@@ -19,19 +19,82 @@
 
 package io.github.ust.mico.core;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableMap;
-import io.github.ust.mico.core.configuration.CorsConfig;
-import io.github.ust.mico.core.dto.*;
-import io.github.ust.mico.core.model.*;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo.ImagePullPolicy;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.MicoStatusService;
-import io.github.ust.mico.core.util.CollectionUtils;
-import io.github.ust.mico.core.web.ApplicationController;
+import static io.github.ust.mico.core.JsonPathBuilder.EMBEDDED;
+import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
+import static io.github.ust.mico.core.JsonPathBuilder.SELF_HREF;
+import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
+import static io.github.ust.mico.core.TestConstants.AVAILABLE_REPLICAS;
+import static io.github.ust.mico.core.TestConstants.AVERAGE_CPU_LOAD_PER_NODE_PATH;
+import static io.github.ust.mico.core.TestConstants.AVERAGE_MEMORY_USAGE_PER_NODE_PATH;
+import static io.github.ust.mico.core.TestConstants.DESCRIPTION;
+import static io.github.ust.mico.core.TestConstants.ERROR_MESSAGES;
+import static io.github.ust.mico.core.TestConstants.GIT_TEST_REPO_URL;
+import static io.github.ust.mico.core.TestConstants.ID;
+import static io.github.ust.mico.core.TestConstants.ID_1;
+import static io.github.ust.mico.core.TestConstants.ID_2;
+import static io.github.ust.mico.core.TestConstants.ID_3;
+import static io.github.ust.mico.core.TestConstants.INTERFACES_INFORMATION;
+import static io.github.ust.mico.core.TestConstants.INTERFACES_INFORMATION_NAME;
+import static io.github.ust.mico.core.TestConstants.NAME;
+import static io.github.ust.mico.core.TestConstants.OWNER;
+import static io.github.ust.mico.core.TestConstants.POD_INFO;
+import static io.github.ust.mico.core.TestConstants.POD_INFO_METRICS_AVAILABLE_1;
+import static io.github.ust.mico.core.TestConstants.POD_INFO_METRICS_AVAILABLE_2;
+import static io.github.ust.mico.core.TestConstants.POD_INFO_METRICS_CPU_LOAD_1;
+import static io.github.ust.mico.core.TestConstants.POD_INFO_METRICS_CPU_LOAD_2;
+import static io.github.ust.mico.core.TestConstants.POD_INFO_METRICS_MEMORY_USAGE_1;
+import static io.github.ust.mico.core.TestConstants.POD_INFO_METRICS_MEMORY_USAGE_2;
+import static io.github.ust.mico.core.TestConstants.POD_INFO_NODE_NAME_1;
+import static io.github.ust.mico.core.TestConstants.POD_INFO_NODE_NAME_2;
+import static io.github.ust.mico.core.TestConstants.POD_INFO_PHASE_1;
+import static io.github.ust.mico.core.TestConstants.POD_INFO_PHASE_2;
+import static io.github.ust.mico.core.TestConstants.POD_INFO_POD_NAME_1;
+import static io.github.ust.mico.core.TestConstants.POD_INFO_POD_NAME_2;
+import static io.github.ust.mico.core.TestConstants.REQUESTED_REPLICAS;
+import static io.github.ust.mico.core.TestConstants.SDI_IMAGE_PULLPOLICY_PATH;
+import static io.github.ust.mico.core.TestConstants.SDI_LABELS_PATH;
+import static io.github.ust.mico.core.TestConstants.SDI_REPLICAS_PATH;
+import static io.github.ust.mico.core.TestConstants.SERVICE_INFORMATION_NAME;
+import static io.github.ust.mico.core.TestConstants.SERVICE_INTERFACE_NAME;
+import static io.github.ust.mico.core.TestConstants.SERVICE_SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.SERVICE_VERSION;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_1;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_2;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_OTHER;
+import static io.github.ust.mico.core.TestConstants.TOTAL_NUMBER_OF_AVAILABLE_REPLICAS;
+import static io.github.ust.mico.core.TestConstants.TOTAL_NUMBER_OF_MICO_SERVICES;
+import static io.github.ust.mico.core.TestConstants.TOTAL_NUMBER_OF_PODS;
+import static io.github.ust.mico.core.TestConstants.TOTAL_NUMBER_OF_REQUESTED_REPLICAS;
+import static io.github.ust.mico.core.TestConstants.VERSION;
+import static io.github.ust.mico.core.TestConstants.VERSION_1_0_1;
+import static io.github.ust.mico.core.TestConstants.VERSION_1_0_2;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,24 +113,32 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableMap;
 
-import static io.github.ust.mico.core.JsonPathBuilder.*;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
-import static io.github.ust.mico.core.TestConstants.VERSION;
-import static io.github.ust.mico.core.TestConstants.*;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import io.github.ust.mico.core.configuration.CorsConfig;
+import io.github.ust.mico.core.dto.KubernetesPodInformationDTO;
+import io.github.ust.mico.core.dto.KubernetesPodMetricsDTO;
+import io.github.ust.mico.core.dto.MicoApplicationDTO;
+import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
+import io.github.ust.mico.core.dto.MicoApplicationWithServicesDTO;
+import io.github.ust.mico.core.dto.MicoServiceDeploymentInfoDTO;
+import io.github.ust.mico.core.dto.MicoServiceInterfaceStatusDTO;
+import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoLabel;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo.ImagePullPolicy;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfoQueryResult;
+import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.service.MicoStatusService;
+import io.github.ust.mico.core.util.CollectionUtils;
+import io.github.ust.mico.core.web.ApplicationController;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(ApplicationController.class)
@@ -756,9 +827,7 @@ public class ApplicationControllerTests {
         given(serviceRepository.findAllByApplication(SHORT_NAME, VERSION)).willReturn(CollectionUtils.listOf(service));
         ArgumentCaptor<MicoApplication> micoApplicationCaptor = ArgumentCaptor.forClass(MicoApplication.class);
 
-        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES)
-            .content(mapper.writeValueAsBytes(service))
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + SERVICE_VERSION))
             .andDo(print())
             .andExpect(status().isNoContent());
 
@@ -766,73 +835,6 @@ public class ApplicationControllerTests {
         MicoApplication savedMicoApplication = micoApplicationCaptor.getValue();
         assertEquals("Expected one service deployment information", 1, savedMicoApplication.getServiceDeploymentInfos().size());
         assertEquals(service, savedMicoApplication.getServiceDeploymentInfos().get(0).getService());
-    }
-
-    @Test
-    public void addServiceOnlyWithShortNameAndVersionToApplication() throws Exception {
-        MicoApplication application = new MicoApplication()
-            .setId(ID)
-            .setShortName(SHORT_NAME)
-            .setName(NAME)
-            .setVersion(VERSION);
-
-        MicoService existingService = new MicoService()
-            .setId(ID_1)
-            .setShortName(SERVICE_SHORT_NAME)
-            .setVersion(SERVICE_VERSION)
-            .setName(NAME)
-            .setDescription(DESCRIPTION);
-
-        MicoService providedService = new MicoService()
-            .setShortName(SERVICE_SHORT_NAME)
-            .setVersion(SERVICE_VERSION);
-
-        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION))
-            .willReturn(Optional.of(application));
-        given(serviceRepository.findByShortNameAndVersion(SERVICE_SHORT_NAME, SERVICE_VERSION))
-            .willReturn(Optional.of(existingService));
-        given(serviceRepository.findAllByApplication(SHORT_NAME, VERSION))
-            .willReturn(CollectionUtils.listOf(existingService));
-
-        ArgumentCaptor<MicoApplication> micoApplicationCaptor = ArgumentCaptor.forClass(MicoApplication.class);
-
-        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES)
-            .content(mapper.writeValueAsBytes(providedService))
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print())
-            .andExpect(status().isNoContent());
-
-        verify(applicationRepository, times(1)).save(micoApplicationCaptor.capture());
-        MicoApplication savedMicoApplication = micoApplicationCaptor.getValue();
-        assertEquals("Expected one service deployment information", 1, savedMicoApplication.getServiceDeploymentInfos().size());
-        assertEquals(existingService, savedMicoApplication.getServiceDeploymentInfos().get(0).getService());
-    }
-
-    @Test
-    public void addServiceWithInconsistentDataToApplication() throws Exception {
-        MicoApplication micoApplication = new MicoApplication()
-            .setId(ID)
-            .setShortName(SHORT_NAME)
-            .setVersion(VERSION);
-
-        MicoService existingService = new MicoService()
-            .setShortName(SERVICE_SHORT_NAME)
-            .setVersion(SERVICE_VERSION)
-            .setDescription(DESCRIPTION);
-
-        MicoService providedService = new MicoService()
-            .setShortName(SERVICE_SHORT_NAME)
-            .setVersion(SERVICE_VERSION)
-            .setDescription("NewDesc");
-
-        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
-        given(serviceRepository.findByShortNameAndVersion(SERVICE_SHORT_NAME, SERVICE_VERSION)).willReturn(Optional.of(existingService));
-
-        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES)
-            .content(mapper.writeValueAsBytes(providedService))
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print())
-            .andExpect(status().isConflict());
     }
 
     @Test

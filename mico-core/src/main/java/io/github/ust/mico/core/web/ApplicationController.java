@@ -65,6 +65,7 @@ public class ApplicationController {
     private static final String PATH_VARIABLE_SHORT_NAME = "shortName";
     private static final String PATH_VARIABLE_VERSION = "version";
     private static final String PATH_VARIABLE_SERVICE_SHORT_NAME = "serviceShortName";
+    private static final String PATH_VARIABLE_SERVICE_VERSION = "serviceVersion";
 
     @Autowired
     private MicoApplicationRepository applicationRepository;
@@ -216,12 +217,13 @@ public class ApplicationController {
                 linkTo(methodOn(ApplicationController.class).getServicesFromApplication(shortName, version)).withSelfRel()));
     }
 
-    @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES)
+    @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES + "/{" + PATH_VARIABLE_SERVICE_SHORT_NAME + "}/{" + PATH_VARIABLE_SERVICE_VERSION + "}")
     public ResponseEntity<Void> addServiceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
                                                         @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
-                                                        @Valid @RequestBody MicoService providedService) {
+                                                        @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName,
+                                                        @PathVariable(PATH_VARIABLE_SERVICE_VERSION) String serviceVersion) {
         MicoApplication application = getApplicationFromDatabase(applicationShortName, applicationVersion);
-        MicoService existingService = validateProvidedService(providedService);
+        MicoService existingService = getServiceFromDatabase(serviceShortName, serviceVersion);
 
         // Each service can be added to one application only once
         if (application.getServiceDeploymentInfos().stream().noneMatch(sdi -> sdi.getService().equals(existingService))) {
@@ -342,6 +344,23 @@ public class ApplicationController {
         }
         return existingApplicationOptional.get();
     }
+    
+    /**
+     * Returns the existing {@link MicoService} object from the database
+     * for the given shortName and version.
+     *
+     * @param shortName the short name of the {@link MicoService}.
+     * @param version the version of the {@link MicoService}.
+     * @return the existing {@link MicoService} from the database if it exists.
+     * @throws ResponseStatusException if no {@link MicoService} exists for the given shortName and version.
+     */
+    private MicoService getServiceFromDatabase(String shortName, String version) throws ResponseStatusException {
+        Optional<MicoService> existingServciceOptional = serviceRepository.findByShortNameAndVersion(shortName, version);
+        if (!existingServciceOptional.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service '" + shortName + "' '" + version + "' was not found!");
+        }
+        return existingServciceOptional.get();
+    }
 
     private List<Resource<MicoApplicationWithServicesDTO>> getApplicationWithServicesDTOResourceList(List<MicoApplication> applications) {
         return applications.stream().map(application -> getApplicationWithServicesDTOResourceWithDeploymentStatus(application)).collect(Collectors.toList());
@@ -377,74 +396,4 @@ public class ApplicationController {
         return links;
     }
 
-    /**
-     * Validates the {@link MicoService} with the data that is stored in the database.
-     * If the provided service is valid, return the existing service.
-     *
-     * @param providedService the {@link MicoService}
-     * @return the already existing {@link MicoService}
-     * @throws ResponseStatusException if a {@link MicoService} does not exist or there is a conflict
-     */
-    private MicoService validateProvidedService(MicoService providedService) throws ResponseStatusException {
-
-        // Check if the provided service exists
-        Optional<MicoService> existingServiceOptional = serviceRepository.findByShortNameAndVersion(providedService.getShortName(), providedService.getVersion());
-        if (!existingServiceOptional.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                "Provided service '" + providedService.getShortName() + "' '" + providedService.getVersion() + "' does not exist!");
-        }
-
-        // If more than the short name and the version of the service are provided,
-        // check if the data is consistent. If not throw a 409 conflict error.
-        MicoService existingService = existingServiceOptional.get();
-        if (providedService.getDockerImageUri() != null
-            && !providedService.getDockerImageUri().equals(existingService.getDockerImageUri())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "Provided service '" + providedService.getShortName() + "' '" + providedService.getVersion() +
-                    "' has a conflict in the property 'dockerImageUri' with the existing service!");
-        }
-        if (providedService.getDockerfilePath() != null
-            && !providedService.getDockerfilePath().equals(existingService.getDockerfilePath())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "Provided service '" + providedService.getShortName() + "' '" + providedService.getVersion() +
-                    "' has a conflict in the property 'dockerfilePath' with the existing service!");
-        }
-        if (providedService.getGitCloneUrl() != null
-            && !providedService.getGitCloneUrl().equals(existingService.getGitCloneUrl())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "Provided service '" + providedService.getShortName() + "' '" + providedService.getVersion() +
-                    "' has a conflict in the property 'gitCloneUrl' with the existing service!");
-        }
-        if (providedService.getDescription() != null && !providedService.getDescription().equals("")
-            && !providedService.getDescription().equals(existingService.getDescription())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "Provided service '" + providedService.getShortName() + "' '" + providedService.getVersion() +
-                    "' has a conflict in the property 'description' with the existing service!");
-        }
-        if (providedService.getGitReleaseInfoUrl() != null
-            && !providedService.getGitReleaseInfoUrl().equals(existingService.getGitReleaseInfoUrl())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "Provided service '" + providedService.getShortName() + "' '" + providedService.getVersion() +
-                    "' has a conflict in the property 'gitReleaseInfoUrl' with the existing service!");
-        }
-        if (providedService.getName() != null
-            && !providedService.getName().equals(existingService.getName())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "Provided service '" + providedService.getShortName() + "' '" + providedService.getVersion() +
-                    "' has a conflict in the property 'name' with the existing service!");
-        }
-        if (providedService.getContact() != null
-            && !providedService.getContact().equals(existingService.getContact())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "Provided service '" + providedService.getShortName() + "' '" + providedService.getVersion() +
-                    "' has a conflict in the property 'contact' with the existing service!");
-        }
-        if (providedService.getOwner() != null
-            && !providedService.getOwner().equals(existingService.getOwner())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "Provided service '" + providedService.getShortName() + "' '" + providedService.getVersion() +
-                    "' has a conflict in the property 'owner' with the existing service!");
-        }
-        return existingService;
-    }
 }
