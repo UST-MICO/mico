@@ -35,6 +35,7 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.github.ust.mico.core.configuration.PrometheusConfig;
+import io.github.ust.mico.core.dto.KubernetesNodeMetricsDTO;
 import io.github.ust.mico.core.dto.KubernetesPodInformationDTO;
 import io.github.ust.mico.core.dto.KubernetesPodMetricsDTO;
 import io.github.ust.mico.core.dto.MicoApplicationDTO;
@@ -105,10 +106,10 @@ public class MicoStatusService {
             availableReplicasCount += micoServiceStatus.getAvailableReplicas();
             // Remove the current application's name to retrieve a list with only the names of other applications that are sharing a service
             micoServiceStatus.getApplicationsUsingThisService().remove(new MicoApplicationDTO()
-            .setName(micoApplication.getName())
-            .setShortName(micoApplication.getShortName())
-            .setVersion(micoApplication.getVersion())
-            .setDescription(micoApplication.getDescription()));
+                .setName(micoApplication.getName())
+                .setShortName(micoApplication.getShortName())
+                .setVersion(micoApplication.getVersion())
+                .setDescription(micoApplication.getDescription()));
             applicationStatus.getServiceStatuses().add(micoServiceStatus);
         }
         applicationStatus
@@ -183,9 +184,8 @@ public class MicoStatusService {
             }
         }
 
+        List<KubernetesNodeMetricsDTO> nodeMetrics = new ArrayList<>();
         // Calculate for each node the average values for all pods running on this node
-        Map<String, Integer> averageCpuUsagePerNode = new HashMap<>();
-        Map<String, Integer> averageMemoryUsagePerNode = new HashMap<>();
         for (String nodeName : podsPerNode.keySet()) {
             int sumCpuLoadOnNode = 0;
             int sumMemoryUsageOnNode = 0;
@@ -195,12 +195,13 @@ public class MicoStatusService {
                 sumMemoryUsageOnNode += podInformation.getMetrics().getMemoryUsage();
                 podInfos.add(podInformation);
             }
-            averageCpuUsagePerNode.put(nodeName, sumCpuLoadOnNode / podsPerNode.get(nodeName).size());
-            averageMemoryUsagePerNode.put(nodeName, sumMemoryUsageOnNode / podsPerNode.get(nodeName).size());
+            nodeMetrics.add(new KubernetesNodeMetricsDTO()
+                .setNodeName(nodeName)
+                .setAverageCpuLoad(sumCpuLoadOnNode / podsPerNode.get(nodeName).size())
+                .setAverageMemoryUsage(sumMemoryUsageOnNode / podsPerNode.get(nodeName).size()));
         }
         serviceStatus
-            .setAverageCpuLoadPerNode(averageCpuUsagePerNode)
-            .setAverageMemoryUsagePerNode(averageMemoryUsagePerNode)
+            .setNodeMetrics(nodeMetrics)
             .setPodsInformation(podInfos);
         return serviceStatus;
     }
