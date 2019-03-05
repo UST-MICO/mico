@@ -157,7 +157,6 @@ public class ServiceInterfaceControllerTests {
             .content(mapper.writeValueAsBytes(serviceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isUnprocessableEntity())
-            .andExpect(status().reason("The name of the service interface is not valid."))
             .andReturn();
     }
 

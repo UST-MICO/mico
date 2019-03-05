@@ -43,7 +43,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
-import static io.github.ust.mico.core.ServiceControllerTests.SERVICE_LIST;
 import static io.github.ust.mico.core.TestConstants.*;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertFalse;
@@ -72,7 +71,7 @@ public class ServiceControllerIntegrationTests extends Neo4jTestClass {
 
     @Test
     public void deleteService() throws Exception {
-        MicoService micoService = new MicoService().setShortName(SHORT_NAME).setVersion(VERSION_1_0_1);
+        MicoService micoService = new MicoService().setShortName(SHORT_NAME).setVersion(VERSION_1_0_1).setName(NAME);
         serviceRepository.save(micoService);
         mvc.perform(delete( SERVICES_PATH + "/" + SHORT_NAME + "/" + "/" + VERSION_1_0_1).accept(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())

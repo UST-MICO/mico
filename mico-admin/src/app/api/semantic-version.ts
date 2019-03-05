@@ -17,8 +17,8 @@
  * under the License.
  */
 
-export const VERSION_REGEX = /(^\w+)?(\d+)\.(\d+)\.(\d+)(-(?:\w+\.)*\w+)?/;
-
+export const VERSION_REGEX = /^([a-zA-Z]+)?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(((0|[1-9]\d*|\d*[A-Z-a-z-][\dA-Za-z-]*))(\.(0|[1-9]\d*|\d*[A-Za-z-][\dA-Za-z-]*))*))?(\+([\dA-Za-z-]+(\.[\dA-Za-z-]*)*))?$/;
+// /(^\w+)?(\d+)\.(\d+)\.(\d+)(-(?:\w+\.)*\w+)?/;
 /**
  * Comparator for semantic version strings. Can be used in the array.sort method.
  *

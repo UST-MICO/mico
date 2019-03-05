@@ -22,16 +22,27 @@ package io.github.ust.mico.core.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 
-import com.fasterxml.jackson.annotation.*;
+import org.hibernate.validator.constraints.URL;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
+
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.exception.VersionNotSupportedException;
+import io.github.ust.mico.core.util.Patterns;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -67,89 +78,90 @@ public class MicoService {
 
     /**
      * A brief name for the service.
+     * In conjunction with the version it must be unique.
      * Pattern is the same as the one for Kubernetes Service names.
      */
-    @Pattern(regexp="^[a-z]([-a-z0-9]*[a-z0-9])?$")
     @ApiModelProperty(required = true, extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Short Name"),
-            @ExtensionProperty(name = "pattern", value = "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"),
+            @ExtensionProperty(name = "pattern", value = Patterns.KUBERNETES_NAMING_REGEX),
+            @ExtensionProperty(name = "minLength", value = "3"),
+            @ExtensionProperty(name = "maxLength", value = "253"),
             @ExtensionProperty(name = "x-order", value = "10"),
             @ExtensionProperty(name = "description", value = "A unique name of the MicoService.")
         }
     )})
+    @Size(min = 3, max = 253, message = "must have a length between 3 and 253")
+    @Pattern(regexp = Patterns.KUBERNETES_NAMING_REGEX, message = Patterns.KUBERNETES_NAMING_MESSAGE)
     private String shortName;
 
     /**
      * The name of the artifact. Intended for humans.
+     * Required only for the usage in the UI.
      */
     @ApiModelProperty(required = true, extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Name"),
-            @ExtensionProperty(name = "x-order", value = "20"),
+            @ExtensionProperty(name = "x-order", value = "30"),
             @ExtensionProperty(name = "description", value = "A human readable name of the MicoService.")
         }
     )})
     private String name;
 
     /**
-     * The version of this service. Refers to GitHub release tag.
+     * The version of this service.
+     * E.g. the GitHub release tag.
      */
     @ApiModelProperty(required = true, extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Version"),
-            @ExtensionProperty(name = "pattern", value = "^(\\w+)?(\\d+)\\.(\\d+)\\.(\\d+)(-(\\w+\\.)*\\w+)?$"),
-            @ExtensionProperty(name = "x-order", value = "30"),
+            @ExtensionProperty(name = "pattern", value = Patterns.SEMANTIC_VERSION_WITH_PREFIX_REGEX),
+            @ExtensionProperty(name = "x-order", value = "20"),
             @ExtensionProperty(name = "description", value = "The version of this service. Refers to GitHub release " +
                 "tag.")
         }
     )})
+    @NotEmpty
+    @Pattern(regexp = Patterns.SEMANTIC_VERSION_WITH_PREFIX_REGEX, message = Patterns.SEMANTIC_VERSIONING_MESSAGE)
     private String version;
 
     /**
      * Human readable description of this service.
+     * Is allowed to be empty (default). {@code null} values are skipped.
      */
     @ApiModelProperty(required = true, extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Description"),
+            @ExtensionProperty(name = "default", value = ""),
             @ExtensionProperty(name = "x-order", value = "40"),
-            @ExtensionProperty(name = "description", value = "Human readable description of this service.")
+            @ExtensionProperty(name = "description", value = "Human readable description of this service.\n " +
+                "Is allowed to be empty (default). Null values are skipped.")
         }
     )})
-    private String description;
-
-    /**
-     * The list of interfaces this service provides.
-     */
-    @ApiModelProperty(required = true, extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Service Interfaces"),
-            @ExtensionProperty(name = "x-order", value = "50"),
-            @ExtensionProperty(name = "description", value = "The list of interfaces this service provides.")
-        }
-    )})
-    @Relationship(type = "PROVIDES_INTERFACES", direction = Relationship.UNDIRECTED)
-    private List<MicoServiceInterface> serviceInterfaces = new ArrayList<>();
+    @JsonSetter(nulls = Nulls.SKIP)
+    private String description = "";
 
     /**
      * Indicates where this service originates from, e.g.,
      * GitHub (downloaded and built by MICO) or DockerHub
      * (ready-to-use image).
+     * {@code null} is ignored.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Service Crawling Origin"),
+            @ExtensionProperty(name = "default", value = "NOT_DEFINED"),
             @ExtensionProperty(name = "x-order", value = "100"),
             @ExtensionProperty(name = "description", value = "Indicates where this service originates from.")
         }
     )})
-    private MicoServiceCrawlingOrigin serviceCrawlingOrigin;
+    @JsonSetter(nulls = Nulls.SKIP)
+    private MicoServiceCrawlingOrigin serviceCrawlingOrigin = MicoServiceCrawlingOrigin.NOT_DEFINED;
 
 
     // ----------------------
@@ -157,21 +169,42 @@ public class MicoService {
     // ----------------------
 
     /**
+     * The list of interfaces this service provides.
+     * Is read only. Use special API for updating.
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Service Interfaces"),
+            @ExtensionProperty(name = "x-order", value = "60"),
+            @ExtensionProperty(name = "description", value = "The list of interfaces this service provides.\n " +
+                "Is read only. Use special API for updating.")
+        }
+    )})
+    @Relationship(type = "PROVIDES_INTERFACES", direction = Relationship.UNDIRECTED)
+    @Valid
+    private List<MicoServiceInterface> serviceInterfaces = new ArrayList<>();
+
+    /**
      * The list of services that this service requires
      * in order to run normally.
+     * Is read only. Use special API for updating.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Dependencies"),
+            @ExtensionProperty(name = "readOnly", value = "true"),
             @ExtensionProperty(name = "x-order", value = "90"),
             @ExtensionProperty(name = "description", value = "The list of services that this service requires in " +
-                "order to run normally.")
+                "order to run normally.\n " +
+                "Is read only. Use special API for updating.")
         }
     )})
     @JsonManagedReference
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Relationship(type = "DEPENDS_ON")
+    @Valid
     private List<MicoServiceDependency> dependencies = new ArrayList<>();
 
     /**
@@ -186,6 +219,7 @@ public class MicoService {
         }
     )})
     @Relationship(type = "PREDECESSOR")
+    // TODO: Not required by the UI. Omit it in the DTO. Covered in mico#512
     private MicoService predecessor;
 
     /**
@@ -223,12 +257,13 @@ public class MicoService {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "\"git clone\" Url"),
+            @ExtensionProperty(name = "title", value = "Git Clone URL"),
             @ExtensionProperty(name = "x-order", value = "110"),
             @ExtensionProperty(name = "description", value = "The URL that could be used for a git clone, to clone " +
                 "the current master branch.")
         }
     )})
+    @URL(host = "github.com", message = "must be a valid GitHub URL")
     private String gitCloneUrl;
 
     /**
@@ -238,11 +273,14 @@ public class MicoService {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Git Release Info Url"),
+            @ExtensionProperty(name = "readOnly", value = "true"),
             @ExtensionProperty(name = "x-order", value = "120"),
             @ExtensionProperty(name = "description", value = "The URL to the get the information about a specific " +
                 "git release.")
         }
     )})
+    // TODO: Not required by the UI. Omit it in the DTO. Covered in mico#512
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String gitReleaseInfoUrl;
 
     /**
@@ -252,12 +290,12 @@ public class MicoService {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Path to Dockerfile"),
-            @ExtensionProperty(name = "pattern", value = "^(?!/.*$).*"),
+            @ExtensionProperty(name = "pattern", value = Patterns.RELATIVE_PATH_REGEX),
             @ExtensionProperty(name = "x-order", value = "130"),
             @ExtensionProperty(name = "description", value = "The relative path to the Dockerfile.")
         }
     )})
-    @Pattern(regexp = "^(?!/.*$).*", message = "Path must be relative to the Git clone url")
+    @Pattern(regexp = Patterns.RELATIVE_PATH_REGEX, message = "must be relative to the Git clone url")
     private String dockerfilePath;
 
     /**

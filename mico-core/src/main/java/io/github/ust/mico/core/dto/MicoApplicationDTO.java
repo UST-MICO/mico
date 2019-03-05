@@ -19,12 +19,11 @@
 
 package io.github.ust.mico.core.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.util.Patterns;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -32,6 +31,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 
 /**
  * DTO for a {@link MicoApplication} without services
@@ -58,20 +61,26 @@ public class MicoApplicationDTO {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Short Name"),
-            @ExtensionProperty(name = "x-order", value = "20"),
+            @ExtensionProperty(name = "pattern", value = Patterns.KUBERNETES_NAMING_REGEX),
+            @ExtensionProperty(name = "minLength", value = "3"),
+            @ExtensionProperty(name = "maxLength", value = "253"),
+            @ExtensionProperty(name = "x-order", value = "10"),
             @ExtensionProperty(name = "description", value = "Unique short name of the application.")
         }
     )})
+    @Size(min = 3, max = 253, message = "must have a length between 3 and 253")
+    @Pattern(regexp = Patterns.KUBERNETES_NAMING_REGEX, message = Patterns.KUBERNETES_NAMING_MESSAGE)
     private String shortName;
 
     /**
      * The name of the artifact. Intended for humans.
+     * Required only for the usage in the UI.
      */
     @ApiModelProperty(required = true, extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Name"),
-            @ExtensionProperty(name = "x-order", value = "10"),
+            @ExtensionProperty(name = "x-order", value = "30"),
             @ExtensionProperty(name = "description", value = "Human readable name of the application.")
         }
     )})
@@ -84,24 +93,31 @@ public class MicoApplicationDTO {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Version"),
-            @ExtensionProperty(name = "x-order", value = "30"),
-            @ExtensionProperty(name = "description", value = "Version number of the application.")
+            @ExtensionProperty(name = "pattern", value = Patterns.SEMANTIC_VERSION_WITH_PREFIX_REGEX),
+            @ExtensionProperty(name = "x-order", value = "20"),
+            @ExtensionProperty(name = "description", value = "The version of this application.")
         }
     )})
+    @NotEmpty
+    @Pattern(regexp = Patterns.SEMANTIC_VERSION_WITH_PREFIX_REGEX, message = Patterns.SEMANTIC_VERSIONING_MESSAGE)
     private String version;
 
     /**
      * Human readable description of this application.
+     * Is allowed to be empty (default). {@code null} values are skipped.
      */
     @ApiModelProperty(required = true, extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Description"),
+            @ExtensionProperty(name = "default", value = ""),
             @ExtensionProperty(name = "x-order", value = "40"),
-            @ExtensionProperty(name = "description", value = "Human readable description of this application.")
+            @ExtensionProperty(name = "description", value = "Human readable description of this application.\n " +
+                "Is allowed to be empty (default). Null values are skipped.")
         }
     )})
-    private String description;
+    @JsonSetter(nulls = Nulls.SKIP)
+    private String description = "";
 
 
     // ----------------------
@@ -135,53 +151,56 @@ public class MicoApplicationDTO {
         }
     )})
     private String owner;
-    
+
     /**
      * Indicates whether the {@link MicoApplication} is currently deployed.
+     * Default is {@link MicoApplicationDeploymentStatus#UNKNOWN}.
+     * Is read only and will be updated by the backend at every request.
      */
     @ApiModelProperty(extensions = {@Extension(
-            name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-            properties = {
-                @ExtensionProperty(name = "title", value = "Deployment Status"),
-                @ExtensionProperty(name = "x-order", value = "220"),
-                @ExtensionProperty(name = "description", value = "Holds the current deployment status of this application.")
-            }
-        )})
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Deployment Status"),
+            @ExtensionProperty(name = "readOnly", value = "true"),
+            @ExtensionProperty(name = "x-order", value = "220"),
+            @ExtensionProperty(name = "description", value = "Holds the current deployment status of this application.")
+        }
+    )})
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private MicoApplicationDeploymentStatus deploymentStatus = MicoApplicationDeploymentStatus.UNKNOWN;
-    
-    
+
     /**
      * Creates a {@code MicoApplicationDTO} based on a
      * {@link MicoApplication}. Note that the deployment status
      * needs to be set explicitly since it cannot be inferred
      * from the given {@link MicoApplication} itself.
-     * 
+     *
      * @param application the {@link MicoApplication}.
      * @return a {@link MicoApplicationDTO} with all the values
-     *         of the given {@code MicoApplication}.
+     * of the given {@code MicoApplication}.
      */
     public static MicoApplicationDTO valueOf(MicoApplication application) {
         return new MicoApplicationDTO()
-                .setShortName(application.getShortName())
-                .setName(application.getName())
-                .setVersion(application.getVersion())
-                .setDescription(application.getDescription())
-                .setContact(application.getContact())
-                .setOwner(application.getOwner());
+            .setShortName(application.getShortName())
+            .setName(application.getName())
+            .setVersion(application.getVersion())
+            .setDescription(application.getDescription())
+            .setContact(application.getContact())
+            .setOwner(application.getOwner());
     }
-    
-    
+
+
     public enum MicoApplicationDeploymentStatus {
-        
+
         DEPLOYED,
         NOT_DEPLOYED,
         UNKNOWN;
-        
+
         @Override
         public String toString() {
             return super.toString().toLowerCase();
         }
-        
+
     }
 
 }

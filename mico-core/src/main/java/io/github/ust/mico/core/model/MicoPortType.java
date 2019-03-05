@@ -32,11 +32,5 @@ public enum MicoPortType {
     /**
      * User Datagram Protocol.
      */
-    UDP;
-
-    /**
-     * Default port type is {@link MicoPortType#TCP}.
-     */
-    public static MicoPortType DEFAULT = MicoPortType.TCP;
-
+    UDP
 }

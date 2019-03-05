@@ -19,21 +19,22 @@
 
 package io.github.ust.mico.core;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.IOException;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.GitHubCrawler;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.service.GitHubCrawler;
+import java.io.IOException;
+
+import static org.junit.Assert.assertEquals;
 
 @Category(IntegrationTests.class)
 @RunWith(SpringRunner.class)
@@ -47,10 +48,11 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
     @Autowired
     private MicoServiceRepository serviceRepository;
 
+    @Autowired
+    private GitHubCrawler crawler;
+
     @Test
     public void testGitHubCrawlerLatestReleaseByApiUri() throws IOException {
-        RestTemplateBuilder restTemplate = new RestTemplateBuilder();
-        GitHubCrawler crawler = new GitHubCrawler(restTemplate);
         MicoService service = crawler.crawlGitHubRepoLatestRelease(REPO_URI_API);
         serviceRepository.save(service);
 
@@ -66,8 +68,6 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
 
     @Test
     public void testGitHubCrawlerLatestReleaseByHtmlUri() throws IOException {
-        RestTemplateBuilder restTemplate = new RestTemplateBuilder();
-        GitHubCrawler crawler = new GitHubCrawler(restTemplate);
         MicoService service = crawler.crawlGitHubRepoLatestRelease(REPO_URI_HTML);
         serviceRepository.save(service);
 
@@ -83,8 +83,6 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
 
     @Test
     public void testGitHubCrawlerSpecificRelease() throws IOException {
-        RestTemplateBuilder restTemplate = new RestTemplateBuilder();
-        GitHubCrawler crawler = new GitHubCrawler(restTemplate);
         MicoService service = crawler.crawlGitHubRepoSpecificRelease(REPO_URI_API, RELEASE);
         serviceRepository.save(service);
 
@@ -96,5 +94,25 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
         assertEquals(service.getGitCloneUrl(), readService.getGitCloneUrl());
         assertEquals(service.getGitReleaseInfoUrl(), readService.getGitReleaseInfoUrl());
         assertEquals(service.getName(), readService.getName());
+    }
+
+    @Test
+    public void invalidRepoNameIsNormalized() throws IOException {
+        MicoService service = crawler.crawlGitHubRepoLatestRelease(REPO_URI_API);
+
+        System.out.println("Crawled MICO service from API URI:");
+        prettyPrint(service);
+
+        assertEquals("Expected that repo name 'octokit.rb' is normalized", "octokit-rb", service.getShortName());
+    }
+
+    private void prettyPrint(Object object) {
+        ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+        try {
+            String json = mapper.writeValueAsString(object);
+            System.out.println(json);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
     }
 }

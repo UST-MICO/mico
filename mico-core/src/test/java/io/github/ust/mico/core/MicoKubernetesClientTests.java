@@ -287,8 +287,9 @@ public class MicoKubernetesClientTests {
             .setId(ID)
             .setShortName(SHORT_NAME)
             .setVersion(RELEASE)
+            .setName(NAME)
             .setGitCloneUrl(GIT_TEST_REPO_URL)
-            .setDockerfilePath(DOCKERFILE);
+            .setDockerfilePath(DOCKERFILE_PATH);
     }
 
     private MicoServiceInterface getMicoServiceInterface() {
