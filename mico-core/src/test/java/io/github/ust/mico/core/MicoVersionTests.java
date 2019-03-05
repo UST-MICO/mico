@@ -89,6 +89,11 @@ public class MicoVersionTests {
         assertEquals(version.getPreReleaseVersion(), "rc.1");
     }
     
+    @Test(expected = VersionNotSupportedException.class)
+    public void createVersionForStringWithInvalidPrefix() throws VersionNotSupportedException {
+        MicoVersion.valueOf("-1.0.0");
+    }
+    
     @Test
     public void createVersionForValues() {
         MicoVersion version = MicoVersion.forIntegers(22, 4, 17);

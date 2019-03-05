@@ -23,9 +23,7 @@ import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
 import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
 import io.github.ust.mico.core.model.MicoVersion;
 
-import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
-import static io.github.ust.mico.core.JsonPathBuilder.buildAttributePath;
-import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
+import static io.github.ust.mico.core.JsonPathBuilder.*;
 
 public class TestConstants {
 
@@ -34,14 +32,10 @@ public class TestConstants {
     public static final String DEPENDEES_SUBPATH = "/dependees";
     public static final String DEPENDERS_SUBPATH = "/dependers";
 
-    public static final Long ID = Long.valueOf(1000);
-    public static final Long ID_1 = Long.valueOf(1001);
-    public static final Long ID_2 = Long.valueOf(1002);
-    public static final Long ID_3 = Long.valueOf(1003);
-
-    public static final String APPLICATION_NAME = "application-test-name";
-    public static final String APPLICATION_NAME_OTHER = "other-application-test-name";
-
+    public static final Long ID = 1000L;
+    public static final Long ID_1 = 1001L;
+    public static final Long ID_2 = 1002L;
+    public static final Long ID_3 = 1003L;
 
     public static final String VERSION = MicoVersion.forIntegers(1, 0, 0).toString();
     public static final String VERSION_1_0_1 = MicoVersion.forIntegers(1, 0, 1).toString();
@@ -63,23 +57,34 @@ public class TestConstants {
     public static final String SHORT_NAME_1_MATCHER = JsonPathBuilder.buildSingleMatcher(SHORT_NAME_ATTRIBUTE, SHORT_NAME_1);
     public static final String SHORT_NAME_2_MATCHER = JsonPathBuilder.buildSingleMatcher(SHORT_NAME_ATTRIBUTE, SHORT_NAME_2);
     public static final String SHORT_NAME_3_MATCHER = JsonPathBuilder.buildSingleMatcher(SHORT_NAME_ATTRIBUTE, SHORT_NAME_3);
-    
-    public static final String DESCRIPTION = "Description Service";
-    public static final String DESCRIPTION_1 = "Description Service 1";
-    public static final String DESCRIPTION_2 = "Description Service 2";
-    public static final String DESCRIPTION_3 = "Description Service 3";
-    public static final String DESCRIPTION_ATTRIBUTE = buildAttributePath("description");
+
+    public static final String NAME = "test-name";
+    public static final String NAME_1 = "test-name-1";
+    public static final String NAME_2 = "test-name-2";
+    public static final String NAME_3 = "test-name-3";
+    public static final String NAME_ATTRIBUTE = JsonPathBuilder.buildAttributePath("name");
+    public static final String NAME_MATCHER = JsonPathBuilder.buildSingleMatcher(NAME_ATTRIBUTE, NAME);
+    public static final String NAME_1_MATCHER = JsonPathBuilder.buildSingleMatcher(NAME_ATTRIBUTE, NAME_1);
+    public static final String NAME_2_MATCHER = JsonPathBuilder.buildSingleMatcher(NAME_ATTRIBUTE, NAME_2);
+    public static final String NAME_3_MATCHER = JsonPathBuilder.buildSingleMatcher(NAME_ATTRIBUTE, NAME_3);
+
+    public static final String DESCRIPTION = "Description";
+    public static final String DESCRIPTION_1 = "Description 1";
+    public static final String DESCRIPTION_2 = "Description 2";
+    public static final String DESCRIPTION_3 = "Description 3";
+    public static final String DESCRIPTION_ATTRIBUTE = JsonPathBuilder.buildAttributePath("description");
     public static final String DESCRIPTION_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION);
     public static final String DESCRIPTION_1_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION_1);
     public static final String DESCRIPTION_2_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION_2);
     public static final String DESCRIPTION_3_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION_3);
 
-    public static final String SERVICE_SHORT_NAME = "serviceShortName";
+    public static final String SERVICE_SHORT_NAME = "service-short-name";
+    public static final String SERVICE_SHORT_NAME_1 = "service-short-name-1";
+
     public static final String SERVICE_VERSION = "1.0.0";
 
     public static final String SERVICE_INTERFACE_NAME = "service-interface-name";
     public static final String SERVICE_INTERFACE_NAME_1 = "service-interface-name-1";
-    public static final String SERVICE_NAME = "test-service";
 
     public static final String OWNER = "owner";
 
@@ -143,7 +148,7 @@ public class TestConstants {
     public static final String SERVICE_DTO_POD_INFO_METRICS_MEMORY_USAGE_2 = buildPath(ROOT, "podsInformation[1].metrics.memoryUsage");
     public static final String SERVICE_DTO_POD_INFO_METRICS_CPU_LOAD_2 = buildPath(ROOT, "podsInformation[1].metrics.cpuLoad");
     public static final String SERVICE_DTO_POD_INFO_METRICS_AVAILABLE_2 = buildPath(ROOT, "podsInformation[1].metrics.available");
-    
+
     public static final String SDI_REPLICAS_PATH = buildPath(ROOT, "replicas");
     public static final String SDI_LABELS_PATH = buildPath(ROOT, "labels");
     public static final String SDI_IMAGE_PULLPOLICY_PATH = buildPath(ROOT, "imagePullPolicy");
@@ -155,7 +160,7 @@ public class TestConstants {
     /**
      * Path to the Dockerfile. It must be relative to the root of the Git repository.
      */
-    public static final String DOCKERFILE = "Dockerfile";
+    public static final String DOCKERFILE_PATH = "Dockerfile";
     /**
      * Release tag of the release that should be used for testing. Must be in in supported version format (semantic
      * version with a prefix that only consists of letters).

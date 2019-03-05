@@ -118,10 +118,11 @@ public class ImageBuilderIntegrationTests {
         imageBuilder.init();
 
         MicoService micoService = new MicoService()
-            .setShortName("hello-integration-test")
+            .setShortName("hello-it")
+            .setName("hello-integration-test")
             .setVersion(MicoVersion.valueOf(RELEASE).toString())
             .setGitCloneUrl(GIT_TEST_REPO_URL)
-            .setDockerfilePath(DOCKERFILE);
+            .setDockerfilePath(DOCKERFILE_PATH);
 
         Build build = imageBuilder.build(micoService);
 

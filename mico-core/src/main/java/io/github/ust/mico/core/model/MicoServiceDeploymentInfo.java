@@ -30,8 +30,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Represents the information necessary for deploying
- * a {@link MicoApplication}.
+ * Represents the information necessary for deploying a {@link MicoApplication}.
+ * DTO is {@link MicoServiceDeploymentInfoDTO}.
  */
 @Data
 @NoArgsConstructor
@@ -97,19 +97,19 @@ public class MicoServiceDeploymentInfo {
      * subsequently added and modified at any time.
      * Each key must be unique for a given object.
      */
-    private List<MicoLabel<String, String>> labels = new ArrayList<>();
+    private List<MicoLabel> labels = new ArrayList<>();
 
     /**
      * Indicates whether and when to pull the image.
-     * Defaults to ImagePullPolicy#DEFAULT.
+     * Default image pull policy is {@link ImagePullPolicy#ALWAYS}.
      */
-    private ImagePullPolicy imagePullPolicy = ImagePullPolicy.DEFAULT;
+    private ImagePullPolicy imagePullPolicy = ImagePullPolicy.ALWAYS;
 
     /**
      * Restart policy for all containers.
-     * Defaults to RestartPolicy#ALWAYS.
+     * Default restart policy is {@link RestartPolicy#ALWAYS}.
      */
-    private RestartPolicy restartPolicy = RestartPolicy.DEFAULT;
+    private RestartPolicy restartPolicy = RestartPolicy.ALWAYS;
 
 
     /**
@@ -138,13 +138,7 @@ public class MicoServiceDeploymentInfo {
 
         ALWAYS,
         NEVER,
-        IF_NOT_PRESENT;
-
-        /**
-         * Default image pull policy is {@link ImagePullPolicy#ALWAYS}.
-         */
-        public static ImagePullPolicy DEFAULT = ImagePullPolicy.ALWAYS;
-
+        IF_NOT_PRESENT
     }
 
 
@@ -155,13 +149,7 @@ public class MicoServiceDeploymentInfo {
 
         ALWAYS,
         ON_FAILURE,
-        NEVER;
-
-        /**
-         * Default restart policy is {@link RestartPolicy#ALWAYS}.
-         */
-        public static RestartPolicy DEFAULT = RestartPolicy.ALWAYS;
-
+        NEVER
     }
 
 }
