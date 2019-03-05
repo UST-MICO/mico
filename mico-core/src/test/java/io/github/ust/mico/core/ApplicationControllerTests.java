@@ -19,56 +19,6 @@
 
 package io.github.ust.mico.core;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.ust.mico.core.configuration.CorsConfig;
-import io.github.ust.mico.core.dto.KubernetesNodeMetricsDTO;
-import io.github.ust.mico.core.dto.KubernetesPodInformationDTO;
-import io.github.ust.mico.core.dto.KubernetesPodMetricsDTO;
-import io.github.ust.mico.core.dto.MicoApplicationDTO;
-import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
-import io.github.ust.mico.core.dto.MicoApplicationWithServicesDTO;
-import io.github.ust.mico.core.dto.MicoServiceDeploymentInfoDTO;
-import io.github.ust.mico.core.dto.MicoServiceInterfaceStatusDTO;
-import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoLabel;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo.ImagePullPolicy;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfoQueryResult;
-import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.MicoStatusService;
-import io.github.ust.mico.core.util.CollectionUtils;
-import io.github.ust.mico.core.web.ApplicationController;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.hateoas.MediaTypes;
-import org.springframework.http.HttpHeaders;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultActions;
-
 import static io.github.ust.mico.core.JsonPathBuilder.EMBEDDED;
 import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
 import static io.github.ust.mico.core.JsonPathBuilder.SELF_HREF;
@@ -138,6 +88,58 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.http.HttpHeaders;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.github.ust.mico.core.configuration.CorsConfig;
+import io.github.ust.mico.core.dto.KubernetesNodeMetricsDTO;
+import io.github.ust.mico.core.dto.KubernetesPodInformationDTO;
+import io.github.ust.mico.core.dto.KubernetesPodMetricsDTO;
+import io.github.ust.mico.core.dto.MicoApplicationDTO;
+import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
+import io.github.ust.mico.core.dto.MicoApplicationWithServicesDTO;
+import io.github.ust.mico.core.dto.MicoServiceDeploymentInfoDTO;
+import io.github.ust.mico.core.dto.MicoServiceInterfaceStatusDTO;
+import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoLabel;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo.ImagePullPolicy;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfoQueryResult;
+import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.service.MicoStatusService;
+import io.github.ust.mico.core.util.CollectionUtils;
+import io.github.ust.mico.core.web.ApplicationController;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(ApplicationController.class)
@@ -830,9 +832,7 @@ public class ApplicationControllerTests {
         given(serviceRepository.findAllByApplication(SHORT_NAME, VERSION)).willReturn(CollectionUtils.listOf(service));
         ArgumentCaptor<MicoApplication> micoApplicationCaptor = ArgumentCaptor.forClass(MicoApplication.class);
 
-        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES)
-            .content(mapper.writeValueAsBytes(service))
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + SERVICE_VERSION))
             .andDo(print())
             .andExpect(status().isNoContent());
 
@@ -840,73 +840,6 @@ public class ApplicationControllerTests {
         MicoApplication savedMicoApplication = micoApplicationCaptor.getValue();
         assertEquals("Expected one service deployment information", 1, savedMicoApplication.getServiceDeploymentInfos().size());
         assertEquals(service, savedMicoApplication.getServiceDeploymentInfos().get(0).getService());
-    }
-
-    @Test
-    public void addServiceOnlyWithShortNameAndVersionToApplication() throws Exception {
-        MicoApplication application = new MicoApplication()
-            .setId(ID)
-            .setShortName(SHORT_NAME)
-            .setName(NAME)
-            .setVersion(VERSION);
-
-        MicoService existingService = new MicoService()
-            .setId(ID_1)
-            .setShortName(SERVICE_SHORT_NAME)
-            .setVersion(SERVICE_VERSION)
-            .setName(NAME)
-            .setDescription(DESCRIPTION);
-
-        MicoService providedService = new MicoService()
-            .setShortName(SERVICE_SHORT_NAME)
-            .setVersion(SERVICE_VERSION);
-
-        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION))
-            .willReturn(Optional.of(application));
-        given(serviceRepository.findByShortNameAndVersion(SERVICE_SHORT_NAME, SERVICE_VERSION))
-            .willReturn(Optional.of(existingService));
-        given(serviceRepository.findAllByApplication(SHORT_NAME, VERSION))
-            .willReturn(CollectionUtils.listOf(existingService));
-
-        ArgumentCaptor<MicoApplication> micoApplicationCaptor = ArgumentCaptor.forClass(MicoApplication.class);
-
-        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES)
-            .content(mapper.writeValueAsBytes(providedService))
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print())
-            .andExpect(status().isNoContent());
-
-        verify(applicationRepository, times(1)).save(micoApplicationCaptor.capture());
-        MicoApplication savedMicoApplication = micoApplicationCaptor.getValue();
-        assertEquals("Expected one service deployment information", 1, savedMicoApplication.getServiceDeploymentInfos().size());
-        assertEquals(existingService, savedMicoApplication.getServiceDeploymentInfos().get(0).getService());
-    }
-
-    @Test
-    public void addServiceWithInconsistentDataToApplication() throws Exception {
-        MicoApplication micoApplication = new MicoApplication()
-            .setId(ID)
-            .setShortName(SHORT_NAME)
-            .setVersion(VERSION);
-
-        MicoService existingService = new MicoService()
-            .setShortName(SERVICE_SHORT_NAME)
-            .setVersion(SERVICE_VERSION)
-            .setDescription(DESCRIPTION);
-
-        MicoService providedService = new MicoService()
-            .setShortName(SERVICE_SHORT_NAME)
-            .setVersion(SERVICE_VERSION)
-            .setDescription("NewDesc");
-
-        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
-        given(serviceRepository.findByShortNameAndVersion(SERVICE_SHORT_NAME, SERVICE_VERSION)).willReturn(Optional.of(existingService));
-
-        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES)
-            .content(mapper.writeValueAsBytes(providedService))
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print())
-            .andExpect(status().isConflict());
     }
 
     @Test
