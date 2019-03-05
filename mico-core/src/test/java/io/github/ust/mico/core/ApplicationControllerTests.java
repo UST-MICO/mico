@@ -28,15 +28,15 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ust.mico.core.configuration.CorsConfig;
-import io.github.ust.mico.core.dto.KubernetesNodeMetricsDTO;
-import io.github.ust.mico.core.dto.KubernetesPodInformationDTO;
-import io.github.ust.mico.core.dto.KubernetesPodMetricsDTO;
-import io.github.ust.mico.core.dto.MicoApplicationDTO;
-import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
-import io.github.ust.mico.core.dto.MicoApplicationWithServicesDTO;
-import io.github.ust.mico.core.dto.MicoServiceDeploymentInfoDTO;
-import io.github.ust.mico.core.dto.MicoServiceInterfaceStatusDTO;
-import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
+import io.github.ust.mico.core.dto.response.KubernetesNodeMetricsResponseDTO;
+import io.github.ust.mico.core.dto.response.KubernetesPodInformationResponseDTO;
+import io.github.ust.mico.core.dto.response.KubernetesPodMetricsResponseDTO;
+import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
+import io.github.ust.mico.core.dto.response.MicoApplicationStatusResponseDTO;
+import io.github.ust.mico.core.dto.response.MicoApplicationWithServicesResponseDTO;
+import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO;
+import io.github.ust.mico.core.dto.response.MicoServiceInterfaceStatusResponseDTO;
+import io.github.ust.mico.core.dto.response.MicoServiceStatusResponseDTO;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoLabel;
 import io.github.ust.mico.core.model.MicoService;
@@ -280,7 +280,7 @@ public class ApplicationControllerTests {
             .andReturn();
 
         String contentAsString = mvcResult.getResponse().getContentAsString();
-        MicoApplicationWithServicesDTO micoApplicationWithServicesDTO = mapper.readValue(contentAsString, MicoApplicationWithServicesDTO.class);
+        MicoApplicationWithServicesResponseDTO micoApplicationWithServicesDTO = mapper.readValue(contentAsString, MicoApplicationWithServicesResponseDTO.class);
         System.out.println("Deserialized application with services DTO:\n" + micoApplicationWithServicesDTO);
     }
 
@@ -307,7 +307,7 @@ public class ApplicationControllerTests {
         given(applicationRepository.save(any(MicoApplication.class))).willReturn(application);
 
         final ResultActions result = mvc.perform(post(BASE_PATH)
-            .content(mapper.writeValueAsBytes(MicoApplicationDTO.valueOf(application)))
+            .content(mapper.writeValueAsBytes(MicoApplicationResponseDTO.valueOf(application)))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(jsonPath(SHORT_NAME_PATH, is(application.getShortName())))
@@ -343,7 +343,7 @@ public class ApplicationControllerTests {
             eq(existingService2.getShortName()), eq(existingService2.getVersion())))
             .willReturn(Optional.of(existingService2));
 
-        MicoApplicationDTO newApplication = new MicoApplicationDTO()
+        MicoApplicationResponseDTO newApplication = new MicoApplicationResponseDTO()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setName(NAME)
@@ -382,7 +382,7 @@ public class ApplicationControllerTests {
             eq(application.getVersion()))).willReturn(Optional.of(application));
 
         final ResultActions result = mvc.perform(post(BASE_PATH)
-            .content(mapper.writeValueAsBytes(MicoApplicationDTO.valueOf(application)))
+            .content(mapper.writeValueAsBytes(MicoApplicationResponseDTO.valueOf(application)))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print());
 
@@ -493,7 +493,7 @@ public class ApplicationControllerTests {
         given(applicationRepository.save(eq(expectedApplication))).willReturn(expectedApplication);
 
         ResultActions resultUpdate = mvc.perform(put(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION)
-            .content(mapper.writeValueAsBytes(MicoApplicationDTO.valueOf(updatedApplication)))
+            .content(mapper.writeValueAsBytes(MicoApplicationResponseDTO.valueOf(updatedApplication)))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(jsonPath(DESCRIPTION_PATH, is(updatedApplication.getDescription())))
@@ -539,7 +539,7 @@ public class ApplicationControllerTests {
 
         ResultActions resultUpdate = mvc
             .perform(put(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION)
-                .content(mapper.writeValueAsBytes(MicoApplicationDTO.valueOf(updatedApplication)))
+                .content(mapper.writeValueAsBytes(MicoApplicationResponseDTO.valueOf(updatedApplication)))
                 .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(jsonPath(DESCRIPTION_PATH, is(updatedApplication.getDescription())))
@@ -718,15 +718,15 @@ public class ApplicationControllerTests {
         int memoryUsage2 = 70;
         int cpuLoad2 = 40;
 
-        MicoApplicationStatusDTO micoApplicationStatus = new MicoApplicationStatusDTO()
+        MicoApplicationStatusResponseDTO micoApplicationStatus = new MicoApplicationStatusResponseDTO()
             .setTotalNumberOfMicoServices(1)
             .setTotalNumberOfAvailableReplicas(availableReplicas)
             .setTotalNumberOfRequestedReplicas(replicas)
             .setTotalNumberOfPods(2);
-        MicoServiceStatusDTO micoServiceStatus = new MicoServiceStatusDTO();
+        MicoServiceStatusResponseDTO micoServiceStatus = new MicoServiceStatusResponseDTO();
 
         // Set information for first pod of a MicoService
-        KubernetesPodInformationDTO kubernetesPodInfo1 = new KubernetesPodInformationDTO();
+        KubernetesPodInformationResponseDTO kubernetesPodInfo1 = new KubernetesPodInformationResponseDTO();
         kubernetesPodInfo1
             .setHostIp(hostIp)
             .setNodeName(nodeName)
@@ -734,13 +734,13 @@ public class ApplicationControllerTests {
             .setPodName(podName1)
             .setStartTime(startTimePod1)
             .setRestarts(restartsPod1)
-            .setMetrics(new KubernetesPodMetricsDTO()
+            .setMetrics(new KubernetesPodMetricsResponseDTO()
                 .setAvailable(false)
                 .setCpuLoad(cpuLoad1)
                 .setMemoryUsage(memoryUsage1));
 
         // Set information for second pod of a MicoService
-        KubernetesPodInformationDTO kubernetesPodInfo2 = new KubernetesPodInformationDTO();
+        KubernetesPodInformationResponseDTO kubernetesPodInfo2 = new KubernetesPodInformationResponseDTO();
         kubernetesPodInfo2
             .setHostIp(hostIp)
             .setNodeName(nodeName)
@@ -748,7 +748,7 @@ public class ApplicationControllerTests {
             .setPodName(podName2)
             .setStartTime(startTimePod2)
             .setRestarts(restartsPod2)
-            .setMetrics(new KubernetesPodMetricsDTO()
+            .setMetrics(new KubernetesPodMetricsResponseDTO()
                 .setAvailable(true)
                 .setCpuLoad(cpuLoad2)
                 .setMemoryUsage(memoryUsage2));
@@ -760,15 +760,15 @@ public class ApplicationControllerTests {
             .setVersion(SERVICE_VERSION)
             .setAvailableReplicas(availableReplicas)
             .setRequestedReplicas(replicas)
-            .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationDTO()
+            .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationResponseDTO()
                 .setName(otherMicoApplication.getName())
                 .setShortName(otherMicoApplication.getShortName())
                 .setVersion(otherMicoApplication.getVersion())
                 .setDescription(otherMicoApplication.getDescription())))
-            .setInterfacesInformation(CollectionUtils.listOf(new MicoServiceInterfaceStatusDTO().setName(SERVICE_INTERFACE_NAME)))
+            .setInterfacesInformation(CollectionUtils.listOf(new MicoServiceInterfaceStatusResponseDTO().setName(SERVICE_INTERFACE_NAME)))
             .setPodsInformation(Arrays.asList(kubernetesPodInfo1, kubernetesPodInfo2))
             .setNodeMetrics(CollectionUtils.listOf(
-                new KubernetesNodeMetricsDTO()
+                new KubernetesNodeMetricsResponseDTO()
                     .setNodeName(nodeName)
                     .setAverageCpuLoad(25)
                     .setAverageMemoryUsage(60)
@@ -1001,7 +1001,7 @@ public class ApplicationControllerTests {
             .setLabels(CollectionUtils.listOf(new MicoLabel("key", "value")))
             .setImagePullPolicy(ImagePullPolicy.IF_NOT_PRESENT);
 
-        MicoServiceDeploymentInfoDTO updatedServiceDeploymentInfoDTO = new MicoServiceDeploymentInfoDTO()
+        MicoServiceDeploymentInfoResponseDTO updatedServiceDeploymentInfoDTO = new MicoServiceDeploymentInfoResponseDTO()
             .setReplicas(5)
             .setLabels(CollectionUtils.listOf(new MicoLabel("key-updated", "value-updated")))
             .setImagePullPolicy(ImagePullPolicy.NEVER);
@@ -1107,7 +1107,7 @@ public class ApplicationControllerTests {
             .setApplication(application)
             .setService(service);
 
-        MicoServiceDeploymentInfoDTO updatedServiceDeploymentInfoDTO = new MicoServiceDeploymentInfoDTO()
+        MicoServiceDeploymentInfoResponseDTO updatedServiceDeploymentInfoDTO = new MicoServiceDeploymentInfoResponseDTO()
             .setLabels(labels);
 
         application.getServiceDeploymentInfos().add(serviceDeploymentInfo);

@@ -21,7 +21,8 @@ package io.github.ust.mico.core.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.github.ust.mico.core.dto.MicoServiceDeploymentInfoDTO;
+
+import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO;
 import lombok.*;
 import lombok.experimental.Accessors;
 import org.neo4j.ogm.annotation.*;
@@ -31,7 +32,7 @@ import java.util.List;
 
 /**
  * Represents the information necessary for deploying a {@link MicoApplication}.
- * DTO is {@link MicoServiceDeploymentInfoDTO}.
+ * DTO is {@link MicoServiceDeploymentInfoResponseDTO}.
  */
 @Data
 @NoArgsConstructor
@@ -114,14 +115,14 @@ public class MicoServiceDeploymentInfo {
 
     /**
      * Applies the values of all properties of a
-     * {@link MicoServiceDeploymentInfoDTO} to this
+     * {@link MicoServiceDeploymentInfoResponseDTO} to this
      * {@code MicoServiceDeploymentInfo}.
      *
-     * @param serviceDeploymentInfoDTO the {@link MicoServiceDeploymentInfoDTO}.
+     * @param serviceDeploymentInfoDTO the {@link MicoServiceDeploymentInfoResponseDTO}.
      * @return this {@link MicoServiceDeploymentInfo} with the values
-     * of the properties of the given {@link MicoServiceDeploymentInfoDTO}.
+     * of the properties of the given {@link MicoServiceDeploymentInfoResponseDTO}.
      */
-    public MicoServiceDeploymentInfo applyValuesFrom(MicoServiceDeploymentInfoDTO serviceDeploymentInfoDTO) {
+    public MicoServiceDeploymentInfo applyValuesFrom(MicoServiceDeploymentInfoResponseDTO serviceDeploymentInfoDTO) {
         return setReplicas(serviceDeploymentInfoDTO.getReplicas())
             .setMinReadySecondsBeforeMarkedAvailable(serviceDeploymentInfoDTO.getMinReadySecondsBeforeMarkedAvailable())
             .setLabels(serviceDeploymentInfoDTO.getLabels())

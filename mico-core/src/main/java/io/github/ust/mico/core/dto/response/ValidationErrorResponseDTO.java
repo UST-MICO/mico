@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto;
+package io.github.ust.mico.core.dto.response;
 
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 
@@ -34,7 +34,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import lombok.Value;
 
 @Value
-public class ValidationErrorDTO {
+public class ValidationErrorResponseDTO {
 
     /**
      * The {@link HttpStatus#value()}
@@ -65,7 +65,7 @@ public class ValidationErrorDTO {
      */
     public final static HttpStatus HTTP_STATUS = UNPROCESSABLE_ENTITY;
 
-    public ValidationErrorDTO(List<FieldError> fieldErrorList) {
+    public ValidationErrorResponseDTO(List<FieldError> fieldErrorList) {
         this.fieldErrors = fieldErrorList.stream()
             .map(fieldError -> "Field '" + fieldError.getField() + "' " + fieldError.getDefaultMessage())
             .collect(Collectors.toList());

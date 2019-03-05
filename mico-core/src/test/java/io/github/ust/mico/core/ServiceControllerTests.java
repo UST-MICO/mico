@@ -27,11 +27,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import io.github.ust.mico.core.configuration.CorsConfig;
-import io.github.ust.mico.core.dto.KubernetesNodeMetricsDTO;
-import io.github.ust.mico.core.dto.KubernetesPodInformationDTO;
-import io.github.ust.mico.core.dto.KubernetesPodMetricsDTO;
-import io.github.ust.mico.core.dto.MicoServiceInterfaceStatusDTO;
-import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
+import io.github.ust.mico.core.dto.response.KubernetesNodeMetricsResponseDTO;
+import io.github.ust.mico.core.dto.response.KubernetesPodInformationResponseDTO;
+import io.github.ust.mico.core.dto.response.KubernetesPodMetricsResponseDTO;
+import io.github.ust.mico.core.dto.response.MicoServiceInterfaceStatusResponseDTO;
+import io.github.ust.mico.core.dto.response.MicoServiceStatusResponseDTO;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.model.MicoServiceInterface;
@@ -210,25 +210,25 @@ public class ServiceControllerTests {
         int memoryUsagePod2 = 70;
         int cpuLoadPod2 = 40;
 
-        MicoServiceStatusDTO micoServiceStatus = new MicoServiceStatusDTO();
+        MicoServiceStatusResponseDTO micoServiceStatus = new MicoServiceStatusResponseDTO();
 
-        KubernetesPodInformationDTO kubernetesPodInfo1 = new KubernetesPodInformationDTO();
+        KubernetesPodInformationResponseDTO kubernetesPodInfo1 = new KubernetesPodInformationResponseDTO();
         kubernetesPodInfo1
             .setHostIp(hostIp)
             .setNodeName(nodeName)
             .setPhase(podPhase)
             .setPodName(podName1)
-            .setMetrics(new KubernetesPodMetricsDTO()
+            .setMetrics(new KubernetesPodMetricsResponseDTO()
                 .setAvailable(false)
                 .setCpuLoad(cpuLoadPod1)
                 .setMemoryUsage(memoryUsagePod1));
-        KubernetesPodInformationDTO kubernetesPodInfo2 = new KubernetesPodInformationDTO();
+        KubernetesPodInformationResponseDTO kubernetesPodInfo2 = new KubernetesPodInformationResponseDTO();
         kubernetesPodInfo2
             .setHostIp(hostIp)
             .setNodeName(nodeName)
             .setPhase(podPhase)
             .setPodName(podName2)
-            .setMetrics(new KubernetesPodMetricsDTO()
+            .setMetrics(new KubernetesPodMetricsResponseDTO()
                 .setAvailable(true)
                 .setCpuLoad(cpuLoadPod2)
                 .setMemoryUsage(memoryUsagePod2));
@@ -239,12 +239,12 @@ public class ServiceControllerTests {
             .setShortName(SHORT_NAME)
             .setAvailableReplicas(availableReplicas)
             .setRequestedReplicas(requestedReplicas)
-            .setNodeMetrics(CollectionUtils.listOf(new KubernetesNodeMetricsDTO()
+            .setNodeMetrics(CollectionUtils.listOf(new KubernetesNodeMetricsResponseDTO()
                 .setNodeName(nodeName)
                 .setAverageCpuLoad(25)
                 .setAverageMemoryUsage(60)
             ))
-            .setInterfacesInformation(CollectionUtils.listOf(new MicoServiceInterfaceStatusDTO().setName(SERVICE_INTERFACE_NAME)))
+            .setInterfacesInformation(CollectionUtils.listOf(new MicoServiceInterfaceStatusResponseDTO().setName(SERVICE_INTERFACE_NAME)))
             .setPodsInformation(Arrays.asList(kubernetesPodInfo1, kubernetesPodInfo2));
 
         given(micoStatusService.getServiceStatus(any(MicoService.class))).willReturn(micoServiceStatus);

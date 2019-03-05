@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto;
+package io.github.ust.mico.core.dto.response;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -32,9 +32,9 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-public class MicoServiceDependencyGraphDTO {
+public class MicoServiceDependencyGraphResponseDTO {
 
    private List<MicoService> micoServices = new LinkedList<>();
-   private List<MicoServiceDependencyGraphEdgeDTO> micoServiceDependencyGraphEdgeList = new LinkedList<>();
+   private List<MicoServiceDependencyGraphEdgeResponseDTO> micoServiceDependencyGraphEdgeList = new LinkedList<>();
    
 }

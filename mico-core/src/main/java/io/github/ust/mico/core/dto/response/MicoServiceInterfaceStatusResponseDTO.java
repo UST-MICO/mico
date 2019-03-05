@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto;
+package io.github.ust.mico.core.dto.response;
 
 import java.util.List;
 
@@ -38,7 +38,7 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-public class MicoServiceInterfaceStatusDTO {
+public class MicoServiceInterfaceStatusResponseDTO {
 
     /**
      * Name of the {@link MicoServiceInterface}.

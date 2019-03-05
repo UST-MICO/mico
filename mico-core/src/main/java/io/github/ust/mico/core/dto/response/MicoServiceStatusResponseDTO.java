@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto;
+package io.github.ust.mico.core.dto.response;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,20 +40,7 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-public class MicoServiceStatusDTO {
-
-    /**
-     * Name of the {@link MicoService}.
-     */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Name"),
-            @ExtensionProperty(name = "x-order", value = "30"),
-            @ExtensionProperty(name = "description", value = "Name of the MicoService.")
-        }
-    )})
-    private String name;
+public class MicoServiceStatusResponseDTO {
 
     /**
      * ShortName of the {@link MicoService}.
@@ -80,6 +67,19 @@ public class MicoServiceStatusDTO {
         }
     )})
     private String version;
+
+    /**
+     * Name of the {@link MicoService}.
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Name"),
+            @ExtensionProperty(name = "x-order", value = "30"),
+            @ExtensionProperty(name = "description", value = "Name of the MicoService.")
+        }
+    )})
+    private String name;
 
     /**
      * Counter for the number of replicas the corresponding that should be available.
@@ -121,10 +121,10 @@ public class MicoServiceStatusDTO {
             	+ "for each MicoServiceInterface of the corresponding MicoService.")
         }
     )})
-    private List<MicoServiceInterfaceStatusDTO> interfacesInformation = new ArrayList<>();
+    private List<MicoServiceInterfaceStatusResponseDTO> interfacesInformation = new ArrayList<>();
 
     /**
-     * List of {@link MicoApplicationDTO MicoApplicationDTOs} representing all applications that share the MicoService.
+     * List of {@link MicoApplicationResponseDTO MicoApplicationDTOs} representing all applications that share the MicoService.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -135,7 +135,7 @@ public class MicoServiceStatusDTO {
                 "representing all applications that share the MicoService.")
         }
     )})
-    private List<MicoApplicationDTO> applicationsUsingThisService = new ArrayList<>();
+    private List<MicoApplicationResponseDTO> applicationsUsingThisService = new ArrayList<>();
 
     /**
      * List of all {@link Pod Pods} of all replicas of a deployment of the {@link MicoService}.
@@ -149,10 +149,10 @@ public class MicoServiceStatusDTO {
                 " of a deployment of the MicoService.")
         }
     )})
-    private List<KubernetesPodInformationDTO> podsInformation = new ArrayList<>();
+    private List<KubernetesPodInformationResponseDTO> podsInformation = new ArrayList<>();
 
     /**
-     * List of {@link KubernetesNodeMetricsDTO KubernetesNodeMetricsDTOs} with metrics for each node used by the {@link
+     * List of {@link KubernetesNodeMetricsResponseDTO KubernetesNodeMetricsDTOs} with metrics for each node used by the {@link
      * MicoService}.
      */
     @ApiModelProperty(extensions = {@Extension(
@@ -163,7 +163,7 @@ public class MicoServiceStatusDTO {
             @ExtensionProperty(name = "description", value = "List of KubernetesNodeMetricsDTO with metrics for each node used by this MicoService.")
         }
     )})
-    private List<KubernetesNodeMetricsDTO> nodeMetrics = new ArrayList<>();
+    private List<KubernetesNodeMetricsResponseDTO> nodeMetrics = new ArrayList<>();
 
     /**
      * Contains error messages for Kubernetes services that

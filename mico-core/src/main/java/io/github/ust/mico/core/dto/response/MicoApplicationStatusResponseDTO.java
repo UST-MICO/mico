@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto;
+package io.github.ust.mico.core.dto.response;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,13 +34,13 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for status information of a {@link MicoApplication}.
+ * DTO for the status information of a {@link MicoApplication}.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-public class MicoApplicationStatusDTO {
+public class MicoApplicationStatusResponseDTO {
 
     /**
      * List of status information of {@link MicoService MicoServices}, which belong to a {@link MicoApplication}.
@@ -53,7 +53,7 @@ public class MicoApplicationStatusDTO {
             @ExtensionProperty(name = "description", value = "List of status information of MicoServices, which belong to a MicoApplication.")
         }
     )})
-    private List<MicoServiceStatusDTO> serviceStatuses = new ArrayList<>();
+    private List<MicoServiceStatusResponseDTO> serviceStatuses = new ArrayList<>();
 
     /**
      * Number of {@link MicoService MicoServices} belonging to a {@link MicoApplication}.
@@ -106,4 +106,5 @@ public class MicoApplicationStatusDTO {
         }
     )})
     private int totalNumberOfPods;
+    
 }

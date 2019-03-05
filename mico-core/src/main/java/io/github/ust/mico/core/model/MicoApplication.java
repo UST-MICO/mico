@@ -21,7 +21,8 @@ package io.github.ust.mico.core.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.github.ust.mico.core.dto.MicoApplicationDTO;
+
+import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
 import io.github.ust.mico.core.exception.VersionNotSupportedException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -109,7 +110,7 @@ public class MicoApplication {
     private String owner;
     
     
-    public static MicoApplication valueOf(MicoApplicationDTO applicationDto) {
+    public static MicoApplication valueOf(MicoApplicationResponseDTO applicationDto) {
         return new MicoApplication()
                 .setShortName(applicationDto.getShortName())
                 .setName(applicationDto.getName())

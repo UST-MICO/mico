@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto;
+package io.github.ust.mico.core.dto.response;
 
 import io.github.ust.mico.core.model.MicoService;
 import lombok.AllArgsConstructor;
@@ -29,14 +29,14 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-public class MicoServiceDependencyGraphEdgeDTO {
+public class MicoServiceDependencyGraphEdgeResponseDTO {
 
     private String sourceShortName;
     private String sourceVersion;
     private String targetShortName;
     private String targetVersion;
 
-    public MicoServiceDependencyGraphEdgeDTO(MicoService source, MicoService target){
+    public MicoServiceDependencyGraphEdgeResponseDTO(MicoService source, MicoService target){
         this.sourceShortName = source.getShortName();
         this.sourceVersion = source.getVersion();
         this.targetShortName = target.getShortName();

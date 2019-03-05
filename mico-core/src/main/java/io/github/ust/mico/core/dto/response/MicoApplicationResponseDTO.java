@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto;
+package io.github.ust.mico.core.dto.response;
 
 import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -46,7 +46,9 @@ import javax.validation.constraints.Size;
 @AllArgsConstructor
 @Accessors(chain = true)
 @JsonInclude(Include.NON_NULL)
-public class MicoApplicationDTO {
+public class MicoApplicationResponseDTO {
+	
+	// TODO: Consider inheriting from MicoApplicationRequestDTO
 
     // ----------------------
     // -> Required fields ---
@@ -72,20 +74,6 @@ public class MicoApplicationDTO {
     private String shortName;
 
     /**
-     * The name of the artifact. Intended for humans.
-     * Required only for the usage in the UI.
-     */
-    @ApiModelProperty(required = true, extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Name"),
-            @ExtensionProperty(name = "x-order", value = "30"),
-            @ExtensionProperty(name = "description", value = "Human readable name of the application.")
-        }
-    )})
-    private String name;
-
-    /**
      * The version of this application.
      */
     @ApiModelProperty(required = true, extensions = {@Extension(
@@ -100,6 +88,20 @@ public class MicoApplicationDTO {
     @NotEmpty
     @Pattern(regexp = Patterns.SEMANTIC_VERSION_WITH_PREFIX_REGEX, message = Patterns.SEMANTIC_VERSIONING_MESSAGE)
     private String version;
+
+    /**
+     * The name of the artifact. Intended for humans.
+     * Required only for the usage in the UI.
+     */
+    @ApiModelProperty(required = true, extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Name"),
+            @ExtensionProperty(name = "x-order", value = "30"),
+            @ExtensionProperty(name = "description", value = "Human readable name of the application.")
+        }
+    )})
+    private String name;
 
     /**
      * Human readable description of this application.
@@ -175,11 +177,11 @@ public class MicoApplicationDTO {
      * from the given {@link MicoApplication} itself.
      *
      * @param application the {@link MicoApplication}.
-     * @return a {@link MicoApplicationDTO} with all the values
+     * @return a {@link MicoApplicationResponseDTO} with all the values
      * of the given {@code MicoApplication}.
      */
-    public static MicoApplicationDTO valueOf(MicoApplication application) {
-        return new MicoApplicationDTO()
+    public static MicoApplicationResponseDTO valueOf(MicoApplication application) {
+        return new MicoApplicationResponseDTO()
             .setShortName(application.getShortName())
             .setName(application.getName())
             .setVersion(application.getVersion())
@@ -189,6 +191,10 @@ public class MicoApplicationDTO {
     }
 
 
+    /**
+     * Enumeration for all possible states a deployment of
+     * a {@link MicoApplication} can be in.
+     */
     public enum MicoApplicationDeploymentStatus {
 
         DEPLOYED,

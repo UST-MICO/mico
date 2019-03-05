@@ -19,7 +19,6 @@
 
 package io.github.ust.mico.core.exception;
 
-import io.github.ust.mico.core.dto.ValidationErrorDTO;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -27,6 +26,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+
+import io.github.ust.mico.core.dto.response.ValidationErrorResponseDTO;
 
 import java.util.List;
 
@@ -43,9 +44,9 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
     @ResponseBody
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ValidationErrorDTO methodArgumentNotValidException(MethodArgumentNotValidException ex) {
+    public ValidationErrorResponseDTO methodArgumentNotValidException(MethodArgumentNotValidException ex) {
         BindingResult result = ex.getBindingResult();
         List<FieldError> fieldErrors = result.getFieldErrors();
-        return new ValidationErrorDTO(fieldErrors);
+        return new ValidationErrorResponseDTO(fieldErrors);
     }
 }

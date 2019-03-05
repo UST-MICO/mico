@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto;
+package io.github.ust.mico.core.dto.response;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +49,9 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-public class MicoServiceDeploymentInfoDTO {
+public class MicoServiceDeploymentInfoResponseDTO {
+	
+	// TODO: Consider inheriting from MicoServiceDeploymentInfoRequestDTO.
 
     /**
      * Number of desired instances. Defaults to 1.
@@ -159,11 +161,11 @@ public class MicoServiceDeploymentInfoDTO {
      * {@link MicoServiceDeploymentInfo}.
      *
      * @param micoServiceDeploymentInfo the {@link MicoServiceDeploymentInfo} to use.
-     * @return a {@link MicoServiceDeploymentInfoDTO} with all the values
+     * @return a {@link MicoServiceDeploymentInfoResponseDTO} with all the values
      * of the given {@code MicoServiceDeploymentInfo}.
      */
-    public static MicoServiceDeploymentInfoDTO valueOf(MicoServiceDeploymentInfo micoServiceDeploymentInfo) {
-        return new MicoServiceDeploymentInfoDTO()
+    public static MicoServiceDeploymentInfoResponseDTO valueOf(MicoServiceDeploymentInfo micoServiceDeploymentInfo) {
+        return new MicoServiceDeploymentInfoResponseDTO()
             .setReplicas(micoServiceDeploymentInfo.getReplicas())
             .setMinReadySecondsBeforeMarkedAvailable(micoServiceDeploymentInfo.getMinReadySecondsBeforeMarkedAvailable())
             .setLabels(micoServiceDeploymentInfo.getLabels())

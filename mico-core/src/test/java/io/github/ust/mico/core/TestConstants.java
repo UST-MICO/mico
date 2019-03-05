@@ -19,13 +19,14 @@
 
 package io.github.ust.mico.core;
 
-import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
-import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
 import io.github.ust.mico.core.model.MicoVersion;
 
 import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
 import static io.github.ust.mico.core.JsonPathBuilder.buildAttributePath;
 import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
+
+import io.github.ust.mico.core.dto.response.MicoApplicationStatusResponseDTO;
+import io.github.ust.mico.core.dto.response.MicoServiceStatusResponseDTO;
 
 public class TestConstants {
 
@@ -95,7 +96,7 @@ public class TestConstants {
      * All paths are build on the path for the status of this service.
      */
     /**
-     * Path of a single {@link MicoServiceStatusDTO} in a {@link MicoApplicationStatusDTO}. Contains status information
+     * Path of a single {@link MicoServiceStatusResponseDTO} in a {@link MicoApplicationStatusResponseDTO}. Contains status information
      * for this service.
      */
     public static final String SERVICE_STATUS_PATH = buildPath(ROOT, "serviceStatuses[0]");

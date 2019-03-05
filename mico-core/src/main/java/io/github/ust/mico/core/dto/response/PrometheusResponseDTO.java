@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto;
+package io.github.ust.mico.core.dto.response;
 
 import java.util.List;
 import java.util.Map;
@@ -35,7 +35,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 // TODO: Class comment.
-public class PrometheusResponse {
+public class PrometheusResponseDTO {
     
     // TODO: Add comments for fields.
     

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto;
+package io.github.ust.mico.core.dto.request;
 
 import javax.validation.constraints.NotEmpty;
 
@@ -39,7 +39,7 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-public class CrawlingInfoDTO {
+public class CrawlingInfoRequestDTO {
 
     /**
      * The url to the remote repository to crawl from.
