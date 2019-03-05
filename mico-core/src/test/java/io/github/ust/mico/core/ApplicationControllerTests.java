@@ -24,8 +24,6 @@ import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
 import static io.github.ust.mico.core.JsonPathBuilder.SELF_HREF;
 import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
 import static io.github.ust.mico.core.TestConstants.AVAILABLE_REPLICAS;
-import static io.github.ust.mico.core.TestConstants.AVERAGE_CPU_LOAD_PER_NODE_PATH;
-import static io.github.ust.mico.core.TestConstants.AVERAGE_MEMORY_USAGE_PER_NODE_PATH;
 import static io.github.ust.mico.core.TestConstants.DESCRIPTION;
 import static io.github.ust.mico.core.TestConstants.ERROR_MESSAGES;
 import static io.github.ust.mico.core.TestConstants.GIT_TEST_REPO_URL;
@@ -36,6 +34,9 @@ import static io.github.ust.mico.core.TestConstants.ID_3;
 import static io.github.ust.mico.core.TestConstants.INTERFACES_INFORMATION;
 import static io.github.ust.mico.core.TestConstants.INTERFACES_INFORMATION_NAME;
 import static io.github.ust.mico.core.TestConstants.NAME;
+import static io.github.ust.mico.core.TestConstants.NODE_METRICS_AVERAGE_CPU_LOAD;
+import static io.github.ust.mico.core.TestConstants.NODE_METRICS_AVERAGE_MEMORY_USAGE;
+import static io.github.ust.mico.core.TestConstants.NODE_METRICS_NAME;
 import static io.github.ust.mico.core.TestConstants.OWNER;
 import static io.github.ust.mico.core.TestConstants.POD_INFO;
 import static io.github.ust.mico.core.TestConstants.POD_INFO_METRICS_AVAILABLE_1;
@@ -114,9 +115,9 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableMap;
 
 import io.github.ust.mico.core.configuration.CorsConfig;
+import io.github.ust.mico.core.dto.KubernetesNodeMetricsDTO;
 import io.github.ust.mico.core.dto.KubernetesPodInformationDTO;
 import io.github.ust.mico.core.dto.KubernetesPodMetricsDTO;
 import io.github.ust.mico.core.dto.MicoApplicationDTO;
@@ -147,8 +148,6 @@ import io.github.ust.mico.core.web.ApplicationController;
 @EnableConfigurationProperties(value = {CorsConfig.class})
 public class ApplicationControllerTests {
 
-    private static final String JSON_PATH_LINKS_SECTION = "$._links.";
-
     public static final String APPLICATION_DTO_LIST_PATH = buildPath(EMBEDDED, "micoApplicationDTOList");
     public static final String APPLICATION_WITH_SERVICES_DTO_LIST_PATH = buildPath(EMBEDDED, "micoApplicationWithServicesDTOList");
     public static final String APPLICATION_PATH = buildPath(ROOT, "application");
@@ -160,6 +159,7 @@ public class ApplicationControllerTests {
     public static final String SERVICE_LIST_PATH = buildPath(ROOT, "services");
     public static final String INTERFACES_LIST_PATH = buildPath(ROOT, "serviceInterfaces");
     public static final String ID_PATH = buildPath(ROOT, "id");
+    private static final String JSON_PATH_LINKS_SECTION = "$._links.";
     private static final String BASE_PATH = "/applications";
     private static final String PATH_SERVICES = "services";
     private static final String PATH_DEPLOYMENT_INFORMATION = "deploymentInformation";
@@ -769,8 +769,12 @@ public class ApplicationControllerTests {
                 .setDescription(otherMicoApplication.getDescription())))
             .setInterfacesInformation(CollectionUtils.listOf(new MicoServiceInterfaceStatusDTO().setName(SERVICE_INTERFACE_NAME)))
             .setPodsInformation(Arrays.asList(kubernetesPodInfo1, kubernetesPodInfo2))
-            .setAverageCpuLoadPerNode(ImmutableMap.of(nodeName, 25))
-            .setAverageMemoryUsagePerNode(ImmutableMap.of(nodeName, 60));
+            .setNodeMetrics(CollectionUtils.listOf(
+                new KubernetesNodeMetricsDTO()
+                    .setNodeName(nodeName)
+                    .setAverageCpuLoad(25)
+                    .setAverageMemoryUsage(60)
+            ));
         micoApplicationStatus.getServiceStatuses().add(micoServiceStatus);
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
@@ -788,8 +792,9 @@ public class ApplicationControllerTests {
             .andExpect(jsonPath(TOTAL_NUMBER_OF_REQUESTED_REPLICAS, is(replicas)))
             .andExpect(jsonPath(TOTAL_NUMBER_OF_PODS, is(2)))
             .andExpect(jsonPath(TOTAL_NUMBER_OF_MICO_SERVICES, is(1)))
-            .andExpect(jsonPath(AVERAGE_CPU_LOAD_PER_NODE_PATH, is(ImmutableMap.of(nodeName, 25))))
-            .andExpect(jsonPath(AVERAGE_MEMORY_USAGE_PER_NODE_PATH, is(ImmutableMap.of(nodeName, 60))))
+            .andExpect(jsonPath(NODE_METRICS_NAME, is(nodeName)))
+            .andExpect(jsonPath(NODE_METRICS_AVERAGE_CPU_LOAD, is(25)))
+            .andExpect(jsonPath(NODE_METRICS_AVERAGE_MEMORY_USAGE, is(60)))
             .andExpect(jsonPath(REQUESTED_REPLICAS, is(replicas)))
             .andExpect(jsonPath(AVAILABLE_REPLICAS, is(availableReplicas)))
             .andExpect(jsonPath(INTERFACES_INFORMATION, hasSize(1)))

@@ -19,7 +19,13 @@
 
 package io.github.ust.mico.core;
 
-import com.google.common.collect.ImmutableMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.PodListBuilder;
 import io.fabric8.kubernetes.api.model.Service;
@@ -27,7 +33,14 @@ import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.github.ust.mico.core.configuration.PrometheusConfig;
-import io.github.ust.mico.core.dto.*;
+import io.github.ust.mico.core.dto.KubernetesNodeMetricsDTO;
+import io.github.ust.mico.core.dto.KubernetesPodInformationDTO;
+import io.github.ust.mico.core.dto.KubernetesPodMetricsDTO;
+import io.github.ust.mico.core.dto.MicoApplicationDTO;
+import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
+import io.github.ust.mico.core.dto.MicoServiceInterfaceStatusDTO;
+import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
+import io.github.ust.mico.core.dto.PrometheusResponse;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
@@ -49,12 +62,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.*;
-
-import static io.github.ust.mico.core.TestConstants.*;
+import static io.github.ust.mico.core.TestConstants.NAME;
+import static io.github.ust.mico.core.TestConstants.SERVICE_INTERFACE_NAME;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_OTHER;
+import static io.github.ust.mico.core.TestConstants.VERSION;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
@@ -230,7 +247,7 @@ public class MicoStatusServiceTest {
     }
 
     @Test
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public void getApplicationStatus() {
         MicoApplicationStatusDTO micoApplicationStatus = new MicoApplicationStatusDTO();
         micoApplicationStatus
@@ -249,8 +266,16 @@ public class MicoStatusServiceTest {
                     .setShortName(otherMicoApplication.getShortName())
                     .setVersion(otherMicoApplication.getVersion())
                     .setDescription(otherMicoApplication.getDescription())))
-                .setAverageMemoryUsagePerNode(ImmutableMap.of(nodeName1, 60, nodeName2, 57))
-                .setAverageCpuLoadPerNode(ImmutableMap.of(nodeName1, 20, nodeName2, 7))
+                .setNodeMetrics(CollectionUtils.listOf(
+                    new KubernetesNodeMetricsDTO()
+                        .setNodeName(nodeName1)
+                        .setAverageCpuLoad(20)
+                        .setAverageMemoryUsage(60),
+                    new KubernetesNodeMetricsDTO()
+                        .setNodeName(nodeName2)
+                        .setAverageCpuLoad(7)
+                        .setAverageMemoryUsage(57)
+                ))
                 // Add four pods (on two different nodes)
                 .setPodsInformation(Arrays.asList(
                     new KubernetesPodInformationDTO()
@@ -353,8 +378,12 @@ public class MicoStatusServiceTest {
                     .setShortName(otherMicoApplication.getShortName())
                     .setVersion(otherMicoApplication.getVersion())
                     .setDescription(otherMicoApplication.getDescription())))
-                .setAverageMemoryUsagePerNode(ImmutableMap.of(nodeName1, 70))
-                .setAverageCpuLoadPerNode(ImmutableMap.of(nodeName1, 30))
+                .setNodeMetrics(CollectionUtils.listOf(
+                    new KubernetesNodeMetricsDTO()
+                        .setNodeName(nodeName1)
+                        .setAverageCpuLoad(30)
+                        .setAverageMemoryUsage(70)
+                ))
                 // Add four pods (on two different nodes)
                 .setPodsInformation(CollectionUtils.listOf(
                     new KubernetesPodInformationDTO()
@@ -429,7 +458,7 @@ public class MicoStatusServiceTest {
     }
 
     @Test
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public void getServiceStatus() {
         MicoServiceStatusDTO micoServiceStatus = new MicoServiceStatusDTO();
         micoServiceStatus
@@ -443,8 +472,16 @@ public class MicoStatusServiceTest {
                 .setShortName(otherMicoApplication.getShortName())
                 .setVersion(otherMicoApplication.getVersion())
                 .setDescription(otherMicoApplication.getDescription())))
-            .setAverageMemoryUsagePerNode(ImmutableMap.of(nodeName1, 60, nodeName2, 57))
-            .setAverageCpuLoadPerNode(ImmutableMap.of(nodeName1, 20, nodeName2, 7))
+            .setNodeMetrics(CollectionUtils.listOf(
+                new KubernetesNodeMetricsDTO()
+                    .setNodeName(nodeName1)
+                    .setAverageCpuLoad(20)
+                    .setAverageMemoryUsage(60),
+                new KubernetesNodeMetricsDTO()
+                    .setNodeName(nodeName2)
+                    .setAverageCpuLoad(7)
+                    .setAverageMemoryUsage(57)
+            ))
             // Add four pods (on two different nodes)
             .setPodsInformation(Arrays.asList(
                 new KubernetesPodInformationDTO()
