@@ -15,7 +15,7 @@ export DOCKERHUB_USERNAME_BASE64=$(echo -n $uname | base64 -w 0)
 
 # Read in DockerHub password
 echo "Please provide the password for DockerHub:"
-read pw
+read -s pw
 if [[ -z "$pw" ]]; then
     echo "ERROR: No password provided"
     exit 1
