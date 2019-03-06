@@ -101,7 +101,8 @@ public class DeploymentControllerTests {
 
     @Before
     public void setUp() throws KubernetesResourceException {
-        given(imageBuilder.createImageName(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).willReturn(DOCKER_IMAGE_URI);
+        given(imageBuilder.createImageName(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).willReturn(
+            TestConstants.IntegrationTest.DOCKER_IMAGE_URI);
 
         Deployment deployment = new Deployment();
         given(micoKubernetesClient.createMicoService(
@@ -113,12 +114,12 @@ public class DeploymentControllerTests {
     @Test
     public void deployApplicationWithOneServiceAndOneServiceInterface() throws Exception {
         MicoService service = getTestService();
+        service.setDockerImageUri(TestConstants.IntegrationTest.DOCKER_IMAGE_URI);
+
         MicoApplication application = getTestApplication();
         application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
-                .setApplication(application)
-                .setService(service));
-        
-        service.setDockerImageUri(DOCKER_IMAGE_URI);
+            .setApplication(application)
+            .setService(service));
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(serviceRepository.save(any(MicoService.class))).willReturn(service);
@@ -132,14 +133,14 @@ public class DeploymentControllerTests {
             .andExpect(status().isOk());
 
         // Assume asynchronous image build operation was successful -> invoke onSuccess function
-        onSuccessArgumentCaptor.getValue().accept(DOCKER_IMAGE_URI);
+        onSuccessArgumentCaptor.getValue().accept(service.getDockerImageUri());
 
         verify(serviceRepository, times(1)).save(micoServiceArgumentCaptor.capture());
 
         MicoService storedMicoService = micoServiceArgumentCaptor.getValue();
         assertNotNull(storedMicoService);
         assertNotNull("DockerImageUri was not set", storedMicoService.getDockerImageUri());
-        assertEquals(DOCKER_IMAGE_URI, storedMicoService.getDockerImageUri());
+        assertEquals(service.getDockerImageUri(), storedMicoService.getDockerImageUri());
 
         verify(micoKubernetesClient, times(1)).createMicoService(
             micoServiceArgumentCaptor.capture(),
@@ -179,20 +180,22 @@ public class DeploymentControllerTests {
     }
 
     private MicoService getTestService() {
-        return new MicoService()
-            .setId(ID)
-            .setShortName(SERVICE_SHORT_NAME)
-            .setVersion(RELEASE)
-            .setGitCloneUrl(GIT_TEST_REPO_URL)
-            .setDockerfilePath(DOCKERFILE_PATH)
-            .setServiceInterfaces(CollectionUtils.listOf(
-                new MicoServiceInterface()
-                    .setServiceInterfaceName(SERVICE_INTERFACE_NAME)
-                    .setPorts(CollectionUtils.listOf(
-                        new MicoServicePort()
-                            .setPort(80)
-                            .setTargetPort(80)
-                    ))
+        MicoService service = new MicoService()
+            .setId(ID_1)
+            .setShortName(TestConstants.IntegrationTest.SERVICE_SHORT_NAME)
+            .setName(TestConstants.IntegrationTest.SERVICE_NAME)
+            .setVersion(TestConstants.IntegrationTest.RELEASE)
+            .setDescription(TestConstants.IntegrationTest.SERVICE_DESCRIPTION)
+            .setGitCloneUrl(TestConstants.IntegrationTest.GIT_CLONE_URL)
+            .setDockerfilePath(TestConstants.IntegrationTest.DOCKERFILE_PATH);
+        MicoServiceInterface serviceInterface = new MicoServiceInterface()
+            .setServiceInterfaceName(TestConstants.IntegrationTest.SERVICE_INTERFACE_NAME)
+            .setPorts(CollectionUtils.listOf(new MicoServicePort()
+                .setPort(TestConstants.IntegrationTest.PORT)
+                .setTargetPort(TestConstants.IntegrationTest.TARGET_PORT)
             ));
+        service.getServiceInterfaces().add(serviceInterface);
+
+        return service;
     }
 }

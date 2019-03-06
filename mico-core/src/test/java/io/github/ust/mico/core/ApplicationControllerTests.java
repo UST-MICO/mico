@@ -26,7 +26,6 @@ import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
 import static io.github.ust.mico.core.TestConstants.AVAILABLE_REPLICAS;
 import static io.github.ust.mico.core.TestConstants.DESCRIPTION;
 import static io.github.ust.mico.core.TestConstants.ERROR_MESSAGES;
-import static io.github.ust.mico.core.TestConstants.GIT_TEST_REPO_URL;
 import static io.github.ust.mico.core.TestConstants.ID;
 import static io.github.ust.mico.core.TestConstants.ID_1;
 import static io.github.ust.mico.core.TestConstants.ID_2;
@@ -510,7 +509,7 @@ public class ApplicationControllerTests {
         MicoService existingService = new MicoService()
             .setShortName(SERVICE_SHORT_NAME)
             .setVersion(SERVICE_VERSION)
-            .setGitCloneUrl(GIT_TEST_REPO_URL);
+            .setName(NAME);
 
         MicoApplication existingApplication = new MicoApplication()
             .setId(ID)
