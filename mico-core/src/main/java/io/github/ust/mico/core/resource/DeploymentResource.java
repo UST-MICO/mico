@@ -204,25 +204,27 @@ public class DeploymentResource {
      * @throws KubernetesResourceException
      */
     private void createKubernetesResources(MicoApplication micoApplication, MicoService micoService) throws KubernetesResourceException {
-        log.debug("Start creating Kubernetes resources for MICO service '{}' in version '{}'", micoService.getShortName(), micoService.getVersion());
+        log.debug("Start creating Kubernetes resources for MicoService '{}' in version '{}'", micoService.getShortName(), micoService.getVersion());
 
         // Kubernetes Deployment
 		Optional<MicoServiceDeploymentInfo> serviceDeploymentInfoOptional = serviceDeploymentInfoRepository
 		    .findByApplicationAndService(micoApplication.getShortName(), micoApplication.getVersion(),
 		        micoService.getShortName(), micoService.getVersion());
-        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo();
+        new MicoServiceDeploymentInfo();
+        MicoServiceDeploymentInfo serviceDeploymentInfo;
         if (serviceDeploymentInfoOptional.isPresent()) {
             serviceDeploymentInfo = serviceDeploymentInfoOptional.get();
             log.debug("Using deployment information for MICO Service '{}' in version '{}': {}",
                 micoService.getShortName(), micoService.getVersion(), serviceDeploymentInfo.toString());
         } else {
-            log.warn("MICO application '{}' in version '{}' doesn't have a service deployment information for service '{}' in version '{}' stored.",
+            serviceDeploymentInfo = new MicoServiceDeploymentInfo().setService(micoService);
+            log.warn("MicoApplication '{}' in version '{}' doesn't have a service deployment information for service '{}' in version '{}' stored.",
                 micoApplication.getShortName(), micoApplication.getShortName(), micoService.getShortName(), micoService.getVersion());
         }
         log.info("Creating Kubernetes deployment for MicoService '{}' in version '{}'",
             micoService.getShortName(), micoService.getVersion());
         log.debug("Details of MicoService: {}", micoService.toString());
-        micoKubernetesClient.createMicoService(micoService, serviceDeploymentInfo);
+        micoKubernetesClient.createMicoService(serviceDeploymentInfo);
 
         log.debug("Creating {} Kubernetes service(s) for MicoService '{}' in version '{}'",
             micoService.getServiceInterfaces().size(), micoService.getShortName(), micoService.getVersion());

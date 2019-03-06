@@ -99,13 +99,13 @@ public class MicoKubernetesClient {
     }
 
     /**
-     * Create a Kubernetes deployment based on a MICO service.
+     * Create a Kubernetes deployment based on a {@link MicoServiceDeploymentInfo}.
      *
-     * @param micoService    the {@link MicoService}
-     * @param deploymentInfo the {@link MicoServiceDeploymentInfo}
+     * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}
      * @return the Kubernetes {@link Deployment} resource object
      */
-    public Deployment createMicoService(MicoService micoService, MicoServiceDeploymentInfo deploymentInfo) throws KubernetesResourceException {
+    public Deployment createMicoService(MicoServiceDeploymentInfo serviceDeploymentInfo) throws KubernetesResourceException {
+        MicoService micoService = serviceDeploymentInfo.getService();
         String namespace = micoKubernetesConfig.getNamespaceMicoWorkspace();
         String deploymentUid;
 
@@ -132,7 +132,7 @@ public class MicoKubernetesClient {
             .addToLabels(LABEL_INSTANCE_KEY, deploymentUid)
             .endMetadata()
             .withNewSpec()
-            .withReplicas(deploymentInfo.getReplicas())
+            .withReplicas(serviceDeploymentInfo.getReplicas())
             .withNewSelector()
             .addToMatchLabels(LABEL_INSTANCE_KEY, deploymentUid)
             .endSelector()
@@ -148,7 +148,7 @@ public class MicoKubernetesClient {
                     .withName(micoService.getShortName())
                     .withImage(micoService.getDockerImageUri())
                     .withPorts(createContainerPorts(micoService))
-                    .withEnv(deploymentInfo.getEnvironmentVariables().stream().map(
+                    .withEnv(serviceDeploymentInfo.getEnvironmentVariables().stream().map(
                         environmentVariable -> new EnvVarBuilder()
                             .withName(environmentVariable.getName())
                             .withValue(environmentVariable.getValue())
@@ -160,7 +160,10 @@ public class MicoKubernetesClient {
             .endSpec()
             .build();
 
-        return kubernetesClient.apps().deployments().inNamespace(namespace).createOrReplace(deployment);
+        Deployment createdDeployment = kubernetesClient.apps().deployments().inNamespace(namespace).createOrReplace(deployment);
+        log.debug("Successfully created Kubernetes deployment '{}' in namespace '{}' for MicoService '{}' '{}'",
+            createdDeployment.getMetadata().getName(), namespace, micoService.getShortName(), micoService.getVersion());
+        return createdDeployment;
     }
 
     /**
@@ -224,7 +227,10 @@ public class MicoKubernetesClient {
         // TODO: Check whether optional fields of MicoServiceInterface have to be used in some way
         // (publicDns, description, protocol, transportProtocol)
 
-        return kubernetesClient.services().inNamespace(namespace).createOrReplace(service);
+        Service createdService = kubernetesClient.services().inNamespace(namespace).createOrReplace(service);
+        log.debug("Successfully created Kubernetes service '{}' in namespace '{}' for MicoServiceInterface '{}' of MicoService '{}' '{}'",
+            createdService.getMetadata().getName(), namespace, serviceInterfaceName, micoService.getShortName(), micoService.getVersion());
+        return createdService;
     }
 
     /**

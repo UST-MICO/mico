@@ -19,21 +19,6 @@
 
 package io.github.ust.mico.core;
 
-import static io.github.ust.mico.core.TestConstants.*;
-import static org.junit.Assert.*;
-import static org.mockito.BDDMockito.given;
-
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.junit4.SpringRunner;
-
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServiceList;
@@ -48,6 +33,22 @@ import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.UIDUtils;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import static io.github.ust.mico.core.TestConstants.*;
+import static org.junit.Assert.*;
+import static org.mockito.BDDMockito.given;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -58,6 +59,15 @@ public class MicoKubernetesClientTests {
     private static final String LABEL_VERSION_KEY = LABEL_PREFIX + "version";
     private static final String LABEL_INTERFACE_KEY = LABEL_PREFIX + "interface";
     private static final String LABEL_INSTANCE_KEY = LABEL_PREFIX + "instance";
+
+    @Captor
+    ArgumentCaptor<Service> serviceArgumentCaptor;
+
+    @Captor
+    ArgumentCaptor<Deployment> deploymentArgumentCaptor;
+
+    @Captor
+    ArgumentCaptor<String> namespaceArgumentCaptor;
 
     @Rule
     public KubernetesServer mockServer = new KubernetesServer(false, true);
@@ -81,15 +91,19 @@ public class MicoKubernetesClientTests {
 
     @Test
     public void creationOfMicoServiceWorks() throws KubernetesResourceException {
-        assertEquals(0, mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems().size());
+        // Assert that at the beginning there are no deployment
+        DeploymentList deployments = mockServer.getClient().apps().deployments().inNamespace(testNamespace).list();
+        assertEquals(0, deployments.getItems().size());
 
         MicoService micoService = getMicoServiceWithoutInterface();
-        MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo();
-        micoKubernetesClient.createMicoService(micoService, deploymentInfo);
+        MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo()
+            .setService(micoService);
 
-        assertEquals(1, mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems().size());
+        micoKubernetesClient.createMicoService(deploymentInfo);
 
-        Deployment actualDeployment = mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems().get(0);
+        deployments = mockServer.getClient().apps().deployments().inNamespace(testNamespace).list();
+        assertEquals(1, deployments.getItems().size());
+        Deployment actualDeployment = deployments.getItems().get(0);
         assertNotNull(actualDeployment);
         assertTrue("Name of Kubernetes Deployment does not start with short name of MicoService",
             actualDeployment.getMetadata().getName().startsWith(micoService.getShortName()));
@@ -105,7 +119,7 @@ public class MicoKubernetesClientTests {
             .setService(micoService)
             .setEnvironmentVariables(CollectionUtils.listOf(new MicoEnvironmentVariable().setName("NAME").setValue("VALUE")));
 
-        micoKubernetesClient.createMicoService(micoService, deploymentInfo);
+        micoKubernetesClient.createMicoService(deploymentInfo);
 
         assertEquals(1, mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems().size());
 
@@ -118,50 +132,51 @@ public class MicoKubernetesClientTests {
 
     @Test
     public void creationOfMicoServiceInterfaceWorks() throws KubernetesResourceException {
-        assertEquals(0, mockServer.getClient().services().inNamespace(testNamespace).list().getItems().size());
+        // Assert that at the beginning there are no deployment
+        ServiceList services = mockServer.getClient().services().inNamespace(testNamespace).list();
+        assertEquals(0, services.getItems().size());
 
         MicoService micoService = getMicoServiceWithInterface();
         MicoServiceInterface micoServiceInterface = getMicoServiceInterface();
         String deploymentUid = UIDUtils.uidFor(micoService);
-        Deployment existingDeployment = getDeploymentObject(micoService, deploymentUid);
 
-        mockServer.getClient().apps().deployments().inNamespace(testNamespace).create(getDeploymentObject(micoService, deploymentUid));
+        // Arrange existing deployments
+        Deployment existingDeployment = getDeploymentObject(micoService, deploymentUid);
+        mockServer.getClient().apps().deployments().inNamespace(testNamespace).create(existingDeployment);
+
         micoKubernetesClient.createMicoServiceInterface(micoServiceInterface, micoService);
 
-        assertEquals(1, mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems().size());
-        assertEquals(1, mockServer.getClient().services().inNamespace(testNamespace).list().getItems().size());
-
-        Service actualService = mockServer.getClient().services().inNamespace(testNamespace).list().getItems().get(0);
+        services = mockServer.getClient().services().inNamespace(testNamespace).list();
+        assertEquals(1, services.getItems().size());
+        Service actualService = services.getItems().get(0);
         assertNotNull(actualService);
         assertTrue("Name of Kubernetes Service does not start with name of MicoServiceInterface",
             actualService.getMetadata().getName().startsWith(micoServiceInterface.getServiceInterfaceName()));
 
-        String expectedRunLabelValue = existingDeployment.getMetadata().getLabels().getOrDefault(LABEL_INSTANCE_KEY, "UNKNOWN INSTANCE LABEL KEY");
-        assertEquals("Expected RUN label value in metadata is same than associated deployment",
-            expectedRunLabelValue, actualService.getMetadata().getLabels().getOrDefault(LABEL_INSTANCE_KEY, "UNKNOWN INSTANCE LABEL KEY"));
-        assertEquals("Expected RUN label value in spec used as selector is same than associated deployment",
-            expectedRunLabelValue, actualService.getSpec().getSelector().getOrDefault(LABEL_INSTANCE_KEY, "UNKNOWN INSTANCE LABEL KEY"));
+        String expectedInstanceLabel = existingDeployment.getMetadata().getLabels().getOrDefault(LABEL_INSTANCE_KEY, "UNKNOWN INSTANCE LABEL KEY");
+        assertEquals("Expected INSTANCE label value in metadata is same than associated deployment",
+            expectedInstanceLabel, actualService.getMetadata().getLabels().getOrDefault(LABEL_INSTANCE_KEY, "UNKNOWN INSTANCE LABEL KEY"));
+        assertEquals("Expected INSTANCE label value in spec used as selector is same than associated deployment",
+            expectedInstanceLabel, actualService.getSpec().getSelector().getOrDefault(LABEL_INSTANCE_KEY, "UNKNOWN INSTANCE LABEL KEY"));
         assertEquals(testNamespace, actualService.getMetadata().getNamespace());
     }
 
     @Test
     public void creationOfMicoServiceThatAlreadyExistsDoesReplaceTheSameObject() throws KubernetesResourceException {
         MicoService micoServiceWithoutInterface = getMicoServiceWithoutInterface();
-        MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo();
+        MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo()
+            .setService(micoServiceWithoutInterface);
 
         // First creation
-        micoKubernetesClient.createMicoService(micoServiceWithoutInterface, deploymentInfo);
+        micoKubernetesClient.createMicoService(deploymentInfo);
 
         DeploymentList deployments = mockServer.getClient().apps().deployments().inNamespace(testNamespace).list();
         assertEquals(1, deployments.getItems().size());
         Deployment firstDeployment = deployments.getItems().get(0);
         assertNotNull(firstDeployment);
-        String firstDeploymentName = firstDeployment.getMetadata().getName();
-        Deployment deployment = getDeploymentObject(micoServiceWithoutInterface, firstDeploymentName);
-        mockServer.getClient().apps().deployments().inNamespace(testNamespace).create(deployment);
 
         // Second creation
-        micoKubernetesClient.createMicoService(micoServiceWithoutInterface, deploymentInfo);
+        micoKubernetesClient.createMicoService(deploymentInfo);
 
         deployments = mockServer.getClient().apps().deployments().inNamespace(testNamespace).list();
         assertEquals(1, deployments.getItems().size());
@@ -184,7 +199,6 @@ public class MicoKubernetesClientTests {
         // First creation
         micoKubernetesClient.createMicoServiceInterface(micoServiceInterface, micoService);
 
-        // Assert first creation
         ServiceList existingServices = mockServer.getClient().services().inNamespace(testNamespace).list();
         assertEquals(1, existingServices.getItems().size());
         Service firstService = existingServices.getItems().get(0);
@@ -193,7 +207,6 @@ public class MicoKubernetesClientTests {
         // Second creation
         micoKubernetesClient.createMicoServiceInterface(micoServiceInterface, micoService);
 
-        // Assert second creation
         existingServices = mockServer.getClient().services().inNamespace(testNamespace).list();
         assertEquals(1, existingServices.getItems().size());
         Service secondService = existingServices.getItems().get(0);
@@ -218,7 +231,8 @@ public class MicoKubernetesClientTests {
 
         MicoApplication micoApplication = new MicoApplication()
             .setShortName(SHORT_NAME)
-            .setVersion(VERSION);
+            .setVersion(VERSION)
+            .setName(NAME);
 
         boolean result = micoKubernetesClient.isApplicationDeployed(micoApplication);
 

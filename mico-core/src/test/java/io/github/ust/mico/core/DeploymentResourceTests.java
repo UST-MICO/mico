@@ -86,7 +86,7 @@ public class DeploymentResourceTests {
     @Captor
     ArgumentCaptor<MicoServiceInterface> micoServiceInterfaceArgumentCaptor;
     @Captor
-    ArgumentCaptor<MicoServiceDeploymentInfo> deploymentInfoArgumentCaptor;
+    ArgumentCaptor<MicoServiceDeploymentInfo> serviceDeploymentInfoArgumentCaptor;
 
     @Autowired
     private MockMvc mvc;
@@ -111,9 +111,7 @@ public class DeploymentResourceTests {
             TestConstants.IntegrationTest.DOCKER_IMAGE_URI);
 
         Deployment deployment = new Deployment();
-        given(micoKubernetesClient.createMicoService(
-            ArgumentMatchers.any(MicoService.class),
-            ArgumentMatchers.any(MicoServiceDeploymentInfo.class)))
+        given(micoKubernetesClient.createMicoService(ArgumentMatchers.any(MicoServiceDeploymentInfo.class)))
             .willReturn(deployment);
     }
 
@@ -163,15 +161,13 @@ public class DeploymentResourceTests {
         assertNotNull("DockerImageUri was not set", storedMicoService.getDockerImageUri());
         assertEquals(service.getDockerImageUri(), storedMicoService.getDockerImageUri());
 
-        verify(micoKubernetesClient, times(1)).createMicoService(
-            micoServiceArgumentCaptor.capture(),
-            deploymentInfoArgumentCaptor.capture());
+        verify(micoKubernetesClient, times(1)).createMicoService(serviceDeploymentInfoArgumentCaptor.capture());
 
         MicoService micoServiceToCreate = micoServiceArgumentCaptor.getValue();
         assertNotNull(micoServiceToCreate);
         assertEquals("MicoService that will be created as Kubernetes resources does not match", service, micoServiceToCreate);
 
-        MicoServiceDeploymentInfo deploymentInfo = deploymentInfoArgumentCaptor.getValue();
+        MicoServiceDeploymentInfo deploymentInfo = serviceDeploymentInfoArgumentCaptor.getValue();
         assertNotNull(deploymentInfo);
         int actualReplicas = deploymentInfo.getReplicas();
         int expectedReplicas = application.getServiceDeploymentInfos().get(0).getReplicas();
