@@ -19,6 +19,8 @@
 
 package io.github.ust.mico.core.resource;
 
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.github.ust.mico.core.broker.BackgroundTaskBroker;
 import io.github.ust.mico.core.dto.response.MicoApplicationJobStatusResponseDTO;
 import io.github.ust.mico.core.exception.ImageBuildException;
@@ -46,11 +48,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -196,44 +200,50 @@ public class DeploymentResource {
     }
 
     /**
-     * Creates the Kubernetes resources based on the deployment
+     * Creates the Kubernetes resources based on the service deployment
      * information of the provided {@link MicoApplication}.
      *
      * @param micoApplication the {@link MicoApplication}.
      * @param micoService     the {@link MicoService}.
-     * @throws KubernetesResourceException
+     * @throws KubernetesResourceException if there is an error during the creation of Kubernetes resources
      */
     private void createKubernetesResources(MicoApplication micoApplication, MicoService micoService) throws KubernetesResourceException {
-        log.debug("Start creating Kubernetes resources for MicoService '{}' in version '{}'", micoService.getShortName(), micoService.getVersion());
 
-        // Kubernetes Deployment
+        // Get service deployment information
 		Optional<MicoServiceDeploymentInfo> serviceDeploymentInfoOptional = serviceDeploymentInfoRepository
 		    .findByApplicationAndService(micoApplication.getShortName(), micoApplication.getVersion(),
 		        micoService.getShortName(), micoService.getVersion());
-        new MicoServiceDeploymentInfo();
         MicoServiceDeploymentInfo serviceDeploymentInfo;
         if (serviceDeploymentInfoOptional.isPresent()) {
             serviceDeploymentInfo = serviceDeploymentInfoOptional.get();
-            log.debug("Using deployment information for MICO Service '{}' in version '{}': {}",
-                micoService.getShortName(), micoService.getVersion(), serviceDeploymentInfo.toString());
         } else {
             serviceDeploymentInfo = new MicoServiceDeploymentInfo().setService(micoService);
-            log.warn("MicoApplication '{}' in version '{}' doesn't have a service deployment information for service '{}' in version '{}' stored.",
+            log.debug("There are no service deployment information for MicoApplication '{}' '{}' for MicoService '{}' '{}'. " +
+                    "Use default deployment information.",
                 micoApplication.getShortName(), micoApplication.getShortName(), micoService.getShortName(), micoService.getVersion());
         }
-        log.info("Creating Kubernetes deployment for MicoService '{}' in version '{}'",
-            micoService.getShortName(), micoService.getVersion());
-        log.debug("Details of MicoService: {}", micoService.toString());
-        micoKubernetesClient.createMicoService(serviceDeploymentInfo);
 
-        log.debug("Creating {} Kubernetes service(s) for MicoService '{}' in version '{}'",
-            micoService.getServiceInterfaces().size(), micoService.getShortName(), micoService.getVersion());
-        // Kubernetes Service(s)
+        log.info("Creating Kubernetes resources for MicoService '{}' in version '{}'", micoService.getShortName(), micoService.getVersion());
+        log.debug("Using deployment information for MicoService '{}' in version '{}': {}",
+            micoService.getShortName(), micoService.getVersion(), serviceDeploymentInfo.toString());
+
+        // TODO: Scale in/out existing Kubernetes resources instead of replacing existing resources (issue mico#416)
+        Deployment createdDeployment = micoKubernetesClient.createMicoService(serviceDeploymentInfo);
+
+        List<Service> createdServices = new ArrayList<>();
         for (MicoServiceInterface serviceInterface : micoService.getServiceInterfaces()) {
-            micoKubernetesClient.createMicoServiceInterface(serviceInterface, micoService);
+            Service createdService = micoKubernetesClient.createMicoServiceInterface(serviceInterface, micoService);
+            createdServices.add(createdService);
         }
 
-        log.info("Created Kubernetes resources for MicoService '{}' in version '{}'",
+        // Store the names of the created Kubernetes resources in the database
+        serviceDeploymentInfo.setKubernetesDeploymentInfo(new KubernetesDeploymentInfo()
+            .setNamespace(createdDeployment.getMetadata().getNamespace())
+            .setDeploymentName(createdDeployment.getMetadata().getName())
+            .setServiceNames(createdServices.stream().map(service -> service.getMetadata().getName()).collect(Collectors.toList()))
+        );
+        serviceDeploymentInfoRepository.save(serviceDeploymentInfo);
+        log.info("Successfully created Kubernetes resources for MicoService '{}' in version '{}'",
             micoService.getShortName(), micoService.getVersion());
     }
 

@@ -19,21 +19,22 @@
 
 package io.github.ust.mico.core.model;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
-
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Relationship;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Represents the information necessary for deploying a {@link MicoApplication}.
@@ -69,6 +70,12 @@ public class MicoServiceDeploymentInfo {
     // ----------------------
     // -> Optional fields ---
     // ----------------------
+
+    /**
+     * Information about the actual Kubernetes resources created by a deployment.
+     * Contains details about the used Kubernetes {@link Deployment} and {@link Service Services}.
+     */
+    private KubernetesDeploymentInfo kubernetesDeploymentInfo;
 
     /**
      * Number of desired instances. Defaults to 1.

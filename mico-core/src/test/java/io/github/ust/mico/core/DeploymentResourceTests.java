@@ -19,13 +19,17 @@
 
 package io.github.ust.mico.core;
 
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.github.ust.mico.core.broker.BackgroundTaskBroker;
 import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoBackgroundTaskRepository;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.resource.DeploymentResource;
 import io.github.ust.mico.core.service.MicoCoreBackgroundTaskFactory;
@@ -76,6 +80,9 @@ public class DeploymentResourceTests {
     public static @ClassRule
     RuleChain rules = RuleChain.outerRule(EmbeddedRedisServer.runningAt(6379).suppressExceptions());
     private static final String BASE_PATH = "/applications";
+    private static final String DEPLOYMENT_NAME = "deployment-name";
+    private static final String SERVICE_NAME = "service-name";
+    private static final String NAMESPACE_NAME = "namespace-name";
 
     @Captor
     ArgumentCaptor<Consumer<String>> onSuccessArgumentCaptor;
@@ -95,6 +102,8 @@ public class DeploymentResourceTests {
     @MockBean
     private MicoServiceRepository serviceRepository;
     @MockBean
+    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
+    @MockBean
     private MicoBackgroundTaskRepository backgroundTaskRepository;
     @MockBean
     private BackgroundTaskBroker backgroundTaskBroker;
@@ -110,9 +119,16 @@ public class DeploymentResourceTests {
         given(imageBuilder.createImageName(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).willReturn(
             TestConstants.IntegrationTest.DOCKER_IMAGE_URI);
 
-        Deployment deployment = new Deployment();
-        given(micoKubernetesClient.createMicoService(ArgumentMatchers.any(MicoServiceDeploymentInfo.class)))
+        Deployment deployment = new DeploymentBuilder()
+            .withNewMetadata().withName(DEPLOYMENT_NAME).withNamespace(NAMESPACE_NAME).endMetadata()
+            .build();
+        given(micoKubernetesClient.createMicoService(any(MicoServiceDeploymentInfo.class)))
             .willReturn(deployment);
+        Service service = new ServiceBuilder()
+            .withNewMetadata().withName(SERVICE_NAME).withNamespace(NAMESPACE_NAME).endMetadata()
+            .build();
+        given(micoKubernetesClient.createMicoServiceInterface(any(MicoServiceInterface.class), any(MicoService.class)))
+            .willReturn(service);
     }
 
     @Test
@@ -127,6 +143,10 @@ public class DeploymentResourceTests {
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(serviceRepository.save(any(MicoService.class))).willReturn(service);
         given(serviceRepository.findAllByApplication(SHORT_NAME, VERSION)).willReturn(CollectionUtils.listOf(service));
+        given(serviceDeploymentInfoRepository
+            .findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName(), service.getVersion()))
+            .willReturn(Optional.of(new MicoServiceDeploymentInfo()
+                .setService(service)));
 
         CompletableFuture<?> future = CompletableFuture.completedFuture(service);
         given(factory.runAsync(any(), onSuccessArgumentCaptor.capture(), onErrorArgumentCaptor.capture())).willReturn(future);
@@ -186,6 +206,15 @@ public class DeploymentResourceTests {
         assertNotNull(micoServiceThatIsUsedForInterfaceCreation);
         assertEquals("MicoService that will be used to create a MicoServiceInterface does not match",
             service, micoServiceThatIsUsedForInterfaceCreation);
+
+        verify(serviceDeploymentInfoRepository, times(1)).save(serviceDeploymentInfoArgumentCaptor.capture());
+        MicoServiceDeploymentInfo storedServiceDeploymentInfo = serviceDeploymentInfoArgumentCaptor.getValue();
+        assertNotNull(storedServiceDeploymentInfo);
+        KubernetesDeploymentInfo kubernetesDeploymentInfo = storedServiceDeploymentInfo.getKubernetesDeploymentInfo();
+        assertEquals(DEPLOYMENT_NAME, kubernetesDeploymentInfo.getDeploymentName());
+        assertEquals(1, kubernetesDeploymentInfo.getServiceNames().size());
+        assertEquals(SERVICE_NAME, kubernetesDeploymentInfo.getServiceNames().get(0));
+        assertEquals(NAMESPACE_NAME, kubernetesDeploymentInfo.getNamespace());
     }
 
     private MicoApplication getTestApplication() {
