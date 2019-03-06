@@ -6,21 +6,16 @@ io.github.ust.mico.core.model
 .. toctree::
    :maxdepth: 1
 
-   DomainModelDemo
    MicoApplication
-   MicoApplicationDeploymentInfo
-   MicoDeploymentStrategy
-   MicoDeploymentStrategy-Type
-   MicoImageContainer
-   MicoPort
+   MicoLabel
    MicoPortType
-   MicoResourceConstraint
    MicoService
    MicoServiceCrawlingOrigin
    MicoServiceDependency
    MicoServiceDeploymentInfo
    MicoServiceDeploymentInfo-ImagePullPolicy
    MicoServiceDeploymentInfo-RestartPolicy
+   MicoServiceDeploymentInfoQueryResult
    MicoServiceInterface
    MicoServicePort
    MicoVersion
