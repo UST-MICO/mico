@@ -19,14 +19,14 @@
 
 package io.github.ust.mico.core;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.util.concurrent.CompletableFuture;
-
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.util.CollectionUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -39,19 +39,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoPortType;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.model.MicoServicePort;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.util.CollectionUtils;
-import lombok.extern.slf4j.Slf4j;
+import java.util.concurrent.CompletableFuture;
+
+import static io.github.ust.mico.core.TestConstants.ID;
+import static io.github.ust.mico.core.TestConstants.ID_1;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Ignore
 // TODO Upgrade to JUnit5
@@ -155,26 +151,26 @@ public class DeploymentControllerIntegrationTests extends Neo4jTestClass {
 
     private MicoApplication getTestApplication() {
         return new MicoApplication()
-            .setShortName("hello")
-            .setName("hello-application")
-            .setVersion("v1.0.0")
-            .setDescription("Hello World Application");
+            .setShortName(TestConstants.IntegrationTest.APPLICATION_SHORT_NAME)
+            .setName(TestConstants.IntegrationTest.APPLICATION_NAME)
+            .setVersion(TestConstants.IntegrationTest.APPLICATION_VERSION)
+            .setDescription(TestConstants.IntegrationTest.APPLICATION_DESCRIPTION);
     }
 
     private MicoService getTestService() {
         MicoService service = new MicoService()
-            .setShortName("hello-integration-test")
-            .setName("UST-MICO/hello")
-            .setVersion("v1.0.0")
-            .setDescription("Hello World Service for integration testing")
-            .setGitCloneUrl("https://github.com/UST-MICO/hello.git")
-            .setDockerfilePath("Dockerfile");
+            .setShortName(TestConstants.IntegrationTest.SERVICE_SHORT_NAME)
+            .setName(TestConstants.IntegrationTest.SERVICE_NAME)
+            .setVersion(TestConstants.IntegrationTest.RELEASE)
+            .setDescription(TestConstants.IntegrationTest.SERVICE_DESCRIPTION)
+            .setGitCloneUrl(TestConstants.IntegrationTest.GIT_CLONE_URL)
+            .setDockerfilePath(TestConstants.IntegrationTest.DOCKERFILE_PATH);
         MicoServiceInterface serviceInterface = new MicoServiceInterface()
-            .setServiceInterfaceName("hello-service")
+            .setServiceInterfaceName(TestConstants.IntegrationTest.SERVICE_INTERFACE_NAME)
             .setPorts(CollectionUtils.listOf(new MicoServicePort()
-                .setPort(80)
-                .setTargetPort(80)
-                .setType(MicoPortType.TCP)));
+                .setPort(TestConstants.IntegrationTest.PORT)
+                .setTargetPort(TestConstants.IntegrationTest.TARGET_PORT)
+            ));
         service.getServiceInterfaces().add(serviceInterface);
 
         return service;

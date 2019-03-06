@@ -70,10 +70,9 @@ public class ImageBuilderTests {
 
         MicoService micoService = new MicoService()
             .setShortName(SERVICE_SHORT_NAME)
-            .setName(NAME)
             .setVersion(SERVICE_VERSION)
-            .setGitCloneUrl(GIT_TEST_REPO_URL)
-            .setDockerfilePath(DOCKERFILE_PATH);
+            .setName(NAME)
+            .setGitCloneUrl(IntegrationTest.GIT_CLONE_URL);
 
         imageBuilder.build(micoService);
     }

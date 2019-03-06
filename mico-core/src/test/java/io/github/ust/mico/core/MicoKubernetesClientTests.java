@@ -285,11 +285,9 @@ public class MicoKubernetesClientTests {
     private MicoService getMicoServiceWithoutInterface() {
         return new MicoService()
             .setId(ID)
-            .setShortName(SHORT_NAME)
-            .setVersion(RELEASE)
-            .setName(NAME)
-            .setGitCloneUrl(GIT_TEST_REPO_URL)
-            .setDockerfilePath(DOCKERFILE_PATH);
+            .setShortName(SERVICE_SHORT_NAME)
+            .setVersion(SERVICE_VERSION)
+            .setName(NAME);
     }
 
     private MicoServiceInterface getMicoServiceInterface() {
