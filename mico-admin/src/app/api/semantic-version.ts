@@ -55,7 +55,7 @@ export function versionComparator(versionA: string, versionB: string): number {
     if (result !== 0) {
         return (result > 0) ? 1 : -1;
     }
-    // compare prefix if both versions have one
+    // compare suffix if both versions have one
     if (mA[5] != null && mB[5] != null) {
         if (mA[5] > mB[5]) {
             return 1;

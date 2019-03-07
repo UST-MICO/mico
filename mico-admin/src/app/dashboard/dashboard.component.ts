@@ -26,6 +26,7 @@ import { Router } from '@angular/router';
 import { CreateApplicationComponent } from '../dialogs/create-application/create-application.component';
 import { groupBy, mergeMap, toArray, map } from 'rxjs/operators';
 import { Subscription, from } from 'rxjs';
+import { UtilsService } from '../util/utils.service';
 
 @Component({
     selector: 'mico-dashboard',
@@ -39,6 +40,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         private dialog: MatDialog,
         private router: Router,
         private snackBar: MatSnackBar,
+        private util: UtilsService,
     ) { }
 
     subApplications: Subscription;
@@ -51,9 +53,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     ngOnDestroy() {
         // unsubscribe from observables
-        if (this.subApplications != null) {
-            this.subApplications.unsubscribe();
-        }
+        this.util.safeUnsubscribe(this.subApplications);
     }
 
 
@@ -125,7 +125,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                 });
             }
 
-            subDialog.unsubscribe();
+            this.util.safeUnsubscribe(subDialog);
         });
     }
 
@@ -162,7 +162,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                 this.router.navigate(['app-detail', val.shortName, val.version]);
             });
 
-            subDialog.unsubscribe();
+            this.util.safeUnsubscribe(subDialog);
         });
     }
 

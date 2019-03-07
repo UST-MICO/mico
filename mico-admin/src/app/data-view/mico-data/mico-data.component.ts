@@ -22,6 +22,7 @@ import { ModelsService } from '../../api/models.service';
 import { ApiModel, ApiModelRef } from '../../api/apimodel';
 import { map, first } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
+import { UtilsService } from 'src/app/util/utils.service';
 
 @Component({
     selector: 'mico-data',
@@ -41,7 +42,10 @@ export class MicoDataComponent implements OnInit, OnChanges {
 
     private formSubscription: Subscription;
 
-    constructor(private models: ModelsService) { }
+    constructor(
+        private models: ModelsService,
+        private util: UtilsService,
+    ) { }
 
     ngOnInit() { }
 
@@ -73,9 +77,7 @@ export class MicoDataComponent implements OnInit, OnChanges {
                     return orderA - orderB;
                 });
 
-                if (this.formSubscription != null) {
-                    this.formSubscription.unsubscribe();
-                }
+                this.util.safeUnsubscribe(this.formSubscription);
             });
         }
     }

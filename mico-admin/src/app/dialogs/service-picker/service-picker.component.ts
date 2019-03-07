@@ -25,6 +25,7 @@ import { SelectionModel } from '@angular/cdk/collections';
 import { ApiObject } from 'src/app/api/apiobject';
 import { groupBy, mergeMap, toArray } from 'rxjs/operators';
 import { versionComparator } from 'src/app/api/semantic-version';
+import { UtilsService } from 'src/app/util/utils.service';
 
 
 enum FilterTypes {
@@ -68,8 +69,12 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
     // used for highlighting
     selectedRowIndex: number = -1;
 
-    constructor(public dialogRef: MatDialogRef<ServicePickerComponent>, @Inject(MAT_DIALOG_DATA) public data: any,
-        private apiService: ApiService) {
+    constructor(
+        public dialogRef: MatDialogRef<ServicePickerComponent>,
+        @Inject(MAT_DIALOG_DATA) public data: any,
+        private apiService: ApiService,
+        private util: UtilsService,
+    ) {
 
         if (data.filter === 'internal') {
             this.filter = FilterTypes.Internal;
@@ -139,9 +144,7 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy() {
-        if (this.serviceSubscription != null) {
-            this.serviceSubscription.unsubscribe();
-        }
+        this.util.safeUnsubscribe(this.serviceSubscription);
     }
 
     getSelectedService() {

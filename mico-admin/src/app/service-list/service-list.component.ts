@@ -25,6 +25,7 @@ import { groupBy, mergeMap, toArray, map } from 'rxjs/operators';
 import { ApiObject } from '../api/apiobject';
 import { MatDialog } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
+import { UtilsService } from '../util/utils.service';
 
 
 @Component({
@@ -39,6 +40,7 @@ export class ServiceListComponent implements OnInit, OnDestroy {
     constructor(
         private apiService: ApiService,
         private dialog: MatDialog,
+        private util: UtilsService,
     ) {
         this.getServices();
     }
@@ -52,9 +54,7 @@ export class ServiceListComponent implements OnInit, OnDestroy {
 
     ngOnDestroy() {
         // unsubscribe observables
-        if (this.subServices != null) {
-            this.subServices.unsubscribe();
-        }
+        this.util.safeUnsubscribe(this.subServices);
     }
 
     /**
@@ -98,7 +98,7 @@ export class ServiceListComponent implements OnInit, OnDestroy {
         const subDeleteServiceVersions = dialogRef.afterClosed().subscribe(shouldDelete => {
             if (shouldDelete) {
                 this.apiService.deleteAllServiceVersions(service.shortName).subscribe();
-                subDeleteServiceVersions.unsubscribe();
+                this.util.safeUnsubscribe(subDeleteServiceVersions);
             }
         });
     }

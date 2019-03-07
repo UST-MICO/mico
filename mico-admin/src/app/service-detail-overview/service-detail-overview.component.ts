@@ -26,6 +26,7 @@ import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.com
 import { CreateServiceInterfaceComponent } from '../dialogs/create-service-interface/create-service-interface.component';
 import { Router } from '@angular/router';
 import { UpdateServiceInterfaceComponent } from '../dialogs/update-service-interface/update-service-interface.component';
+import { UtilsService } from '../util/utils.service';
 
 
 @Component({
@@ -46,6 +47,7 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
         private apiService: ApiService,
         private dialog: MatDialog,
         private router: Router,
+        private util: UtilsService,
     ) { }
 
     // dependees: services the current service depends on
@@ -80,39 +82,29 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
      * unsubscribes all obervables which are not null
      */
     handleSubscriptions() {
-        this.unsubscribe(this.serviceSubscription);
-        this.unsubscribe(this.subDeleteServiceInterface);
-        this.unsubscribe(this.subServiceInterfaces);
-        this.unsubscribe(this.subVersion);
-        this.unsubscribe(this.subDependeesCall);
-        this.unsubscribe(this.subDependersCall);
-    }
-
-    /**
-     * generic function to unsubscribe from an obersvable if it is not null
-     * @param subscription observable
-     */
-    unsubscribe(subscription: Subscription) {
-        if (subscription != null) {
-            subscription.unsubscribe();
-        }
+        this.util.safeUnsubscribe(this.serviceSubscription);
+        this.util.safeUnsubscribe(this.subDeleteServiceInterface);
+        this.util.safeUnsubscribe(this.subServiceInterfaces);
+        this.util.safeUnsubscribe(this.subVersion);
+        this.util.safeUnsubscribe(this.subDependeesCall);
+        this.util.safeUnsubscribe(this.subDependersCall);
     }
 
     update() {
 
-        this.unsubscribe(this.serviceSubscription);
+        this.util.safeUnsubscribe(this.serviceSubscription);
         this.serviceSubscription = this.apiService.getService(this.shortName, this.version)
             .subscribe(service => {
                 this.serviceData = service;
 
                 // get dependencies
-                this.unsubscribe(this.subDependersCall);
+                this.util.safeUnsubscribe(this.subDependersCall);
                 this.subDependeesCall = this.apiService.getServiceDependees(this.shortName, this.version)
                     .subscribe(val => {
                         this.dependees = JSON.parse(JSON.stringify(val));
                     });
 
-                this.unsubscribe(this.subDependersCall);
+                this.util.safeUnsubscribe(this.subDependersCall);
                 this.subDependeesCall = this.apiService.getServiceDependers(this.shortName, this.version)
                     .subscribe(val => {
                         this.dependers = val;
@@ -120,7 +112,7 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
 
 
                 // get interfaces
-                this.unsubscribe(this.subServiceInterfaces);
+                this.util.safeUnsubscribe(this.subServiceInterfaces);
                 this.subServiceInterfaces = this.apiService.getServiceInterfaces(this.shortName, this.version)
                     .subscribe(val => {
                         this.serviceInterfaces = val;
@@ -140,7 +132,7 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
                 this.serviceData = val;
                 this.shortName = val.shortName;
                 this.version = val.version;
-                this.unsubscribe(subPutNewServiceInformation);
+                this.util.safeUnsubscribe(subPutNewServiceInformation);
             });
         this.edit = false;
     }
@@ -156,7 +148,7 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
                 return;
             }
             this.apiService.postServiceInterface(this.shortName, this.version, result).subscribe();
-            subDialog.unsubscribe();
+            this.util.safeUnsubscribe(subDialog);
         });
     }
 
@@ -196,7 +188,7 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
                 return;
             }
             this.apiService.deleteServiceInterface(this.shortName, this.version, interfaceName).subscribe();
-            subDialog.unsubscribe();
+            this.util.safeUnsubscribe(subDialog);
         });
     }
 
@@ -222,7 +214,7 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
                 return;
             }
             this.apiService.postServiceDependee(this.shortName, this.version, result[0]).subscribe();
-            subDialog.unsubscribe();
+            this.util.safeUnsubscribe(subDialog);
         });
     }
 
@@ -247,7 +239,7 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
                 return;
             }
             this.apiService.deleteServiceDependee(this.shortName, this.version, dependee.shortName, dependee.version).subscribe();
-            subDialog.unsubscribe();
+            this.util.safeUnsubscribe(subDialog);
         });
     }
 }

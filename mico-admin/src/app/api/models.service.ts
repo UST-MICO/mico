@@ -83,9 +83,6 @@ export class ModelsService {
             // retrieve models from swagger api
             return this.apiService.getModelDefinitions().pipe(
                 map(remoteModels => {
-                    // TODO remove in the end of the project
-                    // print all current remote models
-                    // console.log(remoteModels);
                     return JSON.parse(JSON.stringify(remoteModels[modelID]));
                 })
             );
