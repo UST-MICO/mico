@@ -24,7 +24,6 @@ import { ServicePickerComponent } from '../dialogs/service-picker/service-picker
 import { MatDialog } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 import { CreateServiceInterfaceComponent } from '../dialogs/create-service-interface/create-service-interface.component';
-import { Router } from '@angular/router';
 import { UpdateServiceInterfaceComponent } from '../dialogs/update-service-interface/update-service-interface.component';
 import { UtilsService } from '../util/utils.service';
 
@@ -42,11 +41,11 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
     private subVersion: Subscription;
     private subDependeesCall: Subscription;
     private subDependersCall: Subscription;
+    private subProvide: Subscription;
 
     constructor(
         private apiService: ApiService,
         private dialog: MatDialog,
-        private router: Router,
         private util: UtilsService,
     ) { }
 
@@ -88,6 +87,7 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
         this.util.safeUnsubscribe(this.subVersion);
         this.util.safeUnsubscribe(this.subDependeesCall);
         this.util.safeUnsubscribe(this.subDependersCall);
+        this.util.safeUnsubscribe(this.subProvide);
     }
 
     update() {
