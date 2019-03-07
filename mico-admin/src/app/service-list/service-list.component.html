@@ -5,6 +5,14 @@
 <mat-card class="ma2">
     <mat-card-title>Services</mat-card-title>
     <mat-card-content>
+
+        <mat-button-toggle mat-raised-button (click)="newService()" class="mv2">
+            <span>
+                new Service
+            </span>
+            <mat-icon>add</mat-icon>
+        </mat-button-toggle>
+
         <mat-table [dataSource]="services" class="mat-elevation-z2">
             <ng-container matColumnDef="id">
                 <mat-header-cell *matHeaderCellDef>ID</mat-header-cell>
