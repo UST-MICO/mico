@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.web;
+package io.github.ust.mico.core.resource;
 
 import io.github.ust.mico.core.exception.ImageBuildException;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
@@ -50,7 +50,7 @@ import java.util.concurrent.TimeoutException;
 @Slf4j
 @RestController
 @RequestMapping(value = "/applications/{shortName}/{version}/deploy", produces = MediaTypes.HAL_JSON_VALUE)
-public class DeploymentController {
+public class DeploymentResource {
     private static final String PATH_VARIABLE_SHORT_NAME = "shortName";
     private static final String PATH_VARIABLE_VERSION = "version";
 

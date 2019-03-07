@@ -17,10 +17,13 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.web;
+package io.github.ust.mico.core.resource;
 
-import io.github.ust.mico.core.dto.*;
+import io.github.ust.mico.core.dto.MicoApplicationDTO;
 import io.github.ust.mico.core.dto.MicoApplicationDTO.MicoApplicationDeploymentStatus;
+import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
+import io.github.ust.mico.core.dto.MicoApplicationWithServicesDTO;
+import io.github.ust.mico.core.dto.MicoServiceDeploymentInfoDTO;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
@@ -54,8 +57,8 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @Slf4j
 @RestController
-@RequestMapping(value = "/" + ApplicationController.PATH_APPLICATIONS, produces = MediaTypes.HAL_JSON_VALUE)
-public class ApplicationController {
+@RequestMapping(value = "/" + ApplicationResource.PATH_APPLICATIONS, produces = MediaTypes.HAL_JSON_VALUE)
+public class ApplicationResource {
 
     public static final String PATH_APPLICATIONS = "applications";
     public static final String PATH_SERVICES = "services";
@@ -86,7 +89,7 @@ public class ApplicationController {
     public ResponseEntity<Resources<Resource<MicoApplicationWithServicesDTO>>> getAllApplications() {
         return ResponseEntity.ok(
             new Resources<>(getApplicationWithServicesDTOResourceList(applicationRepository.findAll(3)),
-                linkTo(methodOn(ApplicationController.class).getAllApplications()).withSelfRel()));
+                linkTo(methodOn(ApplicationResource.class).getAllApplications()).withSelfRel()));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
@@ -95,7 +98,7 @@ public class ApplicationController {
 
         return ResponseEntity.ok(
             new Resources<>(getApplicationWithServicesDTOResourceList(micoApplicationList),
-                linkTo(methodOn(ApplicationController.class).getApplicationsByShortName(shortName)).withSelfRel()));
+                linkTo(methodOn(ApplicationResource.class).getApplicationsByShortName(shortName)).withSelfRel()));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
@@ -118,7 +121,7 @@ public class ApplicationController {
         MicoApplication savedApplication = applicationRepository.save(MicoApplication.valueOf(newApplicationDto));
 
         return ResponseEntity
-            .created(linkTo(methodOn(ApplicationController.class)
+            .created(linkTo(methodOn(ApplicationResource.class)
                 .getApplicationByShortNameAndVersion(savedApplication.getShortName(), savedApplication.getVersion())).toUri())
             .body(new Resource<>(savedApplication, getApplicationLinks(savedApplication)));
     }
@@ -211,10 +214,10 @@ public class ApplicationController {
                                                                                        @PathVariable(PATH_VARIABLE_VERSION) String version) {
         MicoApplication micoApplication = getApplicationFromDatabase(shortName, version);
         List<MicoService> micoServices = serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion());
-        List<Resource<MicoService>> micoServicesWithLinks = ServiceController.getServiceResourcesList(micoServices);
+        List<Resource<MicoService>> micoServicesWithLinks = ServiceResource.getServiceResourcesList(micoServices);
         return ResponseEntity.ok(
             new Resources<>(micoServicesWithLinks,
-                linkTo(methodOn(ApplicationController.class).getServicesFromApplication(shortName, version)).withSelfRel()));
+                linkTo(methodOn(ApplicationResource.class).getServicesFromApplication(shortName, version)).withSelfRel()));
     }
 
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES + "/{" + PATH_VARIABLE_SERVICE_SHORT_NAME + "}/{" + PATH_VARIABLE_SERVICE_VERSION + "}")
@@ -284,7 +287,7 @@ public class ApplicationController {
         // Convert to service deployment info DTO and return it
         MicoServiceDeploymentInfo serviceDeploymentInfo = serviceDeploymentInfoQueryResultOptional.get().getServiceDeploymentInfo();
         return ResponseEntity.ok(new Resource<>(MicoServiceDeploymentInfoDTO.valueOf(serviceDeploymentInfo),
-            linkTo(methodOn(ApplicationController.class)
+            linkTo(methodOn(ApplicationResource.class)
                 .getServiceDeploymentInformation(shortName, version, serviceShortName)).withSelfRel()));
     }
 
@@ -317,7 +320,7 @@ public class ApplicationController {
 
         // TODO: Update actual Kubernetes deployment (see issue mico#416).
 
-        return ResponseEntity.ok(new Resource<>(serviceDeploymentInfoDTO, linkTo(methodOn(ApplicationController.class)
+        return ResponseEntity.ok(new Resource<>(serviceDeploymentInfoDTO, linkTo(methodOn(ApplicationResource.class)
             .getServiceDeploymentInformation(shortName, version, serviceShortName)).withSelfRel()));
     }
 
@@ -391,8 +394,8 @@ public class ApplicationController {
 
     private Iterable<Link> getApplicationLinks(MicoApplication application) {
         LinkedList<Link> links = new LinkedList<>();
-        links.add(linkTo(methodOn(ApplicationController.class).getApplicationByShortNameAndVersion(application.getShortName(), application.getVersion())).withSelfRel());
-        links.add(linkTo(methodOn(ApplicationController.class).getAllApplications()).withRel("applications"));
+        links.add(linkTo(methodOn(ApplicationResource.class).getApplicationByShortNameAndVersion(application.getShortName(), application.getVersion())).withSelfRel());
+        links.add(linkTo(methodOn(ApplicationResource.class).getAllApplications()).withRel("applications"));
         return links;
     }
 
