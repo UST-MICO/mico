@@ -51,7 +51,7 @@ export class ServiceListComponent implements OnInit, OnDestroy {
 
     services;
 
-    displayedColumns: string[] = ['id', 'name', 'shortName', 'description', 'controls'];
+    displayedColumns: string[] = ['name', 'shortName', 'version', 'description', 'controls'];
 
     ngOnInit() {
     }
@@ -75,7 +75,7 @@ export class ServiceListComponent implements OnInit, OnDestroy {
                     .pipe(
                         groupBy(service => service.shortName),
                         mergeMap(group => group.pipe(toArray())),
-                        map(group => group[0]),
+                        map(group => group[group.length - 1]),
                         toArray()
                     ).subscribe(serviceList => {
                         this.services = serviceList;
