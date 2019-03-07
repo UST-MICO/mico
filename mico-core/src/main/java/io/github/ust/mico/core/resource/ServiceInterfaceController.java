@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.web;
+package io.github.ust.mico.core.resource;
 
 import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
 import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
@@ -46,8 +46,8 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static io.github.ust.mico.core.web.ServiceController.PATH_VARIABLE_SHORT_NAME;
-import static io.github.ust.mico.core.web.ServiceController.PATH_VARIABLE_VERSION;
+import static io.github.ust.mico.core.resource.ServiceController.PATH_VARIABLE_SHORT_NAME;
+import static io.github.ust.mico.core.resource.ServiceController.PATH_VARIABLE_VERSION;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 

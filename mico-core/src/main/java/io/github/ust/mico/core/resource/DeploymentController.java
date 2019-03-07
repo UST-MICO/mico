@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.web;
+package io.github.ust.mico.core.resource;
 
 import io.github.ust.mico.core.exception.ImageBuildException;
 import io.github.ust.mico.core.exception.KubernetesResourceException;

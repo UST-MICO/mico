@@ -17,11 +17,11 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.web;
+package io.github.ust.mico.core.resource;
 
+import io.github.ust.mico.core.dto.CrawlingInfoDTO;
 import io.github.ust.mico.core.dto.MicoServiceDependencyGraphDTO;
 import io.github.ust.mico.core.dto.MicoServiceDependencyGraphEdgeDTO;
-import io.github.ust.mico.core.dto.CrawlingInfoDTO;
 import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.MicoService;

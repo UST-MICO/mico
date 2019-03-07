@@ -17,10 +17,13 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.web;
+package io.github.ust.mico.core.resource;
 
-import io.github.ust.mico.core.dto.*;
+import io.github.ust.mico.core.dto.MicoApplicationDTO;
 import io.github.ust.mico.core.dto.MicoApplicationDTO.MicoApplicationDeploymentStatus;
+import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
+import io.github.ust.mico.core.dto.MicoApplicationWithServicesDTO;
+import io.github.ust.mico.core.dto.MicoServiceDeploymentInfoDTO;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
