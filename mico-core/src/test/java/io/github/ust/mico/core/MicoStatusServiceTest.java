@@ -40,7 +40,7 @@ import io.github.ust.mico.core.dto.MicoApplicationDTO;
 import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
 import io.github.ust.mico.core.dto.MicoServiceInterfaceStatusDTO;
 import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
-import io.github.ust.mico.core.dto.PrometheusResponse;
+import io.github.ust.mico.core.dto.PrometheusResponseDTO;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
@@ -347,7 +347,7 @@ public class MicoStatusServiceTest {
         ResponseEntity responseEntityCpuLoadPod3 = getPrometheusResponseEntity(cpuLoadPod3);
         ResponseEntity responseEntityMemoryUsagePod4 = getPrometheusResponseEntity(memoryUsagePod4);
         ResponseEntity responseEntityCpuLoadPod4 = getPrometheusResponseEntity(cpuLoadPod4);
-        given(restTemplate.getForEntity(any(), eq(PrometheusResponse.class))).
+        given(restTemplate.getForEntity(any(), eq(PrometheusResponseDTO.class))).
             willReturn(responseEntityMemoryUsagePod1)
             .willReturn(responseEntityCpuLoadPod1)
             .willReturn(responseEntityMemoryUsagePod2)
@@ -418,7 +418,7 @@ public class MicoStatusServiceTest {
         given(prometheusConfig.getUri()).willReturn("http://localhost:9090/api/v1/query");
         ResponseEntity responseEntityMemoryUsagePod1 = getPrometheusResponseEntity(memoryUsagePod1);
         ResponseEntity responseEntityCpuLoadPod1 = getPrometheusResponseEntity(cpuLoadPod1);
-        given(restTemplate.getForEntity(any(), eq(PrometheusResponse.class))).
+        given(restTemplate.getForEntity(any(), eq(PrometheusResponseDTO.class))).
             willReturn(responseEntityMemoryUsagePod1)
             .willReturn(responseEntityCpuLoadPod1);
         assertEquals(micoApplicationStatus, micoStatusService.getApplicationStatus(micoApplication));
@@ -448,8 +448,8 @@ public class MicoStatusServiceTest {
 
     @SuppressWarnings("rawtypes")
     private ResponseEntity getPrometheusResponseEntity(int value) {
-        PrometheusResponse prometheusResponse = new PrometheusResponse();
-        prometheusResponse.setStatus(PrometheusResponse.PROMETHEUS_SUCCESSFUL_RESPONSE);
+        PrometheusResponseDTO prometheusResponse = new PrometheusResponseDTO();
+        prometheusResponse.setStatus(PrometheusResponseDTO.PROMETHEUS_SUCCESSFUL_RESPONSE);
         prometheusResponse.setValue(value);
         ResponseEntity responseEntity = mock(ResponseEntity.class);
         given(responseEntity.getStatusCode()).willReturn(HttpStatus.OK);
@@ -550,7 +550,7 @@ public class MicoStatusServiceTest {
         ResponseEntity responseEntityCpuLoadPod3 = getPrometheusResponseEntity(cpuLoadPod3);
         ResponseEntity responseEntityMemoryUsagePod4 = getPrometheusResponseEntity(memoryUsagePod4);
         ResponseEntity responseEntityCpuLoadPod4 = getPrometheusResponseEntity(cpuLoadPod4);
-        given(restTemplate.getForEntity(any(), eq(PrometheusResponse.class))).
+        given(restTemplate.getForEntity(any(), eq(PrometheusResponseDTO.class))).
             willReturn(responseEntityMemoryUsagePod1)
             .willReturn(responseEntityCpuLoadPod1)
             .willReturn(responseEntityMemoryUsagePod2)

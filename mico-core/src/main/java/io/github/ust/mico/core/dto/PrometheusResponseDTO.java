@@ -19,8 +19,6 @@
 
 package io.github.ust.mico.core.dto;
 
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.AllArgsConstructor;
@@ -28,38 +26,32 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+/**
+ * DTO for a response from Prometheus. It contains a status and the value field for the CPU load / memory usage.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-// TODO: Class comment.
-public class PrometheusResponse {
-
-    // TODO: Add comments for fields.
+public class PrometheusResponseDTO {
 
     public static final String PROMETHEUS_SUCCESSFUL_RESPONSE = "success";
 
+    /**
+     * Status of the response: can be "success" or "error".
+     */
     @JsonProperty("status")
     private String status;
 
-    private int value;
-
+    /**
+     * The data field and all nested fields in the response JSON are deserialized with {@link
+     * PrometheusValueDeserializer} to retrieve the value for the memory usage / CPU load.
+     */
     @JsonProperty("data")
     @JsonDeserialize(using = PrometheusValueDeserializer.class)
-    private Map<String, Object> data;
+    private int value;
 
     public boolean wasSuccessful() {
         return status.equals(PROMETHEUS_SUCCESSFUL_RESPONSE);
     }
-
-    /*
-     // TODO: Optimize
-     @JsonProperty("data")
-     @SuppressWarnings("unchecked") private void unpackNested(Map<String, Object> data) {
-     //TODO find a better mapping solution
-     List<Object> resultList = (List<Object>) data.get("result");
-     Map<String, Object> resultEntry = (Map<String, Object>) resultList.get(0);
-     List<String> dataPoint = (List<String>) resultEntry.get("value");
-     this.value = Integer.parseInt(dataPoint.get(1));
-     }*/
 }

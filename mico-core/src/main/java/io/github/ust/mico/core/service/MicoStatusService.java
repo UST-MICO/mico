@@ -42,7 +42,7 @@ import io.github.ust.mico.core.dto.MicoApplicationDTO;
 import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
 import io.github.ust.mico.core.dto.MicoServiceInterfaceStatusDTO;
 import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
-import io.github.ust.mico.core.dto.PrometheusResponse;
+import io.github.ust.mico.core.dto.PrometheusResponseDTO;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.PrometheusRequestFailedException;
 import io.github.ust.mico.core.model.MicoApplication;
@@ -303,14 +303,14 @@ public class MicoStatusService {
     }
 
     private int requestValueFromPrometheus(URI prometheusUri) throws PrometheusRequestFailedException {
-        ResponseEntity<PrometheusResponse> response = restTemplate.getForEntity(prometheusUri, PrometheusResponse.class);
+        ResponseEntity<PrometheusResponseDTO> response = restTemplate.getForEntity(prometheusUri, PrometheusResponseDTO.class);
         if (response.getStatusCode().is2xxSuccessful()) {
-            PrometheusResponse prometheusMemoryResponse = response.getBody();
-            if (prometheusMemoryResponse != null) {
-                if (prometheusMemoryResponse.wasSuccessful()) {
-                    return prometheusMemoryResponse.getValue();
+            PrometheusResponseDTO prometheusResponse = response.getBody();
+            if (prometheusResponse != null) {
+                if (prometheusResponse.wasSuccessful()) {
+                    return prometheusResponse.getValue();
                 } else {
-                    throw new PrometheusRequestFailedException("The status of the prometheus response was " + prometheusMemoryResponse.getStatus(), response.getStatusCode(), prometheusMemoryResponse.getStatus());
+                    throw new PrometheusRequestFailedException("The status of the prometheus response was " + prometheusResponse.getStatus(), response.getStatusCode(), prometheusResponse.getStatus());
                 }
             } else {
                 throw new PrometheusRequestFailedException("There was no response body", response.getStatusCode(), null);
