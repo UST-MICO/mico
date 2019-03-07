@@ -29,7 +29,7 @@ import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.model.MicoServicePort;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.resource.ServiceController;
+import io.github.ust.mico.core.resource.ServiceResource;
 import io.github.ust.mico.core.service.GitHubCrawler;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
@@ -56,7 +56,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
 
-import static io.github.ust.mico.core.ApplicationControllerTests.INTERFACES_LIST_PATH;
+import static io.github.ust.mico.core.ApplicationResourceTests.INTERFACES_LIST_PATH;
 import static io.github.ust.mico.core.JsonPathBuilder.*;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
 import static io.github.ust.mico.core.TestConstants.VERSION;
@@ -76,11 +76,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
-@WebMvcTest(ServiceController.class)
+@WebMvcTest(ServiceResource.class)
 @OverrideAutoConfiguration(enabled = true) //Needed to override our neo4j config
 @EnableAutoConfiguration
 @EnableConfigurationProperties(value = {CorsConfig.class})
-public class ServiceControllerTests {
+public class ServiceResourceTests {
 
     private static final String BASE_PATH = "/services";
 

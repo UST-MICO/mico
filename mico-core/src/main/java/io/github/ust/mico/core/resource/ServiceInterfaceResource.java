@@ -46,15 +46,15 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static io.github.ust.mico.core.resource.ServiceController.PATH_VARIABLE_SHORT_NAME;
-import static io.github.ust.mico.core.resource.ServiceController.PATH_VARIABLE_VERSION;
+import static io.github.ust.mico.core.resource.ServiceResource.PATH_VARIABLE_SHORT_NAME;
+import static io.github.ust.mico.core.resource.ServiceResource.PATH_VARIABLE_VERSION;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @Slf4j
 @RestController
 @RequestMapping(value = "/services", produces = MediaTypes.HAL_JSON_VALUE)
-public class ServiceInterfaceController {
+public class ServiceInterfaceResource {
 
     private static final String PATH_VARIABLE_SERVICE_INTERFACE_NAME = "serviceInterfaceName";
     private static final String PATH_PART_INTERFACES = "interfaces";
@@ -81,7 +81,7 @@ public class ServiceInterfaceController {
         if (!interfacesOpt.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service interface '" + shortName + "' '" + version + "' was not found!");
         }
-        return ResponseEntity.ok(new Resources<>(interfacesOpt.get(), linkTo(methodOn(ServiceInterfaceController.class).getInterfacesOfService(shortName, version)).withSelfRel()));
+        return ResponseEntity.ok(new Resources<>(interfacesOpt.get(), linkTo(methodOn(ServiceInterfaceResource.class).getInterfacesOfService(shortName, version)).withSelfRel()));
     }
 
     @GetMapping(SERVICE_INTERFACE_PATH + "/{" + PATH_VARIABLE_SERVICE_INTERFACE_NAME + "}")
@@ -180,7 +180,7 @@ public class ServiceInterfaceController {
         service.getServiceInterfaces().add(serviceInterface);
         serviceRepository.save(service);
         return ResponseEntity.created(
-            linkTo(methodOn(ServiceInterfaceController.class).getInterfaceByName(shortName, version, serviceInterface.getServiceInterfaceName())).toUri()).body(new Resource<>(serviceInterface, getServiceInterfaceLinks(serviceInterface, shortName, version)));
+            linkTo(methodOn(ServiceInterfaceResource.class).getInterfaceByName(shortName, version, serviceInterface.getServiceInterfaceName())).toUri()).body(new Resource<>(serviceInterface, getServiceInterfaceLinks(serviceInterface, shortName, version)));
     }
 
     /**
@@ -260,9 +260,9 @@ public class ServiceInterfaceController {
 
     private Iterable<Link> getServiceInterfaceLinks(MicoServiceInterface serviceInterface, String shortName, String version) {
         LinkedList<Link> links = new LinkedList<>();
-        links.add(linkTo(methodOn(ServiceInterfaceController.class).getInterfaceByName(shortName, version, serviceInterface.getServiceInterfaceName())).withSelfRel());
-        links.add(linkTo(methodOn(ServiceInterfaceController.class).getInterfacesOfService(shortName, version)).withRel("interfaces"));
-        links.add(linkTo(methodOn(ServiceController.class).getServiceByShortNameAndVersion(shortName, version)).withRel("service"));
+        links.add(linkTo(methodOn(ServiceInterfaceResource.class).getInterfaceByName(shortName, version, serviceInterface.getServiceInterfaceName())).withSelfRel());
+        links.add(linkTo(methodOn(ServiceInterfaceResource.class).getInterfacesOfService(shortName, version)).withRel("interfaces"));
+        links.add(linkTo(methodOn(ServiceResource.class).getServiceByShortNameAndVersion(shortName, version)).withRel("service"));
         return links;
     }
 

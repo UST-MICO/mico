@@ -89,7 +89,7 @@ class TestConstants {
     static final String OWNER = "owner";
 
     /*
-     * For tests in ApplicationControllerTests, one service is added to the list of MicoServiceStatusDTOs in MicoApplicationStatusDTO.
+     * For tests in ApplicationResourceTests, one service is added to the list of MicoServiceStatusDTOs in MicoApplicationStatusDTO.
      * All paths are build on the path for the status of this service.
      */
     /**
@@ -127,7 +127,7 @@ class TestConstants {
 
 
     /*
-     * For tests in ServiceControllerTests, a MicoServiceStatusDTO is used.
+     * For tests in ServiceResourceTests, a MicoServiceStatusDTO is used.
      * All paths are build on the base path of this object.
      */
     static final String SERVICE_DTO_SERVICE_NAME = buildAttributePath("name");

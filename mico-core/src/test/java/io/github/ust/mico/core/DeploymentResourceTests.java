@@ -25,7 +25,7 @@ import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.resource.DeploymentController;
+import io.github.ust.mico.core.resource.DeploymentResource;
 import io.github.ust.mico.core.service.MicoCoreBackgroundTaskFactory;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
@@ -62,11 +62,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
-@WebMvcTest(DeploymentController.class)
+@WebMvcTest(DeploymentResource.class)
 @OverrideAutoConfiguration(enabled = true) //Needed to override our neo4j config
 @EnableAutoConfiguration
 @EnableConfigurationProperties(value = {CorsConfig.class})
-public class DeploymentControllerTests {
+public class DeploymentResourceTests {
 
     private static final String BASE_PATH = "/applications";
 

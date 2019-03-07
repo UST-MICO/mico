@@ -41,8 +41,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.concurrent.CompletableFuture;
 
-import static io.github.ust.mico.core.TestConstants.ID;
-import static io.github.ust.mico.core.TestConstants.ID_1;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -56,7 +54,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @RunWith(SpringRunner.class)
 @AutoConfigureMockMvc
-public class DeploymentControllerIntegrationTests extends Neo4jTestClass {
+public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
 
     private static final String BASE_PATH = "/applications";
 

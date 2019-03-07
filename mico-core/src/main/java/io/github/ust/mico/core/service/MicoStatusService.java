@@ -19,30 +19,10 @@
 
 package io.github.ust.mico.core.service;
 
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import javax.validation.constraints.NotNull;
-
-import io.fabric8.kubernetes.api.model.ContainerStatus;
-import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
-import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.github.ust.mico.core.configuration.PrometheusConfig;
-import io.github.ust.mico.core.dto.KubernetesNodeMetricsDTO;
-import io.github.ust.mico.core.dto.KubernetesPodInformationDTO;
-import io.github.ust.mico.core.dto.KubernetesPodMetricsDTO;
-import io.github.ust.mico.core.dto.MicoApplicationDTO;
-import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
-import io.github.ust.mico.core.dto.MicoServiceInterfaceStatusDTO;
-import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
-import io.github.ust.mico.core.dto.PrometheusResponse;
+import io.github.ust.mico.core.dto.*;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.PrometheusRequestFailedException;
 import io.github.ust.mico.core.model.MicoApplication;
@@ -58,6 +38,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import javax.validation.constraints.NotNull;
+import java.net.URI;
+import java.util.*;
 
 /**
  * Provides functionality to retrieve status information for a {@link MicoApplication} or a particular {@link
@@ -244,7 +228,7 @@ public class MicoStatusService {
      * @param kubernetesService the Kubernetes {@link Service}
      * @return a list with public IPs of the provided Kubernetes Service
      */
-    // TODO: Duplicate exists in ServiceInterfaceController. Will be covered by mico#491
+    // TODO: Duplicate exists in ServiceInterfaceResource. Will be covered by mico#491
     private List<String> getPublicIpsOfKubernetesService(Service kubernetesService) {
         LoadBalancerStatus loadBalancerStatus = kubernetesService.getStatus().getLoadBalancer();
         List<String> publicIps = new ArrayList<>();

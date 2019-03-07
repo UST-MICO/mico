@@ -55,7 +55,7 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 @Slf4j
 @RestController
 @RequestMapping(value = "/services", produces = MediaTypes.HAL_JSON_VALUE)
-public class ServiceController {
+public class ServiceResource {
 
     public static final String PATH_VARIABLE_SHORT_NAME = "shortName";
     public static final String PATH_VARIABLE_VERSION = "version";
@@ -84,7 +84,7 @@ public class ServiceController {
         List<Resource<MicoService>> serviceResources = getServiceResourcesList(services);
         return ResponseEntity.ok(
             new Resources<>(serviceResources,
-                linkTo(methodOn(ServiceController.class).getServiceList()).withSelfRel()));
+                linkTo(methodOn(ServiceResource.class).getServiceList()).withSelfRel()));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
@@ -119,7 +119,7 @@ public class ServiceController {
         MicoService updatedService = serviceRepository.save(service);
 
         return ResponseEntity.ok(new Resource<>(updatedService,
-            linkTo(methodOn(ServiceController.class).updateService(shortName, version, service)).withSelfRel()));
+            linkTo(methodOn(ServiceResource.class).updateService(shortName, version, service)).withSelfRel()));
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
@@ -184,7 +184,7 @@ public class ServiceController {
         List<Resource<MicoService>> serviceResources = getServiceResourcesList(services);
         return ResponseEntity.ok(
             new Resources<>(serviceResources,
-                linkTo(methodOn(ServiceController.class).getVersionsOfService(shortName)).withSelfRel()));
+                linkTo(methodOn(ServiceResource.class).getVersionsOfService(shortName)).withSelfRel()));
     }
 
     //TODO: Ambiguous endpoint with /services/shortName
@@ -213,7 +213,7 @@ public class ServiceController {
         MicoService savedService = serviceRepository.save(newService);
 
         return ResponseEntity
-            .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+            .created(linkTo(methodOn(ServiceResource.class).getServiceById(savedService.getId())).toUri())
             .body(new Resource<>(newService, getServiceLinks(newService)));
     }
 
@@ -232,7 +232,7 @@ public class ServiceController {
 
         return ResponseEntity.ok(
             new Resources<>(resourceList,
-                linkTo(methodOn(ServiceController.class).getDependees(shortName, version)).withSelfRel()));
+                linkTo(methodOn(ServiceResource.class).getDependees(shortName, version)).withSelfRel()));
     }
 
     /**
@@ -258,7 +258,7 @@ public class ServiceController {
                 && dependency.getDependedService().getVersion().equals(localVersion));
         if (dependencyAlreadyExists) {
             return ResponseEntity
-                .created(linkTo(methodOn(ServiceController.class).getServiceById(service.getId())).toUri())
+                .created(linkTo(methodOn(ServiceResource.class).getServiceById(service.getId())).toUri())
                 .body(new Resource<>(service, getServiceLinks(service)));
         }
 
@@ -274,7 +274,7 @@ public class ServiceController {
         MicoService savedService = serviceRepository.save(service);
 
         return ResponseEntity
-            .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+            .created(linkTo(methodOn(ServiceResource.class).getServiceById(savedService.getId())).toUri())
             .body(new Resource<>(savedService, getServiceLinks(savedService)));
     }
 
@@ -288,7 +288,7 @@ public class ServiceController {
         MicoService savedService = serviceRepository.save(service);
 
         return ResponseEntity
-            .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+            .created(linkTo(methodOn(ServiceResource.class).getServiceById(savedService.getId())).toUri())
             .body(new Resource<>(savedService, getServiceLinks(savedService)));
     }
 
@@ -321,7 +321,7 @@ public class ServiceController {
         MicoService savedService = serviceRepository.save(service);
 
         return ResponseEntity
-            .created(linkTo(methodOn(ServiceController.class).getServiceById(savedService.getId())).toUri())
+            .created(linkTo(methodOn(ServiceResource.class).getServiceById(savedService.getId())).toUri())
             .body(new Resource<>(savedService, getServiceLinks(savedService)));
     }
 
@@ -334,7 +334,7 @@ public class ServiceController {
         List<Resource<MicoService>> resourceList = getServiceResourcesList(dependers);
         return ResponseEntity.ok(
             new Resources<>(resourceList,
-                linkTo(methodOn(ServiceController.class).getDependers(shortName, version)).withSelfRel()));
+                linkTo(methodOn(ServiceResource.class).getDependers(shortName, version)).withSelfRel()));
     }
 
     @PostMapping(PATH_GITHUB_ENDPOINT)
@@ -391,7 +391,7 @@ public class ServiceController {
        }
        micoServiceDependencyGraph.setMicoServiceDependencyGraphEdgeList(micoServiceDependencyGraphEdgeList);
        return ResponseEntity.ok(new Resource<>(micoServiceDependencyGraph,
-           linkTo(methodOn(ServiceController.class).getDependencyGraph(shortName, version)).withSelfRel()));
+           linkTo(methodOn(ServiceResource.class).getDependencyGraph(shortName, version)).withSelfRel()));
    }
 
 
@@ -512,8 +512,8 @@ public class ServiceController {
 
     private static Iterable<Link> getServiceLinks(MicoService service) {
         LinkedList<Link> links = new LinkedList<>();
-        links.add(linkTo(methodOn(ServiceController.class).getServiceByShortNameAndVersion(service.getShortName(), service.getVersion())).withSelfRel());
-        links.add(linkTo(methodOn(ServiceController.class).getServiceList()).withRel("services"));
+        links.add(linkTo(methodOn(ServiceResource.class).getServiceByShortNameAndVersion(service.getShortName(), service.getVersion())).withSelfRel());
+        links.add(linkTo(methodOn(ServiceResource.class).getServiceList()).withRel("services"));
         return links;
     }
 
