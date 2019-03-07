@@ -24,6 +24,7 @@ import { Subscription, from } from 'rxjs';
 import { groupBy, mergeMap, toArray, map } from 'rxjs/operators';
 import { MatDialog } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
+import { UtilsService } from '../util/utils.service';
 
 @Component({
     selector: 'mico-app-list',
@@ -36,7 +37,8 @@ export class AppListComponent implements OnInit {
 
     constructor(
         private apiService: ApiService,
-        private dialog: MatDialog
+        private dialog: MatDialog,
+        private util: UtilsService,
     ) { }
 
     applications: Readonly<ApiObject[]>;
@@ -86,7 +88,7 @@ export class AppListComponent implements OnInit {
         const subDeleteServiceVersions = dialogRef.afterClosed().subscribe(shouldDelete => {
             if (shouldDelete) {
                 this.apiService.deleteAllApplicationVersions(application.shortName).subscribe();
-                subDeleteServiceVersions.unsubscribe();
+                this.util.safeUnsubscribe(subDeleteServiceVersions);
             }
         });
     }

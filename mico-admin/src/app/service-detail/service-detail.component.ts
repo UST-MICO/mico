@@ -26,6 +26,7 @@ import { ApiObject } from '../api/apiobject';
 import { versionComparator } from '../api/semantic-version';
 import { MatDialog } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
+import { UtilsService } from '../util/utils.service';
 
 export interface Service extends ApiObject {
     name: string;
@@ -46,6 +47,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
         private route: ActivatedRoute,
         private router: Router,
         private dialog: MatDialog,
+        private util: UtilsService,
     ) { }
 
     service: Service;
@@ -64,19 +66,10 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
 
     ngOnDestroy() {
         // unsubscribe if observable is not null
-        this.unsubscribe(this.subService);
-        this.unsubscribe(this.subParam);
+        this.util.safeUnsubscribe(this.subService);
+        this.util.safeUnsubscribe(this.subParam);
     }
 
-    /**
-     * generic function to unsubscribe from an obersvable if it is not null
-     * @param subscription obervable
-     */
-    unsubscribe(subscription: Subscription) {
-        if (subscription != null) {
-            subscription.unsubscribe();
-        }
-    }
 
     /**
      * loads a defined service and displays the service
@@ -93,9 +86,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
             return;
         }
 
-        if (this.subService != null) {
-            this.subService.unsubscribe();
-        }
+        this.util.safeUnsubscribe(this.subService);
 
         // get latest version
         this.subService = this.apiService.getServiceVersions(shortName)
@@ -185,7 +176,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
                             this.router.navigate(['../service-detail/service-list']);
                         }
                     });
-                this.unsubscribe(subDeleteDependency);
+                this.util.safeUnsubscribe(subDeleteDependency);
             }
         });
     }

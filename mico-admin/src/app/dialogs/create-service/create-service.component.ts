@@ -22,6 +22,7 @@ import { ApiService } from 'src/app/api/api.service';
 import { Subscription } from 'rxjs';
 import { ApiModel } from 'src/app/api/apimodel';
 import { versionComparator } from 'src/app/api/semantic-version';
+import { UtilsService } from 'src/app/util/utils.service';
 
 @Component({
     selector: 'mico-create-service',
@@ -47,7 +48,9 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
     filterListManual: string[];
     filterListGithub: string[];
 
-    constructor(private apiService: ApiService) {
+    constructor(
+        private apiService: ApiService,
+        private util: UtilsService) {
     }
 
     ngOnInit() {
@@ -59,9 +62,8 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy() {
-        if (this.subModelDefinitions != null) {
-            this.subModelDefinitions.unsubscribe();
-        }
+        this.util.safeUnsubscribe(this.subModelDefinitions);
+
     }
 
     mapTabIndexToString(index) {
