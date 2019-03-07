@@ -14,11 +14,6 @@
         </mat-button-toggle>
 
         <mat-table [dataSource]="services" class="mat-elevation-z2">
-            <ng-container matColumnDef="id">
-                <mat-header-cell *matHeaderCellDef>ID</mat-header-cell>
-                <mat-cell *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">{{element.id}}
-                </mat-cell>
-            </ng-container>
             <ng-container matColumnDef="name">
                 <mat-header-cell class="ph1" *matHeaderCellDef>Name</mat-header-cell>
                 <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">
@@ -28,6 +23,11 @@
                 <mat-header-cell class="ph1" *matHeaderCellDef>Short Name</mat-header-cell>
                 <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">
                     {{element.shortName}}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="version">
+                <mat-header-cell class="ph1" *matHeaderCellDef>Version</mat-header-cell>
+                <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">
+                    {{element.version}}</mat-cell>
             </ng-container>
             <ng-container matColumnDef="description">
                 <mat-header-cell class="ph1" *matHeaderCellDef>Description</mat-header-cell>
