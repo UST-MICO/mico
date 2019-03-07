@@ -212,7 +212,6 @@ export class ServiceDependencyGraphComponent implements OnInit, OnChanges {
         // map services to graph nodes
         dependencyGraph.micoServices.forEach(service => {
             const serviceId = `${service.shortName}-${service.version}`;
-            console.log(serviceId, nodeMap.has(serviceId))
             toDelete.delete(serviceId); // remove toDelete mark from node
             if (nodeMap.has(serviceId)) {
                 // update existing node
