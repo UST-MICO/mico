@@ -52,7 +52,6 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
     constructor(private api: ApiService,
         private dialog: MatDialog,
         private util: UtilsService,
-        private dialog: MatDialog
     ) { }
 
     ngOnInit() {
