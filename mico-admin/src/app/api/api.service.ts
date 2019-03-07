@@ -330,7 +330,7 @@ export class ApiService {
 
     /**
      * Returns the deployment information of an applications included service
-     * uses: GET applications/{applicationShortName}/{applicationVersion}/services/{serviceShortName}
+     * uses: GET applications/{applicationShortName}/{applicationVersion}/deploymentInformation/{serviceShortName}
      *
      * @param applicationShortName shortName of the application
      * @param applicationVersion version of the application
@@ -353,7 +353,7 @@ export class ApiService {
 
     /**
      * Updates the deployment information of an applications service
-     * uses: PUT applications/{applicationShortName}/{applicationVersion}/services/{serviceShortName}
+     * uses: PUT applications/{applicationShortName}/{applicationVersion}/deploymentInformation/{serviceShortName}
      *
      * @param applicationShortName shortName of the application
      * @param applicationVersion version of the application
