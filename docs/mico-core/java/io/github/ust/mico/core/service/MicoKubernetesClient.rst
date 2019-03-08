@@ -2,17 +2,13 @@
 
 .. java:import:: io.fabric8.kubernetes.api.model.apps DeploymentBuilder
 
+.. java:import:: io.fabric8.kubernetes.client KubernetesClient
+
 .. java:import:: io.github.ust.mico.core.configuration MicoKubernetesConfig
 
 .. java:import:: io.github.ust.mico.core.exception KubernetesResourceException
 
-.. java:import:: io.github.ust.mico.core.model MicoService
-
-.. java:import:: io.github.ust.mico.core.model MicoServiceDeploymentInfo
-
-.. java:import:: io.github.ust.mico.core.model MicoServiceInterface
-
-.. java:import:: io.github.ust.mico.core.model MicoServicePort
+.. java:import:: io.github.ust.mico.core.persistence MicoServiceRepository
 
 .. java:import:: io.github.ust.mico.core.util CollectionUtils
 
@@ -30,6 +26,8 @@
 
 .. java:import:: java.util Map
 
+.. java:import:: java.util Optional
+
 MicoKubernetesClient
 ====================
 
@@ -38,42 +36,14 @@ MicoKubernetesClient
 
 .. java:type:: @Slf4j @Component public class MicoKubernetesClient
 
-   Provides accessor methods for creating deployment and services in Kubernetes.
-
-Fields
-------
-LABEL_APP_KEY
-^^^^^^^^^^^^^
-
-.. java:field:: public static final String LABEL_APP_KEY
-   :outertype: MicoKubernetesClient
-
-   Labels are used as selectors for Kubernetes deployments, services and pods. The `app` label references to the shortName of the \ :java:ref:`MicoService`\ . The `version` label references to the version of the \ :java:ref:`MicoService`\ . The `interface` label references to the name of the \ :java:ref:`MicoServiceInterface`\ . The `run` label references to the UID that is created for each \ :java:ref:`MicoService`\ .
-
-LABEL_INTERFACE_KEY
-^^^^^^^^^^^^^^^^^^^
-
-.. java:field:: public static final String LABEL_INTERFACE_KEY
-   :outertype: MicoKubernetesClient
-
-LABEL_RUN_KEY
-^^^^^^^^^^^^^
-
-.. java:field:: public static final String LABEL_RUN_KEY
-   :outertype: MicoKubernetesClient
-
-LABEL_VERSION_KEY
-^^^^^^^^^^^^^^^^^
-
-.. java:field:: public static final String LABEL_VERSION_KEY
-   :outertype: MicoKubernetesClient
+   Provides accessor methods for creating deployments and services in Kubernetes as well as getter methods to retrieve existing Kubernetes deployments and services.
 
 Constructors
 ------------
 MicoKubernetesClient
 ^^^^^^^^^^^^^^^^^^^^
 
-.. java:constructor:: @Autowired public MicoKubernetesClient(MicoKubernetesConfig micoKubernetesConfig, ClusterAwarenessFabric8 cluster)
+.. java:constructor:: @Autowired public MicoKubernetesClient(MicoKubernetesConfig micoKubernetesConfig, MicoServiceRepository serviceRepository, KubernetesClient kubernetesClient)
    :outertype: MicoKubernetesClient
 
 Methods
@@ -101,4 +71,73 @@ createMicoServiceInterface
    :param micoServiceInterface: the \ :java:ref:`MicoServiceInterface`\
    :param micoService: the \ :java:ref:`MicoService`\
    :return: the Kubernetes \ :java:ref:`Service`\  resource
+
+getDeploymentOfMicoService
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public Optional<Deployment> getDeploymentOfMicoService(MicoService micoService) throws KubernetesResourceException
+   :outertype: MicoKubernetesClient
+
+   Checks if the \ :java:ref:`MicoService`\  is already deployed to the Kubernetes cluster. Labels are used for the lookup.
+
+   :param micoService: the \ :java:ref:`MicoService`\
+   :return: an \ :java:ref:`Optional`\  with the \ :java:ref:`Deployment`\  of the Kubernetes service, or an empty \ :java:ref:`Optional`\  if there is no Kubernetes deployment of the \ :java:ref:`MicoService`\ .
+
+getInterfaceByNameOfMicoService
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public Optional<Service> getInterfaceByNameOfMicoService(MicoService micoService, String micoServiceInterfaceName) throws KubernetesResourceException
+   :outertype: MicoKubernetesClient
+
+   Check if the \ :java:ref:`MicoServiceInterface`\  is already created for the \ :java:ref:`MicoService`\  in the Kubernetes cluster. Labels are used for the lookup.
+
+   :param micoService: the \ :java:ref:`MicoService`\
+   :param micoServiceInterfaceName: the name of a \ :java:ref:`MicoServiceInterface`\
+   :return: an \ :java:ref:`Optional`\  with the Kubernetes \ :java:ref:`Service`\ , or an emtpy \ :java:ref:`Optional`\  if there is no Kubernetes deployment of the \ :java:ref:`Service`\ .
+
+getInterfacesOfMicoService
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public List<Service> getInterfacesOfMicoService(MicoService micoService)
+   :outertype: MicoKubernetesClient
+
+   Looks up if there are any interfaces created for the \ :java:ref:`MicoService`\  in the Kubernetes cluster. If so, it returns them as a list of Kubernetes \ :java:ref:`Service`\  objects. Labels are used for the lookup.
+
+   :param micoService: the \ :java:ref:`MicoService`\
+   :return: the list of Kubernetes \ :java:ref:`Service`\  objects
+
+getPodsCreatedByDeploymentOfMicoService
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public List<Pod> getPodsCreatedByDeploymentOfMicoService(MicoService micoService)
+   :outertype: MicoKubernetesClient
+
+   Looks up if the \ :java:ref:`MicoService`\  is already deployed to the Kubernetes cluster. If so, it returns the list of Kubernetes \ :java:ref:`Pod`\  objects that belongs to the \ :java:ref:`Deployment`\ . Labels are used for the lookup.
+
+   :param micoService: the \ :java:ref:`MicoService`\
+   :return: the list of Kubernetes \ :java:ref:`Pod`\  objects
+
+isApplicationDeployed
+^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public boolean isApplicationDeployed(MicoApplication micoApplication) throws KubernetesResourceException
+   :outertype: MicoKubernetesClient
+
+   Checks if a MICO application is already deployed.
+
+   :param micoApplication: the \ :java:ref:`MicoApplication`\
+   :throws KubernetesResourceException: if there is an error while retrieving the Kubernetes objects
+   :return: if true the application is deployed.
+
+isMicoServiceDeployed
+^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public boolean isMicoServiceDeployed(MicoService micoService) throws KubernetesResourceException
+   :outertype: MicoKubernetesClient
+
+   Checks if a MICO service is already deployed.
+
+   :param micoService: the \ :java:ref:`MicoService`\
+   :throws KubernetesResourceException: if there is an error while retrieving the Kubernetes objects
+   :return: \ ``true``\  if the \ :java:ref:`MicoService`\  is deployed.
 

@@ -6,7 +6,11 @@
 
 .. java:import:: org.springframework.stereotype Component
 
+.. java:import:: javax.validation.constraints Min
+
 .. java:import:: javax.validation.constraints NotBlank
+
+.. java:import:: javax.validation.constraints NotNull
 
 MicoKubernetesBuildBotConfig
 ============================

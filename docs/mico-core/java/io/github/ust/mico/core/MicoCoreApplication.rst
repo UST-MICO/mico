@@ -36,7 +36,7 @@ restTemplate
 .. java:method:: @Bean public RestTemplate restTemplate(RestTemplateBuilder builder)
    :outertype: MicoCoreApplication
 
-   https://gist.github.com/RealDeanZhao/38821bc1efeb7e2a9bcd554cc06cdf96
-
    :param builder:
+
+   **See also:** \ `RealDeanZhao/autowire-resttemplate.md <https://gist.github.com/RealDeanZhao/38821bc1efeb7e2a9bcd554cc06cdf96>`_\
 
