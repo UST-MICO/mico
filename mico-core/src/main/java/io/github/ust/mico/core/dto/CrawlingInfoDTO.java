@@ -22,6 +22,7 @@ package io.github.ust.mico.core.dto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.service.GitHubCrawler;
+import io.github.ust.mico.core.util.Patterns;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -31,6 +32,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Pattern;
 
 /**
  * DTO for the information needed by a Crawler (e.g., {@link GitHubCrawler})
@@ -70,4 +72,20 @@ public class CrawlingInfoDTO {
             @ExtensionProperty(name = "description", value = "The remote release tag. Defaults to 'latest'.")})})
     @NotEmpty
     private String version = "latest";
+
+
+    /**
+     * The path to the dockerfile must be relative to the root folder of the git repository
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Path to Dockerfile"),
+            @ExtensionProperty(name = "pattern", value = Patterns.RELATIVE_PATH_REGEX),
+            @ExtensionProperty(name = "x-order", value = "30"),
+            @ExtensionProperty(name = "description", value = "The path to the dockerfile must be relative to the root folder of the git repository")
+        }
+    )})
+    @Pattern(regexp = Patterns.RELATIVE_PATH_REGEX, message = "must be relative to the root folder of the git repository")
+    private String dockerfilePath = "Dockerfile";
 }
