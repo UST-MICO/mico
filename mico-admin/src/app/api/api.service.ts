@@ -714,6 +714,7 @@ export class ApiService {
 
                 this.getService(serviceShortName, serviceVersion);
                 this.getServiceDependees(serviceShortName, serviceVersion);
+                this.getServiceDependencyGraph(serviceShortName, serviceVersion);
 
                 return stream.asObservable().pipe(
                     filter(service => service !== undefined)
@@ -739,6 +740,7 @@ export class ApiService {
                 this.getServices();
                 this.getService(serviceShortName, serviceVersion);
                 this.getServiceDependees(serviceShortName, serviceVersion);
+                this.getServiceDependencyGraph(serviceShortName, serviceVersion);
 
                 return true;
             }));
@@ -763,6 +765,27 @@ export class ApiService {
             } else {
                 stream.next(freezeObject([]));
             }
+        });
+
+        return stream.asObservable().pipe(
+            filter(data => data !== undefined)
+        );
+    }
+
+    /**
+     * Get full dependency graph of service
+     * uses: GET services/{shortName}/{version}/dependencyGraph
+     *
+     * @param shortName unique short name of the service
+     * @param version service version to be returned
+     */
+    getServiceDependencyGraph(shortName, version): Observable<ApiObject> {
+
+        const resource = 'services/' + shortName + '/' + version + '/dependencyGraph';
+        const stream = this.getStreamSource<ApiObject>(resource);
+
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+            stream.next(freezeObject(val));
         });
 
         return stream.asObservable().pipe(
