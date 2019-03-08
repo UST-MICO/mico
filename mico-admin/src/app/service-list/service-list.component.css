@@ -1,4 +1,14 @@
 mat-footer-row, mat-row {
-    max-height: 85px;
     overflow: hidden;
+}
+
+.mat-cell, .mat-footer-cell {
+
+    position: relative;
+
+}
+
+.descriptionStyle {
+    top: 0.25rem;
+    max-height: 85px !important;
 }
