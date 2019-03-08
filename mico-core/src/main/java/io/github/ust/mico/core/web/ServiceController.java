@@ -21,6 +21,7 @@ package io.github.ust.mico.core.web;
 
 import io.github.ust.mico.core.dto.request.CrawlingInfoRequestDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphResponseDTO;
+import io.github.ust.mico.core.dto.response.MicoServiceResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphEdgeResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceStatusResponseDTO;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
@@ -505,12 +506,14 @@ public class ServiceController {
         return services;
     }
 
-    static List<Resource<MicoService>> getServiceResourcesList(List<MicoService> services) {
-        return services.stream().map(service -> new Resource<>(service, getServiceLinks(service)))
-            .collect(Collectors.toList());
+    protected static List<Resource<MicoServiceResponseDTO>> getServiceResponseDTOResourcesList(List<MicoService> services) {
+		return services.stream()
+		    .map(service -> new Resource<MicoServiceResponseDTO>(MicoServiceResponseDTO.valueOf(service),
+		        getServiceLinks(service)))
+		    .collect(Collectors.toList());
     }
 
-    private static Iterable<Link> getServiceLinks(MicoService service) {
+    protected static Iterable<Link> getServiceLinks(MicoService service) {
         LinkedList<Link> links = new LinkedList<>();
         links.add(linkTo(methodOn(ServiceController.class).getServiceByShortNameAndVersion(service.getShortName(), service.getVersion())).withSelfRel());
         links.add(linkTo(methodOn(ServiceController.class).getServiceList()).withRel("services"));
@@ -538,7 +541,7 @@ public class ServiceController {
         }
 
         // If more than the name of the interface is provided,
-        // check if the data is consistent. If not throw a 409 conflict error.
+        // check if the data is consistent. If not, throw a 409 conflict error.
         MicoServiceInterface existingInterface = existingInterfaceOptional.get();
         if (providedInterface.getId() != null
             && !providedInterface.getId().equals(existingInterface.getId())) {

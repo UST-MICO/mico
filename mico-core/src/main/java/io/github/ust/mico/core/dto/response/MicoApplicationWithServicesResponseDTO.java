@@ -28,20 +28,15 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoService;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for a {@link MicoApplication} including all of
- * its associated {@link MicoService MicoServices}.
+ * DTO for a {@link MicoApplication} intended to use with requests only.
+ * Additionally includes all of services of the application.
  */
 @Data
 @ToString(callSuper = true)
@@ -53,7 +48,7 @@ import lombok.experimental.Accessors;
 public class MicoApplicationWithServicesResponseDTO extends MicoApplicationResponseDTO {
 
     /**
-     * All {@link MicoService MicoServices} of the {@link MicoApplication}.
+     * All services of the application as {@link MicoServiceResponseDTO}.
      */
     @ApiModelProperty(extensions = {@Extension(
             name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -63,7 +58,7 @@ public class MicoApplicationWithServicesResponseDTO extends MicoApplicationRespo
                 @ExtensionProperty(name = "description", value = "All services of the application.")
             }
         )})
-    private List<MicoService> services = new ArrayList<>();
+    private List<MicoServiceResponseDTO> services = new ArrayList<>();
     
     
     // ----------------------
@@ -72,18 +67,20 @@ public class MicoApplicationWithServicesResponseDTO extends MicoApplicationRespo
     
     /**
      * Creates a {@code MicoApplicationWithServicesDTO} based on a
-     * {@link MicoApplication}. Note that the deployment status of the application
+     * {@code MicoApplication}. Note that the deployment status of the application
      * needs to be set explicitly since it cannot be inferred
-     * from the given {@link MicoApplication} itself.
+     * from the given {@code MicoApplication} itself.
      * 
      * @param application the {@link MicoApplication}.
      * @return a {@link MicoApplicationWithServicesResponseDTO} with all the values
      *         of the given {@code MicoApplication}. 
      */
     public static MicoApplicationWithServicesResponseDTO valueOf(MicoApplication application) {
-        return createBase(application)
-                .setServices(application.getServiceDeploymentInfos().stream().map(sdi -> sdi.getService())
-                        .collect(Collectors.toList()));
+    	return ((MicoApplicationWithServicesResponseDTO) MicoApplicationResponseDTO.valueOf(application))
+            .setServices(application.getServiceDeploymentInfos().stream()
+            	.map(sdi -> sdi.getService())
+            	.map(service -> MicoServiceResponseDTO.valueOf(service))
+            	.collect(Collectors.toList()));
     }
     
     /**
@@ -96,21 +93,11 @@ public class MicoApplicationWithServicesResponseDTO extends MicoApplicationRespo
      *         of the given {@code MicoApplication}. 
      */
     public static MicoApplicationWithServicesResponseDTO valueOf(MicoApplication application, MicoApplicationDeploymentStatus deploymentStatus) {
-        return ((MicoApplicationWithServicesResponseDTO) createBase(application)
-                .setDeploymentStatus(deploymentStatus))
-                .setServices(application.getServiceDeploymentInfos().stream().map(sdi -> sdi.getService())
-                        .collect(Collectors.toList()));
+    	return ((MicoApplicationWithServicesResponseDTO) MicoApplicationResponseDTO.valueOf(application, deploymentStatus))
+            .setServices(application.getServiceDeploymentInfos().stream()
+            	.map(sdi -> sdi.getService())
+            	.map(service -> MicoServiceResponseDTO.valueOf(service))
+                .collect(Collectors.toList()));
     }
     
-    // Sets all direct application fields.
-    private static MicoApplicationWithServicesResponseDTO createBase(MicoApplication application) {
-        return (MicoApplicationWithServicesResponseDTO) new MicoApplicationWithServicesResponseDTO()
-                .setShortName(application.getShortName())
-                .setName(application.getName())
-                .setVersion(application.getVersion())
-                .setDescription(application.getDescription())
-                .setContact(application.getContact())
-                .setOwner(application.getOwner());
-    }
-
 }

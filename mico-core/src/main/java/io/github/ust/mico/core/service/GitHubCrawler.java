@@ -121,7 +121,6 @@ public class GitHubCrawler {
             responseJson.forEach(release -> versionList.add(release.get("tag_name").textValue()));
 
             return versionList;
-
         } catch (IOException e) {
             log.error(e.getStackTrace().toString());
             log.error("Getting exception '{}'", e.getMessage());

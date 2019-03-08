@@ -19,22 +19,24 @@
 
 package io.github.ust.mico.core.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Relationship;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
 import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
 import io.github.ust.mico.core.exception.VersionNotSupportedException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Represents an application as a set of {@link MicoService}s
@@ -108,9 +110,19 @@ public class MicoApplication {
      * who is responsible for this application.
      */
     private String owner;
+
+
+    // ----------------------
+    // -> Static Creators ---
+    // ----------------------
     
-    
-    public static MicoApplication valueOf(MicoApplicationResponseDTO applicationDto) {
+    /**
+     * Creates a {@code MicoApplication} based on a {@code MicoApplicationRequestDTO}.
+     * 
+     * @param applicationDto the {@link MicoApplicationRequestDTO}.
+     * @return a {@link MicoApplication}.
+     */
+    public static MicoApplication valueOf(MicoApplicationRequestDTO applicationDto) {
         return new MicoApplication()
                 .setShortName(applicationDto.getShortName())
                 .setName(applicationDto.getName())
@@ -118,6 +130,16 @@ public class MicoApplication {
                 .setDescription(applicationDto.getDescription())
                 .setContact(applicationDto.getContact())
                 .setOwner(applicationDto.getOwner());
+    }
+    
+    /**
+     * Creates a {@code MicoApplication} based on a {@code MicoApplicationResponseDTO}.
+     * 
+     * @param applicationDto the {@link MicoApplicationResponseDTO}.
+     * @return a {@link MicoApplication}.
+     */
+    public static MicoApplication valueOf(MicoApplicationResponseDTO applicationDto) {
+        return valueOf((MicoApplicationRequestDTO) applicationDto);
     }
 
     @JsonIgnore
