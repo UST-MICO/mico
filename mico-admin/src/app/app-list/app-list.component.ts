@@ -24,7 +24,6 @@ import { Subscription, from } from 'rxjs';
 import { groupBy, mergeMap, toArray, map } from 'rxjs/operators';
 import { MatDialog, MatSnackBar } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
-import { CreateApplicationComponent } from '../dialogs/create-application/create-application.component';
 import { Router } from '@angular/router';
 import { safeUnsubscribe } from '../util/utils';
 import { UtilServiceService } from '../util/util-service.service';

@@ -17,16 +17,14 @@
  * under the License.
  */
 
-import { Component, OnInit, OnDestroy, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ApiService } from '../api/api.service';
 import { Subscription } from 'rxjs';
 import { from } from 'rxjs';
 import { groupBy, mergeMap, toArray, map } from 'rxjs/operators';
 import { ApiObject } from '../api/apiobject';
-import { MatDialog, MatSnackBar } from '@angular/material';
+import { MatDialog } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
-import { Router } from '@angular/router';
-import { CreateServiceDialogComponent } from '../dialogs/create-service/create-service.component';
 import { safeUnsubscribe } from '../util/utils';
 import { UtilServiceService } from '../util/util-service.service';
 

@@ -20,8 +20,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
-import { MatDialog, MatSnackBar } from '@angular/material';
-import { Router } from '@angular/router';
 import { groupBy, mergeMap, toArray, map } from 'rxjs/operators';
 import { Subscription, from } from 'rxjs';
 import { safeUnsubscribe } from '../util/utils';
