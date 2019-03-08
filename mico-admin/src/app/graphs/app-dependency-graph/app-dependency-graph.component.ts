@@ -130,7 +130,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
             if (!success) {
                 return;
             }
-            this.api.postApplicationServices(this.shortName, this.version, newVersion).subscribe();
+            this.api.postApplicationServices(this.shortName, this.version, newVersion.shortName, newVersion.version).subscribe();
         });
     }
 
