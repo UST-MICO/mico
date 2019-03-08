@@ -111,12 +111,6 @@ public class MicoService {
     private List<MicoServiceDependency> dependencies = new ArrayList<>();
 
     /**
-     * Same MicoService with previous version.
-     */
-    @Relationship(type = "PREDECESSOR")
-    private MicoService predecessor;
-
-    /**
      * Human readable contact information for support purposes.
      */
     private String contact;
@@ -132,11 +126,6 @@ public class MicoService {
      * to clone the current master branch.
      */
     private String gitCloneUrl;
-
-    /**
-     * The URL to the get the information about a specific git release.
-     */
-    private String gitReleaseInfoUrl;
 
     /**
      * The relative path to the Dockerfile.

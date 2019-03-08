@@ -73,8 +73,7 @@ public class GitHubCrawler {
                 .setVersion(releaseInfoJson.get("tag_name").textValue())
                 .setDescription(basicInfoJson.get("description").textValue())
                 .setServiceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
-                .setGitCloneUrl(basicInfoJson.get("clone_url").textValue())
-                .setGitReleaseInfoUrl(releaseInfoJson.get("url").textValue());
+                .setGitCloneUrl(basicInfoJson.get("clone_url").textValue());
 
         } catch (IOException e) {
             log.error(e.getStackTrace().toString());

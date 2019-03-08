@@ -19,11 +19,8 @@
 
 package io.github.ust.mico.core;
 
-import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
-import io.github.ust.mico.core.exception.NotInitializedException;
-import io.github.ust.mico.core.exception.VersionNotSupportedException;
-import io.github.ust.mico.core.model.MicoVersion;
-import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
+import static io.github.ust.mico.core.TestConstants.*;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -33,10 +30,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
-import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
+import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
+import io.github.ust.mico.core.exception.NotInitializedException;
 import io.github.ust.mico.core.model.MicoService;
-
-import static io.github.ust.mico.core.TestConstants.*;
+import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
+import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
