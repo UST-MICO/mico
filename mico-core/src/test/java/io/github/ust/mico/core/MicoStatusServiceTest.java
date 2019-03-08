@@ -261,11 +261,7 @@ public class MicoStatusServiceTest {
                 .setVersion(VERSION)
                 .setAvailableReplicas(1)
                 .setRequestedReplicas(1)
-                .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationResponseDTO()
-                    .setName(otherMicoApplication.getName())
-                    .setShortName(otherMicoApplication.getShortName())
-                    .setVersion(otherMicoApplication.getVersion())
-                    .setDescription(otherMicoApplication.getDescription())))
+                .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication)))
                 .setNodeMetrics(CollectionUtils.listOf(
                     new KubernetesNodeMetricsResponseDTO()
                         .setNodeName(nodeName1)
@@ -359,7 +355,8 @@ public class MicoStatusServiceTest {
         assertEquals(micoApplicationStatus, micoStatusService.getApplicationStatus(micoApplication));
     }
 
-    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
     public void getApplicationStatusWithMissingKubernetesService() {
         MicoApplicationStatusResponseDTO micoApplicationStatus = new MicoApplicationStatusResponseDTO();
         micoApplicationStatus
@@ -373,11 +370,7 @@ public class MicoStatusServiceTest {
                 .setVersion(VERSION)
                 .setAvailableReplicas(1)
                 .setRequestedReplicas(1)
-                .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationResponseDTO()
-                    .setName(otherMicoApplication.getName())
-                    .setShortName(otherMicoApplication.getShortName())
-                    .setVersion(otherMicoApplication.getVersion())
-                    .setDescription(otherMicoApplication.getDescription())))
+                .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication)))
                 .setNodeMetrics(CollectionUtils.listOf(
                     new KubernetesNodeMetricsResponseDTO()
                         .setNodeName(nodeName1)
@@ -467,11 +460,7 @@ public class MicoStatusServiceTest {
             .setVersion(VERSION)
             .setAvailableReplicas(1)
             .setRequestedReplicas(1)
-            .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationResponseDTO()
-                .setName(otherMicoApplication.getName())
-                .setShortName(otherMicoApplication.getShortName())
-                .setVersion(otherMicoApplication.getVersion())
-                .setDescription(otherMicoApplication.getDescription())))
+            .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication)))
             .setNodeMetrics(CollectionUtils.listOf(
                 new KubernetesNodeMetricsResponseDTO()
                     .setNodeName(nodeName1)

@@ -27,6 +27,7 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
+import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
 import io.github.ust.mico.core.exception.VersionNotSupportedException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -143,6 +144,30 @@ public class MicoService {
     public MicoVersion getMicoVersion() throws VersionNotSupportedException {
         MicoVersion micoVersion = MicoVersion.valueOf(this.version);
         return micoVersion;
+    }
+
+
+    // ----------------------
+    // -> Static Creators ---
+    // ----------------------
+    
+    /**
+     * Creates a {@code MicoService} based on a {@code MicoServiceRequestDTO}.
+     * 
+     * @param applicationDto the {@link MicoServiceRequestDTO}.
+     * @return a {@link MicoService}.
+     */
+    public static MicoService valueOf(MicoServiceRequestDTO serviceDto) {
+        return new MicoService()
+                .setShortName(serviceDto.getShortName())
+                .setName(serviceDto.getName())
+                .setVersion(serviceDto.getVersion())
+                .setDescription(serviceDto.getDescription())
+                .setContact(serviceDto.getContact())
+                .setOwner(serviceDto.getOwner())
+                .setGitCloneUrl(serviceDto.getGitCloneUrl())
+                .setDockerfilePath(serviceDto.getDockerfilePath())
+                .setDockerImageUri(serviceDto.getDockerImageUri());
     }
 
 }

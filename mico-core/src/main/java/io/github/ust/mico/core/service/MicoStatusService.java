@@ -162,13 +162,8 @@ public class MicoStatusService {
 
         // Return the names of all applications that are using this service
         List<MicoApplication> usingApplications = micoApplicationRepository.findAllByUsedService(micoService.getShortName(), micoService.getVersion());
-        for (MicoApplication micoApplication : usingApplications) {
-            MicoApplicationResponseDTO usingApplication = new MicoApplicationResponseDTO()
-                .setName(micoApplication.getName())
-                .setShortName(micoApplication.getShortName())
-                .setVersion(micoApplication.getVersion())
-                .setDescription(micoApplication.getDescription());
-            serviceStatus.getApplicationsUsingThisService().add(usingApplication);
+        for (MicoApplication application : usingApplications) {
+            serviceStatus.getApplicationsUsingThisService().add(new MicoApplicationResponseDTO(application));
         }
 
         // Get status information for all pods of a service
