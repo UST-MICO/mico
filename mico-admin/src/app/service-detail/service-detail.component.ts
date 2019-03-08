@@ -26,7 +26,7 @@ import { ApiObject } from '../api/apiobject';
 import { versionComparator } from '../api/semantic-version';
 import { MatDialog } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
-import { UtilsService } from '../util/utils.service';
+import { safeUnsubscribe } from '../util/utils';
 
 export interface Service extends ApiObject {
     name: string;
@@ -47,7 +47,6 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
         private route: ActivatedRoute,
         private router: Router,
         private dialog: MatDialog,
-        private util: UtilsService,
     ) { }
 
     service: Service;
@@ -66,8 +65,8 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
 
     ngOnDestroy() {
         // unsubscribe if observable is not null
-        this.util.safeUnsubscribe(this.subService);
-        this.util.safeUnsubscribe(this.subParam);
+        safeUnsubscribe(this.subService);
+        safeUnsubscribe(this.subParam);
     }
 
 
@@ -86,7 +85,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
             return;
         }
 
-        this.util.safeUnsubscribe(this.subService);
+        safeUnsubscribe(this.subService);
 
         // get latest version
         this.subService = this.apiService.getServiceVersions(shortName)
@@ -176,7 +175,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
                             this.router.navigate(['../service-detail/service-list']);
                         }
                     });
-                this.util.safeUnsubscribe(subDeleteDependency);
+                safeUnsubscribe(subDeleteDependency);
             }
         });
     }

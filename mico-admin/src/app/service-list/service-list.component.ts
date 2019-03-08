@@ -25,9 +25,9 @@ import { groupBy, mergeMap, toArray, map } from 'rxjs/operators';
 import { ApiObject } from '../api/apiobject';
 import { MatDialog, MatSnackBar } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
-import { UtilsService } from '../util/utils.service';
 import { Router } from '@angular/router';
 import { CreateServiceDialogComponent } from '../dialogs/create-service/create-service.component';
+import { safeUnsubscribe } from '../util/utils';
 
 
 @Component({
@@ -42,7 +42,6 @@ export class ServiceListComponent implements OnInit, OnDestroy {
     constructor(
         private apiService: ApiService,
         private dialog: MatDialog,
-        private util: UtilsService,
         private router: Router,
         private snackBar: MatSnackBar,
     ) {
@@ -58,7 +57,7 @@ export class ServiceListComponent implements OnInit, OnDestroy {
 
     ngOnDestroy() {
         // unsubscribe observables
-        this.util.safeUnsubscribe(this.subServices);
+        safeUnsubscribe(this.subServices);
     }
 
     /**
@@ -102,7 +101,7 @@ export class ServiceListComponent implements OnInit, OnDestroy {
         const subDeleteServiceVersions = dialogRef.afterClosed().subscribe(shouldDelete => {
             if (shouldDelete) {
                 this.apiService.deleteAllServiceVersions(service.shortName).subscribe();
-                this.util.safeUnsubscribe(subDeleteServiceVersions);
+                safeUnsubscribe(subDeleteServiceVersions);
             }
         });
     }
@@ -149,7 +148,7 @@ export class ServiceListComponent implements OnInit, OnDestroy {
                 });
             }
 
-            this.util.safeUnsubscribe(subDialog);
+            safeUnsubscribe(subDialog);
         });
     }
 }

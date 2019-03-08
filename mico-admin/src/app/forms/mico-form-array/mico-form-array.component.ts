@@ -25,7 +25,7 @@ import { ModelsService } from 'src/app/api/models.service';
 import { MicoFormComponent } from '../mico-form/mico-form.component';
 import { combineLatest, Observable, BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { UtilsService } from 'src/app/util/utils.service';
+import { safeUnsubscribe } from 'src/app/util/utils';
 
 
 @Component({
@@ -42,8 +42,7 @@ import { UtilsService } from 'src/app/util/utils.service';
 export class MicoFormArrayComponent implements OnInit, AfterViewInit, AsyncValidator {
 
 
-    constructor(private models: ModelsService,
-        private util: UtilsService) { }
+    constructor(private models: ModelsService) { }
 
     @ViewChildren(MicoFormComponent) forms;
 
@@ -140,7 +139,7 @@ export class MicoFormArrayComponent implements OnInit, AfterViewInit, AsyncValid
                 validObservables.push(form.valid.asObservable());
             });
             if (this.lastValidSub != null) {
-                this.util.safeUnsubscribe(this.lastValidSub);
+                safeUnsubscribe(this.lastValidSub);
             }
             this.lastValidSub = combineLatest(...validObservables).pipe(
                 map((values) => {

@@ -22,7 +22,7 @@ import { ApiService } from 'src/app/api/api.service';
 import { Subscription } from 'rxjs';
 import { ApiModel } from 'src/app/api/apimodel';
 import { versionComparator } from 'src/app/api/semantic-version';
-import { UtilsService } from 'src/app/util/utils.service';
+import { safeUnsubscribe } from 'src/app/util/utils';
 
 @Component({
     selector: 'mico-create-service',
@@ -50,8 +50,7 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
 
     constructor(
         private apiService: ApiService,
-        private util: UtilsService) {
-    }
+    ) { }
 
     ngOnInit() {
         this.subModelDefinitions = this.apiService.getModelDefinitions().subscribe(val => {
@@ -62,7 +61,7 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy() {
-        this.util.safeUnsubscribe(this.subModelDefinitions);
+        safeUnsubscribe(this.subModelDefinitions);
 
     }
 

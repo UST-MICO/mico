@@ -23,7 +23,7 @@ import { Subscription } from 'rxjs';
 import { MatDialog } from '@angular/material';
 import { ServicePickerComponent } from '../service-picker/service-picker.component';
 import { ApiModel } from 'src/app/api/apimodel';
-import { UtilsService } from 'src/app/util/utils.service';
+import { safeUnsubscribe } from 'src/app/util/utils';
 
 @Component({
     selector: 'mico-create-application',
@@ -43,7 +43,6 @@ export class CreateApplicationComponent implements OnInit, OnDestroy {
     constructor(
         private apiService: ApiService,
         private dialog: MatDialog,
-        private util: UtilsService,
     ) {
     }
 
@@ -56,8 +55,8 @@ export class CreateApplicationComponent implements OnInit, OnDestroy {
 
     ngOnDestroy() {
         // unsubscribe obervables
-        this.util.safeUnsubscribe(this.subDependeesDialog);
-        this.util.safeUnsubscribe(this.subModelDefinitions);
+        safeUnsubscribe(this.subDependeesDialog);
+        safeUnsubscribe(this.subModelDefinitions);
     }
 
 

@@ -24,9 +24,9 @@ import { Subscription, from } from 'rxjs';
 import { groupBy, mergeMap, toArray, map } from 'rxjs/operators';
 import { MatDialog, MatSnackBar } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
-import { UtilsService } from '../util/utils.service';
 import { CreateApplicationComponent } from '../dialogs/create-application/create-application.component';
 import { Router } from '@angular/router';
+import { safeUnsubscribe } from '../util/utils';
 
 @Component({
     selector: 'mico-app-list',
@@ -40,7 +40,6 @@ export class AppListComponent implements OnInit {
     constructor(
         private apiService: ApiService,
         private dialog: MatDialog,
-        private util: UtilsService,
         private snackBar: MatSnackBar,
         private router: Router,
     ) { }
@@ -92,7 +91,7 @@ export class AppListComponent implements OnInit {
         const subDeleteServiceVersions = dialogRef.afterClosed().subscribe(shouldDelete => {
             if (shouldDelete) {
                 this.apiService.deleteAllApplicationVersions(application.shortName).subscribe();
-                this.util.safeUnsubscribe(subDeleteServiceVersions);
+                safeUnsubscribe(subDeleteServiceVersions);
             }
         });
     }
@@ -130,7 +129,7 @@ export class AppListComponent implements OnInit {
                 this.router.navigate(['app-detail', val.shortName, val.version]);
             });
 
-            this.util.safeUnsubscribe(subDialog);
+            safeUnsubscribe(subDialog);
         });
     }
 }
