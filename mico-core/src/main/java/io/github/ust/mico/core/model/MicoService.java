@@ -284,7 +284,7 @@ public class MicoService {
     private String gitReleaseInfoUrl;
 
     /**
-     * The relative path to the Dockerfile.
+     * The path to the dockerfile must be relative to the root folder of the git repository
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -292,10 +292,10 @@ public class MicoService {
             @ExtensionProperty(name = "title", value = "Path to Dockerfile"),
             @ExtensionProperty(name = "pattern", value = Patterns.RELATIVE_PATH_REGEX),
             @ExtensionProperty(name = "x-order", value = "130"),
-            @ExtensionProperty(name = "description", value = "The relative path to the Dockerfile.")
+            @ExtensionProperty(name = "description", value = "The path to the dockerfile must be relative to the root folder of the git repository")
         }
     )})
-    @Pattern(regexp = Patterns.RELATIVE_PATH_REGEX, message = "must be relative to the Git clone url")
+    @Pattern(regexp = Patterns.RELATIVE_PATH_REGEX, message = "must be relative to the root folder of the git repository")
     private String dockerfilePath;
 
     /**
