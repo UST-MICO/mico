@@ -19,18 +19,17 @@
 
 package io.github.ust.mico.core.model;
 
-import com.fasterxml.jackson.annotation.*;
-import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
-import io.github.ust.mico.core.exception.VersionNotSupportedException;
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.Extension;
-import io.swagger.annotations.ExtensionProperty;
-import lombok.*;
-import lombok.experimental.Accessors;
-import org.neo4j.ogm.annotation.*;
-
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+
+import org.neo4j.ogm.annotation.*;
+
+import com.fasterxml.jackson.annotation.*;
+
+import io.github.ust.mico.core.exception.VersionNotSupportedException;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.*;
+import lombok.experimental.Accessors;
 
 /**
  * Represents a dependency of a {@link MicoService}.
@@ -39,7 +38,6 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonIgnoreProperties(ignoreUnknown = true)
 @RelationshipEntity(type = "DEPENDS_ON")
 public class MicoServiceDependency {
 

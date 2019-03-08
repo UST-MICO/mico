@@ -33,6 +33,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
@@ -101,6 +102,7 @@ public class MicoApplicationResponseDTO {
             @ExtensionProperty(name = "description", value = "Human readable name of the application.")
         }
     )})
+    @NotNull
     private String name;
 
     /**
