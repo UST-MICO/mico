@@ -32,8 +32,10 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
-import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceCrawlingOrigin;
+import io.github.ust.mico.core.model.MicoServiceDependency;
+import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.util.Patterns;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
@@ -44,9 +46,10 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for a {@link MicoApplication} without services
- * and their deployment information. Contains the current
- * deployment status of this application (may be unknown).
+ * DTO for a {@link MicoService}. Note that the 
+ * {@link MicoServiceDependency MicoServiceDependencies}
+ * and {@link MicoServiceInterface MicoServiceInterfaces}
+ * are not included.
  */
 @Data
 @NoArgsConstructor
@@ -82,21 +85,6 @@ public class MicoServiceResponseDTO {
     private String shortName;
 
     /**
-     * The name of the artifact. Intended for humans.
-     * Required only for the usage in the UI.
-     */
-    @ApiModelProperty(required = true, extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Name"),
-            @ExtensionProperty(name = "x-order", value = "30"),
-            @ExtensionProperty(name = "description", value = "A human readable name of the MicoService.")
-        }
-    )})
-    @NotNull
-    private String name;
-
-    /**
      * The version of this service.
      * E.g. the GitHub release tag.
      */
@@ -113,6 +101,21 @@ public class MicoServiceResponseDTO {
     @NotEmpty
     @Pattern(regexp = Patterns.SEMANTIC_VERSION_WITH_PREFIX_REGEX, message = Patterns.SEMANTIC_VERSIONING_MESSAGE)
     private String version;
+
+    /**
+     * The name of the artifact. Intended for humans.
+     * Required only for the usage in the UI.
+     */
+    @ApiModelProperty(required = true, extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Name"),
+            @ExtensionProperty(name = "x-order", value = "30"),
+            @ExtensionProperty(name = "description", value = "A human readable name of the MicoService.")
+        }
+    )})
+    @NotNull
+    private String name;
 
     /**
      * Human readable description of this service.
@@ -228,5 +231,31 @@ public class MicoServiceResponseDTO {
         }
     )})
     private String dockerImageUri;
+    
+    
+    // ----------------------
+    // -> Static Creators ---
+    // ----------------------
+    
+    /**
+     * Creates a {@link MicoServiceResponseDTO} based on a {@code MicoService}.
+     * 
+     * @param service the {@link MicoService}.
+     * @return a {@link MicoServiceResponseDTO} with all the values
+     * 		   of the given {@code MicoService}.
+     */
+    public static MicoServiceResponseDTO valueOf(MicoService service) {
+        return new MicoServiceResponseDTO()
+            .setShortName(service.getShortName())
+            .setName(service.getName())
+            .setVersion(service.getVersion())
+            .setDescription(service.getDescription())
+            .setServiceCrawlingOrigin(service.getServiceCrawlingOrigin())
+            .setContact(service.getContact())
+            .setOwner(service.getOwner())
+            .setGitCloneUrl(service.getGitCloneUrl())
+            .setDockerfilePath(service.getDockerfilePath())
+            .setDockerImageUri(service.getDockerImageUri());
+    }
 
 }

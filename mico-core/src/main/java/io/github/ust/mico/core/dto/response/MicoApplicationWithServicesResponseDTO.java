@@ -66,6 +66,10 @@ public class MicoApplicationWithServicesResponseDTO extends MicoApplicationRespo
     private List<MicoService> services = new ArrayList<>();
     
     
+    // ----------------------
+    // -> Static Creators ---
+    // ----------------------
+    
     /**
      * Creates a {@code MicoApplicationWithServicesDTO} based on a
      * {@link MicoApplication}. Note that the deployment status of the application
@@ -84,7 +88,7 @@ public class MicoApplicationWithServicesResponseDTO extends MicoApplicationRespo
     
     /**
      * Creates a {@code MicoApplicationWithServicesDTO} based on a
-     * {@link MicoApplication}.
+     * {@code MicoApplication}.
      * 
      * @param application the {@link MicoApplication}.
      * @param deploymentStatus indicates the current {@link MicoApplicationDeploymentStatus}.

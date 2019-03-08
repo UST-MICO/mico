@@ -69,5 +69,25 @@ public class MicoServiceDependencyResponseDTO {
      */
     @ApiModelProperty(required = true)
     private String maxVersion;
+    
+    
+    // ----------------------
+    // -> Static Creators ---
+    // ----------------------
+
+    /**
+     * Creates a {@code MicoServiceDependencyResponseDTO} based on a
+     * {@code MicoServiceDependency}.
+     *
+     * @param application the {@link MicoServiceDependency}.
+     * @return a {@link MicoServiceDependencyResponseDTO} with all the values
+     * 		   of the given {@code MicoServiceDependency}.
+     */
+    public static MicoServiceDependencyResponseDTO valueOf(MicoServiceDependency serviceDependency) {
+        return new MicoServiceDependencyResponseDTO()
+        	.setDependedService(MicoServiceResponseDTO.valueOf(serviceDependency.getDependedService()))
+            .setMinVersion(serviceDependency.getMinVersion())
+            .setMaxVersion(serviceDependency.getMaxVersion());
+    }
 
 }

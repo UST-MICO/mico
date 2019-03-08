@@ -171,16 +171,21 @@ public class MicoApplicationResponseDTO {
     )})
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private MicoApplicationDeploymentStatus deploymentStatus = MicoApplicationDeploymentStatus.NOT_DEPLOYED;
+    
+    
+    // ----------------------
+    // -> Static Creators ---
+    // ----------------------
 
     /**
      * Creates a {@code MicoApplicationDTO} based on a
-     * {@link MicoApplication}. Note that the deployment status
+     * {@code MicoApplication}. Note that the deployment status
      * needs to be set explicitly since it cannot be inferred
      * from the given {@link MicoApplication} itself.
      *
      * @param application the {@link MicoApplication}.
      * @return a {@link MicoApplicationResponseDTO} with all the values
-     * of the given {@code MicoApplication}.
+     * 		   of the given {@code MicoApplication}.
      */
     public static MicoApplicationResponseDTO valueOf(MicoApplication application) {
         return new MicoApplicationResponseDTO()
@@ -201,6 +206,7 @@ public class MicoApplicationResponseDTO {
 
         DEPLOYED,
         NOT_DEPLOYED;
+    	
         @Override
         public String toString() {
             return super.toString().toLowerCase();
