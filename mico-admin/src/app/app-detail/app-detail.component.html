@@ -62,8 +62,9 @@
             </div>
             <ng-container *ngIf="edit">
                 <!-- edit version (dynamic form) -->
-                <mico-form [modelUrl]="'remote/MicoApplicationDTO'" [filter]="['deploymentInfo', 'services']"
-                    [isBlacklist]="true" (data)="applicationData = $event" [startData]="application"></mico-form>
+                <mico-form [modelUrl]="'remote/MicoApplicationDTO'"
+                    [filter]="['deploymentStatus', 'deploymentInfo', 'services']" [isBlacklist]="true"
+                    (data)="applicationData = $event" [startData]="application"></mico-form>
 
                 <div class="ma1 pa1">
                     <span class="ma1">

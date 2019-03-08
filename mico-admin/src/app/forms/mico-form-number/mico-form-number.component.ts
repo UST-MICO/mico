@@ -77,7 +77,7 @@ export class MicoFormNumberComponent implements OnChanges {
         }
         if (!isNaN(this.maxValue) && input > this.maxValue) {
             input = this.maxValue;
-            this.snackBar.open('Input exeeds maximum value of: ' + this.maxValue, 'Ok', {
+            this.snackBar.open('Input exeeds the maximum value of: ' + this.maxValue, 'Ok', {
                 duration: 8000,
             });
         }
