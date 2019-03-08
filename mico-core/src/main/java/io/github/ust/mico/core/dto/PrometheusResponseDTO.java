@@ -21,21 +21,20 @@ package io.github.ust.mico.core.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import io.github.ust.mico.core.util.PrometheusValueDeserializer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for a response from Prometheus. It contains a status and the value field for the CPU load / memory usage.
+ * DTO for a response from Prometheus. It contains a status field and the value field for the CPU load / memory usage.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
 public class PrometheusResponseDTO {
-
-    public static final String PROMETHEUS_SUCCESSFUL_RESPONSE = "success";
 
     /**
      * Status of the response: can be "success" or "error".
@@ -50,8 +49,4 @@ public class PrometheusResponseDTO {
     @JsonProperty("data")
     @JsonDeserialize(using = PrometheusValueDeserializer.class)
     private int value;
-
-    public boolean wasSuccessful() {
-        return status.equals(PROMETHEUS_SUCCESSFUL_RESPONSE);
-    }
 }

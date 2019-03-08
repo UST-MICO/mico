@@ -302,24 +302,40 @@ public class MicoStatusService {
         return requestValueFromPrometheus(prometheusUri);
     }
 
+    /**
+     * Request the CPU load / memory usage value from Prometheus.
+     *
+     * @param prometheusUri is the adapted URI with the query for Prometheus, either CPU load or memory usage
+     * @return a single Integer value of the current CPU load or the memory usage of a {@link Pod}
+     * @throws PrometheusRequestFailedException is thrown if Prometheus returns an error, if there is no response body,
+     *                                          or if the HTTP request was not successful
+     */
     private int requestValueFromPrometheus(URI prometheusUri) throws PrometheusRequestFailedException {
         ResponseEntity<PrometheusResponseDTO> response = restTemplate.getForEntity(prometheusUri, PrometheusResponseDTO.class);
         if (response.getStatusCode().is2xxSuccessful()) {
             PrometheusResponseDTO prometheusResponse = response.getBody();
             if (prometheusResponse != null) {
-                if (prometheusResponse.wasSuccessful()) {
+                if (prometheusResponse.getStatus().equals("success")) {
                     return prometheusResponse.getValue();
                 } else {
-                    throw new PrometheusRequestFailedException("The status of the prometheus response was " + prometheusResponse.getStatus(), response.getStatusCode(), prometheusResponse.getStatus());
+                    throw new PrometheusRequestFailedException("Prometheus returned a response with status " + prometheusResponse.getStatus());
                 }
             } else {
-                throw new PrometheusRequestFailedException("There was no response body", response.getStatusCode(), null);
+                throw new PrometheusRequestFailedException("There is no body in the response with status code " + response.getStatusCode());
             }
         } else {
-            throw new PrometheusRequestFailedException("The http status code was not 2xx", response.getStatusCode(), null);
+            throw new PrometheusRequestFailedException("The http request was not successful and returned a " + response.getStatusCode());
         }
     }
 
+    /**
+     * Build the correct Prometheus URI to request the correct value.
+     *
+     * @param query   is the query for Prometheus in PromQL (either the query for the CPU load, or for the memory
+     *                usage)
+     * @param podName is the name of the {@link Pod}, for which the CPU load / memory usage query is build.
+     * @return the URI to send the request to
+     */
     private URI getPrometheusUri(String query, String podName) {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(prometheusConfig.getUri());
         uriBuilder.queryParam(PROMETHEUS_QUERY_PARAMETER_NAME, String.format(query, podName));

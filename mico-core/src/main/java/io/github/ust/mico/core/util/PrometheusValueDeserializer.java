@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto;
+package io.github.ust.mico.core.util;
 
 import java.io.IOException;
 
@@ -28,7 +28,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 
 /**
- * Custom deserializer for JSON objects, which are received from Prometheus.
+ * Custom deserializer for JSON objects, which are received from Prometheus for CPU load / memory usage requests.
  */
 public class PrometheusValueDeserializer extends StdDeserializer<Integer> {
 
@@ -44,16 +44,8 @@ public class PrometheusValueDeserializer extends StdDeserializer<Integer> {
     public Integer deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
         JsonNode dataJson = p.getCodec().readTree(p);
         JsonNode resultJsonArray = dataJson.get("result");
-        JsonNode resultArrayFirstElement = resultJsonArray.get(0);
-        JsonNode valueNode = resultArrayFirstElement.get("value");
-        // TODO Is the metric name or any additional information necessary?
-//        JsonNode metricNode = resultArrayFirstElement.get("metric");
-//        String valueName;
-//        if (metricNode.get("__name__").asText().contains("cpu")) {
-//            valueName = "cpu_load";
-//        } else {
-//            valueName = "memory_usage";
-//        }
+        JsonNode resultJsonArrayFirstElement = resultJsonArray.get(0);
+        JsonNode valueNode = resultJsonArrayFirstElement.get("value");
         return valueNode.get(1).asInt();
     }
 }
