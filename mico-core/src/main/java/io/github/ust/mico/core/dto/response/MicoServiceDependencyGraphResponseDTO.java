@@ -28,12 +28,18 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+/**
+ * TODO: Class comment.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
 public class MicoServiceDependencyGraphResponseDTO {
 
+	// TODO: Field comments.
+	// TODO: API documentation.
+	
    private List<MicoService> micoServices = new LinkedList<>();
    private List<MicoServiceDependencyGraphEdgeResponseDTO> micoServiceDependencyGraphEdgeList = new LinkedList<>();
    

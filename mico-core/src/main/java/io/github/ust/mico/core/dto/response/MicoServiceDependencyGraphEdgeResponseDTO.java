@@ -25,17 +25,29 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+/**
+ * TODO: Class comment.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
 public class MicoServiceDependencyGraphEdgeResponseDTO {
 
+	// TODO: Field comments.
+	// TODO: API documentation.
+
     private String sourceShortName;
     private String sourceVersion;
     private String targetShortName;
     private String targetVersion;
 
+    /**
+     * TODO: Constructor comment.
+     * 
+     * @param source
+     * @param target
+     */
     public MicoServiceDependencyGraphEdgeResponseDTO(MicoService source, MicoService target){
         this.sourceShortName = source.getShortName();
         this.sourceVersion = source.getVersion();
