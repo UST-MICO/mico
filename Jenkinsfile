@@ -1,7 +1,5 @@
 #!/usr/bin/env groovy
 
-def COLOR_MAP = ['SUCCESS': 'good', 'FAILURE': 'danger', 'UNSTABLE': 'danger', 'ABORTED': 'danger']
-
 pipeline {
     environment {
         BUILD_USER = ''
@@ -89,16 +87,24 @@ pipeline {
     }
 
     post {
-        changed {
-            wrap([$class: 'BuildUser']) {
-    	       slackSend channel: '#ci-pipeline',
-                    color: COLOR_MAP[currentBuild.currentResult],
-                    message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} by ${BUILD_USER} changed the completion status\n More info at: ${env.BUILD_URL}"
-            }
+        success {
+            notification('SUCCESS')
+        }
+        failure {
+            notification('FAILURE')
         }
         always {
             // Clean workspace
             cleanWs()
         }
+    }
+}
+
+def notification(String result) {
+    COLOR_MAP = ['SUCCESS': 'good', 'FAILURE': 'danger', 'UNSTABLE': 'danger', 'ABORTED': 'danger']
+    wrap([$class: 'BuildUser']) {
+        slackSend channel: '#ci-pipeline',
+        color: COLOR_MAP[result],
+        message: "*${result}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} by ${env.BUILD_USER}\n More info at: ${env.BUILD_URL}"
     }
 }
