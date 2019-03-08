@@ -168,7 +168,7 @@ public class MicoApplicationResponseDTO {
         }
     )})
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private MicoApplicationDeploymentStatus deploymentStatus = MicoApplicationDeploymentStatus.UNKNOWN;
+    private MicoApplicationDeploymentStatus deploymentStatus = MicoApplicationDeploymentStatus.NOT_DEPLOYED;
 
     /**
      * Creates a {@code MicoApplicationDTO} based on a
@@ -198,9 +198,7 @@ public class MicoApplicationResponseDTO {
     public enum MicoApplicationDeploymentStatus {
 
         DEPLOYED,
-        NOT_DEPLOYED,
-        UNKNOWN;
-
+        NOT_DEPLOYED;
         @Override
         public String toString() {
             return super.toString().toLowerCase();

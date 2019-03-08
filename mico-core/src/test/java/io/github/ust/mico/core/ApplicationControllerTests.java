@@ -146,8 +146,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @EnableConfigurationProperties(value = {CorsConfig.class})
 public class ApplicationControllerTests {
 
-    public static final String APPLICATION_DTO_LIST_PATH = buildPath(EMBEDDED, "micoApplicationDTOList");
-    public static final String APPLICATION_WITH_SERVICES_DTO_LIST_PATH = buildPath(EMBEDDED, "micoApplicationWithServicesDTOList");
+    public static final String APPLICATION_DTO_LIST_PATH = buildPath(EMBEDDED, "micoApplicationResponseDTOList");
+    public static final String APPLICATION_WITH_SERVICES_DTO_LIST_PATH = buildPath(EMBEDDED, "micoApplicationWithServicesResponseDTOList");
     public static final String APPLICATION_PATH = buildPath(ROOT, "application");
     public static final String SHORT_NAME_PATH = buildPath(ROOT, "shortName");
     public static final String VERSION_PATH = buildPath(ROOT, "version");
