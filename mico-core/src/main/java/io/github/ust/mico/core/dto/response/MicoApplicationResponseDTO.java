@@ -69,38 +69,57 @@ public class MicoApplicationResponseDTO extends MicoApplicationRequestDTO {
     private MicoApplicationDeploymentStatus deploymentStatus = MicoApplicationDeploymentStatus.NOT_DEPLOYED;
     
     
-    // ----------------------
-    // -> Static Creators ---
-    // ----------------------
+    // -------------------
+    // -> Constructors ---
+    // -------------------
+    
+	/**
+	 * TODO: Constructor comment.
+	 * 
+	 * @param application
+	 */
+	public MicoApplicationResponseDTO(MicoApplication application) {
+		super(application);
+	}
+    
+	/**
+	 * TODO: Constructor comment.
+	 * 
+	 * @param application
+	 */
+	public MicoApplicationResponseDTO(MicoApplication application, MicoApplicationDeploymentStatus deploymentStatus) {
+		super(application);
+		this.deploymentStatus = deploymentStatus;
+	}
 
-    /**
-     * Creates a {@code MicoApplicationDTO} based on a
-     * {@code MicoApplication}. Note that the deployment status
-     * needs to be set explicitly since it cannot be inferred
-     * from the given {@link MicoApplication} itself.
-     *
-     * @param application the {@link MicoApplication}.
-     * @return a {@link MicoApplicationResponseDTO} with all the values
-     * 		   of the given {@code MicoApplication}.
-     */
-    public static MicoApplicationResponseDTO valueOf(MicoApplication application) {
-        return (MicoApplicationResponseDTO) MicoApplicationRequestDTO.valueOf(application);
-    }
-
-    /**
-     * Creates a {@code MicoApplicationDTO} based on a
-     * {@code MicoApplication} and a deployment status.
-     * Note that this method is intended for use only
-     * within DTOs for instantiation purposes.
-     *
-     * @param application the {@link MicoApplication}.
-     * @param deploymentStatus the {@link MicoApplicationDeploymentStatus}. 
-     * @return a {@link MicoApplicationResponseDTO} with all the values
-     * 		   of the given {@code MicoApplication} and {@code MicoApplicationDeploymentStatus}.
-     */
-    static MicoApplicationResponseDTO valueOf(MicoApplication application, MicoApplicationDeploymentStatus deploymentStatus) {
-        return ((MicoApplicationResponseDTO) MicoApplicationRequestDTO.valueOf(application)).setDeploymentStatus(deploymentStatus);
-    }
+//    /**
+//     * Creates a {@code MicoApplicationDTO} based on a
+//     * {@code MicoApplication}. Note that the deployment status
+//     * needs to be set explicitly since it cannot be inferred
+//     * from the given {@link MicoApplication} itself.
+//     *
+//     * @param application the {@link MicoApplication}.
+//     * @return a {@link MicoApplicationResponseDTO} with all the values
+//     * 		   of the given {@code MicoApplication}.
+//     */
+//    public static MicoApplicationResponseDTO valueOf(MicoApplication application) {
+//        return (MicoApplicationResponseDTO) MicoApplicationRequestDTO.valueOf(application);
+//    }
+//
+//    /**
+//     * Creates a {@code MicoApplicationDTO} based on a
+//     * {@code MicoApplication} and a deployment status.
+//     * Note that this method is intended for use only
+//     * within DTOs for instantiation purposes.
+//     *
+//     * @param application the {@link MicoApplication}.
+//     * @param deploymentStatus the {@link MicoApplicationDeploymentStatus}. 
+//     * @return a {@link MicoApplicationResponseDTO} with all the values
+//     * 		   of the given {@code MicoApplication} and {@code MicoApplicationDeploymentStatus}.
+//     */
+//    static MicoApplicationResponseDTO valueOf(MicoApplication application, MicoApplicationDeploymentStatus deploymentStatus) {
+//        return ((MicoApplicationResponseDTO) MicoApplicationRequestDTO.valueOf(application)).setDeploymentStatus(deploymentStatus);
+//    }
 
 
     /**

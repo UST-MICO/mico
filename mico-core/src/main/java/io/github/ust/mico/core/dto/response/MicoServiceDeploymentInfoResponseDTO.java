@@ -21,9 +21,7 @@ package io.github.ust.mico.core.dto.response;
 
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.*;
 import lombok.experimental.Accessors;
 
 /**
@@ -32,23 +30,38 @@ import lombok.experimental.Accessors;
 @Data
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
 @Accessors(chain = true)
 public class MicoServiceDeploymentInfoResponseDTO extends MicoServiceDeploymentInfoRequestDTO {
 	
 	// Note: as soon as someone adds fields to this class, please add
-	// @NoArgsConstructor and @AllArgsConstructor to this class in order
+	// @AllArgsConstructor to this class in order
 	// to conform to the other DTOs.
 
-    /**
-     * Creates a {@code MicoServiceDeploymentInfoDTO} based on a
-     * {@code MicoServiceDeploymentInfo}.
-     *
-     * @param micoServiceDeploymentInfo the {@link MicoServiceDeploymentInfo} to use.
-     * @return a {@link MicoServiceDeploymentInfoResponseDTO} with all the values
-     * of the given {@code MicoServiceDeploymentInfo}.
-     */
-    public static MicoServiceDeploymentInfoResponseDTO valueOf(MicoServiceDeploymentInfo micoServiceDeploymentInfo) {
-        return (MicoServiceDeploymentInfoResponseDTO) MicoServiceDeploymentInfoRequestDTO.valueOf(micoServiceDeploymentInfo);
-    }
+	
+    // -------------------
+    // -> Constructors ---
+    // -------------------
+	
+	/**
+	 * TODO: Constructor comment.
+	 * 
+	 * @param application
+	 */
+	public MicoServiceDeploymentInfoResponseDTO(MicoServiceDeploymentInfo serviceDeploymentInfo) {
+		super(serviceDeploymentInfo);
+	}
+
+//    /**
+//     * Creates a {@code MicoServiceDeploymentInfoDTO} based on a
+//     * {@code MicoServiceDeploymentInfo}.
+//     *
+//     * @param micoServiceDeploymentInfo the {@link MicoServiceDeploymentInfo} to use.
+//     * @return a {@link MicoServiceDeploymentInfoResponseDTO} with all the values
+//     * of the given {@code MicoServiceDeploymentInfo}.
+//     */
+//    public static MicoServiceDeploymentInfoResponseDTO valueOf(MicoServiceDeploymentInfo micoServiceDeploymentInfo) {
+//        return (MicoServiceDeploymentInfoResponseDTO) MicoServiceDeploymentInfoRequestDTO.valueOf(micoServiceDeploymentInfo);
+//    }
 
 }

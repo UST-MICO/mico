@@ -153,26 +153,40 @@ public class MicoApplicationRequestDTO {
     private String owner;
 
     
-    // ----------------------
-    // -> Static Creators ---
-    // ----------------------
+    // -------------------
+    // -> Constructors ---
+    // -------------------
+	
+	/**
+	 * TODO: Constructor comment.
+	 * 
+	 * @param application
+	 */
+	public MicoApplicationRequestDTO(MicoApplication application) {
+		this.shortName = application.getShortName();
+		this.version = application.getVersion();
+		this.name = application.getName();
+		this.description = application.getDescription();
+		this.contact = application.getContact();
+		this.owner = application.getOwner();
+	}
 
-    /**
-     * Creates a {@code MicoApplicationRequestDTO} based on a
-     * {@code MicoApplication}.
-     *
-     * @param application the {@link MicoApplication}.
-     * @return a {@link MicoApplicationRequestDTO} with all the values
-     * 		   of the given {@code MicoApplication}.
-     */
-    public static MicoApplicationRequestDTO valueOf(MicoApplication application) {
-        return new MicoApplicationRequestDTO()
-            .setShortName(application.getShortName())
-            .setName(application.getName())
-            .setVersion(application.getVersion())
-            .setDescription(application.getDescription())
-            .setContact(application.getContact())
-            .setOwner(application.getOwner());
-    }
+//    /**
+//     * Creates a {@code MicoApplicationRequestDTO} based on a
+//     * {@code MicoApplication}.
+//     *
+//     * @param application the {@link MicoApplication}.
+//     * @return a {@link MicoApplicationRequestDTO} with all the values
+//     * 		   of the given {@code MicoApplication}.
+//     */
+//    public static MicoApplicationRequestDTO valueOf(MicoApplication application) {
+//        return new MicoApplicationRequestDTO()
+//            .setShortName(application.getShortName())
+//            .setVersion(application.getVersion())
+//            .setName(application.getName())
+//            .setDescription(application.getDescription())
+//            .setContact(application.getContact())
+//            .setOwner(application.getOwner());
+//    }
 
 }

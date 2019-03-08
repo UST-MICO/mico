@@ -61,43 +61,66 @@ public class MicoApplicationWithServicesResponseDTO extends MicoApplicationRespo
     private List<MicoServiceResponseDTO> services = new ArrayList<>();
     
     
-    // ----------------------
-    // -> Static Creators ---
-    // ----------------------
+    // -------------------
+    // -> Constructors ---
+    // -------------------
     
-    /**
-     * Creates a {@code MicoApplicationWithServicesDTO} based on a
-     * {@code MicoApplication}. Note that the deployment status of the application
-     * needs to be set explicitly since it cannot be inferred
-     * from the given {@code MicoApplication} itself.
-     * 
-     * @param application the {@link MicoApplication}.
-     * @return a {@link MicoApplicationWithServicesResponseDTO} with all the values
-     *         of the given {@code MicoApplication}. 
-     */
-    public static MicoApplicationWithServicesResponseDTO valueOf(MicoApplication application) {
-    	return ((MicoApplicationWithServicesResponseDTO) MicoApplicationResponseDTO.valueOf(application))
-            .setServices(application.getServiceDeploymentInfos().stream()
-            	.map(sdi -> sdi.getService())
-            	.map(service -> MicoServiceResponseDTO.valueOf(service))
-            	.collect(Collectors.toList()));
-    }
+	/**
+	 * TODO: Constructor comment.
+	 * 
+	 * @param application
+	 */
+	public MicoApplicationWithServicesResponseDTO(MicoApplication application) {
+		super(application);
+		services = application.getServiceDeploymentInfos().stream()
+        	.map(sdi -> sdi.getService())
+        	.map(service -> new MicoServiceResponseDTO(service))
+        	.collect(Collectors.toList());
+	}
     
-    /**
-     * Creates a {@code MicoApplicationWithServicesDTO} based on a
-     * {@code MicoApplication}.
-     * 
-     * @param application the {@link MicoApplication}.
-     * @param deploymentStatus indicates the current {@link MicoApplicationDeploymentStatus}.
-     * @return a {@link MicoApplicationWithServicesResponseDTO} with all the values
-     *         of the given {@code MicoApplication}. 
-     */
-    public static MicoApplicationWithServicesResponseDTO valueOf(MicoApplication application, MicoApplicationDeploymentStatus deploymentStatus) {
-    	return ((MicoApplicationWithServicesResponseDTO) MicoApplicationResponseDTO.valueOf(application, deploymentStatus))
-            .setServices(application.getServiceDeploymentInfos().stream()
-            	.map(sdi -> sdi.getService())
-            	.map(service -> MicoServiceResponseDTO.valueOf(service))
-                .collect(Collectors.toList()));
-    }
+	/**
+	 * TODO: Constructor comment.
+	 * 
+	 * @param application
+	 */
+	public MicoApplicationWithServicesResponseDTO(MicoApplication application, MicoApplicationDeploymentStatus deploymentStatus) {
+		this(application);
+		setDeploymentStatus(deploymentStatus);
+	}
+    
+//    /**
+//     * Creates a {@code MicoApplicationWithServicesDTO} based on a
+//     * {@code MicoApplication}. Note that the deployment status of the application
+//     * needs to be set explicitly since it cannot be inferred
+//     * from the given {@code MicoApplication} itself.
+//     * 
+//     * @param application the {@link MicoApplication}.
+//     * @return a {@link MicoApplicationWithServicesResponseDTO} with all the values
+//     *         of the given {@code MicoApplication}. 
+//     */
+//    public static MicoApplicationWithServicesResponseDTO valueOf(MicoApplication application) {
+//    	return ((MicoApplicationWithServicesResponseDTO) MicoApplicationResponseDTO.valueOf(application))
+//            .setServices(application.getServiceDeploymentInfos().stream()
+//            	.map(sdi -> sdi.getService())
+//            	.map(service -> MicoServiceResponseDTO.valueOf(service))
+//            	.collect(Collectors.toList()));
+//    }
+//    
+//    /**
+//     * Creates a {@code MicoApplicationWithServicesDTO} based on a
+//     * {@code MicoApplication}.
+//     * 
+//     * @param application the {@link MicoApplication}.
+//     * @param deploymentStatus indicates the current {@link MicoApplicationDeploymentStatus}.
+//     * @return a {@link MicoApplicationWithServicesResponseDTO} with all the values
+//     *         of the given {@code MicoApplication}. 
+//     */
+//    public static MicoApplicationWithServicesResponseDTO valueOf(MicoApplication application, MicoApplicationDeploymentStatus deploymentStatus) {
+//    	return ((MicoApplicationWithServicesResponseDTO) MicoApplicationResponseDTO.valueOf(application, deploymentStatus))
+//            .setServices(application.getServiceDeploymentInfos().stream()
+//            	.map(sdi -> sdi.getService())
+//            	.map(service -> MicoServiceResponseDTO.valueOf(service))
+//                .collect(Collectors.toList()));
+//    }
     
 }

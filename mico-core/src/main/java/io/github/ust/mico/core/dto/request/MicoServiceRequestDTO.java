@@ -212,28 +212,46 @@ public class MicoServiceRequestDTO {
     private String dockerImageUri;
     
     
-    // ----------------------
-    // -> Static Creators ---
-    // ----------------------
+    // -------------------
+    // -> Constructors ---
+    // -------------------
     
-    /**
-     * Creates a {@link MicoServiceRequestDTO} based on a {@code MicoService}.
-     * 
-     * @param service the {@link MicoService}.
-     * @return a {@link MicoServiceRequestDTO} with all the values
-     * 		   of the given {@code MicoService}.
-     */
-    public static MicoServiceRequestDTO valueOf(MicoService service) {
-        return new MicoServiceRequestDTO()
-            .setShortName(service.getShortName())
-            .setName(service.getName())
-            .setVersion(service.getVersion())
-            .setDescription(service.getDescription())
-            .setContact(service.getContact())
-            .setOwner(service.getOwner())
-            .setGitCloneUrl(service.getGitCloneUrl())
-            .setDockerfilePath(service.getDockerfilePath())
-            .setDockerImageUri(service.getDockerImageUri());
-    }
+	/**
+	 * TODO: Constructor comment.
+	 * 
+	 * @param application
+	 */
+	public MicoServiceRequestDTO(MicoService service) {
+		this.shortName = service.getShortName();
+		this.version = service.getVersion();
+		this.name = service.getName();
+		this.description = service.getDescription();
+		this.contact = service.getContact();
+		this.owner = service.getOwner();
+		this.gitCloneUrl = service.getGitCloneUrl();
+		this.dockerfilePath = service.getDockerfilePath();
+		this.dockerImageUri = service.getDockerImageUri();
+	}
+    
+    
+//    /**
+//     * Creates a {@link MicoServiceRequestDTO} based on a {@code MicoService}.
+//     * 
+//     * @param service the {@link MicoService}.
+//     * @return a {@link MicoServiceRequestDTO} with all the values
+//     * 		   of the given {@code MicoService}.
+//     */
+//    public static MicoServiceRequestDTO valueOf(MicoService service) {
+//        return new MicoServiceRequestDTO()
+//            .setShortName(service.getShortName())
+//            .setName(service.getName())
+//            .setVersion(service.getVersion())
+//            .setDescription(service.getDescription())
+//            .setContact(service.getContact())
+//            .setOwner(service.getOwner())
+//            .setGitCloneUrl(service.getGitCloneUrl())
+//            .setDockerfilePath(service.getDockerfilePath())
+//            .setDockerImageUri(service.getDockerImageUri());
+//    }
 
 }

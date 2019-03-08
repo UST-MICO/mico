@@ -85,7 +85,7 @@ public class MicoServiceDependencyResponseDTO {
      */
     public static MicoServiceDependencyResponseDTO valueOf(MicoServiceDependency serviceDependency) {
         return new MicoServiceDependencyResponseDTO()
-        	.setDependedService(MicoServiceResponseDTO.valueOf(serviceDependency.getDependedService()))
+        	.setDependedService(new MicoServiceResponseDTO(serviceDependency.getDependedService()))
             .setMinVersion(serviceDependency.getMinVersion())
             .setMaxVersion(serviceDependency.getMaxVersion());
     }

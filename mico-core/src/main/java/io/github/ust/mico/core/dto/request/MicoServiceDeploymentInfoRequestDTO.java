@@ -153,22 +153,40 @@ public class MicoServiceDeploymentInfoRequestDTO {
     @JsonSetter(nulls = Nulls.SKIP)
     private RestartPolicy restartPolicy = RestartPolicy.ALWAYS;
 
+    
+    // -------------------
+    // -> Constructors ---
+    // -------------------
+	
+	/**
+	 * TODO: Constructor comment.
+	 * 
+	 * @param application
+	 */
+	public MicoServiceDeploymentInfoRequestDTO(MicoServiceDeploymentInfo serviceDeploymentInfo) {
+		this.replicas = serviceDeploymentInfo.getReplicas();
+		this.minReadySecondsBeforeMarkedAvailable = serviceDeploymentInfo.getMinReadySecondsBeforeMarkedAvailable();
+		this.labels = serviceDeploymentInfo.getLabels();
+		this.imagePullPolicy = serviceDeploymentInfo.getImagePullPolicy();
+		this.restartPolicy = serviceDeploymentInfo.getRestartPolicy();
+	}
 
-    /**
-     * Creates a {@code MicoServiceDeploymentInfoDTO} based on a
-     * {@code MicoServiceDeploymentInfo}.
-     *
-     * @param micoServiceDeploymentInfo the {@link MicoServiceDeploymentInfo} to use.
-     * @return a {@link MicoServiceDeploymentInfoRequestDTO} with all the values
-     * of the given {@code MicoServiceDeploymentInfo}.
-     */
-    public static MicoServiceDeploymentInfoRequestDTO valueOf(MicoServiceDeploymentInfo micoServiceDeploymentInfo) {
-        return new MicoServiceDeploymentInfoRequestDTO()
-            .setReplicas(micoServiceDeploymentInfo.getReplicas())
-            .setMinReadySecondsBeforeMarkedAvailable(micoServiceDeploymentInfo.getMinReadySecondsBeforeMarkedAvailable())
-            .setLabels(micoServiceDeploymentInfo.getLabels())
-            .setImagePullPolicy(micoServiceDeploymentInfo.getImagePullPolicy())
-            .setRestartPolicy(micoServiceDeploymentInfo.getRestartPolicy());
-    }
+
+//    /**
+//     * Creates a {@code MicoServiceDeploymentInfoDTO} based on a
+//     * {@code MicoServiceDeploymentInfo}.
+//     *
+//     * @param micoServiceDeploymentInfo the {@link MicoServiceDeploymentInfo} to use.
+//     * @return a {@link MicoServiceDeploymentInfoRequestDTO} with all the values
+//     * of the given {@code MicoServiceDeploymentInfo}.
+//     */
+//    public static MicoServiceDeploymentInfoRequestDTO valueOf(MicoServiceDeploymentInfo micoServiceDeploymentInfo) {
+//        return new MicoServiceDeploymentInfoRequestDTO()
+//            .setReplicas(micoServiceDeploymentInfo.getReplicas())
+//            .setMinReadySecondsBeforeMarkedAvailable(micoServiceDeploymentInfo.getMinReadySecondsBeforeMarkedAvailable())
+//            .setLabels(micoServiceDeploymentInfo.getLabels())
+//            .setImagePullPolicy(micoServiceDeploymentInfo.getImagePullPolicy())
+//            .setRestartPolicy(micoServiceDeploymentInfo.getRestartPolicy());
+//    }
 
 }

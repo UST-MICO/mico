@@ -120,7 +120,7 @@ public class ApplicationController {
         }
 
         MicoApplication savedApplication = applicationRepository.save(MicoApplication.valueOf(applicationDto));
-		MicoApplicationResponseDTO savedApplicationResponseDto = MicoApplicationResponseDTO.valueOf(savedApplication)
+		MicoApplicationResponseDTO savedApplicationResponseDto = new MicoApplicationResponseDTO(savedApplication)
 		    .setDeploymentStatus(MicoApplicationDeploymentStatus.NOT_DEPLOYED);
 
         return ResponseEntity
@@ -279,7 +279,7 @@ public class ApplicationController {
 
         // Convert to service deployment info DTO and return it
         MicoServiceDeploymentInfo serviceDeploymentInfo = serviceDeploymentInfoQueryResultOptional.get().getServiceDeploymentInfo();
-        return ResponseEntity.ok(new Resource<>(MicoServiceDeploymentInfoResponseDTO.valueOf(serviceDeploymentInfo),
+        return ResponseEntity.ok(new Resource<>(new MicoServiceDeploymentInfoResponseDTO(serviceDeploymentInfo),
             linkTo(methodOn(ApplicationController.class)
                 .getServiceDeploymentInformation(shortName, version, serviceShortName)).withSelfRel()));
     }
@@ -299,10 +299,12 @@ public class ApplicationController {
         }
 
         // Search the corresponding deployment information ...
+        MicoServiceDeploymentInfoResponseDTO serviceDeploymentInfoResponseDTO = null;
         for (MicoServiceDeploymentInfo serviceDeploymentInfo : application.getServiceDeploymentInfos()) {
             if (serviceDeploymentInfo.getService().getShortName().equals(serviceShortName)) {
                 // ... and update it with the values from the deployment information from the DTO
                 serviceDeploymentInfo.applyValuesFrom(serviceDeploymentInfoDTO);
+                serviceDeploymentInfoResponseDTO = new MicoServiceDeploymentInfoResponseDTO(serviceDeploymentInfo);
                 log.info("Service deployment information for service '{}' in application '{}' in version '{}' has been updated.",
                     serviceShortName, shortName, version);
                 break;
@@ -313,7 +315,7 @@ public class ApplicationController {
 
         // TODO: Update actual Kubernetes deployment (see issue mico#416).
 
-		return ResponseEntity.ok(new Resource<>((MicoServiceDeploymentInfoResponseDTO) serviceDeploymentInfoDTO,
+		return ResponseEntity.ok(new Resource<>(serviceDeploymentInfoResponseDTO,
 			linkTo(methodOn(ApplicationController.class).getServiceDeploymentInformation(shortName, version, serviceShortName))
 		        .withSelfRel()));
     }
@@ -364,14 +366,13 @@ public class ApplicationController {
     }
 
     private Resource<MicoApplicationWithServicesResponseDTO> getApplicationWithServicesResponseDTOResourceWithDeploymentStatus(MicoApplication application) {
-        MicoApplicationWithServicesResponseDTO dto = MicoApplicationWithServicesResponseDTO.valueOf(application);
+        MicoApplicationWithServicesResponseDTO dto = new MicoApplicationWithServicesResponseDTO(application);
         dto.setDeploymentStatus(getApplicationDeploymentStatus(application));
         return new Resource<MicoApplicationWithServicesResponseDTO>(dto, getApplicationLinks(application));
     }
 
     private Resource<MicoApplicationResponseDTO> getApplicationResponseDTOResourceWithDeploymentStatus(MicoApplication application) {
-        MicoApplicationResponseDTO dto = MicoApplicationResponseDTO.valueOf(application);
-        dto.setDeploymentStatus(getApplicationDeploymentStatus(application));
+        MicoApplicationResponseDTO dto = new MicoApplicationResponseDTO(application, getApplicationDeploymentStatus(application));
         return new Resource<MicoApplicationResponseDTO>(dto, getApplicationLinks(application));
     }
 

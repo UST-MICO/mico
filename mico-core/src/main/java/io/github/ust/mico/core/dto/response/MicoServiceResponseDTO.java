@@ -72,22 +72,32 @@ public class MicoServiceResponseDTO extends MicoServiceRequestDTO {
     )})
     @JsonSetter(nulls = Nulls.SKIP)
     private MicoServiceCrawlingOrigin serviceCrawlingOrigin = MicoServiceCrawlingOrigin.NOT_DEFINED;
-
     
-    // ----------------------
-    // -> Static Creators ---
-    // ----------------------
     
-    /**
-     * Creates a {@link MicoServiceResponseDTO} based on a {@code MicoService}.
-     * 
-     * @param service the {@link MicoService}.
-     * @return a {@link MicoServiceResponseDTO} with all the values
-     * 		   of the given {@code MicoService}.
-     */
-    public static MicoServiceResponseDTO valueOf(MicoService service) {
-		return ((MicoServiceResponseDTO) MicoServiceRequestDTO.valueOf(service))
-		    .setServiceCrawlingOrigin(service.getServiceCrawlingOrigin());
-    }
+    // -------------------
+    // -> Constructors ---
+    // -------------------
+    
+	/**
+	 * TODO: Constructor comment.
+	 * 
+	 * @param application
+	 */
+	public MicoServiceResponseDTO(MicoService service) {
+		super(service);
+		this.serviceCrawlingOrigin = service.getServiceCrawlingOrigin();
+	}
+    
+//    /**
+//     * Creates a {@link MicoServiceResponseDTO} based on a {@code MicoService}.
+//     * 
+//     * @param service the {@link MicoService}.
+//     * @return a {@link MicoServiceResponseDTO} with all the values
+//     * 		   of the given {@code MicoService}.
+//     */
+//    public static MicoServiceResponseDTO valueOf(MicoService service) {
+//		return ((MicoServiceResponseDTO) MicoServiceRequestDTO.valueOf(service))
+//		    .setServiceCrawlingOrigin(service.getServiceCrawlingOrigin());
+//    }
 
 }
