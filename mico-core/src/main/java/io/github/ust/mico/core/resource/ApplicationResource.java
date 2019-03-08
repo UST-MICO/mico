@@ -159,7 +159,10 @@ public class ApplicationResource {
         // all edges (deployment information) will be copied, too.
         MicoApplication updatedApplication = applicationRepository.save(application);
 
-        return ResponseEntity.ok(getApplicationDTOResourceWithDeploymentStatus(updatedApplication));
+        return ResponseEntity
+            .created(linkTo(methodOn(ApplicationResource.class)
+                .getApplicationByShortNameAndVersion(updatedApplication.getShortName(), updatedApplication.getVersion())).toUri())
+            .body(getApplicationDTOResourceWithDeploymentStatus(updatedApplication));
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")

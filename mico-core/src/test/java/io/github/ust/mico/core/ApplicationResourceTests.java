@@ -513,7 +513,7 @@ public class ApplicationResourceTests {
             .andExpect(jsonPath(SHORT_NAME_PATH, is(updatedApplication.getShortName())))
             .andExpect(jsonPath(VERSION_PATH, is(newVersion)));
 
-        resultUpdate.andExpect(status().isOk());
+        resultUpdate.andExpect(status().isCreated());
     }
 
     @Ignore // Ignored because validation is missing. Will covered by mico#512

@@ -43,6 +43,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -65,6 +66,7 @@ public class ServiceResource {
     public static final String PATH_VARIABLE_IMPORT = "import";
     public static final String PATH_VARIABLE_GITHUB = "github";
     public static final String PATH_GITHUB_ENDPOINT = "/" + PATH_VARIABLE_IMPORT + "/" + PATH_VARIABLE_GITHUB;
+    public static final String PATH_PROMOTE = "promote";
 
     @Autowired
     private MicoServiceRepository serviceRepository;
@@ -358,6 +360,27 @@ public class ServiceResource {
         }
     }
 
+    @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_PROMOTE)
+    public ResponseEntity<Resource<MicoService>> promoteService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                                @NotEmpty @RequestBody String newVersion) {
+        // Service to promote (copy)
+        MicoService micoService = getServiceFromDatabase(shortName, version);
+        log.debug("Received following MicoService from database: {}", micoService);
+
+        // Due to the merge capability of neo4j, we need to set the id to null
+        // to prevent neo4j from overwriting the old version
+        micoService.setVersion(newVersion).setId(null);
+
+        // Save the new (promoted) service in the database
+        MicoService updatedService = serviceRepository.save(micoService);
+        log.debug("Saved following MicoService in database: {}", updatedService);
+
+        return ResponseEntity
+                .created(linkTo(methodOn(ServiceResource.class).getServiceById(updatedService.getId())).toUri())
+                .body(new Resource<>(updatedService, getServiceLinks(updatedService)));
+    }
+
     @GetMapping(PATH_GITHUB_ENDPOINT)
     @ResponseBody
     public LinkedList<String> getVersionsFromGitHub(@RequestParam String url) {
@@ -373,7 +396,7 @@ public class ServiceResource {
         }
     }
 
-   @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependencyGraph")
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependencyGraph")
     public ResponseEntity<Resource<MicoServiceDependencyGraphDTO>> getDependencyGraph(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                @PathVariable(PATH_VARIABLE_VERSION) String version) {
        MicoService micoServiceRoot = getServiceFromDatabase(shortName, version);
@@ -393,7 +416,6 @@ public class ServiceResource {
        return ResponseEntity.ok(new Resource<>(micoServiceDependencyGraph,
            linkTo(methodOn(ServiceResource.class).getDependencyGraph(shortName, version)).withSelfRel()));
    }
-
 
 
     public List<MicoService> getDependers(MicoService serviceToLookFor) {
