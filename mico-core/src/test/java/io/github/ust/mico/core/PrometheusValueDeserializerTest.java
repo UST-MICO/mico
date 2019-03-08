@@ -37,31 +37,10 @@ public class PrometheusValueDeserializerTest {
             "        \"resultType\": \"vector\",\n" +
             "        \"result\": [\n" +
             "            {\n" +
-            "                \"metric\": {\n" +
-            "                    \"__name__\": \"container_memory_working_set_bytes\",\n" +
-            "                    \"agentpool\": \"nodepool1\",\n" +
-            "                    \"beta_kubernetes_io_arch\": \"amd64\",\n" +
-            "                    \"beta_kubernetes_io_instance_type\": \"Standard_B2s\",\n" +
-            "                    \"beta_kubernetes_io_os\": \"linux\",\n" +
-            "                    \"container_name\": \"mico-core\",\n" +
-            "                    \"failure_domain_beta_kubernetes_io_region\": \"westeurope\",\n" +
-            "                    \"failure_domain_beta_kubernetes_io_zone\": \"1\",\n" +
-            "                    \"id\": \"/kubepods/besteffort/podcf6a6787-3e64-11e9-9cb7-ceea768c1492/fe9743fa17bcc00c80066722ff71794d1c90c299504f9e59b517ce0e3b598d7a\",\n" +
-            "                    \"image\": \"ustmico/mico-core@sha256:bcfa6ef8d45bfe7f3eb5f816fbd10476135f123843587311a34b454b7b736b18\",\n" +
-            "                    \"instance\": \"aks-nodepool1-26424023-1\",\n" +
-            "                    \"job\": \"kubernetes-cadvisor\",\n" +
-            "                    \"kubernetes_azure_com_cluster\": \"MC_ust-mico-resourcegroup_ust-mico-cluster_westeurope\",\n" +
-            "                    \"kubernetes_io_hostname\": \"aks-nodepool1-26424023-1\",\n" +
-            "                    \"kubernetes_io_role\": \"agent\",\n" +
-            "                    \"name\": \"k8s_mico-core_mico-core-5b9c49f5dc-qr9b8_mico-system_cf6a6787-3e64-11e9-9cb7-ceea768c1492_0\",\n" +
-            "                    \"namespace\": \"mico-system\",\n" +
-            "                    \"pod_name\": \"mico-core-5b9c49f5dc-qr9b8\",\n" +
-            "                    \"storageprofile\": \"managed\",\n" +
-            "                    \"storagetier\": \"Premium_LRS\"\n" +
-            "                },\n" +
+            "                \"metric\": {},\n" +
             "                \"value\": [\n" +
-            "                    1551979840.464,\n" +
-            "                    \"301961216\"\n" +
+            "                    1552041266.607,\n" +
+            "                    \"310083584\"\n" +
             "                ]\n" +
             "            }\n" +
             "        ]\n" +
@@ -74,30 +53,9 @@ public class PrometheusValueDeserializerTest {
             "        \"resultType\": \"vector\",\n" +
             "        \"result\": [\n" +
             "            {\n" +
-            "                \"metric\": {\n" +
-            "                    \"__name__\": \"container_cpu_load_average_10s\",\n" +
-            "                    \"agentpool\": \"nodepool1\",\n" +
-            "                    \"beta_kubernetes_io_arch\": \"amd64\",\n" +
-            "                    \"beta_kubernetes_io_instance_type\": \"Standard_B2s\",\n" +
-            "                    \"beta_kubernetes_io_os\": \"linux\",\n" +
-            "                    \"container_name\": \"mico-core\",\n" +
-            "                    \"failure_domain_beta_kubernetes_io_region\": \"westeurope\",\n" +
-            "                    \"failure_domain_beta_kubernetes_io_zone\": \"1\",\n" +
-            "                    \"id\": \"/kubepods/besteffort/podcf6a6787-3e64-11e9-9cb7-ceea768c1492/fe9743fa17bcc00c80066722ff71794d1c90c299504f9e59b517ce0e3b598d7a\",\n" +
-            "                    \"image\": \"ustmico/mico-core@sha256:bcfa6ef8d45bfe7f3eb5f816fbd10476135f123843587311a34b454b7b736b18\",\n" +
-            "                    \"instance\": \"aks-nodepool1-26424023-1\",\n" +
-            "                    \"job\": \"kubernetes-cadvisor\",\n" +
-            "                    \"kubernetes_azure_com_cluster\": \"MC_ust-mico-resourcegroup_ust-mico-cluster_westeurope\",\n" +
-            "                    \"kubernetes_io_hostname\": \"aks-nodepool1-26424023-1\",\n" +
-            "                    \"kubernetes_io_role\": \"agent\",\n" +
-            "                    \"name\": \"k8s_mico-core_mico-core-5b9c49f5dc-qr9b8_mico-system_cf6a6787-3e64-11e9-9cb7-ceea768c1492_0\",\n" +
-            "                    \"namespace\": \"mico-system\",\n" +
-            "                    \"pod_name\": \"mico-core-5b9c49f5dc-qr9b8\",\n" +
-            "                    \"storageprofile\": \"managed\",\n" +
-            "                    \"storagetier\": \"Premium_LRS\"\n" +
-            "                },\n" +
+            "                \"metric\": {},\n" +
             "                \"value\": [\n" +
-            "                    1551980217.607,\n" +
+            "                    1552042589.238,\n" +
             "                    \"0\"\n" +
             "                ]\n" +
             "            }\n" +
@@ -113,7 +71,7 @@ public class PrometheusValueDeserializerTest {
 
             PrometheusResponseDTO responseMemoryUsage = objectMapper.readValue(testJsonForMemoryUsageRequest, PrometheusResponseDTO.class);
             assertEquals("success", responseMemoryUsage.getStatus());
-            assertEquals(301961216, responseMemoryUsage.getValue());
+            assertEquals(310083584, responseMemoryUsage.getValue());
         } catch (IOException e) {
             e.printStackTrace();
         }
