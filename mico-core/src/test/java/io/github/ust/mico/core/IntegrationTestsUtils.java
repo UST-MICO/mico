@@ -21,12 +21,12 @@ package io.github.ust.mico.core;
 
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.exception.DeploymentException;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
@@ -48,7 +48,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class IntegrationTestsUtils {
 
     @Autowired
-    private ClusterAwarenessFabric8 cluster;
+    private KubernetesClient kubernetesClient;
 
     @Autowired
     private MicoKubernetesClient micoKubernetesClient;
@@ -81,7 +81,7 @@ public class IntegrationTestsUtils {
             String shortId = RandomStringUtils.randomAlphanumeric(8).toLowerCase();
             namespace = namespace + "-" + shortId;
         }
-        cluster.createNamespace(namespace);
+        kubernetesClient.namespaces().createOrReplace(new NamespaceBuilder().withNewMetadata().withName(namespace).endMetadata().build());
         // Override config so all the Kubernetes objects will be created in the integration test namespace
         buildBotConfig.setNamespaceBuildExecution(namespace);
         kubernetesConfig.setNamespaceMicoWorkspace(namespace);
@@ -89,7 +89,7 @@ public class IntegrationTestsUtils {
     }
 
     void cleanUpEnvironment(String namespace) {
-        cluster.deleteNamespace(namespace);
+        kubernetesClient.namespaces().withName(namespace).delete();
     }
 
     /**
@@ -126,14 +126,14 @@ public class IntegrationTestsUtils {
             .addToData("username", usernameBase64Encoded)
             .addToData("password", passwordBase64Encoded)
             .build();
-        cluster.createSecret(dockerRegistrySecret, namespace);
+        kubernetesClient.secrets().inNamespace(namespace).createOrReplace(dockerRegistrySecret);
 
         ServiceAccount buildServiceAccount = new ServiceAccountBuilder()
             .withApiVersion("v1")
             .withNewMetadata().withName(serviceAccountName).withNamespace(namespace).endMetadata()
             .withSecrets(new ObjectReferenceBuilder().withName(dockerRegistrySecret.getMetadata().getName()).build())
             .build();
-        cluster.createServiceAccount(buildServiceAccount, namespace);
+        kubernetesClient.serviceAccounts().inNamespace(namespace).createOrReplace(buildServiceAccount);
 
         dockerRegistrySecretName = dockerRegistrySecret.getMetadata().getName();
     }
@@ -155,7 +155,7 @@ public class IntegrationTestsUtils {
 
         final ScheduledFuture<?> checkFuture = podStatusChecker.scheduleAtFixedRate(() -> {
 
-            PodList podList = cluster.getAllPods(namespace);
+            PodList podList = kubernetesClient.pods().inNamespace(namespace).list();
             List<Pod> pods = podList.getItems();
             int numberOfPodsInNamespace = pods.size();
             log.debug("Number of pods in namespace '{}': {}", namespace, numberOfPodsInNamespace);
@@ -323,7 +323,7 @@ public class IntegrationTestsUtils {
             Build build = imageBuilder.getBuild(buildName);
             if (build.getStatus() != null && build.getStatus().getCluster() != null) {
                 String buildPodName = build.getStatus().getCluster().getPodName();
-                Pod buildPod = cluster.getPod(buildPodName, namespace);
+                Pod buildPod = kubernetesClient.pods().inNamespace(namespace).withName(buildPodName).get();
 
                 log.debug("Current build phase: {}", buildPod.getStatus().getPhase());
                 if (buildPod.getStatus().getPhase().equals("Succeeded")) {
@@ -351,7 +351,7 @@ public class IntegrationTestsUtils {
      * @throws DeploymentException if error occurs during deployment of pod
      */
     private Boolean checkIfPodIsRunning(String podName, String namespace) throws DeploymentException {
-        Pod pod = cluster.getPod(podName, namespace);
+        Pod pod = kubernetesClient.pods().inNamespace(namespace).withName(podName).get();
         String phase = pod.getStatus().getPhase();
         log.debug("Pod '{}' is currently in phase: {}", podName, phase);
 

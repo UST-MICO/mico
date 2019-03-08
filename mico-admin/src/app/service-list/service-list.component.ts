@@ -25,6 +25,7 @@ import { groupBy, mergeMap, toArray, map } from 'rxjs/operators';
 import { ApiObject } from '../api/apiobject';
 import { MatDialog } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
+import { UtilsService } from '../util/utils.service';
 
 
 @Component({
@@ -39,6 +40,7 @@ export class ServiceListComponent implements OnInit, OnDestroy {
     constructor(
         private apiService: ApiService,
         private dialog: MatDialog,
+        private util: UtilsService,
     ) {
         this.getServices();
     }
@@ -51,9 +53,8 @@ export class ServiceListComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy() {
-        if (this.subServices != null) {
-            this.subServices.unsubscribe();
-        }
+        // unsubscribe observables
+        this.util.safeUnsubscribe(this.subServices);
     }
 
     /**
@@ -75,7 +76,6 @@ export class ServiceListComponent implements OnInit, OnDestroy {
                     ).subscribe(serviceList => {
                         this.services = serviceList;
                     });
-
             });
 
     }
@@ -86,6 +86,7 @@ export class ServiceListComponent implements OnInit, OnDestroy {
      * @param service shortName of the services to be deleted
      */
     deleteService(service) {
+        // open dialog
         const dialogRef = this.dialog.open(YesNoDialogComponent, {
             data: {
                 object: service,
@@ -93,10 +94,11 @@ export class ServiceListComponent implements OnInit, OnDestroy {
             }
         });
 
+        // handle dialog result
         const subDeleteServiceVersions = dialogRef.afterClosed().subscribe(shouldDelete => {
             if (shouldDelete) {
                 this.apiService.deleteAllServiceVersions(service.shortName).subscribe();
-                subDeleteServiceVersions.unsubscribe();
+                this.util.safeUnsubscribe(subDeleteServiceVersions);
             }
         });
     }

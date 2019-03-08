@@ -24,6 +24,7 @@ import { FormGroup } from '@angular/forms';
 import { FormGroupService } from '../form-group.service';
 import { map, first } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
+import { UtilsService } from 'src/app/util/utils.service';
 
 /**
  * Dynamic form component that renders a form from the given modelUrl.
@@ -57,7 +58,10 @@ export class MicoFormComponent implements OnInit, OnChanges {
 
     private formSubscription: Subscription;
 
-    constructor(private models: ModelsService, private formGroup: FormGroupService) { }
+    constructor(private models: ModelsService,
+        private formGroup: FormGroupService,
+        private util: UtilsService,
+    ) { }
 
     ngOnInit() { }
 
@@ -85,7 +89,7 @@ export class MicoFormComponent implements OnInit, OnChanges {
                 });
                 this.form = this.formGroup.modelToFormGroup(model);
                 if (this.formSubscription != null) {
-                    this.formSubscription.unsubscribe();
+                    this.util.safeUnsubscribe(this.formSubscription);
                 }
                 if (this._startData != null) {
                     this.form.patchValue(this._startData);

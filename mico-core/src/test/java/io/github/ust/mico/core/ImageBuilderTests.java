@@ -19,10 +19,11 @@
 
 package io.github.ust.mico.core;
 
+import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.exception.NotInitializedException;
-import io.github.ust.mico.core.exception.VersionNotSupportedException;
-import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -31,17 +32,11 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
-import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoVersion;
+import static io.github.ust.mico.core.TestConstants.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class ImageBuilderTests {
-
-    private static final String GIT_URI = "https://github.com/UST-MICO/hello.git";
-    private static final String RELEASE = "v1.0.0";
 
     @Rule
     public KubernetesServer mockServer = new KubernetesServer(false, true);
@@ -50,15 +45,13 @@ public class ImageBuilderTests {
 
     @Before
     public void setUp() {
-        ClusterAwarenessFabric8 cluster = new ClusterAwarenessFabric8(mockServer.getClient());
-
         MicoKubernetesBuildBotConfig buildBotConfig = new MicoKubernetesBuildBotConfig();
         buildBotConfig.setNamespaceBuildExecution("build-execution-namespace");
         buildBotConfig.setKanikoExecutorImageUrl("kaniko-executor-image-url");
         buildBotConfig.setDockerRegistryServiceAccountName("service-account-name");
         buildBotConfig.setDockerImageRepositoryUrl("image-repository-url");
 
-        imageBuilder = new ImageBuilder(cluster, buildBotConfig);
+        imageBuilder = new ImageBuilder(mockServer.getClient(), buildBotConfig);
     }
 
     @After
@@ -67,13 +60,13 @@ public class ImageBuilderTests {
     }
 
     @Test(expected = NotInitializedException.class)
-    public void withoutInitializingAnErrorIsThrown() throws NotInitializedException, VersionNotSupportedException {
+    public void withoutInitializingAnErrorIsThrown() throws NotInitializedException {
 
         MicoService micoService = new MicoService()
-            .setShortName("service-short-name")
-            .setVersion(MicoVersion.valueOf(RELEASE).toString())
-            .setGitCloneUrl(GIT_URI)
-            .setDockerfilePath("Dockerfile");
+            .setShortName(SERVICE_SHORT_NAME)
+            .setVersion(SERVICE_VERSION)
+            .setName(NAME)
+            .setGitCloneUrl(IntegrationTest.GIT_CLONE_URL);
 
         imageBuilder.build(micoService);
     }

@@ -19,34 +19,24 @@
 
 package io.github.ust.mico.core.service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import io.fabric8.kubernetes.api.model.ContainerBuilder;
-import io.fabric8.kubernetes.api.model.ContainerPort;
-import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.fabric8.kubernetes.api.model.ServicePort;
-import io.fabric8.kubernetes.api.model.ServicePortBuilder;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.model.MicoServicePort;
+import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.UIDUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Provides accessor methods for creating deployments and services in Kubernetes as well as getter methods to retrieve
@@ -78,15 +68,15 @@ public class MicoKubernetesClient {
     private static final String LABEL_RUN_KEY = "run";
 
     private final MicoKubernetesConfig micoKubernetesConfig;
-    private final ClusterAwarenessFabric8 cluster;
+    private final KubernetesClient kubernetesClient;
     private final MicoServiceRepository serviceRepository;
 
     @Autowired
-    public MicoKubernetesClient(MicoKubernetesConfig micoKubernetesConfig, ClusterAwarenessFabric8 cluster,
-                                MicoServiceRepository serviceRepository) {
+    public MicoKubernetesClient(MicoKubernetesConfig micoKubernetesConfig, MicoServiceRepository serviceRepository,
+                                KubernetesClient kubernetesClient) {
         this.micoKubernetesConfig = micoKubernetesConfig;
-        this.cluster = cluster;
         this.serviceRepository = serviceRepository;
+        this.kubernetesClient = kubernetesClient;
     }
 
     /**
@@ -146,7 +136,7 @@ public class MicoKubernetesClient {
             .endSpec()
             .build();
 
-        return cluster.createDeployment(deployment, namespace);
+        return kubernetesClient.apps().deployments().inNamespace(namespace).createOrReplace(deployment);
     }
 
     /**
@@ -178,7 +168,7 @@ public class MicoKubernetesClient {
         // Retrieve deployment corresponding to given MicoService to retrieve
         // the unique run label which will be used for the Kubernetes Service, too.
         Map<String, String> labels = CollectionUtils.mapOf(LABEL_APP_KEY, micoService.getShortName(), LABEL_VERSION_KEY, micoService.getVersion());
-        List<Deployment> matchingDeployments = cluster.getDeploymentsByLabels(labels, namespace).getItems();
+        List<Deployment> matchingDeployments = kubernetesClient.apps().deployments().inNamespace(namespace).withLabels(labels).list().getItems();
 
         if (matchingDeployments.size() == 0) {
             throw new KubernetesResourceException("There are no deployments for service with name '"
@@ -210,7 +200,7 @@ public class MicoKubernetesClient {
         // TODO: Check whether optional fields of MicoServiceInterface have to be used in some way
         // (publicDns, description, protocol, transportProtocol)
 
-        return cluster.createService(service, namespace);
+        return kubernetesClient.services().inNamespace(namespace).createOrReplace(service);
     }
 
     /**
@@ -224,8 +214,7 @@ public class MicoKubernetesClient {
         boolean result = false;
 
         for (MicoService micoService : serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion())) {
-            Optional<Deployment> deployment = getDeploymentOfMicoService(micoService);
-            if (deployment.isPresent()) {
+            if (isMicoServiceDeployed(micoService)) {
                 result = true;
                 break;
             }
@@ -233,6 +222,26 @@ public class MicoKubernetesClient {
         String deploymentStatus = result ? "deployed" : "not deployed";
         log.info("MicoApplication '{}' in version '{}' is {}.",
             micoApplication.getShortName(), micoApplication.getVersion(), deploymentStatus);
+        return result;
+    }
+
+
+    /**
+     * Checks if a MICO service is already deployed.
+     *
+     * @param micoService the {@link MicoService}
+     * @return {@code true} if the {@link MicoService} is deployed.
+     * @throws KubernetesResourceException if there is an error while retrieving the Kubernetes objects
+     */
+    public boolean isMicoServiceDeployed(MicoService micoService) throws KubernetesResourceException {
+        boolean result = false;
+        Optional<Deployment> deployment = getDeploymentOfMicoService(micoService);
+        if (deployment.isPresent()) {
+            result = true;
+        }
+        String deploymentStatus = result ? "deployed" : "not deployed";
+        log.info("MicoService '{}' in version '{}' is {}.",
+            micoService.getShortName(), micoService.getVersion(), deploymentStatus);
         return result;
     }
 
@@ -249,7 +258,7 @@ public class MicoKubernetesClient {
         );
         String namespace = micoKubernetesConfig.getNamespaceMicoWorkspace();
 
-        List<Deployment> deploymentList = cluster.getDeploymentsByLabels(labels, namespace).getItems();
+        List<Deployment> deploymentList = kubernetesClient.apps().deployments().inNamespace(namespace).withLabels(labels).list().getItems();
         log.debug("Found {} Kubernetes deployment(s) that match the labels '{}': '{}'", deploymentList.size(), labels.toString(), deploymentList);
 
         if (deploymentList.isEmpty()) {
@@ -281,7 +290,7 @@ public class MicoKubernetesClient {
             LABEL_INTERFACE_KEY, micoServiceInterfaceName
         );
         String namespace = micoKubernetesConfig.getNamespaceMicoWorkspace();
-        List<Service> serviceList = cluster.getServicesByLabels(labels, namespace).getItems();
+        List<Service> serviceList = kubernetesClient.services().inNamespace(namespace).withLabels(labels).list().getItems();
         log.debug("Found {} Kubernetes service(s) that match the labels '{}': '{}'", serviceList.size(), labels.toString(), serviceList);
 
         if (serviceList.isEmpty()) {
@@ -312,7 +321,7 @@ public class MicoKubernetesClient {
             LABEL_VERSION_KEY, micoService.getVersion()
         );
         String namespace = micoKubernetesConfig.getNamespaceMicoWorkspace();
-        List<Service> serviceList = cluster.getServicesByLabels(labels, namespace).getItems();
+        List<Service> serviceList = kubernetesClient.services().inNamespace(namespace).withLabels(labels).list().getItems();
         log.debug("Found {} Kubernetes service(s) that match the labels '{}': '{}'", serviceList.size(), labels.toString(), serviceList);
 
         return serviceList;
@@ -331,7 +340,7 @@ public class MicoKubernetesClient {
             LABEL_VERSION_KEY, micoService.getVersion()
         );
         String namespace = micoKubernetesConfig.getNamespaceMicoWorkspace();
-        List<Pod> podList = cluster.getPodsByLabels(labels, namespace).getItems();
+        List<Pod> podList = kubernetesClient.pods().inNamespace(namespace).withLabels(labels).list().getItems();
         log.debug("Found {} Kubernetes pod(s) that match the labels '{}': '{}'", podList.size(), labels.toString(), podList);
 
         return podList;

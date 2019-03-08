@@ -1,18 +1,2 @@
-<mat-accordion>
-
-    <!-- TODO add data-view for aggregated data, as soon as the endpoint delivers  them-->
-
-    <mat-expansion-panel *ngFor="let serviceStatus of applicationStatus?.serviceStatus">
-        <mat-expansion-panel-header>
-            <mat-panel-title>
-                {{serviceStatus?.name}}&nbsp;<i>({{serviceStatus?.shortName}})</i>&nbsp;- {{serviceStatus?.version}}
-            </mat-panel-title>
-        </mat-expansion-panel-header>
-
-        <ng-template matExpansionPanelContent>
-            <mico-data [modelUrl]="'remote/MicoServiceStatusDTO'" [startData]="serviceStatus">
-            </mico-data>
-        </ng-template>
-
-    </mat-expansion-panel>
-</mat-accordion>
+<mico-data [modelUrl]="'remote/MicoApplicationStatusDTO'" [startData]="applicationStatus">
+</mico-data>

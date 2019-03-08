@@ -21,7 +21,6 @@ package io.github.ust.mico.core.dto;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -128,7 +127,8 @@ public class MicoServiceStatusDTO {
     private List<MicoServiceInterfaceStatusDTO> interfacesInformation = new ArrayList<>();
 
     /**
-     * List of {@link MicoApplicationDTO MicoApplicationDTOs}, representing all applications that are using one service together.
+     * List of {@link MicoApplicationDTO MicoApplicationDTOs}, representing all applications that are using one service
+     * together.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -139,7 +139,7 @@ public class MicoServiceStatusDTO {
                 "representing all applications that are using one service together.")
         }
     )})
-    private List<MicoApplicationDTO> applicationsUsingThisService  = new ArrayList<>();
+    private List<MicoApplicationDTO> applicationsUsingThisService = new ArrayList<>();
 
     /**
      * List of all {@link Pod Pods} of all replicas of a deployment of a {@link MicoService}.
@@ -156,38 +156,18 @@ public class MicoServiceStatusDTO {
     private List<KubernetesPodInformationDTO> podsInformation = new ArrayList<>();
 
     /**
-     * Each entry in this map represents a node with its average CPU load. The average CPU load is computed from all
-     * pods of the deployment of a {@link MicoService}, which are running on this node.
+     * List of {@link KubernetesNodeMetricsDTO KubernetesNodeMetricsDTOs} with metrics for each node used by the {@link
+     * MicoService}.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Average CPU Load Per Node"),
-            @ExtensionProperty(name = "x-order", value = "92"),
-            @ExtensionProperty(name = "description", value = "Each entry in this map represents " +
-                "a node with its average CPU load. \n" +
-                "The average CPU load is computed from all pods of the deployment " +
-                "of a MicoService running on this node.")
+            @ExtensionProperty(name = "title", value = "Node Metrics"),
+            @ExtensionProperty(name = "x-order", value = "90"),
+            @ExtensionProperty(name = "description", value = "List of KubernetesNodeMetricsDTO with metrics for each node used by this MicoService.")
         }
     )})
-    private Map<String, Integer> averageCpuLoadPerNode;
-
-    /**
-     * Each entry in this map represents a node with its average memory usage. The average memory usage is computed from
-     * all pods of the deployment of a {@link MicoService}, which are running on this node.
-     */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Average Memory Usage Per Node"),
-            @ExtensionProperty(name = "x-order", value = "93"),
-            @ExtensionProperty(name = "description", value = "Each entry in this map represents a " +
-                "node with its average memory usage.\n " +
-                "The average memory usage is computed from all pods of the deployment" +
-                "of a MicoService, which are running on this node.")
-        }
-    )})
-    private Map<String, Integer> averageMemoryUsagePerNode;
+    private List<KubernetesNodeMetricsDTO> nodeMetrics;
 
     /**
      * Contains error messages for services that are not deployed or not available due to other reasons.

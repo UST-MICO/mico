@@ -8,24 +8,33 @@
     <mat-card-content>
         <mat-table [dataSource]="applications" class="mat-elevation-z2">
             <ng-container matColumnDef="id">
-                <mat-header-cell *matHeaderCellDef>ID</mat-header-cell>
-                <mat-cell *matCellDef="let element" [routerLink]="['/app-detail', element.shortName]">{{element.id}}</mat-cell>
+                <mat-header-cell class="ph1" *matHeaderCellDef>ID</mat-header-cell>
+                <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/app-detail', element.shortName]">
+                    {{element.id}}</mat-cell>
             </ng-container>
             <ng-container matColumnDef="name">
-                <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
-                <mat-cell *matCellDef="let element" [routerLink]="['/app-detail', element.shortName]">{{element.name}}</mat-cell>
+                <mat-header-cell class="ph1" *matHeaderCellDef>Name</mat-header-cell>
+                <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/app-detail', element.shortName]">
+                    {{element.name}}</mat-cell>
             </ng-container>
             <ng-container matColumnDef="shortName">
-                <mat-header-cell *matHeaderCellDef>Short Name</mat-header-cell>
-                <mat-cell *matCellDef="let element" [routerLink]="['/app-detail', element.shortName]">{{element.shortName}}</mat-cell>
+                <mat-header-cell class="ph1" *matHeaderCellDef>Short Name</mat-header-cell>
+                <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/app-detail', element.shortName]">
+                    {{element.shortName}}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="version">
+                <mat-header-cell class="ph1" *matHeaderCellDef>Version</mat-header-cell>
+                <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/app-detail', element.shortName]">
+                    {{element.version}}</mat-cell>
             </ng-container>
             <ng-container matColumnDef="description">
-                <mat-header-cell *matHeaderCellDef>Description</mat-header-cell>
-                <mat-cell *matCellDef="let element" [routerLink]="['/app-detail', element.shortName]">{{element.description}}</mat-cell>
+                <mat-header-cell class="ph1" *matHeaderCellDef>Description</mat-header-cell>
+                <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/app-detail', element.shortName]">
+                    {{element.description}}</mat-cell>
             </ng-container>
             <ng-container matColumnDef="controls">
-                <mat-header-cell *matHeaderCellDef>Controls</mat-header-cell>
-                <mat-cell *matCellDef="let element">
+                <mat-header-cell class="ph1" *matHeaderCellDef>Controls</mat-header-cell>
+                <mat-cell class="ph1" *matCellDef="let element">
                     <button mat-raised-button (click)="deleteApplication(element)">delete</button>
                 </mat-cell>
             </ng-container>

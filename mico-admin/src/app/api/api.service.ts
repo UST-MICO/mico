@@ -133,7 +133,7 @@ export class ApiService {
         this.rest.get<ApiObject>(resource).subscribe(val => {
             // return actual application list
             if (val.hasOwnProperty('_embedded')) {
-                stream.next(freezeObject(val._embedded.micoApplicationList));
+                stream.next(freezeObject(val._embedded.micoApplicationWithServicesDTOList));
             } else {
                 stream.next(freezeObject([]));
             }
@@ -159,7 +159,7 @@ export class ApiService {
             let list: ApiObject[];
 
             if (val.hasOwnProperty('_embedded')) {
-                list = val._embedded.micoApplicationList;
+                list = val._embedded.micoApplicationWithServicesDTOList;
             } else {
                 list = [];
             }
@@ -320,13 +320,62 @@ export class ApiService {
         return this.rest.delete<ApiObject>('applications/' + applicationShortName + '/' + applicationVersion
             + '/services/' + serviceShortName)
             .pipe(map(val => {
-                console.log('DELETE includes', val);
 
                 this.getApplicationVersions(applicationShortName);
                 this.getApplication(applicationShortName, applicationVersion);
 
                 return true;
             }));
+    }
+
+    /**
+     * Returns the deployment information of an applications included service
+     * uses: GET applications/{applicationShortName}/{applicationVersion}/deploymentInformation/{serviceShortName}
+     *
+     * @param applicationShortName shortName of the application
+     * @param applicationVersion version of the application
+     * @param serviceShortName shortName of the service
+     */
+    getServiceDeploymentInformation(applicationShortName: string, applicationVersion: string, serviceShortName) {
+
+        const resource = 'applications/' + applicationShortName + '/' + applicationVersion + '/deploymentInformation/' + serviceShortName;
+        const stream = this.getStreamSource<ApiObject>(resource);
+
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+            stream.next(freezeObject(val));
+        });
+
+        return stream.asObservable().pipe(
+            filter(data => data !== undefined)
+        );
+    }
+
+
+    /**
+     * Updates the deployment information of an applications service
+     * uses: PUT applications/{applicationShortName}/{applicationVersion}/deploymentInformation/{serviceShortName}
+     *
+     * @param applicationShortName shortName of the application
+     * @param applicationVersion version of the application
+     * @param serviceShortName shortName of the service
+     * @param data object holding the updated deployment information
+     */
+    putServiceDeploymentInformation(applicationShortName: string, applicationVersion: string, serviceShortName, data) {
+        if (data == null) {
+            return;
+        }
+
+        const resource = 'applications/' + applicationShortName + '/' + applicationVersion + '/deploymentInformation/' + serviceShortName;
+
+        return this.rest.put<ApiObject>(resource, data).pipe(flatMap(val => {
+
+            const stream = this.getStreamSource<ApiObject>(val._links.self.href);
+            stream.next(val);
+
+            return stream.asObservable().pipe(
+                filter(application => application !== undefined)
+            );
+        }));
     }
 
 
@@ -665,6 +714,7 @@ export class ApiService {
 
                 this.getService(serviceShortName, serviceVersion);
                 this.getServiceDependees(serviceShortName, serviceVersion);
+                this.getServiceDependencyGraph(serviceShortName, serviceVersion);
 
                 return stream.asObservable().pipe(
                     filter(service => service !== undefined)
@@ -686,11 +736,11 @@ export class ApiService {
         return this.rest.delete<ApiObject>('services/' + serviceShortName + '/' + serviceVersion + '/dependees/' +
             dependeeShortName + '/' + dependeeVersion)
             .pipe(map(val => {
-                console.log('DELETE DEPENDEE', val);
 
                 this.getServices();
                 this.getService(serviceShortName, serviceVersion);
                 this.getServiceDependees(serviceShortName, serviceVersion);
+                this.getServiceDependencyGraph(serviceShortName, serviceVersion);
 
                 return true;
             }));
@@ -715,6 +765,27 @@ export class ApiService {
             } else {
                 stream.next(freezeObject([]));
             }
+        });
+
+        return stream.asObservable().pipe(
+            filter(data => data !== undefined)
+        );
+    }
+
+    /**
+     * Get full dependency graph of service
+     * uses: GET services/{shortName}/{version}/dependencyGraph
+     *
+     * @param shortName unique short name of the service
+     * @param version service version to be returned
+     */
+    getServiceDependencyGraph(shortName, version): Observable<ApiObject> {
+
+        const resource = 'services/' + shortName + '/' + version + '/dependencyGraph';
+        const stream = this.getStreamSource<ApiObject>(resource);
+
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+            stream.next(freezeObject(val));
         });
 
         return stream.asObservable().pipe(
@@ -768,8 +839,6 @@ export class ApiService {
         return this.rest.post<ApiObject>('services/' + shortName + '/' + version + '/interfaces',
             data).pipe(flatMap(val => {
 
-                console.log('RETURN', val);
-
                 const stream = this.getStreamSource<ApiObject>(val._links.self.href);
                 stream.next(freezeObject(val));
 
@@ -792,7 +861,6 @@ export class ApiService {
      */
     putServiceInterface(shortName: string, version: string, serviceInterfaceName: string, serviceData: any) {
         const resource = 'services/' + shortName + '/' + version + '/interfaces/' + serviceInterfaceName;
-        const stream = this.getStreamSource<ApiObject>(resource);
 
         return this.rest.put<ApiObject>(resource, serviceData).pipe(flatMap(val => {
 
@@ -819,8 +887,6 @@ export class ApiService {
 
         return this.rest.delete<ApiObject>('services/' + shortName + '/' + version + '/interfaces/' + serviceInterfaceName)
             .pipe(map(val => {
-                console.log('DELETE INTERFACE', val);
-
 
                 this.getServiceInterfaces(shortName, version);
 

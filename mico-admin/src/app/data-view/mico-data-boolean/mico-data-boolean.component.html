@@ -1,5 +1,7 @@
 <mat-list-item class="mat-list-item">
-    <b>{{config.title}}: </b> &nbsp;
+    <span class="mr1" matTooltip={{config?.description}}>
+        <b>{{config.title}}: </b>
+    </span>
 
     <div [ngSwitch]="config['x-boolean']">
         <div *ngSwitchCase="'YesNo'">

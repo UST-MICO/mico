@@ -19,24 +19,21 @@
 
 package io.github.ust.mico.core.model;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
-
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.ust.mico.core.dto.MicoApplicationDTO;
 import io.github.ust.mico.core.exception.VersionNotSupportedException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Relationship;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Represents an application as a set of {@link MicoService}s
@@ -65,11 +62,14 @@ public class MicoApplication {
     /**
      * A brief name for the application intended
      * for use as a unique identifier.
+     * To be consistent we want to be compatible with Kubernetes resource names,
+     * therefore it must match the Kubernetes naming pattern.
      */
     private String shortName;
 
     /**
      * The name of the artifact. Intended for humans.
+     * Required only for the usage in the UI.
      */
     private String name;
 
@@ -80,6 +80,7 @@ public class MicoApplication {
 
     /**
      * Human readable description of this application.
+     * Is allowed to be empty (default). {@code null} values are skipped.
      */
     private String description;
 
@@ -91,8 +92,8 @@ public class MicoApplication {
     /**
      * The list of service deployment information
      * this application uses for the deployment of the required services.
+     * {@code null} values are skipped.
      */
-    @JsonBackReference
     @Relationship(type = "INCLUDES_SERVICE")
     private List<MicoServiceDeploymentInfo> serviceDeploymentInfos = new ArrayList<>();
 

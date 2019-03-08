@@ -27,6 +27,8 @@ import { Subscription } from 'rxjs';
 import { STYLE_TEMPLATE, APPLICATION_NODE_TEMPLATE, SERVICE_NODE_TEMPLATE, ARROW_TEMPLATE } from './app-dependency-graph-constants';
 import { MatDialog } from '@angular/material';
 import { ChangeServiceVersionComponent } from 'src/app/dialogs/change-service-version/change-service-version.component';
+import { UtilsService } from 'src/app/util/utils.service';
+import { debounceTime } from 'rxjs/operators';
 
 
 @Component({
@@ -46,9 +48,12 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
     private nodeMap: Map<string, Node>;
     private edgeMap: Map<string, Edge>;
 
-    private versionChangedFor: { node: Node, newVersion: ApiObject};
+    private versionChangedFor: { node: Node, newVersion: ApiObject };
 
-    constructor(private api: ApiService, private dialog: MatDialog) {}
+    constructor(private api: ApiService,
+        private dialog: MatDialog,
+        private util: UtilsService,
+    ) { }
 
     ngOnInit() {
         if (this.graph == null) {
@@ -76,9 +81,9 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
     ngOnChanges(changes: SimpleChanges) {
         if (changes.shortName != null || changes.version != null) {
             this.resetGraph();
-            if (this.appSubscription != null) {
-                this.appSubscription.unsubscribe();
-            }
+
+            this.util.safeUnsubscribe(this.appSubscription);
+
             if (this.shortName != null && this.version != null) {
                 this.appSubscription = this.api.getApplication(this.shortName, this.version).subscribe(application => {
                     this.updateGraphFromApplicationData(application);
@@ -122,7 +127,9 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
      */
     changeServiceVersion(node: Node, newVersion: ApiObject) {
         this.versionChangedFor = {node: node, newVersion: newVersion};
-        this.api.deleteApplicationServices(this.shortName, this.version, node.service.shortName).subscribe((success) => {
+        this.api.deleteApplicationServices(this.shortName, this.version, node.service.shortName).pipe(
+            debounceTime(300),
+        ).subscribe((success) => {
             if (!success) {
                 return;
             }
@@ -134,7 +141,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
      * Update markerEnd and type of newly created edges.
      */
     onCreateDraggedEdge = (edge: DraggedEdge) => {
-        edge.markerEnd = {template: 'arrow', positionOnLine: 1, lineOffset: 4, scale: 0.5, rotate: {relativeAngle: 0}};
+        edge.markerEnd = { template: 'arrow', positionOnLine: 1, lineOffset: 4, scale: 0.5, rotate: { relativeAngle: 0 } };
         edge.validTargets.clear();
         if (edge.source === 'APPLICATION') {
             edge.type = 'includes';
