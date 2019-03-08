@@ -17,8 +17,8 @@
  * under the License.
  */
 
-import { Component, forwardRef, OnInit, Input } from '@angular/core';
-import { MatFormFieldControl } from '@angular/material';
+import { Component, forwardRef, Input, OnChanges } from '@angular/core';
+import { MatFormFieldControl, MatSnackBar } from '@angular/material';
 import { NG_VALUE_ACCESSOR } from '@angular/forms';
 import { ApiModel } from 'src/app/api/apimodel';
 
@@ -33,14 +33,26 @@ import { ApiModel } from 'src/app/api/apimodel';
     }, { provide: MatFormFieldControl, useExisting: Number }],
 })
 
-export class MicoFormNumberComponent implements OnInit {
+export class MicoFormNumberComponent implements OnChanges {
 
-    constructor() { }
+    constructor(
+        private snackBar: MatSnackBar,
+    ) { }
 
     content: number;
+    minValue: number = NaN;
+    maxValue: number = NaN;
     @Input() config: ApiModel;
 
-    ngOnInit() {
+    ngOnChanges() {
+        if (this.config != null) {
+            if (this.config.hasOwnProperty('minimum')) {
+                this.minValue = Number(this.config.minimum);
+            }
+            if (this.config.hasOwnProperty('maximum')) {
+                this.maxValue = Number(this.config.maximum);
+            }
+        }
     }
 
     onChange: any = () => { };
@@ -63,6 +75,19 @@ export class MicoFormNumberComponent implements OnInit {
         if (input == null) {
             return;
         }
+        if (!isNaN(this.maxValue) && input > this.maxValue) {
+            input = this.maxValue;
+            this.snackBar.open('Input exeeds maximum value of: ' + this.maxValue, 'Ok', {
+                duration: 8000,
+            });
+        }
+        if (!isNaN(this.minValue) && input < this.minValue) {
+            input = this.minValue;
+            this.snackBar.open('Input is below the minimum value of: ' + this.minValue, 'Ok', {
+                duration: 8000,
+            });
+        }
+
         this.content = input;
         this.onChange(input);
         this.onTouched();
