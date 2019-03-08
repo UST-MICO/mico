@@ -176,7 +176,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                 // add some deployment monitoring (e.g. state)
                 console.log(val);
                 this.snackBar.open('Application deployment initialized.', 'Ok', {
-                    duration: 5,
+                    duration: 5000,
                 });
 
             });
