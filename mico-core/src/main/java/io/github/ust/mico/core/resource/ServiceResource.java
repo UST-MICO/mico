@@ -341,14 +341,15 @@ public class ServiceResource {
     public ResponseEntity<?> importMicoServiceFromGitHub(@RequestBody CrawlingInfoDTO crawlingInfo) {
         String url = crawlingInfo.getUrl();
         String version = crawlingInfo.getVersion();
+        String dockerfilePath = crawlingInfo.getDockerfilePath();
         log.debug("Start importing MicoService from URL '{}'", url);
 
         try {
             if (version.equals("latest")) {
-                MicoService service = crawler.crawlGitHubRepoLatestRelease(url);
+                MicoService service = crawler.crawlGitHubRepoLatestRelease(url, dockerfilePath);
                 return createService(service);
             } else {
-                MicoService service = crawler.crawlGitHubRepoSpecificRelease(url, version);
+                MicoService service = crawler.crawlGitHubRepoSpecificRelease(url, version, dockerfilePath);
                 return createService(service);
             }
         } catch (IOException e) {
