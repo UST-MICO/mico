@@ -353,9 +353,12 @@ public class ServiceResource {
                 return createService(service);
             }
         } catch (IOException e) {
-            log.error(e.getStackTrace().toString());
-            log.error("Getting exception '{}'", e.getMessage());
+            log.error(e.getMessage(), e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+
+        } catch (IllegalArgumentException e) {
+            log.error(e.getMessage(), e);
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
         }
     }
 
