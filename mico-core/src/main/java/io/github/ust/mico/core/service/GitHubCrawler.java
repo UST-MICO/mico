@@ -60,8 +60,22 @@ public class GitHubCrawler {
     private MicoService crawlGitHubRepo(String uriBasicInfo, String uriReleaseInfo, String dockerfilePath) throws IOException {
         log.debug("Crawl GitHub basic information from '{}' and release information from '{}'", uriBasicInfo, uriReleaseInfo);
 
-        ResponseEntity<String> responseBasicInfo = restTemplate.getForEntity(uriBasicInfo, String.class);
-        ResponseEntity<String> responseReleaseInfo = restTemplate.getForEntity(uriReleaseInfo, String.class);
+        ResponseEntity<String> responseBasicInfo;
+        ResponseEntity<String> responseReleaseInfo;
+
+        try {
+            responseBasicInfo = restTemplate.getForEntity(uriBasicInfo, String.class);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("GitHub repository " + uriBasicInfo.replace(GITHUB_API_URL, "") + " does not exist!");
+        }
+
+        try {
+            responseReleaseInfo = restTemplate.getForEntity(uriReleaseInfo, String.class);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("GitHub repository " + uriBasicInfo.replace(GITHUB_API_URL, "")
+                + " doesn't have a release " + uriReleaseInfo.replace(GITHUB_API_URL, "") + "!");
+        }
+
         if (responseBasicInfo.getStatusCode().is2xxSuccessful() && responseReleaseInfo.getStatusCode().is2xxSuccessful()) {
             ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
