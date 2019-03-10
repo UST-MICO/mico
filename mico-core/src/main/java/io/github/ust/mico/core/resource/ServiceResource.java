@@ -72,15 +72,19 @@ public class ServiceResource {
     @Autowired
     private ServiceBroker serviceBroker;
 
+    //TODO: remove serviceRepository from ServiceResource
     @Autowired
     private MicoServiceRepository serviceRepository;
 
+    //TODO. Verfiy if this object can be removed from ServiceResource
     @Autowired
     private MicoStatusService micoStatusService;
 
+    //TODO. Verfiy if this object can be removed from ServiceResource
     @Autowired
     private MicoKubernetesClient micoKubernetesClient;
 
+    //TODO. Verfiy if this object can be removed from ServiceResource
     @Autowired
     private GitHubCrawler crawler;
 
@@ -134,14 +138,12 @@ public class ServiceResource {
                                               @PathVariable(PATH_VARIABLE_VERSION) String version) throws KubernetesResourceException {
         //TODO: Use ServiceBroker instead
         MicoService service = getServiceFromDatabase(shortName, version);
-
         throwConflictIfServiceIsDeployed(service);
-
         if (!getDependers(service).isEmpty()) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
                 "Service '" + service.getShortName() + "' '" + service.getVersion() + "' has dependers, therefore it can't be deleted.");
         }
-
+        //TODO: Replace with deleteService inside ServiceBroker
         serviceRepository.deleteServiceByShortNameAndVersion(shortName, version);
         return ResponseEntity.noContent().build();
     }
@@ -413,7 +415,7 @@ public class ServiceResource {
            linkTo(methodOn(ServiceResource.class).getDependencyGraph(shortName, version)).withSelfRel()));
    }
 
-
+    //TODO: Remove here, this method is moved to ServiceBroker
     public List<MicoService> getDependers(MicoService serviceToLookFor) {
         List<MicoService> serviceList = serviceRepository.findAll(2);
 
@@ -455,6 +457,7 @@ public class ServiceResource {
         return serviceOpt.get();
     }
 
+    //TODO: Remove, it already exists in ServiceBroker
     private List<MicoService> getAllVersionsOfServiceFromDatabase(String shortName) throws ResponseStatusException {
         List<MicoService> micoServiceList = serviceRepository.findByShortName(shortName);
         log.debug("Retrieve service list from database: {}", micoServiceList);
@@ -465,6 +468,7 @@ public class ServiceResource {
         return micoServiceList;
     }
 
+    //TODO: Remove method, it already exists in ServiceBroker
     public MicoService getServiceById(Long id) {
         Optional<MicoService> serviceOpt = serviceRepository.findById(id);
         if (!serviceOpt.isPresent()) {
