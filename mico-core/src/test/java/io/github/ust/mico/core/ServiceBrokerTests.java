@@ -8,11 +8,9 @@ import io.github.ust.mico.core.resource.ServiceResource;
 import io.github.ust.mico.core.service.GitHubCrawler;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
-import io.github.ust.mico.core.util.CollectionUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -25,11 +23,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 
 import static io.github.ust.mico.core.TestConstants.*;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
-import static org.mockito.BDDMockito.given;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @RunWith(SpringRunner.class)
@@ -78,7 +75,7 @@ public class ServiceBrokerTests {
         //TODO: Verfiy why this is not working
         //when(serviceRepository.findAll()).thenReturn(micoServiceList);
         when(serviceBroker.getAllServicesAsList()).thenReturn(micoServiceList);
-        when(serviceRepository.findByShortNameAndVersion(SHORT_NAME_1,VERSION_1_0_1)).thenReturn(java.util.Optional.ofNullable(micoServiceOne));
+        when(serviceRepository.findByShortNameAndVersion(SHORT_NAME_1, VERSION_1_0_1)).thenReturn(java.util.Optional.ofNullable(micoServiceOne));
     }
 
     @Test
@@ -98,10 +95,33 @@ public class ServiceBrokerTests {
 
     @Test
     public void getServiceFromDatabase() throws Exception {
-        MicoService micoService = serviceBroker.getServiceFromDatabase(SHORT_NAME_1,VERSION_1_0_1);
+        MicoService micoService = serviceBroker.getServiceFromDatabase(SHORT_NAME_1, VERSION_1_0_1);
         assertThat(micoService.getShortName()).isEqualTo(SHORT_NAME_1);
         assertThat(micoService.getVersion()).isEqualTo(VERSION_1_0_1);
     }
 
+    @Test
+    public void updateExistingService() throws Exception {
+        MicoService micoServiceTwo = new MicoService()
+                .setShortName(SHORT_NAME_2)
+                .setVersion(VERSION_1_0_2)
+                .setName(NAME_2)
+                .setDescription(DESCRIPTION_2);
+
+        MicoService resultUpdatedService = new MicoService()
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_2)
+                .setDescription(DESCRIPTION_2);
+
+        when(serviceRepository.save(any(MicoService.class))).thenReturn(resultUpdatedService);
+
+        MicoService updatedService = serviceBroker.updateExistingService(SHORT_NAME_1, VERSION_1_0_1, micoServiceTwo);
+
+        assertThat(updatedService.getShortName()).isEqualTo(SHORT_NAME_1);
+        assertThat(updatedService.getVersion()).isEqualTo(VERSION_1_0_1);
+        assertThat(updatedService.getName()).isEqualTo(NAME_2);
+        assertThat(updatedService.getDescription()).isEqualTo(DESCRIPTION_2);
+    }
 
 }
