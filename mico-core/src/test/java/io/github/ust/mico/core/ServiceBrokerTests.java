@@ -13,15 +13,19 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 import static io.github.ust.mico.core.TestConstants.*;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
@@ -38,17 +42,27 @@ public class ServiceBrokerTests {
     @MockBean
     private MicoServiceRepository serviceRepository;
 
-    @MockBean
-    private MicoStatusService micoStatusService;
+    @Autowired
+    private ServiceBroker serviceBroker;
 
     @MockBean
-    private ServiceBroker serviceBroker;
+    private MicoStatusService micoStatusService;
 
     @MockBean
     private MicoKubernetesClient micoKubernetesClient;
 
     @MockBean
     private GitHubCrawler crawler;
+
+    @TestConfiguration
+    static class ServiceBrokerTestContextConfiguration {
+
+        @Bean
+        public ServiceBroker serviceBroker() {
+            return new ServiceBroker();
+        }
+
+    }
 
     @Before
     public void setUp() throws Exception {
@@ -61,8 +75,10 @@ public class ServiceBrokerTests {
         micoServiceList.add(micoServiceTwo);
         micoServiceList.add(micoServiceThree);
 
+        //TODO: Verfiy why this is not working
         //when(serviceRepository.findAll()).thenReturn(micoServiceList);
         when(serviceBroker.getAllServicesAsList()).thenReturn(micoServiceList);
+        when(serviceRepository.findByShortNameAndVersion(SHORT_NAME_1,VERSION_1_0_1)).thenReturn(java.util.Optional.ofNullable(micoServiceOne));
     }
 
     @Test
@@ -78,6 +94,13 @@ public class ServiceBrokerTests {
         assertThat(micoServiceList.get(0).getShortName()).isEqualTo(SHORT_NAME_1);
         assertThat(micoServiceList.get(1).getShortName()).isEqualTo(SHORT_NAME_2);
         assertThat(micoServiceList.get(2).getShortName()).isEqualTo(SHORT_NAME_3);
+    }
+
+    @Test
+    public void getServiceFromDatabase() throws Exception {
+        MicoService micoService = serviceBroker.getServiceFromDatabase(SHORT_NAME_1,VERSION_1_0_1);
+        assertThat(micoService.getShortName()).isEqualTo(SHORT_NAME_1);
+        assertThat(micoService.getVersion()).isEqualTo(VERSION_1_0_1);
     }
 
 
