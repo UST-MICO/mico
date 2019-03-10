@@ -19,6 +19,7 @@
 
 package io.github.ust.mico.core.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
@@ -93,7 +94,7 @@ public class MicoServiceDeploymentInfo {
      */
     @Relationship(type = "HAS")
     private List<MicoLabel> labels = new ArrayList<>();
-    
+
     /**
      * Environment variables as key-value pairs that are attached to the deployment
      * of this {@link MicoService}. These environment values can be used by the deployed
@@ -115,7 +116,6 @@ public class MicoServiceDeploymentInfo {
      * Default restart policy is {@link RestartPolicy#ALWAYS}.
      */
     private RestartPolicy restartPolicy = RestartPolicy.ALWAYS;
-
 
 
     /**
@@ -155,10 +155,29 @@ public class MicoServiceDeploymentInfo {
      */
     public enum ImagePullPolicy {
 
-        ALWAYS,
-        NEVER,
-        IF_NOT_PRESENT
-        
+        @JsonProperty("Always")
+        ALWAYS("Always"),
+        @JsonProperty("Never")
+        NEVER("Never"),
+        @JsonProperty("IfNotPresent")
+        IF_NOT_PRESENT("IfNotPresent");
+
+        private final String value;
+
+        /**
+         * @param value the value
+         */
+        ImagePullPolicy(final String value) {
+            this.value = value;
+        }
+
+        /* (non-Javadoc)
+         * @see java.lang.Enum#toString()
+         */
+        @Override
+        public String toString() {
+            return value;
+        }
     }
 
 
@@ -167,10 +186,29 @@ public class MicoServiceDeploymentInfo {
      */
     public enum RestartPolicy {
 
-        ALWAYS,
-        ON_FAILURE,
-        NEVER
-        
+        @JsonProperty("Always")
+        ALWAYS("Always"),
+        @JsonProperty("OnFailure")
+        ON_FAILURE("OnFailure"),
+        @JsonProperty("Never")
+        NEVER("Never");
+
+        private final String value;
+
+        /**
+         * @param value the value
+         */
+        RestartPolicy(final String value) {
+            this.value = value;
+        }
+
+        /* (non-Javadoc)
+         * @see java.lang.Enum#toString()
+         */
+        @Override
+        public String toString() {
+            return value;
+        }
     }
 
 }

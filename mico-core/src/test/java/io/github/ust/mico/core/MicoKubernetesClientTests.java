@@ -22,6 +22,7 @@ package io.github.ust.mico.core;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServiceList;
+import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentList;
@@ -37,12 +38,11 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -59,15 +59,6 @@ public class MicoKubernetesClientTests {
     private static final String LABEL_VERSION_KEY = LABEL_PREFIX + "version";
     private static final String LABEL_INTERFACE_KEY = LABEL_PREFIX + "interface";
     private static final String LABEL_INSTANCE_KEY = LABEL_PREFIX + "instance";
-
-    @Captor
-    ArgumentCaptor<Service> serviceArgumentCaptor;
-
-    @Captor
-    ArgumentCaptor<Deployment> deploymentArgumentCaptor;
-
-    @Captor
-    ArgumentCaptor<String> namespaceArgumentCaptor;
 
     @Rule
     public KubernetesServer mockServer = new KubernetesServer(false, true);
@@ -108,25 +99,54 @@ public class MicoKubernetesClientTests {
         assertTrue("Name of Kubernetes Deployment does not start with short name of MicoService",
             actualDeployment.getMetadata().getName().startsWith(micoService.getShortName()));
         assertEquals(testNamespace, actualDeployment.getMetadata().getNamespace());
+        assertEquals("Expected 1 container",
+            1, actualDeployment.getSpec().getTemplate().getSpec().getContainers().size());
+        assertEquals("Expected 3 labels",
+            3, actualDeployment.getMetadata().getLabels().size());
+        assertEquals("Expected 3 labels in template",
+            3, actualDeployment.getSpec().getTemplate().getMetadata().getLabels().size());
     }
 
     @Test
-    public void creationOfMicoServiceWithEnvironmentVariablesWorks() throws KubernetesResourceException {
-        assertEquals(0, mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems().size());
+    public void creationOfMicoServiceWithDeploymentInformationWorks() throws KubernetesResourceException {
 
         MicoService micoService = getMicoServiceWithoutInterface();
-        MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo()
+        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
             .setService(micoService)
+            .setReplicas(3)
+            .setRestartPolicy(MicoServiceDeploymentInfo.RestartPolicy.NEVER)
+            .setImagePullPolicy(MicoServiceDeploymentInfo.ImagePullPolicy.NEVER)
+            .setLabels(CollectionUtils.listOf(new MicoLabel(null, "CUSTOM_KEY", "CUSTOM_VALUE")))
             .setEnvironmentVariables(CollectionUtils.listOf(new MicoEnvironmentVariable().setName("NAME").setValue("VALUE")));
 
-        micoKubernetesClient.createMicoService(deploymentInfo);
+        micoKubernetesClient.createMicoService(serviceDeploymentInfo);
 
         assertEquals(1, mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems().size());
-
         Deployment actualDeployment = mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems().get(0);
         assertNotNull(actualDeployment);
+        System.out.println("Actual Deployment:" + actualDeployment);
+        assertTrue("Custom label does not exist",
+            actualDeployment.getMetadata().getLabels().containsKey("CUSTOM_KEY"));
+        assertEquals("Replicas does not match expected",
+            serviceDeploymentInfo.getReplicas(), actualDeployment.getSpec().getReplicas().intValue());
+        assertEquals("RestartPolicy does not match expected",
+            serviceDeploymentInfo.getRestartPolicy().toString(),
+            actualDeployment.getSpec().getTemplate().getSpec().getRestartPolicy());
+        assertEquals("Expected 1 container",
+            1, actualDeployment.getSpec().getTemplate().getSpec().getContainers().size());
+        assertEquals("Name of container does not match short name of the MicoService",
+            micoService.getShortName(),
+            actualDeployment.getSpec().getTemplate().getSpec().getContainers().get(0).getName());
+        assertEquals("Image of container does not match expected",
+            micoService.getDockerImageUri(),
+            actualDeployment.getSpec().getTemplate().getSpec().getContainers().get(0).getImage());
+        assertEquals("ImagePullPolicy does not match expected",
+            serviceDeploymentInfo.getImagePullPolicy().toString(),
+            actualDeployment.getSpec().getTemplate().getSpec().getContainers().get(0).getImagePullPolicy());
+        assertTrue("Custom label in template does not exist",
+            actualDeployment.getSpec().getTemplate().getMetadata().getLabels().containsKey("CUSTOM_KEY"));
         assertEquals("Environment variables do not match expected",
-            deploymentInfo.getEnvironmentVariables(), actualDeployment.getSpec().getTemplate().getSpec().getContainers().get(0).getEnv().stream().map(
+            serviceDeploymentInfo.getEnvironmentVariables(), actualDeployment.getSpec().getTemplate().getSpec().getContainers().get(0).getEnv().stream().map(
                 envVar -> new MicoEnvironmentVariable().setName(envVar.getName()).setValue(envVar.getValue())).collect(Collectors.toList()));
     }
 
@@ -152,13 +172,22 @@ public class MicoKubernetesClientTests {
         assertNotNull(actualService);
         assertTrue("Name of Kubernetes Service does not start with name of MicoServiceInterface",
             actualService.getMetadata().getName().startsWith(micoServiceInterface.getServiceInterfaceName()));
-
-        String expectedInstanceLabel = existingDeployment.getMetadata().getLabels().getOrDefault(LABEL_INSTANCE_KEY, "UNKNOWN INSTANCE LABEL KEY");
-        assertEquals("Expected INSTANCE label value in metadata is same than associated deployment",
-            expectedInstanceLabel, actualService.getMetadata().getLabels().getOrDefault(LABEL_INSTANCE_KEY, "UNKNOWN INSTANCE LABEL KEY"));
-        assertEquals("Expected INSTANCE label value in spec used as selector is same than associated deployment",
-            expectedInstanceLabel, actualService.getSpec().getSelector().getOrDefault(LABEL_INSTANCE_KEY, "UNKNOWN INSTANCE LABEL KEY"));
         assertEquals(testNamespace, actualService.getMetadata().getNamespace());
+
+        assertEquals("Expected 4 labels",
+            4, actualService.getMetadata().getLabels().size());
+        assertEquals("Expected 1 selector",
+            1, actualService.getSpec().getSelector().size());
+        assertEquals("Type does not match expected",
+            "LoadBalancer", actualService.getSpec().getType());
+
+        List<ServicePort> actualServicePorts = actualService.getSpec().getPorts();
+        assertEquals("Expected one port", 1, actualServicePorts.size());
+        ServicePort actualServicePort = actualServicePorts.get(0);
+        assertEquals("Service port does not match expected",
+            micoServiceInterface.getPorts().get(0).getPort(), actualServicePort.getPort().intValue());
+        assertEquals("Service target port does not match expected",
+            micoServiceInterface.getPorts().get(0).getTargetPort(), actualServicePort.getTargetPort().getIntVal().intValue());
     }
 
     @Test
@@ -280,7 +309,8 @@ public class MicoKubernetesClientTests {
             .setId(ID)
             .setShortName(SERVICE_SHORT_NAME)
             .setVersion(SERVICE_VERSION)
-            .setName(NAME);
+            .setName(NAME)
+            .setDockerImageUri(IntegrationTest.DOCKER_IMAGE_URI);
     }
 
     private MicoServiceInterface getMicoServiceInterface() {

@@ -33,10 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -127,6 +124,8 @@ public class MicoKubernetesClient {
             .withNewMetadata()
             .withName(deploymentUid)
             .withNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace())
+            .withLabels(serviceDeploymentInfo.getLabels().stream().collect(
+                Collectors.toMap(MicoLabel::getKey, MicoLabel::getValue)))
             .addToLabels(LABEL_NAME_KEY, micoService.getShortName())
             .addToLabels(LABEL_VERSION_KEY, micoService.getVersion())
             .addToLabels(LABEL_INSTANCE_KEY, deploymentUid)
@@ -138,16 +137,20 @@ public class MicoKubernetesClient {
             .endSelector()
             .withNewTemplate()
             .withNewMetadata()
+            .withLabels(serviceDeploymentInfo.getLabels().stream().collect(
+                Collectors.toMap(MicoLabel::getKey, MicoLabel::getValue)))
             .addToLabels(LABEL_NAME_KEY, micoService.getShortName())
             .addToLabels(LABEL_VERSION_KEY, micoService.getVersion())
             .addToLabels(LABEL_INSTANCE_KEY, deploymentUid)
             .endMetadata()
             .withNewSpec()
+            .withRestartPolicy(serviceDeploymentInfo.getRestartPolicy().toString())
             .withContainers(
                 new ContainerBuilder()
                     .withName(micoService.getShortName())
                     .withImage(micoService.getDockerImageUri())
-                    .withPorts(createContainerPorts(micoService))
+                    .withImagePullPolicy(serviceDeploymentInfo.getImagePullPolicy().toString())
+                    .withPorts(createContainerPorts(micoService.getServiceInterfaces()))
                     .withEnv(serviceDeploymentInfo.getEnvironmentVariables().stream().map(
                         environmentVariable -> new EnvVarBuilder()
                             .withName(environmentVariable.getName())
@@ -377,16 +380,16 @@ public class MicoKubernetesClient {
     }
 
     /**
-     * Creates a list of ports based on a MICO service. This list of ports is intended for use with a container inside a
-     * Kubernetes deployment.
+     * Creates a list of ports based on the service interfaces.
+     * This list of ports is intended for use with a container inside a Kubernetes deployment.
      *
-     * @param service the {@link MicoService}.
+     * @param serviceInterfaces the {@link MicoServiceInterface MicoServiceInterfaces}.
      * @return an {@link ArrayList} with the {@link ContainerPort} instances.
      */
-    private List<ContainerPort> createContainerPorts(MicoService service) {
+    private List<ContainerPort> createContainerPorts(List<MicoServiceInterface> serviceInterfaces) {
         List<ContainerPort> ports = new ArrayList<>();
 
-        for (MicoServiceInterface serviceInterface : service.getServiceInterfaces()) {
+        for (MicoServiceInterface serviceInterface : serviceInterfaces) {
             for (MicoServicePort servicePort : serviceInterface.getPorts()) {
                 ports.add(new ContainerPortBuilder()
                     .withContainerPort(servicePort.getTargetPort())
