@@ -11,6 +11,7 @@ import io.github.ust.mico.core.service.MicoStatusService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -122,6 +123,26 @@ public class ServiceBrokerTests {
         assertThat(updatedService.getVersion()).isEqualTo(VERSION_1_0_1);
         assertThat(updatedService.getName()).isEqualTo(NAME_2);
         assertThat(updatedService.getDescription()).isEqualTo(DESCRIPTION_2);
+    }
+
+    @Test
+    public void getServiceById() throws Exception {
+        MicoService micoServiceOne = new MicoService()
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_1)
+                .setDescription(DESCRIPTION_1);
+
+        Long id = new Long(1);
+
+        when(serviceRepository.findById(ArgumentMatchers.anyLong())).thenReturn(java.util.Optional.ofNullable(micoServiceOne));
+
+        MicoService micoService = serviceBroker.getServiceById(id);
+
+        assertThat(micoService.getShortName()).isEqualTo(SHORT_NAME_1);
+        assertThat(micoService.getVersion()).isEqualTo(VERSION_1_0_1);
+        assertThat(micoService.getName()).isEqualTo(NAME_1);
+        assertThat(micoService.getDescription()).isEqualTo(DESCRIPTION_1);
     }
 
 }
