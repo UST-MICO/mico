@@ -145,4 +145,9 @@ public class ServiceBrokerTests {
         assertThat(micoService.getDescription()).isEqualTo(DESCRIPTION_1);
     }
 
+    @Test
+    public void deleteService() throws Exception {
+        //TODO: Implementation haha
+    }
+
 }

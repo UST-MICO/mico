@@ -24,7 +24,7 @@ public class ServiceBroker {
     @Autowired
     private MicoKubernetesClient micoKubernetesClient;
 
-    public List<MicoService> getAllServicesAsList (){
+    public List<MicoService> getAllServicesAsList() {
         return serviceRepository.findAll(2);
     }
 
@@ -53,6 +53,7 @@ public class ServiceBroker {
         }
         return serviceOpt.get();
     }
+
     //TODO: Fix logging
     public List<MicoService> getAllVersionsOfServiceFromDatabase(String shortName) throws ResponseStatusException {
         List<MicoService> micoServiceList = serviceRepository.findByShortName(shortName);
@@ -64,7 +65,7 @@ public class ServiceBroker {
         return micoServiceList;
     }
 
-    public void deleteService(String shortName, String version)  throws KubernetesResourceException {
+    public void deleteService(String shortName, String version) throws KubernetesResourceException {
         MicoService service = getServiceFromDatabase(shortName, version);
 
         throwConflictIfServiceIsDeployed(service);
@@ -79,6 +80,7 @@ public class ServiceBroker {
     /**
      * Checks if a service is deployed and throws a ResponseStatusException with the http status CONFLICT (409) if
      * the service is deployed.
+     *
      * @param service Checks if this service is deployed
      * @throws KubernetesResourceException if the service is deployed. It uses the http status CONFLICT
      */
