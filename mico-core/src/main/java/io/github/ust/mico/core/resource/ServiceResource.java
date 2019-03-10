@@ -196,17 +196,6 @@ public class ServiceResource {
                 linkTo(methodOn(ServiceResource.class).getVersionsOfService(shortName)).withSelfRel()));
     }
 
-    //TODO: Ambiguous endpoint with /services/shortName
-    //@GetMapping("/{" + PATH_VARIABLE_ID + "}")
-    public ResponseEntity<Resource<MicoService>> getServiceById(@PathVariable(PATH_VARIABLE_ID) Long id) {
-        Optional<MicoService> serviceOpt = serviceRepository.findById(id);
-        if (!serviceOpt.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service with id '" + id + "' was not found!");
-        }
-        MicoService service = serviceOpt.get();
-        return ResponseEntity.ok(new Resource<>(service, getServiceLinks(service)));
-    }
-
     @PostMapping
     public ResponseEntity<?> createService(@Valid @RequestBody MicoService newService) {
         Optional<MicoService> serviceOptional = serviceRepository.
