@@ -465,6 +465,14 @@ public class ServiceResource {
         return micoServiceList;
     }
 
+    public MicoService getServiceById(Long id) {
+        Optional<MicoService> serviceOpt = serviceRepository.findById(id);
+        if (!serviceOpt.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service with id '" + id + "' was not found!");
+        }
+        return serviceOpt.get();
+    }
+
     //Get the dependees of a service, check if they exists, if true get the ids and set the dependees
     public MicoService setServiceDependees(MicoService newService) {
         MicoService serviceToGetId = getService(newService);

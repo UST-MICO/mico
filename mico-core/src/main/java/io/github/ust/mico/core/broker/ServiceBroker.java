@@ -38,4 +38,12 @@ public class ServiceBroker {
         return updatedService;
     }
 
+    public MicoService getServiceById(Long id) {
+        Optional<MicoService> serviceOpt = serviceRepository.findById(id);
+        if (!serviceOpt.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service with id '" + id + "' was not found!");
+        }
+        return serviceOpt.get();
+    }
+
 }
