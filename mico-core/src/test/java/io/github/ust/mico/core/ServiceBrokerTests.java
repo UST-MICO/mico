@@ -148,6 +148,7 @@ public class ServiceBrokerTests {
     @Test
     public void deleteService() throws Exception {
         //TODO: Implementation haha
+        serviceBroker.deleteService(SHORT_NAME_1,VERSION_1_0_1);
     }
 
 }

@@ -436,6 +436,8 @@ public class ServiceResource {
         return dependers;
     }
 
+    //TODO: Verfiy if this redundant code with getServiceFromDatabase
+    //TODO: Delete this and move to ServiceBroker if it is not redundant
     private MicoService getService(MicoService newService) {
         Optional<MicoService> serviceOptional = serviceRepository.findByShortNameAndVersion(newService.getShortName(), newService.getVersion());
         return serviceOptional.orElse(null);
@@ -449,7 +451,7 @@ public class ServiceResource {
      * @return the existing {@link MicoService} from the database
      * @throws ResponseStatusException if a {@link MicoService} for the given shortName and version does not exist
      */
-    // Remove here, already moved to ServiceBroker
+    //TODO: Remove here, already moved to ServiceBroker
     private MicoService getServiceFromDatabase(String shortName, String version) throws ResponseStatusException {
         Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (!serviceOpt.isPresent()) {
@@ -478,6 +480,7 @@ public class ServiceResource {
         return serviceOpt.get();
     }
 
+    //TODO: Verify if this code is still necessary
     //Get the dependees of a service, check if they exists, if true get the ids and set the dependees
     public MicoService setServiceDependees(MicoService newService) {
         MicoService serviceToGetId = getService(newService);
