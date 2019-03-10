@@ -119,6 +119,7 @@ public class ServiceResource {
                 "Update of a service is only allowed without providing interfaces.");
         }
 
+        //TODO: Replace with updateExistingService method inside ServiceBroker
         MicoService existingService = getServiceFromDatabase(shortName, version);
         service.setId(existingService.getId());
         service.setServiceInterfaces(existingService.getServiceInterfaces());
@@ -131,6 +132,7 @@ public class ServiceResource {
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     public ResponseEntity<Void> deleteService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                               @PathVariable(PATH_VARIABLE_VERSION) String version) throws KubernetesResourceException {
+        //TODO: Use ServiceBroker instead
         MicoService service = getServiceFromDatabase(shortName, version);
 
         throwConflictIfServiceIsDeployed(service);
@@ -150,6 +152,7 @@ public class ServiceResource {
      * @param service Checks if this service is deployed
      * @throws KubernetesResourceException if the service is deployed. It uses the http status CONFLICT
      */
+    //TODO: Verify if this should be moved to ServiceBroker
     private void throwConflictIfServiceIsDeployed(MicoService service) throws KubernetesResourceException {
         if (micoKubernetesClient.isMicoServiceDeployed(service)) {
             log.info("Micoservice '{}' in version '{}' is deployed. It is not possible to delete a deployed service.", service.getShortName(), service.getVersion());
@@ -454,6 +457,7 @@ public class ServiceResource {
      * @return the existing {@link MicoService} from the database
      * @throws ResponseStatusException if a {@link MicoService} for the given shortName and version does not exist
      */
+    // Remove here, already moved to ServiceBroker
     private MicoService getServiceFromDatabase(String shortName, String version) throws ResponseStatusException {
         Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (!serviceOpt.isPresent()) {
