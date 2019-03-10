@@ -209,12 +209,6 @@ public class ServiceResourceTests {
 
     @Test
     public void getCompleteServiceList() throws Exception {
-        /*given(serviceRepository.findAll(ArgumentMatchers.anyInt())).willReturn(
-            CollectionUtils.listOf(
-                new MicoService().setShortName(SHORT_NAME_1).setVersion(VERSION_1_0_1).setName(NAME_1).setDescription(DESCRIPTION_1),
-                new MicoService().setShortName(SHORT_NAME_2).setVersion(VERSION_1_0_2).setName(NAME_2).setDescription(DESCRIPTION_2),
-                new MicoService().setShortName(SHORT_NAME_3).setVersion(VERSION_1_0_3).setName(NAME_3).setDescription(DESCRIPTION_3)));
-*/
         given(serviceBroker.getAllServicesAsList()).willReturn(CollectionUtils.listOf(
                 new MicoService().setShortName(SHORT_NAME_1).setVersion(VERSION_1_0_1).setName(NAME_1).setDescription(DESCRIPTION_1),
                 new MicoService().setShortName(SHORT_NAME_2).setVersion(VERSION_1_0_2).setName(NAME_2).setDescription(DESCRIPTION_2),
