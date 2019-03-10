@@ -29,6 +29,13 @@ public class ServiceBroker {
         return serviceOpt.get();
     }
 
+    public MicoService updateExistingService(String shortName, String version, MicoService service) {
+        MicoService existingService = getServiceFromDatabase(shortName, version);
+        service.setId(existingService.getId());
+        service.setServiceInterfaces(existingService.getServiceInterfaces());
+        MicoService updatedService = serviceRepository.save(service);
 
+        return updatedService;
+    }
 
 }
