@@ -103,26 +103,18 @@ public class ServiceController {
     @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     public ResponseEntity<Resource<MicoServiceResponseDTO>> updateService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                            @PathVariable(PATH_VARIABLE_VERSION) String version,
-                                           @Valid @RequestBody MicoService service) {
-        if (!service.getShortName().equals(shortName)) {
+                                           @Valid @RequestBody MicoServiceRequestDTO serviceDto) {
+        if (!serviceDto.getShortName().equals(shortName)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "ShortName of the provided service does not match the request parameter");
         }
-        if (!service.getVersion().equals(version)) {
+        if (!serviceDto.getVersion().equals(version)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "Version of the provided service does not match the request parameter");
         }
 
-        // Including interfaces must not be updated through this API. There is an own API for that purpose.
-        if (service.getServiceInterfaces().size() > 0) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                "Update of a service is only allowed without providing interfaces.");
-        }
-
         MicoService existingService = getServiceFromDatabase(shortName, version);
-        service.setId(existingService.getId());
-        service.setServiceInterfaces(existingService.getServiceInterfaces());
-        MicoService updatedService = serviceRepository.save(service);
+        MicoService updatedService = serviceRepository.save(MicoService.valueOf(serviceDto).setId(existingService.getId()));
 
         return ResponseEntity.ok(getServiceResponseDTOResource(updatedService));
     }
@@ -134,7 +126,8 @@ public class ServiceController {
 
         throwConflictIfServiceIsDeployed(service);
 
-        if (!getDependers(service).isEmpty()) {
+//        if (!getDependers(service).isEmpty()) {
+        if (!serviceRepository.findDependers(shortName, version).isEmpty()) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
                 "Service '" + service.getShortName() + "' '" + service.getVersion() + "' has dependers, therefore it can't be deleted.");
         }
@@ -179,18 +172,6 @@ public class ServiceController {
                 linkTo(methodOn(ServiceController.class).getVersionsOfService(shortName)).withSelfRel()));
     }
 
-    //TODO: Ambiguous endpoint with /services/shortName
-    //@GetMapping("/{" + PATH_VARIABLE_ID + "}")
-    @Deprecated
-    public ResponseEntity<Resource<MicoService>> getServiceById(@PathVariable(PATH_VARIABLE_ID) Long id) {
-        Optional<MicoService> serviceOpt = serviceRepository.findById(id);
-        if (!serviceOpt.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service with id '" + id + "' was not found!");
-        }
-        MicoService service = serviceOpt.get();
-        return ResponseEntity.ok(new Resource<>(service, getServiceLinks(service)));
-    }
-
     @PostMapping
     public ResponseEntity<Resource<MicoServiceResponseDTO>> createService(@Valid @RequestBody MicoServiceRequestDTO serviceDto) {
         Optional<MicoService> serviceOptional = serviceRepository.
@@ -213,10 +194,10 @@ public class ServiceController {
         MicoService service = getServiceFromDatabase(shortName, version);
         List<MicoServiceDependency> dependees = service.getDependencies();
         if (dependees == null) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Service dependees should not be null");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Service dependees must not be null.");
         }
 
-        List<MicoService> services = getDependentServices(dependees);
+        List<MicoService> services = serviceRepository.findDependees(shortName, version);
 
         return ResponseEntity.ok(
             new Resources<>(getServiceResponseDTOResourcesList(services),
@@ -309,11 +290,8 @@ public class ServiceController {
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPENDERS)
     public ResponseEntity<Resources<Resource<MicoServiceResponseDTO>>> getDependers(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                          @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        MicoService serviceToLookFor = getServiceFromDatabase(shortName, version);
-        List<MicoService> dependers = getDependers(serviceToLookFor);
-
         return ResponseEntity.ok(
-            new Resources<>(getServiceResponseDTOResourcesList(dependers),
+            new Resources<>(getServiceResponseDTOResourcesList(serviceRepository.findDependers(shortName, version)),
                 linkTo(methodOn(ServiceController.class).getDependers(shortName, version)).withSelfRel()));
     }
 
@@ -353,7 +331,7 @@ public class ServiceController {
     public ResponseEntity<Resource<MicoServiceDependencyGraphResponseDTO>> getDependencyGraph(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                @PathVariable(PATH_VARIABLE_VERSION) String version) {
        MicoService micoServiceRoot = getServiceFromDatabase(shortName, version);
-       List<MicoService> micoServices = serviceRepository.getAllDependeesOfMicoService(micoServiceRoot.getShortName(), micoServiceRoot.getVersion());
+       List<MicoService> micoServices = serviceRepository.findDependees(micoServiceRoot.getShortName(), micoServiceRoot.getVersion());
        MicoServiceDependencyGraphResponseDTO micoServiceDependencyGraph = new MicoServiceDependencyGraphResponseDTO().setMicoServices(micoServices);
        LinkedList<MicoServiceDependencyGraphEdgeResponseDTO> micoServiceDependencyGraphEdgeList = new LinkedList<>();
        for (MicoService micoService : micoServices) {
@@ -369,31 +347,6 @@ public class ServiceController {
        return ResponseEntity.ok(new Resource<>(micoServiceDependencyGraph,
            linkTo(methodOn(ServiceController.class).getDependencyGraph(shortName, version)).withSelfRel()));
 	}
-
-    // TODO: Is there a better solution using Neo4j and custom queries?
-	public List<MicoService> getDependers(MicoService service) {
-		List<MicoService> serviceList = serviceRepository.findAll(2);
-
-		List<MicoService> dependers = new LinkedList<>();
-
-		serviceList.forEach(s -> {
-			List<MicoServiceDependency> dependees = s.getDependencies();
-			if (dependees != null) {
-				dependees.forEach(dependee -> {
-					if (dependee.getDependedService().equals(s)) {
-						dependers.add(dependee.getService());
-					}
-				});
-			}
-		});
-
-		return dependers;
-	}
-
-    private MicoService getService(MicoService newService) {
-        Optional<MicoService> serviceOptional = serviceRepository.findByShortNameAndVersion(newService.getShortName(), newService.getVersion());
-        return serviceOptional.orElse(null);
-    }
 
     /**
      * Returns the existing {@link MicoService} object from the database for the given shortName and version.
@@ -419,65 +372,6 @@ public class ServiceController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Could not find any Service with name: '" + shortName);
         }
         return micoServiceList;
-    }
-
-    //Get the dependees of a service, check if they exists, if true get the ids and set the dependees
-    public MicoService setServiceDependees(MicoService newService) {
-        MicoService serviceToGetId = getService(newService);
-        if (serviceToGetId == null) {
-            // TODO: MicoService name is mandatory! Will be covered by issue mico#490
-            MicoService savedService = serviceRepository.save(new MicoService().setShortName(newService.getShortName()).setVersion(newService.getVersion()));
-
-            List<MicoServiceDependency> dependees = savedService.getDependencies();
-            LinkedList<MicoService> services = getDependentServices(dependees);
-
-            List<MicoServiceDependency> newDependees = new LinkedList<>();
-
-            if (services != null) {
-                services.forEach(service -> newDependees.add(new MicoServiceDependency().setService(savedService).setDependedService(service)));
-            }
-
-            savedService.setDependencies(newDependees);
-
-            return savedService;
-        } else {
-            newService.setId(serviceToGetId.getId());
-            List<MicoServiceDependency> dependees = newService.getDependencies();
-            LinkedList<MicoService> services = getDependentServices(dependees);
-
-            List<MicoServiceDependency> newDependees = new LinkedList<>();
-
-            services.forEach(service -> newDependees.add(new MicoServiceDependency().setService(newService).setDependedService(service)));
-
-            newService.setDependencies(newDependees);
-
-            return newService;
-        }
-    }
-
-    private LinkedList<MicoService> getDependentServices(List<MicoServiceDependency> dependees) {
-        if (dependees == null) {
-            return null;
-        }
-
-        LinkedList<MicoService> services = new LinkedList<>();
-
-        dependees.forEach(dependee -> {
-            String shortName = dependee.getDependedService().getShortName();
-            String version = dependee.getDependedService().getVersion();
-
-            Optional<MicoService> dependeeServiceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
-            MicoService dependeeService = dependeeServiceOpt.orElse(null);
-            if (dependeeService == null) {
-                // TODO: MicoService name is mandatory! Will be covered by issue mico#490
-                MicoService newService = serviceRepository.save(new MicoService().setShortName(shortName).setVersion(version));
-                services.add(newService);
-            } else {
-                services.add(dependeeService);
-            }
-        });
-
-        return services;
     }
 
     /**

@@ -563,8 +563,7 @@ public class ApplicationControllerTests {
             .setShortName(existingApplication.getShortName())
             .setVersion(existingApplication.getVersion())
             .setName(updatedApplication.getName())
-            .setDescription("")
-            .setServiceDeploymentInfos(existingApplication.getServiceDeploymentInfos());
+            .setDescription("");
 
         ArgumentCaptor<MicoApplication> applicationArgumentCaptor = ArgumentCaptor.forClass(MicoApplication.class);
 
