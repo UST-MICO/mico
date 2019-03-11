@@ -24,6 +24,7 @@ import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoBackgroundTaskRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.resource.DeploymentResource;
 import io.github.ust.mico.core.service.MicoCoreBackgroundTaskFactory;
@@ -92,6 +93,8 @@ public class DeploymentResourceTests {
     @MockBean
     private MicoServiceRepository serviceRepository;
     @MockBean
+    private MicoBackgroundTaskRepository backgroundTaskRepository;
+    @MockBean
     private ImageBuilder imageBuilder;
     @MockBean
     private MicoCoreBackgroundTaskFactory factory;
@@ -123,7 +126,9 @@ public class DeploymentResourceTests {
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(serviceRepository.save(any(MicoService.class))).willReturn(service);
         given(serviceRepository.findAllByApplication(SHORT_NAME, VERSION)).willReturn(CollectionUtils.listOf(service));
-
+        MicoBackgroundTask mockTask = new MicoBackgroundTask(CompletableFuture.completedFuture(true), service.getShortName(), service.getVersion(), MicoBackgroundTask.Type.BUILD);
+        mockTask.setStatus(MicoBackgroundTask.Status.DONE);
+        given(backgroundTaskRepository.findByMicoServiceShortNameAndMicoServiceVersionAndType(service.getShortName(), service.getVersion(), MicoBackgroundTask.Type.BUILD)).willReturn(Optional.of(mockTask));
         given(factory.runAsync(ArgumentMatchers.any(), onSuccessArgumentCaptor.capture(), onErrorArgumentCaptor.capture()))
             .willReturn(CompletableFuture.completedFuture(service));
 
