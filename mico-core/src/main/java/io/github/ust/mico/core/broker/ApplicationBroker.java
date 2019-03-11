@@ -125,12 +125,16 @@ public class ApplicationBroker {
         return applicationRepository.save(micoApplication);
     }
 
-    public MicoApplication copyAndUpgradeMicoApplicationByShortNameAndVersion() {
-        //TODO: Implementation
+    public MicoApplication copyAndUpgradeMicoApplicationByShortNameAndVersion(String shortName, String version, String newVersion) throws MicoApplicationNotFoundException {
+        MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(shortName, version);
+        micoApplication.setVersion(newVersion).setId(null);
+        return applicationRepository.save(micoApplication);
     }
 
-    public MicoApplication copyAndUpgradeMicoApplicationById() {
-        //TODO: Implementation
+    public MicoApplication copyAndUpgradeMicoApplicationById(Long id, String newVersion) throws MicoApplicationNotFoundException {
+        MicoApplication micoApplication = getMicoApplicationById(id);
+        micoApplication.setVersion(newVersion).setId(null);
+        return applicationRepository.save(micoApplication);
     }
 
     public List<MicoService> getMicoServicesOfMicoApplicationByShortNameAndVersion() {
