@@ -65,6 +65,7 @@ public class ApplicationController {
     public static final String PATH_SERVICES = "services";
     public static final String PATH_DEPLOYMENT_INFORMATION = "deploymentInformation";
     public static final String PATH_PROMOTE = "promote";
+    public static final String PATH_STATUS = "status";
 
     private static final String PATH_VARIABLE_SHORT_NAME = "shortName";
     private static final String PATH_VARIABLE_VERSION = "version";
@@ -320,7 +321,7 @@ public class ApplicationController {
 		        .withSelfRel()));
     }
 
-    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_STATUS)
     public ResponseEntity<Resource<MicoApplicationStatusResponseDTO>> getStatusOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                      @PathVariable(PATH_VARIABLE_VERSION) String version) {
         MicoApplication micoApplication = getApplicationFromDatabase(shortName, version);

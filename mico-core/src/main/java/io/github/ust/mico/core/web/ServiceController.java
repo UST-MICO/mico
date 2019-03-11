@@ -263,7 +263,7 @@ public class ServiceController {
             .body(new Resource<>(new MicoServiceResponseDTO(savedService), getServiceLinks(savedService)));
     }
 
-    @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees"
+    @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPENDEES
         + "/{" + PATH_DELETE_SHORT_NAME + "}/{" + PATH_DELETE_VERSION + "}")
     public ResponseEntity<Resource<MicoServiceResponseDTO>> deleteDependee(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                 @PathVariable(PATH_VARIABLE_VERSION) String version,
@@ -297,7 +297,7 @@ public class ServiceController {
     }
 
     @PostMapping(PATH_GITHUB_ENDPOINT)
-    public ResponseEntity<Resource<MicoServiceResponseDTO>> importMicoServiceFromGitHub(@RequestBody CrawlingInfoRequestDTO crawlingInfo) {
+    public ResponseEntity<Resource<MicoServiceResponseDTO>> importMicoServiceFromGitHub(@Valid @RequestBody CrawlingInfoRequestDTO crawlingInfo) {
         String url = crawlingInfo.getUrl();
         String version = crawlingInfo.getVersion();
         log.debug("Start importing MicoService from URL '{}'", url);

@@ -244,20 +244,6 @@ public class ServiceInterfaceController {
         }
         return serviceOpt.get();
     }
-
-//    /**
-//     * Checks if a micoServiceInterface exists for a given micoService. The matching is based on the interface name.
-//     *
-//     * @param serviceInterface
-//     * @param service
-//     * @return
-//     */
-//    private boolean serviceInterfaceExists(MicoServiceInterface serviceInterface, MicoService service) {
-//        if (service.getServiceInterfaces() == null) {
-//            return false;
-//        }
-//        return service.getServiceInterfaces().stream().anyMatch(getMicoServiceInterfaceNameMatchingPredicate(serviceInterface.getServiceInterfaceName()));
-//    }
     
     protected Resource<MicoServiceInterfaceResponseDTO> getServiceInterfaceResponseDTOResource(String serviceShortName, String serviceVersion, MicoServiceInterface serviceInterface) {
 		return new Resource<MicoServiceInterfaceResponseDTO>(new MicoServiceInterfaceResponseDTO(serviceInterface), getServiceInterfaceLinks(serviceInterface, serviceShortName, serviceVersion));
@@ -266,16 +252,6 @@ public class ServiceInterfaceController {
     protected List<Resource<MicoServiceInterfaceResponseDTO>> getServiceInterfaceResponseDTOResourcesList(String serviceShortName, String serviceVersion, List<MicoServiceInterface> serviceInterfaces) {
 		return serviceInterfaces.stream().map(serviceInterface -> getServiceInterfaceResponseDTOResource(serviceShortName, serviceVersion, serviceInterface)).collect(Collectors.toList());
     }
-
-//    /**
-//     * Generates a predicate which matches the given micoServiceInterfaceName.
-//     *
-//     * @param micoServiceInterfaceName
-//     * @return
-//     */
-//    private Predicate<MicoServiceInterface> getMicoServiceInterfaceNameMatchingPredicate(String micoServiceInterfaceName) {
-//        return existingServiceInterface -> existingServiceInterface.getServiceInterfaceName().equals(micoServiceInterfaceName);
-//    }
 
     private Iterable<Link> getServiceInterfaceLinks(MicoServiceInterface serviceInterface, String shortName, String version) {
         LinkedList<Link> links = new LinkedList<>();
