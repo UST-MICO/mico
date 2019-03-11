@@ -66,11 +66,11 @@ public class PrometheusValueDeserializerTest {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             PrometheusResponseDTO responseCpuLoad = objectMapper.readValue(testJsonForCpuLoadRequest, PrometheusResponseDTO.class);
-            assertEquals("success", responseCpuLoad.getStatus());
+            assertEquals(true, responseCpuLoad.isSuccess());
             assertEquals(0, responseCpuLoad.getValue());
 
             PrometheusResponseDTO responseMemoryUsage = objectMapper.readValue(testJsonForMemoryUsageRequest, PrometheusResponseDTO.class);
-            assertEquals("success", responseMemoryUsage.getStatus());
+            assertEquals(true, responseMemoryUsage.isSuccess());
             assertEquals(310083584, responseMemoryUsage.getValue());
         } catch (IOException e) {
             e.printStackTrace();

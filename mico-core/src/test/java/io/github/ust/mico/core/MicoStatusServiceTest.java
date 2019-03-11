@@ -449,7 +449,7 @@ public class MicoStatusServiceTest {
     @SuppressWarnings("rawtypes")
     private ResponseEntity getPrometheusResponseEntity(int value) {
         PrometheusResponseDTO prometheusResponse = new PrometheusResponseDTO();
-        prometheusResponse.setStatus("success");
+        prometheusResponse.setSuccess(true);
         prometheusResponse.setValue(value);
         ResponseEntity responseEntity = mock(ResponseEntity.class);
         given(responseEntity.getStatusCode()).willReturn(HttpStatus.OK);

@@ -37,10 +37,9 @@ import lombok.experimental.Accessors;
 public class PrometheusResponseDTO {
 
     /**
-     * Status of the response: can be "success" or "error".
+     * Indicates the status of the response: true if the response is successful and false if an error occurred.
      */
-    @JsonProperty("status")
-    private String status;
+    private boolean success = false;
 
     /**
      * The data field and all nested fields in the response JSON are deserialized with {@link
@@ -49,4 +48,14 @@ public class PrometheusResponseDTO {
     @JsonProperty("data")
     @JsonDeserialize(using = PrometheusValueDeserializer.class)
     private int value;
+
+    /**
+     * Status of the response: can be "success" or "error".
+     */
+    @JsonProperty("status")
+    private void setResponseStatus(String status) {
+        if (status.equals("success")) {
+            this.success = true;
+        }
+    }
 }

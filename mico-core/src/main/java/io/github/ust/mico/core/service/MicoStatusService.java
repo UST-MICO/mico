@@ -263,8 +263,8 @@ public class MicoStatusService {
      * Get information and metrics for a {@link Pod} representing an instance of a {@link MicoService}.
      *
      * @param pod is a {@link Pod} of Kubernetes
-     * @return a {@link KubernetesPodInformationDTO} which has node name, pod name, phase, host ip, memory usage, and
-     * cpu load as status information
+     * @return a {@link KubernetesPodInformationDTO} which has node name, pod name, phase, host IP, memory usage, and
+     * CPU load as status information
      */
     private KubernetesPodInformationDTO getUiPodInfo(Pod pod) {
         String nodeName = pod.getSpec().getNodeName();
@@ -303,22 +303,22 @@ public class MicoStatusService {
     }
 
     /**
-     * Request the CPU load / memory usage value from Prometheus.
+     * Requests the CPU load / memory usage value from Prometheus.
      *
-     * @param prometheusUri is the adapted URI with the query for Prometheus, either CPU load or memory usage
-     * @return a single Integer value of the current CPU load or the memory usage of a {@link Pod}
+     * @param prometheusUri is the adapted URI with the query for Prometheus, either CPU load or memory usage.
+     * @return a single Integer value of the current CPU load or the memory usage of a {@link Pod}.
      * @throws PrometheusRequestFailedException is thrown if Prometheus returns an error, if there is no response body,
-     *                                          or if the HTTP request was not successful
+     *                                          or if the HTTP request was not successful.
      */
     private int requestValueFromPrometheus(URI prometheusUri) throws PrometheusRequestFailedException {
         ResponseEntity<PrometheusResponseDTO> response = restTemplate.getForEntity(prometheusUri, PrometheusResponseDTO.class);
         if (response.getStatusCode().is2xxSuccessful()) {
             PrometheusResponseDTO prometheusResponse = response.getBody();
             if (prometheusResponse != null) {
-                if (prometheusResponse.getStatus().equals("success")) {
+                if (prometheusResponse.isSuccess()) {
                     return prometheusResponse.getValue();
                 } else {
-                    throw new PrometheusRequestFailedException("Prometheus returned a response with status " + prometheusResponse.getStatus());
+                    throw new PrometheusRequestFailedException("Prometheus returned a response with status " + prometheusResponse.isSuccess());
                 }
             } else {
                 throw new PrometheusRequestFailedException("There is no body in the response with status code " + response.getStatusCode());
@@ -329,12 +329,12 @@ public class MicoStatusService {
     }
 
     /**
-     * Build the correct Prometheus URI to request the correct value.
+     * Builds the correct Prometheus URI to request the correct value.
      *
      * @param query   is the query for Prometheus in PromQL (either the query for the CPU load, or for the memory
-     *                usage)
+     *                usage).
      * @param podName is the name of the {@link Pod}, for which the CPU load / memory usage query is build.
-     * @return the URI to send the request to
+     * @return the URI to send the request to.
      */
     private URI getPrometheusUri(String query, String podName) {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(prometheusConfig.getUri());

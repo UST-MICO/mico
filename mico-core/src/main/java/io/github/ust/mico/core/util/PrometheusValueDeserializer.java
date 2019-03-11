@@ -28,7 +28,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 
 /**
- * Custom deserializer for JSON objects, which are received from Prometheus for CPU load / memory usage requests.
+ * Custom deserializer for a response, which is received from Prometheus for CPU load / memory usage requests.
  */
 public class PrometheusValueDeserializer extends StdDeserializer<Integer> {
 
