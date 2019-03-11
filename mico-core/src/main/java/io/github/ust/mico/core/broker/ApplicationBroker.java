@@ -1,7 +1,9 @@
 package io.github.ust.mico.core.broker;
 
+import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
@@ -98,4 +100,18 @@ public class ApplicationBroker {
     public MicoApplication removeMicoServiceFromMicoApplication() {
         //TODO: Implementation
     }
+
+    public MicoServiceDeploymentInfo getMicoServiceDeploymentInformationOfMicoApplication() {
+        //TODO: Implementation
+    }
+
+    public MicoServiceDeploymentInfo updateMicoServiceDeploymentInformationOfMicoApplication() {
+        //TODO: Implementation
+    }
+
+    public MicoApplicationStatusDTO getMicoApplicationStatusOfMicoApplication() {
+        //TODO: Implementation
+    }
+
+
 }

@@ -363,6 +363,7 @@ public class ApplicationResource {
      * @return the existing {@link MicoService} from the database if it exists.
      * @throws ResponseStatusException if no {@link MicoService} exists for the given shortName and version.
      */
+    //TODO: remove?
     private MicoService getServiceFromDatabase(String shortName, String version) throws ResponseStatusException {
         Optional<MicoService> existingServciceOptional = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (!existingServciceOptional.isPresent()) {
@@ -371,22 +372,26 @@ public class ApplicationResource {
         return existingServciceOptional.get();
     }
 
+    //TODO: move to broker
     private List<Resource<MicoApplicationWithServicesDTO>> getApplicationWithServicesDTOResourceList(List<MicoApplication> applications) {
         return applications.stream().map(application -> getApplicationWithServicesDTOResourceWithDeploymentStatus(application)).collect(Collectors.toList());
     }
 
+    //TODO: move to broker
     private Resource<MicoApplicationWithServicesDTO> getApplicationWithServicesDTOResourceWithDeploymentStatus(MicoApplication application) {
         MicoApplicationWithServicesDTO dto = MicoApplicationWithServicesDTO.valueOf(application);
         dto.setDeploymentStatus(getApplicationDeploymentStatus(application));
         return new Resource<MicoApplicationWithServicesDTO>(dto, getApplicationLinks(application));
     }
 
+    //TODO: move to broker
     private Resource<MicoApplicationDTO> getApplicationDTOResourceWithDeploymentStatus(MicoApplication application) {
         MicoApplicationDTO dto = MicoApplicationDTO.valueOf(application);
         dto.setDeploymentStatus(getApplicationDeploymentStatus(application));
         return new Resource<MicoApplicationDTO>(dto, getApplicationLinks(application));
     }
 
+    //TODO: move to broker
     private MicoApplicationDeploymentStatus getApplicationDeploymentStatus(MicoApplication application) {
         try {
             return micoKubernetesClient.isApplicationDeployed(application)
@@ -398,6 +403,7 @@ public class ApplicationResource {
         }
     }
 
+    //TODO: move to broker
     private Iterable<Link> getApplicationLinks(MicoApplication application) {
         LinkedList<Link> links = new LinkedList<>();
         links.add(linkTo(methodOn(ApplicationResource.class).getApplicationByShortNameAndVersion(application.getShortName(), application.getVersion())).withSelfRel());
