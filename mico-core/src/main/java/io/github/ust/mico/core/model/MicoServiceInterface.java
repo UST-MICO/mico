@@ -26,8 +26,8 @@ import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
-import org.springframework.data.neo4j.annotation.QueryResult;
 
+import io.github.ust.mico.core.dto.request.MicoServiceInterfaceRequestDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -41,7 +41,6 @@ import lombok.experimental.Accessors;
 @AllArgsConstructor
 @Accessors(chain = true)
 @NodeEntity
-@QueryResult // TODO: Check whether this annotation is really necessary.
 public class MicoServiceInterface {
 
     /**
@@ -95,5 +94,26 @@ public class MicoServiceInterface {
      * The transport protocol, e.g., TCP.
      */
     private String transportProtocol;
+
+
+    // ----------------------
+    // -> Static Creators ---
+    // ----------------------
+    
+    /**
+     * Creates a {@code MicoServiceInterface} based on a {@code MicoServiceInterfaceRequestDTO}.
+     * 
+     * @param applicationDto the {@link MicoServiceInterfaceRequestDTO}.
+     * @return a {@link MicoServiceInterface}.
+     */
+    public static MicoServiceInterface valueOf(MicoServiceInterfaceRequestDTO serviceInterfaceDto) {
+        return new MicoServiceInterface()
+        	.setServiceInterfaceName(serviceInterfaceDto.getServiceInterfaceName())
+        	.setPorts(serviceInterfaceDto.getPorts())
+        	.setPublicDns(serviceInterfaceDto.getPublicDns())
+        	.setDescription(serviceInterfaceDto.getDescription())
+        	.setProtocol(serviceInterfaceDto.getProtocol())
+        	.setTransportProtocol(serviceInterfaceDto.getTransportProtocol());
+    }
 
 }
