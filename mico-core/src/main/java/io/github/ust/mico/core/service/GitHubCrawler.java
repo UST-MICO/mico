@@ -34,6 +34,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
+
 import java.io.IOException;
 import java.util.LinkedList;
 
@@ -97,31 +98,33 @@ public class GitHubCrawler {
                 if (existsFileInGithubRepo(uriBasicInfo, dockerfilePath)) {
                     micoService.setDockerfilePath(dockerfilePath);
                 } else {
-                    throw new IllegalArgumentException("The dockerfile path must be a valid path relativ the the repository root");
+                    throw new IllegalArgumentException("The Dockerfile path must be a valid path relativ to the repository root");
                 }
             }
             return micoService;
         } else {
-            throw new IllegalArgumentException("An error occurred while requesting information about the github repository. Send to requests and got the status codes "
+            throw new IllegalArgumentException("An error occurred while requesting information about the GitHub repository. Send two requests and got the status codes "
                 + responseBasicInfo.getStatusCode() + " and " + responseReleaseInfo.getStatusCode().is2xxSuccessful());
         }
 
     }
 
     /**
-     * Checks if a file in a github repository exists
-     * @param uriBasicInfo
-     * @param dockerfilePath
-     * @return
+     * Checks if a file in a GitHub repository exists
+     *
+     * @param uriBasicInfo   the URI to a specific release of a GitHub repository
+     * @param dockerfilePath the relative path to the Dockerfile. The path is relative to the root directory of the
+     *                       GitHub repository
+     * @return {@code true} if the Dockerfile exists in the in the specified repository
      */
     private boolean existsFileInGithubRepo(String uriBasicInfo, String dockerfilePath) {
         ResponseEntity<String> responseDockerFileInfo;
         UriComponentsBuilder dockerFileUriBuilder = UriComponentsBuilder.fromHttpUrl(uriBasicInfo);
         UriComponents dockerFileUriComponent = dockerFileUriBuilder.pathSegment(GITHUB_API_CONTENTS).pathSegment(dockerfilePath).build();
-        log.info("Check if the dockerfile exists at {}",dockerFileUriComponent.toString());
+        log.debug("Check if the Dockerfile exists at {}", dockerFileUriComponent.toString());
         responseDockerFileInfo = restTemplate.getForEntity(dockerFileUriComponent.toUri(), String.class);
-        if(!responseDockerFileInfo.getStatusCode().is2xxSuccessful()){
-            log.error("Got an error {} while checking if dockerfile exists",responseDockerFileInfo.getStatusCode());
+        if (!responseDockerFileInfo.getStatusCode().is2xxSuccessful()) {
+            log.error("Got an error {} while checking if Dockerfile exists", responseDockerFileInfo.getStatusCode());
             return false;
         }
         return true;
@@ -135,7 +138,7 @@ public class GitHubCrawler {
     }
 
     public MicoService crawlGitHubRepoLatestRelease(String uri) throws IOException {
-        return crawlGitHubRepoLatestRelease(uri,null);
+        return crawlGitHubRepoLatestRelease(uri, null);
     }
 
     public MicoService crawlGitHubRepoSpecificRelease(String uri, String version, String dockerfilePath) throws IOException {
