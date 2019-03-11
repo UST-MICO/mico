@@ -24,13 +24,14 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.github.ust.mico.core.exception.NotInitializedException;
 import io.github.ust.mico.core.exception.VersionNotSupportedException;
-import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
-import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
-import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoVersion;
+import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
+import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
@@ -49,7 +50,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-import static io.github.ust.mico.core.TestConstants.*;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -62,13 +62,12 @@ import static org.junit.Assert.assertTrue;
 public class ImageBuilderIntegrationTests {
 
     @Autowired
-    private ClusterAwarenessFabric8 cluster;
-
-    @Autowired
     private ImageBuilder imageBuilder;
 
     @Autowired
     private IntegrationTestsUtils integrationTestsUtils;
+
+    private KubernetesClient kubernetesClient = new DefaultKubernetesClient();
 
     private String namespace;
 
@@ -77,7 +76,6 @@ public class ImageBuilderIntegrationTests {
      */
     @Before
     public void setUp() {
-
         namespace = integrationTestsUtils.setUpEnvironment(true);
         integrationTestsUtils.setUpDockerRegistryConnection(namespace);
     }
@@ -87,7 +85,6 @@ public class ImageBuilderIntegrationTests {
      */
     @After
     public void tearDown() {
-
         integrationTestsUtils.cleanUpEnvironment(namespace);
     }
 
@@ -118,11 +115,12 @@ public class ImageBuilderIntegrationTests {
         imageBuilder.init();
 
         MicoService micoService = new MicoService()
-            .setShortName("hello-it")
-            .setName("hello-integration-test")
-            .setVersion(MicoVersion.valueOf(RELEASE).toString())
-            .setGitCloneUrl(GIT_TEST_REPO_URL)
-            .setDockerfilePath(DOCKERFILE_PATH);
+            .setShortName(TestConstants.IntegrationTest.SERVICE_SHORT_NAME)
+            .setName(TestConstants.IntegrationTest.SERVICE_NAME)
+            .setVersion(TestConstants.IntegrationTest.RELEASE)
+            .setDescription(TestConstants.IntegrationTest.SERVICE_DESCRIPTION)
+            .setGitCloneUrl(TestConstants.IntegrationTest.GIT_CLONE_URL)
+            .setDockerfilePath(TestConstants.IntegrationTest.DOCKERFILE_PATH);
 
         Build build = imageBuilder.build(micoService);
 
@@ -162,7 +160,7 @@ public class ImageBuilderIntegrationTests {
                     new LocalObjectReferenceBuilder().withName(dockerRegistrySecretName).build()
                 ).build())
             .build();
-        Pod createdPod = cluster.createPod(pod, namespace);
+        Pod createdPod = kubernetesClient.pods().inNamespace(namespace).createOrReplace(pod);
         String podName = createdPod.getMetadata().getName();
         CompletableFuture<Boolean> podCreationResult = integrationTestsUtils.waitUntilPodIsRunning(
             podName, namespace, 1, 1, 20);

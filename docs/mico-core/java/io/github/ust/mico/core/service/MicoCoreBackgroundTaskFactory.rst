@@ -10,11 +10,11 @@
 
 .. java:import:: java.util.function Supplier
 
-.. java:import:: io.github.ust.mico.core.configuration MicoCoreBackgroundTaskFactoryConfig
-
 .. java:import:: org.springframework.beans.factory.annotation Autowired
 
 .. java:import:: org.springframework.stereotype Component
+
+.. java:import:: io.github.ust.mico.core.configuration MicoCoreBackgroundTaskFactoryConfig
 
 MicoCoreBackgroundTaskFactory
 =============================
@@ -51,7 +51,7 @@ runAsync
 runAsync
 ^^^^^^^^
 
-.. java:method:: public <T> CompletableFuture runAsync(Supplier<T> task, Consumer<? super T> onSuccess)
+.. java:method:: @SuppressWarnings public <T> CompletableFuture runAsync(Supplier<T> task, Consumer<? super T> onSuccess)
    :outertype: MicoCoreBackgroundTaskFactory
 
    Returns a new CompletableFuture that is asynchronously completed by a task running in the \ :java:ref:`ExecutorService`\  defined in this class with the value obtained by calling the given supplier. In case the task succeeds, the given Consumer is executed.
@@ -64,7 +64,7 @@ runAsync
 runAsync
 ^^^^^^^^
 
-.. java:method:: public <T> CompletableFuture runAsync(Supplier<T> task, Consumer<? super T> onSuccess, Function<Throwable, ? extends Void> onError)
+.. java:method:: @SuppressWarnings public <T> CompletableFuture runAsync(Supplier<T> task, Consumer<? super T> onSuccess, Function<Throwable, ? extends Void> onError)
    :outertype: MicoCoreBackgroundTaskFactory
 
    Returns a new CompletableFuture that is asynchronously completed by a task running in the \ :java:ref:`ExecutorService`\  defined in this class with the value obtained by calling the given supplier. In case the task succeeds, the given Consumer is executed, otherwise (on failure) the given Function is executed.

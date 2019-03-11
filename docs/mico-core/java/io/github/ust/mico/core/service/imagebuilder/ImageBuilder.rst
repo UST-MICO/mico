@@ -8,13 +8,13 @@
 
 .. java:import:: io.fabric8.kubernetes.api.model.apiextensions CustomResourceDefinitionList
 
+.. java:import:: io.fabric8.kubernetes.client KubernetesClient
+
 .. java:import:: io.fabric8.kubernetes.client.dsl MixedOperation
 
 .. java:import:: io.fabric8.kubernetes.client.dsl NonNamespaceOperation
 
 .. java:import:: io.fabric8.kubernetes.client.dsl Resource
-
-.. java:import:: io.github.ust.mico.core.service ClusterAwarenessFabric8
 
 .. java:import:: io.github.ust.mico.core.configuration MicoKubernetesBuildBotConfig
 
@@ -49,10 +49,10 @@ Constructors
 ImageBuilder
 ^^^^^^^^^^^^
 
-.. java:constructor:: @Autowired public ImageBuilder(ClusterAwarenessFabric8 cluster, MicoKubernetesBuildBotConfig buildBotConfig)
+.. java:constructor:: @Autowired public ImageBuilder(KubernetesClient kubernetesClient, MicoKubernetesBuildBotConfig buildBotConfig)
    :outertype: ImageBuilder
 
-   :param cluster: The Kubernetes cluster object
+   :param kubernetesClient: The Kubernetes client object
    :param buildBotConfig: The build bot configuration for the image builder
 
 Methods

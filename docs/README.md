@@ -53,7 +53,10 @@ Make sure you have the `dot` command from `graphviz`, `typedoc` and a basic `LaT
 
 **Update Javadoc:**
 
+Javadoc is included in the linux makefile.
+
 ```bash
+# cd docs
 javasphinx-apidoc --update --output-dir="./mico-core/java" "../mico-core/src/main/java"
 ```
 
