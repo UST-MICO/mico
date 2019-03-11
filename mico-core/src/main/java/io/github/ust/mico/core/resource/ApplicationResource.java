@@ -19,7 +19,7 @@
 
 package io.github.ust.mico.core.resource;
 
-import io.github.ust.mico.core.broker.ServiceBroker;
+import io.github.ust.mico.core.broker.ApplicationBroker;
 import io.github.ust.mico.core.dto.MicoApplicationDTO;
 import io.github.ust.mico.core.dto.MicoApplicationDTO.MicoApplicationDeploymentStatus;
 import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
@@ -71,7 +71,7 @@ public class ApplicationResource {
     private static final String PATH_VARIABLE_SERVICE_VERSION = "serviceVersion";
 
     @Autowired
-    private ServiceBroker serviceBroker;
+    private ApplicationBroker applicationBroker;
 
     @Autowired
     private MicoApplicationRepository applicationRepository; //TODO: remove?

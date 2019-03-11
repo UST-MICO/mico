@@ -9,22 +9,18 @@ import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @Service
 public class ApplicationBroker {
 
-    public static final String PATH_APPLICATIONS = "applications";
-    public static final String PATH_SERVICES = "services";
-    public static final String PATH_DEPLOYMENT_INFORMATION = "deploymentInformation";
-    public static final String PATH_PROMOTE = "promote";
-    private static final String PATH_VARIABLE_SHORT_NAME = "shortName";
-    private static final String PATH_VARIABLE_VERSION = "version";
-    private static final String PATH_VARIABLE_SERVICE_SHORT_NAME = "serviceShortName";
-    private static final String PATH_VARIABLE_SERVICE_VERSION = "serviceVersion";
+    @Autowired
+    private ServiceBroker serviceBroker;
 
     @Autowired
     private MicoApplicationRepository applicationRepository; //TODO: remove?
@@ -109,6 +105,7 @@ public class ApplicationBroker {
         //TODO: Implementation
     }
 
+    //TODO: change return value?
     public MicoApplicationStatusDTO getMicoApplicationStatusOfMicoApplication() {
         //TODO: Implementation
     }
