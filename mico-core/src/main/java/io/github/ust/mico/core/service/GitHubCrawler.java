@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -66,13 +67,13 @@ public class GitHubCrawler {
 
         try {
             responseBasicInfo = restTemplate.getForEntity(uriBasicInfo, String.class);
-        } catch (Exception e) {
+        } catch (HttpClientErrorException e) {
             throw new IllegalArgumentException("GitHub repository " + uriBasicInfo.replace(GITHUB_API_URL, "") + " does not exist!");
         }
 
         try {
             responseReleaseInfo = restTemplate.getForEntity(uriReleaseInfo, String.class);
-        } catch (Exception e) {
+        } catch (HttpClientErrorException e) {
             throw new IllegalArgumentException("GitHub repository " + uriBasicInfo.replace(GITHUB_API_URL, "")
                 + " doesn't have a release " + uriReleaseInfo.replace(GITHUB_API_URL, "") + "!");
         }
