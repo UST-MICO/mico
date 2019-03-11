@@ -83,7 +83,7 @@ public class CrawlingInfoDTO {
             @ExtensionProperty(name = "title", value = "Path to Dockerfile"),
             @ExtensionProperty(name = "pattern", value = Patterns.RELATIVE_PATH_REGEX),
             @ExtensionProperty(name = "x-order", value = "30"),
-            @ExtensionProperty(name = "description", value = "The path to the dockerfile must be relative to the root folder of the git repository")
+            @ExtensionProperty(name = "description", value = "The path to the Dockerfile must be relative to the root folder of the git repository")
         }
     )})
     @Pattern(regexp = Patterns.RELATIVE_PATH_REGEX, message = "must be relative to the root folder of the git repository")
