@@ -19,6 +19,7 @@
 
 package io.github.ust.mico.core.resource;
 
+import io.github.ust.mico.core.broker.ServiceBroker;
 import io.github.ust.mico.core.dto.MicoApplicationDTO;
 import io.github.ust.mico.core.dto.MicoApplicationDTO.MicoApplicationDeploymentStatus;
 import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
@@ -64,26 +65,28 @@ public class ApplicationResource {
     public static final String PATH_SERVICES = "services";
     public static final String PATH_DEPLOYMENT_INFORMATION = "deploymentInformation";
     public static final String PATH_PROMOTE = "promote";
-
     private static final String PATH_VARIABLE_SHORT_NAME = "shortName";
     private static final String PATH_VARIABLE_VERSION = "version";
     private static final String PATH_VARIABLE_SERVICE_SHORT_NAME = "serviceShortName";
     private static final String PATH_VARIABLE_SERVICE_VERSION = "serviceVersion";
 
     @Autowired
-    private MicoApplicationRepository applicationRepository;
+    private ServiceBroker serviceBroker;
 
     @Autowired
-    private MicoServiceRepository serviceRepository;
+    private MicoApplicationRepository applicationRepository; //TODO: remove?
 
     @Autowired
-    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
+    private MicoServiceRepository serviceRepository; //TODO: remove?
 
     @Autowired
-    private MicoKubernetesClient micoKubernetesClient;
+    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository; //TODO: remove?
 
     @Autowired
-    private MicoStatusService micoStatusService;
+    private MicoKubernetesClient micoKubernetesClient; //TODO: remove?
+
+    @Autowired
+    private MicoStatusService micoStatusService; //TODO: remove?
 
     @GetMapping()
     public ResponseEntity<Resources<Resource<MicoApplicationWithServicesDTO>>> getAllApplications() {
