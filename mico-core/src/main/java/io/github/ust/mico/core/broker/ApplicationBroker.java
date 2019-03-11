@@ -1,6 +1,9 @@
 package io.github.ust.mico.core.broker;
 
 import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
+import io.github.ust.mico.core.exception.KubernetesResourceException;
+import io.github.ust.mico.core.exception.MicoApplicationAlreadyExistsException;
+import io.github.ust.mico.core.exception.MicoApplicationIsDeployedException;
 import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
@@ -47,36 +50,79 @@ public class ApplicationBroker {
         return micoApplicationOptional.get();
     }
 
-    public List<MicoApplication> getMicoApplicationsByShortName() {
-        //TODO: Implementation
+    public MicoApplication getMicoApplicationById(Long id) throws MicoApplicationNotFoundException {
+        Optional<MicoApplication> micoApplicationOptional = applicationRepository.findById(id);
+        if (!micoApplicationOptional.isPresent()) {
+            throw new MicoApplicationNotFoundException(id);
+        }
+        return micoApplicationOptional.get();
     }
 
-    public List<MicoApplication> getMicoApplications() {
-        //TODO: Implementation
+    public List<MicoApplication> getMicoApplicationsByShortName(String shortName) throws MicoApplicationNotFoundException {
+        List<MicoApplication> micoApplicationList = applicationRepository.findByShortName(shortName);
+        if (micoApplicationList.isEmpty()) {
+            throw new MicoApplicationNotFoundException(shortName);
+        }
+        return micoApplicationList;
     }
 
-    public MicoApplication getMicoApplicationById() {
-
+    public List<MicoApplication> getMicoApplications() throws MicoApplicationNotFoundException {
+        List<MicoApplication> micoApplicationList = applicationRepository.findAll(3);
+        if (micoApplicationList.isEmpty()) {
+            throw new MicoApplicationNotFoundException();
+        }
+        return micoApplicationList;
     }
 
-    public void deleteMicoApplicationByShortNameAndVersion() {
-        //TODO: Implementation
+    public void deleteMicoApplicationByShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException, KubernetesResourceException, MicoApplicationIsDeployedException {
+        MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(shortName, version);
+        if (micoKubernetesClient.isApplicationDeployed(micoApplication)) {
+            throw new MicoApplicationIsDeployedException(shortName, version);
+        }
+        applicationRepository.delete(micoApplication);
     }
 
-    public void deleteMicoApplicationById() {
-        //TODO: Implementation
+    public void deleteMicoApplicationById(Long id) throws MicoApplicationNotFoundException, KubernetesResourceException, MicoApplicationIsDeployedException {
+        MicoApplication micoApplication = getMicoApplicationById(id);
+        if (micoKubernetesClient.isApplicationDeployed(micoApplication)) {
+            throw new MicoApplicationIsDeployedException(id);
+        }
+        applicationRepository.deleteById(id);
     }
 
-    public void deleteMicoApplicationsByShortName() {
-        //TODO: Implementation
+    public void deleteMicoApplicationsByShortName(String shortName) throws MicoApplicationNotFoundException, KubernetesResourceException, MicoApplicationIsDeployedException {
+        List<MicoApplication> micoApplicationList = getMicoApplicationsByShortName(shortName);
+        for (MicoApplication micoApplication : micoApplicationList) {
+            if (micoKubernetesClient.isApplicationDeployed(micoApplication)) {
+                throw new MicoApplicationIsDeployedException(micoApplication.getShortName(), micoApplication.getVersion());
+            }
+        }
+        applicationRepository.deleteAll(micoApplicationList);
     }
 
-    public MicoApplication createMicoApplication() {
-        //TODO: Implementation
+    public void deleteMicoApplications() throws MicoApplicationNotFoundException, KubernetesResourceException, MicoApplicationIsDeployedException {
+        List<MicoApplication> micoApplicationList = getMicoApplications();
+        for (MicoApplication micoApplication : micoApplicationList) {
+            if (micoKubernetesClient.isApplicationDeployed(micoApplication)) {
+                throw new MicoApplicationIsDeployedException(micoApplication.getShortName(), micoApplication.getVersion());
+            }
+        }
+        applicationRepository.deleteAll(micoApplicationList);
     }
 
-    public MicoApplication updateMicoApplication() {
-        //TODO: Implementation
+    public MicoApplication createMicoApplication(MicoApplication micoApplication) throws MicoApplicationAlreadyExistsException {
+        try {
+            MicoApplication existingMicoApplication = getMicoApplicationByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion());
+        } catch (MicoApplicationNotFoundException e) {
+            return applicationRepository.save(micoApplication);
+        }
+        throw new MicoApplicationAlreadyExistsException(micoApplication.getShortName(), micoApplication.getVersion());
+    }
+
+    public MicoApplication updateMicoApplication(MicoApplication micoApplication) throws MicoApplicationNotFoundException {
+        MicoApplication existingMicoApplication = getMicoApplicationByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion());
+        micoApplication.setId(existingMicoApplication.getId());
+        return applicationRepository.save(micoApplication);
     }
 
     public MicoApplication copyAndUpgradeMicoApplicationByShortNameAndVersion() {

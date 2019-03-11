@@ -8,4 +8,12 @@ public class MicoApplicationNotFoundException extends Exception {
     public MicoApplicationNotFoundException(String shortName) {
         //TODO: Implementation
     }
+
+    public MicoApplicationNotFoundException(Long id) {
+        //TODO: Implementation
+    }
+
+    public MicoApplicationNotFoundException() {
+        //TODO: Implementation
+    }
 }
