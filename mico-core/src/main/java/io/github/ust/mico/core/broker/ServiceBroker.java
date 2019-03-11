@@ -29,12 +29,12 @@ public class ServiceBroker {
     }
 
     public MicoService getServiceFromDatabase(String shortName, String version) throws ResponseStatusException {
-        Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
-        if (!serviceOpt.isPresent()) {
-            // TODO: Verfiy if we want to throw http response exceptions inside the broker classes
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service '" + shortName + "' '" + version + "' was not found!");
+        Optional<MicoService> serviceOptional = serviceRepository.findByShortNameAndVersion(shortName, version);
+        if (!serviceOptional.isPresent()) {
+            //TODO
         }
-        return serviceOpt.get();
+        MicoService existingService = serviceOptional.get();
+        return existingService;
     }
 
     public MicoService updateExistingService(String shortName, String version, MicoService service) {
@@ -46,12 +46,9 @@ public class ServiceBroker {
         return updatedService;
     }
 
-    public MicoService getServiceById(Long id) {
+    public Optional<MicoService> getServiceById(Long id) {
         Optional<MicoService> serviceOpt = serviceRepository.findById(id);
-        if (!serviceOpt.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service with id '" + id + "' was not found!");
-        }
-        return serviceOpt.get();
+        return serviceOpt;
     }
 
     //TODO: Fix logging
@@ -59,20 +56,16 @@ public class ServiceBroker {
         List<MicoService> micoServiceList = serviceRepository.findByShortName(shortName);
         //log.debug("Retrieve service list from database: {}", micoServiceList);
         if (micoServiceList.isEmpty()) {
-            //log.error("Service list is empty.");
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Could not find any Service with name: '" + shortName);
+            //TODO
         }
         return micoServiceList;
     }
 
     public void deleteService(String shortName, String version) throws KubernetesResourceException {
         MicoService service = getServiceFromDatabase(shortName, version);
-
         throwConflictIfServiceIsDeployed(service);
-
         if (!getDependers(service).isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                    "Service '" + service.getShortName() + "' '" + service.getVersion() + "' has dependers, therefore it can't be deleted.");
+            //TODO
         }
         serviceRepository.deleteServiceByShortNameAndVersion(shortName, version);
     }
@@ -87,8 +80,7 @@ public class ServiceBroker {
     //TODO: Fix logging
     private void throwConflictIfServiceIsDeployed(MicoService service) throws KubernetesResourceException {
         if (micoKubernetesClient.isMicoServiceDeployed(service)) {
-            //log.info("Micoservice '{}' in version '{}' is deployed. It is not possible to delete a deployed service.", service.getShortName(), service.getVersion());
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Service is currently deployed!");
+            //TODO
         }
     }
 
