@@ -1,6 +1,7 @@
 package io.github.ust.mico.core.broker;
 
 import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
+import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -37,8 +39,12 @@ public class ApplicationBroker {
     @Autowired
     private MicoStatusService micoStatusService; //TODO: remove?
 
-    public MicoApplication getMicoApplicationByShortNameAndVersion() {
-        //TODO: Implementation
+    public MicoApplication getMicoApplicationByShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException {
+        Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
+        if (!micoApplicationOptional.isPresent()) {
+            throw new MicoApplicationNotFoundException(shortName, version);
+        }
+        return micoApplicationOptional.get();
     }
 
     public List<MicoApplication> getMicoApplicationsByShortName() {
@@ -50,7 +56,7 @@ public class ApplicationBroker {
     }
 
     public MicoApplication getMicoApplicationById() {
-        //TODO: Implementation
+
     }
 
     public void deleteMicoApplicationByShortNameAndVersion() {
