@@ -28,7 +28,6 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
 import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceInterface;
 
 public interface MicoServiceRepository extends Neo4jRepository<MicoService, Long> {
 
@@ -47,26 +46,23 @@ public interface MicoServiceRepository extends Neo4jRepository<MicoService, Long
     @Query("MATCH (application:MicoApplication)-[:INCLUDES_SERVICE]-(service:MicoService) WHERE application.shortName = {applicationShortName} AND application.version = {applicationVersion} RETURN COLLECT(service) AS services")
     List<MicoService> findAllByApplication(@Param("applicationShortName") String applicationShortName, @Param("applicationVersion") String applicationVersion);
 
-    /**
-     * Find a specific service interface.
-     *
-     * The returned interface will NOT have ports mapped by the ogm.
-     * If you want to have a interface with mapped ports use the serviceInterface
-     * list in the corresponding MicoService object returned by findByShortNameAndVersion!
-     *
-     * @param serviceInterfaceName
-     * @param shortName
-     * @param version
-     * @return
-     */
-    @Query("MATCH (service:MicoService)-[:PROVIDES_INTERFACES]->(interface:MicoServiceInterface)-[:PROVIDES_PORTS]->(port:MicoServicePort) WHERE service.shortName = {shortName} AND service.version = {version} AND interface.serviceInterfaceName = {serviceInterfaceName} RETURN COLLECT(port) AS ports")
-    Optional<MicoServiceInterface> findInterfaceOfServiceByName(@Param("serviceInterfaceName") String serviceInterfaceName, @Param("shortName") String shortName, @Param("version") String version);
-
     @Query("MATCH (service:MicoService)-[:PROVIDES_INTERFACES]->(interface:MicoServiceInterface)-[:PROVIDES_PORTS]->(port:MicoServicePort) WHERE service.shortName = {shortName} AND service.version = {version} AND interface.serviceInterfaceName = {serviceInterfaceName} DETACH DELETE interface, port")
     void deleteInterfaceOfServiceByName(@Param("serviceInterfaceName") String serviceInterfaceName, @Param("shortName") String shortName, @Param("version") String version);
 
     @Query("MATCH (service:MicoService) WHERE service.shortName = {shortName} AND service.version = {version} WITH service OPTIONAL MATCH (service)-[:PROVIDES_INTERFACES]->(interface:MicoServiceInterface) WITH service, interface OPTIONAL MATCH (interface)-[:PROVIDES_PORTS]->(port:MicoServicePort) DETACH DELETE service, interface, port")
     void deleteServiceByShortNameAndVersion(@Param("shortName") String shortName, @Param("version") String version);
+    
+    /**
+     * Finds all services (dependees) the given service (depender) depends on
+     * as well as the service (depender) itself.
+     * 
+     * @param shortName the short name of the {@link MicoService} (depender). 
+     * @param version the version of the {@link MicoService} (depender).
+     * @return a list of {@link MicoService MicoServices} including all dependees
+     * 		   as well as the depender..
+     */
+    @Query("MATCH (service:MicoService)-[:DEPENDS_ON*0..]->(dependency:MicoService) WHERE service.shortName = {shortName} AND service.version = {version} RETURN COLLECT(DISTINCT dependency)")
+    List<MicoService> findDependeesIncludeDepender(@Param("shortName") String shortName, @Param("version") String version);
 
     /**
      * Finds all services (dependees) the given service (depender) depends on.
