@@ -20,6 +20,8 @@
 package io.github.ust.mico.core.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.service.GitHubCrawler;
 import io.github.ust.mico.core.util.Patterns;
@@ -87,5 +89,6 @@ public class CrawlingInfoDTO {
         }
     )})
     @Pattern(regexp = Patterns.RELATIVE_PATH_REGEX, message = "must be relative to the root folder of the git repository")
+    @JsonSetter(nulls = Nulls.SKIP)
     private String dockerfilePath = "Dockerfile";
 }

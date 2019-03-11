@@ -57,10 +57,12 @@ import java.util.Collections;
 import java.util.Optional;
 
 import static io.github.ust.mico.core.ApplicationResourceTests.INTERFACES_LIST_PATH;
+import static io.github.ust.mico.core.GitHubCrawlerIntegrationTests.HELLO_REPO_SUB_DIR_DOCKERFILE;
 import static io.github.ust.mico.core.JsonPathBuilder.*;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
 import static io.github.ust.mico.core.TestConstants.VERSION;
 import static io.github.ust.mico.core.TestConstants.*;
+import static io.github.ust.mico.core.resource.ServiceResource.PATH_GITHUB_ENDPOINT;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
@@ -953,10 +955,5 @@ public class ServiceResourceTests {
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isConflict());
-    }
-
-    @Test
-    public void createServiceViaGitHubCrawler() {
-        //TODO: Implementation
     }
 }
