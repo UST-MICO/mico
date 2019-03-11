@@ -43,7 +43,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for {@link MicoServiceDeploymentInfo} intended to use only with requests.
+ * DTO for {@link MicoServiceDeploymentInfo} intended to use with requests only.
  */
 @Data
 @NoArgsConstructor
@@ -159,7 +159,7 @@ public class MicoServiceDeploymentInfoRequestDTO {
     // -------------------
 	
     /**
-	 * Creates an instance of this DTO based on a
+	 * Creates an instance of {@code MicoServiceDeploymentInfoRequestDTO} based on a
 	 * {@code MicoServiceDeploymentInfo}.
 	 * 
 	 * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.

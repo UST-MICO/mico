@@ -74,7 +74,7 @@ public class MicoApplicationResponseDTO extends MicoApplicationRequestDTO {
     // -------------------
    
     /**
-     * Creates an instance of this DTO based on a
+     * Creates an instance of {@code MicoApplicationResponseDTO} based on a
      * {@code MicoApplication}. Note that the
      * deployment status is not set since it cannot be
      * inferred from the {@code MicoApplication} itself
@@ -86,7 +86,7 @@ public class MicoApplicationResponseDTO extends MicoApplicationRequestDTO {
 	}
     
 	/**
-     * Creates an instance of this DTO based on a
+     * Creates an instance of {@code MicoApplicationResponseDTO} based on a
      * {@code MicoApplication} and a {@code MicoApplicationDeploymentStatus}.
      *  
      * @param application the {@link MicoApplication}.

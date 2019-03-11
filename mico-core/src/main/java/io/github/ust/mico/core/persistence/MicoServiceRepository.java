@@ -46,6 +46,7 @@ public interface MicoServiceRepository extends Neo4jRepository<MicoService, Long
     @Query("MATCH (application:MicoApplication)-[:INCLUDES_SERVICE]-(service:MicoService) WHERE application.shortName = {applicationShortName} AND application.version = {applicationVersion} RETURN COLLECT(service) AS services")
     List<MicoService> findAllByApplication(@Param("applicationShortName") String applicationShortName, @Param("applicationVersion") String applicationVersion);
 
+    // Doesn't this belong in the MicoServiceInterfaceRepository?
     @Query("MATCH (service:MicoService)-[:PROVIDES_INTERFACES]->(interface:MicoServiceInterface)-[:PROVIDES_PORTS]->(port:MicoServicePort) WHERE service.shortName = {shortName} AND service.version = {version} AND interface.serviceInterfaceName = {serviceInterfaceName} DETACH DELETE interface, port")
     void deleteInterfaceOfServiceByName(@Param("serviceInterfaceName") String serviceInterfaceName, @Param("shortName") String shortName, @Param("version") String version);
 

@@ -158,7 +158,7 @@ public class MicoApplicationRequestDTO {
     // -------------------
 	
     /**
-   	 * Creates an instance of this DTO based on a
+   	 * Creates an instance of {@code MicoApplicationRequestDTO} based on a
    	 * {@code MicoApplication}.
    	 * 
    	 * @param application the {@link MicoApplication}.

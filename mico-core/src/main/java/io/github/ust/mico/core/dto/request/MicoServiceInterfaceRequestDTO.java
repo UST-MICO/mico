@@ -161,7 +161,7 @@ public class MicoServiceInterfaceRequestDTO {
     // -------------------
     
     /**
-     * Creates an instance of this DTO based on a
+     * Creates an instance of {@code MicoServiceInterfaceRequestDTO} based on a
      * {@code MicoServiceInterface}.
      * 
      * @param serviceInterface the {@link MicoServiceInterface}.

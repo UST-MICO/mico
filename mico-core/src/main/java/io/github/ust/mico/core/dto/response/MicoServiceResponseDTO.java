@@ -76,7 +76,7 @@ public class MicoServiceResponseDTO extends MicoServiceRequestDTO {
     // -------------------
     
     /**
-   	 * Creates an instance of this DTO based on a
+   	 * Creates an instance of {@code MicoServiceResponseDTO} based on a
    	 * {@code MicoService}.
    	 * 
    	 * @param service the {@link MicoService}.

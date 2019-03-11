@@ -35,7 +35,7 @@ import lombok.*;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for a {@link MicoApplication} intended to use with requests only.
+ * DTO for a {@link MicoApplication} intended to use with responses only.
  * Additionally includes all of services of the application.
  */
 @Data
@@ -66,7 +66,7 @@ public class MicoApplicationWithServicesResponseDTO extends MicoApplicationRespo
     // -------------------
     
     /**
-     * Creates an instance of this DTO based on a
+     * Creates an instance of {@code MicoApplicationWithServicesResponseDTO} based on a
      * {@code MicoApplication}. Note that the
      * deployment status is not set since it cannot be
      * inferred from the {@code MicoApplication} itself
@@ -82,7 +82,7 @@ public class MicoApplicationWithServicesResponseDTO extends MicoApplicationRespo
 	}
     
 	/**
-     * Creates an instance of this DTO based on a
+     * Creates an instance of {@code MicoApplicationWithServicesResponseDTO} based on a
      * {@code MicoApplication} and a {@code MicoApplicationDeploymentStatus}.
      *  
      * @param application the {@link MicoApplication}.

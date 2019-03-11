@@ -28,7 +28,7 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for {@link MicoServiceDeploymentInfo} intended to use only with responses.
+ * DTO for {@link MicoServiceDeploymentInfo} intended to use with responses only.
  */
 @Data
 @ToString(callSuper = true)
@@ -47,7 +47,7 @@ public class MicoServiceDeploymentInfoResponseDTO extends MicoServiceDeploymentI
     // -------------------
 	
 	/**
-     * Creates an instance of this DTO based on a
+     * Creates an instance of {@code MicoServiceDeploymentInfoResponseDTO} based on a
      * {@code MicoServiceDeploymentInfo}.
      * 
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.

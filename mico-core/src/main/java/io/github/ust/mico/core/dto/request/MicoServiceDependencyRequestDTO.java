@@ -100,7 +100,7 @@ public class MicoServiceDependencyRequestDTO {
     // -------------------
     
     /**
-     * Creates an instance of this DTO based on a
+     * Creates an instance of {@code MicoServiceDependencyRequestDTO} based on a
      * {@code MicoServiceDeploymentInfo}.
      * 
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.

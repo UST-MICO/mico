@@ -51,7 +51,7 @@ public class MicoServiceInterfaceResponseDTO extends MicoServiceInterfaceRequest
     // -------------------
     
     /**
-     * Creates an instance of this DTO based on a
+     * Creates an instance of {@code MicoServiceInterfaceResponseDTO} based on a
      * {@code MicoServiceInterface}.
      * 
      * @param serviceInterface the {@link MicoServiceInterface}.
