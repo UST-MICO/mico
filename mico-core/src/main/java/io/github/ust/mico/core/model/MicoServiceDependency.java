@@ -58,7 +58,6 @@ public class MicoServiceDependency {
      * This is the {@link MicoService} that requires (depends on)
      * the {@link MicoServiceDependency#dependedService}.
      */
-    // TODO: Create a new DTO that does not include the service property. Covered by mico#512
     @JsonBackReference
     @StartNode
     @ToString.Exclude

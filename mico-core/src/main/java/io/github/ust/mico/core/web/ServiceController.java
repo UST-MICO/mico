@@ -41,6 +41,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import io.github.ust.mico.core.dto.request.CrawlingInfoRequestDTO;
+import io.github.ust.mico.core.dto.request.MicoServiceDependencyRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphEdgeResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphResponseDTO;
@@ -210,18 +211,18 @@ public class ServiceController {
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPENDEES)
     public ResponseEntity<Resource<MicoServiceResponseDTO>> createNewDependee(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                    @PathVariable(PATH_VARIABLE_VERSION) String version,
-                                                                   @Valid @RequestBody MicoServiceDependency newServiceDependee) {
+                                                                   @Valid @RequestBody MicoServiceDependencyRequestDTO serviceDependencyDto) {
         MicoService service = getServiceFromDatabase(shortName, version);
 
-        Optional<MicoService> serviceDependeeOpt = serviceRepository.findByShortNameAndVersion(newServiceDependee.getDependedService().getShortName(),
-            newServiceDependee.getDependedService().getVersion());
+        Optional<MicoService> serviceDependeeOpt = serviceRepository.findByShortNameAndVersion(serviceDependencyDto.getDependedService().getShortName(),
+        	serviceDependencyDto.getDependedService().getVersion());
         if (!serviceDependeeOpt.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The dependee service was not found!");
         }
 
         // Check if dependency is already set
-        String localShortName = newServiceDependee.getDependedService().getShortName();
-        String localVersion = newServiceDependee.getDependedService().getVersion();
+        String localShortName = serviceDependencyDto.getDependedService().getShortName();
+        String localVersion = serviceDependencyDto.getDependedService().getVersion();
         boolean dependencyAlreadyExists = (service.getDependencies() != null) && service.getDependencies().stream().anyMatch(
             dependency -> dependency.getDependedService().getShortName().equals(localShortName)
                 && dependency.getDependedService().getVersion().equals(localVersion));
