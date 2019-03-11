@@ -1,12 +1,18 @@
-.. java:import:: com.fasterxml.jackson.annotation JsonProperty
-
-.. java:import:: lombok Getter
-
-.. java:import:: lombok Setter
-
 .. java:import:: java.util List
 
 .. java:import:: java.util Map
+
+.. java:import:: com.fasterxml.jackson.annotation JsonIgnoreProperties
+
+.. java:import:: com.fasterxml.jackson.annotation JsonProperty
+
+.. java:import:: lombok AllArgsConstructor
+
+.. java:import:: lombok Data
+
+.. java:import:: lombok NoArgsConstructor
+
+.. java:import:: lombok.experimental Accessors
 
 PrometheusResponse
 ==================
@@ -14,7 +20,7 @@ PrometheusResponse
 .. java:package:: io.github.ust.mico.core.dto
    :noindex:
 
-.. java:type:: @Getter @Setter public class PrometheusResponse
+.. java:type:: @Data @NoArgsConstructor @AllArgsConstructor @Accessors @JsonIgnoreProperties public class PrometheusResponse
 
 Fields
 ------

@@ -42,7 +42,7 @@ export class AppDetailOverviewComponent implements OnDestroy {
     constructor(
         private apiService: ApiService,
         private dialog: MatDialog,
-        private util: UtilsService ) { }
+        private util: UtilsService) { }
 
 
     ngOnDestroy() {
@@ -69,7 +69,8 @@ export class AppDetailOverviewComponent implements OnDestroy {
             }
 
             result.forEach(service => {
-                this.apiService.postApplicationServices(this.application.shortName, this.application.version, service)
+                this.apiService.postApplicationServices(this.application.shortName,
+                    this.application.version, service.shortName, service.version)
                     .subscribe();
             });
         });

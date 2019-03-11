@@ -6,6 +6,13 @@
 <mat-card class="ma2">
     <mat-card-title>Applications</mat-card-title>
     <mat-card-content>
+        <mat-button-toggle mat-raised-button (click)="newApplication()" class="mv2">
+            <span>
+                new Application
+            </span>
+            <mat-icon>add</mat-icon>
+        </mat-button-toggle>
+
         <mat-table [dataSource]="applications" class="mat-elevation-z2">
             <ng-container matColumnDef="id">
                 <mat-header-cell class="ph1" *matHeaderCellDef>ID</mat-header-cell>
@@ -30,7 +37,10 @@
             <ng-container matColumnDef="description">
                 <mat-header-cell class="ph1" *matHeaderCellDef>Description</mat-header-cell>
                 <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/app-detail', element.shortName]">
-                    {{element.description}}</mat-cell>
+                    <div class="descriptionStyle">
+                        {{element.description}}
+                    </div>
+                </mat-cell>
             </ng-container>
             <ng-container matColumnDef="controls">
                 <mat-header-cell class="ph1" *matHeaderCellDef>Controls</mat-header-cell>

@@ -284,21 +284,19 @@ export class ApiService {
 
     /**
      * Adds an includes relationship from an appliction to a service
-     * uses: POST applications/{shortName}/{version}/services
+     * uses: POST applications/{applicationShortName}/{applicationVersion}/services/{serviceShortName}/{serviceVersion}
      *
      * @param applicationShortName the applications shortName
      * @param applicationVersion the applications version
-     * @param serviceData the service as json the application includes
+     * @param serviceShortName the services shortName
+     * @param serviceVersion the services version
      */
-    postApplicationServices(applicationShortName: string, applicationVersion: string, serviceData: any) {
+    postApplicationServices(applicationShortName: string, applicationVersion: string, serviceShortName: string, serviceVersion: string) {
 
-        if (serviceData == null) {
-            return;
-        }
+        const resource = 'applications/' + applicationShortName + '/' + applicationVersion +
+            '/services/' + serviceShortName + '/' + serviceVersion;
 
-        const resource = 'applications/' + applicationShortName + '/' + applicationVersion + '/services';
-
-        return this.rest.post<ApiObject>(resource, serviceData).pipe(map(val => {
+        return this.rest.post<ApiObject>(resource, null).pipe(map(val => {
 
             this.getApplicationVersions(applicationShortName);
             this.getApplication(applicationShortName, applicationVersion);
@@ -714,6 +712,7 @@ export class ApiService {
 
                 this.getService(serviceShortName, serviceVersion);
                 this.getServiceDependees(serviceShortName, serviceVersion);
+                this.getServiceDependencyGraph(serviceShortName, serviceVersion);
 
                 return stream.asObservable().pipe(
                     filter(service => service !== undefined)
@@ -739,6 +738,7 @@ export class ApiService {
                 this.getServices();
                 this.getService(serviceShortName, serviceVersion);
                 this.getServiceDependees(serviceShortName, serviceVersion);
+                this.getServiceDependencyGraph(serviceShortName, serviceVersion);
 
                 return true;
             }));
@@ -763,6 +763,27 @@ export class ApiService {
             } else {
                 stream.next(freezeObject([]));
             }
+        });
+
+        return stream.asObservable().pipe(
+            filter(data => data !== undefined)
+        );
+    }
+
+    /**
+     * Get full dependency graph of service
+     * uses: GET services/{shortName}/{version}/dependencyGraph
+     *
+     * @param shortName unique short name of the service
+     * @param version service version to be returned
+     */
+    getServiceDependencyGraph(shortName, version): Observable<ApiObject> {
+
+        const resource = 'services/' + shortName + '/' + version + '/dependencyGraph';
+        const stream = this.getStreamSource<ApiObject>(resource);
+
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+            stream.next(freezeObject(val));
         });
 
         return stream.asObservable().pipe(
