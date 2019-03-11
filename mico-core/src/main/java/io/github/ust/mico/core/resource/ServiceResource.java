@@ -179,6 +179,7 @@ public class ServiceResource {
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")
     public ResponseEntity<Resource<MicoServiceStatusDTO>> getStatusOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                              @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        //TODO: Use ServiceBroker
         MicoServiceStatusDTO serviceStatus = new MicoServiceStatusDTO();
         Optional<MicoService> micoServiceOptional = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (micoServiceOptional.isPresent()) {
@@ -193,6 +194,7 @@ public class ServiceResource {
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
     public ResponseEntity<Resources<Resource<MicoService>>> getVersionsOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
+        //TODO: Use ServiceBroker
         List<MicoService> services = serviceRepository.findByShortName(shortName);
         List<Resource<MicoService>> serviceResources = getServiceResourcesList(services);
         return ResponseEntity.ok(

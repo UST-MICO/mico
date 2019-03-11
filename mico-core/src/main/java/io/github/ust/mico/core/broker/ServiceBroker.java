@@ -1,10 +1,13 @@
 package io.github.ust.mico.core.broker;
 
+import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
+import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.service.MicoStatusService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,6 +26,9 @@ public class ServiceBroker {
 
     @Autowired
     private MicoKubernetesClient micoKubernetesClient;
+
+    @Autowired
+    private MicoStatusService micoStatusService;
 
     public List<MicoService> getAllServicesAsList() {
         return serviceRepository.findAll(2);
@@ -86,7 +92,7 @@ public class ServiceBroker {
         List<MicoService> micoServiceList = getAllVersionsOfServiceFromDatabase(shortName);
         log.debug("Got following services from database: {}", micoServiceList);
         for (MicoService micoService : micoServiceList) {
-            throwConflictIfServiceIsDeployed(micoService);
+            //throwConflictIfServiceIsDeployed(micoService); // TODO: Fix exception handling
         }
         micoServiceList.forEach(service -> serviceRepository.delete(service));
     }
@@ -100,7 +106,7 @@ public class ServiceBroker {
      */
     private void throwConflictIfServiceIsDeployed(MicoService service) throws KubernetesResourceException {
         if (micoKubernetesClient.isMicoServiceDeployed(service)) {
-            //TODO
+            log.info("Micoservice '{}' in version '{}' is deployed. It is not possible to delete a deployed service.", service.getShortName(), service.getVersion());
         }
     }
 
@@ -121,6 +127,26 @@ public class ServiceBroker {
         });
         log.debug("Found following dependers: {}", dependers);
         return dependers;
+    }
+
+    public MicoServiceStatusDTO getStatusOfService(String shortName, String version){
+        MicoServiceStatusDTO serviceStatus = new MicoServiceStatusDTO();
+        MicoService micoService = getServiceFromDatabase(shortName, version);
+        serviceStatus = micoStatusService.getServiceStatus(micoService);
+        return serviceStatus;
+    }
+
+    public MicoService persistService(MicoService newService){
+        MicoService micoService = getServiceFromDatabase(newService.getShortName(), newService.getVersion());
+        if (micoService != null){
+            //TODO: throw Exception already exists
+        }
+        for (MicoServiceInterface serviceInterface : newService.getServiceInterfaces()) {
+            //TODO: Verfiy how to put this into method into ServiceBroker
+            //validateProvidedInterface(newService.getShortName(), newService.getVersion(), serviceInterface);
+        }
+        MicoService savedService = serviceRepository.save(newService);
+        return savedService;
     }
 
 }
