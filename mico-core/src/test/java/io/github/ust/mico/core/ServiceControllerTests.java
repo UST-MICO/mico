@@ -19,7 +19,6 @@
 
 package io.github.ust.mico.core;
 
-import static io.github.ust.mico.core.ApplicationControllerTests.INTERFACES_LIST_PATH;
 import static io.github.ust.mico.core.JsonPathBuilder.*;
 import static io.github.ust.mico.core.TestConstants.*;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
@@ -42,7 +41,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -69,7 +67,6 @@ import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
 import io.github.ust.mico.core.dto.response.*;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
-import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.GitHubCrawler;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
@@ -90,7 +87,6 @@ public class ServiceControllerTests {
     private static final String SELF_HREF = buildPath(JSON_PATH_LINKS_SECTION, SELF, HREF);
     private static final String SERVICES_HREF = buildPath(JSON_PATH_LINKS_SECTION, "services", HREF);
     private static final String SERVICE_LIST = buildPath(ROOT_EMBEDDED, "micoServiceResponseDTOList");
-    private static final String ID_PATH = buildPath(ROOT, "id");
     private static final String SHORT_NAME_PATH = buildPath(ROOT, "shortName");
     private static final String DESCRIPTION_PATH = buildPath(ROOT, "description");
     private static final String VERSION_PATH = buildPath(ROOT, "version");
