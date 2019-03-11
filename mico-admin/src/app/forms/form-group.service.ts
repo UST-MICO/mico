@@ -64,7 +64,7 @@ export class FormGroupService {
                     validators.push(Validators.min((itemModel as ApiModel).minimum));
                 }
                 if (itemModel.hasOwnProperty('maximum')) {
-                    validators.push(Validators.min((itemModel as ApiModel).maximum));
+                    validators.push(Validators.max((itemModel as ApiModel).maximum));
                 }
                 group[key] = new FormControl(value, validators);
             }

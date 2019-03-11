@@ -93,6 +93,13 @@ export class UtilServiceService {
             data.services = result.services;
 
             this.apiService.postApplication(data).subscribe(val => {
+                result.services.forEach(service => {
+                    const tempSubscription = this.apiService
+                        .postApplicationServices(val.shortName, val.version, service.shortName, service.version)
+                        .subscribe(element => {
+                            safeUnsubscribe(tempSubscription);
+                        });
+                });
                 this.router.navigate(['app-detail', val.shortName, val.version]);
             });
 
