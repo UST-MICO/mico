@@ -21,6 +21,7 @@ import java.util.List;
 import static io.github.ust.mico.core.TestConstants.*;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
 
 @RunWith(SpringRunner.class)
@@ -89,7 +90,7 @@ public class ServiceBrokerTests {
                 .setName(NAME_2)
                 .setDescription(DESCRIPTION_2);
 
-        when(serviceRepository.save(any(MicoService.class))).thenReturn(resultUpdatedService);
+        given(serviceRepository.save(any(MicoService.class))).willReturn(resultUpdatedService);
 
         MicoService updatedService = serviceBroker.updateExistingService(SHORT_NAME_1, VERSION_1_0_1, micoServiceTwo);
 
@@ -109,7 +110,7 @@ public class ServiceBrokerTests {
 
         Long id = new Long(1);
 
-        when(serviceRepository.findById(ArgumentMatchers.anyLong())).thenReturn(java.util.Optional.ofNullable(micoServiceOne));
+        given(serviceRepository.findById(ArgumentMatchers.anyLong())).willReturn(java.util.Optional.ofNullable(micoServiceOne));
 
         MicoService micoService = serviceBroker.getServiceById(id);
 
@@ -124,5 +125,30 @@ public class ServiceBrokerTests {
         //TODO: Implementation haha
         serviceBroker.deleteService(SHORT_NAME_1, VERSION_1_0_1);
     }
+
+    @Test
+    public void persistService() throws Exception {
+        MicoService service = new MicoService()
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_1)
+                .setDescription(DESCRIPTION_1);
+
+        given(serviceRepository.save(any(MicoService.class))).willReturn(service);
+
+        MicoService savedService = serviceBroker.persistService(service);
+
+        assertThat(savedService.getShortName()).isEqualTo(SHORT_NAME_1);
+        assertThat(savedService.getVersion()).isEqualTo(VERSION_1_0_1);
+        assertThat(savedService.getName()).isEqualTo(NAME_1);
+        assertThat(savedService.getDescription()).isEqualTo(DESCRIPTION_1);
+    }
+
+    @Test
+    public void deleteAllVersionsOfService() throws Exception {
+        serviceBroker.deleteAllVersionsOfService(SHORT_NAME_1);
+    }
+
+
 
 }
