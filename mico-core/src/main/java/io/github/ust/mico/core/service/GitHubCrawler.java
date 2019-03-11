@@ -68,13 +68,13 @@ public class GitHubCrawler {
 
         try {
             responseBasicInfo = restTemplate.getForEntity(uriBasicInfo, String.class);
-        } catch (HttpClientErrorException e) {
+        } catch (HttpClientErrorException.NotFound e) {
             throw new IllegalArgumentException("GitHub repository " + uriBasicInfo.replace(GITHUB_API_URL, "") + " does not exist!");
         }
 
         try {
             responseReleaseInfo = restTemplate.getForEntity(uriReleaseInfo, String.class);
-        } catch (HttpClientErrorException e) {
+        } catch (HttpClientErrorException.NotFound e) {
             throw new IllegalArgumentException("GitHub repository " + uriBasicInfo.replace(GITHUB_API_URL, "")
                 + " doesn't have a release " + uriReleaseInfo.replace(GITHUB_API_URL, "") + "!");
         }
