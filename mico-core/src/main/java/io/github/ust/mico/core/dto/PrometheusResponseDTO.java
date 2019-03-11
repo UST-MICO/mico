@@ -21,7 +21,11 @@ package io.github.ust.mico.core.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.util.PrometheusValueDeserializer;
+import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.Extension;
+import io.swagger.annotations.ExtensionProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -39,6 +43,16 @@ public class PrometheusResponseDTO {
     /**
      * Indicates the status of the response: true if the response is successful and false if an error occurred.
      */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Success"),
+            @ExtensionProperty(name = "default", value = "false"),
+            @ExtensionProperty(name = "x-order", value = "10"),
+            @ExtensionProperty(name = "description", value = "Indicates the status of the response: " +
+                "true if the response is successful and false if an error occurred.")
+        }
+    )})
     private boolean success = false;
 
     /**
