@@ -21,10 +21,15 @@ package io.github.ust.mico.core.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.dto.request.MicoServiceDependencyRequestDTO;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.Extension;
+import io.swagger.annotations.ExtensionProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -48,13 +53,32 @@ public class MicoServiceDependencyResponseDTO extends MicoServiceDependencyReque
 	// @AllArgsConstructor to this class in order
 	// to conform to the other DTOs.
 	
+	
+	// ----------------------
+    // -> Required fields ---
+    // ----------------------
+	
+	/**
+     * The id of this service dependency.
+     */
+    @ApiModelProperty(required = true, extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "ID"),
+            @ExtensionProperty(name = "x-order", value = "5"),
+            @ExtensionProperty(name = "description", value = "The ID of this service dependency.")
+        }
+    )})
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private Long id;
+    
     
     // -------------------
     // -> Constructors ---
     // -------------------
     
     /**
-     * Creates an instance of this DTO based on a
+     * Creates an instance of {@code MicoServiceDependencyResponseDTO} based on a
      * {@code MicoServiceDeploymentInfo}.
      * 
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.
