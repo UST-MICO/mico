@@ -165,6 +165,7 @@ public class ServiceResource {
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
     public ResponseEntity<Void> deleteAllVersionsOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) throws KubernetesResourceException {
+        //TODO: Remove this block, and use ServiceBroker
         List<MicoService> micoServiceList = getAllVersionsOfServiceFromDatabase(shortName);
         log.debug("Got following services from database: {}", micoServiceList);
         for (MicoService micoService : micoServiceList) {

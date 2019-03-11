@@ -42,16 +42,6 @@ public class ServiceBrokerTests {
     @MockBean
     private GitHubCrawler crawler;
 
-//    @TestConfiguration
-//    static class ServiceBrokerTestContextConfiguration {
-//
-//        @Bean
-//        public ServiceBroker serviceBroker() {
-//            return new ServiceBroker();
-//        }
-//
-//    }
-
     @Before
     public void setUp() throws Exception {
         MicoService micoServiceOne = new MicoService().setShortName(SHORT_NAME_1).setVersion(VERSION_1_0_1).setName(NAME_1).setDescription(DESCRIPTION_1);
@@ -132,7 +122,7 @@ public class ServiceBrokerTests {
     @Test
     public void deleteService() throws Exception {
         //TODO: Implementation haha
-        serviceBroker.deleteService(SHORT_NAME_1,VERSION_1_0_1);
+        serviceBroker.deleteService(SHORT_NAME_1, VERSION_1_0_1);
     }
 
 }
