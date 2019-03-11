@@ -1,7 +1,12 @@
 <div class="ma1">
-    <mat-card>
+
+    <mat-card *ngIf="dataValue?.length > 0; else emptyList">
         <mat-card-header>
-            <mat-card-title>{{config?.title}}</mat-card-title>
+            <mat-card-title>
+                <span matTooltip={{config?.description}}>
+                    {{config?.title}}
+                </span>
+            </mat-card-title>
         </mat-card-header>
         <mat-card-content>
             <mat-accordion>
@@ -21,4 +26,15 @@
             </mat-accordion>
         </mat-card-content>
     </mat-card>
+
+    <ng-template #emptyList>
+        <mat-list-item style="height: auto; min-height: 48px; display: inline-flex; vertical-align: middle">
+            <span class="mr1">
+                <b>{{config.title}}:</b>
+            </span>
+            <span class="mv1">
+                None
+            </span>
+        </mat-list-item>
+    </ng-template>
 </div>

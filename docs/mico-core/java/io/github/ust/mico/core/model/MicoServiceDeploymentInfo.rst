@@ -1,28 +1,14 @@
-.. java:import:: java.util ArrayList
+.. java:import:: com.fasterxml.jackson.annotation JsonBackReference
 
-.. java:import:: java.util HashMap
+.. java:import:: com.fasterxml.jackson.annotation JsonProperty
 
-.. java:import:: java.util List
-
-.. java:import:: java.util Map
-
-.. java:import:: org.neo4j.ogm.annotation GeneratedValue
-
-.. java:import:: org.neo4j.ogm.annotation Id
-
-.. java:import:: org.neo4j.ogm.annotation NodeEntity
-
-.. java:import:: io.swagger.annotations ApiModelProperty
-
-.. java:import:: lombok AllArgsConstructor
-
-.. java:import:: lombok Data
-
-.. java:import:: lombok NoArgsConstructor
-
-.. java:import:: lombok Singular
+.. java:import:: io.github.ust.mico.core.dto MicoServiceDeploymentInfoDTO
 
 .. java:import:: lombok.experimental Accessors
+
+.. java:import:: java.util ArrayList
+
+.. java:import:: java.util List
 
 MicoServiceDeploymentInfo
 =========================
@@ -30,7 +16,20 @@ MicoServiceDeploymentInfo
 .. java:package:: io.github.ust.mico.core.model
    :noindex:
 
-.. java:type:: @Data @NoArgsConstructor @AllArgsConstructor @Accessors @NodeEntity public class MicoServiceDeploymentInfo
+.. java:type:: @Data @NoArgsConstructor @AllArgsConstructor @Accessors @RelationshipEntity public class MicoServiceDeploymentInfo
 
-   Represents the information necessary for deploying a \ :java:ref:`MicoApplication`\ .
+   Represents the information necessary for deploying a \ :java:ref:`MicoApplication`\ . DTO is \ :java:ref:`MicoServiceDeploymentInfoDTO`\ .
+
+Methods
+-------
+applyValuesFrom
+^^^^^^^^^^^^^^^
+
+.. java:method:: public MicoServiceDeploymentInfo applyValuesFrom(MicoServiceDeploymentInfoDTO serviceDeploymentInfoDTO)
+   :outertype: MicoServiceDeploymentInfo
+
+   Applies the values of all properties of a \ :java:ref:`MicoServiceDeploymentInfoDTO`\  to this \ ``MicoServiceDeploymentInfo``\ .
+
+   :param serviceDeploymentInfoDTO: the \ :java:ref:`MicoServiceDeploymentInfoDTO`\ .
+   :return: this \ :java:ref:`MicoServiceDeploymentInfo`\  with the values of the properties of the given \ :java:ref:`MicoServiceDeploymentInfoDTO`\ .
 

@@ -10,7 +10,7 @@ KubernetesResourceException
 
 .. java:type:: @ResponseStatus public class KubernetesResourceException extends Exception
 
-   Used to indicate that there is a problem concercing a Kubernetes resource, e.g., a Deployment cannot be found or there are multiple results for a query for a resource that is expected to be unique.
+   Used to indicate that there is a problem concerning a Kubernetes resource, e.g., a Deployment cannot be found or there are multiple results for a query for a resource that is expected to be unique.
 
 Constructors
 ------------

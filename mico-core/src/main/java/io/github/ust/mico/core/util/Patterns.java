@@ -115,7 +115,7 @@ public class Patterns {
     /**
      * Regex for a semantic version with a prefix (optional) consisting of letters. 
      */
-    public static final String SEMANTIC_VERSION_WITH_PREFIX_REGEX = "^[a-zA-Z]*" + SEMANTIC_VERSION_REGEX + "$";
+    public static final String SEMANTIC_VERSION_WITH_PREFIX_REGEX = "^[a-zA-Z]*" + SEMANTIC_VERSION_TEMP_REGEX + "$";
 
     /**
      * Message is used if a match with the {@link Patterns#SEMANTIC_VERSION_WITH_PREFIX_REGEX} fails.

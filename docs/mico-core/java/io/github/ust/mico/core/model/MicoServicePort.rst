@@ -1,12 +1,16 @@
-.. java:import:: org.neo4j.ogm.annotation GeneratedValue
+.. java:import:: com.fasterxml.jackson.annotation JsonProperty
 
-.. java:import:: org.neo4j.ogm.annotation Id
+.. java:import:: com.fasterxml.jackson.annotation JsonSetter
 
-.. java:import:: org.neo4j.ogm.annotation NodeEntity
+.. java:import:: com.fasterxml.jackson.annotation Nulls
 
-.. java:import:: com.fasterxml.jackson.annotation JsonIgnore
+.. java:import:: io.github.ust.mico.core.configuration.extension CustomOpenApiExtentionsPlugin
 
 .. java:import:: io.swagger.annotations ApiModelProperty
+
+.. java:import:: io.swagger.annotations Extension
+
+.. java:import:: io.swagger.annotations ExtensionProperty
 
 .. java:import:: lombok AllArgsConstructor
 
@@ -15,6 +19,16 @@
 .. java:import:: lombok NoArgsConstructor
 
 .. java:import:: lombok.experimental Accessors
+
+.. java:import:: org.neo4j.ogm.annotation GeneratedValue
+
+.. java:import:: org.neo4j.ogm.annotation Id
+
+.. java:import:: org.neo4j.ogm.annotation NodeEntity
+
+.. java:import:: javax.validation.constraints Max
+
+.. java:import:: javax.validation.constraints Min
 
 MicoServicePort
 ===============

@@ -24,14 +24,14 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.ServiceAccount;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinitionList;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
-import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.exception.NotInitializedException;
-import io.github.ust.mico.core.service.imagebuilder.buildtypes.*;
 import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.service.imagebuilder.buildtypes.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -53,19 +53,19 @@ public class ImageBuilder {
     private static final String BUILD_CRD_NAME = "builds." + BUILD_CRD_GROUP;
 
     private final MicoKubernetesBuildBotConfig buildBotConfig;
-    private final ClusterAwarenessFabric8 cluster;
+    private final KubernetesClient kubernetesClient;
 
     private NonNamespaceOperation<Build, BuildList, DoneableBuild, Resource<Build, DoneableBuild>> buildClient;
     private ScheduledExecutorService scheduledBuildStatusCheckService;
 
 
     /**
-     * @param cluster        The Kubernetes cluster object
-     * @param buildBotConfig The build bot configuration for the image builder
+     * @param kubernetesClient The Kubernetes client object
+     * @param buildBotConfig   The build bot configuration for the image builder
      */
     @Autowired
-    public ImageBuilder(ClusterAwarenessFabric8 cluster, MicoKubernetesBuildBotConfig buildBotConfig) {
-        this.cluster = cluster;
+    public ImageBuilder(KubernetesClient kubernetesClient, MicoKubernetesBuildBotConfig buildBotConfig) {
+        this.kubernetesClient = kubernetesClient;
         this.buildBotConfig = buildBotConfig;
     }
 
@@ -83,13 +83,13 @@ public class ImageBuilder {
             log.error("Custom Resource Definition `{}` is not available!", BUILD_CRD_NAME);
             throw new NotInitializedException("Build CRD not available!");
         }
-        ServiceAccount buildServiceAccount = cluster.getServiceAccount(serviceAccountName, namespace);
+        ServiceAccount buildServiceAccount = kubernetesClient.serviceAccounts().inNamespace(namespace).withName(serviceAccountName).get();
         if (buildServiceAccount == null) {
             log.error("Service account `{}` is not available!", serviceAccountName);
             throw new NotInitializedException("Service account not available!");
         }
 
-        this.buildClient = cluster.getClient().customResources(buildCRD.get(),
+        this.buildClient = kubernetesClient.customResources(buildCRD.get(),
             Build.class, BuildList.class, DoneableBuild.class);
 
         String resourceScope = buildCRD.get().getSpec().getScope();
@@ -230,7 +230,7 @@ public class ImageBuilder {
                 String buildNamespace = build.getStatus().getCluster().getNamespace();
                 log.debug("Build is executed with pod '{}' in namespace '{}'", buildPodName, buildNamespace);
 
-                Pod buildPod = this.cluster.getPod(buildPodName, buildBotConfig.getNamespaceBuildExecution());
+                Pod buildPod = this.kubernetesClient.pods().inNamespace(buildBotConfig.getNamespaceBuildExecution()).withName(buildPodName).get();
 
                 log.debug("Current build phase: {}", buildPod.getStatus().getPhase());
                 if (buildPod.getStatus().getPhase().equals("Succeeded")) {
@@ -261,7 +261,7 @@ public class ImageBuilder {
      * @return the list of custom resource definitions
      */
     private List<CustomResourceDefinition> getCustomResourceDefinitions() {
-        CustomResourceDefinitionList crds = cluster.getClient().customResourceDefinitions().list();
+        CustomResourceDefinitionList crds = kubernetesClient.customResourceDefinitions().list();
         List<CustomResourceDefinition> crdsItems = crds.getItems();
 
         return crdsItems;

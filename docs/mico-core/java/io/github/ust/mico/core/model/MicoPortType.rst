@@ -26,13 +26,3 @@ UDP
 
    User Datagram Protocol.
 
-Fields
-------
-DEFAULT
-^^^^^^^
-
-.. java:field:: public static MicoPortType DEFAULT
-   :outertype: MicoPortType
-
-   Default port type is \ :java:ref:`MicoPortType.TCP`\ .
-
