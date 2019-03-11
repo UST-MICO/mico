@@ -18,7 +18,12 @@
  */
 package io.github.ust.mico.core.web;
 
+import io.github.ust.mico.core.dto.MicoApplicationJobStatusDTO;
+import io.github.ust.mico.core.dto.MicoBackgroundTaskDTO;
+import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoBackgroundTask;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoBackgroundTaskRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +39,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -48,15 +54,61 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 public class BackgroundTaskController {
 
     private static final String PATH_ID = "id";
+    private static final String PATH_VARIABLE_SHORT_NAME = "shortName";
+    private static final String PATH_VARIABLE_VERSION = "version";
 
     @Autowired
     private MicoBackgroundTaskRepository jobRepository;
+
+    @Autowired
+    private MicoApplicationRepository applicationRepository;
 
     @GetMapping()
     public ResponseEntity<Resources<Resource<MicoBackgroundTask>>> getAllJobs() {
         List<MicoBackgroundTask> jobs = jobRepository.findAll();
         List<Resource<MicoBackgroundTask>> jobResources = getJobResourceList(jobs);
         return ResponseEntity.ok(new Resources<>(jobResources, linkTo(methodOn(BackgroundTaskController.class).getAllJobs()).withSelfRel()));
+    }
+
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/jobstatus")
+    public ResponseEntity<Resource<MicoApplicationJobStatusDTO>> getJobStatusByApplicationShortnameAndVersion(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName, @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        Optional<MicoApplication> existingApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
+        if (!existingApplicationOptional.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' was not found!");
+        }
+        MicoApplication micoApplication = existingApplicationOptional.get();
+
+
+        List<MicoBackgroundTask> jobList = new ArrayList<>();
+        for(MicoServiceDeploymentInfo deploymentInfo: micoApplication.getServiceDeploymentInfos()){
+            jobList.addAll(jobRepository.findByMicoServiceShortNameAndMicoServiceVersion(deploymentInfo.getService().getShortName(), deploymentInfo.getService().getVersion()));
+        }
+
+        List<MicoBackgroundTask.Status> statusList = jobList.stream().map(MicoBackgroundTask::getStatus).distinct().collect(Collectors.toList());
+        MicoBackgroundTask.Status s = checkStatus(statusList);
+        MicoApplicationJobStatusDTO dto = new MicoApplicationJobStatusDTO();
+        dto.setStatus(s.toString());
+        dto.setJobs(jobList.stream().map(MicoBackgroundTaskDTO::valueOf).collect(Collectors.toList()));
+
+        return ResponseEntity.ok(new Resource<MicoApplicationJobStatusDTO>(dto,linkTo(methodOn(BackgroundTaskController.class).getJobStatusByApplicationShortnameAndVersion(shortName,version)).withSelfRel()));
+    }
+
+    /**
+     * Return status in the following order
+     * error -> pending -> running -> done
+     *
+     */
+    private MicoBackgroundTask.Status checkStatus(List<MicoBackgroundTask.Status> statusList) {
+        if (statusList.contains(MicoBackgroundTask.Status.ERROR)) {
+            return MicoBackgroundTask.Status.ERROR;
+        } else if (statusList.contains(MicoBackgroundTask.Status.PENDING)) {
+            return MicoBackgroundTask.Status.PENDING;
+        } else if (statusList.contains(MicoBackgroundTask.Status.RUNNING)) {
+            return MicoBackgroundTask.Status.RUNNING;
+        } else if (statusList.contains(MicoBackgroundTask.Status.DONE)) {
+            return MicoBackgroundTask.Status.DONE;
+        }
+        return MicoBackgroundTask.Status.ERROR;
     }
 
     @GetMapping("/{" + PATH_ID + "}")

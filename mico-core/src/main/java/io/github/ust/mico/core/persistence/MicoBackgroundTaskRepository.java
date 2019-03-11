@@ -30,5 +30,6 @@ public interface MicoBackgroundTaskRepository extends CrudRepository<MicoBackgro
     @Override
     List<MicoBackgroundTask> findAll();
 
-    Optional<MicoBackgroundTask> findByMicoServiceShortNameAndMicoServiceVersion(String micoServiceShortName, String micoServiceVersion);
+    List<MicoBackgroundTask> findByMicoServiceShortNameAndMicoServiceVersion(String micoServiceShortName, String micoServiceVersion);
+    Optional<MicoBackgroundTask> findByMicoServiceShortNameAndMicoServiceVersionAndType(String micoServiceShortName, String micoServiceVersion, MicoBackgroundTask.Type type);
 }

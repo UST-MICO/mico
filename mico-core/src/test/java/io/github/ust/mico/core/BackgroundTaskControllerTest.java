@@ -19,8 +19,13 @@
 package io.github.ust.mico.core;
 
 import io.github.ust.mico.core.configuration.CorsConfig;
+import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoBackgroundTask;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoBackgroundTaskRepository;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.util.EmbeddedRedisServer;
 import io.github.ust.mico.core.web.BackgroundTaskController;
 import org.junit.After;
@@ -33,12 +38,14 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static io.github.ust.mico.core.JsonPathBuilder.*;
@@ -47,6 +54,7 @@ import static io.github.ust.mico.core.TestConstants.VERSION;
 import static io.github.ust.mico.core.TestConstants.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -73,7 +81,11 @@ public class BackgroundTaskControllerTest {
 
     @Autowired
     private MicoBackgroundTaskRepository jobRepository;
+    @MockBean
+    private MicoApplicationRepository applicationRepository;
 
+    @Autowired
+    private MicoServiceDeploymentInfoRepository micoServiceDeploymentInfoRepository;
     @Autowired
     private MockMvc mvc;
 
@@ -103,6 +115,46 @@ public class BackgroundTaskControllerTest {
     }
 
     @Test
+    public void checkStatus() throws Exception {
+        MicoService existingService = new MicoService()
+            .setId(ID_1)
+            .setShortName(SERVICE_SHORT_NAME)
+            .setVersion(VERSION);
+        MicoService existingService2 = new MicoService()
+            .setId(ID_1)
+            .setShortName(SERVICE_SHORT_NAME_1)
+            .setVersion(VERSION);
+        MicoApplication existingApplication = new MicoApplication()
+            .setId(ID)
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION);
+        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
+            .setApplication(existingApplication)
+            .setService(existingService);
+        MicoServiceDeploymentInfo serviceDeploymentInfo2 = new MicoServiceDeploymentInfo()
+            .setApplication(existingApplication)
+            .setService(existingService2);
+
+        existingApplication.getServiceDeploymentInfos().addAll(Arrays.asList(serviceDeploymentInfo, serviceDeploymentInfo2));
+
+        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingApplication));
+
+        System.out.println(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION));
+
+        MicoBackgroundTask pendingJob = new MicoBackgroundTask(CompletableFuture.completedFuture(true), SERVICE_SHORT_NAME, VERSION, MicoBackgroundTask.Type.BUILD);
+        MicoBackgroundTask runningJob = new MicoBackgroundTask(CompletableFuture.completedFuture(true), SERVICE_SHORT_NAME_1, VERSION, MicoBackgroundTask.Type.BUILD);
+        runningJob.setStatus(MicoBackgroundTask.Status.RUNNING);
+        jobRepository.saveAll(Arrays.asList(pendingJob, runningJob
+        ));
+
+        mvc.perform(get("/jobs/" + SHORT_NAME + "/" + VERSION + "/jobstatus").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(STATUS_PATH, is(MicoBackgroundTask.Status.PENDING.toString())))
+            .andReturn();
+    }
+
+    @Test
     public void getJobById() throws Exception {
 
         MicoBackgroundTask doneJob = new MicoBackgroundTask(CompletableFuture.completedFuture(true), SHORT_NAME, VERSION, MicoBackgroundTask.Type.BUILD);
@@ -112,7 +164,7 @@ public class BackgroundTaskControllerTest {
         mvc.perform(get("/jobs/" + id).accept(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isSeeOther())
-            .andExpect(redirectedUrl("/services/short-name/1.0.0"))
+            .andExpect(redirectedUrl("/services/" + SHORT_NAME + "/" + VERSION))
             .andReturn();
 
         MicoBackgroundTask pendingJob = new MicoBackgroundTask(CompletableFuture.completedFuture(true), SHORT_NAME, VERSION, MicoBackgroundTask.Type.BUILD);

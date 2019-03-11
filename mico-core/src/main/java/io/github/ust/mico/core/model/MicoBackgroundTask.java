@@ -26,11 +26,16 @@ import org.springframework.data.redis.core.index.Indexed;
 import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * BackgroundJob for one {@link MicoService}.
+ * The
+ */
 @Data
 @RedisHash("BackgroundJob")
 public class MicoBackgroundTask implements Serializable {
+    // Build contains currently build and deploy.
     public enum Type {
-        BUILD
+        BUILD, UNDEPLOY
     }
 
     public enum Status {
@@ -46,6 +51,7 @@ public class MicoBackgroundTask implements Serializable {
     String micoServiceVersion;
     Status status;
     String errorMessage;
+    @Indexed
     Type type;
 
     public MicoBackgroundTask(CompletableFuture job, String micoServiceShortName, String micoServiceVersion, Type type) {
