@@ -63,6 +63,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
 import io.github.ust.mico.core.configuration.CorsConfig;
+import io.github.ust.mico.core.dto.request.MicoServiceDependencyRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
 import io.github.ust.mico.core.dto.response.*;
 import io.github.ust.mico.core.model.MicoService;
@@ -541,7 +542,7 @@ public class ServiceControllerTests {
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingService));
 
         ResultActions resultUpdate = mvc.perform(put(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION)
-            .content(mapper.writeValueAsBytes(updatedService))
+            .content(mapper.writeValueAsBytes(new MicoServiceRequestDTO(updatedService)))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print());
 
@@ -661,7 +662,7 @@ public class ServiceControllerTests {
         given(serviceRepository.save(any(MicoService.class))).willReturn(expectedService);
 
         final ResultActions result = mvc.perform(post(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + DEPENDEES_SUBPATH)
-            .content(mapper.writeValueAsBytes(newDependency))
+            .content(mapper.writeValueAsBytes(new MicoServiceDependencyRequestDTO(newDependency)))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print());
 
@@ -699,8 +700,6 @@ public class ServiceControllerTests {
         service.setDependencies(CollectionUtils.listOf(dependency1, dependency2));
 
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
-//        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME_1, VERSION_1_0_1)).willReturn(Optional.of(service1));
-//        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME_2, VERSION_1_0_2)).willReturn(Optional.of(service2));
         given(serviceRepository.findDependees(service.getShortName(), service.getVersion())).willReturn(CollectionUtils.listOf(service1, service2));
 
         mvc.perform(get("/services/" + SHORT_NAME + "/" + VERSION + DEPENDEES_SUBPATH).accept(MediaTypes.HAL_JSON_VALUE))

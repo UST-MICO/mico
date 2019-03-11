@@ -59,6 +59,7 @@ import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.github.ust.mico.core.configuration.CorsConfig;
+import io.github.ust.mico.core.dto.request.MicoServiceInterfaceRequestDTO;
 import io.github.ust.mico.core.model.MicoPortType;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
@@ -115,7 +116,7 @@ public class ServiceInterfaceControllerTests {
     	given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(new MicoService().setShortName(SHORT_NAME).setVersion(VERSION)));
         
     	mvc.perform(post(INTERFACES_URL)
-            .content(mapper.writeValueAsBytes(serviceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .content(mapper.writeValueAsBytes(new MicoServiceInterfaceRequestDTO(serviceInterface))).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isCreated())
             .andExpect(getServiceInterfaceMatcher(serviceInterface, INTERFACES_URL, SERVICE_URL))
@@ -129,7 +130,7 @@ public class ServiceInterfaceControllerTests {
         given(serviceRepository.findByShortNameAndVersion(any(), any())).willReturn(Optional.empty());
         
         mvc.perform(post(INTERFACES_URL)
-            .content(mapper.writeValueAsBytes(serviceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .content(mapper.writeValueAsBytes(new MicoServiceInterfaceRequestDTO(serviceInterface))).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isNotFound())
             .andReturn();
@@ -145,7 +146,7 @@ public class ServiceInterfaceControllerTests {
         given(serviceInterfaceRepository.findByServiceAndName(any(), any(), any())).willReturn(Optional.of(serviceInterface));
         
         mvc.perform(post(INTERFACES_URL)
-            .content(mapper.writeValueAsBytes(serviceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .content(mapper.writeValueAsBytes(new MicoServiceInterfaceRequestDTO(serviceInterface))).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isConflict())
             .andReturn();
@@ -158,7 +159,7 @@ public class ServiceInterfaceControllerTests {
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(new MicoService().setShortName(SHORT_NAME).setVersion(VERSION)));
         
         mvc.perform(post(INTERFACES_URL)
-            .content(mapper.writeValueAsBytes(serviceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .content(mapper.writeValueAsBytes(new MicoServiceInterfaceRequestDTO(serviceInterface))).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isUnprocessableEntity())
             .andReturn();
@@ -230,7 +231,6 @@ public class ServiceInterfaceControllerTests {
 
     @Test
     public void getInterfacePublicIpByNameWithPendingIP() throws Exception {
-//        List<String> externalIPs = new ArrayList<>();
         MicoService service = new MicoService().setShortName(SHORT_NAME).setVersion(VERSION);
         MicoServiceInterface serviceInterface = getTestServiceInterface();
         String serviceInterfaceName = serviceInterface.getServiceInterfaceName();
@@ -253,7 +253,7 @@ public class ServiceInterfaceControllerTests {
         MicoServiceInterface serviceInterface = getTestServiceInterface();
         
         mvc.perform(put(INTERFACES_URL + "/" + serviceInterface.getServiceInterfaceName())
-            .content(mapper.writeValueAsBytes(serviceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .content(mapper.writeValueAsBytes(new MicoServiceInterfaceRequestDTO(serviceInterface))).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isNotFound())
             .andExpect(status().reason("Service '" + SHORT_NAME + "' '" + VERSION + "' was not found!"))
@@ -265,7 +265,7 @@ public class ServiceInterfaceControllerTests {
         MicoServiceInterface serviceInterface = getTestServiceInterface();
         
         mvc.perform(put(INTERFACES_URL + "/" + serviceInterface.getServiceInterfaceName() + "NotEqual")
-            .content(mapper.writeValueAsBytes(serviceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .content(mapper.writeValueAsBytes(new MicoServiceInterfaceRequestDTO(serviceInterface))).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().is(422))
             .andExpect(status().reason("The variable 'serviceInterfaceName' must be equal to the name specified in the request body"))
@@ -280,7 +280,7 @@ public class ServiceInterfaceControllerTests {
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
         
         mvc.perform(put(INTERFACES_URL + "/" + serviceInterface.getServiceInterfaceName())
-            .content(mapper.writeValueAsBytes(serviceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .content(mapper.writeValueAsBytes(new MicoServiceInterfaceRequestDTO(serviceInterface))).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isNotFound())
             .andExpect(status().reason("MicoServiceInterface was not found!"))
@@ -299,7 +299,7 @@ public class ServiceInterfaceControllerTests {
         MicoServiceInterface modifiedServiceInterface = getTestServiceInterface();
         
         mvc.perform(put(INTERFACES_URL + "/" + modifiedServiceInterface.getServiceInterfaceName())
-            .content(mapper.writeValueAsBytes(modifiedServiceInterface)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .content(mapper.writeValueAsBytes(new MicoServiceInterfaceRequestDTO(modifiedServiceInterface))).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(getServiceInterfaceMatcher(modifiedServiceInterface, INTERFACES_URL, SERVICE_URL))

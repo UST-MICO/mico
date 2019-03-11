@@ -275,14 +275,14 @@ public class ApplicationControllerTests {
             eq(existingService2.getShortName()), eq(existingService2.getVersion())))
             .willReturn(Optional.of(existingService2));
 
-        MicoApplicationResponseDTO newApplication = (MicoApplicationResponseDTO) new MicoApplicationResponseDTO()
+        MicoApplicationResponseDTO newApplicationDto = (MicoApplicationResponseDTO) new MicoApplicationResponseDTO()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setName(NAME)
             .setDescription(DESCRIPTION);
 
         mvc.perform(post(BASE_PATH)
-            .content(mapper.writeValueAsBytes(newApplication))
+            .content(mapper.writeValueAsBytes(newApplicationDto))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(jsonPath(SHORT_NAME_PATH, is(existingApplication.getShortName())))
@@ -358,7 +358,7 @@ public class ApplicationControllerTests {
         given(applicationRepository.save(any(MicoApplication.class))).willReturn(expectedApplication);
 
         mvc.perform(post(BASE_PATH)
-            .content(mapper.writeValueAsBytes(newApplication))
+            .content(mapper.writeValueAsBytes(new MicoApplicationRequestDTO(newApplication)))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isCreated());
@@ -389,7 +389,7 @@ public class ApplicationControllerTests {
         given(applicationRepository.save(any(MicoApplication.class))).willReturn(expectedApplication);
 
         mvc.perform(post(BASE_PATH)
-            .content(mapper.writeValueAsBytes(newApplication))
+            .content(mapper.writeValueAsBytes(new MicoApplicationRequestDTO(newApplication)))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isCreated());
@@ -571,7 +571,7 @@ public class ApplicationControllerTests {
         given(applicationRepository.save(any(MicoApplication.class))).willReturn(expectedApplication);
 
         mvc.perform(put(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION)
-            .content(mapper.writeValueAsBytes(updatedApplication))
+            .content(mapper.writeValueAsBytes(new MicoApplicationRequestDTO(updatedApplication)))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isOk());
