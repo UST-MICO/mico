@@ -59,7 +59,7 @@ public class ServiceBroker {
             //TODO
             log.debug("Service in ServiceOptional is not present.");
         }
-        MicoService existingService = serviceOptional.get()
+        MicoService existingService = serviceOptional.get();
         log.debug("Got following service from serviceOptional: {} ", existingService);
         return existingService;
     }

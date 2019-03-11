@@ -1,10 +1,8 @@
 package io.github.ust.mico.core;
 
 import io.github.ust.mico.core.broker.ServiceBroker;
-import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.resource.ServiceResource;
 import io.github.ust.mico.core.service.GitHubCrawler;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
@@ -13,13 +11,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.LinkedList;
@@ -31,10 +24,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @RunWith(SpringRunner.class)
-@WebMvcTest(ServiceResource.class)
-@OverrideAutoConfiguration(enabled = true) //Needed to override our neo4j config
-@EnableAutoConfiguration
-@EnableConfigurationProperties(value = {CorsConfig.class})
+@SpringBootTest
 public class ServiceBrokerTests {
 
     @MockBean
@@ -52,15 +42,15 @@ public class ServiceBrokerTests {
     @MockBean
     private GitHubCrawler crawler;
 
-    @TestConfiguration
-    static class ServiceBrokerTestContextConfiguration {
-
-        @Bean
-        public ServiceBroker serviceBroker() {
-            return new ServiceBroker();
-        }
-
-    }
+//    @TestConfiguration
+//    static class ServiceBrokerTestContextConfiguration {
+//
+//        @Bean
+//        public ServiceBroker serviceBroker() {
+//            return new ServiceBroker();
+//        }
+//
+//    }
 
     @Before
     public void setUp() throws Exception {
@@ -81,12 +71,6 @@ public class ServiceBrokerTests {
 
     @Test
     public void getAllServicesAsList() throws Exception {
-//        given(serviceRepository.findAll(ArgumentMatchers.anyInt())).willReturn(
-//                CollectionUtils.listOf(
-//                        new MicoService().setShortName(SHORT_NAME_1).setVersion(VERSION_1_0_1).setName(NAME_1).setDescription(DESCRIPTION_1),
-//                        new MicoService().setShortName(SHORT_NAME_2).setVersion(VERSION_1_0_2).setName(NAME_2).setDescription(DESCRIPTION_2),
-//                        new MicoService().setShortName(SHORT_NAME_3).setVersion(VERSION_1_0_3).setName(NAME_3).setDescription(DESCRIPTION_3)));
-
         List<MicoService> micoServiceList = serviceBroker.getAllServicesAsList();
 
         assertThat(micoServiceList.get(0).getShortName()).isEqualTo(SHORT_NAME_1);
