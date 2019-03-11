@@ -90,7 +90,7 @@ public class Patterns {
     /**
      * Kubernetes environment variable names must only contain letters, numbers and underscores, and must not start with a digit.
      */
-    public static final String KUBERNETES_ENV_VAR_NAME_REGEX = "[_a-zA-Z][_a-zA-Z0-9]*";
+    public static final String KUBERNETES_ENV_VAR_NAME_REGEX = "^[A-Za-z_][A-Za-z0-9_]*$";
 
     /**
      * Message is used if a match with the {@link Patterns#KUBERNETES_ENV_VAR_NAME_REGEX} fails.
