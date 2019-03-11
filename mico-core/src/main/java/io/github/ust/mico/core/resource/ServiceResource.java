@@ -224,6 +224,7 @@ public class ServiceResource {
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/dependees")
     public ResponseEntity<Resources<Resource<MicoService>>> getDependees(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                          @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        //TODO: Use ServiceBroker
         MicoService service = getServiceFromDatabase(shortName, version);
         List<MicoServiceDependency> dependees = service.getDependencies();
         if (dependees == null) {
@@ -518,6 +519,7 @@ public class ServiceResource {
         }
     }
 
+    //TODO: delete, already moved to ServiceBroker
     private LinkedList<MicoService> getDependentServices(List<MicoServiceDependency> dependees) {
         if (dependees == null) {
             return null;
