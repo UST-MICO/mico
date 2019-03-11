@@ -104,6 +104,7 @@ public class DeploymentResource {
             if (doesTaskExistForMicoService(micoService.getShortName(), micoService.getVersion(), MicoBackgroundTask.Type.BUILD)) {
                 MicoBackgroundTask existingTask = getTaskByMicoService(micoService.getShortName(), micoService.getVersion(), MicoBackgroundTask.Type.BUILD).get();
                 if (existingTask.getStatus() != MicoBackgroundTask.Status.RUNNING) {
+                    backgroundTaskRepo.delete(existingTask);
                     // TODO Check if image for the requested version is already in docker registry -> no build required
 
                     log.info("Start build of MicoService '{}' in version '{}'.", micoService.getShortName(), micoService.getVersion());
