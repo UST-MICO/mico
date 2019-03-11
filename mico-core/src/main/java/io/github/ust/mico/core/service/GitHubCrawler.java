@@ -31,6 +31,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -115,19 +117,27 @@ public class GitHubCrawler {
      * @param uriBasicInfo   the URI to a specific release of a GitHub repository
      * @param dockerfilePath the relative path to the Dockerfile. The path is relative to the root directory of the
      *                       GitHub repository
-     * @return {@code true} if the Dockerfile exists in the in the specified repository
+     * @return {@code true} if the Dockerfile exists in the in the specified repository. {@code false} if response status is HTTP NOT FOUND.
+     * @throws {@link HttpClientErrorException} in case of HTTP 4XX response from GitHub
+     * @throws {@link HttpStatusCodeException} in case of HTTP 5XX response from GitHub
      */
     private boolean existsFileInGithubRepo(String uriBasicInfo, String dockerfilePath) {
         ResponseEntity<String> responseDockerFileInfo;
         UriComponentsBuilder dockerFileUriBuilder = UriComponentsBuilder.fromHttpUrl(uriBasicInfo);
         UriComponents dockerFileUriComponent = dockerFileUriBuilder.pathSegment(GITHUB_API_CONTENTS).pathSegment(dockerfilePath).build();
         log.debug("Check if the Dockerfile exists at {}", dockerFileUriComponent.toString());
-        responseDockerFileInfo = restTemplate.getForEntity(dockerFileUriComponent.toUri(), String.class);
-        if (!responseDockerFileInfo.getStatusCode().is2xxSuccessful()) {
-            log.error("Got an error {} while checking if Dockerfile exists", responseDockerFileInfo.getStatusCode());
+        try {
+            responseDockerFileInfo = restTemplate.getForEntity(dockerFileUriComponent.toUri(), String.class);
+            HttpStatus responseStatus = responseDockerFileInfo.getStatusCode();
+            if (responseStatus.equals(HttpStatus.OK)) {
+                log.debug("The file {} exists", dockerfilePath);
+                return true;
+            }
+        } catch (HttpClientErrorException.NotFound e) {
+            log.info("The file{} does not exist", dockerfilePath);
             return false;
         }
-        return true;
+        return false;
     }
 
     public MicoService crawlGitHubRepoLatestRelease(String uri, String dockerfilePath) throws IOException {
