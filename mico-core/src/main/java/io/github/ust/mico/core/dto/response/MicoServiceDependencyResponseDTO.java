@@ -19,58 +19,35 @@
 
 package io.github.ust.mico.core.dto.response;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import io.github.ust.mico.core.dto.request.MicoServiceDependencyRequestDTO;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for a {@link MicoServiceDependency}. Note that
- * only the depended service is included compared to
+ * DTO for a {@link MicoServiceDependency} intended to use with responses only.
+ * Note that only the depended service is included compared to a
  * {@link MicoServiceDependency}.
  */
 @Data
-@NoArgsConstructor
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 @Accessors(chain = true)
 @JsonInclude(Include.NON_NULL)
-public class MicoServiceDependencyResponseDTO {
+public class MicoServiceDependencyResponseDTO extends MicoServiceDependencyRequestDTO {
 	
-    // ----------------------
-    // -> Required fields ---
-    // ----------------------
-
-	/**
-     * The depended service {@link MicoServiceResponseDTO}.
-     */
-    @ApiModelProperty(required = true)
-    @NotNull
-    @Valid
-    private MicoServiceResponseDTO dependedService;
-
-    /**
-     * The minimum version of the depended service
-     * that is supported.
-     */
-    @ApiModelProperty(required = true)
-    private String minVersion;
-
-    /**
-     * The maximum version of the depended service
-     * that is supported.
-     */
-    @ApiModelProperty(required = true)
-    private String maxVersion;
-    
+	// Note: as soon as someone adds fields to this class, please add
+	// @AllArgsConstructor to this class in order
+	// to conform to the other DTOs.
+	
     
     // -------------------
     // -> Constructors ---
@@ -83,9 +60,7 @@ public class MicoServiceDependencyResponseDTO {
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.
      */
     public MicoServiceDependencyResponseDTO(MicoServiceDependency serviceDependency) {
-    	this.dependedService = new MicoServiceResponseDTO(serviceDependency.getDependedService());
-    	this.minVersion = serviceDependency.getMinVersion();
-    	this.maxVersion = serviceDependency.getMaxVersion();
+    	super(serviceDependency);
     }
 
 }
