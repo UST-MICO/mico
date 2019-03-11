@@ -20,6 +20,7 @@
 package io.github.ust.mico.core;
 
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.github.ust.mico.core.broker.BackgroundTaskBroker;
 import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.*;
@@ -49,6 +50,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -95,6 +97,8 @@ public class DeploymentResourceTests {
     @MockBean
     private MicoBackgroundTaskRepository backgroundTaskRepository;
     @MockBean
+    private BackgroundTaskBroker backgroundTaskBroker;
+    @MockBean
     private ImageBuilder imageBuilder;
     @MockBean
     private MicoCoreBackgroundTaskFactory factory;
@@ -132,6 +136,12 @@ public class DeploymentResourceTests {
         given(factory.runAsync(ArgumentMatchers.any(), onSuccessArgumentCaptor.capture(), onErrorArgumentCaptor.capture()))
             .willReturn(CompletableFuture.completedFuture(service));
 
+        given(backgroundTaskBroker.getJobStatusByApplicationShortNameAndVersion(SHORT_NAME,VERSION))
+            .willReturn(new MicoApplicationJobStatus()
+                .setApplicationName(SHORT_NAME)
+                .setApplicationVersion(VERSION)
+                .setStatus(MicoBackgroundTask.Status.PENDING)
+                .setJobList(Arrays.asList(mockTask)));
         mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/deploy"))
             .andDo(print())
             .andExpect(status().isAccepted());

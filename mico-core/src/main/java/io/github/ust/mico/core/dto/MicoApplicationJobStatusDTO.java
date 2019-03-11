@@ -21,6 +21,7 @@
  import com.fasterxml.jackson.annotation.JsonProperty;
  import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
  import io.github.ust.mico.core.model.MicoApplication;
+ import io.github.ust.mico.core.model.MicoApplicationJobStatus;
  import io.swagger.annotations.ApiModelProperty;
  import io.swagger.annotations.Extension;
  import io.swagger.annotations.ExtensionProperty;
@@ -31,6 +32,7 @@
 
  import java.util.ArrayList;
  import java.util.List;
+ import java.util.stream.Collectors;
 
  @Data
  @NoArgsConstructor
@@ -63,4 +65,18 @@
              @ExtensionProperty(name = "description", value = "The list of jobs for the MicoApplication")})})
      @JsonProperty(access = JsonProperty.Access.READ_ONLY)
      private List<MicoBackgroundTaskDTO> jobs = new ArrayList<>();
+
+     /**
+      * Creates a {@code MicoApplicationJobStatusDTO} based on a
+      * {@link MicoApplicationJobStatus}.
+      *
+      * @param applicationJobStatus the {@link MicoApplicationJobStatus}.
+      * @return a {@link MicoApplicationJobStatusDTO} with all the values
+      * of the given {@code MicoApplicationJobStatus}.
+      */
+     public static MicoApplicationJobStatusDTO valueOf(MicoApplicationJobStatus applicationJobStatus) {
+         return new MicoApplicationJobStatusDTO()
+             .setStatus(applicationJobStatus.getStatus().toString())
+             .setJobs(applicationJobStatus.getJobList().stream().map(MicoBackgroundTaskDTO::valueOf).collect(Collectors.toList()));
+     }
  }

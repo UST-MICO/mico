@@ -19,6 +19,8 @@
 
 package io.github.ust.mico.core.resource;
 
+import io.github.ust.mico.core.broker.BackgroundTaskBroker;
+import io.github.ust.mico.core.dto.MicoApplicationJobStatusDTO;
 import io.github.ust.mico.core.exception.ImageBuildException;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.NotInitializedException;
@@ -34,6 +36,7 @@ import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -56,6 +59,8 @@ public class DeploymentResource {
     private static final String PATH_VARIABLE_VERSION = "version";
 
     @Autowired
+    private BackgroundTaskBroker backgroundTaskBroker;
+    @Autowired
     private MicoApplicationRepository applicationRepository;
 
     @Autowired
@@ -76,8 +81,8 @@ public class DeploymentResource {
     private MicoBackgroundTaskRepository backgroundTaskRepo;
 
     @PostMapping
-    public ResponseEntity<Void> deploy(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                       @PathVariable(PATH_VARIABLE_VERSION) String version) {
+    public ResponseEntity<Resource<MicoApplicationJobStatusDTO>> deploy(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                        @PathVariable(PATH_VARIABLE_VERSION) String version) {
         try {
             imageBuilder.init();
         } catch (NotInitializedException e) {
@@ -128,8 +133,9 @@ public class DeploymentResource {
                 }
             }
         }
-        // TODO return MicoAppllicationJobStatus
-        return ResponseEntity.accepted().build();
+        return ResponseEntity
+            .accepted()
+            .body(new Resource<>(MicoApplicationJobStatusDTO.valueOf(backgroundTaskBroker.getJobStatusByApplicationShortNameAndVersion(shortName, version))));
     }
 
     private Optional<MicoBackgroundTask> getTaskByMicoService(String micoServiceShortName, String micoServiceVersion, MicoBackgroundTask.Type type) {

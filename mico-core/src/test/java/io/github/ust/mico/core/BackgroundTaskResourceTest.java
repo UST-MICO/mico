@@ -18,11 +18,9 @@
  */
 package io.github.ust.mico.core;
 
+import io.github.ust.mico.core.broker.BackgroundTaskBroker;
 import io.github.ust.mico.core.configuration.CorsConfig;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoBackgroundTask;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoBackgroundTaskRepository;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
@@ -71,7 +69,7 @@ public class BackgroundTaskResourceTest {
 
     private static final String JSON_PATH_LINKS_SECTION = "$._links.";
 
-    public static final String BACKGROUNDTASK_LIST = buildPath(EMBEDDED, "micoBackgroundTaskList");
+    public static final String BACKGROUNDTASK_LIST = buildPath(EMBEDDED, "micoBackgroundTaskDTOList");
     public static final String SHORT_NAME_PATH = buildPath(ROOT, "micoServiceShortName");
     public static final String STATUS_PATH = buildPath(ROOT, "status");
     public static final String LINKS_CANCEL_HREF = buildPath(LINKS, "cancel", HREF);
@@ -83,7 +81,8 @@ public class BackgroundTaskResourceTest {
     private MicoBackgroundTaskRepository jobRepository;
     @MockBean
     private MicoApplicationRepository applicationRepository;
-
+    @MockBean
+    private BackgroundTaskBroker backgroundTaskBroker;
     @Autowired
     private MicoServiceDeploymentInfoRepository micoServiceDeploymentInfoRepository;
     @Autowired
@@ -136,7 +135,6 @@ public class BackgroundTaskResourceTest {
             .setService(existingService2);
 
         existingApplication.getServiceDeploymentInfos().addAll(Arrays.asList(serviceDeploymentInfo, serviceDeploymentInfo2));
-
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingApplication));
 
         System.out.println(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION));
@@ -144,6 +142,13 @@ public class BackgroundTaskResourceTest {
         MicoBackgroundTask pendingJob = new MicoBackgroundTask(CompletableFuture.completedFuture(true), SERVICE_SHORT_NAME, VERSION, MicoBackgroundTask.Type.BUILD);
         MicoBackgroundTask runningJob = new MicoBackgroundTask(CompletableFuture.completedFuture(true), SERVICE_SHORT_NAME_1, VERSION, MicoBackgroundTask.Type.BUILD);
         runningJob.setStatus(MicoBackgroundTask.Status.RUNNING);
+        given(backgroundTaskBroker.getJobStatusByApplicationShortNameAndVersion(SHORT_NAME,VERSION))
+            .willReturn(new MicoApplicationJobStatus()
+                .setApplicationName(SHORT_NAME)
+                .setApplicationVersion(VERSION)
+                .setStatus(MicoBackgroundTask.Status.PENDING)
+                .setJobList(Arrays.asList(runningJob,pendingJob)));
+
         jobRepository.saveAll(Arrays.asList(pendingJob, runningJob
         ));
 
