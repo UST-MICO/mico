@@ -31,7 +31,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
-import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
 import io.github.ust.mico.core.exception.VersionNotSupportedException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -132,16 +131,6 @@ public class MicoApplication {
                 .setOwner(applicationDto.getOwner());
     }
     
-    /**
-     * Creates a {@code MicoApplication} based on a {@code MicoApplicationResponseDTO}.
-     * 
-     * @param applicationDto the {@link MicoApplicationResponseDTO}.
-     * @return a {@link MicoApplication}.
-     */
-    public static MicoApplication valueOf(MicoApplicationResponseDTO applicationDto) {
-        return valueOf((MicoApplicationRequestDTO) applicationDto);
-    }
-
     @JsonIgnore
     public MicoVersion getMicoVersion() throws VersionNotSupportedException {
         MicoVersion micoVersion = MicoVersion.valueOf(this.version);

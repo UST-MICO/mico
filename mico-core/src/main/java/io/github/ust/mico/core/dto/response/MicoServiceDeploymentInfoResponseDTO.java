@@ -21,7 +21,10 @@ package io.github.ust.mico.core.dto.response;
 
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import lombok.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 
 /**
@@ -44,24 +47,13 @@ public class MicoServiceDeploymentInfoResponseDTO extends MicoServiceDeploymentI
     // -------------------
 	
 	/**
-	 * TODO: Constructor comment.
-	 * 
-	 * @param application
-	 */
+     * Creates an instance of this DTO based on a
+     * {@code MicoServiceDeploymentInfo}.
+     * 
+     * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.
+     */
 	public MicoServiceDeploymentInfoResponseDTO(MicoServiceDeploymentInfo serviceDeploymentInfo) {
 		super(serviceDeploymentInfo);
 	}
-
-//    /**
-//     * Creates a {@code MicoServiceDeploymentInfoDTO} based on a
-//     * {@code MicoServiceDeploymentInfo}.
-//     *
-//     * @param micoServiceDeploymentInfo the {@link MicoServiceDeploymentInfo} to use.
-//     * @return a {@link MicoServiceDeploymentInfoResponseDTO} with all the values
-//     * of the given {@code MicoServiceDeploymentInfo}.
-//     */
-//    public static MicoServiceDeploymentInfoResponseDTO valueOf(MicoServiceDeploymentInfo micoServiceDeploymentInfo) {
-//        return (MicoServiceDeploymentInfoResponseDTO) MicoServiceDeploymentInfoRequestDTO.valueOf(micoServiceDeploymentInfo);
-//    }
 
 }

@@ -156,27 +156,24 @@ public class MicoServiceInterfaceResponseDTO {
     private String transportProtocol;
     
     
-    // ----------------------
-    // -> Static Creators ---
-    // ----------------------
-
+    // -------------------
+    // -> Constructors ---
+    // -------------------
+    
     /**
-     * Creates a {@code MicoServiceInterfaceResponseDTO} based on a
+     * Creates an instance of this DTO based on a
      * {@code MicoServiceInterface}.
-     *
-     * @param application the {@link MicoServiceInterface}.
-     * @return a {@link MicoServiceInterfaceResponseDTO} with all the values
-     * 		   of the given {@code MicoServiceInterface}.
+     * 
+     * @param serviceInterface the {@link MicoServiceInterface}.
      */
-    public static MicoServiceInterfaceResponseDTO valueOf(MicoServiceInterface serviceInterface) {
-        return new MicoServiceInterfaceResponseDTO()
-        	.setServiceInterfaceName(serviceInterface.getServiceInterfaceName())
-        	.setPorts(serviceInterface.getPorts())
-        	.setPublicDns(serviceInterface.getPublicDns())
-        	.setDescription(serviceInterface.getDescription())
-        	.setProtocol(serviceInterface.getProtocol())
-        	.setTransportProtocol(serviceInterface.getTransportProtocol())
-        	;
+    public MicoServiceInterfaceResponseDTO(MicoServiceInterface serviceInterface) {
+    	this.serviceInterfaceName = serviceInterface.getServiceInterfaceName();
+    	this.ports = serviceInterface.getPorts();
+    	this.publicDns = serviceInterface.getPublicDns();
+    	this.description = serviceInterface.getDescription();
+    	this.protocol = serviceInterface.getProtocol();
+    	this.transportProtocol = serviceInterface.getTransportProtocol();
+    	
     }
 
 }

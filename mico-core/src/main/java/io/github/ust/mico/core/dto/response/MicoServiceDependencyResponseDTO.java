@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import io.github.ust.mico.core.model.MicoServiceDependency;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -71,23 +72,20 @@ public class MicoServiceDependencyResponseDTO {
     private String maxVersion;
     
     
-    // ----------------------
-    // -> Static Creators ---
-    // ----------------------
-
+    // -------------------
+    // -> Constructors ---
+    // -------------------
+    
     /**
-     * Creates a {@code MicoServiceDependencyResponseDTO} based on a
-     * {@code MicoServiceDependency}.
-     *
-     * @param application the {@link MicoServiceDependency}.
-     * @return a {@link MicoServiceDependencyResponseDTO} with all the values
-     * 		   of the given {@code MicoServiceDependency}.
+     * Creates an instance of this DTO based on a
+     * {@code MicoServiceDeploymentInfo}.
+     * 
+     * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.
      */
-    public static MicoServiceDependencyResponseDTO valueOf(MicoServiceDependency serviceDependency) {
-        return new MicoServiceDependencyResponseDTO()
-        	.setDependedService(new MicoServiceResponseDTO(serviceDependency.getDependedService()))
-            .setMinVersion(serviceDependency.getMinVersion())
-            .setMaxVersion(serviceDependency.getMaxVersion());
+    public MicoServiceDependencyResponseDTO(MicoServiceDependency serviceDependency) {
+    	this.dependedService = new MicoServiceResponseDTO(serviceDependency.getDependedService());
+    	this.minVersion = serviceDependency.getMinVersion();
+    	this.maxVersion = serviceDependency.getMaxVersion();
     }
 
 }

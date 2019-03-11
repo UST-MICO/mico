@@ -157,11 +157,12 @@ public class MicoApplicationRequestDTO {
     // -> Constructors ---
     // -------------------
 	
-	/**
-	 * TODO: Constructor comment.
-	 * 
-	 * @param application
-	 */
+    /**
+   	 * Creates an instance of this DTO based on a
+   	 * {@code MicoApplication}.
+   	 * 
+   	 * @param application the {@link MicoApplication}.
+   	 */
 	public MicoApplicationRequestDTO(MicoApplication application) {
 		this.shortName = application.getShortName();
 		this.version = application.getVersion();
@@ -170,23 +171,5 @@ public class MicoApplicationRequestDTO {
 		this.contact = application.getContact();
 		this.owner = application.getOwner();
 	}
-
-//    /**
-//     * Creates a {@code MicoApplicationRequestDTO} based on a
-//     * {@code MicoApplication}.
-//     *
-//     * @param application the {@link MicoApplication}.
-//     * @return a {@link MicoApplicationRequestDTO} with all the values
-//     * 		   of the given {@code MicoApplication}.
-//     */
-//    public static MicoApplicationRequestDTO valueOf(MicoApplication application) {
-//        return new MicoApplicationRequestDTO()
-//            .setShortName(application.getShortName())
-//            .setVersion(application.getVersion())
-//            .setName(application.getName())
-//            .setDescription(application.getDescription())
-//            .setContact(application.getContact())
-//            .setOwner(application.getOwner());
-//    }
 
 }

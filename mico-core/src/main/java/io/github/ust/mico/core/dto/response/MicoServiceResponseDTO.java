@@ -26,10 +26,7 @@ import com.fasterxml.jackson.annotation.Nulls;
 
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceCrawlingOrigin;
-import io.github.ust.mico.core.model.MicoServiceDependency;
-import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.model.*;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -78,26 +75,15 @@ public class MicoServiceResponseDTO extends MicoServiceRequestDTO {
     // -> Constructors ---
     // -------------------
     
-	/**
-	 * TODO: Constructor comment.
-	 * 
-	 * @param application
-	 */
+    /**
+   	 * Creates an instance of this DTO based on a
+   	 * {@code MicoService}.
+   	 * 
+   	 * @param service the {@link MicoService}.
+   	 */
 	public MicoServiceResponseDTO(MicoService service) {
 		super(service);
 		this.serviceCrawlingOrigin = service.getServiceCrawlingOrigin();
 	}
-    
-//    /**
-//     * Creates a {@link MicoServiceResponseDTO} based on a {@code MicoService}.
-//     * 
-//     * @param service the {@link MicoService}.
-//     * @return a {@link MicoServiceResponseDTO} with all the values
-//     * 		   of the given {@code MicoService}.
-//     */
-//    public static MicoServiceResponseDTO valueOf(MicoService service) {
-//		return ((MicoServiceResponseDTO) MicoServiceRequestDTO.valueOf(service))
-//		    .setServiceCrawlingOrigin(service.getServiceCrawlingOrigin());
-//    }
 
 }

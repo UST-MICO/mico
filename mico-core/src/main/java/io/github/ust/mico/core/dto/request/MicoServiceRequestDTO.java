@@ -217,9 +217,10 @@ public class MicoServiceRequestDTO {
     // -------------------
     
 	/**
-	 * TODO: Constructor comment.
+	 * Creates an instance of this DTO based on a
+	 * {@code MicoService}.
 	 * 
-	 * @param application
+	 * @param service the {@link MicoService}.
 	 */
 	public MicoServiceRequestDTO(MicoService service) {
 		this.shortName = service.getShortName();
@@ -232,26 +233,5 @@ public class MicoServiceRequestDTO {
 		this.dockerfilePath = service.getDockerfilePath();
 		this.dockerImageUri = service.getDockerImageUri();
 	}
-    
-    
-//    /**
-//     * Creates a {@link MicoServiceRequestDTO} based on a {@code MicoService}.
-//     * 
-//     * @param service the {@link MicoService}.
-//     * @return a {@link MicoServiceRequestDTO} with all the values
-//     * 		   of the given {@code MicoService}.
-//     */
-//    public static MicoServiceRequestDTO valueOf(MicoService service) {
-//        return new MicoServiceRequestDTO()
-//            .setShortName(service.getShortName())
-//            .setName(service.getName())
-//            .setVersion(service.getVersion())
-//            .setDescription(service.getDescription())
-//            .setContact(service.getContact())
-//            .setOwner(service.getOwner())
-//            .setGitCloneUrl(service.getGitCloneUrl())
-//            .setDockerfilePath(service.getDockerfilePath())
-//            .setDockerImageUri(service.getDockerImageUri());
-//    }
 
 }
