@@ -22,6 +22,14 @@ package io.github.ust.mico.core.service;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.github.ust.mico.core.configuration.PrometheusConfig;
+import io.github.ust.mico.core.dto.KubernetesNodeMetricsDTO;
+import io.github.ust.mico.core.dto.KubernetesPodInformationDTO;
+import io.github.ust.mico.core.dto.KubernetesPodMetricsDTO;
+import io.github.ust.mico.core.dto.MicoApplicationDTO;
+import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
+import io.github.ust.mico.core.dto.MicoServiceInterfaceStatusDTO;
+import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
+import io.github.ust.mico.core.dto.PrometheusResponseDTO;
 import io.github.ust.mico.core.dto.*;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.PrometheusRequestFailedException;
@@ -247,8 +255,8 @@ public class MicoStatusService {
      * Get information and metrics for a {@link Pod} representing an instance of a {@link MicoService}.
      *
      * @param pod is a {@link Pod} of Kubernetes
-     * @return a {@link KubernetesPodInformationDTO} which has node name, pod name, phase, host ip, memory usage, and
-     * cpu load as status information
+     * @return a {@link KubernetesPodInformationDTO} which has node name, pod name, phase, host IP, memory usage, and
+     * CPU load as status information
      */
     private KubernetesPodInformationDTO getUiPodInfo(Pod pod) {
         String nodeName = pod.getSpec().getNodeName();
@@ -286,24 +294,40 @@ public class MicoStatusService {
         return requestValueFromPrometheus(prometheusUri);
     }
 
+    /**
+     * Requests the CPU load / memory usage value from Prometheus.
+     *
+     * @param prometheusUri is the adapted URI with the query for Prometheus, either CPU load or memory usage.
+     * @return a single Integer value of the current CPU load or the memory usage of a {@link Pod}.
+     * @throws PrometheusRequestFailedException is thrown if Prometheus returns an error, if there is no response body,
+     *                                          or if the HTTP request was not successful.
+     */
     private int requestValueFromPrometheus(URI prometheusUri) throws PrometheusRequestFailedException {
-        ResponseEntity<PrometheusResponse> response = restTemplate.getForEntity(prometheusUri, PrometheusResponse.class);
+        ResponseEntity<PrometheusResponseDTO> response = restTemplate.getForEntity(prometheusUri, PrometheusResponseDTO.class);
         if (response.getStatusCode().is2xxSuccessful()) {
-            PrometheusResponse prometheusMemoryResponse = response.getBody();
-            if (prometheusMemoryResponse != null) {
-                if (prometheusMemoryResponse.wasSuccessful()) {
-                    return prometheusMemoryResponse.getValue();
+            PrometheusResponseDTO prometheusResponse = response.getBody();
+            if (prometheusResponse != null) {
+                if (prometheusResponse.isSuccess()) {
+                    return prometheusResponse.getValue();
                 } else {
-                    throw new PrometheusRequestFailedException("The status of the prometheus response was " + prometheusMemoryResponse.getStatus(), response.getStatusCode(), prometheusMemoryResponse.getStatus());
+                    throw new PrometheusRequestFailedException("Prometheus returned a response with status " + prometheusResponse.isSuccess());
                 }
             } else {
-                throw new PrometheusRequestFailedException("There was no response body", response.getStatusCode(), null);
+                throw new PrometheusRequestFailedException("There is no body in the response with status code " + response.getStatusCode());
             }
         } else {
-            throw new PrometheusRequestFailedException("The http status code was not 2xx", response.getStatusCode(), null);
+            throw new PrometheusRequestFailedException("The http request was not successful and returned a " + response.getStatusCode());
         }
     }
 
+    /**
+     * Builds the correct Prometheus URI to request the correct value.
+     *
+     * @param query   is the query for Prometheus in PromQL (either the query for the CPU load, or for the memory
+     *                usage).
+     * @param podName is the name of the {@link Pod}, for which the CPU load / memory usage query is build.
+     * @return the URI to send the request to.
+     */
     private URI getPrometheusUri(String query, String podName) {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(prometheusConfig.getUri());
         uriBuilder.queryParam(PROMETHEUS_QUERY_PARAMETER_NAME, String.format(query, podName));
