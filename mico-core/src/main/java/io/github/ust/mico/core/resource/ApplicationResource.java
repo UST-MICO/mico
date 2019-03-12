@@ -28,7 +28,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
@@ -42,6 +41,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
+import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
 import io.github.ust.mico.core.dto.response.*;
 import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO.MicoApplicationDeploymentStatus;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
@@ -151,20 +151,24 @@ public class ApplicationResource {
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_PROMOTE)
     public ResponseEntity<Resource<MicoApplicationResponseDTO>> promoteApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                            @PathVariable(PATH_VARIABLE_VERSION) String version,
-                                                                           @NotEmpty @RequestBody String newVersion) {
-    	log.debug("Received request to promote MicoApplication '{}' '{}' to version '{}'", shortName, version, newVersion);
+                                                                           @Valid @RequestBody MicoVersionRequestDTO newVersionDto) {
+    	log.debug("Received request to promote MicoApplication '{}' '{}' to version '{}'", shortName, version, newVersionDto.getVersion());
+    	
+    	System.out.println(newVersionDto);
     	
     	// Application to promote (copy)
         MicoApplication application = getApplicationFromDatabase(shortName, version);
+        System.out.println(application);
         log.debug("Received following MicoApplication from database: {}", application);
         
         // Update the version and set id to null, otherwise the original application
         // would be updated but we want a new application instance to be created.
-        application.setVersion(newVersion).setId(null);
+        application.setVersion(newVersionDto.getVersion()).setId(null);
 
         // Save the new (promoted) application in the database,
         // all edges (deployment information) will be copied, too.
         MicoApplication updatedApplication = applicationRepository.save(application);
+        System.out.println(updatedApplication);
         log.debug("Saved following MicoApplication in database: {}", updatedApplication);
 
         return ResponseEntity.ok(getApplicationResponseDTOResourceWithDeploymentStatus(updatedApplication));

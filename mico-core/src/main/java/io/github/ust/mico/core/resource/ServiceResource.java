@@ -29,7 +29,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
@@ -44,6 +43,7 @@ import org.springframework.web.server.ResponseStatusException;
 import io.github.ust.mico.core.dto.request.CrawlingInfoRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoServiceDependencyRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
+import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphEdgeResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceResponseDTO;
@@ -320,8 +320,8 @@ public class ServiceResource {
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_PROMOTE)
     public ResponseEntity<Resource<MicoServiceResponseDTO>> promoteService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                 @PathVariable(PATH_VARIABLE_VERSION) String version,
-                                                                @NotEmpty @RequestBody String newVersion) {
-    	log.debug("Received request to promote MicoService '{}' '{}' to version '{}'", shortName, version, newVersion);
+                                                                @Valid @RequestBody MicoVersionRequestDTO newVersionDto) {
+    	log.debug("Received request to promote MicoService '{}' '{}' to version '{}'", shortName, version, newVersionDto.getVersion());
     	
         // Service to promote (copy)
         MicoService service = getServiceFromDatabase(shortName, version);
@@ -329,7 +329,7 @@ public class ServiceResource {
 
         // Update the version and set id to null, otherwise the original service
         // would be updated but we want a new service instance to be created.
-        service.setVersion(newVersion).setId(null);
+        service.setVersion(newVersionDto.getVersion()).setId(null);
 
         // Save the new (promoted) service in the database
         MicoService updatedService = serviceRepository.save(service);

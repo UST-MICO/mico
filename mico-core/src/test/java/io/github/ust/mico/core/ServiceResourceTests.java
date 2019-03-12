@@ -63,6 +63,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.dto.request.MicoServiceDependencyRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
+import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
 import io.github.ust.mico.core.dto.response.*;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
@@ -91,7 +92,6 @@ public class ServiceResourceTests {
     private static final String DESCRIPTION_PATH = buildPath(ROOT, "description");
     private static final String VERSION_PATH = buildPath(ROOT, "version");
     private static final String PATH_PROMOTE = "promote";
-    private static final String PATH_SERVICE_INTERFACES = buildPath(ROOT, "serviceInterfaces");
 
     //TODO: Use these variables inside the tests instead of the local variables
 
@@ -780,17 +780,14 @@ public class ServiceResourceTests {
         given(serviceRepository.save(eq(promotedService))).willReturn(savedPromotedService);
 
         ResultActions resultPromotion = mvc.perform(post(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_PROMOTE)
-                .content(newVersion)
+                .content(mapper.writeValueAsBytes(new MicoVersionRequestDTO(newVersion)))
                 .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andDo(print())
                 .andExpect(jsonPath(SHORT_NAME_PATH, is(savedPromotedService.getShortName())))
                 .andExpect(jsonPath(VERSION_PATH, is(newVersion)))
-                .andExpect(jsonPath(DESCRIPTION_PATH, is(savedPromotedService.getDescription())))
-                .andExpect(jsonPath(PATH_SERVICE_INTERFACES + "[*]", hasSize(2)))
-                .andExpect(jsonPath(PATH_SERVICE_INTERFACES + "[0].serviceInterfaceName", is(SERVICE_INTERFACE_NAME)))
-                .andExpect(jsonPath(PATH_SERVICE_INTERFACES + "[1].serviceInterfaceName", is(SERVICE_INTERFACE_NAME_1)));
+                .andExpect(jsonPath(DESCRIPTION_PATH, is(savedPromotedService.getDescription())));
 
-        resultPromotion.andExpect(status().isCreated());
+        resultPromotion.andExpect(status().isOk());
     }
 
 }

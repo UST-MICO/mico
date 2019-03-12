@@ -60,6 +60,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
+import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
 import io.github.ust.mico.core.dto.response.*;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo.ImagePullPolicy;
@@ -508,14 +509,14 @@ public class ApplicationResourceTests {
 
         ResultActions resultUpdate = mvc
             .perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_PROMOTE)
-                .content(newVersion)
+                .content(mapper.writeValueAsBytes(new MicoVersionRequestDTO(newVersion)))
                 .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(jsonPath(DESCRIPTION_PATH, is(updatedApplication.getDescription())))
             .andExpect(jsonPath(SHORT_NAME_PATH, is(updatedApplication.getShortName())))
             .andExpect(jsonPath(VERSION_PATH, is(newVersion)));
 
-        resultUpdate.andExpect(status().isCreated());
+        resultUpdate.andExpect(status().isOk());
     }
 
     @Test
