@@ -19,6 +19,7 @@
 package io.github.ust.mico.core.model;
 
 import lombok.Data;
+import lombok.experimental.Accessors;
 import org.neo4j.ogm.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
@@ -32,6 +33,7 @@ import java.util.concurrent.CompletableFuture;
  */
 @Data
 @RedisHash("BackgroundJob")
+@Accessors(chain = true)
 public class MicoBackgroundTask implements Serializable {
     // Build contains currently build and deploy.
     public enum Type {
@@ -54,11 +56,7 @@ public class MicoBackgroundTask implements Serializable {
     @Indexed
     Type type;
 
-    public MicoBackgroundTask(CompletableFuture job, String micoServiceShortName, String micoServiceVersion, Type type) {
-        this.job = job;
-        this.micoServiceShortName = micoServiceShortName;
-        this.micoServiceVersion = micoServiceVersion;
-        this.type = type;
+    public MicoBackgroundTask() {
         this.status = Status.PENDING;
     }
 

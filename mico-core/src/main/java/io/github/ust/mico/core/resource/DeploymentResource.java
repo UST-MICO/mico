@@ -106,33 +106,39 @@ public class DeploymentResource {
 
         for (MicoService micoService : micoServices) {
 
-            // Check if build is already running -> no build required, lock changes to running jobs. if done, error, cancel delete and create new
+            // Check if build is already running -> no build required, lock changes to running jobs. if done, error, cancel delete and create new to get new id
             if (doesTaskExistForMicoService(micoService.getShortName(), micoService.getVersion(), MicoBackgroundTask.Type.BUILD)) {
-                MicoBackgroundTask existingTask = getTaskByMicoService(micoService.getShortName(), micoService.getVersion(), MicoBackgroundTask.Type.BUILD).get();
-                if (existingTask.getStatus() != MicoBackgroundTask.Status.RUNNING) {
-                    backgroundTaskRepo.delete(existingTask);
-                    // TODO Check if image for the requested version is already in docker registry -> no build required
-
-                    log.info("Start build of MicoService '{}' in version '{}'.", micoService.getShortName(), micoService.getVersion());
-                    MicoBackgroundTask task = new MicoBackgroundTask(
-                        backgroundTaskFactory.runAsync(() -> buildImageAndWait(micoService), dockerImageUri -> {
-                            log.info("Build of MicoService '{}' in version '{}' finished with image '{}'.",
-                                micoService.getShortName(), micoService.getVersion(), dockerImageUri);
-
-                            micoService.setDockerImageUri(dockerImageUri);
-                            MicoService savedMicoService = serviceRepository.save(micoService);
-                            try {
-                                createKubernetesResources(micoApplication, savedMicoService);
-                                saveMicoBackgroundTaskStatus(micoService.getShortName(), micoService.getVersion(), MicoBackgroundTask.Status.DONE, MicoBackgroundTask.Type.BUILD, null);
-                            } catch (KubernetesResourceException kre) {
-                                saveMicoBackgroundTaskStatus(micoService.getShortName(), micoService.getVersion(), MicoBackgroundTask.Status.ERROR, MicoBackgroundTask.Type.BUILD, kre.getMessage());
-                                log.error(kre.getMessage(), kre);
-                                exceptionHandler(kre);
-                            }
-                        }, this::exceptionHandler), micoService.getShortName(), micoService.getVersion(), MicoBackgroundTask.Type.BUILD);
-                    backgroundTaskRepo.save(task);
+                if (getTaskByMicoService(micoService.getShortName(), micoService.getVersion(), MicoBackgroundTask.Type.BUILD).get().getStatus() != MicoBackgroundTask.Status.RUNNING) {
+                    backgroundTaskRepo.delete(getTaskByMicoService(micoService.getShortName(), micoService.getVersion(), MicoBackgroundTask.Type.BUILD).get());
+                } else {
+                    continue;
                 }
             }
+            // TODO Check if image for the requested version is already in docker registry -> no build required
+
+            log.info("Start build of MicoService '{}' in version '{}'.", micoService.getShortName(), micoService.getVersion());
+            MicoBackgroundTask task = new MicoBackgroundTask()
+                .setMicoServiceShortName(micoService.getShortName())
+                .setMicoServiceVersion(micoService.getVersion())
+                .setType(MicoBackgroundTask.Type.BUILD);
+            backgroundTaskRepo.save(task);
+            task.setJob(backgroundTaskFactory.runAsync(() -> buildImageAndWait(micoService), dockerImageUri -> {
+                log.info("Build of MicoService '{}' in version '{}' finished with image '{}'.",
+                    micoService.getShortName(), micoService.getVersion(), dockerImageUri);
+
+                micoService.setDockerImageUri(dockerImageUri);
+                MicoService savedMicoService = serviceRepository.save(micoService);
+                try {
+                    createKubernetesResources(micoApplication, savedMicoService);
+                    saveMicoBackgroundTaskStatus(micoService.getShortName(), micoService.getVersion(), MicoBackgroundTask.Status.DONE, MicoBackgroundTask.Type.BUILD, null);
+                } catch (KubernetesResourceException kre) {
+                    saveMicoBackgroundTaskStatus(micoService.getShortName(), micoService.getVersion(), MicoBackgroundTask.Status.ERROR, MicoBackgroundTask.Type.BUILD, kre.getMessage());
+                    log.error(kre.getMessage(), kre);
+                    exceptionHandler(kre);
+                }
+            }, this::exceptionHandler));
+            backgroundTaskRepo.save(task);
+
         }
         return ResponseEntity
             .accepted()
@@ -145,14 +151,15 @@ public class DeploymentResource {
 
     private void saveMicoBackgroundTaskStatus(String micoServiceShortName, String micoServiceVersion, MicoBackgroundTask.Status status, MicoBackgroundTask.Type type, String errorMessage) {
         Optional<MicoBackgroundTask> taskOptional = getTaskByMicoService(micoServiceShortName, micoServiceVersion, type);
+        log.debug("Saving status of '{}'", taskOptional);
         if (taskOptional.isPresent()) {
             MicoBackgroundTask t = taskOptional.get();
             t.setErrorMessage(errorMessage);
             t.setStatus(status);
             backgroundTaskRepo.save(t);
         }
-        log.info("Jobstatus of '{}' is '{}'", backgroundTaskRepo.findByMicoServiceShortNameAndMicoServiceVersionAndType(micoServiceShortName, micoServiceVersion, type),
-            backgroundTaskRepo.findByMicoServiceShortNameAndMicoServiceVersionAndType(micoServiceShortName, micoServiceVersion, type).get().getStatus());
+        log.info("Jobstatus of '{}' is '{}'", getTaskByMicoService(micoServiceShortName, micoServiceVersion, type),
+            getTaskByMicoService(micoServiceShortName, micoServiceVersion, type).get().getStatus());
     }
 
     private boolean doesTaskExistForMicoService(String micoServiceShortName, String micoServiceVersion, MicoBackgroundTask.Type type) {

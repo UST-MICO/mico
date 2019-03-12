@@ -85,9 +85,9 @@ public class BackgroundTaskResourceTest {
 
     @Test
     public void getAllJobs() throws Exception {
-        List<MicoBackgroundTask> jobList = Arrays.asList(new MicoBackgroundTask(CompletableFuture.completedFuture(true), SHORT_NAME, VERSION, MicoBackgroundTask.Type.BUILD),
-            new MicoBackgroundTask(CompletableFuture.completedFuture(true), SHORT_NAME_1, VERSION, MicoBackgroundTask.Type.BUILD),
-            new MicoBackgroundTask(CompletableFuture.completedFuture(true), SHORT_NAME_2, VERSION, MicoBackgroundTask.Type.BUILD));
+        List<MicoBackgroundTask> jobList = Arrays.asList(new MicoBackgroundTask().setJob(CompletableFuture.completedFuture(true)).setMicoServiceShortName(SHORT_NAME).setMicoServiceVersion(VERSION).setType(MicoBackgroundTask.Type.BUILD),
+            new MicoBackgroundTask().setJob(CompletableFuture.completedFuture(true)).setMicoServiceShortName(SHORT_NAME_1).setMicoServiceVersion(VERSION).setType(MicoBackgroundTask.Type.BUILD),
+            new MicoBackgroundTask().setJob(CompletableFuture.completedFuture(true)).setMicoServiceShortName(SHORT_NAME_2).setMicoServiceVersion(VERSION).setType(MicoBackgroundTask.Type.BUILD));
 
         given(backgroundTaskBroker.getAllJobs()).willReturn(jobList);
 
@@ -130,9 +130,18 @@ public class BackgroundTaskResourceTest {
 
         System.out.println(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION));
 
-        MicoBackgroundTask pendingJob = new MicoBackgroundTask(CompletableFuture.completedFuture(true), SERVICE_SHORT_NAME, VERSION, MicoBackgroundTask.Type.BUILD);
-        MicoBackgroundTask runningJob = new MicoBackgroundTask(CompletableFuture.completedFuture(true), SERVICE_SHORT_NAME_1, VERSION, MicoBackgroundTask.Type.BUILD);
-        runningJob.setStatus(MicoBackgroundTask.Status.RUNNING);
+        MicoBackgroundTask pendingJob = new MicoBackgroundTask()
+            .setJob(CompletableFuture.completedFuture(true))
+            .setMicoServiceShortName(SHORT_NAME)
+            .setMicoServiceVersion(VERSION)
+            .setType(MicoBackgroundTask.Type.BUILD);
+        MicoBackgroundTask runningJob = new MicoBackgroundTask()
+            .setJob(CompletableFuture.completedFuture(true))
+            .setMicoServiceShortName(SHORT_NAME)
+            .setMicoServiceVersion(VERSION)
+            .setType(MicoBackgroundTask.Type.BUILD)
+            .setStatus(MicoBackgroundTask.Status.RUNNING);
+
         given(backgroundTaskBroker.getJobStatusByApplicationShortNameAndVersion(SHORT_NAME, VERSION))
             .willReturn(new MicoApplicationJobStatus()
                 .setApplicationName(SHORT_NAME)
@@ -149,8 +158,12 @@ public class BackgroundTaskResourceTest {
 
     @Test
     public void getJobById() throws Exception {
-        MicoBackgroundTask doneJob = new MicoBackgroundTask(CompletableFuture.completedFuture(true), SHORT_NAME, VERSION, MicoBackgroundTask.Type.BUILD);
-        doneJob.setStatus(MicoBackgroundTask.Status.DONE);
+        MicoBackgroundTask doneJob = new MicoBackgroundTask()
+            .setJob(CompletableFuture.completedFuture(true))
+            .setMicoServiceShortName(SHORT_NAME)
+            .setMicoServiceVersion(VERSION)
+            .setType(MicoBackgroundTask.Type.BUILD)
+            .setStatus(MicoBackgroundTask.Status.DONE);
 
         given(backgroundTaskBroker.getJobById(STRING_ID)).willReturn(Optional.of(doneJob));
 
@@ -160,7 +173,11 @@ public class BackgroundTaskResourceTest {
             .andExpect(redirectedUrl("/services/" + SHORT_NAME + "/" + VERSION))
             .andReturn();
 
-        MicoBackgroundTask pendingJob = new MicoBackgroundTask(CompletableFuture.completedFuture(true), SHORT_NAME, VERSION, MicoBackgroundTask.Type.BUILD);
+        MicoBackgroundTask pendingJob = new MicoBackgroundTask()
+            .setJob(CompletableFuture.completedFuture(true))
+            .setMicoServiceShortName(SHORT_NAME)
+            .setMicoServiceVersion(VERSION)
+            .setType(MicoBackgroundTask.Type.BUILD);
         pendingJob.setId(STRING_ID);
 
         given(backgroundTaskBroker.getJobById(STRING_ID)).willReturn(Optional.of(pendingJob));
@@ -175,8 +192,13 @@ public class BackgroundTaskResourceTest {
             .andExpect(jsonPath(LINKS_JOBS_HREF, is("http://localhost/jobs")))
             .andReturn();
 
-        MicoBackgroundTask runningJob = new MicoBackgroundTask(CompletableFuture.completedFuture(true), SHORT_NAME, VERSION, MicoBackgroundTask.Type.BUILD);
-        runningJob.setStatus(MicoBackgroundTask.Status.RUNNING);
+        MicoBackgroundTask runningJob = new MicoBackgroundTask()
+            .setJob(CompletableFuture.completedFuture(true))
+            .setMicoServiceShortName(SHORT_NAME)
+            .setMicoServiceVersion(VERSION)
+            .setType(MicoBackgroundTask.Type.BUILD)
+            .setStatus(MicoBackgroundTask.Status.RUNNING);
+
         runningJob.setId(STRING_ID);
 
         given(backgroundTaskBroker.getJobById(STRING_ID)).willReturn(Optional.of(runningJob));
@@ -194,7 +216,11 @@ public class BackgroundTaskResourceTest {
 
     @Test
     public void deleteJob() throws Exception {
-        MicoBackgroundTask pendingJob = new MicoBackgroundTask(CompletableFuture.completedFuture(true), SHORT_NAME, VERSION, MicoBackgroundTask.Type.BUILD);
+        MicoBackgroundTask pendingJob = new MicoBackgroundTask()
+            .setJob(CompletableFuture.completedFuture(true))
+            .setMicoServiceShortName(SHORT_NAME)
+            .setMicoServiceVersion(VERSION)
+            .setType(MicoBackgroundTask.Type.BUILD);
 
         given(backgroundTaskBroker.getJobById(STRING_ID)).willReturn(Optional.of(pendingJob));
         given(backgroundTaskBroker.deleteJob(STRING_ID)).willReturn(Optional.of(pendingJob));

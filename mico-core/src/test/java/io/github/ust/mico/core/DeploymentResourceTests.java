@@ -130,18 +130,27 @@ public class DeploymentResourceTests {
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(serviceRepository.save(any(MicoService.class))).willReturn(service);
         given(serviceRepository.findAllByApplication(SHORT_NAME, VERSION)).willReturn(CollectionUtils.listOf(service));
-        MicoBackgroundTask mockTask = new MicoBackgroundTask(CompletableFuture.completedFuture(true), service.getShortName(), service.getVersion(), MicoBackgroundTask.Type.BUILD);
-        mockTask.setStatus(MicoBackgroundTask.Status.DONE);
-        given(backgroundTaskRepository.findByMicoServiceShortNameAndMicoServiceVersionAndType(service.getShortName(), service.getVersion(), MicoBackgroundTask.Type.BUILD)).willReturn(Optional.of(mockTask));
-        given(factory.runAsync(ArgumentMatchers.any(), onSuccessArgumentCaptor.capture(), onErrorArgumentCaptor.capture()))
-            .willReturn(CompletableFuture.completedFuture(service));
 
-        given(backgroundTaskBroker.getJobStatusByApplicationShortNameAndVersion(SHORT_NAME,VERSION))
+        CompletableFuture future = CompletableFuture.completedFuture(service);
+        given(factory.runAsync(any(), onSuccessArgumentCaptor.capture(), onErrorArgumentCaptor.capture())).willReturn(future);
+
+        MicoBackgroundTask mockTask = new MicoBackgroundTask()
+            .setJob(future)
+            .setMicoServiceShortName(service.getShortName())
+            .setMicoServiceVersion(service.getVersion())
+            .setType(MicoBackgroundTask.Type.BUILD);
+            //.setStatus(MicoBackgroundTask.Status.PENDING);
+
+        given(backgroundTaskRepository.findByMicoServiceShortNameAndMicoServiceVersionAndType(service.getShortName(), service.getVersion(), MicoBackgroundTask.Type.BUILD))
+            .willReturn(Optional.of(mockTask));
+
+        given(backgroundTaskBroker.getJobStatusByApplicationShortNameAndVersion(SHORT_NAME, VERSION))
             .willReturn(new MicoApplicationJobStatus()
                 .setApplicationName(SHORT_NAME)
                 .setApplicationVersion(VERSION)
                 .setStatus(MicoBackgroundTask.Status.PENDING)
                 .setJobList(Arrays.asList(mockTask)));
+
         mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/deploy"))
             .andDo(print())
             .andExpect(status().isAccepted());
