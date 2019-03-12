@@ -22,6 +22,9 @@ package io.github.ust.mico.core.dto.response;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 import io.github.ust.mico.core.model.MicoService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -35,6 +38,7 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
+@JsonInclude(Include.NON_NULL)
 public class MicoServiceDependencyGraphResponseDTO {
 
 	// TODO: Field comments.

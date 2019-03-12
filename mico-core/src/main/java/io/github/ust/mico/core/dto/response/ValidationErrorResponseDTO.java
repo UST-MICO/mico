@@ -31,9 +31,13 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 import lombok.Value;
 
 @Value
+@JsonInclude(Include.NON_NULL)
 public class ValidationErrorResponseDTO {
 
     /**

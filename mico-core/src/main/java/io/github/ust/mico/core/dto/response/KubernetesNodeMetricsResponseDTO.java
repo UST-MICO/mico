@@ -19,6 +19,9 @@
 
 package io.github.ust.mico.core.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 import io.fabric8.kubernetes.api.model.Node;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
@@ -39,6 +42,7 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
+@JsonInclude(Include.NON_NULL)
 public class KubernetesNodeMetricsResponseDTO {
 
     /**

@@ -22,6 +22,9 @@ package io.github.ust.mico.core.dto.response;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 import io.fabric8.kubernetes.api.model.Pod;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoService;
@@ -40,6 +43,7 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
+@JsonInclude(Include.NON_NULL)
 public class MicoServiceStatusResponseDTO {
 
     /**

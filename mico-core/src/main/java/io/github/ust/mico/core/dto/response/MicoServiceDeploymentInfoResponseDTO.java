@@ -19,6 +19,9 @@
 
 package io.github.ust.mico.core.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import lombok.Data;
@@ -35,6 +38,7 @@ import lombok.experimental.Accessors;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @Accessors(chain = true)
+@JsonInclude(Include.NON_NULL)
 public class MicoServiceDeploymentInfoResponseDTO extends MicoServiceDeploymentInfoRequestDTO {
 	
 	// Note: as soon as someone adds fields to this class, please add

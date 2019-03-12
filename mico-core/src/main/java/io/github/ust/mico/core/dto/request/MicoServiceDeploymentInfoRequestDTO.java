@@ -26,8 +26,10 @@ import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoLabel;
@@ -49,6 +51,7 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
+@JsonInclude(Include.NON_NULL)
 public class MicoServiceDeploymentInfoRequestDTO {
 	
     /**
