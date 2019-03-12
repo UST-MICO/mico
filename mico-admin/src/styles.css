@@ -488,3 +488,11 @@ Quick fix to avoid scroll bars
 .mat-tab-body.mat-tab-body-active{
     overflow-y: hidden !important;
 }
+
+/*
+* Workaround to ensure table cells width is at least 80px
+* (otherwise large descriptions could dominate things like the version)
+*/
+.mat-header-cell {
+    min-width: 80px !important;
+}

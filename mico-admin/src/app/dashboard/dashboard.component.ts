@@ -26,6 +26,7 @@ import { Router } from '@angular/router';
 import { CreateApplicationComponent } from '../dialogs/create-application/create-application.component';
 import { groupBy, mergeMap, toArray, map } from 'rxjs/operators';
 import { Subscription, from } from 'rxjs';
+import { UtilsService } from '../util/utils.service';
 
 @Component({
     selector: 'mico-dashboard',
@@ -39,25 +40,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
         private dialog: MatDialog,
         private router: Router,
         private snackBar: MatSnackBar,
-    ) {
-        this.getApplications();
-    }
+        private util: UtilsService,
+    ) { }
 
     subApplications: Subscription;
     applications: Readonly<ApiObject[]>;
-    displayedColumns: string[] = ['id', 'name', 'shortName'];
+    displayedColumns: string[] = ['name', 'shortName'];
 
     ngOnInit() {
-
+        this.getApplications();
     }
 
-    /**
-     * unsubscribe
-     */
     ngOnDestroy() {
-        if (this.subApplications != null) {
-            this.subApplications.unsubscribe();
-        }
+        // unsubscribe from observables
+        this.util.safeUnsubscribe(this.subApplications);
     }
 
 
@@ -96,38 +92,40 @@ export class DashboardComponent implements OnInit, OnDestroy {
      */
     newService(): void {
         const dialogRef = this.dialog.open(CreateServiceDialogComponent);
-        dialogRef.afterClosed().subscribe(result => {
+
+        const subDialog = dialogRef.afterClosed().subscribe(result => {
 
             // filter empty results (when dialog is aborted)
-            if (result !== '' && result != null && result.data != null) {
+            if (!result) {
+                return;
+            }
 
-                // check if returned object is complete
-                for (const property in result.data) {
-                    if (result.data[property] == null) {
+            // check if returned object is complete
+            for (const property in result.data) {
+                if (result.data[property] == null) {
 
-                        if (property !== 'serviceInterfaces') {
-                            this.snackBar.open('Missing property: ' + property, 'Ok', {
-                                duration: 8000,
-                            });
-                            return;
-                        }
+                    if (property !== 'serviceInterfaces') {
+                        this.snackBar.open('Missing property: ' + property, 'Ok', {
+                            duration: 8000,
+                        });
+                        return;
                     }
                 }
-
-
-                // decide if the service was created manually or is to be created via github crawler
-                if (result.tab === 'manual') {
-                    this.apiService.postService(result.data).subscribe(val => {
-                        this.router.navigate(['service-detail', val.shortName, val.version]);
-                    });
-                } else if (result.tab === 'github') {
-
-                    this.apiService.postServiceViaGithub(result.data.url, result.data.version).subscribe(val => {
-                        this.router.navigate(['service-detail', val.shortName, val.version]);
-                    });
-                }
-
             }
+
+            // decide if the service was created manually or is to be created via github crawler and create service
+            if (result.tab === 'manual') {
+                this.apiService.postService(result.data).subscribe(val => {
+                    this.router.navigate(['service-detail', val.shortName, val.version]);
+                });
+            } else if (result.tab === 'github') {
+
+                this.apiService.postServiceViaGithub(result.data.url, result.data.version).subscribe(val => {
+                    this.router.navigate(['service-detail', val.shortName, val.version]);
+                });
+            }
+
+            this.util.safeUnsubscribe(subDialog);
         });
     }
 
@@ -137,30 +135,34 @@ export class DashboardComponent implements OnInit, OnDestroy {
      */
     newApplication() {
         const dialogRef = this.dialog.open(CreateApplicationComponent);
-        dialogRef.afterClosed().subscribe(result => {
+
+        const subDialog = dialogRef.afterClosed().subscribe(result => {
 
             // filter empty results (when dialog is aborted)
-            if (result !== '') {
-
-                // check if returned object is complete
-                for (const property in result.applicationProperties) {
-                    if (result.applicationProperties[property] == null) {
-
-                        // show an error message containg the missing field
-                        this.snackBar.open('Missing property: ' + property, 'Ok', {
-                            duration: 8000,
-                        });
-                        return;
-                    }
-                }
-
-                const data = result.applicationProperties;
-                data.services = result.services;
-
-                this.apiService.postApplication(data).subscribe(val => {
-                    this.router.navigate(['app-detail', val.shortName, val.version]);
-                });
+            if (!result) {
+                return;
             }
+
+            // check if returned object is complete
+            for (const property in result.applicationProperties) {
+                if (result.applicationProperties[property] == null) {
+
+                    // show an error message containg the missing field
+                    this.snackBar.open('Missing property: ' + property, 'Ok', {
+                        duration: 8000,
+                    });
+                    return;
+                }
+            }
+
+            const data = result.applicationProperties;
+            data.services = result.services;
+
+            this.apiService.postApplication(data).subscribe(val => {
+                this.router.navigate(['app-detail', val.shortName, val.version]);
+            });
+
+            this.util.safeUnsubscribe(subDialog);
         });
     }
 

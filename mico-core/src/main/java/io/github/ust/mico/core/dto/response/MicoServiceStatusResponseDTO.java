@@ -128,7 +128,7 @@ public class MicoServiceStatusResponseDTO {
     private List<MicoServiceInterfaceStatusResponseDTO> interfacesInformation = new ArrayList<>();
 
     /**
-     * List of {@link MicoApplicationResponseDTO MicoApplicationDTOs} representing all applications that share the MicoService.
+     * List of {@link MicoApplicationResponseDTO MicoApplicationResponseDTOs} representing all applications that share the MicoService.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,

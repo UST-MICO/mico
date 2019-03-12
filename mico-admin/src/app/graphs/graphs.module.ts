@@ -23,6 +23,7 @@ import { CommonModule } from '@angular/common';
 import '@ustutt/grapheditor-webcomponent/lib/index';
 
 import { AppDependencyGraphComponent } from './app-dependency-graph/app-dependency-graph.component';
+import { ServiceDependencyGraphComponent } from './service-dependency-graph/service-dependency-graph.component';
 import {
     MatButtonModule, MatButtonToggleModule, MatCardModule, MatMenuModule,
     MatIconModule, MatListModule, MatSidenavModule, MatDialogModule, MatToolbarModule,
@@ -58,9 +59,11 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
     ],
     declarations: [
         AppDependencyGraphComponent,
+        ServiceDependencyGraphComponent,
     ],
     exports: [
         AppDependencyGraphComponent,
+        ServiceDependencyGraphComponent,
 
         CommonModule,
     ],

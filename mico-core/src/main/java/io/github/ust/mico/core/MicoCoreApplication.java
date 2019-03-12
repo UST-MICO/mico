@@ -40,7 +40,8 @@ public class MicoCoreApplication {
     }
 
     /**
-     * https://gist.github.com/RealDeanZhao/38821bc1efeb7e2a9bcd554cc06cdf96
+     * @see <a href="https://gist.github.com/RealDeanZhao/38821bc1efeb7e2a9bcd554cc06cdf96">RealDeanZhao/autowire-resttemplate.md</a>
+     *
      * @param builder
      * @return
      */

@@ -28,155 +28,180 @@ import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
 import io.github.ust.mico.core.dto.response.MicoApplicationStatusResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceStatusResponseDTO;
 
-public class TestConstants {
+class TestConstants {
 
-    public static final String BASE_URL = "http://localhost";
-    public static final String SERVICES_PATH = "/services";
-    public static final String DEPENDEES_SUBPATH = "/dependees";
-    public static final String DEPENDERS_SUBPATH = "/dependers";
+    static final String BASE_URL = "http://localhost";
+    static final String SERVICES_PATH = "/services";
+    static final String DEPENDEES_SUBPATH = "/dependees";
+    static final String DEPENDERS_SUBPATH = "/dependers";
 
-    public static final Long ID = 1000L;
-    public static final Long ID_1 = 1001L;
-    public static final Long ID_2 = 1002L;
-    public static final Long ID_3 = 1003L;
+    static final Long ID = 1000L;
+    static final Long ID_1 = 1001L;
+    static final Long ID_2 = 1002L;
+    static final Long ID_3 = 1003L;
 
-    public static final String VERSION = MicoVersion.forIntegers(1, 0, 0).toString();
-    public static final String VERSION_1_0_1 = MicoVersion.forIntegers(1, 0, 1).toString();
-    public static final String VERSION_1_0_2 = MicoVersion.forIntegers(1, 0, 2).toString();
-    public static final String VERSION_1_0_3 = MicoVersion.forIntegers(1, 0, 3).toString();
-    public static final String VERSION_MATCHER = JsonPathBuilder.buildVersionMatcher(VERSION);
-    public static final String VERSION_1_0_1_MATCHER = JsonPathBuilder.buildVersionMatcher(VERSION_1_0_1);
-    public static final String VERSION_1_0_2_MATCHER = JsonPathBuilder.buildVersionMatcher(VERSION_1_0_2);
-    public static final String VERSION_1_0_3_MATCHER = JsonPathBuilder.buildVersionMatcher(VERSION_1_0_3);
+    static final String VERSION = MicoVersion.forIntegers(1, 0, 0).toString();
+    static final String VERSION_1_0_1 = MicoVersion.forIntegers(1, 0, 1).toString();
+    static final String VERSION_1_0_2 = MicoVersion.forIntegers(1, 0, 2).toString();
+    static final String VERSION_1_0_3 = MicoVersion.forIntegers(1, 0, 3).toString();
+    static final String VERSION_MATCHER = JsonPathBuilder.buildVersionMatcher(VERSION);
+    static final String VERSION_1_0_1_MATCHER = JsonPathBuilder.buildVersionMatcher(VERSION_1_0_1);
+    static final String VERSION_1_0_2_MATCHER = JsonPathBuilder.buildVersionMatcher(VERSION_1_0_2);
+    static final String VERSION_1_0_3_MATCHER = JsonPathBuilder.buildVersionMatcher(VERSION_1_0_3);
 
-    public static final String SHORT_NAME = "short-name";
-    public static final String SHORT_NAME_OTHER = "other-short-name";
-    public static final String SHORT_NAME_1 = "short-name-1";
-    public static final String SHORT_NAME_2 = "short-name-2";
-    public static final String SHORT_NAME_3 = "short-name-3";
-    public static final String SHORT_NAME_INVALID = "short_NAME";
-    public static final String SHORT_NAME_ATTRIBUTE = buildAttributePath("shortName");
-    public static final String SHORT_NAME_MATCHER = JsonPathBuilder.buildSingleMatcher(SHORT_NAME_ATTRIBUTE, SHORT_NAME);
-    public static final String SHORT_NAME_1_MATCHER = JsonPathBuilder.buildSingleMatcher(SHORT_NAME_ATTRIBUTE, SHORT_NAME_1);
-    public static final String SHORT_NAME_2_MATCHER = JsonPathBuilder.buildSingleMatcher(SHORT_NAME_ATTRIBUTE, SHORT_NAME_2);
-    public static final String SHORT_NAME_3_MATCHER = JsonPathBuilder.buildSingleMatcher(SHORT_NAME_ATTRIBUTE, SHORT_NAME_3);
+    static final String SHORT_NAME = "short-name";
+    static final String SHORT_NAME_OTHER = "other-short-name";
+    static final String SHORT_NAME_1 = "short-name-1";
+    static final String SHORT_NAME_2 = "short-name-2";
+    static final String SHORT_NAME_3 = "short-name-3";
+    static final String SHORT_NAME_INVALID = "short_NAME";
+    static final String SHORT_NAME_ATTRIBUTE = buildAttributePath("shortName");
+    static final String SHORT_NAME_MATCHER = JsonPathBuilder.buildSingleMatcher(SHORT_NAME_ATTRIBUTE, SHORT_NAME);
+    static final String SHORT_NAME_1_MATCHER = JsonPathBuilder.buildSingleMatcher(SHORT_NAME_ATTRIBUTE, SHORT_NAME_1);
+    static final String SHORT_NAME_2_MATCHER = JsonPathBuilder.buildSingleMatcher(SHORT_NAME_ATTRIBUTE, SHORT_NAME_2);
+    static final String SHORT_NAME_3_MATCHER = JsonPathBuilder.buildSingleMatcher(SHORT_NAME_ATTRIBUTE, SHORT_NAME_3);
 
-    public static final String NAME = "test-name";
-    public static final String NAME_1 = "test-name-1";
-    public static final String NAME_2 = "test-name-2";
-    public static final String NAME_3 = "test-name-3";
-    public static final String NAME_ATTRIBUTE = JsonPathBuilder.buildAttributePath("name");
-    public static final String NAME_MATCHER = JsonPathBuilder.buildSingleMatcher(NAME_ATTRIBUTE, NAME);
-    public static final String NAME_1_MATCHER = JsonPathBuilder.buildSingleMatcher(NAME_ATTRIBUTE, NAME_1);
-    public static final String NAME_2_MATCHER = JsonPathBuilder.buildSingleMatcher(NAME_ATTRIBUTE, NAME_2);
-    public static final String NAME_3_MATCHER = JsonPathBuilder.buildSingleMatcher(NAME_ATTRIBUTE, NAME_3);
+    static final String NAME = "test-name";
+    static final String NAME_1 = "test-name-1";
+    static final String NAME_2 = "test-name-2";
+    static final String NAME_3 = "test-name-3";
+    static final String NAME_ATTRIBUTE = JsonPathBuilder.buildAttributePath("name");
+    static final String NAME_MATCHER = JsonPathBuilder.buildSingleMatcher(NAME_ATTRIBUTE, NAME);
+    static final String NAME_1_MATCHER = JsonPathBuilder.buildSingleMatcher(NAME_ATTRIBUTE, NAME_1);
+    static final String NAME_2_MATCHER = JsonPathBuilder.buildSingleMatcher(NAME_ATTRIBUTE, NAME_2);
+    static final String NAME_3_MATCHER = JsonPathBuilder.buildSingleMatcher(NAME_ATTRIBUTE, NAME_3);
 
-    public static final String DESCRIPTION = "Description";
-    public static final String DESCRIPTION_1 = "Description 1";
-    public static final String DESCRIPTION_2 = "Description 2";
-    public static final String DESCRIPTION_3 = "Description 3";
-    public static final String DESCRIPTION_ATTRIBUTE = JsonPathBuilder.buildAttributePath("description");
-    public static final String DESCRIPTION_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION);
-    public static final String DESCRIPTION_1_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION_1);
-    public static final String DESCRIPTION_2_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION_2);
-    public static final String DESCRIPTION_3_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION_3);
+    static final String DESCRIPTION = "Description";
+    static final String DESCRIPTION_1 = "Description 1";
+    static final String DESCRIPTION_2 = "Description 2";
+    static final String DESCRIPTION_3 = "Description 3";
+    static final String DESCRIPTION_ATTRIBUTE = JsonPathBuilder.buildAttributePath("description");
+    static final String DESCRIPTION_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION);
+    static final String DESCRIPTION_1_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION_1);
+    static final String DESCRIPTION_2_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION_2);
+    static final String DESCRIPTION_3_MATCHER = JsonPathBuilder.buildSingleMatcher(DESCRIPTION_ATTRIBUTE, DESCRIPTION_3);
 
-    public static final String SERVICE_SHORT_NAME = "service-short-name";
-    public static final String SERVICE_SHORT_NAME_1 = "service-short-name-1";
+    static final String SERVICE_SHORT_NAME = "service-short-name";
+    static final String SERVICE_SHORT_NAME_1 = "service-short-name-1";
 
-    public static final String SERVICE_VERSION = "1.0.0";
+    static final String SERVICE_VERSION = "1.0.0";
 
-    public static final String SERVICE_INTERFACE_NAME = "service-interface-name";
-    public static final String SERVICE_INTERFACE_NAME_1 = "service-interface-name-1";
+    static final String SERVICE_INTERFACE_NAME = "service-interface-name";
+    static final String SERVICE_INTERFACE_NAME_1 = "service-interface-name-1";
 
-    public static final String OWNER = "owner";
+    static final String OWNER = "owner";
 
     /*
-     * For tests in ApplicationControllerTests, one service is added to the list of MicoServiceStatusDTOs in MicoApplicationStatusDTO.
+     * For tests in ApplicationResourceTests, one service is added to the list of MicoServiceStatusDTOs in MicoApplicationStatusDTO.
      * All paths are build on the path for the status of this service.
      */
     /**
-     * Path of a single {@link MicoServiceStatusResponseDTO} in a {@link MicoApplicationStatusResponseDTO}. Contains status information
+     * Path of a single {@link MicoServiceStatusDTO} in a {@link MicoApplicationStatusDTO}. Contains status information
      * for this service.
      */
-    public static final String SERVICE_STATUS_PATH = buildPath(ROOT, "serviceStatuses[0]");
-    public static final String SERVICE_INFORMATION_NAME = buildPath(SERVICE_STATUS_PATH, "name");
-    public static final String REQUESTED_REPLICAS = buildPath(SERVICE_STATUS_PATH, "requestedReplicas");
-    public static final String AVAILABLE_REPLICAS = buildPath(SERVICE_STATUS_PATH, "availableReplicas");
-    public static final String NODE_METRICS_PATH_FIRST_ELEMENT = buildPath(SERVICE_STATUS_PATH, "nodeMetrics[0]");
-    public static final String NODE_METRICS_NAME = buildPath(NODE_METRICS_PATH_FIRST_ELEMENT, "nodeName");
-    public static final String NODE_METRICS_AVERAGE_CPU_LOAD = buildPath(NODE_METRICS_PATH_FIRST_ELEMENT, "averageCpuLoad");
-    public static final String NODE_METRICS_AVERAGE_MEMORY_USAGE = buildPath(NODE_METRICS_PATH_FIRST_ELEMENT, "averageMemoryUsage");
-    public static final String ERROR_MESSAGES = buildPath(SERVICE_STATUS_PATH, "errorMessages");
-    public static final String INTERFACES_INFORMATION = buildPath(SERVICE_STATUS_PATH, "interfacesInformation");
-    public static final String INTERFACES_INFORMATION_NAME = buildPath(SERVICE_STATUS_PATH, "interfacesInformation[0].name");
-    public static final String POD_INFO = buildPath(SERVICE_STATUS_PATH, "podsInformation");
-    public static final String POD_INFO_POD_NAME_1 = buildPath(SERVICE_STATUS_PATH, "podsInformation[0].podName");
-    public static final String POD_INFO_PHASE_1 = buildPath(SERVICE_STATUS_PATH, "podsInformation[0].phase");
-    public static final String POD_INFO_NODE_NAME_1 = buildPath(SERVICE_STATUS_PATH, "podsInformation[0].nodeName");
-    public static final String POD_INFO_METRICS_MEMORY_USAGE_1 = buildPath(SERVICE_STATUS_PATH, "podsInformation[0].metrics.memoryUsage");
-    public static final String POD_INFO_METRICS_CPU_LOAD_1 = buildPath(SERVICE_STATUS_PATH, "podsInformation[0].metrics.cpuLoad");
-    public static final String POD_INFO_METRICS_AVAILABLE_1 = buildPath(SERVICE_STATUS_PATH, "podsInformation[0].metrics.available");
-    public static final String POD_INFO_POD_NAME_2 = buildPath(SERVICE_STATUS_PATH, "podsInformation[1].podName");
-    public static final String POD_INFO_PHASE_2 = buildPath(SERVICE_STATUS_PATH, "podsInformation[1].phase");
-    public static final String POD_INFO_NODE_NAME_2 = buildPath(SERVICE_STATUS_PATH, "podsInformation[1].nodeName");
-    public static final String POD_INFO_METRICS_MEMORY_USAGE_2 = buildPath(SERVICE_STATUS_PATH, "podsInformation[1].metrics.memoryUsage");
-    public static final String POD_INFO_METRICS_CPU_LOAD_2 = buildPath(SERVICE_STATUS_PATH, "podsInformation[1].metrics.cpuLoad");
-    public static final String POD_INFO_METRICS_AVAILABLE_2 = buildPath(SERVICE_STATUS_PATH, "podsInformation[1].metrics.available");
-    public static final String TOTAL_NUMBER_OF_MICO_SERVICES = buildPath(ROOT, "totalNumberOfMicoServices");
-    public static final String TOTAL_NUMBER_OF_AVAILABLE_REPLICAS = buildPath(ROOT, "totalNumberOfAvailableReplicas");
-    public static final String TOTAL_NUMBER_OF_REQUESTED_REPLICAS = buildPath(ROOT, "totalNumberOfRequestedReplicas");
-    public static final String TOTAL_NUMBER_OF_PODS = buildPath(ROOT, "totalNumberOfPods");
+    static final String SERVICE_STATUS_PATH = buildPath(ROOT, "serviceStatuses[0]");
+    static final String SERVICE_INFORMATION_NAME = buildPath(SERVICE_STATUS_PATH, "name");
+    static final String REQUESTED_REPLICAS = buildPath(SERVICE_STATUS_PATH, "requestedReplicas");
+    static final String AVAILABLE_REPLICAS = buildPath(SERVICE_STATUS_PATH, "availableReplicas");
+    static final String NODE_METRICS_PATH_FIRST_ELEMENT = buildPath(SERVICE_STATUS_PATH, "nodeMetrics[0]");
+    static final String NODE_METRICS_NAME = buildPath(NODE_METRICS_PATH_FIRST_ELEMENT, "nodeName");
+    static final String NODE_METRICS_AVERAGE_CPU_LOAD = buildPath(NODE_METRICS_PATH_FIRST_ELEMENT, "averageCpuLoad");
+    static final String NODE_METRICS_AVERAGE_MEMORY_USAGE = buildPath(NODE_METRICS_PATH_FIRST_ELEMENT, "averageMemoryUsage");
+    static final String ERROR_MESSAGES = buildPath(SERVICE_STATUS_PATH, "errorMessages");
+    static final String INTERFACES_INFORMATION = buildPath(SERVICE_STATUS_PATH, "interfacesInformation");
+    static final String INTERFACES_INFORMATION_NAME = buildPath(SERVICE_STATUS_PATH, "interfacesInformation[0].name");
+    static final String POD_INFO = buildPath(SERVICE_STATUS_PATH, "podsInformation");
+    static final String POD_INFO_POD_NAME_1 = buildPath(SERVICE_STATUS_PATH, "podsInformation[0].podName");
+    static final String POD_INFO_PHASE_1 = buildPath(SERVICE_STATUS_PATH, "podsInformation[0].phase");
+    static final String POD_INFO_NODE_NAME_1 = buildPath(SERVICE_STATUS_PATH, "podsInformation[0].nodeName");
+    static final String POD_INFO_METRICS_MEMORY_USAGE_1 = buildPath(SERVICE_STATUS_PATH, "podsInformation[0].metrics.memoryUsage");
+    static final String POD_INFO_METRICS_CPU_LOAD_1 = buildPath(SERVICE_STATUS_PATH, "podsInformation[0].metrics.cpuLoad");
+    static final String POD_INFO_METRICS_AVAILABLE_1 = buildPath(SERVICE_STATUS_PATH, "podsInformation[0].metrics.available");
+    static final String POD_INFO_POD_NAME_2 = buildPath(SERVICE_STATUS_PATH, "podsInformation[1].podName");
+    static final String POD_INFO_PHASE_2 = buildPath(SERVICE_STATUS_PATH, "podsInformation[1].phase");
+    static final String POD_INFO_NODE_NAME_2 = buildPath(SERVICE_STATUS_PATH, "podsInformation[1].nodeName");
+    static final String POD_INFO_METRICS_MEMORY_USAGE_2 = buildPath(SERVICE_STATUS_PATH, "podsInformation[1].metrics.memoryUsage");
+    static final String POD_INFO_METRICS_CPU_LOAD_2 = buildPath(SERVICE_STATUS_PATH, "podsInformation[1].metrics.cpuLoad");
+    static final String POD_INFO_METRICS_AVAILABLE_2 = buildPath(SERVICE_STATUS_PATH, "podsInformation[1].metrics.available");
+    static final String TOTAL_NUMBER_OF_MICO_SERVICES = buildPath(ROOT, "totalNumberOfMicoServices");
+    static final String TOTAL_NUMBER_OF_AVAILABLE_REPLICAS = buildPath(ROOT, "totalNumberOfAvailableReplicas");
+    static final String TOTAL_NUMBER_OF_REQUESTED_REPLICAS = buildPath(ROOT, "totalNumberOfRequestedReplicas");
+    static final String TOTAL_NUMBER_OF_PODS = buildPath(ROOT, "totalNumberOfPods");
 
 
     /*
-     * For tests in ServiceControllerTests, a MicoServiceStatusDTO is used.
+     * For tests in ServiceResourceTests, a MicoServiceStatusDTO is used.
      * All paths are build on the base path of this object.
      */
-    public static final String SERVICE_DTO_SERVICE_NAME = buildAttributePath("name");
-    public static final String SERVICE_DTO_REQUESTED_REPLICAS = buildPath(ROOT, "requestedReplicas");
-    public static final String SERVICE_DTO_AVAILABLE_REPLICAS = buildPath(ROOT, "availableReplicas");
-    public static final String SERVICE_DTO_NODE_METRICS = buildPath(ROOT, "nodeMetrics[0]");
-    public static final String SERVICE_DTO_NODE_NAME = buildPath(SERVICE_DTO_NODE_METRICS, "nodeName");
-    public static final String SERVICE_DTO_NODE_METRICS_AVERAGE_CPU_LOAD = buildPath(SERVICE_DTO_NODE_METRICS, "averageCpuLoad");
-    public static final String SERVICE_DTO_NODE_METRICS_AVERAGE_MEMORY_USAGE = buildPath(SERVICE_DTO_NODE_METRICS, "averageMemoryUsage");
-    public static final String SERVICE_DTO_ERROR_MESSAGES = buildPath(ROOT, "errorMessages");
-    public static final String SERVICE_DTO_INTERFACES_INFORMATION = buildPath(ROOT, "interfacesInformation");
-    public static final String SERVICE_DTO_INTERFACES_INFORMATION_NAME = buildPath(ROOT, "interfacesInformation[0].name");
-    public static final String SERVICE_DTO_POD_INFO = buildPath(ROOT, "podsInformation");
-    public static final String SERVICE_DTO_POD_INFO_POD_NAME_1 = buildPath(ROOT, "podsInformation[0].podName");
-    public static final String SERVICE_DTO_POD_INFO_PHASE_1 = buildPath(ROOT, "podsInformation[0].phase");
-    public static final String SERVICE_DTO_POD_INFO_NODE_NAME_1 = buildPath(ROOT, "podsInformation[0].nodeName");
-    public static final String SERVICE_DTO_POD_INFO_METRICS_MEMORY_USAGE_1 = buildPath(ROOT, "podsInformation[0].metrics.memoryUsage");
-    public static final String SERVICE_DTO_POD_INFO_METRICS_CPU_LOAD_1 = buildPath(ROOT, "podsInformation[0].metrics.cpuLoad");
-    public static final String SERVICE_DTO_POD_INFO_METRICS_AVAILABLE_1 = buildPath(ROOT, "podsInformation[0].metrics.available");
-    public static final String SERVICE_DTO_POD_INFO_POD_NAME_2 = buildPath(ROOT, "podsInformation[1].podName");
-    public static final String SERVICE_DTO_POD_INFO_PHASE_2 = buildPath(ROOT, "podsInformation[1].phase");
-    public static final String SERVICE_DTO_POD_INFO_NODE_NAME_2 = buildPath(ROOT, "podsInformation[1].nodeName");
-    public static final String SERVICE_DTO_POD_INFO_METRICS_MEMORY_USAGE_2 = buildPath(ROOT, "podsInformation[1].metrics.memoryUsage");
-    public static final String SERVICE_DTO_POD_INFO_METRICS_CPU_LOAD_2 = buildPath(ROOT, "podsInformation[1].metrics.cpuLoad");
-    public static final String SERVICE_DTO_POD_INFO_METRICS_AVAILABLE_2 = buildPath(ROOT, "podsInformation[1].metrics.available");
+    static final String SERVICE_DTO_SERVICE_NAME = buildAttributePath("name");
+    static final String SERVICE_DTO_REQUESTED_REPLICAS = buildPath(ROOT, "requestedReplicas");
+    static final String SERVICE_DTO_AVAILABLE_REPLICAS = buildPath(ROOT, "availableReplicas");
+    static final String SERVICE_DTO_NODE_METRICS = buildPath(ROOT, "nodeMetrics[0]");
+    static final String SERVICE_DTO_NODE_NAME = buildPath(SERVICE_DTO_NODE_METRICS, "nodeName");
+    static final String SERVICE_DTO_NODE_METRICS_AVERAGE_CPU_LOAD = buildPath(SERVICE_DTO_NODE_METRICS, "averageCpuLoad");
+    static final String SERVICE_DTO_NODE_METRICS_AVERAGE_MEMORY_USAGE = buildPath(SERVICE_DTO_NODE_METRICS, "averageMemoryUsage");
+    static final String SERVICE_DTO_ERROR_MESSAGES = buildPath(ROOT, "errorMessages");
+    static final String SERVICE_DTO_INTERFACES_INFORMATION = buildPath(ROOT, "interfacesInformation");
+    static final String SERVICE_DTO_INTERFACES_INFORMATION_NAME = buildPath(ROOT, "interfacesInformation[0].name");
+    static final String SERVICE_DTO_POD_INFO = buildPath(ROOT, "podsInformation");
+    static final String SERVICE_DTO_POD_INFO_POD_NAME_1 = buildPath(ROOT, "podsInformation[0].podName");
+    static final String SERVICE_DTO_POD_INFO_PHASE_1 = buildPath(ROOT, "podsInformation[0].phase");
+    static final String SERVICE_DTO_POD_INFO_NODE_NAME_1 = buildPath(ROOT, "podsInformation[0].nodeName");
+    static final String SERVICE_DTO_POD_INFO_METRICS_MEMORY_USAGE_1 = buildPath(ROOT, "podsInformation[0].metrics.memoryUsage");
+    static final String SERVICE_DTO_POD_INFO_METRICS_CPU_LOAD_1 = buildPath(ROOT, "podsInformation[0].metrics.cpuLoad");
+    static final String SERVICE_DTO_POD_INFO_METRICS_AVAILABLE_1 = buildPath(ROOT, "podsInformation[0].metrics.available");
+    static final String SERVICE_DTO_POD_INFO_POD_NAME_2 = buildPath(ROOT, "podsInformation[1].podName");
+    static final String SERVICE_DTO_POD_INFO_PHASE_2 = buildPath(ROOT, "podsInformation[1].phase");
+    static final String SERVICE_DTO_POD_INFO_NODE_NAME_2 = buildPath(ROOT, "podsInformation[1].nodeName");
+    static final String SERVICE_DTO_POD_INFO_METRICS_MEMORY_USAGE_2 = buildPath(ROOT, "podsInformation[1].metrics.memoryUsage");
+    static final String SERVICE_DTO_POD_INFO_METRICS_CPU_LOAD_2 = buildPath(ROOT, "podsInformation[1].metrics.cpuLoad");
+    static final String SERVICE_DTO_POD_INFO_METRICS_AVAILABLE_2 = buildPath(ROOT, "podsInformation[1].metrics.available");
 
-    public static final String SDI_REPLICAS_PATH = buildPath(ROOT, "replicas");
-    public static final String SDI_LABELS_PATH = buildPath(ROOT, "labels");
-    public static final String SDI_IMAGE_PULLPOLICY_PATH = buildPath(ROOT, "imagePullPolicy");
+    static final String SDI_REPLICAS_PATH = buildPath(ROOT, "replicas");
+    static final String SDI_LABELS_PATH = buildPath(ROOT, "labels");
+    static final String SDI_IMAGE_PULLPOLICY_PATH = buildPath(ROOT, "imagePullPolicy");
 
-    /**
-     * Git repository that is used for testing. It must contain a Dockerfile and at least one release.
-     */
-    public static final String GIT_TEST_REPO_URL = "https://github.com/UST-MICO/hello.git";
-    /**
-     * Path to the Dockerfile. It must be relative to the root of the Git repository.
-     */
-    public static final String DOCKERFILE_PATH = "Dockerfile";
-    /**
-     * Release tag of the release that should be used for testing. Must be in in supported version format (semantic
-     * version with a prefix that only consists of letters).
-     */
-    public static final String RELEASE = "v1.0.0";
+    static class IntegrationTest {
+        static final String APPLICATION_SHORT_NAME = "hello";
+        static final String APPLICATION_NAME = "hello-application";
+        static final String APPLICATION_VERSION = "v0.0.1";
+        static final String APPLICATION_DESCRIPTION = "Hello World Application";
 
-    /**
-     * Docker image URI that is created based on the short name and the version of a service.
-     */
-    public static final String DOCKER_IMAGE_URI = "ustmico/" + SHORT_NAME + ":" + RELEASE;
+        static final String SERVICE_SHORT_NAME = "hello-integration-test";
+        static final String SERVICE_NAME = "UST-MICO/hello";
+        static final String SERVICE_DESCRIPTION = "Hello World Service for integration testing";
+
+        static final String SERVICE_INTERFACE_NAME = "hello-interface";
+
+        /**
+         * Path to the Dockerfile. It must be relative to the root of the Git repository.
+         */
+        static final String DOCKERFILE_PATH = "Dockerfile";
+
+        /**
+         * Git repository that is used for testing. It must contain a Dockerfile and at least one release.
+         */
+        static final String GIT_CLONE_URL = "https://github.com/UST-MICO/hello.git";
+
+        /**
+         * Release tag of the release that should be used for testing.
+         * Must be in in supported version format (semantic versioning with a prefix that only consists of letters).
+         */
+        static final String RELEASE = "v1.0.0";
+
+        /**
+         * Resulting docker image URI that is created based on the short name and the version of a service.
+         */
+        static final String DOCKER_IMAGE_URI = "ustmico/" + SERVICE_SHORT_NAME + ":" + RELEASE;
+
+        /**
+         * Port of the externally exposed port.
+         */
+        static final int PORT = 80;
+
+        /**
+         * Port inside the container.
+         */
+        static final int TARGET_PORT = 80;
+    }
 }

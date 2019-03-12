@@ -1,35 +1,45 @@
 <h3 class="ma3">A list of all registered services</h3>
 <mat-divider></mat-divider>
 
-
-<!-- Application table -->
+<!-- Service Table -->
 <mat-card class="ma2">
     <mat-card-title>Services</mat-card-title>
     <mat-card-content>
+
+        <mat-button-toggle mat-raised-button (click)="newService()" class="mv2">
+            <span>
+                new Service
+            </span>
+            <mat-icon>add</mat-icon>
+        </mat-button-toggle>
+
         <mat-table [dataSource]="services" class="mat-elevation-z2">
-            <ng-container matColumnDef="id">
-                <mat-header-cell *matHeaderCellDef>ID</mat-header-cell>
-                <mat-cell *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">{{element.id}}
-                </mat-cell>
-            </ng-container>
             <ng-container matColumnDef="name">
-                <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
-                <mat-cell *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">
+                <mat-header-cell class="ph1" *matHeaderCellDef>Name</mat-header-cell>
+                <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">
                     {{element.name}}</mat-cell>
             </ng-container>
             <ng-container matColumnDef="shortName">
-                <mat-header-cell *matHeaderCellDef>Short Name</mat-header-cell>
-                <mat-cell *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">
+                <mat-header-cell class="ph1" *matHeaderCellDef>Short Name</mat-header-cell>
+                <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">
                     {{element.shortName}}</mat-cell>
             </ng-container>
+            <ng-container matColumnDef="version">
+                <mat-header-cell class="ph1" *matHeaderCellDef>Version</mat-header-cell>
+                <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">
+                    {{element.version}}</mat-cell>
+            </ng-container>
             <ng-container matColumnDef="description">
-                <mat-header-cell *matHeaderCellDef>Description</mat-header-cell>
-                <mat-cell *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">
-                    {{element.description}}</mat-cell>
+                <mat-header-cell class="ph1" *matHeaderCellDef>Description</mat-header-cell>
+                <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">
+                    <div class="descriptionStyle">
+                        {{element.description}}
+                    </div>
+                </mat-cell>
             </ng-container>
             <ng-container matColumnDef="controls">
-                <mat-header-cell *matHeaderCellDef>Controls</mat-header-cell>
-                <mat-cell *matCellDef="let element">
+                <mat-header-cell class="ph1" *matHeaderCellDef>Controls</mat-header-cell>
+                <mat-cell *matCellDef="let element" class="ph1">
                     <button mat-raised-button (click)="deleteService(element)">delete</button>
                 </mat-cell>
             </ng-container>

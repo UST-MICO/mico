@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import { Component, OnInit, Input, OnDestroy } from '@angular/core';
+import { Component, Input, OnDestroy } from '@angular/core';
 
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
@@ -25,13 +25,14 @@ import { MatDialog } from '@angular/material';
 import { ServicePickerComponent } from '../dialogs/service-picker/service-picker.component';
 import { Subscription } from 'rxjs';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
+import { UtilsService } from '../util/utils.service';
 
 @Component({
     selector: 'mico-app-detail-overview',
     templateUrl: './app-detail-overview.component.html',
     styleUrls: ['./app-detail-overview.component.css']
 })
-export class AppDetailOverviewComponent implements OnInit, OnDestroy {
+export class AppDetailOverviewComponent implements OnDestroy {
 
     subDependeesDialog: Subscription;
     subServiceDependency: Subscription;
@@ -40,21 +41,16 @@ export class AppDetailOverviewComponent implements OnInit, OnDestroy {
 
     constructor(
         private apiService: ApiService,
-        private dialog: MatDialog, ) { }
+        private dialog: MatDialog,
+        private util: UtilsService) { }
 
-    ngOnInit() {
-    }
 
     ngOnDestroy() {
-        this.unsubscribe(this.subDependeesDialog);
-        this.unsubscribe(this.subServiceDependency);
+        this.util.safeUnsubscribe(this.subDependeesDialog);
+        this.util.safeUnsubscribe(this.subServiceDependency);
     }
 
-    unsubscribe(subscription: Subscription) {
-        if (subscription != null) {
-            subscription.unsubscribe();
-        }
-    }
+
 
     addService() {
 
@@ -72,15 +68,9 @@ export class AppDetailOverviewComponent implements OnInit, OnDestroy {
                 return;
             }
 
-            // TODO consider if null check is still neccesary as soon as endpoint to add dependencies exists
-            if (this.application.services == null) {
-                this.application.services = [];
-            }
-
             result.forEach(service => {
-                // this.application.services.push(element);
-                // TODO Consider adding all at once.
-                this.apiService.postApplicationServices(this.application.shortName, this.application.version, service)
+                this.apiService.postApplicationServices(this.application.shortName,
+                    this.application.version, service.shortName, service.version)
                     .subscribe();
             });
         });

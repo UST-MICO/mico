@@ -7,6 +7,8 @@ io.github.ust.mico.core.util
    :maxdepth: 1
 
    CollectionUtils
+   KubernetesNameNormalizer
+   Patterns
    RandomStringFactory
    UIDUtils
 

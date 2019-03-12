@@ -19,48 +19,57 @@
 
 package io.github.ust.mico.core.dto.response;
 
-import java.util.List;
-import java.util.Map;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
+import io.github.ust.mico.core.util.PrometheusValueDeserializer;
+import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.Extension;
+import io.swagger.annotations.ExtensionProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+/**
+ * DTO for a response from Prometheus. It contains a status field and the value field for the CPU load / memory usage.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonInclude(Include.NON_NULL)
-// TODO: Class comment.
 public class PrometheusResponseDTO {
-    
-    // TODO: Add comments for fields.
-    
-    public static final String PROMETHEUS_SUCCESSFUL_RESPONSE = "success";
 
-    private String status;
+    /**
+     * Indicates the status of the response: true if the response is successful and false if an error occurred.
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Success"),
+            @ExtensionProperty(name = "default", value = "false"),
+            @ExtensionProperty(name = "x-order", value = "10"),
+            @ExtensionProperty(name = "description", value = "Indicates the status of the response: " +
+                "true if the response is successful and false if an error occurred.")
+        }
+    )})
+    private boolean success = false;
+
+    /**
+     * The data field and all nested fields in the response JSON are deserialized with {@link
+     * PrometheusValueDeserializer} to retrieve the value for the memory usage / CPU load.
+     */
+    @JsonProperty("data")
+    @JsonDeserialize(using = PrometheusValueDeserializer.class)
     private int value;
 
-    public boolean wasSuccessful(){
-        return status.equals(PROMETHEUS_SUCCESSFUL_RESPONSE);
+    /**
+     * Status of the response: can be "success" or "error".
+     */
+    @JsonProperty("status")
+    private void setResponseStatus(String status) {
+        if (status.equals("success")) {
+            this.success = true;
+        }
     }
-
-    // TODO: Optimize
-    @JsonProperty("data")
-    @SuppressWarnings("unchecked")
-    private void unpackNested(Map<String, Object> data) {
-        //TODO find a better mapping solution
-        List<Object> resultList = (List<Object>) data.get("result");
-        Map<String,Object> resultEntry = (Map<String,Object>) resultList.get(0);
-        List<String> dataPoint = (List<String>) resultEntry.get("value");
-        this.value = Integer.parseInt(dataPoint.get(1));
-    }
-
 }

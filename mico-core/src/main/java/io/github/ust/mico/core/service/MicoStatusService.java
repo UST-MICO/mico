@@ -20,29 +20,21 @@
 package io.github.ust.mico.core.service;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import javax.validation.constraints.NotNull;
 
-import io.fabric8.kubernetes.api.model.ContainerStatus;
-import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
-import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.github.ust.mico.core.configuration.PrometheusConfig;
-import io.github.ust.mico.core.dto.response.KubernetesNodeMetricsResponseDTO;
-import io.github.ust.mico.core.dto.response.KubernetesPodInformationResponseDTO;
-import io.github.ust.mico.core.dto.response.KubernetesPodMetricsResponseDTO;
-import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
-import io.github.ust.mico.core.dto.response.MicoApplicationStatusResponseDTO;
-import io.github.ust.mico.core.dto.response.MicoServiceInterfaceStatusResponseDTO;
-import io.github.ust.mico.core.dto.response.MicoServiceStatusResponseDTO;
-import io.github.ust.mico.core.dto.response.PrometheusResponseDTO;
+import io.github.ust.mico.core.dto.response.*;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.PrometheusRequestFailedException;
 import io.github.ust.mico.core.model.MicoApplication;
@@ -52,12 +44,6 @@ import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.util.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * Provides functionality to retrieve status information for a {@link MicoApplication} or a particular {@link
@@ -239,7 +225,7 @@ public class MicoStatusService {
      * @param kubernetesService the Kubernetes {@link Service}
      * @return a list with public IPs of the provided Kubernetes Service
      */
-    // TODO: Duplicate exists in ServiceInterfaceController. Will be covered by mico#491
+    // TODO: Duplicate exists in ServiceInterfaceResource. Will be covered by mico#491
     private List<String> getPublicIpsOfKubernetesService(Service kubernetesService) {
         LoadBalancerStatus loadBalancerStatus = kubernetesService.getStatus().getLoadBalancer();
         List<String> publicIps = new ArrayList<>();
@@ -297,24 +283,40 @@ public class MicoStatusService {
         return requestValueFromPrometheus(prometheusUri);
     }
 
+    /**
+     * Requests the CPU load / memory usage value from Prometheus.
+     *
+     * @param prometheusUri is the adapted URI with the query for Prometheus, either CPU load or memory usage.
+     * @return a single Integer value of the current CPU load or the memory usage of a {@link Pod}.
+     * @throws PrometheusRequestFailedException is thrown if Prometheus returns an error, if there is no response body,
+     *                                          or if the HTTP request was not successful.
+     */
     private int requestValueFromPrometheus(URI prometheusUri) throws PrometheusRequestFailedException {
         ResponseEntity<PrometheusResponseDTO> response = restTemplate.getForEntity(prometheusUri, PrometheusResponseDTO.class);
         if (response.getStatusCode().is2xxSuccessful()) {
-            PrometheusResponseDTO prometheusMemoryResponse = response.getBody();
-            if (prometheusMemoryResponse != null) {
-                if (prometheusMemoryResponse.wasSuccessful()) {
-                    return prometheusMemoryResponse.getValue();
+            PrometheusResponseDTO prometheusResponse = response.getBody();
+            if (prometheusResponse != null) {
+                if (prometheusResponse.isSuccess()) {
+                    return prometheusResponse.getValue();
                 } else {
-                    throw new PrometheusRequestFailedException("The status of the prometheus response was " + prometheusMemoryResponse.getStatus(), response.getStatusCode(), prometheusMemoryResponse.getStatus());
+                    throw new PrometheusRequestFailedException("Prometheus returned a response with status " + prometheusResponse.isSuccess());
                 }
             } else {
-                throw new PrometheusRequestFailedException("There was no response body", response.getStatusCode(), null);
+                throw new PrometheusRequestFailedException("There is no body in the response with status code " + response.getStatusCode());
             }
         } else {
-            throw new PrometheusRequestFailedException("The http status code was not 2xx", response.getStatusCode(), null);
+            throw new PrometheusRequestFailedException("The http request was not successful and returned a " + response.getStatusCode());
         }
     }
 
+    /**
+     * Builds the correct Prometheus URI to request the correct value.
+     *
+     * @param query   is the query for Prometheus in PromQL (either the query for the CPU load, or for the memory
+     *                usage).
+     * @param podName is the name of the {@link Pod}, for which the CPU load / memory usage query is build.
+     * @return the URI to send the request to.
+     */
     private URI getPrometheusUri(String query, String podName) {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(prometheusConfig.getUri());
         uriBuilder.queryParam(PROMETHEUS_QUERY_PARAMETER_NAME, String.format(query, podName));

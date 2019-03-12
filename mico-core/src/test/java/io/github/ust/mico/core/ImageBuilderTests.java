@@ -30,10 +30,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
+import io.github.ust.mico.core.TestConstants.IntegrationTest;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.exception.NotInitializedException;
 import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 
 @RunWith(SpringRunner.class)
@@ -47,15 +47,13 @@ public class ImageBuilderTests {
 
     @Before
     public void setUp() {
-        ClusterAwarenessFabric8 cluster = new ClusterAwarenessFabric8(mockServer.getClient());
-
         MicoKubernetesBuildBotConfig buildBotConfig = new MicoKubernetesBuildBotConfig();
         buildBotConfig.setNamespaceBuildExecution("build-execution-namespace");
         buildBotConfig.setKanikoExecutorImageUrl("kaniko-executor-image-url");
         buildBotConfig.setDockerRegistryServiceAccountName("service-account-name");
         buildBotConfig.setDockerImageRepositoryUrl("image-repository-url");
 
-        imageBuilder = new ImageBuilder(cluster, buildBotConfig);
+        imageBuilder = new ImageBuilder(mockServer.getClient(), buildBotConfig);
     }
 
     @After
@@ -68,10 +66,9 @@ public class ImageBuilderTests {
 
         MicoService micoService = new MicoService()
             .setShortName(SERVICE_SHORT_NAME)
-            .setName(NAME)
             .setVersion(SERVICE_VERSION)
-            .setGitCloneUrl(GIT_TEST_REPO_URL)
-            .setDockerfilePath(DOCKERFILE_PATH);
+            .setName(NAME)
+            .setGitCloneUrl(IntegrationTest.GIT_CLONE_URL);
 
         imageBuilder.build(micoService);
     }

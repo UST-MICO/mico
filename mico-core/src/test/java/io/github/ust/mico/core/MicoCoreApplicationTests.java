@@ -52,7 +52,7 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
     private static final String TEST_PROTOCOL = "http";
     private static final String TEST_DNS = "DNS";
     private static final String TEST_SERVICE_INTERFACE_NAME = "Service interface name";
-    private static final String TEST_LONGER_NAME = "TEST LONGER NAME";
+    private static final String TEST_LONGER_NAME = "TEST LONGER APPLICATION_NAME";
     private static final String TEST_VERSION = "1.0";
 
     @Autowired

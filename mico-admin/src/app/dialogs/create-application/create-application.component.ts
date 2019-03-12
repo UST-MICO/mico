@@ -23,6 +23,7 @@ import { Subscription } from 'rxjs';
 import { MatDialog } from '@angular/material';
 import { ServicePickerComponent } from '../service-picker/service-picker.component';
 import { ApiModel } from 'src/app/api/apimodel';
+import { UtilsService } from 'src/app/util/utils.service';
 
 @Component({
     selector: 'mico-create-application',
@@ -39,31 +40,26 @@ export class CreateApplicationComponent implements OnInit, OnDestroy {
 
     filterList: string[];
 
-    constructor(private apiService: ApiService, private dialog: MatDialog) {
+    constructor(
+        private apiService: ApiService,
+        private dialog: MatDialog,
+        private util: UtilsService,
+    ) {
     }
 
     ngOnInit() {
         // only show required fields
         this.subModelDefinitions = this.apiService.getModelDefinitions().subscribe(val => {
-            this.filterList = (val['MicoApplication'] as ApiModel).required;
+            this.filterList = (val['MicoApplicationDTO'] as ApiModel).required;
         });
     }
 
     ngOnDestroy() {
         // unsubscribe obervables
-        this.unsubscribe(this.subDependeesDialog);
-        this.unsubscribe(this.subModelDefinitions);
+        this.util.safeUnsubscribe(this.subDependeesDialog);
+        this.util.safeUnsubscribe(this.subModelDefinitions);
     }
 
-    /**
-     * generic unsubscribe function
-     * @param subscription observable to be unnsubscribed if not null
-     */
-    unsubscribe(subscription: Subscription) {
-        if (subscription != null) {
-            subscription.unsubscribe();
-        }
-    }
 
     /**
      * return function of the dialog
