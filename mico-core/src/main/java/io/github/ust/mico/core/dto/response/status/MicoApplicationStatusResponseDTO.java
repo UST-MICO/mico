@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto.response;
+package io.github.ust.mico.core.dto.response.status;
 
 import java.util.ArrayList;
 import java.util.List;

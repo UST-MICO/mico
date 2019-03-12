@@ -17,15 +17,12 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto.response;
+package io.github.ust.mico.core.dto.response.status;
 
-import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
-import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.util.PrometheusValueDeserializer;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -35,38 +32,44 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for the status information of a {@link MicoServiceInterface}, that is mapped to a Kubernetes Service.
+ * DTO for a response from Prometheus. It contains a status field and the value field for the CPU load / memory usage.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonInclude(Include.NON_NULL)
-public class MicoServiceInterfaceStatusResponseDTO {
+public class PrometheusResponseDTO {
 
     /**
-     * Name of the {@link MicoServiceInterface}.
+     * Indicates the status of the response: true if the response is successful and false if an error occurred.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Name"),
+            @ExtensionProperty(name = "title", value = "Success"),
+            @ExtensionProperty(name = "default", value = "false"),
             @ExtensionProperty(name = "x-order", value = "10"),
-            @ExtensionProperty(name = "description", value = "Name of the MicoServiceInterface.")
+            @ExtensionProperty(name = "description", value = "Indicates the status of the response: " +
+                "true if the response is successful and false if an error occurred.")
         }
     )})
-    private String name;
+    private boolean success = false;
 
     /**
-     * List of external IP addresses of this {@link MicoServiceInterface}.
+     * The data field and all nested fields in the response JSON are deserialized with {@link
+     * PrometheusValueDeserializer} to retrieve the value for the memory usage / CPU load.
      */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "External IPs"),
-            @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "List of external IP addresses of this MicoServiceInterface.")
+    @JsonProperty("data")
+    @JsonDeserialize(using = PrometheusValueDeserializer.class)
+    private int value;
+
+    /**
+     * Status of the response: can be "success" or "error".
+     */
+    @JsonProperty("status")
+    private void setResponseStatus(String status) {
+        if (status.equals("success")) {
+            this.success = true;
         }
-    )})
-    private List<String> externalIps;
+    }
 }

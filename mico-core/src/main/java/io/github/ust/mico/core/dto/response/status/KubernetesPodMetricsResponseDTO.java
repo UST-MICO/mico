@@ -17,15 +17,13 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto.response;
+package io.github.ust.mico.core.dto.response.status;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-import io.fabric8.kubernetes.api.model.Node;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
-import io.github.ust.mico.core.model.MicoService;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -35,52 +33,51 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for the average CPU load and the average memory usage of all {@link Pod Pods} running on a Kubernetes {@link
- * Node}.
+ * Contains information about CPU/memory load of a {@link Pod}.
  */
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Accessors(chain = true)
 @JsonInclude(Include.NON_NULL)
-public class KubernetesNodeMetricsResponseDTO {
+public class KubernetesPodMetricsResponseDTO {
 
     /**
-     * The name of the Kubernetes {@link Node}.
+     * Memory usage of a pod.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Node Name"),
+            @ExtensionProperty(name = "title", value = "Memory Usage"),
             @ExtensionProperty(name = "x-order", value = "10"),
-            @ExtensionProperty(name = "description", value = "Name of the Kubernetes Node.")
+            @ExtensionProperty(name = "description", value = "Memory usage of a pod.")
         }
     )})
-    private String nodeName;
+    private int memoryUsage;
 
     /**
-     * The average CPU load of all pods of one {@link MicoService} running on this {@link Node}.
+     * CPU load of a pod.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Average CPU Load"),
+            @ExtensionProperty(name = "title", value = "CPU Load"),
             @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "The average CPU load of all pods of one MicoService running on this Node.")
+            @ExtensionProperty(name = "description", value = "CPU load of a pod.")
         }
     )})
-    private int averageCpuLoad;
+    private int cpuLoad;
 
     /**
-     * The average memory usage of all pods of one {@link MicoService} running on this {@link Node}.
+     * Indicates if a pod is available or not.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Average Memory Usage"),
+            @ExtensionProperty(name = "title", value = "Available"),
             @ExtensionProperty(name = "x-order", value = "30"),
-            @ExtensionProperty(name = "description", value = "The average memory usage of all pods of one MicoService running on this Node.")
+            @ExtensionProperty(name = "description", value = "Indicates if a pod is available.")
         }
     )})
-    private int averageMemoryUsage;
+    private boolean available;
 }

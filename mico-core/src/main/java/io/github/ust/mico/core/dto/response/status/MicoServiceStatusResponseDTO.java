@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto.response;
+package io.github.ust.mico.core.dto.response.status;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import io.fabric8.kubernetes.api.model.Pod;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
+import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
 import io.github.ust.mico.core.model.MicoService;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;

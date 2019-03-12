@@ -64,6 +64,7 @@ import io.github.ust.mico.core.dto.request.MicoServiceDependencyRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
 import io.github.ust.mico.core.dto.response.*;
+import io.github.ust.mico.core.dto.response.status.*;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.model.MicoServiceInterface;

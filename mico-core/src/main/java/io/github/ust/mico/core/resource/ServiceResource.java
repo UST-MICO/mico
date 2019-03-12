@@ -47,7 +47,7 @@ import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphEdgeResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceResponseDTO;
-import io.github.ust.mico.core.dto.response.MicoServiceStatusResponseDTO;
+import io.github.ust.mico.core.dto.response.status.MicoServiceStatusResponseDTO;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;

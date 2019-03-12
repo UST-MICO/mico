@@ -62,6 +62,7 @@ import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
 import io.github.ust.mico.core.dto.response.*;
+import io.github.ust.mico.core.dto.response.status.*;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo.ImagePullPolicy;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;

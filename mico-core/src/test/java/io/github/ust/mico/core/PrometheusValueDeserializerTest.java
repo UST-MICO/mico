@@ -27,7 +27,7 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.github.ust.mico.core.dto.response.PrometheusResponseDTO;
+import io.github.ust.mico.core.dto.response.status.PrometheusResponseDTO;
 
 public class PrometheusValueDeserializerTest {
 

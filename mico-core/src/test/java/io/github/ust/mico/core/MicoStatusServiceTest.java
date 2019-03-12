@@ -46,6 +46,7 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.github.ust.mico.core.configuration.PrometheusConfig;
 import io.github.ust.mico.core.dto.response.*;
+import io.github.ust.mico.core.dto.response.status.*;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
