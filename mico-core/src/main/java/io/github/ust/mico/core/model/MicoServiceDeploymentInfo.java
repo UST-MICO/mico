@@ -85,13 +85,6 @@ public class MicoServiceDeploymentInfo {
     private int replicas = 1;
 
     /**
-     * Minimum number of seconds for which this service should be ready
-     * without any of its containers crashing, for it to be considered available.
-     * Defaults to 0 (considered available as soon as it is ready).
-     */
-    private int minReadySecondsBeforeMarkedAvailable = 0;
-
-    /**
      * Those labels are key-value pairs that are attached to the deployment
      * of this service. Intended to be used to specify identifying attributes
      * that are meaningful and relevant to users, but do not directly imply
@@ -127,7 +120,6 @@ public class MicoServiceDeploymentInfo {
      */
     public MicoServiceDeploymentInfo applyValuesFrom(MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) {
         return setReplicas(serviceDeploymentInfoDTO.getReplicas())
-            .setMinReadySecondsBeforeMarkedAvailable(serviceDeploymentInfoDTO.getMinReadySecondsBeforeMarkedAvailable())
             .setLabels(serviceDeploymentInfoDTO.getLabels())
             .setImagePullPolicy(serviceDeploymentInfoDTO.getImagePullPolicy())
             .setRestartPolicy(serviceDeploymentInfoDTO.getRestartPolicy());

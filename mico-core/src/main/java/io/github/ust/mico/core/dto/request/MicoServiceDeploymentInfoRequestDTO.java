@@ -72,26 +72,6 @@ public class MicoServiceDeploymentInfoRequestDTO {
     private int replicas;
 
     /**
-     * Minimum number of seconds for which this service should be ready
-     * without any of its containers crashing, for it to be considered available.
-     * Defaults to 0 (considered available as soon as it is ready).
-     */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Time To Verify Ready State"),
-            @ExtensionProperty(name = "minimum", value = "0"),
-            @ExtensionProperty(name = "default", value = "0"),
-            @ExtensionProperty(name = "x-order", value = "40"),
-            @ExtensionProperty(name = "description", value = "Minimum number of seconds for which this service should be ready " +
-                "without any of its containers crashing, for it to be considered available. " +
-                "0 is considered available as soon as it is ready.")
-        }
-    )})
-    @PositiveOrZero(message = "must not be negative")
-    private int minReadySecondsBeforeMarkedAvailable;
-
-    /**
      * Those labels are key-value pairs that are attached to the deployment
      * of this service. Intended to be used to specify identifying attributes
      * that are meaningful and relevant to users, but do not directly imply
@@ -105,7 +85,7 @@ public class MicoServiceDeploymentInfoRequestDTO {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Labels"),
-            @ExtensionProperty(name = "x-order", value = "50"),
+            @ExtensionProperty(name = "x-order", value = "40"),
             @ExtensionProperty(name = "description", value = "Those labels are key-value pairs that are attached to the deployment" +
                 " of this service. Intended to be used to specify identifying attributes" +
                 " that are meaningful and relevant to users, but do not directly imply" +
@@ -130,7 +110,7 @@ public class MicoServiceDeploymentInfoRequestDTO {
         properties = {
             @ExtensionProperty(name = "title", value = "Image Pull Policy"),
             @ExtensionProperty(name = "default", value = "ALWAYS"),
-            @ExtensionProperty(name = "x-order", value = "60"),
+            @ExtensionProperty(name = "x-order", value = "50"),
             @ExtensionProperty(name = "description", value = "Indicates whether and when to pull the image.\n " +
                 "Null is ignored.")
         }
@@ -148,7 +128,7 @@ public class MicoServiceDeploymentInfoRequestDTO {
         properties = {
             @ExtensionProperty(name = "title", value = "Restart Policy"),
             @ExtensionProperty(name = "default", value = "ALWAYS"),
-            @ExtensionProperty(name = "x-order", value = "70"),
+            @ExtensionProperty(name = "x-order", value = "60"),
             @ExtensionProperty(name = "description", value = "Restart policy for all containers.\n " +
                 "Null is ignored.")
         }
@@ -169,7 +149,6 @@ public class MicoServiceDeploymentInfoRequestDTO {
 	 */
 	public MicoServiceDeploymentInfoRequestDTO(MicoServiceDeploymentInfo serviceDeploymentInfo) {
 		this.replicas = serviceDeploymentInfo.getReplicas();
-		this.minReadySecondsBeforeMarkedAvailable = serviceDeploymentInfo.getMinReadySecondsBeforeMarkedAvailable();
 		this.labels = serviceDeploymentInfo.getLabels();
 		this.imagePullPolicy = serviceDeploymentInfo.getImagePullPolicy();
 		this.restartPolicy = serviceDeploymentInfo.getRestartPolicy();
