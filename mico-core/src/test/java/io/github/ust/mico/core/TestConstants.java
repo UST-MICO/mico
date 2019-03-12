@@ -27,6 +27,7 @@ import static io.github.ust.mico.core.JsonPathBuilder.*;
 
 class TestConstants {
 
+    public static final String STRING_ID = "2b4fd36e-42fe-4e42-be6f-dd1ef743b69e";
     static final String BASE_URL = "http://localhost";
     static final String SERVICES_PATH = "/services";
     static final String DEPENDEES_SUBPATH = "/dependees";

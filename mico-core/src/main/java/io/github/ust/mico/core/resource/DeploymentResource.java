@@ -77,6 +77,7 @@ public class DeploymentResource {
 
     @Autowired
     private MicoKubernetesClient micoKubernetesClient;
+
     @Autowired
     private MicoBackgroundTaskRepository backgroundTaskRepo;
 

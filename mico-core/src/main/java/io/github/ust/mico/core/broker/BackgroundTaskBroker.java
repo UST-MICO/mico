@@ -26,6 +26,20 @@ public class BackgroundTaskBroker {
     @Autowired
     private MicoApplicationRepository applicationRepository;
 
+    public List<MicoBackgroundTask> getAllJobs() {
+        return jobRepository.findAll();
+    }
+
+    public Optional<MicoBackgroundTask> getJobById(String id) {
+        return jobRepository.findById(id);
+    }
+
+    public Optional<MicoBackgroundTask> deleteJob(String id) {
+        Optional<MicoBackgroundTask> job = getJobById(id);
+        jobRepository.deleteById(id);
+        return job;
+    }
+
     public MicoApplicationJobStatus getJobStatusByApplicationShortNameAndVersion(String shortName, String version) {
         Optional<MicoApplication> existingApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
         if (!existingApplicationOptional.isPresent()) {

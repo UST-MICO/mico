@@ -22,7 +22,6 @@ import io.github.ust.mico.core.broker.BackgroundTaskBroker;
 import io.github.ust.mico.core.dto.MicoApplicationJobStatusDTO;
 import io.github.ust.mico.core.dto.MicoBackgroundTaskDTO;
 import io.github.ust.mico.core.model.MicoBackgroundTask;
-import io.github.ust.mico.core.persistence.MicoBackgroundTaskRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
@@ -55,14 +54,11 @@ public class BackgroundTaskResource {
     private static final String PATH_VARIABLE_VERSION = "version";
 
     @Autowired
-    private MicoBackgroundTaskRepository jobRepository;
-
-    @Autowired
     private BackgroundTaskBroker backgroundTaskBroker;
 
     @GetMapping()
     public ResponseEntity<Resources<Resource<MicoBackgroundTaskDTO>>> getAllJobs() {
-        List<MicoBackgroundTask> jobs = jobRepository.findAll();
+        List<MicoBackgroundTask> jobs = backgroundTaskBroker.getAllJobs();
         List<Resource<MicoBackgroundTaskDTO>> jobResources = getJobResourceList(jobs);
 
         return ResponseEntity.ok(new Resources<>(jobResources, linkTo(methodOn(BackgroundTaskResource.class).getAllJobs()).withSelfRel()));
@@ -77,7 +73,7 @@ public class BackgroundTaskResource {
 
     @GetMapping("/{" + PATH_ID + "}")
     public ResponseEntity<Resource<MicoBackgroundTaskDTO>> getJobById(@PathVariable(PATH_ID) String id) {
-        Optional<MicoBackgroundTask> jobOptional = jobRepository.findById(id);
+        Optional<MicoBackgroundTask> jobOptional = backgroundTaskBroker.getJobById(id);
         if (!jobOptional.isPresent()) {
             // likely to be permanent
             throw new ResponseStatusException(HttpStatus.GONE, "Job with id '" + id + "' was not found!");
@@ -99,8 +95,8 @@ public class BackgroundTaskResource {
     @DeleteMapping("/{" + PATH_ID + "}")
     public ResponseEntity<Resource<MicoBackgroundTaskDTO>> deleteJob(@PathVariable(PATH_ID) String id) {
         ResponseEntity<Resource<MicoBackgroundTaskDTO>> job = getJobById(id);
+        backgroundTaskBroker.deleteJob(id);
         job.getBody().removeLinks();
-        jobRepository.deleteById(id);
         return job;
     }
 
