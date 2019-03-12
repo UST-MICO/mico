@@ -326,7 +326,7 @@ public class MicoStatusServiceTest {
                 .setInterfacesInformation(CollectionUtils.listOf(
                     new MicoServiceInterfaceStatusDTO()
                         .setName(SERVICE_INTERFACE_NAME)
-                        .setExternalIps(CollectionUtils.listOf("192.168.2.112", "192.168.2.113"))))))
+                        .setExternalIp("192.168.2.112")))))
         ;
         try {
             given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(deployment);
@@ -404,7 +404,7 @@ public class MicoStatusServiceTest {
                     new MicoServiceInterfaceStatusDTO()
                         .setName(SERVICE_INTERFACE_NAME)
                         // Empty list of external IP addresses
-                        .setExternalIps(CollectionUtils.listOf())))));
+                        .setExternalIp("")))));
         try {
             given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(deployment);
             given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(kubernetesServiceWithoutIps);
@@ -531,7 +531,7 @@ public class MicoStatusServiceTest {
             .setErrorMessages(CollectionUtils.listOf())
             .setInterfacesInformation(CollectionUtils.listOf(new MicoServiceInterfaceStatusDTO()
                 .setName(SERVICE_INTERFACE_NAME)
-                .setExternalIps(CollectionUtils.listOf("192.168.2.112", "192.168.2.113"))));
+                .setExternalIp("192.168.2.112")));
         try {
             given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(deployment);
             given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(kubernetesService);
@@ -570,7 +570,7 @@ public class MicoStatusServiceTest {
 
         MicoServiceInterfaceStatusDTO expectedServiceInterface = new MicoServiceInterfaceStatusDTO()
             .setName(SERVICE_INTERFACE_NAME)
-            .setExternalIps(CollectionUtils.listOf("192.168.2.112", "192.168.2.113"));
+            .setExternalIp("192.168.2.112");
         List<MicoServiceInterfaceStatusDTO> expectedInterfaceStatusDTO = new LinkedList<>();
         expectedInterfaceStatusDTO.add(expectedServiceInterface);
         List<String> errorMessages = new ArrayList<>();
@@ -589,7 +589,7 @@ public class MicoStatusServiceTest {
 
         MicoServiceInterfaceStatusDTO expectedServiceInterface = new MicoServiceInterfaceStatusDTO()
             .setName(SERVICE_INTERFACE_NAME)
-            .setExternalIps(new ArrayList<>()); // Expect that there are no IPs
+            .setExternalIp(""); // Expect that there are no IPs
         List<MicoServiceInterfaceStatusDTO> expectedInterfaceStatusDTO = new LinkedList<>();
         expectedInterfaceStatusDTO.add(expectedServiceInterface);
 

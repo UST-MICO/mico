@@ -19,8 +19,6 @@
 
 package io.github.ust.mico.core.dto;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoServiceInterface;
@@ -56,15 +54,15 @@ public class MicoServiceInterfaceStatusDTO {
     private String name;
 
     /**
-     * List of external IP addresses of this {@link MicoServiceInterface}.
+     * The external IP address of this {@link MicoServiceInterface}.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "External IPs"),
+            @ExtensionProperty(name = "title", value = "External IP"),
             @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "List of external IP addresses of this MicoServiceInterface.")
+            @ExtensionProperty(name = "description", value = "The external IP address of this MicoServiceInterface.")
         }
     )})
-    private List<String> externalIps;
+    private String externalIp;
 }

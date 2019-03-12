@@ -219,30 +219,30 @@ public class MicoStatusService {
                                                                          @NotNull List<String> errorMessages) {
         List<MicoServiceInterfaceStatusDTO> interfacesInformation = new ArrayList<>();
         for (MicoServiceInterface serviceInterface : micoService.getServiceInterfaces()) {
-            String interfaceName = serviceInterface.getServiceInterfaceName();
-            List<String> publicIps = new ArrayList<>();
+            String serviceInterfaceName = serviceInterface.getServiceInterfaceName();
+            String publicIp = "";
             try {
-                Optional<Service> kubernetesServices = micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, interfaceName);
+                Optional<Service> kubernetesServices = micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, serviceInterfaceName);
                 if (kubernetesServices.isPresent()) {
-                    publicIps = getPublicIpsOfKubernetesService(kubernetesServices.get());
-                    if (publicIps.isEmpty()) {
+                    publicIp = getPublicIpOfKubernetesService(micoService, serviceInterfaceName, kubernetesServices.get());
+                    if (publicIp.isEmpty()) {
                         errorMessages.add("There is no Kubernetes service for the interface '" +
-                            interfaceName + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "'.");
+                            serviceInterfaceName + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "'.");
                     }
                 } else {
                     log.warn("There is no Kubernetes service for the interface '{}' of MicoService '{}' '{}'. Continue with next one.",
-                        interfaceName, micoService.getShortName(), micoService.getVersion());
+                        serviceInterfaceName, micoService.getShortName(), micoService.getVersion());
                     errorMessages.add("There is no Kubernetes service for the interface '" +
-                        interfaceName + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "'.");
+                        serviceInterfaceName + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "'.");
                 }
             } catch (Exception e) {
                 log.error("Error while retrieving the Kubernetes service for the interface '{}' of MicoService '{}' '{}'. "
                         + "Continue with next one. Caused by: {}",
-                    interfaceName, micoService.getShortName(), micoService.getVersion(), e.getMessage());
+                    serviceInterfaceName, micoService.getShortName(), micoService.getVersion(), e.getMessage());
                 errorMessages.add(e.getMessage());
             }
 
-            interfacesInformation.add(new MicoServiceInterfaceStatusDTO(interfaceName, publicIps));
+            interfacesInformation.add(new MicoServiceInterfaceStatusDTO(serviceInterfaceName, publicIp));
         }
         return interfacesInformation;
     }
@@ -254,18 +254,23 @@ public class MicoStatusService {
      * @return a list with public IPs of the provided Kubernetes Service
      */
     // TODO: Duplicate exists in ServiceInterfaceResource. Will be covered by mico#491
-    private List<String> getPublicIpsOfKubernetesService(Service kubernetesService) {
+    public String getPublicIpOfKubernetesService(MicoService micoService, String serviceInterfaceName, Service kubernetesService) {
         LoadBalancerStatus loadBalancerStatus = kubernetesService.getStatus().getLoadBalancer();
-        List<String> publicIps = new ArrayList<>();
+        String publicIp = "";
         if (loadBalancerStatus != null) {
             List<LoadBalancerIngress> ingressList = loadBalancerStatus.getIngress();
-            if (ingressList != null && !ingressList.isEmpty()) {
-                for (LoadBalancerIngress ingress : ingressList) {
-                    publicIps.add(ingress.getIp());
-                }
+            if (ingressList != null && ingressList.size() == 1) {
+                log.info("Service interface with name '{}' of MicoService '{}' in version '{}' has external IP: {}",
+                    serviceInterfaceName, micoService.getShortName(), micoService.getVersion(), ingressList.get(0).getIp());
+                return ingressList.get(0).getIp();
+            } else if (ingressList != null && ingressList.size() > 1) {
+                // TODO exception if more than one public IP exists
             }
+            return publicIp;
+        } else {
+            // TODO error handling for a missing load balancer
+            return publicIp;
         }
-        return publicIps;
     }
 
     /**
