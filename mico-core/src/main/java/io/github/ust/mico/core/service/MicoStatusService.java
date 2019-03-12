@@ -19,7 +19,20 @@
 
 package io.github.ust.mico.core.service;
 
-import io.fabric8.kubernetes.api.model.*;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import javax.validation.constraints.NotNull;
+
+import io.fabric8.kubernetes.api.model.ContainerStatus;
+import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
+import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.github.ust.mico.core.configuration.PrometheusConfig;
 import io.github.ust.mico.core.dto.KubernetesNodeMetricsDTO;
@@ -30,7 +43,6 @@ import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
 import io.github.ust.mico.core.dto.MicoServiceInterfaceStatusDTO;
 import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
 import io.github.ust.mico.core.dto.PrometheusResponseDTO;
-import io.github.ust.mico.core.dto.*;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.PrometheusRequestFailedException;
 import io.github.ust.mico.core.model.MicoApplication;
@@ -46,10 +58,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
-
-import javax.validation.constraints.NotNull;
-import java.net.URI;
-import java.util.*;
 
 /**
  * Provides functionality to retrieve status information for a {@link MicoApplication} or a particular {@link
@@ -198,6 +206,15 @@ public class MicoStatusService {
         return serviceStatus;
     }
 
+    /**
+     * Get the status information for all {@link MicoServiceInterface MicoServiceInterfaces} of the {@link
+     * MicoService}.
+     *
+     * @param micoService   is the {@link MicoService} for which the status information of the MicoServiceInterfaces is
+     *                      requested.
+     * @param errorMessages is the list of error messages, which is empty if no error occurs.
+     * @return a list of {@link MicoServiceInterfaceStatusDTO}, one DTO per MicoServiceInterface.
+     */
     public List<MicoServiceInterfaceStatusDTO> getServiceInterfaceStatus(@NotNull MicoService micoService,
                                                                          @NotNull List<String> errorMessages) {
         List<MicoServiceInterfaceStatusDTO> interfacesInformation = new ArrayList<>();
