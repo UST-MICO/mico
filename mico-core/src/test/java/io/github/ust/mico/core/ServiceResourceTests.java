@@ -28,8 +28,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -91,6 +90,7 @@ public class ServiceResourceTests {
     private static final String SHORT_NAME_PATH = buildPath(ROOT, "shortName");
     private static final String DESCRIPTION_PATH = buildPath(ROOT, "description");
     private static final String VERSION_PATH = buildPath(ROOT, "version");
+    private static final String SERVICE_VERSIONS_LIST = buildPath(ROOT_EMBEDDED, "micoVersionRequestDTOList");
     private static final String PATH_PROMOTE = "promote";
 
     //TODO: Use these variables inside the tests instead of the local variables
@@ -786,6 +786,23 @@ public class ServiceResourceTests {
                 .andExpect(jsonPath(SHORT_NAME_PATH, is(savedPromotedService.getShortName())))
                 .andExpect(jsonPath(VERSION_PATH, is(newVersion)))
                 .andExpect(jsonPath(DESCRIPTION_PATH, is(savedPromotedService.getDescription())));
+
+        resultPromotion.andExpect(status().isOk());
+    }
+    
+    @Test
+    public void getVersionsFromGitHub() throws Exception {
+    	List<String> versions = CollectionUtils.listOf("v1.0.0", "v2.0.0", "v3.0.0");
+    	
+    	given(crawler.getVersionsFromGitHubRepo(anyString())).willReturn(versions);
+
+        ResultActions resultPromotion = mvc.perform(get(SERVICES_PATH + "/import/github")
+                .param("url", anyString()))
+                .andDo(print())
+                .andExpect(jsonPath(SERVICE_VERSIONS_LIST + "[*]", hasSize(3)))
+                .andExpect(jsonPath(SERVICE_VERSIONS_LIST + "[0].version", is(versions.get(0))))
+                .andExpect(jsonPath(SERVICE_VERSIONS_LIST + "[1].version", is(versions.get(1))))
+                .andExpect(jsonPath(SERVICE_VERSIONS_LIST + "[2].version", is(versions.get(2))));
 
         resultPromotion.andExpect(status().isOk());
     }

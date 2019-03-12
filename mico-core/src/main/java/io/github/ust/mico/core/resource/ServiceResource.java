@@ -92,8 +92,7 @@ public class ServiceResource {
         List<MicoService> services = serviceRepository.findAll(2);
         List<Resource<MicoServiceResponseDTO>> serviceResources = getServiceResponseDTOResourcesList(services);
         return ResponseEntity.ok(
-            new Resources<>(serviceResources,
-                linkTo(methodOn(ServiceResource.class).getServiceList()).withSelfRel()));
+            new Resources<>(serviceResources, linkTo(methodOn(ServiceResource.class).getServiceList()).withSelfRel()));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
@@ -339,11 +338,13 @@ public class ServiceResource {
     }
 
     @GetMapping(PATH_GITHUB_ENDPOINT)
-    @ResponseBody
-    public LinkedList<String> getVersionsFromGitHub(@RequestParam String url) {
+    public ResponseEntity<Resources<Resource<MicoVersionRequestDTO>>> getVersionsFromGitHub(@RequestParam("url") String url) {
         try {
-        	log.debug("Start getting versions from URL '{}'", url);
-            return crawler.getVersionsFromGitHubRepo(url);
+        	log.debug("Start getting versions from URL '{}'.", url);
+			List<Resource<MicoVersionRequestDTO>> versions = crawler.getVersionsFromGitHubRepo(url).stream()
+			    .map(version -> new Resource<MicoVersionRequestDTO>(new MicoVersionRequestDTO(version)))
+			    .collect(Collectors.toList());
+			return ResponseEntity.ok(new Resources<>(versions, linkTo(methodOn(ServiceResource.class).getVersionsFromGitHub(url)).withSelfRel()));
         } catch (IOException e) {
             log.error(e.getMessage(), e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
