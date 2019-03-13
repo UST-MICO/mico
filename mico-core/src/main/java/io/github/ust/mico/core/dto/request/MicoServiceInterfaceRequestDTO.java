@@ -21,6 +21,7 @@ package io.github.ust.mico.core.dto.request;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
@@ -29,7 +30,6 @@ import javax.validation.constraints.Pattern;
 
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.model.MicoServicePort;
 import io.github.ust.mico.core.util.Patterns;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
@@ -79,13 +79,13 @@ public class MicoServiceInterfaceRequestDTO {
             @ExtensionProperty(name = "title", value = "Ports"),
             @ExtensionProperty(name = "x-order", value = "200"),
             @ExtensionProperty(name = "minItems", value = "1"),
-            @ExtensionProperty(name = "description", value = "The list of the interfaces ports.\n" +
+            @ExtensionProperty(name = "description", value = "The list of ports of this interface.\n" +
                 " Must not be empty.")
         }
     )})
     @NotEmpty
     @Valid
-    private List<MicoServicePort> ports = new ArrayList<>();
+    private List<MicoServicePortRequestDTO> ports = new ArrayList<>();
 
 
     // ----------------------
@@ -159,7 +159,7 @@ public class MicoServiceInterfaceRequestDTO {
      */
     public MicoServiceInterfaceRequestDTO(MicoServiceInterface serviceInterface) {
     	this.serviceInterfaceName = serviceInterface.getServiceInterfaceName();
-    	this.ports = serviceInterface.getPorts();
+    	this.ports = serviceInterface.getPorts().stream().map(port -> new MicoServicePortRequestDTO(port)).collect(Collectors.toList());
     	this.publicDns = serviceInterface.getPublicDns();
     	this.description = serviceInterface.getDescription();
     	this.protocol = serviceInterface.getProtocol();

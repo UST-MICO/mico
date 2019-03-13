@@ -21,6 +21,7 @@ package io.github.ust.mico.core.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -109,7 +110,7 @@ public class MicoServiceInterface {
     public static MicoServiceInterface valueOf(MicoServiceInterfaceRequestDTO serviceInterfaceDto) {
         return new MicoServiceInterface()
         	.setServiceInterfaceName(serviceInterfaceDto.getServiceInterfaceName())
-        	.setPorts(serviceInterfaceDto.getPorts())
+        	.setPorts(serviceInterfaceDto.getPorts().stream().map(port -> MicoServicePort.valueOf(port)).collect(Collectors.toList()))
         	.setPublicDns(serviceInterfaceDto.getPublicDns())
         	.setDescription(serviceInterfaceDto.getDescription())
         	.setProtocol(serviceInterfaceDto.getProtocol())
