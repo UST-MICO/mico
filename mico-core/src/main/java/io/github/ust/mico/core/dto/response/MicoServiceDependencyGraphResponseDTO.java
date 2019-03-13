@@ -19,20 +19,23 @@
 
 package io.github.ust.mico.core.dto.response;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
+import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoService;
+import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.Extension;
+import io.swagger.annotations.ExtensionProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- * TODO: Class comment.
+ * DTO for the dependency graph of a {@link MicoService}.
  */
 @Data
 @NoArgsConstructor
@@ -41,10 +44,31 @@ import lombok.experimental.Accessors;
 @JsonInclude(Include.NON_NULL)
 public class MicoServiceDependencyGraphResponseDTO {
 
-	// TODO: Field comments.
-	// TODO: API documentation.
-	
-   private List<MicoService> micoServices = new LinkedList<>();
-   private List<MicoServiceDependencyGraphEdgeResponseDTO> micoServiceDependencyGraphEdgeList = new LinkedList<>();
-   
+    /**
+     * The {@link MicoService MicoServices} that are included in the dependency graph.
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Included MicoServices"),
+            @ExtensionProperty(name = "x-order", value = "10"),
+            @ExtensionProperty(name = "description", value = "The MicoServices that are included in the dependency graph.")
+        }
+    )})
+    private List<MicoServiceResponseDTO> micoServices = new ArrayList<>();
+
+    /**
+     * The list of edges in the dependency graph based on {@link MicoServiceDependencyGraphEdgeResponseDTO}.
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Edge List"),
+            @ExtensionProperty(name = "x-order", value = "20"),
+            @ExtensionProperty(name = "description", value = " The list of edges in the dependency graph " +
+                "based on MicoServiceDependencyGraphEdgeResponseDTO.")
+        }
+    )})
+    private List<MicoServiceDependencyGraphEdgeResponseDTO> micoServiceDependencyGraphEdgeList = new ArrayList<>();
+
 }

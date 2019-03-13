@@ -22,6 +22,7 @@ package io.github.ust.mico.core.dto.response;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
 import io.github.ust.mico.core.model.*;
@@ -61,10 +62,12 @@ public class MicoServiceResponseDTO extends MicoServiceRequestDTO {
         properties = {
             @ExtensionProperty(name = "title", value = "Service Crawling Origin"),
             @ExtensionProperty(name = "default", value = "NOT_DEFINED"),
+            @ExtensionProperty(name = "readOnly", value = "true"),
             @ExtensionProperty(name = "x-order", value = "100"),
             @ExtensionProperty(name = "description", value = "Indicates where this service originates from.")
         }
     )})
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private MicoServiceCrawlingOrigin serviceCrawlingOrigin = MicoServiceCrawlingOrigin.NOT_DEFINED;
     
     

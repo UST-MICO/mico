@@ -21,15 +21,18 @@ package io.github.ust.mico.core.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
+import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoService;
+import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.Extension;
+import io.swagger.annotations.ExtensionProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * TODO: Class comment.
+ * DTO for the edge of the dependency graph of a {@link MicoService}.
  */
 @Data
 @NoArgsConstructor
@@ -38,21 +41,66 @@ import lombok.experimental.Accessors;
 @JsonInclude(Include.NON_NULL)
 public class MicoServiceDependencyGraphEdgeResponseDTO {
 
-	// TODO: Field comments.
-	// TODO: API documentation.
-
+    /**
+     * The short name of the source {@link MicoService}.
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Source Short Name"),
+            @ExtensionProperty(name = "x-order", value = "10"),
+            @ExtensionProperty(name = "description", value = "The short name of the source MicoService.")
+        }
+    )})
     private String sourceShortName;
+
+    /**
+     * The version of the source {@link MicoService}.
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Source Version"),
+            @ExtensionProperty(name = "x-order", value = "20"),
+            @ExtensionProperty(name = "description", value = "The version of the source MicoService.")
+        }
+    )})
     private String sourceVersion;
+
+    /**
+     * The short name of the target {@link MicoService}.
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Target Short Name"),
+            @ExtensionProperty(name = "x-order", value = "30"),
+            @ExtensionProperty(name = "description", value = "The short name of the target MicoService.")
+        }
+    )})
     private String targetShortName;
+
+    /**
+     * The version of the target {@link MicoService}.
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Target Version"),
+            @ExtensionProperty(name = "x-order", value = "40"),
+            @ExtensionProperty(name = "description", value = "The version of the target MicoService.")
+        }
+    )})
     private String targetVersion;
 
     /**
-     * TODO: Constructor comment.
-     * 
-     * @param source
-     * @param target
+     * Creates an instance of {@code MicoServiceDependencyGraphEdgeResponseDTO} based on a
+     * source {@code MicoService} and a target {@code MicoService}.
+     *
+     * @param source the source {@link MicoService}.
+     * @param target the target {@link MicoService}.
      */
-    public MicoServiceDependencyGraphEdgeResponseDTO(MicoService source, MicoService target){
+    public MicoServiceDependencyGraphEdgeResponseDTO(MicoService source, MicoService target) {
         this.sourceShortName = source.getShortName();
         this.sourceVersion = source.getVersion();
         this.targetShortName = target.getShortName();
