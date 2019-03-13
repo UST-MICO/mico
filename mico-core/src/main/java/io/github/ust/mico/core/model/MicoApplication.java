@@ -86,13 +86,18 @@ public class MicoApplication {
     // ----------------------
     // -> Optional fields ---
     // ----------------------
+    
+    /**
+     * The list of included {@link MicoService MicoServices}.
+     */
+    @Relationship(type = "INCLUDES")
+    private List<MicoService> services = new ArrayList<>();
 
     /**
      * The list of service deployment information
      * this application uses for the deployment of the required services.
-     * {@code null} values are skipped.
      */
-    @Relationship(type = "INCLUDES_SERVICE")
+    @Relationship(type = "PROVIDES")
     private List<MicoServiceDeploymentInfo> serviceDeploymentInfos = new ArrayList<>();
 
     /**

@@ -19,6 +19,14 @@
 
 package io.github.ust.mico.core.model;
 
+import java.util.Map;
+
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
+
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.util.Patterns;
 import io.swagger.annotations.ApiModelProperty;
@@ -28,10 +36,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
-
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
-import java.util.Map;
 
 /**
  * Represents a simple key-value pair label.
@@ -45,6 +49,10 @@ import java.util.Map;
 @AllArgsConstructor
 @Accessors(chain = true)
 public class MicoLabel {
+	
+	@Id
+	@GeneratedValue
+	private Long id;
 
     /**
      * Key of the label.

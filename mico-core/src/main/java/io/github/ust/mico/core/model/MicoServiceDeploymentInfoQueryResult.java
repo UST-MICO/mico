@@ -19,6 +19,9 @@
 
 package io.github.ust.mico.core.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.data.neo4j.annotation.QueryResult;
 
 import lombok.AllArgsConstructor;
@@ -31,10 +34,12 @@ import lombok.experimental.Accessors;
 @AllArgsConstructor
 @Accessors(chain = true)
 @QueryResult
+@Deprecated
 public class MicoServiceDeploymentInfoQueryResult {
     
-    private MicoApplication application;
     private MicoServiceDeploymentInfo serviceDeploymentInfo;
     private MicoService service;
+    private List<MicoLabel> labels = new ArrayList<>();
+    private List<MicoEnvironmentVariable> environmentVariables = new ArrayList<>();
 
 }

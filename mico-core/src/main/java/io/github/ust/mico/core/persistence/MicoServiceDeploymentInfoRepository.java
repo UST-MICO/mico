@@ -26,35 +26,61 @@ import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfoQueryResult;
 
 public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<MicoServiceDeploymentInfo, Long> {
+     
+    /**
+     * Retrieves all service deployment information of a particular application.
+     * 
+     * @param applicationShortName the short name of the {@link MicoApplication}.
+     * @param applicationVersion the version of the {@link MicoApplication}.
+     * @return a {@link List} of {@link MicoServiceDeploymentInfo} instances.
+     */
+    @Query("MATCH (application:MicoApplication)-[:PROVIDES]->(serviceDeploymentInfo:MicoServiceDeploymentInfo)-[:FOR]->(service:MicoService) OPTIONAL MATCH (serviceDeploymentInfo:MicoServiceDeploymentInfo)-[:HAS]->(label:MicoLabel) OPTIONAL MATCH (serviceDeploymentInfo:MicoServiceDeploymentInfo)-[:HAS]->(env:MicoEnvironmentVariable) "
+        + "WHERE application.shortName = {applicationShortName} AND application.version = {applicationVersion} "
+        + "RETURN (serviceDeploymentInfo:MicoServiceDeploymentInfo)-->()")
+    List<MicoServiceDeploymentInfo> findAllByApplication(
+        @Param("applicationShortName") String applicationShortName,
+        @Param("applicationVersion") String applicationVersion);
     
-    @Query("MATCH (application:MicoApplication)-[serviceDeploymentInfo:INCLUDES_SERVICE]-(service:MicoService) "
-            + "WHERE application.shortName = {applicationShortName} AND application.version = {applicationVersion} "
-            + "RETURN application, serviceDeploymentInfo, service")
-    List<MicoServiceDeploymentInfoQueryResult> findAllByApplication(
-            @Param("applicationShortName") String applicationShortName,
-            @Param("applicationVersion") String applicationVersion);
+    /**
+     * Retrieves the deployment information for a particular application and service. 
+     * 
+     * @param applicationShortName the short name of the {@link MicoApplication}.
+     * @param applicationVersion the version of the {@link MicoApplication}.
+     * @param serviceShortName the short name of the {@link MicoService}.
+     * @return an {@link Optional} of {@link MicoServiceDeploymentInfo}.
+     */
+    @Query("MATCH (application:MicoApplication)-[:PROVIDES]->(serviceDeploymentInfo:MicoServiceDeploymentInfo)-[:FOR]->(service:MicoService) OPTIONAL MATCH (serviceDeploymentInfo:MicoServiceDeploymentInfo)-[:HAS]->(label:MicoLabel) OPTIONAL MATCH (serviceDeploymentInfo:MicoServiceDeploymentInfo)-[:HAS]->(env:MicoEnvironmentVariable) "
+        + "WHERE application.shortName = {applicationShortName} AND application.version = {applicationVersion} "
+        + "AND service.shortName = {serviceShortName} "
+        + "RETURN (serviceDeploymentInfo:MicoServiceDeploymentInfo)-->()")
+    Optional<MicoServiceDeploymentInfo> findByApplicationAndService(
+        @Param("applicationShortName") String applicationShortName,
+        @Param("applicationVersion") String applicationVersion,
+        @Param("serviceShortName") String serviceShortName);
     
-    @Query("MATCH (application:MicoApplication)-[serviceDeploymentInfo:INCLUDES_SERVICE]-(service:MicoService) "
-            + "WHERE application.shortName = {applicationShortName} AND application.version = {applicationVersion} "
-            + "AND service.shortName = {serviceShortName} "
-            + "RETURN application, serviceDeploymentInfo, service")
-    Optional<MicoServiceDeploymentInfoQueryResult> findByApplicationAndService(
-            @Param("applicationShortName") String applicationShortName,
-            @Param("applicationVersion") String applicationVersion,
-            @Param("serviceShortName") String serviceShortName);
-    
-    @Query("MATCH (application:MicoApplication)-[serviceDeploymentInfo:INCLUDES_SERVICE]-(service:MicoService) "
-            + "WHERE application.shortName = {applicationShortName} AND application.version = {applicationVersion} "
-            + "AND service.shortName = {serviceShortName} AND service.version = {serviceVersion} "
-            + "RETURN application, serviceDeploymentInfo, service")
-    Optional<MicoServiceDeploymentInfoQueryResult> findByApplicationAndService(
-            @Param("applicationShortName") String applicationShortName,
-            @Param("applicationVersion") String applicationVersion,
-            @Param("serviceShortName") String serviceShortName,
-            @Param("serviceVersion") String serviceVersion);
+    /**
+     * Retrieves the deployment information for a particular application and service.
+     * 
+     * @param applicationShortName the short name of the {@link MicoApplication}.
+     * @param applicationVersion the version of the {@link MicoApplication}.
+     * @param serviceShortName the short name of the {@link MicoService}.
+     * @param serviceVersion the version of the {@link MicoService}.
+     * @return an {@link Optional} of {@link MicoServiceDeploymentInfo}.
+     */
+    // TODO: Include 'KubernetesDeploymentInfo' in query via OPTIONAL MATCH
+    @Query("MATCH (application:MicoApplication)-[:PROVIDES]->(serviceDeploymentInfo:MicoServiceDeploymentInfo)-[:FOR]->(service:MicoService) OPTIONAL MATCH (serviceDeploymentInfo:MicoServiceDeploymentInfo)-[:HAS]->(label:MicoLabel) OPTIONAL MATCH (serviceDeploymentInfo:MicoServiceDeploymentInfo)-[:HAS]->(env:MicoEnvironmentVariable) "
+        + "WHERE application.shortName = {applicationShortName} AND application.version = {applicationVersion} "
+        + "AND service.shortName = {serviceShortName} AND service.version = {serviceVersion} "
+        + "RETURN (serviceDeploymentInfo:MicoServiceDeploymentInfo)-->()")
+    Optional<MicoServiceDeploymentInfo> findByApplicationAndService(
+        @Param("applicationShortName") String applicationShortName,
+        @Param("applicationVersion") String applicationVersion,
+        @Param("serviceShortName") String serviceShortName,
+        @Param("serviceVersion") String serviceVersion);
     
 }
