@@ -22,6 +22,7 @@ package io.github.ust.mico.core;
 import io.github.ust.mico.core.service.MicoCoreBackgroundTaskFactory;
 import org.junit.ComparisonFailure;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -36,6 +37,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+@Category(IntegrationTests.class)
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class MicoCoreBackgroundTaskFactoryTests {
