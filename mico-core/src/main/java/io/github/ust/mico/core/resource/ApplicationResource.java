@@ -49,11 +49,9 @@ import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO
 import io.github.ust.mico.core.dto.response.MicoServiceResponseDTO;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfoQueryResult;
+import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoLabelRepository;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
@@ -84,6 +82,9 @@ public class ApplicationResource {
 
     @Autowired
     private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
+    
+    @Autowired
+    private MicoLabelRepository labelRepository;
 
     @Autowired
     private MicoKubernetesClient micoKubernetesClient;
@@ -314,33 +315,37 @@ public class ApplicationResource {
                                                                                                      @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                                                      @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName,
                                                                                                      @Valid @RequestBody MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) {
-        // Check whether the corresponding service to update the deployment information for
-        // is available in the database (done via the deployment information relationship)
-        MicoApplication application = getApplicationFromDatabase(shortName, version);
-        if (application.getServiceDeploymentInfos().stream().noneMatch(sdi -> sdi.getService().getShortName().equals(serviceShortName))) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "Service deployment information for service '" + serviceShortName + "' in application '" + shortName
-                    + "' in version '" + version + "' could not be found.");
-        }
-
-        // Search the corresponding deployment information ...
-        MicoServiceDeploymentInfoResponseDTO serviceDeploymentInfoResponseDTO = null;
-        for (MicoServiceDeploymentInfo serviceDeploymentInfo : application.getServiceDeploymentInfos()) {
-            if (serviceDeploymentInfo.getService().getShortName().equals(serviceShortName)) {
-                // ... and update it with the values from the deployment information from the DTO
-                serviceDeploymentInfo.applyValuesFrom(serviceDeploymentInfoDTO);
-                serviceDeploymentInfoResponseDTO = new MicoServiceDeploymentInfoResponseDTO(serviceDeploymentInfo);
-                log.info("Service deployment information for service '{}' in application '{}' in version '{}' has been updated.",
-                    serviceShortName, shortName, version);
-                break;
-            }
-        }
-
-        applicationRepository.save(application);
-
+    	// Check whether application contains service
+    	MicoApplication application = getApplicationFromDatabase(shortName, version);
+    	if (application.getServices().stream().noneMatch(service -> service.getShortName().equals(serviceShortName))) {
+    		throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                "Application '" + shortName + "' '" + version + "' does not include service '" + serviceShortName + "'.");
+    	}
+    	
+    	// Check whether the deployment information for the given application and service exists
+    	Optional<MicoServiceDeploymentInfo> serviceDeploymentInfoOptional = serviceDeploymentInfoRepository.findByApplicationAndService(shortName, version, serviceShortName);
+    	if (!serviceDeploymentInfoOptional.isPresent()) {
+    		throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+    			"Service deployment information for service '" + serviceShortName + "' in application '" + shortName
+                + "' '" + version + "' could not be found.");
+    	}
+    	
+    	// Update the service deployment information in the database
+    	MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(serviceDeploymentInfoOptional.get().applyValuesFrom(serviceDeploymentInfoDTO));
+    	// In case some labels have been removed from the list of labels in the service deployment information,
+    	// the standard save() function of the service deployment information repository will not delete those
+    	// "tangling" (without relationships) labels (nodes), hence the manual clean up.
+    	// TODO: Alternative: use delete + insert instead of update. Decide whether to do so or not.
+    	labelRepository.cleanUp();
+    	// Same goes for the environment variables, ...
+    	// TODO: Clean up environment variables.
+    	// ... and the Kubernetes deployment info.
+    	// TODO: Clean up Kubernetes deployment info.
+    	log.debug("Service deployment information for service '{}' in application '{}' '{}' has been updated.", serviceShortName, shortName, version);
+    	
         // TODO: Update actual Kubernetes deployment (see issue mico#416).
 
-		return ResponseEntity.ok(new Resource<>(serviceDeploymentInfoResponseDTO,
+		return ResponseEntity.ok(new Resource<>(new MicoServiceDeploymentInfoResponseDTO(updatedServiceDeploymentInfo),
 			linkTo(methodOn(ApplicationResource.class).getServiceDeploymentInformation(shortName, version, serviceShortName))
 		        .withSelfRel()));
     }
