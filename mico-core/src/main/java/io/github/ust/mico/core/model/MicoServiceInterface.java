@@ -110,7 +110,7 @@ public class MicoServiceInterface {
     public static MicoServiceInterface valueOf(MicoServiceInterfaceRequestDTO serviceInterfaceDto) {
         return new MicoServiceInterface()
         	.setServiceInterfaceName(serviceInterfaceDto.getServiceInterfaceName())
-        	.setPorts(serviceInterfaceDto.getPorts().stream().map(port -> MicoServicePort.valueOf(port)).collect(Collectors.toList()))
+        	.setPorts(serviceInterfaceDto.getPorts().stream().map(MicoServicePort::valueOf).collect(Collectors.toList()))
         	.setPublicDns(serviceInterfaceDto.getPublicDns())
         	.setDescription(serviceInterfaceDto.getDescription())
         	.setProtocol(serviceInterfaceDto.getProtocol())

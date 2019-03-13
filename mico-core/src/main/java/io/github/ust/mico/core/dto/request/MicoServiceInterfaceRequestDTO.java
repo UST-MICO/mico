@@ -159,7 +159,7 @@ public class MicoServiceInterfaceRequestDTO {
      */
     public MicoServiceInterfaceRequestDTO(MicoServiceInterface serviceInterface) {
     	this.serviceInterfaceName = serviceInterface.getServiceInterfaceName();
-    	this.ports = serviceInterface.getPorts().stream().map(port -> new MicoServicePortRequestDTO(port)).collect(Collectors.toList());
+    	this.ports = serviceInterface.getPorts().stream().map(MicoServicePortRequestDTO::new).collect(Collectors.toList());
     	this.publicDns = serviceInterface.getPublicDns();
     	this.description = serviceInterface.getDescription();
     	this.protocol = serviceInterface.getProtocol();
