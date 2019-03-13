@@ -287,17 +287,24 @@ public class ApplicationResource {
     public ResponseEntity<Resource<MicoServiceDeploymentInfoResponseDTO>> getServiceDeploymentInformation(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                                   @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                                                   @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName) {
-        // Retrieve service deployment info from database if there is any
-        Optional<MicoServiceDeploymentInfoQueryResult> serviceDeploymentInfoQueryResultOptional = serviceDeploymentInfoRepository.findByApplicationAndService(shortName, version, serviceShortName);
-        if (!serviceDeploymentInfoQueryResultOptional.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "Service deployment information for service '" + serviceShortName + "' in application '" + shortName
-                    + "' in version '" + version + "' could not be found.");
-        }
-
-        // Convert to service deployment info DTO and return it
-        MicoServiceDeploymentInfo serviceDeploymentInfo = serviceDeploymentInfoQueryResultOptional.get().getServiceDeploymentInfo();
-        return ResponseEntity.ok(new Resource<>(new MicoServiceDeploymentInfoResponseDTO(serviceDeploymentInfo),
+    	// Check whether application contains service
+    	MicoApplication application = getApplicationFromDatabase(shortName, version);
+    	if (application.getServices().stream().noneMatch(service -> service.getShortName().equals(serviceShortName))) {
+    		throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                "Application '" + shortName + "' '" + version + "' does not include service '" + serviceShortName + "'.");
+    	}
+    	
+    	// Check whether the deployment information for the given application and service exists
+    	Optional<MicoServiceDeploymentInfo> serviceDeploymentInfoOptional = serviceDeploymentInfoRepository.findByApplicationAndService(shortName, version, serviceShortName);
+    	if (!serviceDeploymentInfoOptional.isPresent()) {
+    		throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+    			"Service deployment information for service '" + serviceShortName + "' in application '" + shortName
+                + "' '" + version + "' could not be found.");
+    	}
+    	
+    	// Convert to service deployment info DTO and return it
+    	MicoServiceDeploymentInfoResponseDTO serviceDeploymentInfoResponseDto = new MicoServiceDeploymentInfoResponseDTO(serviceDeploymentInfoOptional.get());
+        return ResponseEntity.ok(new Resource<>(serviceDeploymentInfoResponseDto,
             linkTo(methodOn(ApplicationResource.class)
                 .getServiceDeploymentInformation(shortName, version, serviceShortName)).withSelfRel()));
     }
