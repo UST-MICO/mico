@@ -31,7 +31,10 @@ import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 
 public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<MicoServiceDeploymentInfo, Long> {
-     
+	
+	// TODO: Include 'KubernetesDeploymentInfo' in all find queries via OPTIONAL MATCH.
+	// TODO: Include 'KubernetesDeploymentInfo' in all delete queries via DETACH DELETE.
+	
     /**
      * Retrieves all service deployment information of a particular application.
      * 
@@ -39,10 +42,10 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
      * @param applicationVersion the version of the {@link MicoApplication}.
      * @return a {@link List} of {@link MicoServiceDeploymentInfo} instances.
      */
-    @Query("MATCH (application:MicoApplication)-[:PROVIDES]->(serviceDeploymentInfo:MicoServiceDeploymentInfo)-[:FOR]->(service:MicoService) OPTIONAL MATCH (serviceDeploymentInfo:MicoServiceDeploymentInfo)-[:HAS]->(label:MicoLabel) OPTIONAL MATCH (serviceDeploymentInfo:MicoServiceDeploymentInfo)-[:HAS]->(env:MicoEnvironmentVariable) "
+    @Query("MATCH (application:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(service:MicoService) OPTIONAL MATCH (sdi:MicoServiceDeploymentInfo)-[:HAS]->(label:MicoLabel) OPTIONAL MATCH (sdi:MicoServiceDeploymentInfo)-[:HAS]->(env:MicoEnvironmentVariable) "
         + "WHERE application.shortName = {applicationShortName} AND application.version = {applicationVersion} "
-        + "RETURN (serviceDeploymentInfo:MicoServiceDeploymentInfo)-->()")
-    List<MicoServiceDeploymentInfo> findAllByApplication(
+        + "RETURN (sdi:MicoServiceDeploymentInfo)-->()")
+    public List<MicoServiceDeploymentInfo> findAllByApplication(
         @Param("applicationShortName") String applicationShortName,
         @Param("applicationVersion") String applicationVersion);
     
@@ -54,11 +57,11 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
      * @param serviceShortName the short name of the {@link MicoService}.
      * @return an {@link Optional} of {@link MicoServiceDeploymentInfo}.
      */
-    @Query("MATCH (application:MicoApplication)-[:PROVIDES]->(serviceDeploymentInfo:MicoServiceDeploymentInfo)-[:FOR]->(service:MicoService) OPTIONAL MATCH (serviceDeploymentInfo:MicoServiceDeploymentInfo)-[:HAS]->(label:MicoLabel) OPTIONAL MATCH (serviceDeploymentInfo:MicoServiceDeploymentInfo)-[:HAS]->(env:MicoEnvironmentVariable) "
+    @Query("MATCH (application:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(service:MicoService) OPTIONAL MATCH (sdi:MicoServiceDeploymentInfo)-[:HAS]->(label:MicoLabel) OPTIONAL MATCH (sdi:MicoServiceDeploymentInfo)-[:HAS]->(env:MicoEnvironmentVariable) "
         + "WHERE application.shortName = {applicationShortName} AND application.version = {applicationVersion} "
         + "AND service.shortName = {serviceShortName} "
-        + "RETURN (serviceDeploymentInfo:MicoServiceDeploymentInfo)-->()")
-    Optional<MicoServiceDeploymentInfo> findByApplicationAndService(
+        + "RETURN (sdi:MicoServiceDeploymentInfo)-->()")
+    public Optional<MicoServiceDeploymentInfo> findByApplicationAndService(
         @Param("applicationShortName") String applicationShortName,
         @Param("applicationVersion") String applicationVersion,
         @Param("serviceShortName") String serviceShortName);
@@ -72,13 +75,46 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
      * @param serviceVersion the version of the {@link MicoService}.
      * @return an {@link Optional} of {@link MicoServiceDeploymentInfo}.
      */
-    // TODO: Include 'KubernetesDeploymentInfo' in query via OPTIONAL MATCH
-    @Query("MATCH (application:MicoApplication)-[:PROVIDES]->(serviceDeploymentInfo:MicoServiceDeploymentInfo)-[:FOR]->(service:MicoService) OPTIONAL MATCH (serviceDeploymentInfo:MicoServiceDeploymentInfo)-[:HAS]->(label:MicoLabel) OPTIONAL MATCH (serviceDeploymentInfo:MicoServiceDeploymentInfo)-[:HAS]->(env:MicoEnvironmentVariable) "
+    @Query("MATCH (application:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(service:MicoService) OPTIONAL MATCH (sdi:MicoServiceDeploymentInfo)-[:HAS]->(label:MicoLabel) OPTIONAL MATCH (sdi:MicoServiceDeploymentInfo)-[:HAS]->(env:MicoEnvironmentVariable) "
         + "WHERE application.shortName = {applicationShortName} AND application.version = {applicationVersion} "
         + "AND service.shortName = {serviceShortName} AND service.version = {serviceVersion} "
-        + "RETURN (serviceDeploymentInfo:MicoServiceDeploymentInfo)-->()")
-    Optional<MicoServiceDeploymentInfo> findByApplicationAndService(
+        + "RETURN (sdi:MicoServiceDeploymentInfo)-->()")
+    public Optional<MicoServiceDeploymentInfo> findByApplicationAndService(
         @Param("applicationShortName") String applicationShortName,
+        @Param("applicationVersion") String applicationVersion,
+        @Param("serviceShortName") String serviceShortName,
+        @Param("serviceVersion") String serviceVersion);
+    
+    /**
+     * Delete the deployment for a particular application and service.
+     * 
+     * @param applicationShortName the short name of the {@link MicoApplication}.
+     * @param applicationVersion the version of the {@link MicoApplication}.
+     * @param serviceShortName the short name of the {@link MicoService}.
+     */
+    @Query("MATCH (application:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(service:MicoService) OPTIONAL MATCH (sdi:MicoServiceDeploymentInfo)-[:HAS]->(label:MicoLabel) OPTIONAL MATCH (sdi:MicoServiceDeploymentInfo)-[:HAS]->(env:MicoEnvironmentVariable) "
+    	 + "WHERE application.shortName = {applicationShortName} AND application.version = {applicationVersion} "
+         + "AND service.shortName = {serviceShortName} "
+         + "DETACH DELETE sdi, label, env")
+    public void deleteByApplicationAndService(
+    	@Param("applicationShortName") String applicationShortName,
+        @Param("applicationVersion") String applicationVersion,
+        @Param("serviceShortName") String serviceShortName);
+    
+    /**
+     * Delete the deployment for a particular application and service.
+     * 
+     * @param applicationShortName the short name of the {@link MicoApplication}.
+     * @param applicationVersion the version of the {@link MicoApplication}.
+     * @param serviceShortName the short name of the {@link MicoService}.
+     * @param serviceVersion the version of the {@link MicoService}.
+     */
+    @Query("MATCH (application:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(service:MicoService) OPTIONAL MATCH (sdi:MicoServiceDeploymentInfo)-[:HAS]->(label:MicoLabel) OPTIONAL MATCH (sdi:MicoServiceDeploymentInfo)-[:HAS]->(env:MicoEnvironmentVariable) "
+    	 + "WHERE application.shortName = {applicationShortName} AND application.version = {applicationVersion} "
+         + "AND service.shortName = {serviceShortName} AND service.version = {serviceVersion} "
+         + "DETACH DELETE sdi, label, env")
+    public void deleteByApplicationAndService(
+    	@Param("applicationShortName") String applicationShortName,
         @Param("applicationVersion") String applicationVersion,
         @Param("serviceShortName") String serviceShortName,
         @Param("serviceVersion") String serviceVersion);
