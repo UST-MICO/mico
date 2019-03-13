@@ -23,8 +23,6 @@ import org.neo4j.ogm.annotation.*;
 
 import com.fasterxml.jackson.annotation.*;
 
-import io.github.ust.mico.core.dto.request.MicoServiceDependencyRequestDTO;
-import io.github.ust.mico.core.exception.VersionNotSupportedException;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.*;
 import lombok.experimental.Accessors;
@@ -71,49 +69,5 @@ public class MicoServiceDependency {
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     private MicoService dependedService;
-
-    /**
-     * The minimum version of the depended service
-     * that is supported.
-     */
-    @ApiModelProperty(required = true)
-    private String minVersion;
-
-    /**
-     * The maximum version of the depended service
-     * that is supported.
-     */
-    @ApiModelProperty(required = true)
-    private String maxVersion;
-
-    @JsonIgnore
-    public MicoVersion getMinMicoVersion() throws VersionNotSupportedException {
-        MicoVersion micoVersion = MicoVersion.valueOf(this.minVersion);
-        return micoVersion;
-    }
-
-    @JsonIgnore
-    public MicoVersion getMaxMicoVersion() throws VersionNotSupportedException {
-        MicoVersion micoVersion = MicoVersion.valueOf(this.maxVersion);
-        return micoVersion;
-    }
-
-
-    // ----------------------
-    // -> Static Creators ---
-    // ----------------------
-    
-    /**
-     * Creates a {@code MicoServiceDependency} based on a {@code MicoServiceDependencyRequestDTO}.
-     * 
-     * @param serviceDependencyDto the {@link MicoServiceDependencyRequestDTO}.
-     * @return a {@link MicoServiceDependency}.
-     */
-    public static MicoServiceDependency valueOf(MicoServiceDependencyRequestDTO serviceDependencyDto) {
-        return new MicoServiceDependency()
-        	.setDependedService(MicoService.valueOf(serviceDependencyDto.getDependedService()))
-        	.setMinVersion(serviceDependencyDto.getMinVersion())
-        	.setMaxVersion(serviceDependencyDto.getMaxVersion());
-    }
 
 }

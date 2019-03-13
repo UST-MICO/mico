@@ -60,10 +60,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
 import io.github.ust.mico.core.configuration.CorsConfig;
-import io.github.ust.mico.core.dto.request.MicoServiceDependencyRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
-import io.github.ust.mico.core.dto.response.*;
 import io.github.ust.mico.core.dto.response.status.*;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
@@ -381,7 +379,7 @@ public class ServiceResourceTests {
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print());
 
-        resultDelete.andExpect(status().isCreated());
+        resultDelete.andExpect(status().isNoContent());
     }
 
     @Test
@@ -402,7 +400,7 @@ public class ServiceResourceTests {
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print());
 
-        resultDelete.andExpect(status().isCreated());
+        resultDelete.andExpect(status().isNoContent());
     }
 
     @Test
@@ -663,12 +661,12 @@ public class ServiceResourceTests {
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME_1, VERSION_1_0_1)).willReturn(Optional.of(existingService2));
         given(serviceRepository.save(any(MicoService.class))).willReturn(expectedService);
 
-        final ResultActions result = mvc.perform(post(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + DEPENDEES_SUBPATH)
-            .content(mapper.writeValueAsBytes(new MicoServiceDependencyRequestDTO(newDependency)))
+        final ResultActions result = mvc.perform(post(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION +
+            DEPENDEES_SUBPATH + "/" + newDependency.getDependedService().getShortName() + "/" + newDependency.getDependedService().getVersion())
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print());
 
-        result.andExpect(status().isCreated());
+        result.andExpect(status().isNoContent());
     }
 
     private void prettyPrint(Object object) {

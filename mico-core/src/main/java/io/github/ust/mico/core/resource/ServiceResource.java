@@ -19,29 +19,7 @@
 
 package io.github.ust.mico.core.resource;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
-
-import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import javax.validation.Valid;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Link;
-import org.springframework.hateoas.MediaTypes;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.Resources;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-
 import io.github.ust.mico.core.dto.request.CrawlingInfoRequestDTO;
-import io.github.ust.mico.core.dto.request.MicoServiceDependencyRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphEdgeResponseDTO;
@@ -56,6 +34,25 @@ import io.github.ust.mico.core.service.GitHubCrawler;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.Resources;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import javax.validation.Valid;
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @Slf4j
 @RestController
@@ -64,8 +61,8 @@ public class ServiceResource {
 
     public static final String PATH_VARIABLE_SHORT_NAME = "shortName";
     public static final String PATH_VARIABLE_VERSION = "version";
-    public static final String PATH_DELETE_SHORT_NAME = "shortNameToDelete";
-    public static final String PATH_DELETE_VERSION = "versionToDelete";
+    public static final String PATH_VARIABLE_DEPENDEE_SHORT_NAME = "dependeeShortName";
+    public static final String PATH_VARIABLE_DEPENDEE_VERSION = "dependeeVersion";
     public static final String PATH_VARIABLE_IMPORT = "import";
     public static final String PATH_VARIABLE_GITHUB = "github";
     public static final String PATH_GITHUB_ENDPOINT = "/" + PATH_VARIABLE_IMPORT + "/" + PATH_VARIABLE_GITHUB;
@@ -207,28 +204,25 @@ public class ServiceResource {
     /**
      * Creates a new dependency edge between the Service and the depended service.
      */
-    @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPENDEES)
-    public ResponseEntity<Resource<MicoServiceResponseDTO>> createNewDependee(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                   @PathVariable(PATH_VARIABLE_VERSION) String version,
-                                                                   @Valid @RequestBody MicoServiceDependencyRequestDTO serviceDependencyDto) {
+    @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPENDEES
+        + "/{" + PATH_VARIABLE_DEPENDEE_SHORT_NAME + "}/{" + PATH_VARIABLE_DEPENDEE_VERSION + "}")
+    public ResponseEntity<Void> createNewDependee(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                  @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                  @PathVariable(PATH_VARIABLE_DEPENDEE_SHORT_NAME) String dependeeShortName,
+                                                  @PathVariable(PATH_VARIABLE_DEPENDEE_VERSION) String dependeeVersion) {
         MicoService service = getServiceFromDatabase(shortName, version);
 
-        Optional<MicoService> serviceDependeeOpt = serviceRepository.findByShortNameAndVersion(serviceDependencyDto.getDependedService().getShortName(),
-        	serviceDependencyDto.getDependedService().getVersion());
+        Optional<MicoService> serviceDependeeOpt = serviceRepository.findByShortNameAndVersion(dependeeShortName, dependeeVersion);
         if (!serviceDependeeOpt.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The dependee service was not found!");
         }
 
         // Check if dependency is already set
-        String localShortName = serviceDependencyDto.getDependedService().getShortName();
-        String localVersion = serviceDependencyDto.getDependedService().getVersion();
         boolean dependencyAlreadyExists = (service.getDependencies() != null) && service.getDependencies().stream().anyMatch(
-            dependency -> dependency.getDependedService().getShortName().equals(localShortName)
-                && dependency.getDependedService().getVersion().equals(localVersion));
+            dependency -> dependency.getDependedService().getShortName().equals(dependeeShortName)
+                && dependency.getDependedService().getVersion().equals(dependeeVersion));
         if (dependencyAlreadyExists) {
-            return ResponseEntity
-                .created(linkTo(methodOn(ServiceResource.class).getServiceByShortNameAndVersion(shortName, version)).toUri())
-                .body(new Resource<>(new MicoServiceResponseDTO(service), getServiceLinks(service)));
+            return ResponseEntity.noContent().build();
         }
 
         final MicoServiceDependency processedServiceDependee = new MicoServiceDependency()
@@ -240,51 +234,45 @@ public class ServiceResource {
             processedServiceDependee.getDependedService().getVersion());
 
         service.getDependencies().add(processedServiceDependee);
-        MicoService savedService = serviceRepository.save(service);
+        serviceRepository.save(service);
 
-        return ResponseEntity
-            .created(linkTo(methodOn(ServiceResource.class).getServiceByShortNameAndVersion(shortName, version)).toUri())
-            .body(new Resource<>(new MicoServiceResponseDTO(savedService), getServiceLinks(savedService)));
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPENDEES)
-    public ResponseEntity<Resource<MicoServiceResponseDTO>> deleteAllDependees(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+    public ResponseEntity<Void> deleteAllDependees(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version) {
     	// We only want to delete the relationships (the edges),
     	// not the actual depended services.
         MicoService service = getServiceFromDatabase(shortName, version);
         service.getDependencies().clear();
 
-        MicoService savedService = serviceRepository.save(service);
+        serviceRepository.save(service);
 
-        return ResponseEntity
-            .created(linkTo(methodOn(ServiceResource.class).getServiceByShortNameAndVersion(shortName, version)).toUri())
-            .body(new Resource<>(new MicoServiceResponseDTO(savedService), getServiceLinks(savedService)));
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPENDEES
-        + "/{" + PATH_DELETE_SHORT_NAME + "}/{" + PATH_DELETE_VERSION + "}")
-    public ResponseEntity<Resource<MicoServiceResponseDTO>> deleteDependee(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                @PathVariable(PATH_VARIABLE_VERSION) String version,
-                                                                @PathVariable(PATH_DELETE_SHORT_NAME) String shortNameToDelete,
-                                                                @PathVariable(PATH_DELETE_VERSION) String versionToDelete) {
+        + "/{" + PATH_VARIABLE_DEPENDEE_SHORT_NAME + "}/{" + PATH_VARIABLE_DEPENDEE_VERSION + "}")
+    public ResponseEntity<Void> deleteDependee(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                               @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                               @PathVariable(PATH_VARIABLE_DEPENDEE_SHORT_NAME) String dependeeShortName,
+                                               @PathVariable(PATH_VARIABLE_DEPENDEE_VERSION) String dependeeVersion) {
     	// We only want to delete the relationship (the edge),
     	// not the actual depended service.
         MicoService service = getServiceFromDatabase(shortName, version);
         
         // Check whether dependee to delete exists
-        Optional<MicoService> serviceOptToDelete = serviceRepository.findByShortNameAndVersion(shortNameToDelete, versionToDelete);
+        Optional<MicoService> serviceOptToDelete = serviceRepository.findByShortNameAndVersion(dependeeShortName, dependeeVersion);
         if (!serviceOptToDelete.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service dependee '" + shortNameToDelete + "' '" + versionToDelete + "'  was not found!");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service dependee '" + dependeeShortName + "' '" + dependeeVersion + "'  was not found!");
         }
         MicoService serviceToDelete = serviceOptToDelete.get();
 
         service.getDependencies().removeIf(dependency -> dependency.getDependedService().getId() == serviceToDelete.getId());
-        MicoService savedService = serviceRepository.save(service);
+        serviceRepository.save(service);
 
-        return ResponseEntity
-            .created(linkTo(methodOn(ServiceResource.class).getServiceByShortNameAndVersion(shortName, version)).toUri())
-            .body(new Resource<>(new MicoServiceResponseDTO(savedService), getServiceLinks(savedService)));
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPENDERS)
