@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto.response.status;
+package io.github.ust.mico.core.dto.response.internal;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -32,7 +32,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for a response from Prometheus. It contains a status field and the value field for the CPU load / memory usage.
+ * Internal DTO for a response from Prometheus. It contains a status field and the value field for the CPU load / memory usage.
  */
 @Data
 @NoArgsConstructor

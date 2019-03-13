@@ -24,6 +24,7 @@ import java.util.*;
 
 import javax.validation.constraints.NotNull;
 
+import io.github.ust.mico.core.dto.response.internal.PrometheusResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;

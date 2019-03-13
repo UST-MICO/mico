@@ -27,6 +27,7 @@ import static org.mockito.BDDMockito.*;
 
 import java.util.*;
 
+import io.github.ust.mico.core.dto.response.internal.PrometheusResponseDTO;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
