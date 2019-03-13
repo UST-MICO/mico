@@ -2,10 +2,12 @@ package io.github.ust.mico.core;
 
 import io.github.ust.mico.core.broker.ServiceBroker;
 import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.GitHubCrawler;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
+import io.github.ust.mico.core.util.CollectionUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,8 +17,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 import static io.github.ust.mico.core.TestConstants.*;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
@@ -149,6 +153,45 @@ public class ServiceBrokerTests {
         serviceBroker.deleteAllVersionsOfService(SHORT_NAME_1);
     }
 
+    @Test
+    public void getAllDependersOfService() throws Exception {
+        MicoService service = new MicoService()
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION)
+                .setName(NAME)
+                .setDescription(DESCRIPTION);
 
+        MicoService service1 = new MicoService()
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME)
+                .setDescription(DESCRIPTION_1);
+        MicoService service2 = new MicoService()
+                .setShortName(SHORT_NAME_2)
+                .setVersion(VERSION_1_0_2)
+                .setDescription(DESCRIPTION_2);
+        MicoService service3 = new MicoService()
+                .setShortName(SHORT_NAME_3)
+                .setVersion(VERSION_1_0_3)
+                .setName(NAME)
+                .setDescription(DESCRIPTION_3);
+
+        MicoServiceDependency dependency1 = new MicoServiceDependency().setService(service1).setDependedService(service);
+        MicoServiceDependency dependency2 = new MicoServiceDependency().setService(service2).setDependedService(service);
+        MicoServiceDependency dependency3 = new MicoServiceDependency().setService(service3).setDependedService(service);
+
+        service1.setDependencies(Collections.singletonList(dependency1));
+        service2.setDependencies(Collections.singletonList(dependency2));
+        service3.setDependencies(Collections.singletonList(dependency3));
+
+        given(serviceRepository.findAll(ArgumentMatchers.anyInt())).willReturn(CollectionUtils.listOf(service, service1, service2, service3));
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
+
+        List<MicoService> dependers = serviceBroker.getDependers(service);
+
+        assertThat(dependers).contains(service1);
+        assertThat(dependers).contains(service2);
+        assertThat(dependers).contains(service3);
+    }
 
 }
