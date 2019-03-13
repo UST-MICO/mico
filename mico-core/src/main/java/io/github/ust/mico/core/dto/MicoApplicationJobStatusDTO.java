@@ -22,6 +22,7 @@
  import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
  import io.github.ust.mico.core.model.MicoApplication;
  import io.github.ust.mico.core.model.MicoApplicationJobStatus;
+ import io.github.ust.mico.core.model.MicoBackgroundTask;
  import io.swagger.annotations.ApiModelProperty;
  import io.swagger.annotations.Extension;
  import io.swagger.annotations.ExtensionProperty;
@@ -51,7 +52,7 @@
              @ExtensionProperty(name = "readOnly", value = "true"),
              @ExtensionProperty(name = "description", value = "The aggregated status of jobs from the MicoApplication")})})
      @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-     private String status;
+     private MicoBackgroundTask.Status status;
 
      /**
       * The list of jobs for the {@link MicoApplication}.
@@ -76,7 +77,7 @@
       */
      public static MicoApplicationJobStatusDTO valueOf(MicoApplicationJobStatus applicationJobStatus) {
          return new MicoApplicationJobStatusDTO()
-             .setStatus(applicationJobStatus.getStatus().toString())
+             .setStatus(applicationJobStatus.getStatus())
              .setJobs(applicationJobStatus.getJobList().stream().map(MicoBackgroundTaskDTO::valueOf).collect(Collectors.toList()));
      }
  }
