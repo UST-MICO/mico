@@ -27,7 +27,6 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.util.Patterns;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
@@ -45,7 +44,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 @JsonInclude(Include.NON_NULL)
 public class MicoVersionRequestDTO {
-	
+
     // ----------------------
     // -> Required fields ---
     // ----------------------
@@ -64,17 +63,16 @@ public class MicoVersionRequestDTO {
     @NotEmpty
     @Pattern(regexp = Patterns.SEMANTIC_VERSION_WITH_PREFIX_REGEX, message = Patterns.SEMANTIC_VERSIONING_MESSAGE)
     private String version;
-    
-    
+
+
     // -------------------
     // -> Constructors ---
     // -------------------
-    
+
 	/**
-	 * Creates an instance of {@code MicoServiceRequestDTO} based on a
-	 * {@code MicoService}.
-	 * 
-	 * @param service the {@link MicoService}.
+	 * Creates an instance of {@code MicoVersionRequestDTO} based on the String value {@code version}.
+	 *
+	 * @param version the version.
 	 */
 	public MicoVersionRequestDTO(String version) {
 		this.version = version;

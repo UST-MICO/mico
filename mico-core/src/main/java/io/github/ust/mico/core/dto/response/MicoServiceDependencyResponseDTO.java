@@ -26,7 +26,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.dto.request.MicoServiceDependencyRequestDTO;
 import io.github.ust.mico.core.model.MicoServiceDependency;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -66,6 +65,7 @@ public class MicoServiceDependencyResponseDTO extends MicoServiceDependencyReque
         properties = {
             @ExtensionProperty(name = "title", value = "ID"),
             @ExtensionProperty(name = "x-order", value = "5"),
+            @ExtensionProperty(name = "readOnly", value = "true"),
             @ExtensionProperty(name = "description", value = "The ID of this service dependency.")
         }
     )})
@@ -79,9 +79,9 @@ public class MicoServiceDependencyResponseDTO extends MicoServiceDependencyReque
     
     /**
      * Creates an instance of {@code MicoServiceDependencyResponseDTO} based on a
-     * {@code MicoServiceDeploymentInfo}.
+     * {@code MicoServiceDependency}.
      * 
-     * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.
+     * @param serviceDependency the {@link MicoServiceDependency}.
      */
     public MicoServiceDependencyResponseDTO(MicoServiceDependency serviceDependency) {
     	super(serviceDependency);

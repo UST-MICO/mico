@@ -154,7 +154,7 @@ public class MicoService {
     /**
      * Creates a {@code MicoService} based on a {@code MicoServiceRequestDTO}.
      * 
-     * @param applicationDto the {@link MicoServiceRequestDTO}.
+     * @param serviceDto the {@link MicoServiceRequestDTO}.
      * @return a {@link MicoService}.
      */
     public static MicoService valueOf(MicoServiceRequestDTO serviceDto) {

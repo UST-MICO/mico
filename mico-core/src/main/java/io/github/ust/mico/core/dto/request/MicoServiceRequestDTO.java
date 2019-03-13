@@ -165,7 +165,7 @@ public class MicoServiceRequestDTO {
     private String owner;
 
     /**
-     * The URL that could be used for a git clone,
+     * The URL used for a git clone of a GitHub repository,
      * to clone the current master branch.
      */
     @ApiModelProperty(extensions = {@Extension(
@@ -173,8 +173,8 @@ public class MicoServiceRequestDTO {
         properties = {
             @ExtensionProperty(name = "title", value = "Git Clone URL"),
             @ExtensionProperty(name = "x-order", value = "110"),
-            @ExtensionProperty(name = "description", value = "The URL that could be used for a git clone, to clone " +
-                "the current master branch.")
+            @ExtensionProperty(name = "description", value = "The URL used for a git clone of a GitHub repository, " +
+                "to clone the current master branch.")
         }
     )})
     @URL(host = "github.com", message = "must be a valid GitHub URL")

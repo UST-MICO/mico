@@ -378,12 +378,12 @@ public class ApplicationResource {
     private Resource<MicoApplicationWithServicesResponseDTO> getApplicationWithServicesResponseDTOResourceWithDeploymentStatus(MicoApplication application) {
         MicoApplicationWithServicesResponseDTO dto = new MicoApplicationWithServicesResponseDTO(application);
         dto.setDeploymentStatus(getApplicationDeploymentStatus(application));
-        return new Resource<MicoApplicationWithServicesResponseDTO>(dto, getApplicationLinks(application));
+        return new Resource<>(dto, getApplicationLinks(application));
     }
 
     private Resource<MicoApplicationResponseDTO> getApplicationResponseDTOResourceWithDeploymentStatus(MicoApplication application) {
         MicoApplicationResponseDTO dto = new MicoApplicationResponseDTO(application, getApplicationDeploymentStatus(application));
-        return new Resource<MicoApplicationResponseDTO>(dto, getApplicationLinks(application));
+        return new Resource<>(dto, getApplicationLinks(application));
     }
 
     private MicoApplicationDeploymentStatus getApplicationDeploymentStatus(MicoApplication application) {

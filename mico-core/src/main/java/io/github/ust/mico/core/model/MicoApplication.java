@@ -27,9 +27,6 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
 import io.github.ust.mico.core.exception.VersionNotSupportedException;
 import lombok.AllArgsConstructor;
@@ -53,7 +50,6 @@ public class MicoApplication {
      */
     @Id
     @GeneratedValue
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
 
@@ -131,7 +127,6 @@ public class MicoApplication {
                 .setOwner(applicationDto.getOwner());
     }
     
-    @JsonIgnore
     public MicoVersion getMicoVersion() throws VersionNotSupportedException {
         MicoVersion micoVersion = MicoVersion.valueOf(this.version);
         return micoVersion;

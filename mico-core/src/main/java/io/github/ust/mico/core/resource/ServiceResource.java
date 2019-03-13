@@ -64,7 +64,6 @@ public class ServiceResource {
 
     public static final String PATH_VARIABLE_SHORT_NAME = "shortName";
     public static final String PATH_VARIABLE_VERSION = "version";
-    public static final String PATH_VARIABLE_ID = "id";
     public static final String PATH_DELETE_SHORT_NAME = "shortNameToDelete";
     public static final String PATH_DELETE_VERSION = "versionToDelete";
     public static final String PATH_VARIABLE_IMPORT = "import";
@@ -342,7 +341,7 @@ public class ServiceResource {
         try {
         	log.debug("Start getting versions from URL '{}'.", url);
 			List<Resource<MicoVersionRequestDTO>> versions = crawler.getVersionsFromGitHubRepo(url).stream()
-			    .map(version -> new Resource<MicoVersionRequestDTO>(new MicoVersionRequestDTO(version)))
+			    .map(version -> new Resource<>(new MicoVersionRequestDTO(version)))
 			    .collect(Collectors.toList());
 			return ResponseEntity.ok(new Resources<>(versions, linkTo(methodOn(ServiceResource.class).getVersionsFromGitHub(url)).withSelfRel()));
         } catch (IOException e) {
@@ -401,7 +400,7 @@ public class ServiceResource {
     /**
      * Checks if a service is deployed and throws a ResponseStatusException with the http status CONFLICT (409) if
      * the service is deployed.
-     * @param service Checks if this service is deployed
+     * @param service Checks if this {@link MicoService} is deployed
      * @throws KubernetesResourceException if the service is deployed. It uses the http status CONFLICT
      */
     private void throwConflictIfServiceIsDeployed(MicoService service) throws KubernetesResourceException {
@@ -412,7 +411,7 @@ public class ServiceResource {
     }
     
     protected static Resource<MicoServiceResponseDTO> getServiceResponseDTOResource(MicoService service) {
-		return new Resource<MicoServiceResponseDTO>(new MicoServiceResponseDTO(service), getServiceLinks(service));
+		return new Resource<>(new MicoServiceResponseDTO(service), getServiceLinks(service));
     }
 
     protected static List<Resource<MicoServiceResponseDTO>> getServiceResponseDTOResourcesList(List<MicoService> services) {

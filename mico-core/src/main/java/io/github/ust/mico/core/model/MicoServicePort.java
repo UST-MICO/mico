@@ -39,6 +39,7 @@ import javax.validation.constraints.Min;
 
 /**
  * Represents a basic port with a port number and port type (protocol).
+ * Is used also as a DTO for requests and responses.
  */
 @Data
 @NoArgsConstructor

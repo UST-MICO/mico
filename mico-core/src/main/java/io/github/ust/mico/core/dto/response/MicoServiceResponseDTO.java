@@ -21,8 +21,6 @@ package io.github.ust.mico.core.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonSetter;
-import com.fasterxml.jackson.annotation.Nulls;
 
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
@@ -67,7 +65,6 @@ public class MicoServiceResponseDTO extends MicoServiceRequestDTO {
             @ExtensionProperty(name = "description", value = "Indicates where this service originates from.")
         }
     )})
-    @JsonSetter(nulls = Nulls.SKIP)
     private MicoServiceCrawlingOrigin serviceCrawlingOrigin = MicoServiceCrawlingOrigin.NOT_DEFINED;
     
     

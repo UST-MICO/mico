@@ -19,29 +19,6 @@
 
 package io.github.ust.mico.core.resource;
 
-import static io.github.ust.mico.core.resource.ServiceResource.PATH_VARIABLE_SHORT_NAME;
-import static io.github.ust.mico.core.resource.ServiceResource.PATH_VARIABLE_VERSION;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
-
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import javax.validation.Valid;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Link;
-import org.springframework.hateoas.MediaTypes;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.Resources;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-
 import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
 import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
 import io.fabric8.kubernetes.api.model.Service;
@@ -54,6 +31,27 @@ import io.github.ust.mico.core.persistence.MicoServiceInterfaceRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.Resources;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import javax.validation.Valid;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static io.github.ust.mico.core.resource.ServiceResource.PATH_VARIABLE_SHORT_NAME;
+import static io.github.ust.mico.core.resource.ServiceResource.PATH_VARIABLE_VERSION;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @Slf4j
 @RestController
@@ -172,9 +170,9 @@ public class ServiceInterfaceResource {
      * This is not transactional. At the moment we have only one user. If this changes transactional support
      * is a must. FIXME Add transactional support
      *
-     * @param shortName        the name of the MICO service
-     * @param version          the version of the MICO service
-     * @param serviceInterface the name of the MICO service interface
+     * @param shortName                  the name of the MICO service
+     * @param version                    the version of the MICO service
+     * @param serviceInterfaceRequestDto the {@link MicoServiceInterfaceRequestDTO}
      * @return the created MICO service interface
      */
     @PostMapping(SERVICE_INTERFACE_PATH)
@@ -197,13 +195,13 @@ public class ServiceInterfaceResource {
     }
 
     /**
-     * Updates an existing micoServiceInterface
+     * Updates an existing MICO service interface.
      *
-     * @param shortName
-     * @param version
-     * @param serviceInterfaceName
-     * @param modifiedMicoServiceInterface
-     * @return
+     * @param shortName                         the name of a {@link MicoService}
+     * @param version                           the version a {@link MicoService}
+     * @param serviceInterfaceName              the name of a {@link MicoServiceInterface}
+     * @param updatedServiceInterfaceRequestDto the {@link MicoServiceInterfaceRequestDTO}
+     * @return the updated {@link MicoServiceInterfaceResponseDTO}
      */
     @PutMapping(SERVICE_INTERFACE_PATH + "/{" + PATH_VARIABLE_SERVICE_INTERFACE_NAME + "}")
     public ResponseEntity<Resource<MicoServiceInterfaceResponseDTO>> updateServiceInterface(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
@@ -246,7 +244,7 @@ public class ServiceInterfaceResource {
     }
     
     protected Resource<MicoServiceInterfaceResponseDTO> getServiceInterfaceResponseDTOResource(String serviceShortName, String serviceVersion, MicoServiceInterface serviceInterface) {
-		return new Resource<MicoServiceInterfaceResponseDTO>(new MicoServiceInterfaceResponseDTO(serviceInterface), getServiceInterfaceLinks(serviceInterface, serviceShortName, serviceVersion));
+		return new Resource<>(new MicoServiceInterfaceResponseDTO(serviceInterface), getServiceInterfaceLinks(serviceInterface, serviceShortName, serviceVersion));
     }
 
     protected List<Resource<MicoServiceInterfaceResponseDTO>> getServiceInterfaceResponseDTOResourcesList(String serviceShortName, String serviceVersion, List<MicoServiceInterface> serviceInterfaces) {

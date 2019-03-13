@@ -19,6 +19,7 @@
 
 package io.github.ust.mico.core.dto.response.status;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -68,5 +69,5 @@ public class MicoServiceInterfaceStatusResponseDTO {
             @ExtensionProperty(name = "description", value = "List of external IP addresses of this MicoServiceInterface.")
         }
     )})
-    private List<String> externalIps;
+    private List<String> externalIps = new ArrayList<>();
 }

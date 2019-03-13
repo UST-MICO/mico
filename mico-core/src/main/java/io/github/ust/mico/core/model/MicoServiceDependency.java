@@ -19,9 +19,6 @@
 
 package io.github.ust.mico.core.model;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-
 import org.neo4j.ogm.annotation.*;
 
 import com.fasterxml.jackson.annotation.*;
@@ -47,7 +44,6 @@ public class MicoServiceDependency {
      */
     @Id
     @GeneratedValue
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
 
@@ -63,7 +59,6 @@ public class MicoServiceDependency {
     @StartNode
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    @Valid
     private MicoService service;
 
     /**
@@ -75,8 +70,6 @@ public class MicoServiceDependency {
     @EndNode
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
-    @NotNull
-    @Valid
     private MicoService dependedService;
 
     /**
@@ -113,7 +106,7 @@ public class MicoServiceDependency {
     /**
      * Creates a {@code MicoServiceDependency} based on a {@code MicoServiceDependencyRequestDTO}.
      * 
-     * @param applicationDto the {@link MicoServiceDependencyRequestDTO}.
+     * @param serviceDependencyDto the {@link MicoServiceDependencyRequestDTO}.
      * @return a {@link MicoServiceDependency}.
      */
     public static MicoServiceDependency valueOf(MicoServiceDependencyRequestDTO serviceDependencyDto) {

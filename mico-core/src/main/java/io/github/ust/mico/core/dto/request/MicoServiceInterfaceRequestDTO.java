@@ -29,8 +29,6 @@ import javax.validation.constraints.Pattern;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonSetter;
-import com.fasterxml.jackson.annotation.Nulls;
 
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoServiceInterface;
@@ -114,20 +112,17 @@ public class MicoServiceInterfaceRequestDTO {
     /**
      * Human readable description of this service interface,
      * e.g., the functionality provided.
-     * {@code null} values are skipped.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Description"),
-            @ExtensionProperty(name = "default", value = ""),
             @ExtensionProperty(name = "x-order", value = "110"),
             @ExtensionProperty(name = "description", value = "Human readable description of this service interface.\n " +
                 "Null values are skipped.")
         }
     )})
-    @JsonSetter(nulls = Nulls.SKIP)
-    private String description = "";
+    private String description;
 
     /**
      * The protocol of this interface, e.g., HTTPS.

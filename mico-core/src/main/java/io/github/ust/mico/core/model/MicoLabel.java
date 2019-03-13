@@ -19,7 +19,6 @@
 
 package io.github.ust.mico.core.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.util.Patterns;
 import io.swagger.annotations.ApiModelProperty;
@@ -38,13 +37,13 @@ import java.util.Map;
  * Represents a simple key-value pair label.
  * Necessary since Neo4j does not allow to persist
  * {@link Map} implementations.
+ * Is used also as a DTO for requests and responses.
  *
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class MicoLabel {
 
     /**

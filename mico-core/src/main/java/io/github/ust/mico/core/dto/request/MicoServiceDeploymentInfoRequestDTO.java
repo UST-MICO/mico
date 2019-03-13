@@ -24,7 +24,6 @@ import java.util.List;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
-import javax.validation.constraints.PositiveOrZero;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSetter;
@@ -56,6 +55,7 @@ public class MicoServiceDeploymentInfoRequestDTO {
 	
     /**
      * Number of desired instances. Defaults to 1.
+     * {@code null} is ignored.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -69,7 +69,8 @@ public class MicoServiceDeploymentInfoRequestDTO {
         }
     )})
     @Positive(message = "must be at least one replica")
-    private int replicas;
+    @JsonSetter(nulls = Nulls.SKIP)
+    private int replicas = 1;
 
     /**
      * Those labels are key-value pairs that are attached to the deployment
@@ -116,7 +117,7 @@ public class MicoServiceDeploymentInfoRequestDTO {
         }
     )})
     @JsonSetter(nulls = Nulls.SKIP)
-    private ImagePullPolicy imagePullPolicy;
+    private ImagePullPolicy imagePullPolicy = ImagePullPolicy.ALWAYS;
 
     /**
      * Restart policy for all containers.

@@ -103,7 +103,7 @@ public class MicoServiceInterface {
     /**
      * Creates a {@code MicoServiceInterface} based on a {@code MicoServiceInterfaceRequestDTO}.
      * 
-     * @param applicationDto the {@link MicoServiceInterfaceRequestDTO}.
+     * @param serviceInterfaceDto the {@link MicoServiceInterfaceRequestDTO}.
      * @return a {@link MicoServiceInterface}.
      */
     public static MicoServiceInterface valueOf(MicoServiceInterfaceRequestDTO serviceInterfaceDto) {
