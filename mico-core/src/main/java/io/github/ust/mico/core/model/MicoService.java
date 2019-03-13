@@ -100,7 +100,7 @@ public class MicoService {
      * The list of interfaces this service provides.
      * Is read only. Use special API for updating.
      */
-    @Relationship(type = "PROVIDES_INTERFACES", direction = Relationship.UNDIRECTED)
+    @Relationship(type = "PROVIDES", direction = Relationship.UNDIRECTED)
     private List<MicoServiceInterface> serviceInterfaces = new ArrayList<>();
 
     /**

@@ -47,10 +47,10 @@ public interface MicoServiceRepository extends Neo4jRepository<MicoService, Long
     List<MicoService> findAllByApplication(@Param("applicationShortName") String applicationShortName, @Param("applicationVersion") String applicationVersion);
 
     // Doesn't this belong in the MicoServiceInterfaceRepository?
-    @Query("MATCH (service:MicoService)-[:PROVIDES_INTERFACES]->(interface:MicoServiceInterface)-[:PROVIDES_PORTS]->(port:MicoServicePort) WHERE service.shortName = {shortName} AND service.version = {version} AND interface.serviceInterfaceName = {serviceInterfaceName} DETACH DELETE interface, port")
+    @Query("MATCH (service:MicoService)-[:PROVIDES]->(interface:MicoServiceInterface)-[:PROVIDES]->(port:MicoServicePort) WHERE service.shortName = {shortName} AND service.version = {version} AND interface.serviceInterfaceName = {serviceInterfaceName} DETACH DELETE interface, port")
     void deleteInterfaceOfServiceByName(@Param("serviceInterfaceName") String serviceInterfaceName, @Param("shortName") String shortName, @Param("version") String version);
 
-    @Query("MATCH (service:MicoService) WHERE service.shortName = {shortName} AND service.version = {version} WITH service OPTIONAL MATCH (service)-[:PROVIDES_INTERFACES]->(interface:MicoServiceInterface) WITH service, interface OPTIONAL MATCH (interface)-[:PROVIDES_PORTS]->(port:MicoServicePort) DETACH DELETE service, interface, port")
+    @Query("MATCH (service:MicoService) WHERE service.shortName = {shortName} AND service.version = {version} WITH service OPTIONAL MATCH (service)-[:PROVIDES]->(interface:MicoServiceInterface) WITH service, interface OPTIONAL MATCH (interface)-[:PROVIDES]->(port:MicoServicePort) DETACH DELETE service, interface, port")
     void deleteServiceByShortNameAndVersion(@Param("shortName") String shortName, @Param("version") String version);
     
     /**
