@@ -26,14 +26,17 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.*;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.UIDUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -85,13 +88,13 @@ public class MicoKubernetesClient {
 
     private final MicoKubernetesConfig micoKubernetesConfig;
     private final KubernetesClient kubernetesClient;
-    private final MicoServiceRepository serviceRepository;
+    private final MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
 
     @Autowired
-    public MicoKubernetesClient(MicoKubernetesConfig micoKubernetesConfig, MicoServiceRepository serviceRepository,
+    public MicoKubernetesClient(MicoKubernetesConfig micoKubernetesConfig, MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository,
                                 KubernetesClient kubernetesClient) {
         this.micoKubernetesConfig = micoKubernetesConfig;
-        this.serviceRepository = serviceRepository;
+        this.serviceDeploymentInfoRepository = serviceDeploymentInfoRepository;
         this.kubernetesClient = kubernetesClient;
     }
 
@@ -240,22 +243,118 @@ public class MicoKubernetesClient {
      * Checks if a MICO application is already deployed.
      *
      * @param micoApplication the {@link MicoApplication}
-     * @return if true the application is deployed.
-     * @throws KubernetesResourceException if there is an error while retrieving the Kubernetes objects
+     * @return {@code true} if the application is deployed.
      */
-    public boolean isApplicationDeployed(MicoApplication micoApplication) throws KubernetesResourceException {
+    public boolean isApplicationDeployed(MicoApplication micoApplication) {
         boolean result = false;
 
-        for (MicoService micoService : serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion())) {
-            if (isMicoServiceDeployed(micoService)) {
-                result = true;
-                break;
+        List<MicoServiceDeploymentInfo> serviceDeploymentInfos = serviceDeploymentInfoRepository.findAllByApplication(
+            micoApplication.getShortName(), micoApplication.getVersion());
+
+        int expectedNumberOfServiceDeployments = serviceDeploymentInfos.size();
+        if (expectedNumberOfServiceDeployments > 0) {
+            int actualNumberOfServiceDeployments = 0;
+            for (MicoServiceDeploymentInfo serviceDeploymentInfo : serviceDeploymentInfos) {
+                MicoService micoService = serviceDeploymentInfo.getService();
+                if (serviceDeploymentInfo.getKubernetesDeploymentInfo() == null) {
+                    log.warn("There is no Kubernetes deployment information set for MicoService '{}' '{}'.",
+                        micoService.getShortName(), micoService.getVersion());
+                    continue;
+                }
+
+                // Check if the stored information are still valid.
+                KubernetesDeploymentInfo kubernetesDeploymentInfo = updateKubernetesDeploymentInfo(serviceDeploymentInfo);
+                if (kubernetesDeploymentInfo != null) {
+                    log.debug("MicoService '{}' '{}' is deployed to the Kubernetes namespace '{}' " +
+                            "with the Kubernetes Deployment '{}' and the Kubernetes Services '{}'.",
+                        micoService.getShortName(), micoService.getVersion(), kubernetesDeploymentInfo.getNamespace(),
+                        kubernetesDeploymentInfo.getDeploymentName(), kubernetesDeploymentInfo.getServiceNames());
+                    actualNumberOfServiceDeployments++;
+                }
             }
+            if (actualNumberOfServiceDeployments == expectedNumberOfServiceDeployments) {
+                result = true;
+            }
+        } else {
+            log.warn("There are no service deployment information for MicoApplication '{}' '{}'",
+                micoApplication.getShortName(), micoApplication.getVersion());
         }
+
         String deploymentStatus = result ? "deployed" : "not deployed";
         log.info("MicoApplication '{}' in version '{}' is {}.",
             micoApplication.getShortName(), micoApplication.getVersion(), deploymentStatus);
         return result;
+    }
+
+    /**
+     * Checks if the current {@link KubernetesDeploymentInfo} of the provided {@link MicoServiceDeploymentInfo}
+     * is up to date, stores the updated deployment information in the database and returns it.
+     *
+     * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}
+     * @return the updated {@link KubernetesDeploymentInfo}. Is {@code null} if there is no deployment.
+     */
+    // TODO: Use caching
+    private KubernetesDeploymentInfo updateKubernetesDeploymentInfo(MicoServiceDeploymentInfo serviceDeploymentInfo) {
+
+        MicoService micoService = serviceDeploymentInfo.getService();
+        KubernetesDeploymentInfo currentKubernetesDeploymentInfo = serviceDeploymentInfo.getKubernetesDeploymentInfo();
+
+        String namespace = currentKubernetesDeploymentInfo.getNamespace();
+        String deploymentName = currentKubernetesDeploymentInfo.getDeploymentName();
+        List<String> serviceNames = currentKubernetesDeploymentInfo.getServiceNames();
+
+        if (namespace == null) {
+            throw new IllegalArgumentException("There is no namespace set for MicoService " +
+                "'" + micoService.getShortName() + "' '" + micoService.getVersion() + "'!");
+        }
+        if (deploymentName == null) {
+            throw new IllegalArgumentException("There is no deployment name set for MicoService " +
+                "'" + micoService.getShortName() + "' '" + micoService.getVersion() + "'!");
+        }
+        if (serviceNames == null) {
+            throw new IllegalArgumentException("There are no Kubernetes Services set for MicoService " +
+                "'" + micoService.getShortName() + "' '" + micoService.getVersion() + "'!");
+        }
+
+        Deployment actualKubernetesDeployment = null;
+        List<Service> actualKubernetesServices = new ArrayList<>();
+        if (kubernetesClient.namespaces().withName(namespace).get() != null) {
+            actualKubernetesDeployment = kubernetesClient.apps().deployments().inNamespace(namespace).withName(deploymentName).get();
+            if (actualKubernetesDeployment == null) {
+                log.warn("Deployment '{}' of MicoService '{}' '{}' doesn't exist anymore!",
+                    deploymentName, micoService.getShortName(), micoService.getVersion());
+            }
+
+            for (String serviceName : serviceNames) {
+                Service actualKubernetesService = kubernetesClient.services().inNamespace(namespace).withName(serviceName).get();
+                if (actualKubernetesService != null) {
+                    actualKubernetesServices.add(actualKubernetesService);
+                } else {
+                    log.warn("Kubernetes service '{}' of MicoService '{}' '{}' doesn't exist anymore",
+                        serviceName, micoService.getShortName(), micoService.getVersion());
+                }
+            }
+        } else {
+            log.warn("Namespace '{}' of deployment of MicoService '{}' '{}' doesn't exist anymore!",
+                namespace, micoService.getShortName(), micoService.getVersion());
+        }
+
+        KubernetesDeploymentInfo updatedKubernetesDeploymentInfo = null;
+        // Consider a deployment only as valid if there is a Kubernetes Deployment and at least one Kubernetes Service.
+        boolean isDeploymentValid = actualKubernetesDeployment != null && actualKubernetesServices.size() > 0;
+        if (isDeploymentValid) {
+            updatedKubernetesDeploymentInfo = new KubernetesDeploymentInfo()
+                .setNamespace(namespace)
+                .setDeploymentName(actualKubernetesDeployment.getMetadata().getName())
+                .setServiceNames(actualKubernetesServices.stream().map(svc -> svc.getMetadata().getName()).collect(Collectors.toList()));
+        } else {
+            log.warn("Actual Kubernetes deployment of MicoService  '{}' '{}' is not valid!",
+                micoService.getShortName(), micoService.getVersion());
+        }
+        serviceDeploymentInfo.setKubernetesDeploymentInfo(updatedKubernetesDeploymentInfo);
+        serviceDeploymentInfoRepository.save(serviceDeploymentInfo);
+
+        return updatedKubernetesDeploymentInfo;
     }
 
 
@@ -273,7 +372,7 @@ public class MicoKubernetesClient {
             result = true;
         }
         String deploymentStatus = result ? "deployed" : "not deployed";
-        log.info("MicoService '{}' in version '{}' is {}.",
+        log.debug("MicoService '{}' in version '{}' is {}.",
             micoService.getShortName(), micoService.getVersion(), deploymentStatus);
         return result;
     }
@@ -284,7 +383,8 @@ public class MicoKubernetesClient {
      * @param micoService the {@link MicoService}
      * @return an {@link Optional<Deployment>} with the {@link Deployment} of the Kubernetes service, or an empty {@link Optional<Deployment>} if there is no Kubernetes deployment of the {@link MicoService}.
      */
-    public Optional<Deployment> getDeploymentOfMicoService(MicoService micoService) throws KubernetesResourceException {
+    public Optional<Deployment> getDeploymentOfMicoService(MicoService micoService) throws
+        KubernetesResourceException {
         Map<String, String> labels = CollectionUtils.mapOf(
             LABEL_NAME_KEY, micoService.getShortName(),
             LABEL_VERSION_KEY, micoService.getVersion()
@@ -314,9 +414,11 @@ public class MicoKubernetesClient {
      *
      * @param micoService              the {@link MicoService}
      * @param micoServiceInterfaceName the name of a {@link MicoServiceInterface}
-     * @return an {@link Optional<Service>} with the Kubernetes {@link Service}, or an emtpy {@link Optional<Service>} if there is no Kubernetes deployment of the {@link Service}.
+     * @return an {@link Optional<Service>} with the Kubernetes {@link Service},
+     * or an empty {@link Optional<Service>} if there is no Kubernetes {@link Service} for this {@link MicoServiceInterface}.
      */
-    public Optional<Service> getInterfaceByNameOfMicoService(MicoService micoService, String micoServiceInterfaceName) throws KubernetesResourceException {
+    public Optional<Service> getInterfaceByNameOfMicoService(MicoService micoService, String
+        micoServiceInterfaceName) throws KubernetesResourceException {
         Map<String, String> labels = CollectionUtils.mapOf(
             LABEL_NAME_KEY, micoService.getShortName(),
             LABEL_VERSION_KEY, micoService.getVersion(),

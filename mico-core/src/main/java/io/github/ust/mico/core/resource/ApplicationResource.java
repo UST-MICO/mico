@@ -421,14 +421,9 @@ public class ApplicationResource {
     }
 
     private MicoApplicationDeploymentStatus getApplicationDeploymentStatus(MicoApplication application) {
-        try {
-        	if (micoKubernetesClient.isApplicationDeployed(application)) {
-        		return MicoApplicationDeploymentStatus.DEPLOYED;
-        	}
-        } catch (KubernetesResourceException e) {
-            log.debug(e.getMessage(), e);
-        }
-        return MicoApplicationDeploymentStatus.NOT_DEPLOYED;
+        return micoKubernetesClient.isApplicationDeployed(application)
+            ? MicoApplicationDeploymentStatus.DEPLOYED
+            : MicoApplicationDeploymentStatus.NOT_DEPLOYED;
     }
 
     private Iterable<Link> getApplicationLinks(MicoApplication application) {
