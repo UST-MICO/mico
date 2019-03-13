@@ -32,7 +32,9 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
  */
 public class PrometheusValueDeserializer extends StdDeserializer<Integer> {
 
-    public PrometheusValueDeserializer() {
+	private static final long serialVersionUID = 8170187864990259257L;
+
+	public PrometheusValueDeserializer() {
         this(null);
     }
 
