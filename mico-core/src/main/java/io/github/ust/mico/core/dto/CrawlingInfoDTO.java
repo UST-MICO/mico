@@ -77,7 +77,7 @@ public class CrawlingInfoDTO {
 
 
     /**
-     * The path to the dockerfile must be relative to the root folder of the git repository
+     * The path to the Dockerfile must be relative to the root folder of the git repository
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
