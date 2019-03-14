@@ -148,7 +148,10 @@ public class ApplicationResource {
                 "Version of the provided application does not match the request parameter");
         }
         MicoApplication existingApplication = getApplicationFromDatabase(shortName, version);
-        MicoApplication updatedApplication = applicationRepository.save(MicoApplication.valueOf(applicationRequestDto).setId(existingApplication.getId()));
+        MicoApplication updatedApplication = applicationRepository.save(MicoApplication.valueOf(applicationRequestDto)
+        	.setId(existingApplication.getId())
+        	.setServices(existingApplication.getServices())
+        	.setServiceDeploymentInfos(existingApplication.getServiceDeploymentInfos()));
 
         return ResponseEntity.ok(getApplicationResponseDTOResourceWithDeploymentStatus(updatedApplication));
     }
