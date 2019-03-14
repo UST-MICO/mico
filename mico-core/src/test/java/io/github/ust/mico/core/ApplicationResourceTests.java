@@ -289,6 +289,7 @@ public class ApplicationResourceTests {
             .andDo(print())
             .andExpect(jsonPath(SHORT_NAME_PATH, is(existingApplication.getShortName())))
             .andExpect(jsonPath(VERSION_PATH, is(existingApplication.getVersion())))
+            .andExpect(jsonPath(SERVICE_LIST_PATH, hasSize(2)))
             .andExpect(status().isCreated())
             .andReturn();
     }
@@ -431,7 +432,8 @@ public class ApplicationResourceTests {
             .andDo(print())
             .andExpect(jsonPath(DESCRIPTION_PATH, is(updatedApplication.getDescription())))
             .andExpect(jsonPath(SHORT_NAME_PATH, is(updatedApplication.getShortName())))
-            .andExpect(jsonPath(VERSION_PATH, is(updatedApplication.getVersion())));
+            .andExpect(jsonPath(VERSION_PATH, is(updatedApplication.getVersion())))
+            .andExpect(jsonPath(SERVICE_LIST_PATH, hasSize(0)));
 
         resultUpdate.andExpect(status().isOk());
     }
@@ -478,7 +480,11 @@ public class ApplicationResourceTests {
             .andExpect(jsonPath(DESCRIPTION_PATH, is(updatedApplication.getDescription())))
             .andExpect(jsonPath(SHORT_NAME_PATH, is(updatedApplication.getShortName())))
             .andExpect(jsonPath(VERSION_PATH, is(updatedApplication.getVersion())))
-            .andExpect(jsonPath(NAME_PATH, is(updatedApplication.getName())));
+            .andExpect(jsonPath(NAME_PATH, is(updatedApplication.getName())))
+            .andExpect(jsonPath(SERVICE_LIST_PATH, hasSize(1)))
+            .andExpect(jsonPath(SERVICE_LIST_PATH + "[0].shortName", is(SERVICE_SHORT_NAME)))
+            .andExpect(jsonPath(SERVICE_LIST_PATH + "[0].version", is(SERVICE_VERSION)))
+            .andExpect(jsonPath(SERVICE_LIST_PATH + "[0].name", is(NAME)));
 
         resultUpdate.andExpect(status().isOk());
     }
@@ -487,7 +493,8 @@ public class ApplicationResourceTests {
     public void promoteApplication() throws Exception {
         MicoService service = new MicoService()
             .setShortName(SERVICE_SHORT_NAME)
-            .setVersion(SERVICE_VERSION);
+            .setVersion(SERVICE_VERSION)
+            .setName(NAME);
 
         MicoApplication existingApplication = new MicoApplication()
             .setId(ID)
@@ -515,7 +522,11 @@ public class ApplicationResourceTests {
             .andDo(print())
             .andExpect(jsonPath(DESCRIPTION_PATH, is(updatedApplication.getDescription())))
             .andExpect(jsonPath(SHORT_NAME_PATH, is(updatedApplication.getShortName())))
-            .andExpect(jsonPath(VERSION_PATH, is(newVersion)));
+            .andExpect(jsonPath(VERSION_PATH, is(newVersion)))
+            .andExpect(jsonPath(SERVICE_LIST_PATH, hasSize(1)))
+            .andExpect(jsonPath(SERVICE_LIST_PATH + "[0].shortName", is(SERVICE_SHORT_NAME)))
+            .andExpect(jsonPath(SERVICE_LIST_PATH + "[0].version", is(SERVICE_VERSION)))
+            .andExpect(jsonPath(SERVICE_LIST_PATH + "[0].name", is(NAME)));
 
         resultUpdate.andExpect(status().isOk());
     }
