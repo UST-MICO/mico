@@ -76,7 +76,7 @@ public class MicoServiceDeploymentInfo {
 
     /**
      * Those labels are key-value pairs that are attached to the deployment
-     * of this service. Intended to be used to specify identifying attributes
+     * of this {@link MicoService}. Intended to be used to specify identifying attributes
      * that are meaningful and relevant to users, but do not directly imply
      * semantics to the core system. Labels can be used to organize and to select
      * subsets of objects. Labels can be attached to objects at creation time and
@@ -93,6 +93,15 @@ public class MicoServiceDeploymentInfo {
     
 //    @Relationship(type = "HAS")
 //    private List<MicoEnvironmentVariable> environmentVariables = new ArrayList<>();
+
+    /**
+     * Environment variables as key-value pairs that are attached to the deployment
+     * of this {@link MicoService}. These environment values can be used by the deployed
+     * {@link MicoService} during runtime. This could be useful to pass information to the
+     * {@link MicoService} that is not known during design time or is likely to change.
+     * Example could be an URL to another {@link MicoService} or an external service.
+     */
+    private List<MicoEnvironmentVariable> environmentVariables = new ArrayList<>();
 
     /**
      * Indicates whether and when to pull the image.
@@ -120,6 +129,7 @@ public class MicoServiceDeploymentInfo {
     public MicoServiceDeploymentInfo applyValuesFrom(MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) {
         return setReplicas(serviceDeploymentInfoDTO.getReplicas())
             .setLabels(serviceDeploymentInfoDTO.getLabels())
+            .setEnvironmentVariables(serviceDeploymentInfoDTO.getEnvironmentVariables())
             .setImagePullPolicy(serviceDeploymentInfoDTO.getImagePullPolicy())
             .setRestartPolicy(serviceDeploymentInfoDTO.getRestartPolicy());
     }

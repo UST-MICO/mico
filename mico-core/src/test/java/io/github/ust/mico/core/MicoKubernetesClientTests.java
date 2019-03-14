@@ -41,6 +41,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static io.github.ust.mico.core.TestConstants.*;
 import static org.junit.Assert.*;
@@ -78,17 +79,44 @@ public class MicoKubernetesClientTests {
     public void creationOfMicoServiceWorks() throws KubernetesResourceException {
         assertEquals(0, mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems().size());
 
-        MicoService micoServiceWithoutInterface = getMicoServiceWithoutInterface();
+        MicoService micoService = getMicoServiceWithoutInterface();
         MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo();
-        micoKubernetesClient.createMicoService(micoServiceWithoutInterface, deploymentInfo);
+        micoKubernetesClient.createMicoService(micoService, deploymentInfo);
 
         assertEquals(1, mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems().size());
 
         Deployment actualDeployment = mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems().get(0);
         assertNotNull(actualDeployment);
         assertTrue("Name of Kubernetes Deployment does not start with short name of MicoService",
-            actualDeployment.getMetadata().getName().startsWith(micoServiceWithoutInterface.getShortName()));
+            actualDeployment.getMetadata().getName().startsWith(micoService.getShortName()));
         assertEquals(testNamespace, actualDeployment.getMetadata().getNamespace());
+    }
+
+    @Test
+    public void creationOfMicoServiceWithEnvironmentVariablesWorks() throws KubernetesResourceException {
+
+        assertEquals(0, mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems().size());
+
+        MicoApplication micoApplication = new MicoApplication()
+            .setId(ID)
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(NAME);
+        MicoService micoService = getMicoServiceWithoutInterface();
+        MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo()
+            .setApplication(micoApplication)
+            .setService(micoService)
+            .setEnvironmentVariables(CollectionUtils.listOf(new MicoEnvironmentVariable("NAME", "VALUE")));
+
+        micoKubernetesClient.createMicoService(micoService, deploymentInfo);
+
+        assertEquals(1, mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems().size());
+
+        Deployment actualDeployment = mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems().get(0);
+        assertNotNull(actualDeployment);
+        assertEquals("Environment variables do not match expected",
+            deploymentInfo.getEnvironmentVariables(), actualDeployment.getSpec().getTemplate().getSpec().getContainers().get(0).getEnv().stream().map(
+                envVar -> new MicoEnvironmentVariable(envVar.getName(), envVar.getValue())).collect(Collectors.toList()));
     }
 
     @Test
