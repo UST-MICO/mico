@@ -39,6 +39,7 @@ export class MicoFormComponent implements OnInit, OnChanges {
     @Input() modelUrl: string;
     @Input() filter: string[] = [];
     @Input() isBlacklist: boolean = false;
+    @Input() onlyRequired: boolean = false;
     @Input() debug: boolean = false;
     @Input() set startData(data: { [prop: string]: any }) {
         this._startData = data;
@@ -66,12 +67,16 @@ export class MicoFormComponent implements OnInit, OnChanges {
     ngOnInit() { }
 
     ngOnChanges(changes: SimpleChanges) {
-        if (changes.modelUrl != null || changes.filter != null || changes.isBlacklist != null) {
+        if (changes.modelUrl != null || changes.filter != null || changes.isBlacklist != null || changes.onlyRequired != null) {
 
-            this.models.getModel(this.modelUrl).pipe(
+            let modelObservable = this.models.getModel(this.modelUrl).pipe(
                 map(this.models.filterModel(this.filter, this.isBlacklist)),
                 first(),
-            ).subscribe(model => {
+            );
+            if (this.onlyRequired) {
+                modelObservable = modelObservable.pipe(map(this.models.onlyRequired));
+            }
+            modelObservable.subscribe(model => {
                 const props = [];
                 if (model.properties != null) {
                     for (const key in model.properties) {
