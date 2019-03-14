@@ -112,9 +112,8 @@ public class DeploymentResourceTests {
         service.setDockerImageUri(TestConstants.IntegrationTest.DOCKER_IMAGE_URI);
 
         MicoApplication application = getTestApplication();
-        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
-            .setApplication(application)
-            .setService(service));
+        application.getServices().add(service);
+        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(service));
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(serviceRepository.save(any(MicoService.class))).willReturn(service);

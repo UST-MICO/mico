@@ -149,13 +149,11 @@ public class MicoStatusServiceTest {
                     .setServiceInterfaceName(SERVICE_INTERFACE_NAME)
             ));
 
-        micoApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
-            .setApplication(micoApplication)
-            .setService(micoService));
+        micoApplication.getServices().add(micoService);
+        micoApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(micoService));
 
-        otherMicoApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
-            .setApplication(otherMicoApplication)
-            .setService(micoService));
+        otherMicoApplication.getServices().add(micoService);
+        otherMicoApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(micoService));
 
         int availableReplicas = 1;
         int replicas = 1;
