@@ -110,7 +110,7 @@ public class MicoServiceDeploymentInfoRequestDTO {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Environment Variables"),
-            @ExtensionProperty(name = "x-order", value = "55"),
+            @ExtensionProperty(name = "x-order", value = "45"),
             @ExtensionProperty(name = "description", value = "Environment variables as key-value pairs that are attached to the deployment " +
                 "of this MicoService. These environment values can be used by the deployed " +
                 "MicoService during runtime. This could be useful to pass information to the " +

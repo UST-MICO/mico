@@ -176,7 +176,8 @@ public class ApplicationResource {
         application.setId(null);
         application.getServiceDeploymentInfos().forEach(sdi -> sdi.setId(null));
         application.getServiceDeploymentInfos().forEach(sdi -> sdi.getLabels().forEach(label -> label.setId(null)));
-        // TODO: Also clear ids for environment variables and Kubernetes deployment information.
+        application.getServiceDeploymentInfos().forEach(sdi -> sdi.getEnvironmentVariables().forEach(envVar -> envVar.setId(null)));
+        // TODO: Also clear ids for Kubernetes deployment information.
 
         // Save the new (promoted) application in the database.
         MicoApplication updatedApplication = applicationRepository.save(application);
@@ -349,7 +350,8 @@ public class ApplicationResource {
     	}
     	
     	// Update the service deployment information in the database
-    	MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(serviceDeploymentInfoOptional.get().applyValuesFrom(serviceDeploymentInfoDTO));
+    	MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(
+    	    serviceDeploymentInfoOptional.get().applyValuesFrom(serviceDeploymentInfoDTO));
     	// In case some labels have been removed from the list of labels in the service deployment information,
     	// the standard save() function of the service deployment information repository will not delete those
     	// "tangling" (without relationships) labels (nodes), hence the manual clean up.

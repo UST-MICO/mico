@@ -38,6 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.*;
 import java.util.stream.Collectors;
 
+import io.github.ust.mico.core.persistence.MicoLabelRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -108,6 +109,9 @@ public class ApplicationResourceTests {
 
     @MockBean
     private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
+
+    @MockBean
+    private MicoLabelRepository labelRepository;
 
     @MockBean
     private MicoKubernetesClient micoKubernetesClient;
@@ -446,22 +450,38 @@ public class ApplicationResourceTests {
             .setShortName(SERVICE_SHORT_NAME)
             .setVersion(SERVICE_VERSION)
             .setName(NAME);
+        MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo().setId(ID_1).setService(service);
 
-        MicoApplication appplication = new MicoApplication()
+        MicoApplication application = new MicoApplication()
             .setId(ID)
-            .setShortName(SHORT_NAME).setVersion(VERSION)
-            .setDescription(DESCRIPTION);
-
-        appplication.getServices().add(service);
-        appplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(service));
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(NAME);
+        application.getServices().add(service);
+        application.getServiceDeploymentInfos().add(deploymentInfo);
 
         String newVersion = VERSION_1_0_1;
         Long newId = ID + 1;
 
-        MicoApplication updatedApplication = appplication.setId(null).setVersion(newVersion);
-        MicoApplication expectedApplication = updatedApplication.setId(newId);
+        MicoApplication updatedApplication = new MicoApplication()
+            .setId(null)
+            .setShortName(SHORT_NAME)
+            .setVersion(newVersion)
+            .setName(NAME);
+        updatedApplication.getServices().add(service);
+        MicoServiceDeploymentInfo updatedDeploymentInfo = new MicoServiceDeploymentInfo().setId(null).setService(service);
+        updatedApplication.getServiceDeploymentInfos().add(updatedDeploymentInfo);
 
-        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(appplication));
+        MicoApplication expectedApplication = new MicoApplication()
+            .setId(newId)
+            .setShortName(SHORT_NAME)
+            .setVersion(newVersion)
+            .setName(NAME);
+        expectedApplication.getServices().add(service);
+        MicoServiceDeploymentInfo expectedDeploymentInfo = new MicoServiceDeploymentInfo().setId(ID_2).setService(service);
+        expectedApplication.getServiceDeploymentInfos().add(expectedDeploymentInfo);
+
+        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(applicationRepository.save(eq(updatedApplication))).willReturn(expectedApplication);
 
         mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_PROMOTE)
@@ -469,7 +489,7 @@ public class ApplicationResourceTests {
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
-            .andExpect(jsonPath(DESCRIPTION_PATH, is(updatedApplication.getDescription())))
+            .andExpect(jsonPath(NAME_PATH, is(updatedApplication.getName())))
             .andExpect(jsonPath(SHORT_NAME_PATH, is(updatedApplication.getShortName())))
             .andExpect(jsonPath(VERSION_PATH, is(newVersion)))
             .andExpect(jsonPath(SERVICE_LIST_PATH, hasSize(1)))
