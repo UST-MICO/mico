@@ -17,10 +17,8 @@
  * under the License.
  */
 
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component } from '@angular/core';
 import { ApiService } from 'src/app/api/api.service';
-import { Subscription } from 'rxjs';
-import { ApiModel } from 'src/app/api/apimodel';
 import { versionComparator } from 'src/app/api/semantic-version';
 import { UtilsService } from 'src/app/util/utils.service';
 
@@ -29,7 +27,7 @@ import { UtilsService } from 'src/app/util/utils.service';
     templateUrl: './create-service.component.html',
     styleUrls: ['./create-service.component.css']
 })
-export class CreateServiceDialogComponent implements OnInit, OnDestroy {
+export class CreateServiceDialogComponent {
 
     serviceData;
 
@@ -44,26 +42,10 @@ export class CreateServiceDialogComponent implements OnInit, OnDestroy {
     // manual: 0, github: 1
     selectedTab = 0;
 
-    subModelDefinitions: Subscription;
-    filterListManual: string[];
-    filterListGithub: string[];
 
     constructor(
         private apiService: ApiService,
         private util: UtilsService) {
-    }
-
-    ngOnInit() {
-        this.subModelDefinitions = this.apiService.getModelDefinitions().subscribe(val => {
-            this.filterListManual = (val['MicoService'] as ApiModel).required
-                .filter((value) => value !== 'serviceInterfaces');
-            this.filterListGithub = (val['CrawlingInfoDTO'] as ApiModel).required;
-        });
-    }
-
-    ngOnDestroy() {
-        this.util.safeUnsubscribe(this.subModelDefinitions);
-
     }
 
     mapTabIndexToString(index) {

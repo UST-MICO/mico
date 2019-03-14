@@ -1,7 +1,7 @@
 <h2 mat-dialog-title>Create a new Application</h2>
 <mat-dialog-content style="min-width: 35rem">
     <!-- input fields-->
-    <mico-form [modelUrl]="'remote/MicoApplicationDTO'" [filter]="filterList" (data)="applicationData = $event">
+    <mico-form [modelUrl]="'remote/MicoApplicationRequestDTO'" [onlyRequired]="true" (data)="applicationData = $event">
     </mico-form>
 
     <!-- Service Picker-->

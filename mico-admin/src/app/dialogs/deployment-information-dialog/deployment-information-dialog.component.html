@@ -1,7 +1,7 @@
 <mat-dialog-content style="overflow-y: scroll">
     <h2>Deployment Information</h2>
 
-    <mico-form [modelUrl]="'remote/MicoServiceDeploymentInfoDTO'" (data)="changedDeploymentInformation = $event"
+    <mico-form [modelUrl]="'remote/MicoServiceDeploymentInfoRequestDTO'" (data)="changedDeploymentInformation = $event"
         [startData]="deploymentInformation">
 
     </mico-form>
