@@ -22,6 +22,7 @@ package io.github.ust.mico.core.model;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 
+import io.github.ust.mico.core.dto.request.MicoLabelRequestDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -53,4 +54,21 @@ public class MicoLabel {
      */
     private String value;
 
+
+    // ----------------------
+    // -> Static Creators ---
+    // ----------------------
+    
+    /**
+     * Creates a {@code MicoLabel} based on a {@code MicoLabelRequestDTO}.
+     * 
+     * @param applicationDto the {@link MicoLabelRequestDTO}.
+     * @return a {@link MicoLabel}.
+     */
+    public static MicoLabel valueOf(MicoLabelRequestDTO labelDto) {
+        return new MicoLabel()
+                .setKey(labelDto.getKey())
+                .setValue(labelDto.getValue());
+    }
+    
 }

@@ -110,6 +110,11 @@ public class MicoApplication {
      * who is responsible for this application.
      */
     private String owner;
+    
+    public MicoVersion getMicoVersion() throws VersionNotSupportedException {
+        MicoVersion micoVersion = MicoVersion.valueOf(this.version);
+        return micoVersion;
+    }
 
 
     // ----------------------
@@ -130,11 +135,6 @@ public class MicoApplication {
                 .setDescription(applicationDto.getDescription())
                 .setContact(applicationDto.getContact())
                 .setOwner(applicationDto.getOwner());
-    }
-    
-    public MicoVersion getMicoVersion() throws VersionNotSupportedException {
-        MicoVersion micoVersion = MicoVersion.valueOf(this.version);
-        return micoVersion;
     }
 
 }

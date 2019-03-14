@@ -21,6 +21,7 @@ package io.github.ust.mico.core.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -128,7 +129,7 @@ public class MicoServiceDeploymentInfo {
      */
     public MicoServiceDeploymentInfo applyValuesFrom(MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) {
         return setReplicas(serviceDeploymentInfoDTO.getReplicas())
-            .setLabels(serviceDeploymentInfoDTO.getLabels())
+            .setLabels(serviceDeploymentInfoDTO.getLabels().stream().map(MicoLabel::valueOf).collect(Collectors.toList()))
             .setEnvironmentVariables(serviceDeploymentInfoDTO.getEnvironmentVariables())
             .setImagePullPolicy(serviceDeploymentInfoDTO.getImagePullPolicy())
             .setRestartPolicy(serviceDeploymentInfoDTO.getRestartPolicy());
