@@ -104,7 +104,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
 	    + "WHERE application.shortName = {applicationShortName} "
 	    + "DETACH DELETE sdi, additionalProperty")
     public void deleteAllByApplication(@Param("applicationShortName") String applicationShortName);
-    
+	
     /**
      * Deletes all deployment information for a particular application.
      * All additional properties of a {@link MicoServiceDeploymentInfo} that
@@ -114,8 +114,9 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
      * @param applicationShortName the short name of the {@link MicoApplication}.
      * @param applicationVersion the version of the {@link MicoApplication}.
      */
-	@Query("MATCH (application:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(service:MicoService), "
-		+ "(sdi:MicoServiceDeploymentInfo)-[:HAS]->(additionalProperty) "
+	@Query("MATCH (application:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(service:MicoService) "
+		+ "WHERE application.shortName = {applicationShortName} AND application.version = {applicationVersion} "
+		+ "OPTIONAL MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:HAS]->(additionalProperty) "
 	    + "WHERE application.shortName = {applicationShortName} AND application.version = {applicationVersion} "
 	    + "DETACH DELETE sdi, additionalProperty")
     public void deleteAllByApplication(
@@ -132,8 +133,10 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
      * @param applicationVersion the version of the {@link MicoApplication}.
      * @param serviceShortName the short name of the {@link MicoService}.
      */
-	@Query("MATCH (application:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(service:MicoService), "
-		+ "(sdi:MicoServiceDeploymentInfo)-[:HAS]->(additionalProperty) "
+	@Query("MATCH (application:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(service:MicoService) "
+		+ "WHERE application.shortName = {applicationShortName} AND application.version = {applicationVersion} "
+		+ "AND service.shortName = {serviceShortName} " 
+		+ "OPTIONAL MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:HAS]->(additionalProperty) "
 	    + "WHERE application.shortName = {applicationShortName} AND application.version = {applicationVersion} "
 	    + "AND service.shortName = {serviceShortName} " 
 	    + "DETACH DELETE sdi, additionalProperty")
@@ -153,10 +156,12 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
      * @param serviceShortName the short name of the {@link MicoService}.
      * @param serviceVersion the version of the {@link MicoService}.
      */
-    @Query("MATCH (application:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(service:MicoService), "
-    	+ "(sdi:MicoServiceDeploymentInfo)-[:HAS]->(additionalProperty) "
+    @Query("MATCH (application:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(service:MicoService) "
+		+ "WHERE application.shortName = {applicationShortName} AND application.version = {applicationVersion} "
+		+ "AND service.shortName = {serviceShortName} AND service.version = {serviceVersion} " 
+		+ "OPTIONAL MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:HAS]->(additionalProperty) "
 	    + "WHERE application.shortName = {applicationShortName} AND application.version = {applicationVersion} "
-	    + "AND service.shortName = {serviceShortName} AND service.version = {serviceVersion} "
+	    + "AND service.shortName = {serviceShortName} AND service.version = {serviceVersion} " 
 	    + "DETACH DELETE sdi, additionalProperty")
     public void deleteByApplicationAndService(
     	@Param("applicationShortName") String applicationShortName,
