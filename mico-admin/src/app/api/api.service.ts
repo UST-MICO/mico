@@ -133,7 +133,7 @@ export class ApiService {
         this.rest.get<ApiObject>(resource).subscribe(val => {
             // return actual application list
             if (val.hasOwnProperty('_embedded')) {
-                stream.next(freezeObject(val._embedded.micoApplicationWithServicesDTOList));
+                stream.next(freezeObject(val._embedded.micoApplicationWithServicesResponseDTOList));
             } else {
                 stream.next(freezeObject([]));
             }
@@ -159,7 +159,7 @@ export class ApiService {
             let list: ApiObject[];
 
             if (val.hasOwnProperty('_embedded')) {
-                list = val._embedded.micoApplicationWithServicesDTOList;
+                list = val._embedded.micoApplicationWithServicesResponseDTOList;
             } else {
                 list = [];
             }
@@ -480,7 +480,7 @@ export class ApiService {
         this.rest.get<ApiObject>(resource).subscribe(val => {
             // return actual service list
             if (val.hasOwnProperty('_embedded')) {
-                stream.next(freezeObject(val._embedded.micoServiceList));
+                stream.next(freezeObject(val._embedded.micoServiceResponseDTOList));
             } else {
                 stream.next(freezeObject([]));
             }
@@ -507,7 +507,7 @@ export class ApiService {
             let list: ApiObject[];
 
             if (val.hasOwnProperty('_embedded')) {
-                list = val._embedded.micoServiceList;
+                list = val._embedded.micoServiceResponseDTOList;
             } else {
                 list = [];
             }
@@ -596,8 +596,15 @@ export class ApiService {
         const resource = 'services/import/github' + '?url=' + url;
         const stream = this.getStreamSource<String[]>(resource);
 
-        this.rest.get<String[]>(resource).subscribe(val => {
-            stream.next(freezeObject(val));
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+
+            let list: string[] = [];
+
+            if (val.hasOwnProperty('_embedded')) {
+                list = val._embedded.micoVersionRequestDTOList.map(version => version.version);
+            }
+
+            stream.next(freezeObject(list));
         });
 
         return stream.asObservable().pipe(
@@ -680,7 +687,7 @@ export class ApiService {
 
         this.rest.get<ApiObject>(resource).subscribe(val => {
             if (val.hasOwnProperty('_embedded')) {
-                stream.next(freezeObject(val._embedded.micoServiceList));
+                stream.next(freezeObject(val._embedded.micoServiceResponseDTOList));
             } else {
                 stream.next(freezeObject([]));
             }
@@ -704,19 +711,15 @@ export class ApiService {
             return;
         }
 
-        return this.rest.post<ApiObject>('services/' + serviceShortName + '/' + serviceVersion + '/dependees',
-            { dependedService: dependee }, undefined, false).pipe(flatMap(val => {
+        const url = 'services/' + serviceShortName + '/' + serviceVersion + '/dependees/' + dependee.shortName + '/' + dependee.version;
 
-                const stream = this.getStreamSource<ApiObject>(val._links.self.href);
-                stream.next(val);
+        return this.rest.post<ApiObject>(url, undefined, undefined, false).pipe(flatMap(val => {
 
-                this.getService(serviceShortName, serviceVersion);
+                const stream = this.getService(serviceShortName, serviceVersion);
                 this.getServiceDependees(serviceShortName, serviceVersion);
                 this.getServiceDependencyGraph(serviceShortName, serviceVersion);
 
-                return stream.asObservable().pipe(
-                    filter(service => service !== undefined)
-                );
+                return stream;
             }));
     }
 
@@ -759,7 +762,7 @@ export class ApiService {
 
         this.rest.get<ApiObject>(resource).subscribe(val => {
             if (val.hasOwnProperty('_embedded')) {
-                stream.next(freezeObject(val._embedded.micoServiceList));
+                stream.next(freezeObject(val._embedded.micoServiceResponseDTOList));
             } else {
                 stream.next(freezeObject([]));
             }
@@ -809,7 +812,7 @@ export class ApiService {
         this.rest.get<ApiObject>(resource).subscribe(val => {
 
             if (val.hasOwnProperty('_embedded')) {
-                stream.next(freezeObject(val._embedded.micoServiceInterfaceList));
+                stream.next(freezeObject(val._embedded.micoServiceInterfaceResponseDTOList));
             } else {
                 stream.next(freezeObject([]));
             }
