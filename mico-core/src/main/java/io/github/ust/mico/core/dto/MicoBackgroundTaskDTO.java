@@ -55,7 +55,7 @@
       */
      @ApiModelProperty(extensions = {
          @Extension(name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION, properties = {
-             @ExtensionProperty(name = "title", value = "Name of MicoService"),
+             @ExtensionProperty(name = "title", value = "ShortName of MicoService"),
              @ExtensionProperty(name = "x-order", value = "20"),
              @ExtensionProperty(name = "readOnly", value = "true"),
              @ExtensionProperty(name = "description", value = "The Name to the corresponding MicoService")})})
@@ -79,7 +79,7 @@
       */
      @ApiModelProperty(extensions = {
          @Extension(name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION, properties = {
-             @ExtensionProperty(name = "title", value = "Jobstatus"),
+             @ExtensionProperty(name = "title", value = "Job Status"),
              @ExtensionProperty(name = "x-order", value = "40"),
              @ExtensionProperty(name = "readOnly", value = "true"),
              @ExtensionProperty(name = "description", value = "The current Status of the job.")})})
@@ -103,7 +103,7 @@
       */
      @ApiModelProperty(extensions = {
          @Extension(name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION, properties = {
-             @ExtensionProperty(name = "title", value = "Jobtype"),
+             @ExtensionProperty(name = "title", value = "Job Type"),
              @ExtensionProperty(name = "x-order", value = "60"),
              @ExtensionProperty(name = "readOnly", value = "true"),
              @ExtensionProperty(name = "description", value = "The type of job.")})})

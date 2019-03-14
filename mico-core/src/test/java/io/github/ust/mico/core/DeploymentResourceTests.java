@@ -139,17 +139,16 @@ public class DeploymentResourceTests {
             .setMicoServiceShortName(service.getShortName())
             .setMicoServiceVersion(service.getVersion())
             .setType(MicoBackgroundTask.Type.BUILD);
-            //.setStatus(MicoBackgroundTask.Status.PENDING);
 
         given(backgroundTaskRepository.findByMicoServiceShortNameAndMicoServiceVersionAndType(service.getShortName(), service.getVersion(), MicoBackgroundTask.Type.BUILD))
             .willReturn(Optional.of(mockTask));
 
         given(backgroundTaskBroker.getJobStatusByApplicationShortNameAndVersion(SHORT_NAME, VERSION))
             .willReturn(new MicoApplicationJobStatus()
-                .setApplicationName(SHORT_NAME)
+                .setApplicationShortName(SHORT_NAME)
                 .setApplicationVersion(VERSION)
                 .setStatus(MicoBackgroundTask.Status.PENDING)
-                .setJobList(Arrays.asList(mockTask)));
+                .setJobs(Arrays.asList(mockTask)));
 
         mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/deploy"))
             .andDo(print())

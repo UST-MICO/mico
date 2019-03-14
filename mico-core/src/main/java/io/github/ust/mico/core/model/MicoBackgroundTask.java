@@ -29,7 +29,6 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * BackgroundJob for one {@link MicoService}.
- * The
  */
 @Data
 @RedisHash("BackgroundJob")
@@ -41,7 +40,7 @@ public class MicoBackgroundTask implements Serializable {
     }
 
     public enum Status {
-        PENDING, RUNNING, ERROR, DONE
+        PENDING, RUNNING, ERROR, DONE, UNDEFINED
     }
 
     @Id
@@ -56,12 +55,10 @@ public class MicoBackgroundTask implements Serializable {
     @Indexed
     Type type;
 
+    /**
+     * Constructor which sets the status to {@link Status#PENDING}
+     */
     public MicoBackgroundTask() {
         this.status = Status.PENDING;
     }
-
-    public void cancelJob() {
-        job.cancel(false);
-    }
-
 }

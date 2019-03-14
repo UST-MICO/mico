@@ -220,7 +220,7 @@ public class ImageBuilder {
 
     public CompletableFuture<Boolean> waitUntilBuildIsFinished(String buildName) throws InterruptedException, ExecutionException, TimeoutException {
         CompletableFuture<Boolean> completionFuture = new CompletableFuture<>();
-        //
+
         // Create a future that polls every second with a delay of 10 seconds.
         final ScheduledFuture<?> checkFuture = scheduledBuildStatusCheckService.scheduleAtFixedRate(() -> {
 
@@ -235,7 +235,6 @@ public class ImageBuilder {
                 log.debug("Current build phase: {}", buildPod.getStatus().getPhase());
                 if (buildPod.getStatus().getPhase().equals("Succeeded")) {
                     completionFuture.complete(true);
-                    // TODO update buildtask?
                     // TODO Clean up build (delete build pod)
                 } else if (buildPod.getStatus().getPhase().equals("Failed")) {
                     completionFuture.complete(false);

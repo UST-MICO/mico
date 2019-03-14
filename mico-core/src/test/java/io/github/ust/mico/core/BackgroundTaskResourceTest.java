@@ -67,7 +67,7 @@ public class BackgroundTaskResourceTest {
 
     private static final String JSON_PATH_LINKS_SECTION = "$._links.";
 
-    public static final String BACKGROUNDTASK_LIST = buildPath(EMBEDDED, "micoBackgroundTaskDTOList");
+    public static final String BACKGROUND_TASK_LIST = buildPath(EMBEDDED, "micoBackgroundTaskDTOList");
     public static final String SHORT_NAME_PATH = buildPath(ROOT, "micoServiceShortName");
     public static final String STATUS_PATH = buildPath(ROOT, "status");
     public static final String LINKS_CANCEL_HREF = buildPath(LINKS, "cancel", HREF);
@@ -95,10 +95,10 @@ public class BackgroundTaskResourceTest {
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andExpect(jsonPath(BACKGROUNDTASK_LIST + "[*]", hasSize(3)))
-            .andExpect(jsonPath(BACKGROUNDTASK_LIST + "[?(@.micoServiceShortName=='" + SHORT_NAME + "' && @.micoServiceVersion=='" + VERSION + "')]", hasSize(1)))
-            .andExpect(jsonPath(BACKGROUNDTASK_LIST + "[?(@.micoServiceShortName=='" + SHORT_NAME_1 + "' && @.micoServiceVersion=='" + VERSION + "')]", hasSize(1)))
-            .andExpect(jsonPath(BACKGROUNDTASK_LIST + "[?(@.micoServiceShortName=='" + SHORT_NAME_2 + "' && @.micoServiceVersion=='" + VERSION + "')]", hasSize(1)))
+            .andExpect(jsonPath(BACKGROUND_TASK_LIST + "[*]", hasSize(3)))
+            .andExpect(jsonPath(BACKGROUND_TASK_LIST + "[?(@.micoServiceShortName=='" + SHORT_NAME + "' && @.micoServiceVersion=='" + VERSION + "')]", hasSize(1)))
+            .andExpect(jsonPath(BACKGROUND_TASK_LIST + "[?(@.micoServiceShortName=='" + SHORT_NAME_1 + "' && @.micoServiceVersion=='" + VERSION + "')]", hasSize(1)))
+            .andExpect(jsonPath(BACKGROUND_TASK_LIST + "[?(@.micoServiceShortName=='" + SHORT_NAME_2 + "' && @.micoServiceVersion=='" + VERSION + "')]", hasSize(1)))
             .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/jobs")))
             .andReturn();
 
@@ -144,10 +144,10 @@ public class BackgroundTaskResourceTest {
 
         given(backgroundTaskBroker.getJobStatusByApplicationShortNameAndVersion(SHORT_NAME, VERSION))
             .willReturn(new MicoApplicationJobStatus()
-                .setApplicationName(SHORT_NAME)
+                .setApplicationShortName(SHORT_NAME)
                 .setApplicationVersion(VERSION)
                 .setStatus(MicoBackgroundTask.Status.PENDING)
-                .setJobList(Arrays.asList(runningJob, pendingJob)));
+                .setJobs(Arrays.asList(runningJob, pendingJob)));
 
         mvc.perform(get("/jobs/" + SHORT_NAME + "/" + VERSION + "/jobstatus").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -227,8 +227,7 @@ public class BackgroundTaskResourceTest {
 
         mvc.perform(delete("/jobs/" + STRING_ID).accept(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
-            .andExpect(status().isOk())
-            .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
+            .andExpect(status().isNoContent())
             .andReturn();
     }
 }

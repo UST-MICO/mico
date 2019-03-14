@@ -29,6 +29,9 @@ import org.springframework.stereotype.Component;
 
 import javax.validation.constraints.NotBlank;
 
+/**
+ * Configuration that includes information about Redis Database
+ */
 @Component
 @Configuration
 @Getter

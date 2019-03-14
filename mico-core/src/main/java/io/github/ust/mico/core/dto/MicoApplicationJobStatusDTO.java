@@ -78,6 +78,6 @@
      public static MicoApplicationJobStatusDTO valueOf(MicoApplicationJobStatus applicationJobStatus) {
          return new MicoApplicationJobStatusDTO()
              .setStatus(applicationJobStatus.getStatus())
-             .setJobs(applicationJobStatus.getJobList().stream().map(MicoBackgroundTaskDTO::valueOf).collect(Collectors.toList()));
+             .setJobs(applicationJobStatus.getJobs().stream().map(MicoBackgroundTaskDTO::valueOf).collect(Collectors.toList()));
      }
  }

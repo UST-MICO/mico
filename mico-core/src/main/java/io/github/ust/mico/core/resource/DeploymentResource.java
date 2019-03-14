@@ -61,6 +61,7 @@ public class DeploymentResource {
 
     @Autowired
     private BackgroundTaskBroker backgroundTaskBroker;
+
     @Autowired
     private MicoApplicationRepository applicationRepository;
 
@@ -163,15 +164,15 @@ public class DeploymentResource {
                                               MicoBackgroundTask.Status status, MicoBackgroundTask.Type type,
                                               @Nullable String errorMessage) {
         Optional<MicoBackgroundTask> taskOptional = getTaskByMicoService(micoServiceShortName, micoServiceVersion, type);
-        log.debug("Saving status of '{}'", taskOptional);
         if (taskOptional.isPresent()) {
             MicoBackgroundTask t = taskOptional.get();
+            log.debug("Saving status of '{}'", taskOptional);
             t.setErrorMessage(errorMessage);
             t.setStatus(status);
             backgroundTaskRepo.save(t);
+            log.info("Job status of '{}' is '{}'", getTaskByMicoService(micoServiceShortName, micoServiceVersion, type),
+                getTaskByMicoService(micoServiceShortName, micoServiceVersion, type).get().getStatus());
         }
-        log.info("Job status of '{}' is '{}'", getTaskByMicoService(micoServiceShortName, micoServiceVersion, type),
-            getTaskByMicoService(micoServiceShortName, micoServiceVersion, type).get().getStatus());
     }
 
     private String buildImageAndWait(MicoService micoService) {

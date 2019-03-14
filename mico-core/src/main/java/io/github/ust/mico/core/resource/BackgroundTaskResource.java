@@ -88,16 +88,13 @@ public class BackgroundTaskResource {
             return new ResponseEntity<>(responseHeaders, HttpStatus.SEE_OTHER);
 
         }
-        return jobOptional.map(job -> new Resource<>(MicoBackgroundTaskDTO.valueOf(job), getJobLinks(job)))
-            .map(ResponseEntity::ok).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Job with id '" + id + "' links not found!"));
+        return ResponseEntity.ok(new Resource<>(MicoBackgroundTaskDTO.valueOf(jobOptional.get()), getJobLinks(jobOptional.get())));
     }
 
     @DeleteMapping("/{" + PATH_ID + "}")
-    public ResponseEntity<Resource<MicoBackgroundTaskDTO>> deleteJob(@PathVariable(PATH_ID) String id) {
-        ResponseEntity<Resource<MicoBackgroundTaskDTO>> job = getJobById(id);
+    public ResponseEntity<Void> deleteJob(@PathVariable(PATH_ID) String id) {
         backgroundTaskBroker.deleteJob(id);
-        job.getBody().removeLinks();
-        return job;
+        return ResponseEntity.noContent().build();
     }
 
     private URI getLocationForJob(MicoBackgroundTask job) throws URISyntaxException {
