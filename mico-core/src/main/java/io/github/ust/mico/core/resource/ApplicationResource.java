@@ -157,24 +157,27 @@ public class ApplicationResource {
     public ResponseEntity<Resource<MicoApplicationResponseDTO>> promoteApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                            @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                            @Valid @RequestBody MicoVersionRequestDTO newVersionDto) {
-    	log.debug("Received request to promote MicoApplication '{}' '{}' to version '{}'", shortName, version, newVersionDto.getVersion());
+    	log.debug("Received request to promote application '{}' '{}' to version '{}'", shortName, version, newVersionDto.getVersion());
     	
-    	System.out.println(newVersionDto);
-    	
-    	// Application to promote (copy)
+    	// Retrieve application to promote (copy) from the database (checks whether it exists)
         MicoApplication application = getApplicationFromDatabase(shortName, version);
-        System.out.println(application);
-        log.debug("Received following MicoApplication from database: {}", application);
+        log.debug("Retrieved following application from database: {}", application);
         
-        // Update the version and set id to null, otherwise the original application
-        // would be updated but we want a new application instance to be created.
-        application.setVersion(newVersionDto.getVersion()).setId(null);
+        // Update the version of the application
+        application.setVersion(newVersionDto.getVersion());
+        
+        // In order to copy the application along with all service deployment information nodes
+        // it provides and the nodes the service deployment information node(s) is/are connected to,
+        // we need to set the id of all those nodes to null. That way, Neo4j will create new entities
+        // instead of updating the existing ones.
+        application.setId(null);
+        application.getServiceDeploymentInfos().forEach(sdi -> sdi.setId(null));
+        application.getServiceDeploymentInfos().forEach(sdi -> sdi.getLabels().forEach(label -> label.setId(null)));
+        // TODO: Also clear ids for environment variables and Kubernetes deployment information.
 
-        // Save the new (promoted) application in the database,
-        // all edges (deployment information) will be copied, too.
+        // Save the new (promoted) application in the database.
         MicoApplication updatedApplication = applicationRepository.save(application);
-        System.out.println(updatedApplication);
-        log.debug("Saved following MicoApplication in database: {}", updatedApplication);
+        log.debug("Saved following application in database: {}", updatedApplication);
 
         return ResponseEntity.ok(getApplicationResponseDTOResourceWithDeploymentStatus(updatedApplication));
     }
@@ -182,14 +185,20 @@ public class ApplicationResource {
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     public ResponseEntity<Void> deleteApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                   @PathVariable(PATH_VARIABLE_VERSION) String version) throws KubernetesResourceException {
-        MicoApplication application = getApplicationFromDatabase(shortName, version);
+    	// Retrieve application to delete from the database (checks whether it exists)
+    	MicoApplication application = getApplicationFromDatabase(shortName, version);
 
         // Check whether application is currently deployed, i.e., it cannot be deleted
         if (micoKubernetesClient.isApplicationDeployed(application)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Application is currently deployed!");
         }
 
-        // Delete application in database
+        // Any service deployment information this application provides must be deleted
+        // before (!) the actual application is deleted, otherwise the query for
+        // deleting the service deployment information would not work.
+        serviceDeploymentInfoRepository.deleteAllByApplication(shortName, version);
+        
+        // Delete actual application
         applicationRepository.delete(application);
 
         return ResponseEntity.noContent().build();
@@ -197,24 +206,30 @@ public class ApplicationResource {
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
     public ResponseEntity<Void> deleteAllVersionsOfAnApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) throws KubernetesResourceException {
-        List<MicoApplication> micoApplicationList = applicationRepository.findByShortName(shortName);
+    	// Retrieve applications to delete from database (checks whether they all exist)
+        List<MicoApplication> applicationList = applicationRepository.findByShortName(shortName);
 
         // Check whether there is any version of the application in the database at all
-        if (micoApplicationList.isEmpty()) {
+        if (applicationList.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
         // If at least one version of the application is currently deployed,
         // none of the versions shall be deleted
-        for (MicoApplication application : micoApplicationList) {
+        for (MicoApplication application : applicationList) {
             if (micoKubernetesClient.isApplicationDeployed(application)) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Application is currently deployed in version " + application.getVersion() + "!");
             }
         }
+        
+        // Any service deployment information one of the applications provides must be deleted
+        // before (!) the actual application is deleted, otherwise the query for
+        // deleting the service deployment information would not work.
+        serviceDeploymentInfoRepository.deleteAllByApplication(shortName);
 
         // No version of the application is deployed -> delete all
-        applicationRepository.deleteAll(micoApplicationList);
+        applicationRepository.deleteAll(applicationList);
 
         return ResponseEntity.noContent().build();
     }
