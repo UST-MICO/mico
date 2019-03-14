@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * Represents a simple key-value pair label.
+ * A label represented as a simple key-value pair.
  * Necessary since Neo4j does not allow to persist
  * properties of composite types.
  *
@@ -62,7 +62,7 @@ public class MicoLabel {
     /**
      * Creates a {@code MicoLabel} based on a {@code MicoLabelRequestDTO}.
      * 
-     * @param applicationDto the {@link MicoLabelRequestDTO}.
+     * @param labelDto the {@link MicoLabelRequestDTO}.
      * @return a {@link MicoLabel}.
      */
     public static MicoLabel valueOf(MicoLabelRequestDTO labelDto) {

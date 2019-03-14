@@ -19,25 +19,21 @@
 
 package io.github.ust.mico.core.model;
 
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
-import io.github.ust.mico.core.util.Patterns;
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.Extension;
-import io.swagger.annotations.ExtensionProperty;
+
+import io.github.ust.mico.core.dto.request.MicoEnvironmentVariableRequestDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.Pattern;
-import java.util.Map;
-
 /**
- * Represents a simple key-value pair label.
+ * An environment variable represented as a simple key-value pair.
  * Necessary since Neo4j does not allow to persist
- * {@link Map} implementations.
+ * properties of composite types.
  */
 @Data
 @NoArgsConstructor
@@ -45,34 +41,36 @@ import java.util.Map;
 @Accessors(chain = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MicoEnvironmentVariable {
+	
+	@Id
+	@GeneratedValue
+	private Long id;
 
     /**
      * Name of the environment variable.
      */
-    @ApiModelProperty(required = true, extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Name"),
-            @ExtensionProperty(name = "pattern", value = Patterns.KUBERNETES_ENV_VAR_NAME_REGEX),
-            @ExtensionProperty(name = "x-order", value = "10"),
-            @ExtensionProperty(name = "description", value = "Name of the environment variable.")
-        }
-    )})
-    @NotEmpty
-    @Pattern(regexp = Patterns.KUBERNETES_ENV_VAR_NAME_REGEX, message = Patterns.KUBERNETES_ENV_VAR_NAME_MESSAGE)
     private String name;
 
     /**
      * Value of the environment variable.
      */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Value"),
-            @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "Value of the environment variable.")
-        }
-    )})
     private String value;
+
+
+    // ----------------------
+    // -> Static Creators ---
+    // ----------------------
+    
+    /**
+     * Creates a {@code MicoEnvironmentVariable} based on a {@code MicoEnvironmentVariableRequestDTO}.
+     * 
+     * @param environmentVariableDto the {@link MicoEnvironmentVariableRequestDTO}.
+     * @return a {@link MicoEnvironmentVariable}.
+     */
+    public static MicoEnvironmentVariable valueOf(MicoEnvironmentVariableRequestDTO environmentVariableDto) {
+        return new MicoEnvironmentVariable()
+                .setName(environmentVariableDto.getName())
+                .setValue(environmentVariableDto.getValue());
+    }
 
 }

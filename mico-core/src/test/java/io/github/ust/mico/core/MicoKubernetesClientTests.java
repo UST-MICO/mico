@@ -98,15 +98,10 @@ public class MicoKubernetesClientTests {
 
         assertEquals(0, mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems().size());
 
-//        MicoApplication micoApplication = new MicoApplication()
-//            .setId(ID)
-//            .setShortName(SHORT_NAME)
-//            .setVersion(VERSION)
-//            .setName(NAME);
         MicoService micoService = getMicoServiceWithoutInterface();
         MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo()
             .setService(micoService)
-            .setEnvironmentVariables(CollectionUtils.listOf(new MicoEnvironmentVariable("NAME", "VALUE")));
+            .setEnvironmentVariables(CollectionUtils.listOf(new MicoEnvironmentVariable().setName("NAME").setValue("VALUE")));
 
         micoKubernetesClient.createMicoService(micoService, deploymentInfo);
 
@@ -116,7 +111,7 @@ public class MicoKubernetesClientTests {
         assertNotNull(actualDeployment);
         assertEquals("Environment variables do not match expected",
             deploymentInfo.getEnvironmentVariables(), actualDeployment.getSpec().getTemplate().getSpec().getContainers().get(0).getEnv().stream().map(
-                envVar -> new MicoEnvironmentVariable(envVar.getName(), envVar.getValue())).collect(Collectors.toList()));
+                envVar -> new MicoEnvironmentVariable().setName(envVar.getName()).setValue(envVar.getValue())).collect(Collectors.toList()));
     }
 
     @Test

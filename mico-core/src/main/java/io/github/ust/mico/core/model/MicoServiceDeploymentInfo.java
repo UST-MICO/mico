@@ -87,14 +87,6 @@ public class MicoServiceDeploymentInfo {
     @Relationship(type = "HAS")
     private List<MicoLabel> labels = new ArrayList<>();
     
-    // NOTE: Every property added to this class that requires to be stored as a separate node entity
-    // should be marker with the annotation @Relationship(type = "HAS").
-    // Particularly with regard to the custom queries for the service deployment information
-    // it is important, that the type of the relationship equals "HAS". See below for an example.
-    
-//    @Relationship(type = "HAS")
-//    private List<MicoEnvironmentVariable> environmentVariables = new ArrayList<>();
-
     /**
      * Environment variables as key-value pairs that are attached to the deployment
      * of this {@link MicoService}. These environment values can be used by the deployed
@@ -102,6 +94,7 @@ public class MicoServiceDeploymentInfo {
      * {@link MicoService} that is not known during design time or is likely to change.
      * Example could be an URL to another {@link MicoService} or an external service.
      */
+    @Relationship(type = "HAS")
     private List<MicoEnvironmentVariable> environmentVariables = new ArrayList<>();
 
     /**
@@ -130,7 +123,7 @@ public class MicoServiceDeploymentInfo {
     public MicoServiceDeploymentInfo applyValuesFrom(MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) {
         return setReplicas(serviceDeploymentInfoDTO.getReplicas())
             .setLabels(serviceDeploymentInfoDTO.getLabels().stream().map(MicoLabel::valueOf).collect(Collectors.toList()))
-            .setEnvironmentVariables(serviceDeploymentInfoDTO.getEnvironmentVariables())
+            .setEnvironmentVariables(serviceDeploymentInfoDTO.getEnvironmentVariables().stream().map(MicoEnvironmentVariable::valueOf).collect(Collectors.toList()))
             .setImagePullPolicy(serviceDeploymentInfoDTO.getImagePullPolicy())
             .setRestartPolicy(serviceDeploymentInfoDTO.getRestartPolicy());
     }

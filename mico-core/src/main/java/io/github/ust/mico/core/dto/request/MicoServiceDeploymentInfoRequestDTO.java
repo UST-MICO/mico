@@ -30,7 +30,6 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
-import io.github.ust.mico.core.model.MicoEnvironmentVariable;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo.ImagePullPolicy;
@@ -121,7 +120,7 @@ public class MicoServiceDeploymentInfoRequestDTO {
     )})
     @JsonSetter(nulls = Nulls.SKIP)
     @Valid
-    private List<MicoEnvironmentVariable> environmentVariables = new ArrayList<>();
+    private List<MicoEnvironmentVariableRequestDTO> environmentVariables = new ArrayList<>();
 
     /**
      * Indicates whether and when to pull the image.
@@ -173,6 +172,7 @@ public class MicoServiceDeploymentInfoRequestDTO {
 	public MicoServiceDeploymentInfoRequestDTO(MicoServiceDeploymentInfo serviceDeploymentInfo) {
 		this.replicas = serviceDeploymentInfo.getReplicas();
 		this.labels = serviceDeploymentInfo.getLabels().stream().map(MicoLabelRequestDTO::new).collect(Collectors.toList());
+		this.environmentVariables = serviceDeploymentInfo.getEnvironmentVariables().stream().map(MicoEnvironmentVariableRequestDTO::new).collect(Collectors.toList());
 		this.imagePullPolicy = serviceDeploymentInfo.getImagePullPolicy();
 		this.restartPolicy = serviceDeploymentInfo.getRestartPolicy();
 	}

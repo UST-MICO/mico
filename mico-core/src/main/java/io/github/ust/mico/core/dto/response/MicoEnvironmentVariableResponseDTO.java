@@ -22,8 +22,8 @@ package io.github.ust.mico.core.dto.response;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-import io.github.ust.mico.core.dto.request.MicoLabelRequestDTO;
-import io.github.ust.mico.core.model.MicoLabel;
+import io.github.ust.mico.core.dto.request.MicoEnvironmentVariableRequestDTO;
+import io.github.ust.mico.core.model.MicoEnvironmentVariable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -31,7 +31,7 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for a {@link MicoLabel} intended to use with responses only.
+ * DTO for a {@link MicoEnvironmentVariable} intended to use with responses only.
  */
 @Data
 @ToString(callSuper = true)
@@ -39,25 +39,25 @@ import lombok.experimental.Accessors;
 @AllArgsConstructor
 @Accessors(chain = true)
 @JsonInclude(Include.NON_NULL)
-public class MicoLabelResponseDTO extends MicoLabelRequestDTO {
+public class MicoEnvironmentVariableResponseDTO extends MicoEnvironmentVariableRequestDTO {
 	
 	// Note: as soon as someone adds fields to this class, please check
 	// whether Jackson requires this class to have a NoArgsConstructor,
 	// if so, add the @NoArgsConstructor to this class.
-    
+	
     
     // -------------------
     // -> Constructors ---
     // -------------------
     
     /**
-   	 * Creates an instance of {@code MicoLabelResponseDTO} based on a
-   	 * {@code MicoLabel}.
+   	 * Creates an instance of {@code MicoEnvironmentVariableResponseDTO} based on a
+   	 * {@code MicoEnvironmentVariable}.
    	 * 
-   	 * @param label the {@link MicoLabel}.
+   	 * @param environmentVariable the {@link MicoEnvironmentVariable}.
    	 */
-	public MicoLabelResponseDTO(MicoLabel label) {
-		super(label);
+	public MicoEnvironmentVariableResponseDTO(MicoEnvironmentVariable environmentVariable) {
+		super(environmentVariable);
 	}
 
 }
