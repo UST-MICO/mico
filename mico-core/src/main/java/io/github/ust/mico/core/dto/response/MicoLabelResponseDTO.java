@@ -19,51 +19,43 @@
 
 package io.github.ust.mico.core.dto.response;
 
-import java.util.stream.Collectors;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.dto.request.MicoLabelRequestDTO;
+import io.github.ust.mico.core.model.MicoLabel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for {@link MicoServiceDeploymentInfo} intended to use with responses only.
+ * DTO for a {@link MicoLabel} intended to use with responses only.
  */
 @Data
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor
 @Accessors(chain = true)
 @JsonInclude(Include.NON_NULL)
-public class MicoServiceDeploymentInfoResponseDTO extends MicoServiceDeploymentInfoRequestDTO {
+public class MicoLabelResponseDTO extends MicoLabelRequestDTO {
 	
-	// Note: as soon as someone adds fields to this class, please add
-	// @AllArgsConstructor to this class in order
-	// to conform to the other DTOs.
-
-	
+	// Note: as soon as someone adds fields to this class, please check
+	// whether Jackson requires this class to have a NoArgsConstructor,
+	// if so, add the @NoArgsConstructor to this class.
+    
+    
     // -------------------
     // -> Constructors ---
     // -------------------
-	
-	/**
-     * Creates an instance of {@code MicoServiceDeploymentInfoResponseDTO} based on a
-     * {@code MicoServiceDeploymentInfo}.
-     * 
-     * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.
-     */
-	public MicoServiceDeploymentInfoResponseDTO(MicoServiceDeploymentInfo serviceDeploymentInfo) {
-		super(serviceDeploymentInfo);
-		// Labels need to be set explicitly to have a list of MicoLabelResponseDTOs
-		// and not a list of MicoLabelRequestDTOs, since the list is declared
-		// in MicoServiceDeploymentInfoRequestDTO and typed to MicoLabelRequestDTO.
-		setLabels(serviceDeploymentInfo.getLabels().stream().map(MicoLabelResponseDTO::new).collect(Collectors.toList()));
+    
+    /**
+   	 * Creates an instance of {@code MicoLabelResponseDTO} based on a
+   	 * {@code MicoLabel}.
+   	 * 
+   	 * @param label the {@link MicoLabel}.
+   	 */
+	public MicoLabelResponseDTO(MicoLabel label) {
+		super(label);
 	}
 
 }

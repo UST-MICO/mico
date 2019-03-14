@@ -61,7 +61,7 @@ public class MicoServiceInterfaceResponseDTO extends MicoServiceInterfaceRequest
 		super(serviceInterface);
 		// Ports need to be set explicitly to have a list of MicoServicePortResponseDTOs
 		// and not a list of MicoServicePortRequestDTOs, since the list is declared
-		// in MicoServiceInterfaceRequestDTO and typed to MicoServicePortRequestDTOs.
+		// in MicoServiceInterfaceRequestDTO and typed to MicoServicePortRequestDTO.
 		setPorts(serviceInterface.getPorts().stream().map(MicoServicePortResponseDTO::new).collect(Collectors.toList()));
 	}
 

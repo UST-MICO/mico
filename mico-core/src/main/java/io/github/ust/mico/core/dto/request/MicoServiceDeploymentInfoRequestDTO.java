@@ -21,6 +21,7 @@ package io.github.ust.mico.core.dto.request;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
@@ -30,7 +31,6 @@ import com.fasterxml.jackson.annotation.Nulls;
 
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoEnvironmentVariable;
-import io.github.ust.mico.core.model.MicoLabel;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo.ImagePullPolicy;
@@ -98,7 +98,7 @@ public class MicoServiceDeploymentInfoRequestDTO {
     )})
     @JsonSetter(nulls = Nulls.SKIP)
     @Valid
-    private List<MicoLabel> labels = new ArrayList<>();
+    private List<MicoLabelRequestDTO> labels = new ArrayList<>();
 
     /**
      * Environment variables as key-value pairs that are attached to the deployment
@@ -172,7 +172,7 @@ public class MicoServiceDeploymentInfoRequestDTO {
 	 */
 	public MicoServiceDeploymentInfoRequestDTO(MicoServiceDeploymentInfo serviceDeploymentInfo) {
 		this.replicas = serviceDeploymentInfo.getReplicas();
-		this.labels = serviceDeploymentInfo.getLabels();
+		this.labels = serviceDeploymentInfo.getLabels().stream().map(MicoLabelRequestDTO::new).collect(Collectors.toList());
 		this.imagePullPolicy = serviceDeploymentInfo.getImagePullPolicy();
 		this.restartPolicy = serviceDeploymentInfo.getRestartPolicy();
 	}

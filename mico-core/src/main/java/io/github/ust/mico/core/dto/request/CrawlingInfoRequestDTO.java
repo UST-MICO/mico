@@ -33,7 +33,8 @@ import lombok.experimental.Accessors;
 
 /**
  * DTO for the information needed by a Crawler (e.g., {@link GitHubCrawler})
- * for crawling a service from a remote repository.
+ * for crawling a service from a remote repository
+ * intended to use with requests only.
  */
 @Data
 @NoArgsConstructor
