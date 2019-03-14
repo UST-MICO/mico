@@ -86,8 +86,13 @@ public class MicoServiceDeploymentInfo {
     @Relationship(type = "HAS")
     private List<MicoLabel> labels = new ArrayList<>();
     
-    @Relationship(type = "HAS")
-    private List<MicoEnvironmentVariable> environmentVariables = new ArrayList<>();
+    // NOTE: Every property added to this class that requires to be stored as a separate node entity
+    // should be marker with the annotation @Relationship(type = "HAS").
+    // Particularly with regard to the custom queries for the service deployment information
+    // it is important, that the type of the relationship equals "HAS". See below for an example.
+    
+//    @Relationship(type = "HAS")
+//    private List<MicoEnvironmentVariable> environmentVariables = new ArrayList<>();
 
     /**
      * Indicates whether and when to pull the image.
