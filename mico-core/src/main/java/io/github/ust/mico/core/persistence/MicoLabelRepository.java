@@ -30,6 +30,6 @@ public interface MicoLabelRepository extends Neo4jRepository<MicoLabel, Long> {
 	 * Deletes all labels that do <b>not</b> have any relationship to another node.
 	 */
 	@Query("MATCH (label:MicoLabel) WHERE size((label)--()) = 0 DELETE (label)")
-	public void cleanUp();
+	void cleanUp();
 	
 }

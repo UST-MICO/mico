@@ -49,7 +49,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
     	+ "OPTIONAL MATCH (sdi:MicoServiceDeploymentInfo)-[:HAS]->(env:MicoEnvironmentVariable) "
         + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
         + "RETURN (sdi:MicoServiceDeploymentInfo)-->()")
-    public List<MicoServiceDeploymentInfo> findAllByApplication(
+    List<MicoServiceDeploymentInfo> findAllByApplication(
         @Param("applicationShortName") String applicationShortName,
         @Param("applicationVersion") String applicationVersion);
     
@@ -71,7 +71,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
         + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
         + "AND s.shortName = {serviceShortName} "
         + "RETURN (sdi:MicoServiceDeploymentInfo)-->()")
-    public Optional<MicoServiceDeploymentInfo> findByApplicationAndService(
+    Optional<MicoServiceDeploymentInfo> findByApplicationAndService(
         @Param("applicationShortName") String applicationShortName,
         @Param("applicationVersion") String applicationVersion,
         @Param("serviceShortName") String serviceShortName);
@@ -95,7 +95,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
         + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
         + "AND s.shortName = {serviceShortName} AND s.version = {serviceVersion} "
         + "RETURN (sdi:MicoServiceDeploymentInfo)-->()")
-    public Optional<MicoServiceDeploymentInfo> findByApplicationAndService(
+    Optional<MicoServiceDeploymentInfo> findByApplicationAndService(
         @Param("applicationShortName") String applicationShortName,
         @Param("applicationVersion") String applicationVersion,
         @Param("serviceShortName") String serviceShortName,
@@ -113,7 +113,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
 		+ "(sdi:MicoServiceDeploymentInfo)-[:HAS]->(additionalProperty) "
 	    + "WHERE a.shortName = {applicationShortName} "
 	    + "DETACH DELETE sdi, additionalProperty")
-    public void deleteAllByApplication(@Param("applicationShortName") String applicationShortName);
+    void deleteAllByApplication(@Param("applicationShortName") String applicationShortName);
 	
     /**
      * Deletes all deployment information for a particular application.
@@ -129,7 +129,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
 		+ "OPTIONAL MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:HAS]->(additionalProperty) "
 	    + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
 	    + "DETACH DELETE sdi, additionalProperty")
-    public void deleteAllByApplication(
+    void deleteAllByApplication(
     	@Param("applicationShortName") String applicationShortName,
         @Param("applicationVersion") String applicationVersion);
     
@@ -150,7 +150,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
 	    + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
 	    + "AND s.shortName = {serviceShortName} " 
 	    + "DETACH DELETE sdi, additionalProperty")
-    public void deleteByApplicationAndService(
+    void deleteByApplicationAndService(
     	@Param("applicationShortName") String applicationShortName,
         @Param("applicationVersion") String applicationVersion,
         @Param("serviceShortName") String serviceShortName);
@@ -173,7 +173,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
 	    + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
 	    + "AND s.shortName = {serviceShortName} AND s.version = {serviceVersion} " 
 	    + "DETACH DELETE sdi, additionalProperty")
-    public void deleteByApplicationAndService(
+    void deleteByApplicationAndService(
     	@Param("applicationShortName") String applicationShortName,
         @Param("applicationVersion") String applicationVersion,
         @Param("serviceShortName") String serviceShortName,

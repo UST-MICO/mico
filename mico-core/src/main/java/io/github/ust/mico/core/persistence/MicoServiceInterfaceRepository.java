@@ -32,4 +32,7 @@ public interface MicoServiceInterfaceRepository extends Neo4jRepository<MicoServ
 	@Query("MATCH (service:MicoService)-[:PROVIDES]->(interface:MicoServiceInterface)-[:PROVIDES]->(port:MicoServicePort) WHERE service.shortName = {shortName} AND service.version = {version} AND interface.serviceInterfaceName = {serviceInterfaceName} RETURN (interface)-[:PROVIDES]->()")
     Optional<MicoServiceInterface> findByServiceAndName(@Param("shortName") String shortName, @Param("version") String version, @Param("serviceInterfaceName") String serviceInterfaceName);
 	
+    @Query("MATCH (service:MicoService)-[:PROVIDES]->(interface:MicoServiceInterface)-[:PROVIDES]->(port:MicoServicePort) WHERE service.shortName = {shortName} AND service.version = {version} AND interface.serviceInterfaceName = {serviceInterfaceName} DETACH DELETE interface, port")
+    void deleteByServiceAndName(@Param("shortName") String shortName, @Param("version") String version, @Param("serviceInterfaceName") String serviceInterfaceName);
+	
 }
