@@ -280,7 +280,7 @@ public class ApplicationResource {
                                                              @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                              @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName) {
         // Retrieve application from database (checks whether it exists)
-        MicoApplication application = getApplicationFromDatabase(serviceShortName, version);
+        MicoApplication application = getApplicationFromDatabase(shortName, version);
         
         // Check whether the application contains the service
         if (application.getServices().stream().noneMatch(service -> service.getShortName().equals(serviceShortName))) {
