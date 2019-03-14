@@ -19,6 +19,21 @@
 
 package io.github.ust.mico.core;
 
+import static io.github.ust.mico.core.TestConstants.*;
+import static org.junit.Assert.*;
+import static org.mockito.BDDMockito.given;
+
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.junit4.SpringRunner;
+
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
@@ -32,20 +47,6 @@ import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.UIDUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.junit4.SpringRunner;
-
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import static io.github.ust.mico.core.TestConstants.*;
-import static org.junit.Assert.*;
-import static org.mockito.BDDMockito.given;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -97,14 +98,13 @@ public class MicoKubernetesClientTests {
 
         assertEquals(0, mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems().size());
 
-        MicoApplication micoApplication = new MicoApplication()
-            .setId(ID)
-            .setShortName(SHORT_NAME)
-            .setVersion(VERSION)
-            .setName(NAME);
+//        MicoApplication micoApplication = new MicoApplication()
+//            .setId(ID)
+//            .setShortName(SHORT_NAME)
+//            .setVersion(VERSION)
+//            .setName(NAME);
         MicoService micoService = getMicoServiceWithoutInterface();
         MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo()
-            .setApplication(micoApplication)
             .setService(micoService)
             .setEnvironmentVariables(CollectionUtils.listOf(new MicoEnvironmentVariable("NAME", "VALUE")));
 

@@ -58,9 +58,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
+import io.github.ust.mico.core.dto.request.MicoLabelRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
 import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
+import io.github.ust.mico.core.dto.response.MicoLabelResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO;
 import io.github.ust.mico.core.dto.response.status.*;
 import io.github.ust.mico.core.model.*;
@@ -769,7 +771,7 @@ public class ApplicationResourceTests {
 
         MicoServiceDeploymentInfoRequestDTO updatedServiceDeploymentInfoDTO = new MicoServiceDeploymentInfoRequestDTO()
             .setReplicas(5)
-            .setLabels(CollectionUtils.listOf(new MicoLabel().setKey("key-updated").setValue("value-updated")))
+            .setLabels(CollectionUtils.listOf(new MicoLabelRequestDTO().setKey("key-updated").setValue("value-updated")))
             .setImagePullPolicy(ImagePullPolicy.NEVER);
 
         application.getServices().add(service);
@@ -858,7 +860,7 @@ public class ApplicationResourceTests {
 
         MicoServiceDeploymentInfoResponseDTO updatedServiceDeploymentInfoDTO = 
         	(MicoServiceDeploymentInfoResponseDTO) new MicoServiceDeploymentInfoResponseDTO()
-            .setLabels(labels);
+            .setLabels(labels.stream().map(MicoLabelResponseDTO::new).collect(Collectors.toList()));
 
         application.getServices().add(service);
         application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
