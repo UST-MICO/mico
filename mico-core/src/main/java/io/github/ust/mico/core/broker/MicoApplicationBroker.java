@@ -18,6 +18,9 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ *
+ */
 @Slf4j
 @Service
 public class MicoApplicationBroker {
@@ -40,6 +43,12 @@ public class MicoApplicationBroker {
     @Autowired
     private MicoStatusService micoStatusService;
 
+    /**
+     * @param shortName
+     * @param version
+     * @return
+     * @throws MicoApplicationNotFoundException
+     */
     public MicoApplication getMicoApplicationByShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException {
         Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
         if (!micoApplicationOptional.isPresent()) {
@@ -48,6 +57,12 @@ public class MicoApplicationBroker {
         return micoApplicationOptional.get();
     }
 
+    /**
+     *
+     * @param id
+     * @return
+     * @throws MicoApplicationNotFoundException
+     */
     public MicoApplication getMicoApplicationById(Long id) throws MicoApplicationNotFoundException {
         Optional<MicoApplication> micoApplicationOptional = applicationRepository.findById(id);
         if (!micoApplicationOptional.isPresent()) {
@@ -56,6 +71,12 @@ public class MicoApplicationBroker {
         return micoApplicationOptional.get();
     }
 
+    /**
+     *
+     * @param shortName
+     * @return
+     * @throws MicoApplicationNotFoundException
+     */
     public List<MicoApplication> getMicoApplicationsByShortName(String shortName) throws MicoApplicationNotFoundException {
         List<MicoApplication> micoApplicationList = applicationRepository.findByShortName(shortName);
         if (micoApplicationList.isEmpty()) {
@@ -64,6 +85,11 @@ public class MicoApplicationBroker {
         return micoApplicationList;
     }
 
+    /**
+     *
+     * @return
+     * @throws MicoApplicationNotFoundException
+     */
     public List<MicoApplication> getMicoApplications() throws MicoApplicationNotFoundException {
         List<MicoApplication> micoApplicationList = applicationRepository.findAll(3);
         if (micoApplicationList.isEmpty()) {
@@ -72,6 +98,14 @@ public class MicoApplicationBroker {
         return micoApplicationList;
     }
 
+    /**
+     *
+     * @param shortName
+     * @param version
+     * @throws MicoApplicationNotFoundException
+     * @throws KubernetesResourceException
+     * @throws MicoApplicationIsDeployedException
+     */
     public void deleteMicoApplicationByShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException, KubernetesResourceException, MicoApplicationIsDeployedException {
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(shortName, version);
         if (micoKubernetesClient.isApplicationDeployed(micoApplication)) {
@@ -80,6 +114,13 @@ public class MicoApplicationBroker {
         applicationRepository.delete(micoApplication);
     }
 
+    /**
+     *
+     * @param id
+     * @throws MicoApplicationNotFoundException
+     * @throws KubernetesResourceException
+     * @throws MicoApplicationIsDeployedException
+     */
     public void deleteMicoApplicationById(Long id) throws MicoApplicationNotFoundException, KubernetesResourceException, MicoApplicationIsDeployedException {
         MicoApplication micoApplication = getMicoApplicationById(id);
         if (micoKubernetesClient.isApplicationDeployed(micoApplication)) {
@@ -88,16 +129,35 @@ public class MicoApplicationBroker {
         applicationRepository.deleteById(id);
     }
 
+    /**
+     *
+     * @param shortName
+     * @throws MicoApplicationNotFoundException
+     * @throws KubernetesResourceException
+     * @throws MicoApplicationIsDeployedException
+     */
     public void deleteMicoApplicationsByShortName(String shortName) throws MicoApplicationNotFoundException, KubernetesResourceException, MicoApplicationIsDeployedException {
         List<MicoApplication> micoApplicationList = getMicoApplicationsByShortName(shortName);
         deleteListOfMicoApplications(micoApplicationList);
     }
 
+    /**
+     *
+     * @throws MicoApplicationNotFoundException
+     * @throws KubernetesResourceException
+     * @throws MicoApplicationIsDeployedException
+     */
     public void deleteMicoApplications() throws MicoApplicationNotFoundException, KubernetesResourceException, MicoApplicationIsDeployedException {
         List<MicoApplication> micoApplicationList = getMicoApplications();
         deleteListOfMicoApplications(micoApplicationList);
     }
 
+    /**
+     *
+     * @param micoApplicationList
+     * @throws KubernetesResourceException
+     * @throws MicoApplicationIsDeployedException
+     */
     private void deleteListOfMicoApplications(List<MicoApplication> micoApplicationList) throws KubernetesResourceException, MicoApplicationIsDeployedException {
         for (MicoApplication micoApplication : micoApplicationList) {
             if (micoKubernetesClient.isApplicationDeployed(micoApplication)) {
@@ -107,6 +167,12 @@ public class MicoApplicationBroker {
         applicationRepository.deleteAll(micoApplicationList);
     }
 
+    /**
+     *
+     * @param micoApplication
+     * @return
+     * @throws MicoApplicationAlreadyExistsException
+     */
     public MicoApplication createMicoApplication(MicoApplication micoApplication) throws MicoApplicationAlreadyExistsException {
         try {
             MicoApplication existingMicoApplication = getMicoApplicationByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion());
@@ -116,34 +182,79 @@ public class MicoApplicationBroker {
         throw new MicoApplicationAlreadyExistsException(micoApplication.getShortName(), micoApplication.getVersion());
     }
 
+    /**
+     *
+     * @param micoApplication
+     * @return
+     * @throws MicoApplicationNotFoundException
+     */
     public MicoApplication updateMicoApplication(MicoApplication micoApplication) throws MicoApplicationNotFoundException {
         MicoApplication existingMicoApplication = getMicoApplicationByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion());
         micoApplication.setId(existingMicoApplication.getId());
         return applicationRepository.save(micoApplication);
     }
 
+    /**
+     *
+     * @param shortName
+     * @param version
+     * @param newVersion
+     * @return
+     * @throws MicoApplicationNotFoundException
+     */
     public MicoApplication copyAndUpgradeMicoApplicationByShortNameAndVersion(String shortName, String version, String newVersion) throws MicoApplicationNotFoundException {
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(shortName, version);
         micoApplication.setVersion(newVersion).setId(null);
         return applicationRepository.save(micoApplication);
     }
 
+    /**
+     *
+     * @param id
+     * @param newVersion
+     * @return
+     * @throws MicoApplicationNotFoundException
+     */
     public MicoApplication copyAndUpgradeMicoApplicationById(Long id, String newVersion) throws MicoApplicationNotFoundException {
         MicoApplication micoApplication = getMicoApplicationById(id);
         micoApplication.setVersion(newVersion).setId(null);
         return applicationRepository.save(micoApplication);
     }
 
+    /**
+     *
+     * @param shortName
+     * @param version
+     * @return
+     * @throws MicoApplicationNotFoundException
+     */
     public List<MicoService> getMicoServicesOfMicoApplicationByShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException {
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(shortName, version);
         return serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion());
     }
 
+    /**
+     *
+     * @param id
+     * @return
+     * @throws MicoApplicationNotFoundException
+     */
     public List<MicoService> getMicoServicesOfMicoApplicationById(Long id) throws MicoApplicationNotFoundException {
         MicoApplication micoApplication = getMicoApplicationById(id);
         return serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion());
     }
 
+    /**
+     *
+     * @param applicationShortName
+     * @param applicationVersion
+     * @param serviceShortName
+     * @param serviceVersion
+     * @return
+     * @throws MicoApplicationNotFoundException
+     * @throws MicoServiceNotFoundException
+     * @throws MicoServiceAlreadyAddedToMicoApplicationException
+     */
     public MicoApplication addMicoServiceToMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion) throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAlreadyAddedToMicoApplicationException {
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
         MicoService micoService = micoServiceBroker.getServiceFromDatabase(serviceShortName, serviceVersion);
@@ -159,6 +270,15 @@ public class MicoApplicationBroker {
         }
     }
 
+    /**
+     *
+     * @param applicationId
+     * @param serviceId
+     * @return
+     * @throws MicoApplicationNotFoundException
+     * @throws MicoServiceNotFoundException
+     * @throws MicoServiceAlreadyAddedToMicoApplicationException
+     */
     public MicoApplication addMicoServiceToMicoApplicationById(Long applicationId, Long serviceId) throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAlreadyAddedToMicoApplicationException {
         MicoApplication micoApplication = getMicoApplicationById(applicationId);
         MicoService micoService = micoServiceBroker.getServiceById(serviceId);
@@ -174,6 +294,14 @@ public class MicoApplicationBroker {
         }
     }
 
+    /**
+     *
+     * @param applicationShortName
+     * @param applicationVersion
+     * @param serviceShortName
+     * @return
+     * @throws MicoServiceDeploymentInformationNotFoundException
+     */
     public MicoServiceDeploymentInfo getMicoServiceDeploymentInformationOfMicoApplication(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoServiceDeploymentInformationNotFoundException {
         Optional<MicoServiceDeploymentInfoQueryResult> micoServiceDeploymentInfoQueryResultOptional = serviceDeploymentInfoRepository.findByApplicationAndService(applicationShortName, applicationVersion, serviceShortName);
         if (micoServiceDeploymentInfoQueryResultOptional.isPresent()) {
@@ -183,6 +311,15 @@ public class MicoApplicationBroker {
         }
     }
 
+    /**
+     *
+     * @param applicationShortName
+     * @param applicationVersion
+     * @param serviceShortName
+     * @param serviceVersion
+     * @return
+     * @throws MicoServiceDeploymentInformationNotFoundException
+     */
     public MicoServiceDeploymentInfo getMicoServiceDeploymentInformationOfMicoApplication(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion) throws MicoServiceDeploymentInformationNotFoundException {
         Optional<MicoServiceDeploymentInfoQueryResult> micoServiceDeploymentInfoQueryResultOptional = serviceDeploymentInfoRepository.findByApplicationAndService(applicationShortName, applicationVersion, serviceShortName, serviceVersion);
         if (micoServiceDeploymentInfoQueryResultOptional.isPresent()) {
@@ -192,6 +329,14 @@ public class MicoApplicationBroker {
         }
     }
 
+    /**
+     *
+     * @param applicationShortName
+     * @param applicationVersion
+     * @param serviceShortName
+     * @return
+     * @throws MicoServiceDeploymentInformationNotFoundException
+     */
     public MicoApplication removeMicoServiceFromMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoServiceDeploymentInformationNotFoundException {
         MicoServiceDeploymentInfo micoServiceDeploymentInfo = getMicoServiceDeploymentInformationOfMicoApplication(applicationShortName, applicationVersion, serviceShortName);
         MicoApplication micoApplication = micoServiceDeploymentInfo.getApplication();
@@ -201,6 +346,15 @@ public class MicoApplicationBroker {
         return applicationRepository.save(micoApplication);
     }
 
+    /**
+     *
+     * @param applicationShortName
+     * @param applicationVersion
+     * @param serviceShortName
+     * @param serviceVersion
+     * @return
+     * @throws MicoServiceDeploymentInformationNotFoundException
+     */
     public MicoApplication removeMicoServiceFromMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion) throws MicoServiceDeploymentInformationNotFoundException {
         MicoServiceDeploymentInfo micoServiceDeploymentInfo = getMicoServiceDeploymentInformationOfMicoApplication(applicationShortName, applicationVersion, serviceShortName, serviceVersion);
         MicoApplication micoApplication = micoServiceDeploymentInfo.getApplication();
@@ -210,6 +364,16 @@ public class MicoApplicationBroker {
         return applicationRepository.save(micoApplication);
     }
 
+    /**
+     *
+     * @param applicationShortName
+     * @param applicationVersion
+     * @param serviceShortName
+     * @param serviceVersion
+     * @param micoServiceDeploymentInfo
+     * @return
+     * @throws MicoServiceDeploymentInformationNotFoundException
+     */
     public MicoApplication updateMicoServiceDeploymentInformationOfMicoApplication(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion, MicoServiceDeploymentInfo micoServiceDeploymentInfo) throws MicoServiceDeploymentInformationNotFoundException {
         MicoServiceDeploymentInfo existingMicoServiceDeploymentInfo = getMicoServiceDeploymentInformationOfMicoApplication(applicationShortName, applicationVersion, serviceShortName, serviceVersion);
         MicoApplication micoApplication = existingMicoServiceDeploymentInfo.getApplication();
@@ -222,6 +386,13 @@ public class MicoApplicationBroker {
         return applicationRepository.save(micoApplication);
     }
 
+    /**
+     *
+     * @param shortName
+     * @param version
+     * @return
+     * @throws MicoApplicationNotFoundException
+     */
     //TODO: Change return value to MicoApplicationStatus
     public MicoApplicationStatusResponseDTO getMicoApplicationStatusOfMicoApplication(String shortName, String version) throws MicoApplicationNotFoundException {
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(shortName, version);
