@@ -76,6 +76,7 @@ public class MicoServiceDeploymentInfo {
      * Information about the actual Kubernetes resources created by a deployment.
      * Contains details about the used Kubernetes {@link Deployment} and {@link Service Services}.
      */
+    @Relationship(type = "HAS")
     private KubernetesDeploymentInfo kubernetesDeploymentInfo;
 
     /**
@@ -116,7 +117,6 @@ public class MicoServiceDeploymentInfo {
      * Default restart policy is {@link RestartPolicy#ALWAYS}.
      */
     private RestartPolicy restartPolicy = RestartPolicy.ALWAYS;
-
 
     /**
      * Applies the values of all properties of a
