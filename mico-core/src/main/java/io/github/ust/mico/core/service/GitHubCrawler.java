@@ -39,6 +39,7 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.LinkedList;
 
 @Slf4j
@@ -125,16 +126,18 @@ public class GitHubCrawler {
     /**
      * Checks if a file in a GitHub repository exists
      *
-     * @param urlBasicInfo   the URL to a specific release of a GitHub repository
-     * @param dockerfilePath the relative path to the Dockerfile. The path is relative to the root directory of the
-     *                       GitHub repository
+     * @param gitHubRepositoryApiUrl the URL to a specific release of a GitHub repository
+     * @param dockerfilePath         the relative path to the Dockerfile. The path is relative to the root directory of the
+     *                               GitHub repository
      * @return {@code true} if the Dockerfile exists in the in the specified repository. {@code false} if response status is HTTP NOT FOUND.
-     * @throws {@link HttpClientErrorException} in case of HTTP 4XX response from GitHub
-     * @throws {@link HttpStatusCodeException} in case of HTTP 5XX response from GitHub
+     * @throws {@link HttpClientErrorException} in case of HTTP 4XX response from the GitHub API. The exception is used by {@link RestTemplate#getForEntity(URI, Class)}
+     *                to indicate that the GitHub API returned an HTTP 4XX error for a request. The HTTP Code 404 is expected and caught if the file does not exist in the specified repository.
+     * @throws {@link HttpStatusCodeException} in case of HTTP 5XX response from the GitHub API. The exception is used by {@link RestTemplate#getForEntity(URI, Class)}
+     *                to indicate that the GitHub API returned an HTTP 5XX error for a request. This is most likely a problem of the GitHub API itself.
      */
-    private boolean existsFileInGithubRepo(String urlBasicInfo, String dockerfilePath) {
+    private boolean existsFileInGithubRepo(String gitHubRepositoryApiUrl, String dockerfilePath) {
         ResponseEntity<String> responseDockerfileInfo;
-        UriComponentsBuilder dockerFileUriBuilder = UriComponentsBuilder.fromHttpUrl(urlBasicInfo);
+        UriComponentsBuilder dockerFileUriBuilder = UriComponentsBuilder.fromHttpUrl(gitHubRepositoryApiUrl);
         UriComponents dockerFileUriComponent = dockerFileUriBuilder.pathSegment(GITHUB_API_CONTENTS).pathSegment(dockerfilePath).build();
         log.debug("Check if the Dockerfile exists at {}", dockerFileUriComponent.toString());
         try {
