@@ -259,7 +259,7 @@ public class MicoApplicationBroker {
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
         MicoService micoService = micoServiceBroker.getServiceFromDatabase(serviceShortName, serviceVersion);
 
-        //TODO: update following implementation (make use of getMicoServiceDeploymentInformationOfMicoApplication)
+        //TODO: update following implementation (make use of getMicoServiceDeploymentInformationOfMicoApplicationByShortNameAndVersion)
         if (micoApplication.getServiceDeploymentInfos().stream().noneMatch(sdi -> sdi.getService().equals(micoService))) {
             MicoServiceDeploymentInfo sdi = new MicoServiceDeploymentInfo();
             sdi.setApplication(micoApplication).setService(micoService);
@@ -283,7 +283,7 @@ public class MicoApplicationBroker {
         MicoApplication micoApplication = getMicoApplicationById(applicationId);
         MicoService micoService = micoServiceBroker.getServiceById(serviceId);
 
-        //TODO: update following implementation (make use of getMicoServiceDeploymentInformationOfMicoApplication)
+        //TODO: update following implementation (make use of getMicoServiceDeploymentInformationOfMicoApplicationByShortNameAndVersion)
         if (micoApplication.getServiceDeploymentInfos().stream().noneMatch(sdi -> sdi.getService().equals(micoService))) {
             MicoServiceDeploymentInfo sdi = new MicoServiceDeploymentInfo();
             sdi.setApplication(micoApplication).setService(micoService);
@@ -302,7 +302,7 @@ public class MicoApplicationBroker {
      * @return
      * @throws MicoServiceDeploymentInformationNotFoundException
      */
-    public MicoServiceDeploymentInfo getMicoServiceDeploymentInformationOfMicoApplication(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoServiceDeploymentInformationNotFoundException {
+    public MicoServiceDeploymentInfo getMicoServiceDeploymentInformationOfMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoServiceDeploymentInformationNotFoundException {
         Optional<MicoServiceDeploymentInfoQueryResult> micoServiceDeploymentInfoQueryResultOptional = serviceDeploymentInfoRepository.findByApplicationAndService(applicationShortName, applicationVersion, serviceShortName);
         if (micoServiceDeploymentInfoQueryResultOptional.isPresent()) {
             return micoServiceDeploymentInfoQueryResultOptional.get().getServiceDeploymentInfo();
@@ -320,7 +320,7 @@ public class MicoApplicationBroker {
      * @return
      * @throws MicoServiceDeploymentInformationNotFoundException
      */
-    public MicoServiceDeploymentInfo getMicoServiceDeploymentInformationOfMicoApplication(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion) throws MicoServiceDeploymentInformationNotFoundException {
+    public MicoServiceDeploymentInfo getMicoServiceDeploymentInformationOfMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion) throws MicoServiceDeploymentInformationNotFoundException {
         Optional<MicoServiceDeploymentInfoQueryResult> micoServiceDeploymentInfoQueryResultOptional = serviceDeploymentInfoRepository.findByApplicationAndService(applicationShortName, applicationVersion, serviceShortName, serviceVersion);
         if (micoServiceDeploymentInfoQueryResultOptional.isPresent()) {
             return micoServiceDeploymentInfoQueryResultOptional.get().getServiceDeploymentInfo();
@@ -338,7 +338,7 @@ public class MicoApplicationBroker {
      * @throws MicoServiceDeploymentInformationNotFoundException
      */
     public MicoApplication removeMicoServiceFromMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoServiceDeploymentInformationNotFoundException {
-        MicoServiceDeploymentInfo micoServiceDeploymentInfo = getMicoServiceDeploymentInformationOfMicoApplication(applicationShortName, applicationVersion, serviceShortName);
+        MicoServiceDeploymentInfo micoServiceDeploymentInfo = getMicoServiceDeploymentInformationOfMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion, serviceShortName);
         MicoApplication micoApplication = micoServiceDeploymentInfo.getApplication();
         micoApplication.getServiceDeploymentInfos().remove(micoServiceDeploymentInfo);
 
@@ -356,7 +356,7 @@ public class MicoApplicationBroker {
      * @throws MicoServiceDeploymentInformationNotFoundException
      */
     public MicoApplication removeMicoServiceFromMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion) throws MicoServiceDeploymentInformationNotFoundException {
-        MicoServiceDeploymentInfo micoServiceDeploymentInfo = getMicoServiceDeploymentInformationOfMicoApplication(applicationShortName, applicationVersion, serviceShortName, serviceVersion);
+        MicoServiceDeploymentInfo micoServiceDeploymentInfo = getMicoServiceDeploymentInformationOfMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion, serviceShortName, serviceVersion);
         MicoApplication micoApplication = micoServiceDeploymentInfo.getApplication();
         micoApplication.getServiceDeploymentInfos().remove(micoServiceDeploymentInfo);
 
@@ -375,7 +375,7 @@ public class MicoApplicationBroker {
      * @throws MicoServiceDeploymentInformationNotFoundException
      */
     public MicoApplication updateMicoServiceDeploymentInformationOfMicoApplication(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion, MicoServiceDeploymentInfo micoServiceDeploymentInfo) throws MicoServiceDeploymentInformationNotFoundException {
-        MicoServiceDeploymentInfo existingMicoServiceDeploymentInfo = getMicoServiceDeploymentInformationOfMicoApplication(applicationShortName, applicationVersion, serviceShortName, serviceVersion);
+        MicoServiceDeploymentInfo existingMicoServiceDeploymentInfo = getMicoServiceDeploymentInformationOfMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion, serviceShortName, serviceVersion);
         MicoApplication micoApplication = existingMicoServiceDeploymentInfo.getApplication();
 
         micoServiceDeploymentInfo.setId(existingMicoServiceDeploymentInfo.getId());
