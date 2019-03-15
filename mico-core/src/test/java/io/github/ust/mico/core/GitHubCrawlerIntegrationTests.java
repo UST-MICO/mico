@@ -65,7 +65,6 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
         assertEquals(service.getId(), readService.getId());
         assertEquals(service.getVersion(), readService.getVersion());
         assertEquals(service.getGitCloneUrl(), readService.getGitCloneUrl());
-        assertEquals(service.getGitReleaseInfoUrl(), readService.getGitReleaseInfoUrl());
         assertEquals(service.getName(), readService.getName());
     }
 
@@ -80,7 +79,6 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
         assertEquals(service.getId(), readService.getId());
         assertEquals(service.getVersion(), readService.getVersion());
         assertEquals(service.getGitCloneUrl(), readService.getGitCloneUrl());
-        assertEquals(service.getGitReleaseInfoUrl(), readService.getGitReleaseInfoUrl());
         assertEquals(service.getName(), readService.getName());
     }
 
@@ -95,7 +93,6 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
         assertEquals(service.getId(), readService.getId());
         assertEquals(service.getVersion(), readService.getVersion());
         assertEquals(service.getGitCloneUrl(), readService.getGitCloneUrl());
-        assertEquals(service.getGitReleaseInfoUrl(), readService.getGitReleaseInfoUrl());
         assertEquals(service.getName(), readService.getName());
     }
 

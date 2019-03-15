@@ -19,28 +19,32 @@
 
 package io.github.ust.mico.core.service;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceCrawlingOrigin;
 import io.github.ust.mico.core.util.KubernetesNameNormalizer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
-import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpStatusCodeException;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
-
-import java.io.IOException;
 import java.net.URI;
-import java.util.LinkedList;
+
 
 @Slf4j
 @Component
@@ -120,7 +124,6 @@ public class GitHubCrawler {
             throw new IllegalArgumentException("An error occurred while requesting information about the GitHub repository. Send two requests and got the status codes "
                 + responseBasicInfo.getStatusCode() + " and " + responseReleaseInfo.getStatusCode().is2xxSuccessful());
         }
-
     }
 
     /**
@@ -185,7 +188,7 @@ public class GitHubCrawler {
         return url.replace(GITHUB_HTML_URL, GITHUB_API_URL);
     }
 
-    public LinkedList<String> getVersionsFromGitHubRepo(String gitHubRepoUrl) throws IOException {
+    public List<String> getVersionsFromGitHubRepo(String gitHubRepoUrl) throws IOException {
         gitHubRepoUrl = adaptUriForGitHubApi(gitHubRepoUrl);
         String releasesUrl = gitHubRepoUrl + "/" + RELEASES;
         log.debug("Getting release tags from '{}'", releasesUrl);
@@ -196,11 +199,10 @@ public class GitHubCrawler {
         try {
             JsonNode responseJson = mapper.readTree(response.getBody());
 
-            LinkedList<String> versionList = new LinkedList<>();
+            List<String> versionList = new ArrayList<>();
             responseJson.forEach(release -> versionList.add(release.get("tag_name").textValue()));
 
             return versionList;
-
         } catch (IOException e) {
             log.error(e.getStackTrace().toString());
             log.error("Getting exception '{}'", e.getMessage());

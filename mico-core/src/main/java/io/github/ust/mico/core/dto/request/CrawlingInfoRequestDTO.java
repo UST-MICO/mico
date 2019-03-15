@@ -17,9 +17,9 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto;
+package io.github.ust.mico.core.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import javax.validation.constraints.NotEmpty;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
@@ -32,20 +32,18 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
-
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Pattern;
 
 /**
  * DTO for the information needed by a Crawler (e.g., {@link GitHubCrawler})
- * for crawling a service from a remote repository.
+ * for crawling a service from a remote repository
+ * intended to use with requests only.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class CrawlingInfoDTO {
+public class CrawlingInfoRequestDTO {
 
     /**
      * The url to the remote repository to crawl from.

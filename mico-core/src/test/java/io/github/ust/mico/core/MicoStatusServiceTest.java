@@ -19,38 +19,15 @@
 
 package io.github.ust.mico.core;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import static io.github.ust.mico.core.TestConstants.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.*;
 
-import io.fabric8.kubernetes.api.model.PodList;
-import io.fabric8.kubernetes.api.model.PodListBuilder;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
-import io.github.ust.mico.core.configuration.PrometheusConfig;
-import io.github.ust.mico.core.dto.KubernetesNodeMetricsDTO;
-import io.github.ust.mico.core.dto.KubernetesPodInformationDTO;
-import io.github.ust.mico.core.dto.KubernetesPodMetricsDTO;
-import io.github.ust.mico.core.dto.MicoApplicationDTO;
-import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
-import io.github.ust.mico.core.dto.MicoServiceInterfaceStatusDTO;
-import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
-import io.github.ust.mico.core.dto.PrometheusResponseDTO;
-import io.github.ust.mico.core.exception.KubernetesResourceException;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.MicoStatusService;
-import io.github.ust.mico.core.util.CollectionUtils;
+import java.util.*;
+
+import io.github.ust.mico.core.dto.response.internal.PrometheusResponseDTO;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -62,18 +39,25 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
-import static io.github.ust.mico.core.TestConstants.NAME;
-import static io.github.ust.mico.core.TestConstants.SERVICE_INTERFACE_NAME;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME_OTHER;
-import static io.github.ust.mico.core.TestConstants.VERSION;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
+import io.fabric8.kubernetes.api.model.PodList;
+import io.fabric8.kubernetes.api.model.PodListBuilder;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.github.ust.mico.core.configuration.PrometheusConfig;
+import io.github.ust.mico.core.dto.response.*;
+import io.github.ust.mico.core.dto.response.status.*;
+import io.github.ust.mico.core.exception.KubernetesResourceException;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.service.MicoStatusService;
+import io.github.ust.mico.core.util.CollectionUtils;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -149,7 +133,7 @@ public class MicoStatusServiceTest {
     public void setupMicoApplication() {
         micoApplication = new MicoApplication()
             .setShortName(SHORT_NAME)
-            .setVersion(VERSION);
+             .setVersion(VERSION);
 
         otherMicoApplication = new MicoApplication()
             .setName(NAME)
@@ -165,13 +149,11 @@ public class MicoStatusServiceTest {
                     .setServiceInterfaceName(SERVICE_INTERFACE_NAME)
             ));
 
-        micoApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
-            .setApplication(micoApplication)
-            .setService(micoService));
+        micoApplication.getServices().add(micoService);
+        micoApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(micoService));
 
-        otherMicoApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
-            .setApplication(otherMicoApplication)
-            .setService(micoService));
+        otherMicoApplication.getServices().add(micoService);
+        otherMicoApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(micoService));
 
         int availableReplicas = 1;
         int replicas = 1;
@@ -249,82 +231,78 @@ public class MicoStatusServiceTest {
     @Test
     @SuppressWarnings({"rawtypes", "unchecked"})
     public void getApplicationStatus() {
-        MicoApplicationStatusDTO micoApplicationStatus = new MicoApplicationStatusDTO();
+        MicoApplicationStatusResponseDTO micoApplicationStatus = new MicoApplicationStatusResponseDTO();
         micoApplicationStatus
             .setTotalNumberOfRequestedReplicas(1)
             .setTotalNumberOfAvailableReplicas(1)
             .setTotalNumberOfPods(4)
             .setTotalNumberOfMicoServices(1)
-            .setServiceStatuses(CollectionUtils.listOf(new MicoServiceStatusDTO()
+            .setServiceStatuses(CollectionUtils.listOf(new MicoServiceStatusResponseDTO()
                 .setName(NAME)
                 .setShortName(SHORT_NAME)
                 .setVersion(VERSION)
                 .setAvailableReplicas(1)
                 .setRequestedReplicas(1)
-                .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationDTO()
-                    .setName(otherMicoApplication.getName())
-                    .setShortName(otherMicoApplication.getShortName())
-                    .setVersion(otherMicoApplication.getVersion())
-                    .setDescription(otherMicoApplication.getDescription())))
+                .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication)))
                 .setNodeMetrics(CollectionUtils.listOf(
-                    new KubernetesNodeMetricsDTO()
+                    new KubernetesNodeMetricsResponseDTO()
                         .setNodeName(nodeName1)
                         .setAverageCpuLoad(20)
                         .setAverageMemoryUsage(60),
-                    new KubernetesNodeMetricsDTO()
+                    new KubernetesNodeMetricsResponseDTO()
                         .setNodeName(nodeName2)
                         .setAverageCpuLoad(7)
                         .setAverageMemoryUsage(57)
                 ))
                 // Add four pods (on two different nodes)
                 .setPodsInformation(Arrays.asList(
-                    new KubernetesPodInformationDTO()
+                    new KubernetesPodInformationResponseDTO()
                         .setPodName(podName1)
                         .setHostIp(hostIp)
                         .setNodeName(nodeName1)
                         .setPhase(podPhase)
                         .setStartTime(startTimePod1)
                         .setRestarts(restartsPod1)
-                        .setMetrics(new KubernetesPodMetricsDTO()
+                        .setMetrics(new KubernetesPodMetricsResponseDTO()
                             .setMemoryUsage(memoryUsagePod1)
                             .setCpuLoad(cpuLoadPod1)
                             .setAvailable(podAvailablePod1)),
-                    new KubernetesPodInformationDTO()
+                    new KubernetesPodInformationResponseDTO()
                         .setPodName(podName2)
                         .setHostIp(hostIp)
                         .setNodeName(nodeName1)
                         .setPhase(podPhase)
                         .setStartTime(startTimePod2)
                         .setRestarts(restartsPod2)
-                        .setMetrics(new KubernetesPodMetricsDTO()
+                        .setMetrics(new KubernetesPodMetricsResponseDTO()
                             .setMemoryUsage(memoryUsagePod2)
                             .setCpuLoad(cpuLoadPod2)
                             .setAvailable(podAvailablePod2)),
-                    new KubernetesPodInformationDTO()
+                    new KubernetesPodInformationResponseDTO()
                         .setPodName(podName3)
                         .setHostIp(hostIp)
                         .setNodeName(nodeName2)
                         .setPhase(podPhase)
                         .setStartTime(startTimePod3)
                         .setRestarts(restartsPod3)
-                        .setMetrics(new KubernetesPodMetricsDTO()
+                        .setMetrics(new KubernetesPodMetricsResponseDTO()
                             .setMemoryUsage(memoryUsagePod3)
                             .setCpuLoad(cpuLoadPod3)
                             .setAvailable(podAvailablePod3)),
-                    new KubernetesPodInformationDTO()
+                    new KubernetesPodInformationResponseDTO()
                         .setPodName(podName4)
                         .setHostIp(hostIp)
                         .setNodeName(nodeName2)
                         .setPhase(podPhase)
                         .setStartTime(startTimePod4)
                         .setRestarts(restartsPod4)
-                        .setMetrics(new KubernetesPodMetricsDTO()
+                        .setMetrics(new KubernetesPodMetricsResponseDTO()
                             .setMemoryUsage(memoryUsagePod4)
                             .setCpuLoad(cpuLoadPod4)
                             .setAvailable(podAvailablePod4))))
                 .setErrorMessages(CollectionUtils.listOf())
                 .setInterfacesInformation(CollectionUtils.listOf(
-                    new MicoServiceInterfaceStatusDTO()
+                    new MicoServiceInterfaceStatusResponseDTO()
                         .setName(SERVICE_INTERFACE_NAME)
                         .setExternalIps(CollectionUtils.listOf("192.168.2.112", "192.168.2.113"))))))
         ;
@@ -359,41 +337,38 @@ public class MicoStatusServiceTest {
         assertEquals(micoApplicationStatus, micoStatusService.getApplicationStatus(micoApplication));
     }
 
-    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
     public void getApplicationStatusWithMissingKubernetesService() {
-        MicoApplicationStatusDTO micoApplicationStatus = new MicoApplicationStatusDTO();
+        MicoApplicationStatusResponseDTO micoApplicationStatus = new MicoApplicationStatusResponseDTO();
         micoApplicationStatus
             .setTotalNumberOfRequestedReplicas(1)
             .setTotalNumberOfAvailableReplicas(1)
             .setTotalNumberOfPods(1)
             .setTotalNumberOfMicoServices(1)
-            .setServiceStatuses(CollectionUtils.listOf(new MicoServiceStatusDTO()
+            .setServiceStatuses(CollectionUtils.listOf(new MicoServiceStatusResponseDTO()
                 .setName(NAME)
                 .setShortName(SHORT_NAME)
                 .setVersion(VERSION)
                 .setAvailableReplicas(1)
                 .setRequestedReplicas(1)
-                .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationDTO()
-                    .setName(otherMicoApplication.getName())
-                    .setShortName(otherMicoApplication.getShortName())
-                    .setVersion(otherMicoApplication.getVersion())
-                    .setDescription(otherMicoApplication.getDescription())))
+                .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication)))
                 .setNodeMetrics(CollectionUtils.listOf(
-                    new KubernetesNodeMetricsDTO()
+                    new KubernetesNodeMetricsResponseDTO()
                         .setNodeName(nodeName1)
                         .setAverageCpuLoad(30)
                         .setAverageMemoryUsage(70)
                 ))
                 // Add four pods (on two different nodes)
                 .setPodsInformation(CollectionUtils.listOf(
-                    new KubernetesPodInformationDTO()
+                    new KubernetesPodInformationResponseDTO()
                         .setPodName(podName1)
                         .setHostIp(hostIp)
                         .setNodeName(nodeName1)
                         .setPhase(podPhase)
                         .setStartTime(startTimePod1)
                         .setRestarts(restartsPod1)
-                        .setMetrics(new KubernetesPodMetricsDTO()
+                        .setMetrics(new KubernetesPodMetricsResponseDTO()
                             .setMemoryUsage(memoryUsagePod1)
                             .setCpuLoad(cpuLoadPod1)
                             .setAvailable(podAvailablePod1))))
@@ -401,7 +376,7 @@ public class MicoStatusServiceTest {
                     SERVICE_INTERFACE_NAME + "' of MicoService '" +
                     micoService.getShortName() + "' '" + micoService.getVersion() + "'."))
                 .setInterfacesInformation(CollectionUtils.listOf(
-                    new MicoServiceInterfaceStatusDTO()
+                    new MicoServiceInterfaceStatusResponseDTO()
                         .setName(SERVICE_INTERFACE_NAME)
                         // Empty list of external IP addresses
                         .setExternalIps(CollectionUtils.listOf())))));
@@ -426,13 +401,13 @@ public class MicoStatusServiceTest {
 
     @Test
     public void getApplicationStatusWithMissingDeployment() {
-        MicoApplicationStatusDTO micoApplicationStatus = new MicoApplicationStatusDTO();
+        MicoApplicationStatusResponseDTO micoApplicationStatus = new MicoApplicationStatusResponseDTO();
         micoApplicationStatus
             .setTotalNumberOfRequestedReplicas(0)
             .setTotalNumberOfAvailableReplicas(0)
             .setTotalNumberOfPods(0)
             .setTotalNumberOfMicoServices(1)
-            .setServiceStatuses(CollectionUtils.listOf(new MicoServiceStatusDTO().setErrorMessages(CollectionUtils.listOf("No deployment of " + micoService.getShortName() + " " + micoService.getVersion() + " is available."))));
+            .setServiceStatuses(CollectionUtils.listOf(new MicoServiceStatusResponseDTO().setErrorMessages(CollectionUtils.listOf("No deployment of " + micoService.getShortName() + " " + micoService.getVersion() + " is available."))));
         try {
             given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(Optional.empty());
             given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(kubernetesService);
@@ -460,76 +435,72 @@ public class MicoStatusServiceTest {
     @Test
     @SuppressWarnings({"rawtypes", "unchecked"})
     public void getServiceStatus() {
-        MicoServiceStatusDTO micoServiceStatus = new MicoServiceStatusDTO();
+        MicoServiceStatusResponseDTO micoServiceStatus = new MicoServiceStatusResponseDTO();
         micoServiceStatus
             .setName(NAME)
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setAvailableReplicas(1)
             .setRequestedReplicas(1)
-            .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationDTO()
-                .setName(otherMicoApplication.getName())
-                .setShortName(otherMicoApplication.getShortName())
-                .setVersion(otherMicoApplication.getVersion())
-                .setDescription(otherMicoApplication.getDescription())))
+            .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication)))
             .setNodeMetrics(CollectionUtils.listOf(
-                new KubernetesNodeMetricsDTO()
+                new KubernetesNodeMetricsResponseDTO()
                     .setNodeName(nodeName1)
                     .setAverageCpuLoad(20)
                     .setAverageMemoryUsage(60),
-                new KubernetesNodeMetricsDTO()
+                new KubernetesNodeMetricsResponseDTO()
                     .setNodeName(nodeName2)
                     .setAverageCpuLoad(7)
                     .setAverageMemoryUsage(57)
             ))
             // Add four pods (on two different nodes)
             .setPodsInformation(Arrays.asList(
-                new KubernetesPodInformationDTO()
+                new KubernetesPodInformationResponseDTO()
                     .setPodName(podName1)
                     .setHostIp(hostIp)
                     .setNodeName(nodeName1)
                     .setPhase(podPhase)
                     .setStartTime(startTimePod1)
                     .setRestarts(restartsPod1)
-                    .setMetrics(new KubernetesPodMetricsDTO()
+                    .setMetrics(new KubernetesPodMetricsResponseDTO()
                         .setMemoryUsage(memoryUsagePod1)
                         .setCpuLoad(cpuLoadPod1)
                         .setAvailable(podAvailablePod1)),
-                new KubernetesPodInformationDTO()
+                new KubernetesPodInformationResponseDTO()
                     .setPodName(podName2)
                     .setHostIp(hostIp)
                     .setNodeName(nodeName1)
                     .setPhase(podPhase)
                     .setStartTime(startTimePod2)
                     .setRestarts(restartsPod2)
-                    .setMetrics(new KubernetesPodMetricsDTO()
+                    .setMetrics(new KubernetesPodMetricsResponseDTO()
                         .setMemoryUsage(memoryUsagePod2)
                         .setCpuLoad(cpuLoadPod2)
                         .setAvailable(podAvailablePod2)),
-                new KubernetesPodInformationDTO()
+                new KubernetesPodInformationResponseDTO()
                     .setPodName(podName3)
                     .setHostIp(hostIp)
                     .setNodeName(nodeName2)
                     .setPhase(podPhase)
                     .setStartTime(startTimePod3)
                     .setRestarts(restartsPod3)
-                    .setMetrics(new KubernetesPodMetricsDTO()
+                    .setMetrics(new KubernetesPodMetricsResponseDTO()
                         .setMemoryUsage(memoryUsagePod3)
                         .setCpuLoad(cpuLoadPod3)
                         .setAvailable(podAvailablePod3)),
-                new KubernetesPodInformationDTO()
+                new KubernetesPodInformationResponseDTO()
                     .setPodName(podName4)
                     .setHostIp(hostIp)
                     .setNodeName(nodeName2)
                     .setPhase(podPhase)
                     .setStartTime(startTimePod4)
                     .setRestarts(restartsPod4)
-                    .setMetrics(new KubernetesPodMetricsDTO()
+                    .setMetrics(new KubernetesPodMetricsResponseDTO()
                         .setMemoryUsage(memoryUsagePod4)
                         .setCpuLoad(cpuLoadPod4)
                         .setAvailable(podAvailablePod4))))
             .setErrorMessages(CollectionUtils.listOf())
-            .setInterfacesInformation(CollectionUtils.listOf(new MicoServiceInterfaceStatusDTO()
+            .setInterfacesInformation(CollectionUtils.listOf(new MicoServiceInterfaceStatusResponseDTO()
                 .setName(SERVICE_INTERFACE_NAME)
                 .setExternalIps(CollectionUtils.listOf("192.168.2.112", "192.168.2.113"))));
         try {
@@ -568,14 +539,14 @@ public class MicoStatusServiceTest {
         given(micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, SERVICE_INTERFACE_NAME))
             .willReturn(kubernetesService);
 
-        MicoServiceInterfaceStatusDTO expectedServiceInterface = new MicoServiceInterfaceStatusDTO()
+        MicoServiceInterfaceStatusResponseDTO expectedServiceInterface = new MicoServiceInterfaceStatusResponseDTO()
             .setName(SERVICE_INTERFACE_NAME)
             .setExternalIps(CollectionUtils.listOf("192.168.2.112", "192.168.2.113"));
-        List<MicoServiceInterfaceStatusDTO> expectedInterfaceStatusDTO = new LinkedList<>();
+        List<MicoServiceInterfaceStatusResponseDTO> expectedInterfaceStatusDTO = new LinkedList<>();
         expectedInterfaceStatusDTO.add(expectedServiceInterface);
         List<String> errorMessages = new ArrayList<>();
 
-        List<MicoServiceInterfaceStatusDTO> actualInterfaceStatusDTO = micoStatusService.getServiceInterfaceStatus(micoService, errorMessages);
+        List<MicoServiceInterfaceStatusResponseDTO> actualInterfaceStatusDTO = micoStatusService.getServiceInterfaceStatus(micoService, errorMessages);
 
         assertTrue("Expected there are no errors", errorMessages.isEmpty());
         assertEquals(expectedInterfaceStatusDTO, actualInterfaceStatusDTO);
@@ -587,15 +558,15 @@ public class MicoStatusServiceTest {
         given(micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, SERVICE_INTERFACE_NAME))
             .willThrow(new KubernetesResourceException("Unexpected error"));
 
-        MicoServiceInterfaceStatusDTO expectedServiceInterface = new MicoServiceInterfaceStatusDTO()
+        MicoServiceInterfaceStatusResponseDTO expectedServiceInterface = new MicoServiceInterfaceStatusResponseDTO()
             .setName(SERVICE_INTERFACE_NAME)
             .setExternalIps(new ArrayList<>()); // Expect that there are no IPs
-        List<MicoServiceInterfaceStatusDTO> expectedInterfaceStatusDTO = new LinkedList<>();
+        List<MicoServiceInterfaceStatusResponseDTO> expectedInterfaceStatusDTO = new LinkedList<>();
         expectedInterfaceStatusDTO.add(expectedServiceInterface);
 
         List<String> errorMessages = new ArrayList<>();
 
-        List<MicoServiceInterfaceStatusDTO> actualInterfaceStatusDTO = micoStatusService.getServiceInterfaceStatus(micoService, errorMessages);
+        List<MicoServiceInterfaceStatusResponseDTO> actualInterfaceStatusDTO = micoStatusService.getServiceInterfaceStatus(micoService, errorMessages);
 
         assertEquals("Expected one error", 1, errorMessages.size());
         assertEquals(expectedInterfaceStatusDTO, actualInterfaceStatusDTO);

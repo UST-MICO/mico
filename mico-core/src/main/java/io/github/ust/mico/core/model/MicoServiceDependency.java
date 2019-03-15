@@ -19,18 +19,13 @@
 
 package io.github.ust.mico.core.model;
 
-import com.fasterxml.jackson.annotation.*;
-import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
-import io.github.ust.mico.core.exception.VersionNotSupportedException;
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.Extension;
-import io.swagger.annotations.ExtensionProperty;
-import lombok.*;
-import lombok.experimental.Accessors;
 import org.neo4j.ogm.annotation.*;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
+import com.fasterxml.jackson.annotation.*;
+
+import io.swagger.annotations.ApiModelProperty;
+import lombok.*;
+import lombok.experimental.Accessors;
 
 /**
  * Represents a dependency of a {@link MicoService}.
@@ -39,7 +34,6 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonIgnoreProperties(ignoreUnknown = true)
 @RelationshipEntity(type = "DEPENDS_ON")
 public class MicoServiceDependency {
 
@@ -48,7 +42,6 @@ public class MicoServiceDependency {
      */
     @Id
     @GeneratedValue
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
 
@@ -60,12 +53,10 @@ public class MicoServiceDependency {
      * This is the {@link MicoService} that requires (depends on)
      * the {@link MicoServiceDependency#dependedService}.
      */
-    // TODO: Create a new DTO that does not include the service property. Covered by mico#512
     @JsonBackReference
     @StartNode
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    @Valid
     private MicoService service;
 
     /**
@@ -77,34 +68,6 @@ public class MicoServiceDependency {
     @EndNode
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
-    @NotNull
-    @Valid
     private MicoService dependedService;
-
-    /**
-     * The minimum version of the depended service
-     * that is supported.
-     */
-    @ApiModelProperty(required = true)
-    private String minVersion;
-
-    /**
-     * The maximum version of the depended service
-     * that is supported.
-     */
-    @ApiModelProperty(required = true)
-    private String maxVersion;
-
-    @JsonIgnore
-    public MicoVersion getMinMicoVersion() throws VersionNotSupportedException {
-        MicoVersion micoVersion = MicoVersion.valueOf(this.minVersion);
-        return micoVersion;
-    }
-
-    @JsonIgnore
-    public MicoVersion getMaxMicoVersion() throws VersionNotSupportedException {
-        MicoVersion micoVersion = MicoVersion.valueOf(this.maxVersion);
-        return micoVersion;
-    }
 
 }

@@ -38,18 +38,23 @@ public interface MicoApplicationRepository extends Neo4jRepository<MicoApplicati
     List<MicoApplication> findAll(@Depth int depth);
 
     @Depth(3)
-    List<MicoApplication> findByShortName(@Param("shortName") String shortName);
+    List<MicoApplication> findByShortName(String shortName);
 
     @Depth(3)
     Optional<MicoApplication> findByShortNameAndVersion(String shortName, String version);
 
     /**
-     * Find all applications that are using the given service
+     * Find all applications that are using the given service.
      *
      * @param shortName the shortName of the {@link MicoService}
      * @param version   the version of the {@link MicoService}
      * @return a list of {@link MicoApplication}
      */
-    @Query("MATCH (a:MicoApplication)-[i:INCLUDES_SERVICE]-(s:MicoService) WHERE s.shortName = {shortName} AND s.version = {version} RETURN COLLECT(a) AS applications")
-    List<MicoApplication> findAllByUsedService(@Param("shortName") String shortName, @Param("version") String version);
+    @Query("MATCH (a:MicoApplication)-[i:INCLUDES]-(s:MicoService) "
+    	+ "WHERE s.shortName = {shortName} AND s.version = {version} "
+    	+ "RETURN COLLECT(a) AS applications")
+    List<MicoApplication> findAllByUsedService(
+    	@Param("shortName") String shortName,
+    	@Param("version") String version);
+    
 }

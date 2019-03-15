@@ -17,13 +17,14 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto;
+package io.github.ust.mico.core.dto.request;
 
-import java.util.List;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Pattern;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
-import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.model.MicoEnvironmentVariable;
+import io.github.ust.mico.core.util.Patterns;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -33,38 +34,57 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for status information of a {@link MicoServiceInterface}, that is mapped to a Kubernetes Service.
+ * DTO for a {@link MicoEnvironmentVariable} intended to use with requests only.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class MicoServiceInterfaceStatusDTO {
+public class MicoEnvironmentVariableRequestDTO {
 
-    /**
-     * Name of the {@link MicoServiceInterface}.
+	/**
+     * Name of the environment variable.
      */
-    @ApiModelProperty(extensions = {@Extension(
+    @ApiModelProperty(required = true, extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Name"),
+            @ExtensionProperty(name = "pattern", value = Patterns.KUBERNETES_ENV_VAR_NAME_REGEX),
             @ExtensionProperty(name = "x-order", value = "10"),
-            @ExtensionProperty(name = "description", value = "Name of the MicoServiceInterface.")
+            @ExtensionProperty(name = "description", value = "Name of the environment variable.")
         }
     )})
+    @NotEmpty
+    @Pattern(regexp = Patterns.KUBERNETES_ENV_VAR_NAME_REGEX, message = Patterns.KUBERNETES_ENV_VAR_NAME_MESSAGE)
     private String name;
 
     /**
-     * List of external IP addresses of this {@link MicoServiceInterface}.
+     * Value of the environment variable.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "External IPs"),
+            @ExtensionProperty(name = "title", value = "Value"),
             @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "List of external IP addresses of this MicoServiceInterface.")
+            @ExtensionProperty(name = "description", value = "Value of the environment variable.")
         }
     )})
-    private List<String> externalIps;
+    private String value;
+    
+    
+    // -------------------
+    // -> Constructors ---
+    // -------------------
+    
+    /**
+   	 * Creates an instance of {@code MicoEnvironmentVariableRequestDTO} based on a
+   	 * {@code MicoEnvironmentVariable}.
+   	 * 
+   	 * @param environmentVariable the {@link MicoEnvironmentVariable}.
+   	 */
+	public MicoEnvironmentVariableRequestDTO(MicoEnvironmentVariable environmentVariable) {
+		this.name = environmentVariable.getName();
+		this.value = environmentVariable.getValue();
+	}
+
 }

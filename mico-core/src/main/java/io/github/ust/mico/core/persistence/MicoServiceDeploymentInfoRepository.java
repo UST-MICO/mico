@@ -26,35 +26,158 @@ import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfoQueryResult;
 
 public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<MicoServiceDeploymentInfo, Long> {
+	
+	// NOTE: Include 'KubernetesDeploymentInfo' in all find queries via OPTIONAL MATCH.
+	// NOTE: Include 'KubernetesDeploymentInfo' in all delete queries via DETACH DELETE.
+	
+    /**
+     * Retrieves all service deployment information of a particular application.
+     * 
+     * @param applicationShortName the short name of the {@link MicoApplication}.
+     * @param applicationVersion the version of the {@link MicoApplication}.
+     * @return a {@link List} of {@link MicoServiceDeploymentInfo} instances.
+     */
+    @Query("MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
+    	+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
+    	+ "WITH a, sdi , s OPTIONAL MATCH (sdi)-[:HAS]->(label:MicoLabel) "
+    	+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
+    	+ "WITH a, sdi , s OPTIONAL MATCH (sdi)-[:HAS]->(env:MicoEnvironmentVariable) "
+        + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
+        + "RETURN (sdi:MicoServiceDeploymentInfo)-->()")
+    List<MicoServiceDeploymentInfo> findAllByApplication(
+        @Param("applicationShortName") String applicationShortName,
+        @Param("applicationVersion") String applicationVersion);
     
-    @Query("MATCH (application:MicoApplication)-[serviceDeploymentInfo:INCLUDES_SERVICE]-(service:MicoService) "
-            + "WHERE application.shortName = {applicationShortName} AND application.version = {applicationVersion} "
-            + "RETURN application, serviceDeploymentInfo, service")
-    List<MicoServiceDeploymentInfoQueryResult> findAllByApplication(
-            @Param("applicationShortName") String applicationShortName,
-            @Param("applicationVersion") String applicationVersion);
+    /**
+     * Retrieves the deployment information for a particular application and service. 
+     * 
+     * @param applicationShortName the short name of the {@link MicoApplication}.
+     * @param applicationVersion the version of the {@link MicoApplication}.
+     * @param serviceShortName the short name of the {@link MicoService}.
+     * @return an {@link Optional} of {@link MicoServiceDeploymentInfo}.
+     */
+    @Query("MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
+    	+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
+		+ "AND s.shortName = {serviceShortName} " 
+    	+ "WITH a, sdi , s OPTIONAL MATCH (sdi)-[:HAS]->(label:MicoLabel) "
+    	+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
+		+ "AND s.shortName = {serviceShortName} " 
+    	+ "WITH a, sdi , s OPTIONAL MATCH (sdi)-[:HAS]->(env:MicoEnvironmentVariable) "
+        + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
+        + "AND s.shortName = {serviceShortName} "
+        + "RETURN (sdi:MicoServiceDeploymentInfo)-->()")
+    Optional<MicoServiceDeploymentInfo> findByApplicationAndService(
+        @Param("applicationShortName") String applicationShortName,
+        @Param("applicationVersion") String applicationVersion,
+        @Param("serviceShortName") String serviceShortName);
     
-    @Query("MATCH (application:MicoApplication)-[serviceDeploymentInfo:INCLUDES_SERVICE]-(service:MicoService) "
-            + "WHERE application.shortName = {applicationShortName} AND application.version = {applicationVersion} "
-            + "AND service.shortName = {serviceShortName} "
-            + "RETURN application, serviceDeploymentInfo, service")
-    Optional<MicoServiceDeploymentInfoQueryResult> findByApplicationAndService(
-            @Param("applicationShortName") String applicationShortName,
-            @Param("applicationVersion") String applicationVersion,
-            @Param("serviceShortName") String serviceShortName);
+    /**
+     * Retrieves the deployment information for a particular application and service.
+     * 
+     * @param applicationShortName the short name of the {@link MicoApplication}.
+     * @param applicationVersion the version of the {@link MicoApplication}.
+     * @param serviceShortName the short name of the {@link MicoService}.
+     * @param serviceVersion the version of the {@link MicoService}.
+     * @return an {@link Optional} of {@link MicoServiceDeploymentInfo}.
+     */
+    @Query("MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
+    	+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
+    	+ "AND s.shortName = {serviceShortName} AND s.version = {serviceVersion} "
+    	+ "WITH a, sdi , s OPTIONAL MATCH (sdi)-[:HAS]->(label:MicoLabel) "
+    	+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
+    	+ "AND s.shortName = {serviceShortName} AND s.version = {serviceVersion} " 
+    	+ "WITH a, sdi , s OPTIONAL MATCH (sdi)-[:HAS]->(env:MicoEnvironmentVariable) "
+        + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
+        + "AND s.shortName = {serviceShortName} AND s.version = {serviceVersion} "
+        + "RETURN (sdi:MicoServiceDeploymentInfo)-->()")
+    Optional<MicoServiceDeploymentInfo> findByApplicationAndService(
+        @Param("applicationShortName") String applicationShortName,
+        @Param("applicationVersion") String applicationVersion,
+        @Param("serviceShortName") String serviceShortName,
+        @Param("serviceVersion") String serviceVersion);
     
-    @Query("MATCH (application:MicoApplication)-[serviceDeploymentInfo:INCLUDES_SERVICE]-(service:MicoService) "
-            + "WHERE application.shortName = {applicationShortName} AND application.version = {applicationVersion} "
-            + "AND service.shortName = {serviceShortName} AND service.version = {serviceVersion} "
-            + "RETURN application, serviceDeploymentInfo, service")
-    Optional<MicoServiceDeploymentInfoQueryResult> findByApplicationAndService(
-            @Param("applicationShortName") String applicationShortName,
-            @Param("applicationVersion") String applicationVersion,
-            @Param("serviceShortName") String serviceShortName,
-            @Param("serviceVersion") String serviceVersion);
+    /**
+     * Deletes all deployment information for all versions of an application.
+     * All additional properties of a {@link MicoServiceDeploymentInfo} that
+     * are stored as a separate node entity and connected to it via a {@code [:HAS]}
+     * relationship will be deleted, too.
+     * 
+     * @param applicationShortName the short name of the {@link MicoApplication}.
+     */
+    @Query("MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
+		+ "WHERE a.shortName = {applicationShortName} "
+		+ "WITH a, sdi OPTIONAL MATCH (sdi)-[:HAS]->(additionalProperty) "
+	    + "WHERE a.shortName = {applicationShortName} "
+	    + "DETACH DELETE sdi, additionalProperty")
+    void deleteAllByApplication(@Param("applicationShortName") String applicationShortName);
+	
+    /**
+     * Deletes all deployment information for a particular application.
+     * All additional properties of a {@link MicoServiceDeploymentInfo} that
+     * are stored as a separate node entity and connected to it via a {@code [:HAS]}
+     * relationship will be deleted, too.
+     * 
+     * @param applicationShortName the short name of the {@link MicoApplication}.
+     * @param applicationVersion the version of the {@link MicoApplication}.
+     */
+	@Query("MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
+		+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
+		+ "WITH a, sdi OPTIONAL MATCH (sdi)-[:HAS]->(additionalProperty) "
+	    + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
+	    + "DETACH DELETE sdi, additionalProperty")
+    void deleteAllByApplication(
+    	@Param("applicationShortName") String applicationShortName,
+        @Param("applicationVersion") String applicationVersion);
+    
+    /**
+     * Deletes the deployment information for a particular application and service.
+     * All additional properties of a {@link MicoServiceDeploymentInfo} that
+     * are stored as a separate node entity and connected to it via a {@code [:HAS]}
+     * relationship will be deleted, too.
+     * 
+     * @param applicationShortName the short name of the {@link MicoApplication}.
+     * @param applicationVersion the version of the {@link MicoApplication}.
+     * @param serviceShortName the short name of the {@link MicoService}.
+     */
+	@Query("MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
+		+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
+		+ "AND s.shortName = {serviceShortName} " 
+		+ "WITH a, sdi, s OPTIONAL MATCH (sdi)-[:HAS]->(additionalProperty) "
+	    + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
+	    + "AND s.shortName = {serviceShortName} " 
+	    + "DETACH DELETE sdi, additionalProperty")
+    void deleteByApplicationAndService(
+    	@Param("applicationShortName") String applicationShortName,
+        @Param("applicationVersion") String applicationVersion,
+        @Param("serviceShortName") String serviceShortName);
+	
+    /**
+     * Deletes the deployment information for a particular application and service.
+     * All additional properties of a {@link MicoServiceDeploymentInfo} that
+     * are stored as a separate node entity and connected to it via a {@code [:HAS]}
+     * relationship will be deleted, too.
+     * 
+     * @param applicationShortName the short name of the {@link MicoApplication}.
+     * @param applicationVersion the version of the {@link MicoApplication}.
+     * @param serviceShortName the short name of the {@link MicoService}.
+     * @param serviceVersion the version of the {@link MicoService}.
+     */
+    @Query("MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
+		+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
+		+ "AND s.shortName = {serviceShortName} AND s.version = {serviceVersion} " 
+		+ "WITH a, sdi, s OPTIONAL MATCH (sdi)-[:HAS]->(additionalProperty) "
+	    + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
+	    + "AND s.shortName = {serviceShortName} AND s.version = {serviceVersion} " 
+	    + "DETACH DELETE sdi, additionalProperty")
+    void deleteByApplicationAndService(
+    	@Param("applicationShortName") String applicationShortName,
+        @Param("applicationVersion") String applicationVersion,
+        @Param("serviceShortName") String serviceShortName,
+        @Param("serviceVersion") String serviceVersion);
     
 }

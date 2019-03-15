@@ -17,32 +17,19 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto;
+package io.github.ust.mico.core.persistence;
 
-import io.github.ust.mico.core.model.MicoService;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.Accessors;
+import org.springframework.data.neo4j.annotation.Query;
+import org.springframework.data.neo4j.repository.Neo4jRepository;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Accessors(chain = true)
-public class MicoServiceDependencyGraphEdgeDTO {
+import io.github.ust.mico.core.model.MicoEnvironmentVariable;
 
-
-    private String sourceShortName;
-    private String sourceVersion;
-    private String targetShortName;
-    private String targetVersion;
-
-    public MicoServiceDependencyGraphEdgeDTO(MicoService source, MicoService target){
-        this.sourceShortName = source.getShortName();
-        this.sourceVersion = source.getVersion();
-        this.targetShortName = target.getShortName();
-        this.targetVersion = target.getVersion();
-    }
-
-
+public interface MicoEnvironmentVariableRepository extends Neo4jRepository<MicoEnvironmentVariable, Long> {
+	
+	/**
+	 * Deletes all environment variables that do <b>not</b> have any relationship to another node.
+	 */
+	@Query("MATCH (env:MicoEnvironmentVariable) WHERE size((env)--()) = 0 DELETE (env)")
+	void cleanUp();
+	
 }

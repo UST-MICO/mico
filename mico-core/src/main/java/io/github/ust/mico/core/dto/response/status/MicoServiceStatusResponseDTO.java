@@ -17,16 +17,18 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto;
+package io.github.ust.mico.core.dto.response.status;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 import io.fabric8.kubernetes.api.model.Pod;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
+import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
 import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -36,113 +38,112 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for status information of a {@link MicoService}.
+ * DTO for the status information of a {@link MicoService}.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class MicoServiceStatusDTO {
+@JsonInclude(Include.NON_NULL)
+public class MicoServiceStatusResponseDTO {
 
     /**
-     * Name of a {@link MicoService}.
-     */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Name"),
-            @ExtensionProperty(name = "x-order", value = "30"),
-            @ExtensionProperty(name = "description", value = "Name of a MicoService.")
-        }
-    )})
-    private String name;
-
-    /**
-     * ShortName of a {@link MicoService}.
+     * ShortName of the {@link MicoService}.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Short Name"),
             @ExtensionProperty(name = "x-order", value = "10"),
-            @ExtensionProperty(name = "description", value = "Short name of a MicoService.")
+            @ExtensionProperty(name = "description", value = "Short name of the MicoService.")
         }
     )})
     private String shortName;
 
     /**
-     * Version of a {@link MicoService}.
+     * Version of the {@link MicoService}.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Version"),
             @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "Version of a MicoService.")
+            @ExtensionProperty(name = "description", value = "Version of the MicoService.")
         }
     )})
     private String version;
 
     /**
-     * Counter for the number of replicas that should be available.
+     * Name of the {@link MicoService}.
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Name"),
+            @ExtensionProperty(name = "x-order", value = "30"),
+            @ExtensionProperty(name = "description", value = "Name of the MicoService.")
+        }
+    )})
+    private String name;
+
+    /**
+     * Counter for the number of replicas the corresponding that should be available.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Requested Replicas"),
             @ExtensionProperty(name = "x-order", value = "40"),
-            @ExtensionProperty(name = "description", value = "Counter for number of replicas " +
-                "of a MicoService that should be available.")
+            @ExtensionProperty(name = "description", value = "Counter for the number of replicas of " +
+                "the corresponding MicoService that should be available.")
         }
     )})
     private int requestedReplicas;
 
     /**
-     * Counter for the number of replicas that are actually available.
+     * Counter for the number of replicas of the corresponding that are actually available.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Available Replicas"),
             @ExtensionProperty(name = "x-order", value = "50"),
-            @ExtensionProperty(name = "description", value = "Counter for replicas of " +
-                "a MicoService that are actually available.")
+            @ExtensionProperty(name = "description", value = "Counter for the number of replicas of " +
+                "the corresponding MicoService that are actually available.")
         }
     )})
     private int availableReplicas;
 
     /**
-     * Each {@link MicoServiceInterface} in this list is deployed as a Kubernetes Service for this {@link MicoService}.
+     * Contains information about the Kubernetes services deployed for each MicoServiceInterface of the corresponding MicoService.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Interfaces Information"),
             @ExtensionProperty(name = "x-order", value = "60"),
-            @ExtensionProperty(name = "description", value = "Each link MicoServiceInterface in this list is " +
-                "deployed as a Kubernetes Service for this MicoService.")
+            @ExtensionProperty(name = "description", value = "Contains information about the Kubernetes services deployed "
+            	+ "for each MicoServiceInterface of the corresponding MicoService.")
         }
     )})
-    private List<MicoServiceInterfaceStatusDTO> interfacesInformation = new ArrayList<>();
+    private List<MicoServiceInterfaceStatusResponseDTO> interfacesInformation = new ArrayList<>();
 
     /**
-     * List of {@link MicoApplicationDTO MicoApplicationDTOs}, representing all applications that are using one service
-     * together.
+     * List of {@link MicoApplicationResponseDTO MicoApplicationResponseDTOs} representing all applications that share the MicoService.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Applications Using This Service"),
             @ExtensionProperty(name = "x-order", value = "70"),
-            @ExtensionProperty(name = "description", value = "List of MicoApplicationDTOs, " +
-                "representing all applications that are using one service together.")
+            @ExtensionProperty(name = "description", value = "List of MicoApplicationDTOs " +
+                "representing all applications that share the MicoService.")
         }
     )})
-    private List<MicoApplicationDTO> applicationsUsingThisService = new ArrayList<>();
+    private List<MicoApplicationResponseDTO> applicationsUsingThisService = new ArrayList<>();
 
     /**
-     * List of all {@link Pod Pods} of all replicas of a deployment of a {@link MicoService}.
+     * List of all {@link Pod Pods} of all replicas of a deployment of the {@link MicoService}.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -150,13 +151,13 @@ public class MicoServiceStatusDTO {
             @ExtensionProperty(name = "title", value = "Pods Information"),
             @ExtensionProperty(name = "x-order", value = "80"),
             @ExtensionProperty(name = "description", value = "List of all pods of all replicas" +
-                " of a deployment of a MicoService.")
+                " of a deployment of the MicoService.")
         }
     )})
-    private List<KubernetesPodInformationDTO> podsInformation = new ArrayList<>();
+    private List<KubernetesPodInformationResponseDTO> podsInformation = new ArrayList<>();
 
     /**
-     * List of {@link KubernetesNodeMetricsDTO KubernetesNodeMetricsDTOs} with metrics for each node used by the {@link
+     * List of {@link KubernetesNodeMetricsResponseDTO KubernetesNodeMetricsDTOs} with metrics for each node used by the {@link
      * MicoService}.
      */
     @ApiModelProperty(extensions = {@Extension(
@@ -167,17 +168,19 @@ public class MicoServiceStatusDTO {
             @ExtensionProperty(name = "description", value = "List of KubernetesNodeMetricsDTO with metrics for each node used by this MicoService.")
         }
     )})
-    private List<KubernetesNodeMetricsDTO> nodeMetrics;
+    private List<KubernetesNodeMetricsResponseDTO> nodeMetrics = new ArrayList<>();
 
     /**
-     * Contains error messages for services that are not deployed or not available due to other reasons.
+     * Contains error messages for Kubernetes services that
+     * are not deployed or not available due to other reasons.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Error Messages"),
             @ExtensionProperty(name = "x-order", value = "100"),
-            @ExtensionProperty(name = "description", value = "Contains error messages for services that are not deployed or not available due to other reasons.")
+            @ExtensionProperty(name = "description", value = "Contains error messages for Kubernetes services that "
+            		+ "are not deployed or not available due to other reasons.")
         }
     )})
     private List<String> errorMessages = new ArrayList<>();

@@ -16,25 +16,45 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package io.github.ust.mico.core.model;
 
-import org.springframework.data.neo4j.annotation.QueryResult;
+import java.util.ArrayList;
+import java.util.List;
 
+import io.github.ust.mico.core.model.MicoServiceBackgroundTask.Status;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+/**
+ * Represents the job status for a {@link MicoApplication}.
+ * Contains a list of jobs.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@QueryResult
-public class MicoServiceDeploymentInfoQueryResult {
+public class MicoApplicationJobStatus {
+	
+    /**
+     * The short name of the {@link MicoApplication}.
+     */
+    private String applicationShortName;
     
-    private MicoApplication application;
-    private MicoServiceDeploymentInfo serviceDeploymentInfo;
-    private MicoService service;
-
+    /**
+     * The version of the {@link MicoApplication}.
+     */
+    private String applicationVersion;
+    
+    /**
+     * The aggregated status of jobs for the {@link MicoApplication}.
+     */
+    private MicoServiceBackgroundTask.Status status = Status.UNDEFINED;
+    
+    /**
+     * The list of jobs for the {@link MicoApplication}.
+     */
+    private List<MicoServiceBackgroundTask> jobs = new ArrayList<>();
+    
 }

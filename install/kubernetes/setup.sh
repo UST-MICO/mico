@@ -15,7 +15,7 @@ export DOCKERHUB_USERNAME_BASE64=$(echo -n $uname | base64 -w 0)
 
 # Read in DockerHub password
 echo "Please provide the password for DockerHub:"
-read pw
+read -s pw
 if [[ -z "$pw" ]]; then
     echo "ERROR: No password provided"
     exit 1
@@ -42,6 +42,7 @@ envsubst < mico-build-bot.yaml | kubectl apply -f -
 
 # Install MICO components
 kubectl apply -f neo4j.yaml
+kubectl apply -f redis.yaml
 kubectl apply -f mico-core.yaml
 if [[ -z "$ip" ]]; then
     sed '/${MICO_PUBLIC_IP}/d' mico-admin.yaml | kubectl apply -f -
