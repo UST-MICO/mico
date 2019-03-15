@@ -19,16 +19,14 @@
 
 package io.github.ust.mico.core.util;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
 import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
+
+import org.springframework.stereotype.Component;
 
 /**
  * Normalizes names to be valid Kubernetes resource names.
  */
-@Slf4j
 @Component
 public class KubernetesNameNormalizer {
 

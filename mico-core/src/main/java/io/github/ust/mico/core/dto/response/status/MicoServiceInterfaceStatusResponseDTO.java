@@ -17,11 +17,16 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto;
+package io.github.ust.mico.core.dto.response.status;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.fabric8.kubernetes.api.model.Pod;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
+import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -31,51 +36,38 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * Contains information about CPU/memory load of a {@link Pod}.
+ * DTO for the status information of a {@link MicoServiceInterface}, that is mapped to a Kubernetes Service.
  */
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Accessors(chain = true)
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class KubernetesPodMetricsDTO {
+@JsonInclude(Include.NON_NULL)
+public class MicoServiceInterfaceStatusResponseDTO {
 
     /**
-     * Memory usage of a pod.
+     * Name of the {@link MicoServiceInterface}.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Memory Usage"),
+            @ExtensionProperty(name = "title", value = "Name"),
             @ExtensionProperty(name = "x-order", value = "10"),
-            @ExtensionProperty(name = "description", value = "Memory usage of a pod.")
+            @ExtensionProperty(name = "description", value = "Name of the MicoServiceInterface.")
         }
     )})
-    private int memoryUsage;
+    private String name;
 
     /**
-     * CPU load of a pod.
+     * List of external IP addresses of this {@link MicoServiceInterface}.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "CPU Load"),
+            @ExtensionProperty(name = "title", value = "External IPs"),
             @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "CPU load of a pod.")
+            @ExtensionProperty(name = "description", value = "List of external IP addresses of this MicoServiceInterface.")
         }
     )})
-    private int cpuLoad;
-
-    /**
-     * Indicates if a pod is available or not.
-     */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Available"),
-            @ExtensionProperty(name = "x-order", value = "30"),
-            @ExtensionProperty(name = "description", value = "Indicates if a pod is available.")
-        }
-    )})
-    private boolean available;
+    private List<String> externalIps = new ArrayList<>();
 }

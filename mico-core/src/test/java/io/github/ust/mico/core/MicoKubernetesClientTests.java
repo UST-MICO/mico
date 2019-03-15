@@ -52,7 +52,6 @@ public class MicoKubernetesClientTests {
 
     private static final String LABEL_APP_KEY = "app";
     private static final String LABEL_VERSION_KEY = "version";
-    private static final String LABEL_INTERFACE_KEY = "interface";
     private static final String LABEL_RUN_KEY = "run";
 
     @Rule
@@ -77,7 +76,6 @@ public class MicoKubernetesClientTests {
 
     @Test
     public void creationOfMicoServiceWorks() throws KubernetesResourceException {
-
         assertEquals(0, mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems().size());
 
         MicoService micoServiceWithoutInterface = getMicoServiceWithoutInterface();
@@ -95,7 +93,6 @@ public class MicoKubernetesClientTests {
 
     @Test
     public void creationOfMicoServiceInterfaceWorks() throws KubernetesResourceException {
-
         assertEquals(0, mockServer.getClient().services().inNamespace(testNamespace).list().getItems().size());
 
         MicoService micoService = getMicoServiceWithInterface();
@@ -124,7 +121,6 @@ public class MicoKubernetesClientTests {
 
     @Test
     public void creationOfMicoServiceThatAlreadyExistsDoesReplaceTheSameObject() throws KubernetesResourceException {
-
         MicoService micoServiceWithoutInterface = getMicoServiceWithoutInterface();
         MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo();
 
@@ -152,7 +148,6 @@ public class MicoKubernetesClientTests {
 
     @Test
     public void creationOfMicoServiceInterfaceThatAlreadyExistsReplaceTheSameObject() throws KubernetesResourceException {
-
         MicoService micoService = getMicoServiceWithInterface();
         MicoServiceInterface micoServiceInterface = getMicoServiceInterface();
         String deploymentUid = UIDUtils.uidFor(micoService);

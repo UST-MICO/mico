@@ -1,7 +1,7 @@
 <h2 mat-dialog-title>Update Service Interface "{{serviceInterfaceName}}"</h2>
 <mat-dialog-content style="min-width: 35rem">
     <!-- form for the data on interface level (name, etc.)-->
-    <mico-form [modelUrl]="'remote/MicoServiceInterface'" [startData]="interfaceData"
+    <mico-form [modelUrl]="'remote/MicoServiceInterfaceRequestDTO'" [startData]="interfaceData"
         [filter]="['id', 'serviceInterfaceName']" [isBlacklist]="true"
         (data)="interfaceData = $event" (valid)="valid = $event" #form></mico-form>
 </mat-dialog-content>

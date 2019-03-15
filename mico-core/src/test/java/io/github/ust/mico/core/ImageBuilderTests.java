@@ -19,11 +19,8 @@
 
 package io.github.ust.mico.core;
 
-import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
-import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
-import io.github.ust.mico.core.exception.NotInitializedException;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
+import static io.github.ust.mico.core.TestConstants.*;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -32,7 +29,12 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static io.github.ust.mico.core.TestConstants.*;
+import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
+import io.github.ust.mico.core.TestConstants.IntegrationTest;
+import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
+import io.github.ust.mico.core.exception.NotInitializedException;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest

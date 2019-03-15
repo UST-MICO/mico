@@ -131,23 +131,23 @@ public class DeploymentResourceTests {
         given(serviceRepository.save(any(MicoService.class))).willReturn(service);
         given(serviceRepository.findAllByApplication(SHORT_NAME, VERSION)).willReturn(CollectionUtils.listOf(service));
 
-        CompletableFuture future = CompletableFuture.completedFuture(service);
+        CompletableFuture<?> future = CompletableFuture.completedFuture(service);
         given(factory.runAsync(any(), onSuccessArgumentCaptor.capture(), onErrorArgumentCaptor.capture())).willReturn(future);
 
-        MicoBackgroundTask mockTask = new MicoBackgroundTask()
+        MicoServiceBackgroundTask mockTask = new MicoServiceBackgroundTask()
             .setJob(future)
-            .setMicoServiceShortName(service.getShortName())
-            .setMicoServiceVersion(service.getVersion())
-            .setType(MicoBackgroundTask.Type.BUILD);
+            .setServiceShortName(service.getShortName())
+            .setServiceVersion(service.getVersion())
+            .setType(MicoServiceBackgroundTask.Type.BUILD);
 
-        given(backgroundTaskRepository.findByMicoServiceShortNameAndMicoServiceVersionAndType(service.getShortName(), service.getVersion(), MicoBackgroundTask.Type.BUILD))
+        given(backgroundTaskRepository.findByMicoServiceShortNameAndMicoServiceVersionAndType(service.getShortName(), service.getVersion(), MicoServiceBackgroundTask.Type.BUILD))
             .willReturn(Optional.of(mockTask));
 
         given(backgroundTaskBroker.getJobStatusByApplicationShortNameAndVersion(SHORT_NAME, VERSION))
             .willReturn(new MicoApplicationJobStatus()
                 .setApplicationShortName(SHORT_NAME)
                 .setApplicationVersion(VERSION)
-                .setStatus(MicoBackgroundTask.Status.PENDING)
+                .setStatus(MicoServiceBackgroundTask.Status.PENDING)
                 .setJobs(Arrays.asList(mockTask)));
 
         mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/deploy"))

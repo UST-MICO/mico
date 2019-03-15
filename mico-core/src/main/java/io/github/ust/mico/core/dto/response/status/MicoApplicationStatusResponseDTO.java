@@ -17,12 +17,14 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto;
+package io.github.ust.mico.core.dto.response.status;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
@@ -35,14 +37,14 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for status information of a {@link MicoApplication}.
+ * DTO for the status information of a {@link MicoApplication}.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class MicoApplicationStatusDTO {
+@JsonInclude(Include.NON_NULL)
+public class MicoApplicationStatusResponseDTO {
 
     /**
      * List of status information of {@link MicoService MicoServices}, which belong to a {@link MicoApplication}.
@@ -55,7 +57,7 @@ public class MicoApplicationStatusDTO {
             @ExtensionProperty(name = "description", value = "List of status information of MicoServices, which belong to a MicoApplication.")
         }
     )})
-    private List<MicoServiceStatusDTO> serviceStatuses = new ArrayList<>();
+    private List<MicoServiceStatusResponseDTO> serviceStatuses = new ArrayList<>();
 
     /**
      * Number of {@link MicoService MicoServices} belonging to a {@link MicoApplication}.
@@ -108,4 +110,5 @@ public class MicoApplicationStatusDTO {
         }
     )})
     private int totalNumberOfPods;
+    
 }

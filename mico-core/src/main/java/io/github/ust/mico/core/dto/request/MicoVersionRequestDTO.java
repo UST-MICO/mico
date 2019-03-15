@@ -17,54 +17,61 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto;
+package io.github.ust.mico.core.dto.request;
 
-import java.util.List;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Pattern;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
-import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.util.Patterns;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for status information of a {@link MicoServiceInterface}, that is mapped to a Kubernetes Service.
+ * DTO for a version intended to use with requests only,
+ * e.g., with a request to promote a new version of a {@link MicoApplication}.
  */
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 @Accessors(chain = true)
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class MicoServiceInterfaceStatusDTO {
+public class MicoVersionRequestDTO {
 
-    /**
-     * Name of the {@link MicoServiceInterface}.
+    // ----------------------
+    // -> Required fields ---
+    // ----------------------
+
+	/**
+     * The version (in semantic version format).
      */
-    @ApiModelProperty(extensions = {@Extension(
+    @ApiModelProperty(required = true, extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Name"),
+            @ExtensionProperty(name = "title", value = "Version"),
             @ExtensionProperty(name = "x-order", value = "10"),
-            @ExtensionProperty(name = "description", value = "Name of the MicoServiceInterface.")
+            @ExtensionProperty(name = "description", value = "The version (in semantic version format).")
         }
     )})
-    private String name;
+    @NotEmpty
+    @Pattern(regexp = Patterns.SEMANTIC_VERSION_WITH_PREFIX_REGEX, message = Patterns.SEMANTIC_VERSIONING_MESSAGE)
+    private String version;
 
-    /**
-     * List of external IP addresses of this {@link MicoServiceInterface}.
-     */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "External IPs"),
-            @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "List of external IP addresses of this MicoServiceInterface.")
-        }
-    )})
-    private List<String> externalIps;
+
+    // -------------------
+    // -> Constructors ---
+    // -------------------
+
+	/**
+	 * Creates an instance of {@code MicoVersionRequestDTO} based on the String value {@code version}.
+	 *
+	 * @param version the version.
+	 */
+	public MicoVersionRequestDTO(String version) {
+		this.version = version;
+	}
+
 }
