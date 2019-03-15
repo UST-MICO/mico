@@ -27,9 +27,11 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.util.KubernetesNameNormalizer;
 import io.github.ust.mico.core.util.Patterns;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
@@ -62,10 +64,13 @@ public class MicoServiceInterfaceRequestDTO {
             @ExtensionProperty(name = "title", value = "Service Interface Name"),
             @ExtensionProperty(name = "pattern", value = Patterns.KUBERNETES_NAMING_REGEX),
             @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "The name of this MicoServiceInterface")
+            @ExtensionProperty(name = "description", value = "The name of this MicoServiceInterface"),
+            @ExtensionProperty(name = "minLength", value = "3"),
+            @ExtensionProperty(name = "maxLength", value = KubernetesNameNormalizer.MAX_LABLE_SIZE+""),
         }
     )})
     @NotNull
+    @Size(min = 3, max = KubernetesNameNormalizer.MAX_LABLE_SIZE, message = "must have a length between 3 and " + KubernetesNameNormalizer.MAX_LABLE_SIZE)
     @Pattern(regexp = Patterns.KUBERNETES_NAMING_REGEX, message = Patterns.KUBERNETES_NAMING_MESSAGE)
     private String serviceInterfaceName;
 

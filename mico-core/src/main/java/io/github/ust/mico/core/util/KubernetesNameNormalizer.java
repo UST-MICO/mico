@@ -37,6 +37,7 @@ public class KubernetesNameNormalizer {
     private final static String REGEX_MULTIPLE_DASHES = "[-]+";
     private final static String REGEX_FIRST_OR_LAST_CHAR_IS_A_DASH = "^-|-$";
     private final static String REGEX_MATCH_VALID_FIRST_CHAR = "^[a-z]+.*";
+    public final static int MAX_LABLE_SIZE = 63;
 
     /**
      * Normalizes a name so it is a valid Kubernetes resource name.
@@ -69,7 +70,7 @@ public class KubernetesNameNormalizer {
             result = "short-name-" + s8;
         }
 
-        if (!result.matches(Patterns.KUBERNETES_NAMING_REGEX) || result.length() > 253) {
+        if (!result.matches(Patterns.KUBERNETES_NAMING_REGEX) || result.length() > MAX_LABLE_SIZE) {
             throw new IllegalArgumentException("Name '" + name + "' could not be normalized correctly");
         }
 
