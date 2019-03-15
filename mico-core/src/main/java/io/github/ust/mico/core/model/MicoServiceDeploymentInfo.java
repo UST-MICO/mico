@@ -19,19 +19,21 @@
 
 package io.github.ust.mico.core.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import io.github.ust.mico.core.dto.MicoServiceDeploymentInfoDTO;
-import lombok.*;
-import lombok.experimental.Accessors;
-import org.neo4j.ogm.annotation.*;
-
 import java.util.ArrayList;
 import java.util.List;
 
+import org.neo4j.ogm.annotation.*;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
+import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
+import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO;
+import lombok.*;
+import lombok.experimental.Accessors;
+
 /**
  * Represents the information necessary for deploying a {@link MicoApplication}.
- * DTO is {@link MicoServiceDeploymentInfoDTO}.
+ * DTO is {@link MicoServiceDeploymentInfoResponseDTO}.
  */
 @Data
 @NoArgsConstructor
@@ -45,7 +47,6 @@ public class MicoServiceDeploymentInfo {
      */
     @Id
     @GeneratedValue
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
 
@@ -82,13 +83,6 @@ public class MicoServiceDeploymentInfo {
     private int replicas = 1;
 
     /**
-     * Minimum number of seconds for which this service should be ready
-     * without any of its containers crashing, for it to be considered available.
-     * Defaults to 0 (considered available as soon as it is ready).
-     */
-    private int minReadySecondsBeforeMarkedAvailable = 0;
-
-    /**
      * Those labels are key-value pairs that are attached to the deployment
      * of this service. Intended to be used to specify identifying attributes
      * that are meaningful and relevant to users, but do not directly imply
@@ -112,21 +106,34 @@ public class MicoServiceDeploymentInfo {
     private RestartPolicy restartPolicy = RestartPolicy.ALWAYS;
 
 
+
     /**
      * Applies the values of all properties of a
-     * {@link MicoServiceDeploymentInfoDTO} to this
+     * {@code MicoServiceDeploymentInfoRequestDTO} to this
      * {@code MicoServiceDeploymentInfo}.
      *
-     * @param serviceDeploymentInfoDTO the {@link MicoServiceDeploymentInfoDTO}.
+     * @param serviceDeploymentInfoDTO the {@link MicoServiceDeploymentInfoRequestDTO}.
      * @return this {@link MicoServiceDeploymentInfo} with the values
-     * of the properties of the given {@link MicoServiceDeploymentInfoDTO}.
+     * of the properties of the given {@link MicoServiceDeploymentInfoRequestDTO}.
      */
-    public MicoServiceDeploymentInfo applyValuesFrom(MicoServiceDeploymentInfoDTO serviceDeploymentInfoDTO) {
+    public MicoServiceDeploymentInfo applyValuesFrom(MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) {
         return setReplicas(serviceDeploymentInfoDTO.getReplicas())
-            .setMinReadySecondsBeforeMarkedAvailable(serviceDeploymentInfoDTO.getMinReadySecondsBeforeMarkedAvailable())
             .setLabels(serviceDeploymentInfoDTO.getLabels())
             .setImagePullPolicy(serviceDeploymentInfoDTO.getImagePullPolicy())
             .setRestartPolicy(serviceDeploymentInfoDTO.getRestartPolicy());
+    }
+
+    /**
+     * Applies the values of all properties of a
+     * {@code MicoServiceDeploymentInfoResponseDTO} to this
+     * {@code MicoServiceDeploymentInfo}.
+     *
+     * @param serviceDeploymentInfoDTO the {@link MicoServiceDeploymentInfoResponseDTO}.
+     * @return this {@link MicoServiceDeploymentInfo} with the values
+     * of the properties of the given {@link MicoServiceDeploymentInfoResponseDTO}.
+     */
+    public MicoServiceDeploymentInfo applyValuesFrom(MicoServiceDeploymentInfoResponseDTO serviceDeploymentInfoDTO) {
+        return applyValuesFrom((MicoServiceDeploymentInfoRequestDTO) serviceDeploymentInfoDTO);
     }
 
 

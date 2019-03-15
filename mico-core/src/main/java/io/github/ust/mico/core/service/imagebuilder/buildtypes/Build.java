@@ -44,7 +44,9 @@ import lombok.*;
 @ToString(callSuper = true)
 public class Build extends CustomResource {
 
-    private static final String BUILD_API_VERSION = "build.knative.dev/v1alpha1";
+	private static final long serialVersionUID = 4619424348941454158L;
+	
+	private static final String BUILD_API_VERSION = "build.knative.dev/v1alpha1";
     private static final String BUILD_KIND_NAME = "Build";
 
     /**

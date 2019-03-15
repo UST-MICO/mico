@@ -19,11 +19,9 @@
 
 package io.github.ust.mico.core;
 
-import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
-import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
-import io.github.ust.mico.core.model.MicoVersion;
-
 import static io.github.ust.mico.core.JsonPathBuilder.*;
+
+import io.github.ust.mico.core.model.MicoVersion;
 
 class TestConstants {
 
@@ -92,10 +90,6 @@ class TestConstants {
     /*
      * For tests in ApplicationResourceTests, one service is added to the list of MicoServiceStatusDTOs in MicoApplicationStatusDTO.
      * All paths are build on the path for the status of this service.
-     */
-    /**
-     * Path of a single {@link MicoServiceStatusDTO} in a {@link MicoApplicationStatusDTO}. Contains status information
-     * for this service.
      */
     static final String SERVICE_STATUS_PATH = buildPath(ROOT, "serviceStatuses[0]");
     static final String SERVICE_INFORMATION_NAME = buildPath(SERVICE_STATUS_PATH, "name");

@@ -19,10 +19,17 @@
 
 package io.github.ust.mico.core.persistence;
 
+import java.util.Optional;
+
+import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
+import org.springframework.data.repository.query.Param;
 
 import io.github.ust.mico.core.model.MicoServiceInterface;
 
 public interface MicoServiceInterfaceRepository extends Neo4jRepository<MicoServiceInterface, Long> {
-    
+	
+	@Query("MATCH (service:MicoService)-[:PROVIDES_INTERFACES]->(interface:MicoServiceInterface)-[:PROVIDES_PORTS]->(port:MicoServicePort) WHERE service.shortName = {shortName} AND service.version = {version} AND interface.serviceInterfaceName = {serviceInterfaceName} RETURN interface")
+    Optional<MicoServiceInterface> findByServiceAndName(@Param("shortName") String shortName, @Param("version") String version, @Param("serviceInterfaceName") String serviceInterfaceName);
+	
 }

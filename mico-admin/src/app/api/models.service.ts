@@ -372,4 +372,18 @@ export class ModelsService {
             return freezeObject(newModel);
         };
     }
+
+    /**
+     * Stream filter that filters out all not required properties of the model.
+     *
+     * @param model input api model
+     */
+    onlyRequired: (ApiModel) => Readonly<ApiModel> = (model: ApiModel) => {
+        model = JSON.parse(JSON.stringify(model));
+        if (model.required != null && model.required.length > 0) {
+            const filterFunction = this.filterModel(model.required);
+            return filterFunction(model);
+        }
+        return freezeObject(model);
+    }
 }

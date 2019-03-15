@@ -17,11 +17,17 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto;
+package io.github.ust.mico.core.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.validation.Valid;
+import javax.validation.constraints.Positive;
+
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
+
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoLabel;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
@@ -35,24 +41,18 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
-import javax.validation.Valid;
-import javax.validation.constraints.Positive;
-import javax.validation.constraints.PositiveOrZero;
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * DTO for {@link MicoServiceDeploymentInfo}.
+ * DTO for {@link MicoServiceDeploymentInfo} intended to use with requests only.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class MicoServiceDeploymentInfoDTO {
-
+public class MicoServiceDeploymentInfoRequestDTO {
+	
     /**
      * Number of desired instances. Defaults to 1.
+     * {@code null} is ignored.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -66,27 +66,8 @@ public class MicoServiceDeploymentInfoDTO {
         }
     )})
     @Positive(message = "must be at least one replica")
-    private int replicas;
-
-    /**
-     * Minimum number of seconds for which this service should be ready
-     * without any of its containers crashing, for it to be considered available.
-     * Defaults to 0 (considered available as soon as it is ready).
-     */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Time To Verify Ready State"),
-            @ExtensionProperty(name = "minimum", value = "0"),
-            @ExtensionProperty(name = "default", value = "0"),
-            @ExtensionProperty(name = "x-order", value = "40"),
-            @ExtensionProperty(name = "description", value = "Minimum number of seconds for which this service should be ready " +
-                "without any of its containers crashing, for it to be considered available. " +
-                "0 is considered available as soon as it is ready.")
-        }
-    )})
-    @PositiveOrZero(message = "must not be negative")
-    private int minReadySecondsBeforeMarkedAvailable;
+    @JsonSetter(nulls = Nulls.SKIP)
+    private int replicas = 1;
 
     /**
      * Those labels are key-value pairs that are attached to the deployment
@@ -102,7 +83,7 @@ public class MicoServiceDeploymentInfoDTO {
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Labels"),
-            @ExtensionProperty(name = "x-order", value = "50"),
+            @ExtensionProperty(name = "x-order", value = "40"),
             @ExtensionProperty(name = "description", value = "Those labels are key-value pairs that are attached to the deployment" +
                 " of this service. Intended to be used to specify identifying attributes" +
                 " that are meaningful and relevant to users, but do not directly imply" +
@@ -127,13 +108,13 @@ public class MicoServiceDeploymentInfoDTO {
         properties = {
             @ExtensionProperty(name = "title", value = "Image Pull Policy"),
             @ExtensionProperty(name = "default", value = "ALWAYS"),
-            @ExtensionProperty(name = "x-order", value = "60"),
+            @ExtensionProperty(name = "x-order", value = "50"),
             @ExtensionProperty(name = "description", value = "Indicates whether and when to pull the image.\n " +
                 "Null is ignored.")
         }
     )})
     @JsonSetter(nulls = Nulls.SKIP)
-    private ImagePullPolicy imagePullPolicy;
+    private ImagePullPolicy imagePullPolicy = ImagePullPolicy.ALWAYS;
 
     /**
      * Restart policy for all containers.
@@ -145,7 +126,7 @@ public class MicoServiceDeploymentInfoDTO {
         properties = {
             @ExtensionProperty(name = "title", value = "Restart Policy"),
             @ExtensionProperty(name = "default", value = "ALWAYS"),
-            @ExtensionProperty(name = "x-order", value = "70"),
+            @ExtensionProperty(name = "x-order", value = "60"),
             @ExtensionProperty(name = "description", value = "Restart policy for all containers.\n " +
                 "Null is ignored.")
         }
@@ -153,22 +134,22 @@ public class MicoServiceDeploymentInfoDTO {
     @JsonSetter(nulls = Nulls.SKIP)
     private RestartPolicy restartPolicy = RestartPolicy.ALWAYS;
 
-
+    
+    // -------------------
+    // -> Constructors ---
+    // -------------------
+	
     /**
-     * Creates a {@code MicoServiceDeploymentInfoDTO} based on a
-     * {@link MicoServiceDeploymentInfo}.
-     *
-     * @param micoServiceDeploymentInfo the {@link MicoServiceDeploymentInfo} to use.
-     * @return a {@link MicoServiceDeploymentInfoDTO} with all the values
-     * of the given {@code MicoServiceDeploymentInfo}.
-     */
-    public static MicoServiceDeploymentInfoDTO valueOf(MicoServiceDeploymentInfo micoServiceDeploymentInfo) {
-        return new MicoServiceDeploymentInfoDTO()
-            .setReplicas(micoServiceDeploymentInfo.getReplicas())
-            .setMinReadySecondsBeforeMarkedAvailable(micoServiceDeploymentInfo.getMinReadySecondsBeforeMarkedAvailable())
-            .setLabels(micoServiceDeploymentInfo.getLabels())
-            .setImagePullPolicy(micoServiceDeploymentInfo.getImagePullPolicy())
-            .setRestartPolicy(micoServiceDeploymentInfo.getRestartPolicy());
-    }
+	 * Creates an instance of {@code MicoServiceDeploymentInfoRequestDTO} based on a
+	 * {@code MicoServiceDeploymentInfo}.
+	 * 
+	 * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.
+	 */
+	public MicoServiceDeploymentInfoRequestDTO(MicoServiceDeploymentInfo serviceDeploymentInfo) {
+		this.replicas = serviceDeploymentInfo.getReplicas();
+		this.labels = serviceDeploymentInfo.getLabels();
+		this.imagePullPolicy = serviceDeploymentInfo.getImagePullPolicy();
+		this.restartPolicy = serviceDeploymentInfo.getRestartPolicy();
+	}
 
 }

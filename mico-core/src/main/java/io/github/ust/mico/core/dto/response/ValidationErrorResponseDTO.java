@@ -17,22 +17,28 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto;
+package io.github.ust.mico.core.dto.response;
 
-import lombok.Value;
+import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.servlet.http.HttpServletRequest;
-import java.util.List;
-import java.util.stream.Collectors;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
+import lombok.Value;
 
 @Value
-public class ValidationErrorDTO {
+@JsonInclude(Include.NON_NULL)
+public class ValidationErrorResponseDTO {
 
     /**
      * The {@link HttpStatus#value()}
@@ -63,7 +69,7 @@ public class ValidationErrorDTO {
      */
     public final static HttpStatus HTTP_STATUS = UNPROCESSABLE_ENTITY;
 
-    public ValidationErrorDTO(List<FieldError> fieldErrorList) {
+    public ValidationErrorResponseDTO(List<FieldError> fieldErrorList) {
         this.fieldErrors = fieldErrorList.stream()
             .map(fieldError -> "Field '" + fieldError.getField() + "' " + fieldError.getDefaultMessage())
             .collect(Collectors.toList());

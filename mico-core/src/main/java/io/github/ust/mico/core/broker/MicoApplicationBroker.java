@@ -1,6 +1,5 @@
 package io.github.ust.mico.core.broker;
 
-import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
 import io.github.ust.mico.core.exception.*;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
@@ -223,8 +222,8 @@ public class MicoApplicationBroker {
     }
 
     //TODO: Change return value to MicoApplicationStatus
-    public MicoApplicationStatusDTO getMicoApplicationStatusOfMicoApplication(String shortName, String version) throws MicoApplicationNotFoundException {
-        MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(shortName, version);
-        return micoStatusService.getApplicationStatus(micoApplication);
-    }
+//    public MicoApplicationStatusDTO getMicoApplicationStatusOfMicoApplication(String shortName, String version) throws MicoApplicationNotFoundException {
+//        MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(shortName, version);
+//        return micoStatusService.getApplicationStatus(micoApplication);
+//    }
 }

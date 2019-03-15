@@ -17,9 +17,11 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto;
+package io.github.ust.mico.core.dto.response.status;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 import io.fabric8.kubernetes.api.model.Node;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
@@ -40,11 +42,11 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class KubernetesNodeMetricsDTO {
+@JsonInclude(Include.NON_NULL)
+public class KubernetesNodeMetricsResponseDTO {
 
     /**
-     * Name of the Kubernetes {@link Node}.
+     * The name of the Kubernetes {@link Node}.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,

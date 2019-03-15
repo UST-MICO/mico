@@ -1,6 +1,5 @@
 package io.github.ust.mico.core.broker;
 
-import io.github.ust.mico.core.dto.MicoServiceStatusDTO;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.MicoServiceAlreadyExistsException;
 import io.github.ust.mico.core.exception.MicoServiceHasDependersException;
@@ -133,12 +132,12 @@ public class MicoServiceBroker {
         return dependers;
     }
 
-    public MicoServiceStatusDTO getStatusOfService(String shortName, String version) throws MicoServiceNotFoundException {
-        MicoServiceStatusDTO serviceStatus = new MicoServiceStatusDTO();
-        MicoService micoService = getServiceFromDatabase(shortName, version);
-        serviceStatus = micoStatusService.getServiceStatus(micoService);
-        return serviceStatus;
-    }
+//    public MicoServiceStatusDTO getStatusOfService(String shortName, String version) throws MicoServiceNotFoundException {
+//        MicoServiceStatusDTO serviceStatus = new MicoServiceStatusDTO();
+//        MicoService micoService = getServiceFromDatabase(shortName, version);
+//        serviceStatus = micoStatusService.getServiceStatus(micoService);
+//        return serviceStatus;
+//    }
 
     public MicoService persistService(MicoService newService) throws MicoServiceNotFoundException, MicoServiceAlreadyExistsException {
         MicoService micoService = getServiceFromDatabase(newService.getShortName(), newService.getVersion());
