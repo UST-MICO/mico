@@ -41,7 +41,7 @@ public interface MicoServiceRepository extends Neo4jRepository<MicoService, Long
     	+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
     	+ "RETURN COLLECT(s) AS services")
     List<MicoService> findAllByApplication(
-    	@Param("shortName") String applicationShortName,
+    	@Param("applicationShortName") String applicationShortName,
     	@Param("applicationVersion") String applicationVersion);
 
     @Depth(2)
