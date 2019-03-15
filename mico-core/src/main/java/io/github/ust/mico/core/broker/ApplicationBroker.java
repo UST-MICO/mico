@@ -197,6 +197,7 @@ public class ApplicationBroker {
         MicoServiceDeploymentInfo micoServiceDeploymentInfo = getMicoServiceDeploymentInformationOfMicoApplication(applicationShortName, applicationVersion, serviceShortName);
         MicoApplication micoApplication = micoServiceDeploymentInfo.getApplication();
         micoApplication.getServiceDeploymentInfos().remove(micoServiceDeploymentInfo);
+        // TODO: Update Kubernetes deployment
         return applicationRepository.save(micoApplication);
     }
 
@@ -204,11 +205,20 @@ public class ApplicationBroker {
         MicoServiceDeploymentInfo micoServiceDeploymentInfo = getMicoServiceDeploymentInformationOfMicoApplication(applicationShortName, applicationVersion, serviceShortName, serviceVersion);
         MicoApplication micoApplication = micoServiceDeploymentInfo.getApplication();
         micoApplication.getServiceDeploymentInfos().remove(micoServiceDeploymentInfo);
+        // TODO: Update Kubernetes deployment
         return applicationRepository.save(micoApplication);
     }
 
-    public MicoServiceDeploymentInfo updateMicoServiceDeploymentInformationOfMicoApplication() {
-        //TODO: Implementation
+    public MicoApplication updateMicoServiceDeploymentInformationOfMicoApplication(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion, MicoServiceDeploymentInfo micoServiceDeploymentInfo) throws MicoServiceDeploymentInformationNotFoundException {
+        MicoServiceDeploymentInfo existingMicoServiceDeploymentInfo = getMicoServiceDeploymentInformationOfMicoApplication(applicationShortName, applicationVersion, serviceShortName, serviceVersion);
+        MicoApplication micoApplication = existingMicoServiceDeploymentInfo.getApplication();
+
+        micoServiceDeploymentInfo.setId(existingMicoServiceDeploymentInfo.getId());
+        micoApplication.getServiceDeploymentInfos().remove(existingMicoServiceDeploymentInfo);
+        micoApplication.getServiceDeploymentInfos().add(micoServiceDeploymentInfo);
+
+        // TODO: Update actual Kubernetes deployment (see issue mico#416).
+        return applicationRepository.save(micoApplication);
     }
 
     //TODO: change return value?
