@@ -119,37 +119,6 @@ public class MicoServiceDeploymentInfo {
     private RestartPolicy restartPolicy = RestartPolicy.ALWAYS;
 
     /**
-     * Applies the values of all properties of a
-     * {@code MicoServiceDeploymentInfoRequestDTO} to this
-     * {@code MicoServiceDeploymentInfo}.
-     *
-     * @param serviceDeploymentInfoDTO the {@link MicoServiceDeploymentInfoRequestDTO}.
-     * @return this {@link MicoServiceDeploymentInfo} with the values
-     * of the properties of the given {@link MicoServiceDeploymentInfoRequestDTO}.
-     */
-    public MicoServiceDeploymentInfo applyValuesFrom(MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) {
-        return setReplicas(serviceDeploymentInfoDTO.getReplicas())
-            .setLabels(serviceDeploymentInfoDTO.getLabels().stream().map(MicoLabel::valueOf).collect(Collectors.toList()))
-            .setEnvironmentVariables(serviceDeploymentInfoDTO.getEnvironmentVariables().stream().map(MicoEnvironmentVariable::valueOf).collect(Collectors.toList()))
-            .setImagePullPolicy(serviceDeploymentInfoDTO.getImagePullPolicy())
-            .setRestartPolicy(serviceDeploymentInfoDTO.getRestartPolicy());
-    }
-
-    /**
-     * Applies the values of all properties of a
-     * {@code MicoServiceDeploymentInfoResponseDTO} to this
-     * {@code MicoServiceDeploymentInfo}.
-     *
-     * @param serviceDeploymentInfoDTO the {@link MicoServiceDeploymentInfoResponseDTO}.
-     * @return this {@link MicoServiceDeploymentInfo} with the values
-     * of the properties of the given {@link MicoServiceDeploymentInfoResponseDTO}.
-     */
-    public MicoServiceDeploymentInfo applyValuesFrom(MicoServiceDeploymentInfoResponseDTO serviceDeploymentInfoDTO) {
-        return applyValuesFrom((MicoServiceDeploymentInfoRequestDTO) serviceDeploymentInfoDTO);
-    }
-
-
-    /**
      * Enumeration for the different policies specifying
      * when to pull an image.
      */
@@ -209,6 +178,45 @@ public class MicoServiceDeploymentInfo {
         public String toString() {
             return value;
         }
+    }
+
+    /**
+     * Applies the values of all properties of a
+     * {@code MicoServiceDeploymentInfoRequestDTO} to this
+     * {@code MicoServiceDeploymentInfo}. Note that the id
+     * will not be affected.
+     *
+     * @param serviceDeploymentInfoDto the {@link MicoServiceDeploymentInfoRequestDTO}.
+     * @return this {@link MicoServiceDeploymentInfo} with the values
+     * of the properties of the given {@link MicoServiceDeploymentInfoRequestDTO}.
+     */
+    public MicoServiceDeploymentInfo applyValuesFrom(MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDto) {
+        return setReplicas(serviceDeploymentInfoDto.getReplicas())
+            .setLabels(serviceDeploymentInfoDto.getLabels().stream().map(MicoLabel::valueOf).collect(Collectors.toList()))
+            .setEnvironmentVariables(serviceDeploymentInfoDto.getEnvironmentVariables().stream().map(MicoEnvironmentVariable::valueOf).collect(Collectors.toList()))
+            .setImagePullPolicy(serviceDeploymentInfoDto.getImagePullPolicy())
+            .setRestartPolicy(serviceDeploymentInfoDto.getRestartPolicy());
+    }
+
+
+    // ----------------------
+    // -> Static creators ---
+    // ----------------------
+
+    /**
+     * Applies the values of all properties of a
+     * {@code MicoServiceDeploymentInfoResponseDTO} to this
+     * {@code MicoServiceDeploymentInfo}. Note that the id
+     * will not be affected.
+     *
+     * @param serviceDeploymentInfoDto the {@link MicoServiceDeploymentInfoResponseDTO}.
+     * @return this {@link MicoServiceDeploymentInfo} with the values
+     * of the properties of the given {@link MicoServiceDeploymentInfoResponseDTO}.
+     */
+    public MicoServiceDeploymentInfo applyValuesFrom(MicoServiceDeploymentInfoResponseDTO serviceDeploymentInfoDto) {
+    	return applyValuesFrom((MicoServiceDeploymentInfoRequestDTO) serviceDeploymentInfoDto)
+		    .setKubernetesDeploymentInfo(serviceDeploymentInfoDto.getKubernetesDeploymentInfo() == null ? null
+		        : KubernetesDeploymentInfo.valueOf(serviceDeploymentInfoDto.getKubernetesDeploymentInfo()));
     }
 
 }

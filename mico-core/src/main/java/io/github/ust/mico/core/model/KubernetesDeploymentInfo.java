@@ -19,20 +19,20 @@
 
 package io.github.ust.mico.core.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.Extension;
-import io.swagger.annotations.ExtensionProperty;
+import io.github.ust.mico.core.dto.response.KubernetesDeploymentInfoResponseDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
-import org.neo4j.ogm.annotation.NodeEntity;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Information about the Kubernetes resources
@@ -42,47 +42,70 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
+@NodeEntity
 public class KubernetesDeploymentInfo {
+
+    /**
+     * The id of this Kubernetes deployment info.
+     */
+    @Id
+    @GeneratedValue
+    private Long id;
+
+
+    // ----------------------
+    // -> Optional fields ---
+    // ----------------------
 
     /**
      * The namespace in which the Kubernetes {@link Deployment} is created.
      */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Namespace"),
-            @ExtensionProperty(name = "x-order", value = "10"),
-            @ExtensionProperty(name = "description", value = "The namespace in which the Kubernetes Deployment is created.")
-        }
-    )})
     private String namespace;
 
     /**
      * The name of the Kubernetes {@link Deployment} created by a {@link MicoService}
      */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Deployment Name"),
-            @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "The name of the Kubernetes Deployment " +
-                "created by a MicoService.")
-        }
-    )})
     private String deploymentName;
 
     /**
      * The names of the Kubernetes {@link Service Services}
      * created by {@link MicoServiceInterface MicoServiceInterfaces}
      */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Service Names"),
-            @ExtensionProperty(name = "x-order", value = "30"),
-            @ExtensionProperty(name = "description", value = "The names of the Kubernetes Services " +
-                "created by MicoServiceInterfaces.")
-        }
-    )})
     private List<String> serviceNames = new ArrayList<>();
+
+    /**
+     * Applies the values of all properties of a
+     * {@code KubernetesDeploymentInfoResponseDTO} to this
+     * {@code KubernetesDeploymentInfo}. Note that the id
+     * will not be affected.
+     *
+     * @param kubernetesDeploymentInfoDto the {@link KubernetesDeploymentInfoResponseDTO}.
+     * @return this {@link KubernetesDeploymentInfo} with the values
+     * of the properties of the given {@link KubernetesDeploymentInfoResponseDTO}.
+     */
+    public KubernetesDeploymentInfo applyValuesFrom(KubernetesDeploymentInfoResponseDTO kubernetesDeploymentInfoDto) {
+        return setNamespace(kubernetesDeploymentInfoDto.getNamespace())
+            .setDeploymentName(kubernetesDeploymentInfoDto.getDeploymentName())
+            .setServiceNames(kubernetesDeploymentInfoDto.getServiceNames());
+    }
+
+
+    // ----------------------
+    // -> Static creators ---
+    // ----------------------
+
+    /**
+     * Creates a new {@code KubernetesDeploymentInfo} based on a {@code KubernetesDeploymentInfoResponseDTO}.
+     * Note that the id will be set to {@code null}.
+     *
+     * @param kubernetesDeploymentInfoDto the {@link KubernetesDeploymentInfoResponseDTO}.
+     * @return a {@link KubernetesDeploymentInfo}.
+     */
+    public static KubernetesDeploymentInfo valueOf(KubernetesDeploymentInfoResponseDTO kubernetesDeploymentInfoDto) {
+        return new KubernetesDeploymentInfo()
+            .setNamespace(kubernetesDeploymentInfoDto.getNamespace())
+            .setDeploymentName(kubernetesDeploymentInfoDto.getDeploymentName())
+            .setServiceNames(kubernetesDeploymentInfoDto.getServiceNames());
+    }
+
 }
