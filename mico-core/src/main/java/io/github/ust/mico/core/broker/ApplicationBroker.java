@@ -175,24 +175,50 @@ public class ApplicationBroker {
         }
     }
 
-    public MicoApplication removeMicoServiceFromMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoServiceNotFoundInMicoApplicationException {
+    public MicoServiceDeploymentInfo getMicoServiceDeploymentInformationOfMicoApplication(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoServiceDeploymentInformationNotFoundException {
         Optional<MicoServiceDeploymentInfoQueryResult> micoServiceDeploymentInfoQueryResultOptional = serviceDeploymentInfoRepository.findByApplicationAndService(applicationShortName, applicationVersion, serviceShortName);
         if (micoServiceDeploymentInfoQueryResultOptional.isPresent()) {
-            MicoServiceDeploymentInfoQueryResult micoServiceDeploymentInfoQueryResult = micoServiceDeploymentInfoQueryResultOptional.get();
-            MicoApplication micoApplication = micoServiceDeploymentInfoQueryResult.getApplication();
-            micoApplication.getServiceDeploymentInfos().remove(micoServiceDeploymentInfoQueryResult.getServiceDeploymentInfo());
-            return applicationRepository.save(micoApplication);
+            return micoServiceDeploymentInfoQueryResultOptional.get().getServiceDeploymentInfo();
         } else {
-            throw new MicoServiceNotFoundInMicoApplicationException(applicationShortName, applicationVersion, serviceShortName);
+            throw new MicoServiceDeploymentInformationNotFoundException(applicationShortName, applicationVersion, serviceShortName);
         }
     }
 
-    public MicoServiceDeploymentInfo getMicoServiceDeploymentInformationOfMicoApplication() {
-        //TODO: Implementation
+    public MicoServiceDeploymentInfo getMicoServiceDeploymentInformationOfMicoApplication(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion) throws MicoServiceDeploymentInformationNotFoundException {
+        Optional<MicoServiceDeploymentInfoQueryResult> micoServiceDeploymentInfoQueryResultOptional = serviceDeploymentInfoRepository.findByApplicationAndService(applicationShortName, applicationVersion, serviceShortName, serviceVersion);
+        if (micoServiceDeploymentInfoQueryResultOptional.isPresent()) {
+            return micoServiceDeploymentInfoQueryResultOptional.get().getServiceDeploymentInfo();
+        } else {
+            throw new MicoServiceDeploymentInformationNotFoundException(applicationShortName, applicationVersion, serviceShortName);
+        }
     }
 
-    public MicoServiceDeploymentInfo updateMicoServiceDeploymentInformationOfMicoApplication() {
-        //TODO: Implementation
+    public MicoApplication removeMicoServiceFromMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoServiceDeploymentInformationNotFoundException {
+        MicoServiceDeploymentInfo micoServiceDeploymentInfo = getMicoServiceDeploymentInformationOfMicoApplication(applicationShortName, applicationVersion, serviceShortName);
+        MicoApplication micoApplication = micoServiceDeploymentInfo.getApplication();
+        micoApplication.getServiceDeploymentInfos().remove(micoServiceDeploymentInfo);
+        // TODO: Update Kubernetes deployment
+        return applicationRepository.save(micoApplication);
+    }
+
+    public MicoApplication removeMicoServiceFromMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion) throws MicoServiceDeploymentInformationNotFoundException {
+        MicoServiceDeploymentInfo micoServiceDeploymentInfo = getMicoServiceDeploymentInformationOfMicoApplication(applicationShortName, applicationVersion, serviceShortName, serviceVersion);
+        MicoApplication micoApplication = micoServiceDeploymentInfo.getApplication();
+        micoApplication.getServiceDeploymentInfos().remove(micoServiceDeploymentInfo);
+        // TODO: Update Kubernetes deployment
+        return applicationRepository.save(micoApplication);
+    }
+
+    public MicoApplication updateMicoServiceDeploymentInformationOfMicoApplication(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion, MicoServiceDeploymentInfo micoServiceDeploymentInfo) throws MicoServiceDeploymentInformationNotFoundException {
+        MicoServiceDeploymentInfo existingMicoServiceDeploymentInfo = getMicoServiceDeploymentInformationOfMicoApplication(applicationShortName, applicationVersion, serviceShortName, serviceVersion);
+        MicoApplication micoApplication = existingMicoServiceDeploymentInfo.getApplication();
+
+        micoServiceDeploymentInfo.setId(existingMicoServiceDeploymentInfo.getId());
+        micoApplication.getServiceDeploymentInfos().remove(existingMicoServiceDeploymentInfo);
+        micoApplication.getServiceDeploymentInfos().add(micoServiceDeploymentInfo);
+
+        // TODO: Update actual Kubernetes deployment (see issue mico#416).
+        return applicationRepository.save(micoApplication);
     }
 
     //TODO: change return value?
