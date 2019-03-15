@@ -221,9 +221,9 @@ public class ApplicationBroker {
         return applicationRepository.save(micoApplication);
     }
 
-    //TODO: change return value?
-    public MicoApplicationStatusDTO getMicoApplicationStatusOfMicoApplication() {
-        //TODO: Implementation
+    //TODO: Change return value to MicoApplicationStatus
+    public MicoApplicationStatusDTO getMicoApplicationStatusOfMicoApplication(String shortName, String version) throws MicoApplicationNotFoundException {
+        MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(shortName, version);
+        return micoStatusService.getApplicationStatus(micoApplication);
     }
-
 }
