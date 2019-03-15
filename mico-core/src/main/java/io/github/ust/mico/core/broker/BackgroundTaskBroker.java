@@ -71,12 +71,9 @@ public class BackgroundTaskBroker {
      * Deletes a job in the database.
      *
      * @param id the id of the job.
-     * @return TODO Jakob
      */
     public void deleteJob(String id) {
-//        Optional<MicoBackgroundTask> job = getJobById(id);
         jobRepository.deleteById(id);
-//        return job;
     }
 
     /**

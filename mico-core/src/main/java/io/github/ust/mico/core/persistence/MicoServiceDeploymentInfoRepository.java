@@ -32,8 +32,8 @@ import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 
 public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<MicoServiceDeploymentInfo, Long> {
 	
-	// TODO: Include 'KubernetesDeploymentInfo' in all find queries via OPTIONAL MATCH.
-	// TODO: Include 'KubernetesDeploymentInfo' in all delete queries via DETACH DELETE.
+	// NOTE: Include 'KubernetesDeploymentInfo' in all find queries via OPTIONAL MATCH.
+	// NOTE: Include 'KubernetesDeploymentInfo' in all delete queries via DETACH DELETE.
 	
     /**
      * Retrieves all service deployment information of a particular application.
