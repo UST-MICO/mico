@@ -19,6 +19,7 @@
 
 package io.github.ust.mico.core.resource;
 
+import io.github.ust.mico.core.broker.ApplicationBroker;
 import io.github.ust.mico.core.dto.MicoApplicationDTO;
 import io.github.ust.mico.core.dto.MicoApplicationDTO.MicoApplicationDeploymentStatus;
 import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
@@ -64,26 +65,28 @@ public class ApplicationResource {
     public static final String PATH_SERVICES = "services";
     public static final String PATH_DEPLOYMENT_INFORMATION = "deploymentInformation";
     public static final String PATH_PROMOTE = "promote";
-
     private static final String PATH_VARIABLE_SHORT_NAME = "shortName";
     private static final String PATH_VARIABLE_VERSION = "version";
     private static final String PATH_VARIABLE_SERVICE_SHORT_NAME = "serviceShortName";
     private static final String PATH_VARIABLE_SERVICE_VERSION = "serviceVersion";
 
     @Autowired
-    private MicoApplicationRepository applicationRepository;
+    private ApplicationBroker applicationBroker;
 
     @Autowired
-    private MicoServiceRepository serviceRepository;
+    private MicoApplicationRepository applicationRepository; //TODO: remove?
 
     @Autowired
-    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
+    private MicoServiceRepository serviceRepository; //TODO: remove?
 
     @Autowired
-    private MicoKubernetesClient micoKubernetesClient;
+    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository; //TODO: remove?
 
     @Autowired
-    private MicoStatusService micoStatusService;
+    private MicoKubernetesClient micoKubernetesClient; //TODO: remove?
+
+    @Autowired
+    private MicoStatusService micoStatusService; //TODO: remove?
 
     @GetMapping()
     public ResponseEntity<Resources<Resource<MicoApplicationWithServicesDTO>>> getAllApplications() {
@@ -360,6 +363,7 @@ public class ApplicationResource {
      * @return the existing {@link MicoService} from the database if it exists.
      * @throws ResponseStatusException if no {@link MicoService} exists for the given shortName and version.
      */
+    //TODO: remove?
     private MicoService getServiceFromDatabase(String shortName, String version) throws ResponseStatusException {
         Optional<MicoService> existingServciceOptional = serviceRepository.findByShortNameAndVersion(shortName, version);
         if (!existingServciceOptional.isPresent()) {
@@ -368,22 +372,26 @@ public class ApplicationResource {
         return existingServciceOptional.get();
     }
 
+    //TODO: move to broker
     private List<Resource<MicoApplicationWithServicesDTO>> getApplicationWithServicesDTOResourceList(List<MicoApplication> applications) {
         return applications.stream().map(application -> getApplicationWithServicesDTOResourceWithDeploymentStatus(application)).collect(Collectors.toList());
     }
 
+    //TODO: move to broker
     private Resource<MicoApplicationWithServicesDTO> getApplicationWithServicesDTOResourceWithDeploymentStatus(MicoApplication application) {
         MicoApplicationWithServicesDTO dto = MicoApplicationWithServicesDTO.valueOf(application);
         dto.setDeploymentStatus(getApplicationDeploymentStatus(application));
         return new Resource<MicoApplicationWithServicesDTO>(dto, getApplicationLinks(application));
     }
 
+    //TODO: move to broker
     private Resource<MicoApplicationDTO> getApplicationDTOResourceWithDeploymentStatus(MicoApplication application) {
         MicoApplicationDTO dto = MicoApplicationDTO.valueOf(application);
         dto.setDeploymentStatus(getApplicationDeploymentStatus(application));
         return new Resource<MicoApplicationDTO>(dto, getApplicationLinks(application));
     }
 
+    //TODO: move to broker
     private MicoApplicationDeploymentStatus getApplicationDeploymentStatus(MicoApplication application) {
         try {
             return micoKubernetesClient.isApplicationDeployed(application)
@@ -395,6 +403,7 @@ public class ApplicationResource {
         }
     }
 
+    //TODO: move to broker
     private Iterable<Link> getApplicationLinks(MicoApplication application) {
         LinkedList<Link> links = new LinkedList<>();
         links.add(linkTo(methodOn(ApplicationResource.class).getApplicationByShortNameAndVersion(application.getShortName(), application.getVersion())).withSelfRel());

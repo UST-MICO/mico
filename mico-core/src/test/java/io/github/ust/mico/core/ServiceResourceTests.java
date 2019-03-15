@@ -22,6 +22,7 @@ package io.github.ust.mico.core;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import io.github.ust.mico.core.broker.ServiceBroker;
 import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.dto.*;
 import io.github.ust.mico.core.model.MicoService;
@@ -106,6 +107,9 @@ public class ServiceResourceTests {
 
     @MockBean
     private GitHubCrawler crawler;
+
+    @MockBean
+    private ServiceBroker serviceBroker;
 
     @Autowired
     private MockMvc mvc;
@@ -205,8 +209,7 @@ public class ServiceResourceTests {
 
     @Test
     public void getCompleteServiceList() throws Exception {
-        given(serviceRepository.findAll(ArgumentMatchers.anyInt())).willReturn(
-            CollectionUtils.listOf(
+        given(serviceBroker.getAllServicesAsList()).willReturn(CollectionUtils.listOf(
                 new MicoService().setShortName(SHORT_NAME_1).setVersion(VERSION_1_0_1).setName(NAME_1).setDescription(DESCRIPTION_1),
                 new MicoService().setShortName(SHORT_NAME_2).setVersion(VERSION_1_0_2).setName(NAME_2).setDescription(DESCRIPTION_2),
                 new MicoService().setShortName(SHORT_NAME_3).setVersion(VERSION_1_0_3).setName(NAME_3).setDescription(DESCRIPTION_3)));
