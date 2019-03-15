@@ -1,6 +1,6 @@
 package io.github.ust.mico.core;
 
-import io.github.ust.mico.core.broker.ServiceInterfaceBroker;
+import io.github.ust.mico.core.broker.MicoServiceInterfaceBroker;
 import io.github.ust.mico.core.model.MicoPortType;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
@@ -25,7 +25,7 @@ import static org.mockito.BDDMockito.given;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class ServiceInterfaceBrokerTests {
+public class MicoServiceInterfaceBrokerTests {
 
     private static final String INTERFACE_NAME = "interface-name";
     private static final String INTERFACE_NAME_INVALID = "interface_NAME";
@@ -39,7 +39,7 @@ public class ServiceInterfaceBrokerTests {
     private MicoServiceRepository serviceRepository;
 
     @Autowired
-    private ServiceInterfaceBroker serviceInterfaceBroker;
+    private MicoServiceInterfaceBroker micoServiceInterfaceBroker;
 
     @Test
     public void getAllInterfacesOfService() throws Exception {
@@ -50,7 +50,7 @@ public class ServiceInterfaceBrokerTests {
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
                 Optional.of(new MicoService().setServiceInterfaces(serviceInterfaces)));
 
-        Optional<List<MicoServiceInterface>> optionalMicoServiceInterfaceList = serviceInterfaceBroker.getAllInterfacesOfService(SHORT_NAME, VERSION);
+        Optional<List<MicoServiceInterface>> optionalMicoServiceInterfaceList = micoServiceInterfaceBroker.getAllInterfacesOfService(SHORT_NAME, VERSION);
 
         assertThat(optionalMicoServiceInterfaceList.get().size()).isEqualTo(2);
         assertThat(optionalMicoServiceInterfaceList.get().get(0)).isEqualTo(serviceInterface0);
@@ -63,7 +63,7 @@ public class ServiceInterfaceBrokerTests {
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
                 Optional.of(new MicoService().setServiceInterfaces(CollectionUtils.listOf(serviceInterface))));
 
-        Optional<MicoServiceInterface> micoServiceInterface = serviceInterfaceBroker.getServiceInterfaceByServiceInterfaceName(SHORT_NAME, VERSION, INTERFACE_NAME);
+        Optional<MicoServiceInterface> micoServiceInterface = micoServiceInterfaceBroker.getServiceInterfaceByServiceInterfaceName(SHORT_NAME, VERSION, INTERFACE_NAME);
 
         assertThat(micoServiceInterface.get()).isEqualTo(serviceInterface);
     }
@@ -76,7 +76,7 @@ public class ServiceInterfaceBrokerTests {
 
         MicoServiceInterface serviceInterface = getTestServiceInterface();
 
-        MicoServiceInterface createdMicoServiceInterface = serviceInterfaceBroker.createServiceInterface(SHORT_NAME, VERSION, serviceInterface);
+        MicoServiceInterface createdMicoServiceInterface = micoServiceInterfaceBroker.createServiceInterface(SHORT_NAME, VERSION, serviceInterface);
 
         assertThat(createdMicoServiceInterface).isEqualTo(serviceInterface);
     }

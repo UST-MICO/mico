@@ -20,10 +20,10 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-public class ApplicationBroker {
+public class MicoApplicationBroker {
 
     @Autowired
-    private ServiceBroker serviceBroker;
+    private MicoServiceBroker micoServiceBroker;
 
     @Autowired
     private MicoApplicationRepository applicationRepository;
@@ -146,7 +146,7 @@ public class ApplicationBroker {
 
     public MicoApplication addMicoServiceToMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion) throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAlreadyAddedToMicoApplicationException {
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
-        MicoService micoService = serviceBroker.getServiceFromDatabase(serviceShortName, serviceVersion);
+        MicoService micoService = micoServiceBroker.getServiceFromDatabase(serviceShortName, serviceVersion);
 
         //TODO: update following implementation (make use of getMicoServiceDeploymentInformationOfMicoApplication)
         if (micoApplication.getServiceDeploymentInfos().stream().noneMatch(sdi -> sdi.getService().equals(micoService))) {
@@ -161,7 +161,7 @@ public class ApplicationBroker {
 
     public MicoApplication addMicoServiceToMicoApplicationById(Long applicationId, Long serviceId) throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAlreadyAddedToMicoApplicationException {
         MicoApplication micoApplication = getMicoApplicationById(applicationId);
-        MicoService micoService = serviceBroker.getServiceById(serviceId);
+        MicoService micoService = micoServiceBroker.getServiceById(serviceId);
 
         //TODO: update following implementation (make use of getMicoServiceDeploymentInformationOfMicoApplication)
         if (micoApplication.getServiceDeploymentInfos().stream().noneMatch(sdi -> sdi.getService().equals(micoService))) {

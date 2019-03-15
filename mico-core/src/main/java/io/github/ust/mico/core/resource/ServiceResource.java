@@ -19,7 +19,7 @@
 
 package io.github.ust.mico.core.resource;
 
-import io.github.ust.mico.core.broker.ServiceBroker;
+import io.github.ust.mico.core.broker.MicoServiceBroker;
 import io.github.ust.mico.core.dto.CrawlingInfoDTO;
 import io.github.ust.mico.core.dto.MicoServiceDependencyGraphDTO;
 import io.github.ust.mico.core.dto.MicoServiceDependencyGraphEdgeDTO;
@@ -70,7 +70,7 @@ public class ServiceResource {
     public static final String PATH_PROMOTE = "promote";
 
     @Autowired
-    private ServiceBroker serviceBroker;
+    private MicoServiceBroker micoServiceBroker;
 
     //TODO: remove serviceRepository from ServiceResource
     @Autowired
@@ -90,7 +90,7 @@ public class ServiceResource {
 
     @GetMapping()
     public ResponseEntity<Resources<Resource<MicoService>>> getServiceList() {
-        List<MicoService> services = serviceBroker.getAllServicesAsList();
+        List<MicoService> services = micoServiceBroker.getAllServicesAsList();
         List<Resource<MicoService>> serviceResources = getServiceResourcesList(services);
         return ResponseEntity.ok(
                 new Resources<>(serviceResources,

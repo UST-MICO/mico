@@ -1,6 +1,6 @@
 package io.github.ust.mico.core;
 
-import io.github.ust.mico.core.broker.ServiceBroker;
+import io.github.ust.mico.core.broker.MicoServiceBroker;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
@@ -30,13 +30,13 @@ import static org.mockito.Mockito.when;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class ServiceBrokerTests {
+public class MicoServiceBrokerTests {
 
     @MockBean
     private MicoServiceRepository serviceRepository;
 
     @Autowired
-    private ServiceBroker serviceBroker;
+    private MicoServiceBroker micoServiceBroker;
 
     @MockBean
     private MicoStatusService micoStatusService;
@@ -60,13 +60,13 @@ public class ServiceBrokerTests {
 
         //TODO: Verfiy why this is not working
         //when(serviceRepository.findAll()).thenReturn(micoServiceList);
-        when(serviceBroker.getAllServicesAsList()).thenReturn(micoServiceList);
+        when(micoServiceBroker.getAllServicesAsList()).thenReturn(micoServiceList);
         when(serviceRepository.findByShortNameAndVersion(SHORT_NAME_1, VERSION_1_0_1)).thenReturn(java.util.Optional.ofNullable(micoServiceOne));
     }
 
     @Test
     public void getAllServicesAsList() throws Exception {
-        List<MicoService> micoServiceList = serviceBroker.getAllServicesAsList();
+        List<MicoService> micoServiceList = micoServiceBroker.getAllServicesAsList();
 
         assertThat(micoServiceList.get(0).getShortName()).isEqualTo(SHORT_NAME_1);
         assertThat(micoServiceList.get(1).getShortName()).isEqualTo(SHORT_NAME_2);
@@ -75,7 +75,7 @@ public class ServiceBrokerTests {
 
     @Test
     public void getServiceFromDatabase() throws Exception {
-        MicoService micoService = serviceBroker.getServiceFromDatabase(SHORT_NAME_1, VERSION_1_0_1);
+        MicoService micoService = micoServiceBroker.getServiceFromDatabase(SHORT_NAME_1, VERSION_1_0_1);
         assertThat(micoService.getShortName()).isEqualTo(SHORT_NAME_1);
         assertThat(micoService.getVersion()).isEqualTo(VERSION_1_0_1);
     }
@@ -96,7 +96,7 @@ public class ServiceBrokerTests {
 
         given(serviceRepository.save(any(MicoService.class))).willReturn(resultUpdatedService);
 
-        MicoService updatedService = serviceBroker.updateExistingService(SHORT_NAME_1, VERSION_1_0_1, micoServiceTwo);
+        MicoService updatedService = micoServiceBroker.updateExistingService(SHORT_NAME_1, VERSION_1_0_1, micoServiceTwo);
 
         assertThat(updatedService.getShortName()).isEqualTo(SHORT_NAME_1);
         assertThat(updatedService.getVersion()).isEqualTo(VERSION_1_0_1);
@@ -116,7 +116,7 @@ public class ServiceBrokerTests {
 
         given(serviceRepository.findById(ArgumentMatchers.anyLong())).willReturn(java.util.Optional.ofNullable(micoServiceOne));
 
-        MicoService micoService = serviceBroker.getServiceById(id);
+        MicoService micoService = micoServiceBroker.getServiceById(id);
 
         assertThat(micoService.getShortName()).isEqualTo(SHORT_NAME_1);
         assertThat(micoService.getVersion()).isEqualTo(VERSION_1_0_1);
@@ -127,7 +127,7 @@ public class ServiceBrokerTests {
     @Test
     public void deleteService() throws Exception {
         //TODO: Implementation haha
-        serviceBroker.deleteService(SHORT_NAME_1, VERSION_1_0_1);
+        micoServiceBroker.deleteService(SHORT_NAME_1, VERSION_1_0_1);
     }
 
     @Test
@@ -140,7 +140,7 @@ public class ServiceBrokerTests {
 
         given(serviceRepository.save(any(MicoService.class))).willReturn(service);
 
-        MicoService savedService = serviceBroker.persistService(service);
+        MicoService savedService = micoServiceBroker.persistService(service);
 
         assertThat(savedService.getShortName()).isEqualTo(SHORT_NAME_1);
         assertThat(savedService.getVersion()).isEqualTo(VERSION_1_0_1);
@@ -150,7 +150,7 @@ public class ServiceBrokerTests {
 
     @Test
     public void deleteAllVersionsOfService() throws Exception {
-        serviceBroker.deleteAllVersionsOfService(SHORT_NAME_1);
+        micoServiceBroker.deleteAllVersionsOfService(SHORT_NAME_1);
     }
 
     @Test
@@ -187,7 +187,7 @@ public class ServiceBrokerTests {
         given(serviceRepository.findAll(ArgumentMatchers.anyInt())).willReturn(CollectionUtils.listOf(service, service1, service2, service3));
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
 
-        List<MicoService> dependers = serviceBroker.getDependers(service);
+        List<MicoService> dependers = micoServiceBroker.getDependers(service);
 
         assertThat(dependers).contains(service1);
         assertThat(dependers).contains(service2);
@@ -218,7 +218,7 @@ public class ServiceBrokerTests {
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME_1, VERSION_1_0_1)).willReturn(Optional.of(service1));
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME_2, VERSION_1_0_2)).willReturn(Optional.of(service2));
 
-        List<MicoService> dependentServices = serviceBroker.getDependentServices(service.getDependencies());
+        List<MicoService> dependentServices = micoServiceBroker.getDependentServices(service.getDependencies());
 
         assertThat(dependentServices).contains(service1);
         assertThat(dependentServices).contains(service2);

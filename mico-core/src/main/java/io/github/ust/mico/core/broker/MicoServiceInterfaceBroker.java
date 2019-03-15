@@ -16,13 +16,13 @@ import java.util.function.Predicate;
 
 @Slf4j
 @Service
-public class ServiceInterfaceBroker {
+public class MicoServiceInterfaceBroker {
 
     @Autowired
     private MicoServiceRepository serviceRepository;
 
     @Autowired
-    private ServiceBroker serviceBroker;
+    private MicoServiceBroker micoServiceBroker;
 
     public Optional<List<MicoServiceInterface>> getAllInterfacesOfService(String shortName, String version) {
         Optional<List<MicoServiceInterface>> optionalMicoServiceInterfaceList = serviceRepository.findByShortNameAndVersion(shortName, version)
@@ -55,7 +55,7 @@ public class ServiceInterfaceBroker {
     }
 
     public MicoServiceInterface createServiceInterface (String shortName, String version, MicoServiceInterface micoServiceInterface) throws MicoServiceNotFoundException, MicoServiceInterfaceAlreadyExistsException {
-        MicoService service = serviceBroker.getServiceFromDatabase(shortName, version);
+        MicoService service = micoServiceBroker.getServiceFromDatabase(shortName, version);
         if (serviceInterfaceExists(micoServiceInterface, service)) {
             throw new MicoServiceInterfaceAlreadyExistsException(shortName, version, micoServiceInterface.getServiceInterfaceName());
         }
