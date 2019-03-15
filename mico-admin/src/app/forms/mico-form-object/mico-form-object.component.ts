@@ -19,12 +19,12 @@
 
 import { Component, forwardRef, OnInit, Input, AfterViewInit, ViewChild } from '@angular/core';
 import { MatFormFieldControl } from '@angular/material';
-import { NG_VALUE_ACCESSOR, AsyncValidator, NG_VALIDATORS } from '@angular/forms';
+import { NG_VALUE_ACCESSOR, AsyncValidator, NG_ASYNC_VALIDATORS } from '@angular/forms';
 import { ApiModel } from 'src/app/api/apimodel';
 import { ModelsService } from 'src/app/api/models.service';
 import { MicoFormComponent } from '../mico-form/mico-form.component';
-import { combineLatest, Observable, BehaviorSubject, Subject, Subscription } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { BehaviorSubject, Subject, Subscription } from 'rxjs';
+import { map, take } from 'rxjs/operators';
 
 
 @Component({
@@ -35,7 +35,7 @@ import { map } from 'rxjs/operators';
         provide: NG_VALUE_ACCESSOR,
         useExisting: forwardRef(() => MicoFormObjectComponent),
         multi: true
-    }, { provide: NG_VALIDATORS, useExisting: forwardRef(() => MicoFormObjectComponent), multi: true }
+    }, { provide: NG_ASYNC_VALIDATORS, useExisting: forwardRef(() => MicoFormObjectComponent), multi: true }
         , { provide: MatFormFieldControl, useExisting: Boolean }],
 })
 export class MicoFormObjectComponent implements OnInit, AfterViewInit, AsyncValidator {
@@ -96,6 +96,7 @@ export class MicoFormObjectComponent implements OnInit, AfterViewInit, AsyncVali
                     return { nestedError: 'A nested form has an error.' };
                 }
             }),
+            take(1),
         );
     }
 
