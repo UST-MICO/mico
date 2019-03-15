@@ -20,7 +20,7 @@
 package io.github.ust.mico.core.resource;
 
 import io.github.ust.mico.core.broker.BackgroundTaskBroker;
-import io.github.ust.mico.core.dto.MicoApplicationJobStatusResponseDTO;
+import io.github.ust.mico.core.dto.response.MicoApplicationJobStatusResponseDTO;
 import io.github.ust.mico.core.exception.ImageBuildException;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.NotInitializedException;
