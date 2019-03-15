@@ -89,14 +89,15 @@ public interface MicoServiceRepository extends Neo4jRepository<MicoService, Long
      */
     @Query("MATCH (s:MicoService)-[:DEPENDS_ON]->(dependency:MicoService) "
     	+ "WHERE dependency.shortName = {shortName} AND dependency.version = {version} "
-    	+ "RETURN COLLECT(service)")
+    	+ "RETURN COLLECT(s)")
     List<MicoService> findDependers(
     	@Param("shortName") String shortName,
     	@Param("version") String version);
 
     @Query("MATCH (s:MicoService) WHERE s.shortName = {shortName} AND s.version = {version} "
     	+ "WITH s OPTIONAL MATCH (s)-[:PROVIDES]->(i:MicoServiceInterface) "
-    	+ "WITH s, i OPTIONAL MATCH (i)-[:PROVIDES]->(p:MicoServicePort) DETACH DELETE s, i, p")
+    	+ "WITH s, i OPTIONAL MATCH (i)-[:PROVIDES]->(p:MicoServicePort) "
+    	+ "DETACH DELETE s, i, p")
     void deleteServiceByShortNameAndVersion(
     	@Param("shortName") String shortName,
     	@Param("version") String version);
