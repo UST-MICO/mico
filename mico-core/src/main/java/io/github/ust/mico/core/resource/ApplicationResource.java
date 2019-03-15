@@ -427,6 +427,9 @@ public class ApplicationResource {
         	}
         } catch (KubernetesResourceException e) {
             log.debug(e.getMessage(), e);
+        } catch (Exception e) {
+        	// TODO: REMOVE AFTER TESTING!
+        	return MicoApplicationDeploymentStatus.NOT_DEPLOYED;
         }
         return MicoApplicationDeploymentStatus.NOT_DEPLOYED;
     }
