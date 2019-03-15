@@ -32,9 +32,6 @@ import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 
 public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<MicoServiceDeploymentInfo, Long> {
 	
-	// NOTE: Include 'KubernetesDeploymentInfo' in all find queries via OPTIONAL MATCH.
-	// NOTE: Include 'KubernetesDeploymentInfo' in all delete queries via DETACH DELETE.
-	
     /**
      * Retrieves all service deployment information of a particular application.
      * 
@@ -44,11 +41,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
      */
     @Query("MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
     	+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
-    	+ "WITH a, sdi , s OPTIONAL MATCH (sdi)-[:HAS]->(label:MicoLabel) "
-    	+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
-    	+ "WITH a, sdi , s OPTIONAL MATCH (sdi)-[:HAS]->(env:MicoEnvironmentVariable) "
-        + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
-        + "RETURN (sdi:MicoServiceDeploymentInfo)-->()")
+        + "RETURN (sdi:MicoServiceDeploymentInfo)-[:HAS*0..1]->()")
     List<MicoServiceDeploymentInfo> findAllByApplication(
         @Param("applicationShortName") String applicationShortName,
         @Param("applicationVersion") String applicationVersion);
@@ -64,13 +57,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
     @Query("MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
     	+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
 		+ "AND s.shortName = {serviceShortName} " 
-    	+ "WITH a, sdi , s OPTIONAL MATCH (sdi)-[:HAS]->(label:MicoLabel) "
-    	+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
-		+ "AND s.shortName = {serviceShortName} " 
-    	+ "WITH a, sdi , s OPTIONAL MATCH (sdi)-[:HAS]->(env:MicoEnvironmentVariable) "
-        + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
-        + "AND s.shortName = {serviceShortName} "
-        + "RETURN (sdi:MicoServiceDeploymentInfo)-->()")
+        + "RETURN (sdi:MicoServiceDeploymentInfo)-[:HAS*0..1]->()")
     Optional<MicoServiceDeploymentInfo> findByApplicationAndService(
         @Param("applicationShortName") String applicationShortName,
         @Param("applicationVersion") String applicationVersion,
@@ -88,13 +75,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
     @Query("MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
     	+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
     	+ "AND s.shortName = {serviceShortName} AND s.version = {serviceVersion} "
-    	+ "WITH a, sdi , s OPTIONAL MATCH (sdi)-[:HAS]->(label:MicoLabel) "
-    	+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
-    	+ "AND s.shortName = {serviceShortName} AND s.version = {serviceVersion} " 
-    	+ "WITH a, sdi , s OPTIONAL MATCH (sdi)-[:HAS]->(env:MicoEnvironmentVariable) "
-        + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
-        + "AND s.shortName = {serviceShortName} AND s.version = {serviceVersion} "
-        + "RETURN (sdi:MicoServiceDeploymentInfo)-->()")
+        + "RETURN (sdi:MicoServiceDeploymentInfo)-[:HAS*0..1]->()")
     Optional<MicoServiceDeploymentInfo> findByApplicationAndService(
         @Param("applicationShortName") String applicationShortName,
         @Param("applicationVersion") String applicationVersion,
@@ -128,7 +109,6 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
 	@Query("MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
 		+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
 		+ "WITH a, sdi OPTIONAL MATCH (sdi)-[:HAS]->(additionalProperty) "
-	    + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
 	    + "DETACH DELETE sdi, additionalProperty")
     void deleteAllByApplication(
     	@Param("applicationShortName") String applicationShortName,
@@ -148,8 +128,6 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
 		+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
 		+ "AND s.shortName = {serviceShortName} " 
 		+ "WITH a, sdi, s OPTIONAL MATCH (sdi)-[:HAS]->(additionalProperty) "
-	    + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
-	    + "AND s.shortName = {serviceShortName} " 
 	    + "DETACH DELETE sdi, additionalProperty")
     void deleteByApplicationAndService(
     	@Param("applicationShortName") String applicationShortName,
@@ -171,8 +149,6 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
 		+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
 		+ "AND s.shortName = {serviceShortName} AND s.version = {serviceVersion} " 
 		+ "WITH a, sdi, s OPTIONAL MATCH (sdi)-[:HAS]->(additionalProperty) "
-	    + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
-	    + "AND s.shortName = {serviceShortName} AND s.version = {serviceVersion} " 
 	    + "DETACH DELETE sdi, additionalProperty")
     void deleteByApplicationAndService(
     	@Param("applicationShortName") String applicationShortName,
