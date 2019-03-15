@@ -82,13 +82,12 @@ public class MicoServiceBroker {
         return micoServiceList;
     }
 
-    public void deleteService(String shortName, String version) throws KubernetesResourceException, MicoServiceNotFoundException, MicoServiceHasDependersException {
-        MicoService service = getServiceFromDatabase(shortName, version);
+    public void deleteService(MicoService service) throws KubernetesResourceException, MicoServiceHasDependersException {
         throwConflictIfServiceIsDeployed(service);
         if (!getDependers(service).isEmpty()) {
-            throw new MicoServiceHasDependersException(shortName, version);
+            throw new MicoServiceHasDependersException(service.getShortName(), service.getVersion());
         }
-        serviceRepository.deleteServiceByShortNameAndVersion(shortName, version);
+        serviceRepository.deleteServiceByShortNameAndVersion(service.getShortName(), service.getVersion());
     }
 
     public void deleteAllVersionsOfService(String shortName) throws MicoServiceNotFoundException, KubernetesResourceException {
@@ -113,6 +112,7 @@ public class MicoServiceBroker {
         }
     }
 
+    //TODO: Same functionality as findDependers?
     public List<MicoService> getDependers(MicoService serviceToLookFor) {
         List<MicoService> serviceList = serviceRepository.findAll(2);
         log.debug("Got following services as list from the database: {}", serviceList);
@@ -130,6 +130,11 @@ public class MicoServiceBroker {
         });
         log.debug("Found following dependers: {}", dependers);
         return dependers;
+    }
+
+    //TODO: Same functionality as getDependers?
+    public List<MicoService> findDependers(String shortName, String version) {
+        return serviceRepository.findDependers(shortName, version);
     }
 
 //    public MicoServiceStatusDTO getStatusOfService(String shortName, String version) throws MicoServiceNotFoundException {
