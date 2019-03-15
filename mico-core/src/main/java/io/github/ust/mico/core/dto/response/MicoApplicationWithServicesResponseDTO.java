@@ -28,6 +28,8 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoApplication;
+
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;

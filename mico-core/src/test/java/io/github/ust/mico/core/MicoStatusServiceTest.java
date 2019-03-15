@@ -133,7 +133,7 @@ public class MicoStatusServiceTest {
     public void setupMicoApplication() {
         micoApplication = new MicoApplication()
             .setShortName(SHORT_NAME)
-            .setVersion(VERSION);
+             .setVersion(VERSION);
 
         otherMicoApplication = new MicoApplication()
             .setName(NAME)

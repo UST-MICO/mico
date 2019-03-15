@@ -20,18 +20,23 @@
 package io.github.ust.mico.core;
 
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.github.ust.mico.core.broker.BackgroundTaskBroker;
 import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoBackgroundTaskRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.resource.DeploymentResource;
 import io.github.ust.mico.core.service.MicoCoreBackgroundTaskFactory;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.util.CollectionUtils;
+import io.github.ust.mico.core.util.EmbeddedRedisServer;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
@@ -45,6 +50,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -67,7 +73,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @EnableAutoConfiguration
 @EnableConfigurationProperties(value = {CorsConfig.class})
 public class DeploymentResourceTests {
-
+    public static @ClassRule
+    RuleChain rules = RuleChain.outerRule(EmbeddedRedisServer.runningAt(6379).suppressExceptions());
     private static final String BASE_PATH = "/applications";
 
     @Captor
@@ -87,6 +94,10 @@ public class DeploymentResourceTests {
     private MicoApplicationRepository applicationRepository;
     @MockBean
     private MicoServiceRepository serviceRepository;
+    @MockBean
+    private MicoBackgroundTaskRepository backgroundTaskRepository;
+    @MockBean
+    private BackgroundTaskBroker backgroundTaskBroker;
     @MockBean
     private ImageBuilder imageBuilder;
     @MockBean
@@ -119,12 +130,28 @@ public class DeploymentResourceTests {
         given(serviceRepository.save(any(MicoService.class))).willReturn(service);
         given(serviceRepository.findAllByApplication(SHORT_NAME, VERSION)).willReturn(CollectionUtils.listOf(service));
 
-        given(factory.runAsync(ArgumentMatchers.any(), onSuccessArgumentCaptor.capture(), onErrorArgumentCaptor.capture()))
-            .willReturn(CompletableFuture.completedFuture(service));
+        CompletableFuture<?> future = CompletableFuture.completedFuture(service);
+        given(factory.runAsync(any(), onSuccessArgumentCaptor.capture(), onErrorArgumentCaptor.capture())).willReturn(future);
+
+        MicoServiceBackgroundTask mockTask = new MicoServiceBackgroundTask()
+            .setJob(future)
+            .setServiceShortName(service.getShortName())
+            .setServiceVersion(service.getVersion())
+            .setType(MicoServiceBackgroundTask.Type.BUILD);
+
+        given(backgroundTaskRepository.findByMicoServiceShortNameAndMicoServiceVersionAndType(service.getShortName(), service.getVersion(), MicoServiceBackgroundTask.Type.BUILD))
+            .willReturn(Optional.of(mockTask));
+
+        given(backgroundTaskBroker.getJobStatusByApplicationShortNameAndVersion(SHORT_NAME, VERSION))
+            .willReturn(new MicoApplicationJobStatus()
+                .setApplicationShortName(SHORT_NAME)
+                .setApplicationVersion(VERSION)
+                .setStatus(MicoServiceBackgroundTask.Status.PENDING)
+                .setJobs(Arrays.asList(mockTask)));
 
         mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/deploy"))
             .andDo(print())
-            .andExpect(status().isOk());
+            .andExpect(status().isAccepted());
 
         // Assume asynchronous image build operation was successful -> invoke onSuccess function
         onSuccessArgumentCaptor.getValue().accept(service.getDockerImageUri());

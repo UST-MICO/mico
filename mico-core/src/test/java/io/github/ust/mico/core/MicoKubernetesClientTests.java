@@ -95,7 +95,6 @@ public class MicoKubernetesClientTests {
 
     @Test
     public void creationOfMicoServiceWithEnvironmentVariablesWorks() throws KubernetesResourceException {
-
         assertEquals(0, mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems().size());
 
         MicoService micoService = getMicoServiceWithoutInterface();

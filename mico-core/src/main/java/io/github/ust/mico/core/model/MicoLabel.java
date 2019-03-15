@@ -23,6 +23,11 @@ import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 
 import io.github.ust.mico.core.dto.request.MicoLabelRequestDTO;
+import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
+import io.github.ust.mico.core.util.Patterns;
+import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.Extension;
+import io.swagger.annotations.ExtensionProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

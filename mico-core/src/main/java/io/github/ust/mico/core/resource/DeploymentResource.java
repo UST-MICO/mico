@@ -19,11 +19,14 @@
 
 package io.github.ust.mico.core.resource;
 
+import io.github.ust.mico.core.broker.BackgroundTaskBroker;
+import io.github.ust.mico.core.dto.MicoApplicationJobStatusResponseDTO;
 import io.github.ust.mico.core.exception.ImageBuildException;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.NotInitializedException;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoBackgroundTaskRepository;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoCoreBackgroundTaskFactory;
@@ -33,8 +36,10 @@ import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -55,6 +60,9 @@ public class DeploymentResource {
     private static final String PATH_VARIABLE_VERSION = "version";
 
     @Autowired
+    private BackgroundTaskBroker backgroundTaskBroker;
+
+    @Autowired
     private MicoApplicationRepository applicationRepository;
 
     @Autowired
@@ -72,9 +80,12 @@ public class DeploymentResource {
     @Autowired
     private MicoKubernetesClient micoKubernetesClient;
 
+    @Autowired
+    private MicoBackgroundTaskRepository backgroundTaskRepo;
+
     @PostMapping
-    public ResponseEntity<Void> deploy(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                       @PathVariable(PATH_VARIABLE_VERSION) String version) {
+    public ResponseEntity<Resource<MicoApplicationJobStatusResponseDTO>> deploy(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                        @PathVariable(PATH_VARIABLE_VERSION) String version) {
         try {
             imageBuilder.init();
         } catch (NotInitializedException e) {
@@ -97,11 +108,28 @@ public class DeploymentResource {
 
         for (MicoService micoService : micoServices) {
 
-            // TODO Check if build is already running -> no build required
-            // TODO Check if image for the requested version is already in docker registry -> no build required
+            // Check if a build for this MicoService is already running.
+            // If yes no build is required, lock changes to running jobs.
+            // If the current job status is done, error or cancel delete it and create a new job to get a new id.
+            Optional<MicoServiceBackgroundTask> taskOptional = getTaskByMicoService(
+                micoService.getShortName(), micoService.getVersion(), MicoServiceBackgroundTask.Type.BUILD);
+            if (taskOptional.isPresent()) {
+                if (taskOptional.get().getStatus() != MicoServiceBackgroundTask.Status.RUNNING) {
+                    backgroundTaskRepo.delete(taskOptional.get());
+                } else {
+                    log.debug("Build task of MicoService '{}' '{}' is already running.",
+                        micoService.getShortName(), micoService.getVersion());
+                    continue;
+                }
+            }
 
             log.info("Start build of MicoService '{}' in version '{}'.", micoService.getShortName(), micoService.getVersion());
-            backgroundTaskFactory.runAsync(() -> buildImageAndWait(micoService), dockerImageUri -> {
+            MicoServiceBackgroundTask task = new MicoServiceBackgroundTask()
+                .setServiceShortName(micoService.getShortName())
+                .setServiceVersion(micoService.getVersion())
+                .setType(MicoServiceBackgroundTask.Type.BUILD);
+            backgroundTaskRepo.save(task);
+            task.setJob(backgroundTaskFactory.runAsync(() -> buildImageAndWait(micoService), dockerImageUri -> {
                 log.info("Build of MicoService '{}' in version '{}' finished with image '{}'.",
                     micoService.getShortName(), micoService.getVersion(), dockerImageUri);
 
@@ -109,16 +137,44 @@ public class DeploymentResource {
                 MicoService savedMicoService = serviceRepository.save(micoService);
                 try {
                     createKubernetesResources(micoApplication, savedMicoService);
+                    saveMicoBackgroundTaskStatus(micoService.getShortName(), micoService.getVersion(),
+                        MicoServiceBackgroundTask.Status.DONE, MicoServiceBackgroundTask.Type.BUILD, null);
                 } catch (KubernetesResourceException kre) {
+                    saveMicoBackgroundTaskStatus(micoService.getShortName(), micoService.getVersion(),
+                        MicoServiceBackgroundTask.Status.ERROR, MicoServiceBackgroundTask.Type.BUILD, kre.getMessage());
                     log.error(kre.getMessage(), kre);
                     exceptionHandler(kre);
                 }
-            }, this::exceptionHandler);
+            }, this::exceptionHandler));
+            backgroundTaskRepo.save(task);
+
         }
-        return ResponseEntity.ok().build();
+        return ResponseEntity
+            .accepted()
+            .body(new Resource<>(new MicoApplicationJobStatusResponseDTO(backgroundTaskBroker.getJobStatusByApplicationShortNameAndVersion(shortName, version))));
+    }
+
+    private Optional<MicoServiceBackgroundTask> getTaskByMicoService(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundTask.Type type) {
+        return backgroundTaskRepo.findByMicoServiceShortNameAndMicoServiceVersionAndType(micoServiceShortName, micoServiceVersion, type);
+    }
+
+    private void saveMicoBackgroundTaskStatus(String micoServiceShortName, String micoServiceVersion,
+                                              MicoServiceBackgroundTask.Status status, MicoServiceBackgroundTask.Type type,
+                                              @Nullable String errorMessage) {
+        Optional<MicoServiceBackgroundTask> taskOptional = getTaskByMicoService(micoServiceShortName, micoServiceVersion, type);
+        if (taskOptional.isPresent()) {
+            MicoServiceBackgroundTask t = taskOptional.get();
+            log.debug("Saving status of '{}'", taskOptional);
+            t.setErrorMessage(errorMessage);
+            t.setStatus(status);
+            backgroundTaskRepo.save(t);
+            log.info("Job status of '{}' is '{}'", getTaskByMicoService(micoServiceShortName, micoServiceVersion, type),
+                getTaskByMicoService(micoServiceShortName, micoServiceVersion, type).get().getStatus());
+        }
     }
 
     private String buildImageAndWait(MicoService micoService) {
+        saveMicoBackgroundTaskStatus(micoService.getShortName(), micoService.getVersion(), MicoServiceBackgroundTask.Status.RUNNING, MicoServiceBackgroundTask.Type.BUILD, null);
         try {
             Build build = imageBuilder.build(micoService);
             String buildName = build.getMetadata().getName();
@@ -132,6 +188,7 @@ public class DeploymentResource {
                 throw new ImageBuildException("Build for service " + micoService.getShortName() + " in version " + micoService.getVersion() + " failed");
             }
         } catch (NotInitializedException | InterruptedException | ExecutionException | ImageBuildException | TimeoutException e) {
+            saveMicoBackgroundTaskStatus(micoService.getShortName(), micoService.getVersion(), MicoServiceBackgroundTask.Status.ERROR, MicoServiceBackgroundTask.Type.BUILD, e.getMessage());
             log.error(e.getMessage(), e);
             // TODO Handle NotInitializedException in async task properly
             return null;
