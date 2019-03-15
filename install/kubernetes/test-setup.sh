@@ -11,7 +11,7 @@ export DOCKERHUB_USERNAME_BASE64=$(echo -n $uname | base64 -w 0)
 
 # Read in DockerHub password
 echo "Please provide the password for DockerHub:"
-read pw
+read -s pw
 if [[ -z "$pw" ]]; then
     echo "ERROR: No password provided"
     exit 1
@@ -60,6 +60,7 @@ kubectl create clusterrolebinding ${MICO_TEST_NAMESPACE}-cluster-admin \
 
 # Apply required components
 kubectl apply -f neo4j.yaml
+kubectl apply -f redis.yaml
 kubectl apply -f mico-core.yaml
 kubectl apply -f mico-admin.yaml
 kubectl apply -f mico-build-bot.yaml

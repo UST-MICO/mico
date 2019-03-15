@@ -24,6 +24,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
+import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
 
@@ -32,6 +33,7 @@ import org.springframework.web.client.RestTemplate;
  */
 @SpringBootApplication
 @EnableNeo4jRepositories
+@EnableRedisRepositories(basePackages = "io.github.ust.mico.core.persistence")
 @EnableScheduling
 public class MicoCoreApplication {
 
@@ -40,14 +42,12 @@ public class MicoCoreApplication {
     }
 
     /**
-     * @see <a href="https://gist.github.com/RealDeanZhao/38821bc1efeb7e2a9bcd554cc06cdf96">RealDeanZhao/autowire-resttemplate.md</a>
-     *
      * @param builder
      * @return
+     * @see <a href="https://gist.github.com/RealDeanZhao/38821bc1efeb7e2a9bcd554cc06cdf96">RealDeanZhao/autowire-resttemplate.md</a>
      */
     @Bean
     public RestTemplate restTemplate(RestTemplateBuilder builder) {
         return builder.build();
     }
-
 }
