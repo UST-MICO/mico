@@ -33,14 +33,6 @@ import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import org.neo4j.ogm.annotation.*;
-
-import com.fasterxml.jackson.annotation.JsonBackReference;
-
-import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
-import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO;
-import lombok.*;
 import lombok.experimental.Accessors;
 
 /**

@@ -35,10 +35,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import io.github.ust.mico.core.persistence.MicoLabelRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -65,13 +67,11 @@ import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
 import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoLabelResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO;
-import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
-import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
-import io.github.ust.mico.core.dto.response.*;
 import io.github.ust.mico.core.dto.response.status.*;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo.ImagePullPolicy;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoLabelRepository;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.resource.ApplicationResource;
