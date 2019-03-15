@@ -287,19 +287,24 @@ public class ServiceResource {
     public ResponseEntity<Resource<MicoServiceResponseDTO>> importMicoServiceFromGitHub(@Valid @RequestBody CrawlingInfoRequestDTO crawlingInfo) {
         String url = crawlingInfo.getUrl();
         String version = crawlingInfo.getVersion();
+        String dockerfilePath = crawlingInfo.getDockerfilePath();
         log.debug("Start importing MicoService from URL '{}'", url);
 
         try {
             if (version.equals("latest")) {
-                MicoService service = crawler.crawlGitHubRepoLatestRelease(url);
+                MicoService service = crawler.crawlGitHubRepoLatestRelease(url, dockerfilePath);
                 return createService(new MicoServiceRequestDTO(service));
             } else {
-                MicoService service = crawler.crawlGitHubRepoSpecificRelease(url, version);
+                MicoService service = crawler.crawlGitHubRepoSpecificRelease(url, version, dockerfilePath);
                 return createService(new MicoServiceRequestDTO(service));
             }
         } catch (IOException e) {
             log.error(e.getMessage(), e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+
+        } catch (IllegalArgumentException e) {
+            log.error(e.getMessage(), e);
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
         }
     }
 
