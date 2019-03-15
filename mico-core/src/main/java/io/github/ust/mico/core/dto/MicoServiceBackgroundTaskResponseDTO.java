@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoServiceBackgroundTask;
 import io.github.ust.mico.core.model.MicoServiceBackgroundTask.Status;
+import io.github.ust.mico.core.model.MicoServiceBackgroundTask.Type;
 import io.github.ust.mico.core.model.MicoService;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
@@ -85,7 +86,7 @@ public class MicoServiceBackgroundTaskResponseDTO {
 	private String serviceVersion;
 
 	/**
-	 * The type of job.
+	 * The {@link Type} of job.
 	 */
 	@ApiModelProperty(extensions = {
 	    @Extension(name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION, properties = {
@@ -113,14 +114,14 @@ public class MicoServiceBackgroundTaskResponseDTO {
 	private MicoServiceBackgroundTask.Status status;
 
 	/**
-	 * An error message in case the has failed.
+	 * An error message in case the job has failed.
 	 */
 	@ApiModelProperty(extensions = {
 	    @Extension(name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION, properties = {
 	        @ExtensionProperty(name = "title", value = "Error Message"),
 	        @ExtensionProperty(name = "x-order", value = "60"),
 	        @ExtensionProperty(name = "readOnly", value = "true"),
-	        @ExtensionProperty(name = "description", value = "An error message in case the has failed")
+	        @ExtensionProperty(name = "description", value = "An error message in case the job has failed")
 	    })
 	})
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)

@@ -40,24 +40,43 @@ public class MicoServiceBackgroundTask implements Serializable {
 
 	private static final long serialVersionUID = -8247189361567566737L;
 	
-	// TODO: Add JavaDoc for fields.
-
+    /**
+     * The generated job id.
+     */
     @Id
     private String id;
     
+	/**
+	 * The actual job.
+	 */
 	private CompletableFuture<?> job;
     
+    /**
+     * The short name of the corresponding {@link MicoService}.
+     */
     @Indexed
     private String serviceShortName;
     
+    /**
+     * The version of the corresponding {@link MicoService}.
+     */
     @Indexed
     private String serviceVersion;
     
+    /**
+     * The {@link Type} of this job.
+     */
     @Indexed
     private Type type;
     
+    /**
+     * The current {@link Status} of this job.
+     */
     private Status status = Status.PENDING;
     
+    /**
+     * An error message in case the job has failed.
+     */
     private String errorMessage;
 
 

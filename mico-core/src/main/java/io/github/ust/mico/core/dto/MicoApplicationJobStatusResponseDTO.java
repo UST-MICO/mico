@@ -55,7 +55,9 @@ public class MicoApplicationJobStatusResponseDTO {
 	    @Extension(name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION, properties = {
 	        @ExtensionProperty(name = "title", value = "Status"), @ExtensionProperty(name = "x-order", value = "10"),
 	        @ExtensionProperty(name = "readOnly", value = "true"),
-	        @ExtensionProperty(name = "description", value = "The aggregated status of jobs for an application.") }) })
+	        @ExtensionProperty(name = "description", value = "The aggregated status of jobs for an application.")
+	    })
+	})
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	private MicoServiceBackgroundTask.Status status;
 
@@ -66,7 +68,9 @@ public class MicoApplicationJobStatusResponseDTO {
 	    @Extension(name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION, properties = {
 	        @ExtensionProperty(name = "title", value = "List of Jobs"),
 	        @ExtensionProperty(name = "x-order", value = "20"), @ExtensionProperty(name = "readOnly", value = "true"),
-	        @ExtensionProperty(name = "description", value = "The list of jobs for an application.") }) })
+	        @ExtensionProperty(name = "description", value = "The list of jobs for an application.")
+	    })
+	})
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	private List<MicoServiceBackgroundTaskResponseDTO> jobs = new ArrayList<>();
     

@@ -123,8 +123,6 @@ public class DeploymentResource {
                 }
             }
 
-            // TODO Check if image for the requested version is already in docker registry -> no build required
-
             log.info("Start build of MicoService '{}' in version '{}'.", micoService.getShortName(), micoService.getVersion());
             MicoServiceBackgroundTask task = new MicoServiceBackgroundTask()
                 .setServiceShortName(micoService.getShortName())
