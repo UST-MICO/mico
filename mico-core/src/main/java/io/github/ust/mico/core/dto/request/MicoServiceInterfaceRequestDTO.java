@@ -66,11 +66,11 @@ public class MicoServiceInterfaceRequestDTO {
             @ExtensionProperty(name = "x-order", value = "20"),
             @ExtensionProperty(name = "description", value = "The name of this MicoServiceInterface"),
             @ExtensionProperty(name = "minLength", value = "3"),
-            @ExtensionProperty(name = "maxLength", value = KubernetesNameNormalizer.MAX_LABLE_SIZE+""),
+            @ExtensionProperty(name = "maxLength", value = KubernetesNameNormalizer.MICO_NAME_MAX_SIZE +""),
         }
     )})
     @NotNull
-    @Size(min = 3, max = KubernetesNameNormalizer.MAX_LABLE_SIZE, message = "must have a length between 3 and " + KubernetesNameNormalizer.MAX_LABLE_SIZE)
+    @Size(min = 3, max = KubernetesNameNormalizer.MICO_NAME_MAX_SIZE, message = "must have a length between 3 and " + KubernetesNameNormalizer.MICO_NAME_MAX_SIZE)
     @Pattern(regexp = Patterns.KUBERNETES_NAMING_REGEX, message = Patterns.KUBERNETES_NAMING_MESSAGE)
     private String serviceInterfaceName;
 
