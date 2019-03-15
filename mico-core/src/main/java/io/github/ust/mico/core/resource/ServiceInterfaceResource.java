@@ -71,7 +71,9 @@ public class ServiceInterfaceResource {
     @GetMapping(SERVICE_INTERFACE_PATH)
     public ResponseEntity<Resources<Resource<MicoServiceInterface>>> getInterfacesOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                             @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        // Use service to get the fully mapped interface objects from the ogm
+        //TODO: Use ServiceInterfaceBroker
+        //TODO: Map Optional ServiceInterface to Resources
+        //Use service to get the fully mapped interface objects from the ogm
         Optional<List<Resource<MicoServiceInterface>>> interfacesOpt =
             serviceRepository.findByShortNameAndVersion(shortName, version)
                 .map(MicoService::getServiceInterfaces)
