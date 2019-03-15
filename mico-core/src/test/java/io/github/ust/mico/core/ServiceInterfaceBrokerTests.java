@@ -1,9 +1,12 @@
 package io.github.ust.mico.core;
 
 import io.github.ust.mico.core.broker.ServiceInterfaceBroker;
+import io.github.ust.mico.core.model.MicoPortType;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.model.MicoServicePort;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.util.CollectionUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +26,14 @@ import static org.mockito.BDDMockito.given;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class ServiceInterfaceBrokerTests {
+
+    private static final String INTERFACE_NAME = "interface-name";
+    private static final String INTERFACE_NAME_INVALID = "interface_NAME";
+    private static final int INTERFACE_PORT = 1024;
+    private static final MicoPortType INTERFACE_PORT_TYPE = MicoPortType.TCP;
+    private static final int INTERFACE_TARGET_PORT = 1025;
+    private static final String INTERFACE_DESCRIPTION = "This is a service interface.";
+    private static final String INTERFACE_PUBLIC_DNS = "DNS";
 
     @MockBean
     private MicoServiceRepository serviceRepository;
@@ -44,7 +55,28 @@ public class ServiceInterfaceBrokerTests {
         assertThat(optionalMicoServiceInterfaceList.get().size()).isEqualTo(2);
         assertThat(optionalMicoServiceInterfaceList.get().get(0)).isEqualTo(serviceInterface0);
         assertThat(optionalMicoServiceInterfaceList.get().get(1)).isEqualTo(serviceInterface1);
+    }
 
+    @Test
+    public void getServiceInterfaceByServiceInterfaceName() throws Exception {
+        MicoServiceInterface serviceInterface = getTestServiceInterface();
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
+                Optional.of(new MicoService().setServiceInterfaces(CollectionUtils.listOf(serviceInterface))));
+
+        Optional<MicoServiceInterface> micoServiceInterface = serviceInterfaceBroker.getServiceInterfaceByServiceInterfaceName(SHORT_NAME, VERSION, INTERFACE_NAME);
+
+        assertThat(micoServiceInterface.get()).isEqualTo(serviceInterface);
+    }
+
+    private MicoServiceInterface getTestServiceInterface() {
+        return new MicoServiceInterface()
+                .setServiceInterfaceName(INTERFACE_NAME)
+                .setPorts(CollectionUtils.listOf(new MicoServicePort()
+                        .setPort(INTERFACE_PORT)
+                        .setType(INTERFACE_PORT_TYPE)
+                        .setTargetPort(INTERFACE_TARGET_PORT)))
+                .setDescription(INTERFACE_DESCRIPTION)
+                .setPublicDns(INTERFACE_PUBLIC_DNS);
     }
 
 }

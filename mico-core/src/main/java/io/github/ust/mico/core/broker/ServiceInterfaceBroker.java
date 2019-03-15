@@ -19,9 +19,29 @@ public class ServiceInterfaceBroker {
     private MicoServiceRepository serviceRepository;
 
     public Optional<List<MicoServiceInterface>> getAllInterfacesOfService(String shortName, String version) {
-        return serviceRepository.findByShortNameAndVersion(shortName, version)
+        Optional<List<MicoServiceInterface>> optionalMicoServiceInterfaceList = serviceRepository.findByShortNameAndVersion(shortName, version)
                         .map(MicoService::getServiceInterfaces)
                         .map(ArrayList::new);
+
+        log.debug("Found following serviceInterfaces as list: {}", optionalMicoServiceInterfaceList.get());
+
+        return optionalMicoServiceInterfaceList;
+    }
+
+    public Optional<MicoServiceInterface> getServiceInterfaceByServiceInterfaceName(String shortName, String version, String serviceInterfaceName) {
+        Optional<MicoServiceInterface> serviceInterfaceOptional = serviceRepository.findByShortNameAndVersion(shortName, version).flatMap(service -> {
+            // Use service to get the fully mapped interface objects from the ogm
+            if (service.getServiceInterfaces() == null) {
+                return Optional.empty();
+            }
+            return service.getServiceInterfaces().stream().filter(serviceInterface ->
+                    serviceInterface.getServiceInterfaceName().equals(serviceInterfaceName
+                    )).findFirst();
+        });
+
+        log.debug("Found following serviceInterface: {}", serviceInterfaceOptional.get());
+
+        return serviceInterfaceOptional;
     }
 
 }
