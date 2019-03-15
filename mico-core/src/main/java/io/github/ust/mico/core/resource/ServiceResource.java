@@ -94,6 +94,7 @@ public class ServiceResource {
     @Autowired
     private GitHubCrawler crawler;
 
+    //Test exists and is green
     @GetMapping()
     public ResponseEntity<Resources<Resource<MicoServiceResponseDTO>>> getAllServicesAsList() {
         List<MicoService> services = micoServiceBroker.getAllServicesAsList();
@@ -102,6 +103,7 @@ public class ServiceResource {
                 new Resources<>(serviceResources, linkTo(methodOn(ServiceResource.class).getAllServicesAsList()).withSelfRel()));
     }
 
+    //Test exists and is green
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     public ResponseEntity<Resource<MicoServiceResponseDTO>> getServiceByShortNameAndVersion(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                             @PathVariable(PATH_VARIABLE_VERSION) String version) {
@@ -109,6 +111,7 @@ public class ServiceResource {
         return ResponseEntity.ok(getServiceResponseDTOResource(service));
     }
 
+    //Test exists and is green
     @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     public ResponseEntity<Resource<MicoServiceResponseDTO>> updateService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                           @PathVariable(PATH_VARIABLE_VERSION) String version,
@@ -168,16 +171,10 @@ public class ServiceResource {
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")
     public ResponseEntity<Resource<MicoServiceStatusResponseDTO>> getStatusOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                      @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        //TODO: Use ServiceBroker
-        MicoServiceStatusResponseDTO serviceStatus = new MicoServiceStatusResponseDTO();
-        Optional<MicoService> micoServiceOptional = serviceRepository.findByShortNameAndVersion(shortName, version);
-        if (micoServiceOptional.isPresent()) {
-            log.debug("Retrieve status information of Mico service '{}' '{}'",
-                    shortName, version);
-            serviceStatus = micoStatusService.getServiceStatus(micoServiceOptional.get());
-        } else {
-            log.error("MicoService not found in service repository.");
-        }
+        MicoService micoService = getServiceFromMicoServiceBroker(shortName, version);
+
+        MicoServiceStatusResponseDTO serviceStatus = micoStatusService.getServiceStatus(micoService);
+
         return ResponseEntity.ok(new Resource<>(serviceStatus));
     }
 

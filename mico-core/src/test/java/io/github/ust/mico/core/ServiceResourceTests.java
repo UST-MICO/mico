@@ -205,7 +205,7 @@ public class ServiceResourceTests {
     }
 
     @Test
-    public void getCompleteServiceList() throws Exception {
+    public void getAllServicesAsList() throws Exception {
         given(micoServiceBroker.getAllServicesAsList()).willReturn(CollectionUtils.listOf(
                 new MicoService().setShortName(SHORT_NAME_1).setVersion(VERSION_1_0_1).setName(NAME_1).setDescription(DESCRIPTION_1),
                 new MicoService().setShortName(SHORT_NAME_2).setVersion(VERSION_1_0_2).setName(NAME_2).setDescription(DESCRIPTION_2),
@@ -227,9 +227,9 @@ public class ServiceResourceTests {
     }
 
     @Test
-    public void getServiceViaShortNameAndVersion() throws Exception {
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
-            Optional.of(new MicoService().setShortName(SHORT_NAME).setVersion(VERSION).setDescription(DESCRIPTION)));
+    public void getServiceByShortNameAndVersion() throws Exception {
+        given(micoServiceBroker.getServiceFromDatabase(SHORT_NAME, VERSION)).willReturn(
+            new MicoService().setShortName(SHORT_NAME).setVersion(VERSION).setDescription(DESCRIPTION));
 
         String urlPath = SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION;
         mvc.perform(get(urlPath).accept(MediaTypes.HAL_JSON_VALUE))
@@ -513,8 +513,8 @@ public class ServiceResourceTests {
             .setName(updatedServiceRequestDto.getName())
             .setDescription(updatedServiceRequestDto.getDescription());
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingService));
-        given(serviceRepository.save(eq(expectedService))).willReturn(expectedService);
+        given(micoServiceBroker.getServiceFromDatabase(SHORT_NAME, VERSION)).willReturn(existingService);
+        given(micoServiceBroker.persistService(eq(expectedService))).willReturn(expectedService);
 
         ResultActions resultUpdate = mvc.perform(put(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION)
             .content(mapper.writeValueAsBytes(updatedServiceRequestDto))
