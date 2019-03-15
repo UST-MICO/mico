@@ -95,7 +95,7 @@ public class MicoServiceBrokerTests {
                 .setName(NAME_1)
                 .setDescription(DESCRIPTION_1);
 
-        Long id = new Long(1);
+        Long id = 1L;
 
         given(serviceRepository.findById(ArgumentMatchers.anyLong())).willReturn(java.util.Optional.ofNullable(micoServiceOne));
 
