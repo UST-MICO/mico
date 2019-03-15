@@ -47,6 +47,11 @@ export class FormGroupService {
                 if (itemModel.hasOwnProperty('default')) {
                     value = (itemModel as ApiModel).default;
                 }
+                if ((itemModel as ApiModel).type === 'number') {
+                    if (value == null) {
+                        value = 0;
+                    }
+                }
                 const validators = [];
                 if (itemModel.hasOwnProperty('x-required')) {
                     validators.push(Validators.required);
@@ -61,10 +66,18 @@ export class FormGroupService {
                     validators.push(Validators.pattern((itemModel as ApiModel).pattern));
                 }
                 if (itemModel.hasOwnProperty('minimum')) {
-                    validators.push(Validators.min((itemModel as ApiModel).minimum));
+                    const min = (itemModel as ApiModel).minimum;
+                    validators.push(Validators.min(min));
+                    if (value == null || value < min) {
+                        value = min;
+                    }
                 }
                 if (itemModel.hasOwnProperty('maximum')) {
-                    validators.push(Validators.max((itemModel as ApiModel).maximum));
+                    const max = (itemModel as ApiModel).maximum;
+                    validators.push(Validators.max(max));
+                    if (value == null || value > max) {
+                        value = max;
+                    }
                 }
                 group[key] = new FormControl(value, validators);
             }
