@@ -90,16 +90,15 @@ public class ApplicationBroker {
 
     public void deleteMicoApplicationsByShortName(String shortName) throws MicoApplicationNotFoundException, KubernetesResourceException, MicoApplicationIsDeployedException {
         List<MicoApplication> micoApplicationList = getMicoApplicationsByShortName(shortName);
-        for (MicoApplication micoApplication : micoApplicationList) {
-            if (micoKubernetesClient.isApplicationDeployed(micoApplication)) {
-                throw new MicoApplicationIsDeployedException(micoApplication.getShortName(), micoApplication.getVersion());
-            }
-        }
-        applicationRepository.deleteAll(micoApplicationList);
+        deleteListOfMicoApplications(micoApplicationList);
     }
 
     public void deleteMicoApplications() throws MicoApplicationNotFoundException, KubernetesResourceException, MicoApplicationIsDeployedException {
         List<MicoApplication> micoApplicationList = getMicoApplications();
+        deleteListOfMicoApplications(micoApplicationList);
+    }
+
+    private void deleteListOfMicoApplications(List<MicoApplication> micoApplicationList) throws KubernetesResourceException, MicoApplicationIsDeployedException {
         for (MicoApplication micoApplication : micoApplicationList) {
             if (micoKubernetesClient.isApplicationDeployed(micoApplication)) {
                 throw new MicoApplicationIsDeployedException(micoApplication.getShortName(), micoApplication.getVersion());
@@ -149,7 +148,7 @@ public class ApplicationBroker {
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
         MicoService micoService = serviceBroker.getServiceFromDatabase(serviceShortName, serviceVersion);
 
-        //TODO: update following implementation (make use of getMicoServicesOfMicoApplicationByShortNameAndVersion)
+        //TODO: update following implementation (make use of getMicoServiceDeploymentInformationOfMicoApplication)
         if (micoApplication.getServiceDeploymentInfos().stream().noneMatch(sdi -> sdi.getService().equals(micoService))) {
             MicoServiceDeploymentInfo sdi = new MicoServiceDeploymentInfo();
             sdi.setApplication(micoApplication).setService(micoService);
@@ -164,7 +163,7 @@ public class ApplicationBroker {
         MicoApplication micoApplication = getMicoApplicationById(applicationId);
         MicoService micoService = serviceBroker.getServiceById(serviceId);
 
-        //TODO: update following implementation (make use of getMicoServicesOfMicoApplicationByShortNameAndVersion)
+        //TODO: update following implementation (make use of getMicoServiceDeploymentInformationOfMicoApplication)
         if (micoApplication.getServiceDeploymentInfos().stream().noneMatch(sdi -> sdi.getService().equals(micoService))) {
             MicoServiceDeploymentInfo sdi = new MicoServiceDeploymentInfo();
             sdi.setApplication(micoApplication).setService(micoService);
@@ -197,6 +196,7 @@ public class ApplicationBroker {
         MicoServiceDeploymentInfo micoServiceDeploymentInfo = getMicoServiceDeploymentInformationOfMicoApplication(applicationShortName, applicationVersion, serviceShortName);
         MicoApplication micoApplication = micoServiceDeploymentInfo.getApplication();
         micoApplication.getServiceDeploymentInfos().remove(micoServiceDeploymentInfo);
+
         // TODO: Update Kubernetes deployment
         return applicationRepository.save(micoApplication);
     }
@@ -205,6 +205,7 @@ public class ApplicationBroker {
         MicoServiceDeploymentInfo micoServiceDeploymentInfo = getMicoServiceDeploymentInformationOfMicoApplication(applicationShortName, applicationVersion, serviceShortName, serviceVersion);
         MicoApplication micoApplication = micoServiceDeploymentInfo.getApplication();
         micoApplication.getServiceDeploymentInfos().remove(micoServiceDeploymentInfo);
+
         // TODO: Update Kubernetes deployment
         return applicationRepository.save(micoApplication);
     }
