@@ -90,6 +90,7 @@ public class ServiceInterfaceResource {
     public ResponseEntity<Resource<MicoServiceInterface>> getInterfaceByName(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                              @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                              @PathVariable(PATH_VARIABLE_SERVICE_INTERFACE_NAME) String serviceInterfaceName) {
+        //TODO: Use ServiceInterfaceBroker
         Optional<MicoServiceInterface> serviceInterfaceOptional = serviceRepository.findByShortNameAndVersion(shortName, version).flatMap(service -> {
             // Use service to get the fully mapped interface objects from the ogm
             if (service.getServiceInterfaces() == null) {
@@ -236,6 +237,7 @@ public class ServiceInterfaceResource {
         return serviceOpt.get();
     }
 
+    //TODO: Remove, already exists in ServiceInterfaceBroker
     /**
      * Checks if a micoServiceInterface exists for a given micoService. The matching is based on the interface name.
      *
@@ -250,6 +252,7 @@ public class ServiceInterfaceResource {
         return service.getServiceInterfaces().stream().anyMatch(getMicoServiceInterfaceNameMatchingPredicate(serviceInterface.getServiceInterfaceName()));
     }
 
+    //TODO: Remove, already exists in ServiceInterfaceBroker
     /**
      * Generates a predicate which matches the given micoServiceInterfaceName.
      *

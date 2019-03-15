@@ -68,6 +68,19 @@ public class ServiceInterfaceBrokerTests {
         assertThat(micoServiceInterface.get()).isEqualTo(serviceInterface);
     }
 
+    @Test
+    public void createServiceInterface() throws Exception {
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
+                Optional.of(new MicoService().setShortName(SHORT_NAME).setVersion(VERSION))
+        );
+
+        MicoServiceInterface serviceInterface = getTestServiceInterface();
+
+        MicoServiceInterface createdMicoServiceInterface = serviceInterfaceBroker.createServiceInterface(SHORT_NAME, VERSION, serviceInterface);
+
+        assertThat(createdMicoServiceInterface).isEqualTo(serviceInterface);
+    }
+
     private MicoServiceInterface getTestServiceInterface() {
         return new MicoServiceInterface()
                 .setServiceInterfaceName(INTERFACE_NAME)
