@@ -50,7 +50,7 @@ public class GitHubCrawler {
     private static final String LATEST = "latest";
     private static final String GITHUB_HTML_URL = "https://github.com/";
     private static final String GITHUB_API_URL = "https://api.github.com/repos/";
-    protected static final String GITHUB_API_CONTENTS = "contents";
+    private static final String GITHUB_API_CONTENTS = "contents";
 
     private final RestTemplate restTemplate;
     private final KubernetesNameNormalizer kubernetesNameNormalizer;
@@ -63,14 +63,15 @@ public class GitHubCrawler {
 
     /**
      * Fetches information about a given GitHub repository and creates a {@link MicoService} from it.
-     * @param gitHubRepositoryApiUrl the api url of the GitHub repository. For example https://api.github.com/repos/UST-MICO/hello
+     *
+     * @param gitHubRepositoryApiUrl         the api url of the GitHub repository. For example https://api.github.com/repos/UST-MICO/hello
      * @param gitHubRepositoryApiReleaseInfo the api url of the specific release of the repository.
-     * @param dockerfilePath if the dockerfile of a repository is located in a subdirectory this parameter should be
-     *                      used to specify its relative path to the repository root.
+     * @param dockerfilePath                 if the dockerfile of a repository is located in a subdirectory this parameter should be
+     *                                       used to specify its relative path to the repository root.
      * @return a {@link MicoService} with the information from the GitHub repository.
      * @throws IOException if the response from GitHub is not parsable.
      */
-    private MicoService crawlGitHubRepo(String gitHubRepositoryApiUrl, String gitHubRepositoryApiReleaseInfo,@Nullable String dockerfilePath) throws IOException {
+    private MicoService crawlGitHubRepo(String gitHubRepositoryApiUrl, String gitHubRepositoryApiReleaseInfo, @Nullable String dockerfilePath) throws IOException {
         log.debug("Crawl GitHub basic information from '{}' and release information from '{}'", gitHubRepositoryApiUrl, gitHubRepositoryApiReleaseInfo);
 
         ResponseEntity<String> responseBasicInfo;
@@ -124,66 +125,66 @@ public class GitHubCrawler {
     /**
      * Checks if a file in a GitHub repository exists
      *
-     * @param uriBasicInfo   the URI to a specific release of a GitHub repository
+     * @param urlBasicInfo   the URL to a specific release of a GitHub repository
      * @param dockerfilePath the relative path to the Dockerfile. The path is relative to the root directory of the
      *                       GitHub repository
      * @return {@code true} if the Dockerfile exists in the in the specified repository. {@code false} if response status is HTTP NOT FOUND.
      * @throws {@link HttpClientErrorException} in case of HTTP 4XX response from GitHub
      * @throws {@link HttpStatusCodeException} in case of HTTP 5XX response from GitHub
      */
-    private boolean existsFileInGithubRepo(String uriBasicInfo, String dockerfilePath) {
-        ResponseEntity<String> responseDockerFileInfo;
-        UriComponentsBuilder dockerFileUriBuilder = UriComponentsBuilder.fromHttpUrl(uriBasicInfo);
+    private boolean existsFileInGithubRepo(String urlBasicInfo, String dockerfilePath) {
+        ResponseEntity<String> responseDockerfileInfo;
+        UriComponentsBuilder dockerFileUriBuilder = UriComponentsBuilder.fromHttpUrl(urlBasicInfo);
         UriComponents dockerFileUriComponent = dockerFileUriBuilder.pathSegment(GITHUB_API_CONTENTS).pathSegment(dockerfilePath).build();
         log.debug("Check if the Dockerfile exists at {}", dockerFileUriComponent.toString());
         try {
-            responseDockerFileInfo = restTemplate.getForEntity(dockerFileUriComponent.toUri(), String.class);
-            HttpStatus responseStatus = responseDockerFileInfo.getStatusCode();
+            responseDockerfileInfo = restTemplate.getForEntity(dockerFileUriComponent.toUri(), String.class);
+            HttpStatus responseStatus = responseDockerfileInfo.getStatusCode();
             if (responseStatus.equals(HttpStatus.OK)) {
                 log.debug("The file {} exists", dockerfilePath);
                 return true;
             }
         } catch (HttpClientErrorException.NotFound e) {
-            log.info("The file{} does not exist", dockerfilePath);
+            log.info("The file {} does not exist", dockerfilePath);
             return false;
         }
         return false;
     }
 
-    public MicoService crawlGitHubRepoLatestRelease(String uri,@Nullable String dockerfilePath) throws IOException {
-        uri = adaptUriForGitHubApi(uri);
-        String releaseUrl = uri + "/" + RELEASES + "/" + LATEST;
+    public MicoService crawlGitHubRepoLatestRelease(String gitHubRepoUrl, @Nullable String dockerfilePath) throws IOException {
+        gitHubRepoUrl = adaptUriForGitHubApi(gitHubRepoUrl);
+        String releaseUrl = gitHubRepoUrl + "/" + RELEASES + "/" + LATEST;
 
-        return crawlGitHubRepo(uri, releaseUrl, dockerfilePath);
+        return crawlGitHubRepo(gitHubRepoUrl, releaseUrl, dockerfilePath);
     }
 
-    public MicoService crawlGitHubRepoLatestRelease(String uri) throws IOException {
-        return crawlGitHubRepoLatestRelease(uri, null);
+    public MicoService crawlGitHubRepoLatestRelease(String gitHubRepoUrl) throws IOException {
+        return crawlGitHubRepoLatestRelease(gitHubRepoUrl, null);
     }
 
-    public MicoService crawlGitHubRepoSpecificRelease(String uri, String version,@Nullable String dockerfilePath) throws IOException {
-        uri = adaptUriForGitHubApi(uri);
-        String releaseUrl = uri + "/" + RELEASES + "/" + TAGS + "/" + version;
+    public MicoService crawlGitHubRepoSpecificRelease(String gitHubRepoUrl, String version, @Nullable String dockerfilePath) throws IOException {
+        gitHubRepoUrl = adaptUriForGitHubApi(gitHubRepoUrl);
+        String releaseUrl = gitHubRepoUrl + "/" + RELEASES + "/" + TAGS + "/" + version;
 
-        return crawlGitHubRepo(uri, releaseUrl, dockerfilePath);
+        return crawlGitHubRepo(gitHubRepoUrl, releaseUrl, dockerfilePath);
     }
 
-    public MicoService crawlGitHubRepoSpecificRelease(String uri, String version) throws IOException {
-        return crawlGitHubRepoSpecificRelease(uri, version, null);
+    public MicoService crawlGitHubRepoSpecificRelease(String gitHubRepoUrl, String version) throws IOException {
+        return crawlGitHubRepoSpecificRelease(gitHubRepoUrl, version, null);
     }
 
-    public String adaptUriForGitHubApi(String uri) {
-        uri = uri.trim();
-        if (uri.endsWith("/")) {
-            uri = uri.substring(0, uri.length() - 1);
+    public String adaptUriForGitHubApi(String url) {
+        url = url.trim();
+        if (url.endsWith("/")) {
+            url = url.substring(0, url.length() - 1);
         }
 
-        return uri.replace(GITHUB_HTML_URL, GITHUB_API_URL);
+        return url.replace(GITHUB_HTML_URL, GITHUB_API_URL);
     }
 
-    public LinkedList<String> getVersionsFromGitHubRepo(String uri) throws IOException {
-        uri = adaptUriForGitHubApi(uri);
-        String releasesUrl = uri + "/" + RELEASES;
+    public LinkedList<String> getVersionsFromGitHubRepo(String gitHubRepoUrl) throws IOException {
+        gitHubRepoUrl = adaptUriForGitHubApi(gitHubRepoUrl);
+        String releasesUrl = gitHubRepoUrl + "/" + RELEASES;
         log.debug("Getting release tags from '{}'", releasesUrl);
 
         ResponseEntity<String> response = restTemplate.getForEntity(releasesUrl, String.class);
