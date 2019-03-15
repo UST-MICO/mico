@@ -700,8 +700,8 @@ public class ServiceResourceTests {
         MicoServiceDependency dependency2 = new MicoServiceDependency().setService(service).setDependedService(service2);
         service.setDependencies(CollectionUtils.listOf(dependency1, dependency2));
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
-        given(serviceRepository.findDependees(service.getShortName(), service.getVersion())).willReturn(CollectionUtils.listOf(service1, service2));
+        given(micoServiceBroker.getServiceFromDatabase(SHORT_NAME, VERSION)).willReturn(service);
+        given(micoServiceBroker.getDependeesByMicoService(service)).willReturn(CollectionUtils.listOf(service1, service2));
 
         mvc.perform(get("/services/" + SHORT_NAME + "/" + VERSION + DEPENDEES_SUBPATH).accept(MediaTypes.HAL_JSON_VALUE))
                 .andDo(print())

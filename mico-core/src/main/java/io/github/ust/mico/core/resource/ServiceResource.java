@@ -214,17 +214,17 @@ public class ServiceResource {
                 .body(new Resource<>(new MicoServiceResponseDTO(persistedService), getServiceLinks(persistedService)));
     }
 
+    //Test exists and is green
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPENDEES)
     public ResponseEntity<Resources<Resource<MicoServiceResponseDTO>>> getDependees(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        //TODO: Use ServiceBroker
         MicoService service = getServiceFromMicoServiceBroker(shortName, version);
         List<MicoServiceDependency> dependees = service.getDependencies();
         if (dependees == null) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Service dependees must not be null.");
         }
 
-        List<MicoService> services = serviceRepository.findDependees(shortName, version);
+        List<MicoService> services = micoServiceBroker.getDependeesByMicoService(service);
 
         return ResponseEntity.ok(
                 new Resources<>(getServiceResponseDTOResourcesList(services),

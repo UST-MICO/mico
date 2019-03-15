@@ -182,4 +182,9 @@ public class MicoServiceBroker {
         return services;
     }
 
+    //TODO: Create test
+    public List<MicoService> getDependeesByMicoService(MicoService service) {
+        return serviceRepository.findDependees(service.getShortName(), service.getVersion());
+    }
+
 }
