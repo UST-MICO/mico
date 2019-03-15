@@ -51,10 +51,7 @@ import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoLabelRepository;
-import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.persistence.*;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
 import lombok.extern.slf4j.Slf4j;
@@ -86,6 +83,9 @@ public class ApplicationResource {
     
     @Autowired
     private MicoLabelRepository labelRepository;
+    
+    @Autowired
+    private MicoEnvironmentVariableRepository environmentVariableRepository;
 
     @Autowired
     private MicoKubernetesClient micoKubernetesClient;
@@ -178,7 +178,7 @@ public class ApplicationResource {
         application.getServiceDeploymentInfos().forEach(sdi -> sdi.setId(null));
         application.getServiceDeploymentInfos().forEach(sdi -> sdi.getLabels().forEach(label -> label.setId(null)));
         application.getServiceDeploymentInfos().forEach(sdi -> sdi.getEnvironmentVariables().forEach(envVar -> envVar.setId(null)));
-        // TODO: Also clear ids for Kubernetes deployment information.
+        // NOTE: Also clear ids for Kubernetes deployment information.
 
         // Save the new (promoted) application in the database.
         MicoApplication updatedApplication = applicationRepository.save(application);
@@ -353,15 +353,13 @@ public class ApplicationResource {
     	// Update the service deployment information in the database
     	MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(
     	    serviceDeploymentInfoOptional.get().applyValuesFrom(serviceDeploymentInfoDTO));
-    	// In case some labels have been removed from the list of labels in the service deployment information,
+    	// In case addition properties (stored as separate node entity) such as labels, environment variables
+    	// have been removed from this service deployment information,
     	// the standard save() function of the service deployment information repository will not delete those
     	// "tangling" (without relationships) labels (nodes), hence the manual clean up.
-    	// TODO: Alternative: use delete + insert instead of update. Decide whether to do so or not.
     	labelRepository.cleanUp();
-    	// Same goes for the environment variables, ...
-    	// TODO: Clean up environment variables.
-    	// ... and the Kubernetes deployment info.
-    	// TODO: Clean up Kubernetes deployment info.
+    	environmentVariableRepository.cleanUp();
+    	// NOTE: Clean up Kubernetes deployment info.
     	log.debug("Service deployment information for service '{}' in application '{}' '{}' has been updated.", serviceShortName, shortName, version);
     	
         // TODO: Update actual Kubernetes deployment (see issue mico#416).
