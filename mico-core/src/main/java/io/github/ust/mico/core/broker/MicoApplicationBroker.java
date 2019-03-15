@@ -38,7 +38,7 @@ public class MicoApplicationBroker {
     private MicoKubernetesClient micoKubernetesClient;
 
     @Autowired
-    private MicoStatusService micoStatusService; //TODO: remove?
+    private MicoStatusService micoStatusService;
 
     public MicoApplication getMicoApplicationByShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException {
         Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
