@@ -122,7 +122,8 @@ public class MicoApplication {
     // ----------------------
     
     /**
-     * Creates a {@code MicoApplication} based on a {@code MicoApplicationRequestDTO}.
+     * Creates a new {@code MicoApplication} based on a {@code MicoApplicationRequestDTO}.
+     * Note that the id will be set to {@code null}.
      * 
      * @param applicationDto the {@link MicoApplicationRequestDTO}.
      * @return a {@link MicoApplication}.

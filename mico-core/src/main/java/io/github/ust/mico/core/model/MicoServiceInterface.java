@@ -102,7 +102,8 @@ public class MicoServiceInterface {
     // ----------------------
     
     /**
-     * Creates a {@code MicoServiceInterface} based on a {@code MicoServiceInterfaceRequestDTO}.
+     * Creates a new {@code MicoServiceInterface} based on a {@code MicoServiceInterfaceRequestDTO}.
+     * Note that the id will be set to {@code null}.
      * 
      * @param serviceInterfaceDto the {@link MicoServiceInterfaceRequestDTO}.
      * @return a {@link MicoServiceInterface}.
