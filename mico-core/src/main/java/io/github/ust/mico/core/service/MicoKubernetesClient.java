@@ -217,18 +217,20 @@ public class MicoKubernetesClient {
      * @throws KubernetesResourceException if there is an error while retrieving the Kubernetes objects
      */
     public boolean isApplicationDeployed(MicoApplication micoApplication) throws KubernetesResourceException {
-        boolean result = false;
-
-        for (MicoService micoService : serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion())) {
-            if (isMicoServiceDeployed(micoService)) {
-                result = true;
-                break;
-            }
-        }
-        String deploymentStatus = result ? "deployed" : "not deployed";
-        log.info("MicoApplication '{}' in version '{}' is {}.",
-            micoApplication.getShortName(), micoApplication.getVersion(), deploymentStatus);
-        return result;
+    	return false;
+    	// TODO: REMOVE AFTER TESTING!
+//        boolean result = false;
+//
+//        for (MicoService micoService : serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion())) {
+//            if (isMicoServiceDeployed(micoService)) {
+//                result = true;
+//                break;
+//            }
+//        }
+//        String deploymentStatus = result ? "deployed" : "not deployed";
+//        log.info("MicoApplication '{}' in version '{}' is {}.",
+//            micoApplication.getShortName(), micoApplication.getVersion(), deploymentStatus);
+//        return result;
     }
 
 
