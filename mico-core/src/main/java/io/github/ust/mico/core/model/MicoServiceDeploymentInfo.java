@@ -21,14 +21,18 @@ package io.github.ust.mico.core.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import org.neo4j.ogm.annotation.*;
-
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Relationship;
 
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
@@ -39,7 +43,7 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@RelationshipEntity(type = "INCLUDES_SERVICE")
+@NodeEntity
 public class MicoServiceDeploymentInfo {
 
     /**
@@ -54,22 +58,11 @@ public class MicoServiceDeploymentInfo {
     // -> Required fields ---
     // ----------------------
 
-    /**
-     * The {@link MicoApplication} that uses a {@link MicoService}
-     * this deployment information refers to.
-     */
-    @JsonBackReference
-    @StartNode
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    private MicoApplication application;
 
     /**
      * The {@link MicoService} this deployment information refers to.
      */
-    @EndNode
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
+    @Relationship(type = "FOR")
     private MicoService service;
 
 
@@ -84,14 +77,25 @@ public class MicoServiceDeploymentInfo {
 
     /**
      * Those labels are key-value pairs that are attached to the deployment
-     * of this service. Intended to be used to specify identifying attributes
+     * of this {@link MicoService}. Intended to be used to specify identifying attributes
      * that are meaningful and relevant to users, but do not directly imply
      * semantics to the core system. Labels can be used to organize and to select
      * subsets of objects. Labels can be attached to objects at creation time and
      * subsequently added and modified at any time.
      * Each key must be unique for a given object.
      */
+    @Relationship(type = "HAS")
     private List<MicoLabel> labels = new ArrayList<>();
+    
+    /**
+     * Environment variables as key-value pairs that are attached to the deployment
+     * of this {@link MicoService}. These environment values can be used by the deployed
+     * {@link MicoService} during runtime. This could be useful to pass information to the
+     * {@link MicoService} that is not known during design time or is likely to change.
+     * Example could be an URL to another {@link MicoService} or an external service.
+     */
+    @Relationship(type = "HAS")
+    private List<MicoEnvironmentVariable> environmentVariables = new ArrayList<>();
 
     /**
      * Indicates whether and when to pull the image.
@@ -118,7 +122,8 @@ public class MicoServiceDeploymentInfo {
      */
     public MicoServiceDeploymentInfo applyValuesFrom(MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) {
         return setReplicas(serviceDeploymentInfoDTO.getReplicas())
-            .setLabels(serviceDeploymentInfoDTO.getLabels())
+            .setLabels(serviceDeploymentInfoDTO.getLabels().stream().map(MicoLabel::valueOf).collect(Collectors.toList()))
+            .setEnvironmentVariables(serviceDeploymentInfoDTO.getEnvironmentVariables().stream().map(MicoEnvironmentVariable::valueOf).collect(Collectors.toList()))
             .setImagePullPolicy(serviceDeploymentInfoDTO.getImagePullPolicy())
             .setRestartPolicy(serviceDeploymentInfoDTO.getRestartPolicy());
     }
@@ -146,6 +151,7 @@ public class MicoServiceDeploymentInfo {
         ALWAYS,
         NEVER,
         IF_NOT_PRESENT
+        
     }
 
 
@@ -157,6 +163,7 @@ public class MicoServiceDeploymentInfo {
         ALWAYS,
         ON_FAILURE,
         NEVER
+        
     }
 
 }

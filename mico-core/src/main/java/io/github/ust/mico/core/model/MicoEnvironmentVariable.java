@@ -22,35 +22,37 @@ package io.github.ust.mico.core.model;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 
-import io.github.ust.mico.core.dto.request.MicoLabelRequestDTO;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import io.github.ust.mico.core.dto.request.MicoEnvironmentVariableRequestDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * A label represented as a simple key-value pair.
+ * An environment variable represented as a simple key-value pair.
  * Necessary since Neo4j does not allow to persist
  * properties of composite types.
- *
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-public class MicoLabel {
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class MicoEnvironmentVariable {
 	
 	@Id
 	@GeneratedValue
 	private Long id;
 
     /**
-     * Key of the label.
+     * Name of the environment variable.
      */
-    private String key;
+    private String name;
 
     /**
-     * Value of the label.
+     * Value of the environment variable.
      */
     private String value;
 
@@ -60,15 +62,15 @@ public class MicoLabel {
     // ----------------------
     
     /**
-     * Creates a {@code MicoLabel} based on a {@code MicoLabelRequestDTO}.
+     * Creates a {@code MicoEnvironmentVariable} based on a {@code MicoEnvironmentVariableRequestDTO}.
      * 
-     * @param labelDto the {@link MicoLabelRequestDTO}.
-     * @return a {@link MicoLabel}.
+     * @param environmentVariableDto the {@link MicoEnvironmentVariableRequestDTO}.
+     * @return a {@link MicoEnvironmentVariable}.
      */
-    public static MicoLabel valueOf(MicoLabelRequestDTO labelDto) {
-        return new MicoLabel()
-                .setKey(labelDto.getKey())
-                .setValue(labelDto.getValue());
+    public static MicoEnvironmentVariable valueOf(MicoEnvironmentVariableRequestDTO environmentVariableDto) {
+        return new MicoEnvironmentVariable()
+                .setName(environmentVariableDto.getName())
+                .setValue(environmentVariableDto.getValue());
     }
-    
+
 }

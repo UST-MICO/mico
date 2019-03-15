@@ -17,24 +17,19 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.model;
+package io.github.ust.mico.core.persistence;
 
-import org.springframework.data.neo4j.annotation.QueryResult;
+import org.springframework.data.neo4j.annotation.Query;
+import org.springframework.data.neo4j.repository.Neo4jRepository;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.Accessors;
+import io.github.ust.mico.core.model.MicoEnvironmentVariable;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Accessors(chain = true)
-@QueryResult
-public class MicoServiceDeploymentInfoQueryResult {
-    
-    private MicoApplication application;
-    private MicoServiceDeploymentInfo serviceDeploymentInfo;
-    private MicoService service;
-
+public interface MicoEnvironmentVariableRepository extends Neo4jRepository<MicoEnvironmentVariable, Long> {
+	
+	/**
+	 * Deletes all environment variables that do <b>not</b> have any relationship to another node.
+	 */
+	@Query("MATCH (env:MicoEnvironmentVariable) WHERE size((env)--()) = 0 DELETE (env)")
+	void cleanUp();
+	
 }

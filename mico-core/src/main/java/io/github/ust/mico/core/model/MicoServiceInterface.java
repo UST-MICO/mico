@@ -66,7 +66,7 @@ public class MicoServiceInterface {
      * The list of ports.
      * Must not be empty.
      */
-    @Relationship(type = "PROVIDES_PORTS", direction = Relationship.UNDIRECTED)
+    @Relationship(type = "PROVIDES", direction = Relationship.UNDIRECTED)
     private List<MicoServicePort> ports = new ArrayList<>();
 
 

@@ -19,6 +19,8 @@
 
 package io.github.ust.mico.core.dto.response;
 
+import java.util.stream.Collectors;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
@@ -58,6 +60,14 @@ public class MicoServiceDeploymentInfoResponseDTO extends MicoServiceDeploymentI
      */
 	public MicoServiceDeploymentInfoResponseDTO(MicoServiceDeploymentInfo serviceDeploymentInfo) {
 		super(serviceDeploymentInfo);
+		// Labels need to be set explicitly to have a list of MicoLabelResponseDTOs
+		// and not a list of MicoLabelRequestDTOs, since the list is declared
+		// in MicoServiceDeploymentInfoRequestDTO and typed to MicoLabelRequestDTO.
+		setLabels(serviceDeploymentInfo.getLabels().stream().map(MicoLabelResponseDTO::new).collect(Collectors.toList()));
+		// Environment variables need to be set explicitly to have a list of MicoEnvironmentVariableResponseDTOs
+		// and not a list of MicoEnvironmentVariableRequestDTOs, since the list is declared
+		// in MicoServiceDeploymentInfoRequestDTO and typed to MicoEnvironmentVariableRequestDTO.
+		setEnvironmentVariables(serviceDeploymentInfo.getEnvironmentVariables().stream().map(MicoEnvironmentVariableResponseDTO::new).collect(Collectors.toList()));
 	}
 
 }

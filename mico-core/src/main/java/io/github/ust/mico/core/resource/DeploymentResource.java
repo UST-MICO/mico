@@ -207,12 +207,12 @@ public class DeploymentResource {
         log.debug("Start creating Kubernetes resources for MICO service '{}' in version '{}'", micoService.getShortName(), micoService.getVersion());
 
         // Kubernetes Deployment
-        Optional<MicoServiceDeploymentInfoQueryResult> serviceDeploymentInfoQueryResultOptional = serviceDeploymentInfoRepository
-            .findByApplicationAndService(micoApplication.getShortName(), micoApplication.getVersion(), micoService.getShortName(), micoService.getVersion());
+		Optional<MicoServiceDeploymentInfo> serviceDeploymentInfoOptional = serviceDeploymentInfoRepository
+		    .findByApplicationAndService(micoApplication.getShortName(), micoApplication.getVersion(),
+		        micoService.getShortName(), micoService.getVersion());
         MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo();
-        if (serviceDeploymentInfoQueryResultOptional.isPresent()) {
-            MicoServiceDeploymentInfoQueryResult serviceDeploymentInfoQueryResult = serviceDeploymentInfoQueryResultOptional.get();
-            serviceDeploymentInfo = serviceDeploymentInfoQueryResult.getServiceDeploymentInfo();
+        if (serviceDeploymentInfoOptional.isPresent()) {
+            serviceDeploymentInfo = serviceDeploymentInfoOptional.get();
             log.debug("Using deployment information for MICO Service '{}' in version '{}': {}",
                 micoService.getShortName(), micoService.getVersion(), serviceDeploymentInfo.toString());
         } else {

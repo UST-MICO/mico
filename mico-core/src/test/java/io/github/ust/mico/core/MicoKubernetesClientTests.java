@@ -19,6 +19,21 @@
 
 package io.github.ust.mico.core;
 
+import static io.github.ust.mico.core.TestConstants.*;
+import static org.junit.Assert.*;
+import static org.mockito.BDDMockito.given;
+
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.junit4.SpringRunner;
+
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
@@ -32,19 +47,6 @@ import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.UIDUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.junit4.SpringRunner;
-
-import java.util.Map;
-
-import static io.github.ust.mico.core.TestConstants.*;
-import static org.junit.Assert.*;
-import static org.mockito.BDDMockito.given;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -78,17 +80,37 @@ public class MicoKubernetesClientTests {
     public void creationOfMicoServiceWorks() throws KubernetesResourceException {
         assertEquals(0, mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems().size());
 
-        MicoService micoServiceWithoutInterface = getMicoServiceWithoutInterface();
+        MicoService micoService = getMicoServiceWithoutInterface();
         MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo();
-        micoKubernetesClient.createMicoService(micoServiceWithoutInterface, deploymentInfo);
+        micoKubernetesClient.createMicoService(micoService, deploymentInfo);
 
         assertEquals(1, mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems().size());
 
         Deployment actualDeployment = mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems().get(0);
         assertNotNull(actualDeployment);
         assertTrue("Name of Kubernetes Deployment does not start with short name of MicoService",
-            actualDeployment.getMetadata().getName().startsWith(micoServiceWithoutInterface.getShortName()));
+            actualDeployment.getMetadata().getName().startsWith(micoService.getShortName()));
         assertEquals(testNamespace, actualDeployment.getMetadata().getNamespace());
+    }
+
+    @Test
+    public void creationOfMicoServiceWithEnvironmentVariablesWorks() throws KubernetesResourceException {
+        assertEquals(0, mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems().size());
+
+        MicoService micoService = getMicoServiceWithoutInterface();
+        MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo()
+            .setService(micoService)
+            .setEnvironmentVariables(CollectionUtils.listOf(new MicoEnvironmentVariable().setName("NAME").setValue("VALUE")));
+
+        micoKubernetesClient.createMicoService(micoService, deploymentInfo);
+
+        assertEquals(1, mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems().size());
+
+        Deployment actualDeployment = mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems().get(0);
+        assertNotNull(actualDeployment);
+        assertEquals("Environment variables do not match expected",
+            deploymentInfo.getEnvironmentVariables(), actualDeployment.getSpec().getTemplate().getSpec().getContainers().get(0).getEnv().stream().map(
+                envVar -> new MicoEnvironmentVariable().setName(envVar.getName()).setValue(envVar.getValue())).collect(Collectors.toList()));
     }
 
     @Test

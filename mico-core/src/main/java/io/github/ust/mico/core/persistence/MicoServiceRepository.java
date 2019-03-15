@@ -36,22 +36,19 @@ public interface MicoServiceRepository extends Neo4jRepository<MicoService, Long
 
     @Override
     List<MicoService> findAll(@Depth int depth);
+    
+    @Query("MATCH (a:MicoApplication)-[:INCLUDES]-(s:MicoService) "
+    	+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
+    	+ "RETURN COLLECT(s) AS services")
+    List<MicoService> findAllByApplication(
+    	@Param("shortName") String applicationShortName,
+    	@Param("applicationVersion") String applicationVersion);
 
     @Depth(2)
     List<MicoService> findByShortName(@Param("shortName") String shortName);
 
     @Depth(2)
     Optional<MicoService> findByShortNameAndVersion(String shortName, String version);
-    
-    @Query("MATCH (application:MicoApplication)-[:INCLUDES_SERVICE]-(service:MicoService) WHERE application.shortName = {applicationShortName} AND application.version = {applicationVersion} RETURN COLLECT(service) AS services")
-    List<MicoService> findAllByApplication(@Param("applicationShortName") String applicationShortName, @Param("applicationVersion") String applicationVersion);
-
-    // Doesn't this belong in the MicoServiceInterfaceRepository?
-    @Query("MATCH (service:MicoService)-[:PROVIDES_INTERFACES]->(interface:MicoServiceInterface)-[:PROVIDES_PORTS]->(port:MicoServicePort) WHERE service.shortName = {shortName} AND service.version = {version} AND interface.serviceInterfaceName = {serviceInterfaceName} DETACH DELETE interface, port")
-    void deleteInterfaceOfServiceByName(@Param("serviceInterfaceName") String serviceInterfaceName, @Param("shortName") String shortName, @Param("version") String version);
-
-    @Query("MATCH (service:MicoService) WHERE service.shortName = {shortName} AND service.version = {version} WITH service OPTIONAL MATCH (service)-[:PROVIDES_INTERFACES]->(interface:MicoServiceInterface) WITH service, interface OPTIONAL MATCH (interface)-[:PROVIDES_PORTS]->(port:MicoServicePort) DETACH DELETE service, interface, port")
-    void deleteServiceByShortNameAndVersion(@Param("shortName") String shortName, @Param("version") String version);
     
     /**
      * Finds all services (dependees) the given service (depender) depends on
@@ -62,8 +59,12 @@ public interface MicoServiceRepository extends Neo4jRepository<MicoService, Long
      * @return a list of {@link MicoService MicoServices} including all dependees
      * 		   as well as the depender..
      */
-    @Query("MATCH (service:MicoService)-[:DEPENDS_ON*0..]->(dependency:MicoService) WHERE service.shortName = {shortName} AND service.version = {version} RETURN COLLECT(DISTINCT dependency)")
-    List<MicoService> findDependeesIncludeDepender(@Param("shortName") String shortName, @Param("version") String version);
+    @Query("MATCH (s:MicoService)-[:DEPENDS_ON*0..]->(d:MicoService) "
+    	+ "WHERE s.shortName = {shortName} AND s.version = {version} "
+    	+ "RETURN COLLECT(DISTINCT d)")
+    List<MicoService> findDependeesIncludeDepender(
+    	@Param("shortName") String shortName,
+    	@Param("version") String version);
 
     /**
      * Finds all services (dependees) the given service (depender) depends on.
@@ -72,8 +73,12 @@ public interface MicoServiceRepository extends Neo4jRepository<MicoService, Long
      * @param version the version of the {@link MicoService} (depender).
      * @return a list of {@link MicoService MicoServices}.
      */
-    @Query("MATCH (service:MicoService)-[:DEPENDS_ON*1..]->(dependency:MicoService) WHERE service.shortName = {shortName} AND service.version = {version} RETURN COLLECT(DISTINCT dependency)")
-    List<MicoService> findDependees(@Param("shortName") String shortName, @Param("version") String version);
+    @Query("MATCH (s:MicoService)-[:DEPENDS_ON*1..]->(dependency:MicoService) "
+    	+ "WHERE s.shortName = {shortName} AND s.version = {version} "
+    	+ "RETURN COLLECT(DISTINCT dependency)")
+    List<MicoService> findDependees(
+    	@Param("shortName") String shortName,
+    	@Param("version") String version);
     
     /**
      * Finds all services (dependers) that depend on the given service (dependee).
@@ -82,7 +87,19 @@ public interface MicoServiceRepository extends Neo4jRepository<MicoService, Long
      * @param version the version of the {@link MicoService} (dependee).
      * @return a list of {@link MicoService MicoServices}.
      */
-    @Query("MATCH (service:MicoService)-[:DEPENDS_ON]->(dependency:MicoService) WHERE dependency.shortName = {shortName} AND dependency.version = {version} RETURN COLLECT(service)")
-    List<MicoService> findDependers(@Param("shortName") String shortName, @Param("version") String version);
+    @Query("MATCH (s:MicoService)-[:DEPENDS_ON]->(dependency:MicoService) "
+    	+ "WHERE dependency.shortName = {shortName} AND dependency.version = {version} "
+    	+ "RETURN COLLECT(s)")
+    List<MicoService> findDependers(
+    	@Param("shortName") String shortName,
+    	@Param("version") String version);
+
+    @Query("MATCH (s:MicoService) WHERE s.shortName = {shortName} AND s.version = {version} "
+    	+ "WITH s OPTIONAL MATCH (s)-[:PROVIDES]->(i:MicoServiceInterface) "
+    	+ "WITH s, i OPTIONAL MATCH (i)-[:PROVIDES]->(p:MicoServicePort) "
+    	+ "DETACH DELETE s, i, p")
+    void deleteServiceByShortNameAndVersion(
+    	@Param("shortName") String shortName,
+    	@Param("version") String version);
 
 }

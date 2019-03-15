@@ -19,13 +19,13 @@
 
 package io.github.ust.mico.core.configuration;
 
-import lombok.Getter;
-import lombok.Setter;
+import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import javax.validation.constraints.NotBlank;
-import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 
 @Component
 @Setter
