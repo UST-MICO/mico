@@ -130,6 +130,7 @@ public class ServiceResource {
         return ResponseEntity.ok(getServiceResponseDTOResource(updatedService));
     }
 
+    //Test exists and is green
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     public ResponseEntity<Void> deleteService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                               @PathVariable(PATH_VARIABLE_VERSION) String version) throws KubernetesResourceException {
@@ -151,6 +152,7 @@ public class ServiceResource {
         return ResponseEntity.noContent().build();
     }
 
+    //Test exists and is green
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
     public ResponseEntity<Void> deleteAllVersionsOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
         List<MicoService> micoServiceList = getAllVersionsOfServiceFromMicoServiceBroker(shortName);
@@ -168,6 +170,7 @@ public class ServiceResource {
         return ResponseEntity.noContent().build();
     }
 
+    //Test exists and is green
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")
     public ResponseEntity<Resource<MicoServiceStatusResponseDTO>> getStatusOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                      @PathVariable(PATH_VARIABLE_VERSION) String version) {
@@ -178,29 +181,37 @@ public class ServiceResource {
         return ResponseEntity.ok(new Resource<>(serviceStatus));
     }
 
+    //Test exists and is green
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
     public ResponseEntity<Resources<Resource<MicoServiceResponseDTO>>> getVersionsOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
-        List<MicoService> services = serviceRepository.findByShortName(shortName);
+        List<MicoService> services;
+        try {
+            services = micoServiceBroker.getAllVersionsOfServiceFromDatabase(shortName);
+        } catch (MicoServiceNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+
         List<Resource<MicoServiceResponseDTO>> serviceResources = getServiceResponseDTOResourcesList(services);
+
         return ResponseEntity.ok(
                 new Resources<>(serviceResources,
                         linkTo(methodOn(ServiceResource.class).getVersionsOfService(shortName)).withSelfRel()));
     }
 
+    //Tests exists and are green
     @PostMapping
     public ResponseEntity<Resource<MicoServiceResponseDTO>> createService(@Valid @RequestBody MicoServiceRequestDTO serviceDto) {
-        Optional<MicoService> serviceOptional = serviceRepository.
-                findByShortNameAndVersion(serviceDto.getShortName(), serviceDto.getVersion());
-        if (serviceOptional.isPresent()) {
+        MicoService persistedService;
+        try {
+            persistedService = micoServiceBroker.persistService(MicoService.valueOf(serviceDto));
+        } catch (MicoServiceAlreadyExistsException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Service '" + serviceDto.getShortName() + "' '" + serviceDto.getVersion() + "' already exists.");
         }
 
-        MicoService savedService = serviceRepository.save(MicoService.valueOf(serviceDto));
-
         return ResponseEntity
-                .created(linkTo(methodOn(ServiceResource.class).getServiceByShortNameAndVersion(savedService.getShortName(), savedService.getVersion())).toUri())
-                .body(new Resource<>(new MicoServiceResponseDTO(savedService), getServiceLinks(savedService)));
+                .created(linkTo(methodOn(ServiceResource.class).getServiceByShortNameAndVersion(persistedService.getShortName(), persistedService.getVersion())).toUri())
+                .body(new Resource<>(new MicoServiceResponseDTO(persistedService), getServiceLinks(persistedService)));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPENDEES)
@@ -441,8 +452,6 @@ public class ServiceResource {
         MicoService updatedService;
         try {
             updatedService = micoServiceBroker.persistService(MicoService.valueOf(serviceDto).setId(existingService.getId()));
-        } catch (MicoServiceNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoServiceAlreadyExistsException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }

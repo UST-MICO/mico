@@ -47,23 +47,6 @@ public class MicoServiceBrokerTests {
     @MockBean
     private GitHubCrawler crawler;
 
-    @Before
-    public void setUp() throws Exception {
-        MicoService micoServiceOne = new MicoService().setShortName(SHORT_NAME_1).setVersion(VERSION_1_0_1).setName(NAME_1).setDescription(DESCRIPTION_1);
-        MicoService micoServiceTwo = new MicoService().setShortName(SHORT_NAME_2).setVersion(VERSION_1_0_2).setName(NAME_2).setDescription(DESCRIPTION_2);
-        MicoService micoServiceThree = new MicoService().setShortName(SHORT_NAME_3).setVersion(VERSION_1_0_3).setName(NAME_3).setDescription(DESCRIPTION_3);
-
-        List<MicoService> micoServiceList = new LinkedList<>();
-        micoServiceList.add(micoServiceOne);
-        micoServiceList.add(micoServiceTwo);
-        micoServiceList.add(micoServiceThree);
-
-        //TODO: Verfiy why this is not working
-        //when(serviceRepository.findAll()).thenReturn(micoServiceList);
-        when(micoServiceBroker.getAllServicesAsList()).thenReturn(micoServiceList);
-        when(serviceRepository.findByShortNameAndVersion(SHORT_NAME_1, VERSION_1_0_1)).thenReturn(java.util.Optional.ofNullable(micoServiceOne));
-    }
-
     @Test
     public void getAllServicesAsList() throws Exception {
         List<MicoService> micoServiceList = micoServiceBroker.getAllServicesAsList();
@@ -156,6 +139,14 @@ public class MicoServiceBrokerTests {
 
     @Test
     public void deleteAllVersionsOfService() throws Exception {
+        MicoService micoServiceOne = new MicoService()
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_1)
+                .setDescription(DESCRIPTION_1);
+
+        given(serviceRepository.findByShortName(SHORT_NAME_1)).willReturn(CollectionUtils.listOf(micoServiceOne));
+
         micoServiceBroker.deleteAllVersionsOfService(SHORT_NAME_1);
     }
 

@@ -175,7 +175,7 @@ public class ServiceResourceTests {
             .setPodsInformation(Arrays.asList(kubernetesPodInfo1, kubernetesPodInfo2));
 
         given(micoStatusService.getServiceStatus(any(MicoService.class))).willReturn(micoServiceStatus);
-        given(serviceRepository.findByShortNameAndVersion(ArgumentMatchers.anyString(), ArgumentMatchers.any())).willReturn(Optional.of(micoService));
+        given(micoServiceBroker.getServiceFromDatabase(ArgumentMatchers.anyString(), ArgumentMatchers.any())).willReturn(micoService);
 
         mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/status"))
             .andDo(print())
@@ -252,7 +252,7 @@ public class ServiceResourceTests {
             .setName(NAME)
             .setDescription(DESCRIPTION);
 
-        given(serviceRepository.save(any(MicoService.class))).willReturn(service);
+        given(micoServiceBroker.persistService(any(MicoService.class))).willReturn(service);
 
         final ResultActions result = mvc.perform(post(SERVICES_PATH)
             .content(mapper.writeValueAsBytes(new MicoServiceRequestDTO(service)))
@@ -306,14 +306,14 @@ public class ServiceResourceTests {
 
         ArgumentCaptor<MicoService> serviceArgumentCaptor = ArgumentCaptor.forClass(MicoService.class);
 
-        given(serviceRepository.save(any(MicoService.class))).willReturn(expectedService);
+        given(micoServiceBroker.persistService(any(MicoService.class))).willReturn(expectedService);
 
         mvc.perform(post(SERVICES_PATH)
             .content(mapper.writeValueAsBytes(serviceRequestDto)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isCreated());
 
-        verify(serviceRepository, times(1)).save(serviceArgumentCaptor.capture());
+        verify(micoServiceBroker, times(1)).persistService(serviceArgumentCaptor.capture());
         MicoService savedMicoService = serviceArgumentCaptor.getValue();
         assertNotNull(savedMicoService);
         assertEquals("Actual service does not match expected", expectedService, savedMicoService);
@@ -335,14 +335,14 @@ public class ServiceResourceTests {
 
         ArgumentCaptor<MicoService> serviceArgumentCaptor = ArgumentCaptor.forClass(MicoService.class);
 
-        given(serviceRepository.save(any(MicoService.class))).willReturn(expectedService);
+        given(micoServiceBroker.persistService(any(MicoService.class))).willReturn(expectedService);
 
         mvc.perform(post(SERVICES_PATH)
             .content(mapper.writeValueAsBytes(serviceRequestDto)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isCreated());
 
-        verify(serviceRepository, times(1)).save(serviceArgumentCaptor.capture());
+        verify(micoServiceBroker, times(1)).persistService(serviceArgumentCaptor.capture());
         MicoService savedMicoService = serviceArgumentCaptor.getValue();
         assertNotNull(savedMicoService);
         assertEquals("Actual service does not match expected", expectedService, savedMicoService);
@@ -357,7 +357,7 @@ public class ServiceResourceTests {
             .setDescription(DESCRIPTION)
             .setGitCloneUrl("invalid-url");
 
-        given(serviceRepository.save(any(MicoService.class))).willReturn(service);
+        given(micoServiceBroker.persistService(any(MicoService.class))).willReturn(service);
 
         mvc.perform(post(SERVICES_PATH)
             .content(mapper.writeValueAsBytes(new MicoServiceRequestDTO(service))).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
@@ -405,7 +405,7 @@ public class ServiceResourceTests {
     }
 
     @Test
-    public void deleteAllServices() throws Exception {
+    public void deleteAllVersionsOfService() throws Exception {
         MicoService micoServiceOne = new MicoService()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
@@ -419,7 +419,7 @@ public class ServiceResourceTests {
             .setVersion(VERSION_1_0_2)
             .setName(NAME);
 
-        given(serviceRepository.findByShortName(SHORT_NAME)).willReturn(CollectionUtils.listOf(micoServiceOne, micoServiceTwo, micoServiceThree));
+        given(micoServiceBroker.getAllVersionsOfServiceFromDatabase(SHORT_NAME)).willReturn(CollectionUtils.listOf(micoServiceOne, micoServiceTwo, micoServiceThree));
 
         mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME))
                 .andDo(print())
@@ -596,7 +596,7 @@ public class ServiceResourceTests {
             .setVersion(VERSION)
             .setName(NAME);
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingService));
+        given(micoServiceBroker.getServiceFromDatabase(SHORT_NAME, VERSION)).willReturn(existingService);
 
         ResultActions resultDelete = mvc.perform(delete(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION)
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
@@ -607,7 +607,7 @@ public class ServiceResourceTests {
 
     @Test
     public void getVersionsOfService() throws Exception {
-        given(serviceRepository.findByShortName(SHORT_NAME)).willReturn(
+        given(micoServiceBroker.getAllVersionsOfServiceFromDatabase(SHORT_NAME)).willReturn(
             CollectionUtils.listOf(
                 new MicoService().setShortName(SHORT_NAME).setVersion(VERSION).setName(NAME),
                 new MicoService().setShortName(SHORT_NAME).setVersion(VERSION_1_0_1).setName(NAME),

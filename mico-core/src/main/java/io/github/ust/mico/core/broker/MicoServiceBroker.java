@@ -144,9 +144,9 @@ public class MicoServiceBroker {
 //        return serviceStatus;
 //    }
 
-    public MicoService persistService(MicoService newService) throws MicoServiceNotFoundException, MicoServiceAlreadyExistsException {
-        MicoService micoService = getServiceFromDatabase(newService.getShortName(), newService.getVersion());
-        if (micoService != null) {
+    public MicoService persistService(MicoService newService) throws MicoServiceAlreadyExistsException {
+        Optional<MicoService> micoServiceOptional = serviceRepository.findByShortNameAndVersion(newService.getShortName(), newService.getVersion());
+        if (micoServiceOptional.isPresent()) {
             throw new MicoServiceAlreadyExistsException(newService.getShortName(), newService.getVersion());
         }
         for (MicoServiceInterface serviceInterface : newService.getServiceInterfaces()) {
