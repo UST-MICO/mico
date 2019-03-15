@@ -61,6 +61,17 @@ export class MicoFormNumberComponent {
             return;
         }
 
+        if (this.config.minimum != null && input < this.config.minimum) {
+            input = this.config.minimum;
+        }
+
+
+        if (this.config.maximum != null && input > this.config.maximum) {
+            input = this.config.maximum;
+            // TODO: ensure that input reflects current value even if the value
+            // does not change anymore because it is already the max value
+        }
+
         this.content = input;
         this.onChange(input);
         this.onTouched();
