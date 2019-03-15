@@ -22,6 +22,9 @@ package io.github.ust.mico.core.util;
 import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
 
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceInterface;
 import org.springframework.stereotype.Component;
 
 /**
@@ -37,6 +40,13 @@ public class KubernetesNameNormalizer {
     private final static String REGEX_MULTIPLE_DASHES = "[-]+";
     private final static String REGEX_FIRST_OR_LAST_CHAR_IS_A_DASH = "^-|-$";
     private final static String REGEX_MATCH_VALID_FIRST_CHAR = "^[a-z]+.*";
+
+    /**
+     * A max limit of the MICO names ({@link MicoApplication}, {@link MicoService} and {@link MicoServiceInterface}) is
+     * required because they are used as values of Kubernetes labels that have a limit of 63. Furthermore the name is
+     * used to create a UID that adds 9 characters to it. Therefore the limit have to be set to 54.
+     */
+    public final static int MICO_NAME_MAX_SIZE = 54;
 
     /**
      * Normalizes a name so it is a valid Kubernetes resource name.
@@ -69,7 +79,7 @@ public class KubernetesNameNormalizer {
             result = "short-name-" + s8;
         }
 
-        if (!result.matches(Patterns.KUBERNETES_NAMING_REGEX) || result.length() > 253) {
+        if (!result.matches(Patterns.KUBERNETES_NAMING_REGEX) || result.length() > MICO_NAME_MAX_SIZE) {
             throw new IllegalArgumentException("Name '" + name + "' could not be normalized correctly");
         }
 
