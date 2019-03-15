@@ -178,7 +178,11 @@ public class ApplicationResource {
         application.getServiceDeploymentInfos().forEach(sdi -> sdi.setId(null));
         application.getServiceDeploymentInfos().forEach(sdi -> sdi.getLabels().forEach(label -> label.setId(null)));
         application.getServiceDeploymentInfos().forEach(sdi -> sdi.getEnvironmentVariables().forEach(envVar -> envVar.setId(null)));
-        // NOTE: Also clear ids for Kubernetes deployment information.
+        application.getServiceDeploymentInfos().forEach(sdi -> {
+        	if (sdi.getKubernetesDeploymentInfo() != null) {
+        		sdi.getKubernetesDeploymentInfo().setId(null);
+        	}
+        });
 
         // Save the new (promoted) application in the database.
         MicoApplication updatedApplication = applicationRepository.save(application);
