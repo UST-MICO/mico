@@ -27,8 +27,6 @@ import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
-import io.fabric8.kubernetes.api.model.Service;
-import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
@@ -116,32 +114,8 @@ public class ServiceInterfaceResource {
                                                              @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                              @PathVariable(PATH_VARIABLE_SERVICE_INTERFACE_NAME) String serviceInterfaceName) {
         MicoService micoService = getServiceFromDatabase(shortName, version);
-
-        Optional<MicoServiceInterface> serviceInterfaceOptional = serviceRepository.findInterfaceOfServiceByName(serviceInterfaceName, shortName, version);
-        if (!serviceInterfaceOptional.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "Service interface '" + serviceInterfaceName + "' of MicoService '" + shortName + "' '" + version + "' was not found!");
-        }
-
-        Optional<Service> kubernetesServiceOptional;
-        try {
-            kubernetesServiceOptional = micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, serviceInterfaceName);
-        } catch (KubernetesResourceException e) {
-            log.error("Error occur while retrieving Kubernetes service of MicoServiceInterface '{}' of MicoService '{}' in version '{}'. Caused by: {}",
-                serviceInterfaceName, shortName, version, e.getMessage());
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                "Error occur while retrieving Kubernetes service of MicoServiceInterface '" + serviceInterfaceName +
-                    "' of MicoService '" + shortName + "' '" + version + "'!");
-        }
-        if (!kubernetesServiceOptional.isPresent()) {
-            log.warn("There is no MicoServiceInterface deployed with name '{}' of MicoService '{}' in version '{}'.",
-                serviceInterfaceName, shortName, version);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "No deployed service interface '" + serviceInterfaceName + "' of MicoService '" + shortName + "' '" + version + "' was found!");
-        }
-
-        Service kubernetesService = kubernetesServiceOptional.get();
-        String publicIp = micoStatusService.getPublicIpOfKubernetesService(micoService, serviceInterfaceName, kubernetesService);
+        String publicIp = micoStatusService.getPublicIpOfKubernetesService(micoService, serviceInterfaceName);
+        // TODO error handling ResourceException
 
         return ResponseEntity.ok().body(publicIp);
     }

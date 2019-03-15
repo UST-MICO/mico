@@ -53,10 +53,12 @@ import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.util.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 /**
@@ -222,41 +224,48 @@ public class MicoStatusService {
             String serviceInterfaceName = serviceInterface.getServiceInterfaceName();
             String publicIp = "";
             try {
-                Optional<Service> kubernetesServices = micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, serviceInterfaceName);
-                if (kubernetesServices.isPresent()) {
-                    publicIp = getPublicIpOfKubernetesService(micoService, serviceInterfaceName, kubernetesServices.get());
-                    if (publicIp.isEmpty()) {
-                        errorMessages.add("There is no Kubernetes service for the interface '" +
-                            serviceInterfaceName + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "'.");
-                    }
-                } else {
-                    log.warn("There is no Kubernetes service for the interface '{}' of MicoService '{}' '{}'. Continue with next one.",
-                        serviceInterfaceName, micoService.getShortName(), micoService.getVersion());
-                    errorMessages.add("There is no Kubernetes service for the interface '" +
-                        serviceInterfaceName + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "'.");
-                }
-            } catch (Exception e) {
-                log.error("Error while retrieving the Kubernetes service for the interface '{}' of MicoService '{}' '{}'. "
-                        + "Continue with next one. Caused by: {}",
-                    serviceInterfaceName, micoService.getShortName(), micoService.getVersion(), e.getMessage());
+                publicIp = getPublicIpOfKubernetesService(micoService, serviceInterfaceName);
+            } catch (ResponseStatusException e) {
                 errorMessages.add(e.getMessage());
             }
-
             interfacesInformation.add(new MicoServiceInterfaceStatusDTO(serviceInterfaceName, publicIp));
         }
         return interfacesInformation;
     }
 
     /**
-     * Get the public IPs of a {@link MicoServiceInterface} by providing the corresponding Kubernetes {@link Service}.
+     * Get the public IP of a {@link MicoServiceInterface} by providing the corresponding Kubernetes {@link Service}.
      *
-     * @param kubernetesService the Kubernetes {@link Service}
-     * @return a list with public IPs of the provided Kubernetes Service
+     * @param micoService          is the {@link MicoService}, that has a {@link MicoServiceInterface}, which is
+     *                             deployed on Kubernetes.
+     * @param serviceInterfaceName is the MicoServiceInterface, that is deployed as Kubernetes service .
+     * @return the  public IP of the provided Kubernetes Service
      */
     // TODO: Duplicate exists in ServiceInterfaceResource. Will be covered by mico#491
-    public String getPublicIpOfKubernetesService(MicoService micoService, String serviceInterfaceName, Service kubernetesService) {
+    public String getPublicIpOfKubernetesService(MicoService micoService, String serviceInterfaceName) {
+        Optional<MicoServiceInterface> serviceInterfaceOptional = serviceRepository.findInterfaceOfServiceByName(serviceInterfaceName, micoService.getShortName(), micoService.getVersion());
+        if (!serviceInterfaceOptional.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                "Service interface '" + serviceInterfaceName + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' was not found!");
+        }
+        Optional<Service> kubernetesServiceOptional;
+        try {
+            kubernetesServiceOptional = micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, serviceInterfaceName);
+        } catch (KubernetesResourceException e) {
+            log.error("Error occur while retrieving Kubernetes service of MicoServiceInterface '{}' of MicoService '{}' in version '{}'. Caused by: {}",
+                serviceInterfaceName, micoService.getShortName(), micoService.getVersion(), e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                "Error occur while retrieving Kubernetes service of MicoServiceInterface '" + serviceInterfaceName +
+                    "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "'!");
+        }
+        if (!kubernetesServiceOptional.isPresent()) {
+            log.warn("There is no Kubernetes service deployed for MicoServiceInterface with name '{}' of MicoService '{}' in version '{}'.",
+                serviceInterfaceName, micoService.getShortName(), micoService.getVersion());
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                "No deployed service interface '" + serviceInterfaceName + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' was found!");
+        }
+        Service kubernetesService = kubernetesServiceOptional.get();
         LoadBalancerStatus loadBalancerStatus = kubernetesService.getStatus().getLoadBalancer();
-        String publicIp = "";
         if (loadBalancerStatus != null) {
             List<LoadBalancerIngress> ingressList = loadBalancerStatus.getIngress();
             if (ingressList != null && ingressList.size() == 1) {
@@ -264,12 +273,18 @@ public class MicoStatusService {
                     serviceInterfaceName, micoService.getShortName(), micoService.getVersion(), ingressList.get(0).getIp());
                 return ingressList.get(0).getIp();
             } else if (ingressList != null && ingressList.size() > 1) {
-                // TODO exception if more than one public IP exists
+                log.warn("There are " + ingressList.size() + " IP addresses for the MicoServiceInterface " + serviceInterfaceName + ". Only one IP address is returned.");
+                return ingressList.get(0).getIp();
+            } else {
+                log.error("There is no Kubernetes service for the interface '{}' of MicoService '{}' in version '{}'.",
+                    serviceInterfaceName, micoService.getShortName(), micoService.getVersion());
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "There is no Kubernetes service for the interface '" +
+                    serviceInterfaceName + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "'.");
             }
-            return publicIp;
         } else {
-            // TODO error handling for a missing load balancer
-            return publicIp;
+            log.error("There is no Load Balancer service for the Kubernetes service of the MicoServiceInterface '{}'.", serviceInterfaceName);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "There is no Load Balancer service for the Kubernetes service of the MicoServiceInterface '" +
+                serviceInterfaceName + "'.");
         }
     }
 
