@@ -18,23 +18,50 @@
  */
 package io.github.ust.mico.core.model;
 
-import lombok.Data;
-import lombok.experimental.Accessors;
+import java.io.Serializable;
+import java.util.concurrent.CompletableFuture;
+
 import org.neo4j.ogm.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
 
-import java.io.Serializable;
-import java.util.concurrent.CompletableFuture;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 /**
- * BackgroundJob for one {@link MicoService}.
+ * Background job for a {@link MicoService}.
  */
 @Data
+@NoArgsConstructor
 @RedisHash("BackgroundJob")
 @Accessors(chain = true)
-public class MicoBackgroundTask implements Serializable {
-    // Build contains currently build and deploy.
+public class MicoServiceBackgroundTask implements Serializable {
+
+	private static final long serialVersionUID = -8247189361567566737L;
+	
+	// TODO: Add JavaDoc for fields.
+
+    @Id
+    private String id;
+    
+	private CompletableFuture<?> job;
+    
+    @Indexed
+    private String serviceShortName;
+    
+    @Indexed
+    private String serviceVersion;
+    
+    @Indexed
+    private Type type;
+    
+    private Status status = Status.PENDING;
+    
+    private String errorMessage;
+
+
+	// Build contains currently build and deploy.
     public enum Type {
         BUILD, UNDEPLOY
     }
@@ -42,23 +69,5 @@ public class MicoBackgroundTask implements Serializable {
     public enum Status {
         PENDING, RUNNING, ERROR, DONE, UNDEFINED
     }
-
-    @Id
-    String id;
-    CompletableFuture job;
-    @Indexed
-    String micoServiceShortName;
-    @Indexed
-    String micoServiceVersion;
-    Status status;
-    String errorMessage;
-    @Indexed
-    Type type;
-
-    /**
-     * Constructor which sets the status to {@link Status#PENDING}
-     */
-    public MicoBackgroundTask() {
-        this.status = Status.PENDING;
-    }
+    
 }

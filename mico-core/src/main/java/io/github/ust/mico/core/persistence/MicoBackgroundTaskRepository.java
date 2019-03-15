@@ -18,7 +18,7 @@
  */
 package io.github.ust.mico.core.persistence;
 
-import io.github.ust.mico.core.model.MicoBackgroundTask;
+import io.github.ust.mico.core.model.MicoServiceBackgroundTask;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -26,10 +26,13 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface MicoBackgroundTaskRepository extends CrudRepository<MicoBackgroundTask, String> {
+public interface MicoBackgroundTaskRepository extends CrudRepository<MicoServiceBackgroundTask, String> {
+	
     @Override
-    List<MicoBackgroundTask> findAll();
+    List<MicoServiceBackgroundTask> findAll();
 
-    List<MicoBackgroundTask> findByMicoServiceShortNameAndMicoServiceVersion(String micoServiceShortName, String micoServiceVersion);
-    Optional<MicoBackgroundTask> findByMicoServiceShortNameAndMicoServiceVersionAndType(String micoServiceShortName, String micoServiceVersion, MicoBackgroundTask.Type type);
+    List<MicoServiceBackgroundTask> findByMicoServiceShortNameAndMicoServiceVersion(String micoServiceShortName, String micoServiceVersion);
+    
+    Optional<MicoServiceBackgroundTask> findByMicoServiceShortNameAndMicoServiceVersionAndType(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundTask.Type type);
+    
 }

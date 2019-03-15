@@ -18,29 +18,30 @@
  */
 package io.github.ust.mico.core.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.experimental.Accessors;
-
+import java.util.ArrayList;
 import java.util.List;
 
+import io.github.ust.mico.core.model.MicoServiceBackgroundTask.Status;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
+
 /**
- * Represent the job status from one {@link MicoApplication}.
+ * Represents the job status for a {@link MicoApplication}.
  * Contains a list of jobs.
  */
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
 public class MicoApplicationJobStatus {
-    String applicationShortName;
-    String applicationVersion;
-    MicoBackgroundTask.Status status;
-    List<MicoBackgroundTask> jobs;
-
-    /**
-     * Constructor which sets the status to {@link MicoBackgroundTask.Status#UNDEFINED}
-     */
-    public MicoApplicationJobStatus() {
-        status = MicoBackgroundTask.Status.UNDEFINED;
-    }
+	
+	// TODO: Add JavaDoc for fields.
+	
+    private String applicationShortName;
+    private String applicationVersion;
+    private MicoServiceBackgroundTask.Status status = Status.UNDEFINED;
+    private List<MicoServiceBackgroundTask> jobs = new ArrayList<>();
+    
 }
