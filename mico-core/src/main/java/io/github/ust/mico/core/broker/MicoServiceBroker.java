@@ -216,4 +216,36 @@ public class MicoServiceBroker {
         return service;
     }
 
+    //TODO: Create test
+    public void deleteDependencyBetweenServices(MicoService service, MicoService serviceToDelete) {
+        service.getDependencies().removeIf(dependency -> dependency.getDependedService().getId() == serviceToDelete.getId());
+        serviceRepository.save(service);
+    }
+
+    //TODO: Create test
+    public MicoService deleteAllDependees(MicoService service) {
+        // We only want to delete the relationships (the edges),
+        // not the actual depended services.
+        service.getDependencies().clear();
+        MicoService resultingService = serviceRepository.save(service);
+
+        log.debug("Service after deleting all dependencies: {}", resultingService);
+
+        return resultingService;
+    }
+
+    //TODO: Create test
+    //TODO: Reconsider naming, promote does not suite very well
+    public MicoService promoteService(MicoService service, String newVersion) {
+        service.setVersion(newVersion).setId(null);
+
+        log.debug("Set new version in service: {}", service);
+
+        MicoService updatedService = serviceRepository.save(service);
+
+        log.debug("Updated service: {}", updatedService);
+
+        return updatedService;
+    }
+
 }

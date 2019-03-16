@@ -234,6 +234,7 @@ public class ServiceResource {
     /**
      * Creates a new dependency edge between the Service and the depended service.
      */
+    // Test exists and is green
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPENDEES
             + "/{" + PATH_VARIABLE_DEPENDEE_SHORT_NAME + "}/{" + PATH_VARIABLE_DEPENDEE_VERSION + "}")
     public ResponseEntity<Void> createNewDependee(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
@@ -256,19 +257,19 @@ public class ServiceResource {
         return ResponseEntity.noContent().build();
     }
 
+    //Test exists and is green
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPENDEES)
     public ResponseEntity<Void> deleteAllDependees(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                    @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        // We only want to delete the relationships (the edges),
-        // not the actual depended services.
-        MicoService service = getServiceFromMicoServiceBroker(shortName, version);
-        service.getDependencies().clear();
 
-        serviceRepository.save(service);
+        MicoService service = getServiceFromMicoServiceBroker(shortName, version);
+
+        micoServiceBroker.deleteAllDependees(service);
 
         return ResponseEntity.noContent().build();
     }
 
+    //Test exists and is green
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPENDEES
             + "/{" + PATH_VARIABLE_DEPENDEE_SHORT_NAME + "}/{" + PATH_VARIABLE_DEPENDEE_VERSION + "}")
     public ResponseEntity<Void> deleteDependee(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
@@ -278,28 +279,25 @@ public class ServiceResource {
         // We only want to delete the relationship (the edge),
         // not the actual depended service.
         MicoService service = getServiceFromMicoServiceBroker(shortName, version);
+        MicoService serviceToDelete = getServiceFromMicoServiceBroker(dependeeShortName, dependeeVersion);
 
-        // Check whether dependee to delete exists
-        Optional<MicoService> serviceOptToDelete = serviceRepository.findByShortNameAndVersion(dependeeShortName, dependeeVersion);
-        if (!serviceOptToDelete.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service dependee '" + dependeeShortName + "' '" + dependeeVersion + "'  was not found!");
-        }
-        MicoService serviceToDelete = serviceOptToDelete.get();
-
-        service.getDependencies().removeIf(dependency -> dependency.getDependedService().getId() == serviceToDelete.getId());
-        serviceRepository.save(service);
+        micoServiceBroker.deleteDependencyBetweenServices(service, serviceToDelete);
 
         return ResponseEntity.noContent().build();
     }
 
+    //Test exists and is green
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPENDERS)
     public ResponseEntity<Resources<Resource<MicoServiceResponseDTO>>> getDependers(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        List<MicoService> dependers = micoServiceBroker.findDependers(shortName, version);
+
         return ResponseEntity.ok(
-                new Resources<>(getServiceResponseDTOResourcesList(serviceRepository.findDependers(shortName, version)),
+                new Resources<>(getServiceResponseDTOResourcesList(dependers),
                         linkTo(methodOn(ServiceResource.class).getDependers(shortName, version)).withSelfRel()));
     }
 
+    //TODO: Verfiy this endpoint
     @PostMapping(PATH_GITHUB_ENDPOINT)
     public ResponseEntity<Resource<MicoServiceResponseDTO>> importMicoServiceFromGitHub(@Valid @RequestBody CrawlingInfoRequestDTO crawlingInfo) {
         String url = crawlingInfo.getUrl();
@@ -325,6 +323,7 @@ public class ServiceResource {
         }
     }
 
+    //Test exists and is green
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_PROMOTE)
     public ResponseEntity<Resource<MicoServiceResponseDTO>> promoteService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                            @PathVariable(PATH_VARIABLE_VERSION) String version,
@@ -333,15 +332,8 @@ public class ServiceResource {
 
         // Service to promote (copy)
         MicoService service = getServiceFromMicoServiceBroker(shortName, version);
-        log.debug("Received following MicoService from database: {}", service);
 
-        // Update the version and set id to null, otherwise the original service
-        // would be updated but we want a new service instance to be created.
-        service.setVersion(newVersionDto.getVersion()).setId(null);
-
-        // Save the new (promoted) service in the database
-        MicoService updatedService = serviceRepository.save(service);
-        log.debug("Saved following MicoService in database: {}", updatedService);
+        MicoService updatedService = micoServiceBroker.promoteService(service, newVersionDto.getVersion());
 
         return ResponseEntity.ok(getServiceResponseDTOResource(updatedService));
     }
