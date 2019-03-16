@@ -4,6 +4,7 @@ import io.github.ust.mico.core.exception.MicoServiceInterfaceAlreadyExistsExcept
 import io.github.ust.mico.core.exception.MicoServiceNotFoundException;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.persistence.MicoServiceInterfaceRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,9 @@ public class MicoServiceInterfaceBroker {
 
     @Autowired
     private MicoServiceBroker micoServiceBroker;
+
+    @Autowired
+    private MicoServiceInterfaceRepository micoServiceInterfaceRepository;
 
     public Optional<List<MicoServiceInterface>> getAllInterfacesOfService(String shortName, String version) {
         Optional<List<MicoServiceInterface>> optionalMicoServiceInterfaceList = serviceRepository.findByShortNameAndVersion(shortName, version)
@@ -51,7 +55,7 @@ public class MicoServiceInterfaceBroker {
     }
 
     public void deleteServiceInterfaceByServiceInterfaceName(String shortName, String version, String serviceInterfaceName) {
-        serviceRepository.deleteInterfaceOfServiceByName(serviceInterfaceName, shortName, version);
+        micoServiceInterfaceRepository.deleteByServiceAndName(shortName, version, serviceInterfaceName);
     }
 
     public MicoServiceInterface createServiceInterface (String shortName, String version, MicoServiceInterface micoServiceInterface) throws MicoServiceNotFoundException, MicoServiceInterfaceAlreadyExistsException {
