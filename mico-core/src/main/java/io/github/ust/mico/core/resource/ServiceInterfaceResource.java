@@ -165,7 +165,7 @@ public class ServiceInterfaceResource {
     public ResponseEntity<Void> deleteServiceInterface(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                        @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                        @PathVariable(PATH_VARIABLE_SERVICE_INTERFACE_NAME) String serviceInterfaceName) {
-        serviceRepository.deleteInterfaceOfServiceByName(serviceInterfaceName, shortName, version);
+        serviceInterfaceRepository.deleteByServiceAndName(shortName, version, serviceInterfaceName);
         return ResponseEntity.noContent().build();
     }
 

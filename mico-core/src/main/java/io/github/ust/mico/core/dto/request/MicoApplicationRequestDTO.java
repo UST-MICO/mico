@@ -22,6 +22,7 @@ package io.github.ust.mico.core.dto.request;
 import com.fasterxml.jackson.annotation.*;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.util.KubernetesNameNormalizer;
 import io.github.ust.mico.core.util.Patterns;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
@@ -60,12 +61,12 @@ public class MicoApplicationRequestDTO {
             @ExtensionProperty(name = "title", value = "Short Name"),
             @ExtensionProperty(name = "pattern", value = Patterns.KUBERNETES_NAMING_REGEX),
             @ExtensionProperty(name = "minLength", value = "3"),
-            @ExtensionProperty(name = "maxLength", value = "253"),
+            @ExtensionProperty(name = "maxLength", value = KubernetesNameNormalizer.MICO_NAME_MAX_SIZE +""),
             @ExtensionProperty(name = "x-order", value = "10"),
             @ExtensionProperty(name = "description", value = "Unique short name of the application.")
         }
     )})
-    @Size(min = 3, max = 253, message = "must have a length between 3 and 253")
+    @Size(min = 3, max = KubernetesNameNormalizer.MICO_NAME_MAX_SIZE, message = "must have a length between 3 and " + KubernetesNameNormalizer.MICO_NAME_MAX_SIZE)
     @Pattern(regexp = Patterns.KUBERNETES_NAMING_REGEX, message = Patterns.KUBERNETES_NAMING_MESSAGE)
     private String shortName;
 

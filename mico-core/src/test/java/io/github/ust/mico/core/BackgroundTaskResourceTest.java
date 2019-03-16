@@ -118,12 +118,11 @@ public class BackgroundTaskResourceTest {
             .setId(ID)
             .setShortName(SHORT_NAME).setVersion(VERSION);
         
-        MicoServiceDeploymentInfo serviceDeploymentInfo1 = new MicoServiceDeploymentInfo()
-            .setApplication(application).setService(service1);
-        
-        MicoServiceDeploymentInfo serviceDeploymentInfo2 = new MicoServiceDeploymentInfo()
-            .setApplication(application).setService(service2);
+        MicoServiceDeploymentInfo serviceDeploymentInfo1 = new MicoServiceDeploymentInfo().setService(service1);
+        MicoServiceDeploymentInfo serviceDeploymentInfo2 = new MicoServiceDeploymentInfo().setService(service2);
 
+        application.getServices().add(service1);
+        application.getServices().add(service2);
         application.getServiceDeploymentInfos().add(serviceDeploymentInfo1);
         application.getServiceDeploymentInfos().add(serviceDeploymentInfo2);
 

@@ -28,7 +28,6 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -76,8 +75,7 @@ public class MicoApplicationWithServicesResponseDTO extends MicoApplicationRespo
      */
 	public MicoApplicationWithServicesResponseDTO(MicoApplication application) {
 		super(application);
-		services = application.getServiceDeploymentInfos().stream()
-        	.map(MicoServiceDeploymentInfo::getService)
+		services = application.getServices().stream()
         	.map(MicoServiceResponseDTO::new)
         	.collect(Collectors.toList());
 	}

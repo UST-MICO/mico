@@ -40,8 +40,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import io.github.ust.mico.core.broker.BackgroundTaskBroker;
-import io.github.ust.mico.core.dto.MicoApplicationJobStatusResponseDTO;
-import io.github.ust.mico.core.dto.MicoServiceBackgroundTaskResponseDTO;
+import io.github.ust.mico.core.dto.response.MicoApplicationJobStatusResponseDTO;
+import io.github.ust.mico.core.dto.response.MicoServiceBackgroundTaskResponseDTO;
 import io.github.ust.mico.core.model.MicoServiceBackgroundTask;
 
 @RestController

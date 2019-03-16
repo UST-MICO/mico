@@ -24,6 +24,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
+import io.github.ust.mico.core.util.KubernetesNameNormalizer;
 import org.hibernate.validator.constraints.URL;
 
 import com.fasterxml.jackson.annotation.JsonSetter;
@@ -69,12 +70,12 @@ public class MicoServiceRequestDTO {
             @ExtensionProperty(name = "title", value = "Short Name"),
             @ExtensionProperty(name = "pattern", value = Patterns.KUBERNETES_NAMING_REGEX),
             @ExtensionProperty(name = "minLength", value = "3"),
-            @ExtensionProperty(name = "maxLength", value = "253"),
+            @ExtensionProperty(name = "maxLength", value = KubernetesNameNormalizer.MICO_NAME_MAX_SIZE +""),
             @ExtensionProperty(name = "x-order", value = "10"),
             @ExtensionProperty(name = "description", value = "A unique name of the MicoService.")
         }
     )})
-    @Size(min = 3, max = 253, message = "must have a length between 3 and 253")
+    @Size(min = 3, max = KubernetesNameNormalizer.MICO_NAME_MAX_SIZE, message = "must have a length between 3 and " + KubernetesNameNormalizer.MICO_NAME_MAX_SIZE)
     @Pattern(regexp = Patterns.KUBERNETES_NAMING_REGEX, message = Patterns.KUBERNETES_NAMING_MESSAGE)
     private String shortName;
 

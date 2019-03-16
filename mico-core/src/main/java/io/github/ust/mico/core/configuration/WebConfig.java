@@ -21,7 +21,6 @@ package io.github.ust.mico.core.configuration;
 
 import java.util.List;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -32,8 +31,11 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Configuration
 @Slf4j
+@SuppressWarnings("deprecation")
 public class WebConfig extends WebMvcConfigurerAdapter {
 
     @Autowired

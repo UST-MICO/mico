@@ -19,13 +19,11 @@
 
 package io.github.ust.mico.core.dto.response;
 
-import java.util.stream.Collectors;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-import io.github.ust.mico.core.dto.request.MicoServiceInterfaceRequestDTO;
-import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.dto.request.MicoEnvironmentVariableRequestDTO;
+import io.github.ust.mico.core.model.MicoEnvironmentVariable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -33,7 +31,7 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for a {@link MicoServiceInterface} intended to use with responses only.
+ * DTO for a {@link MicoEnvironmentVariable} intended to use with responses only.
  */
 @Data
 @ToString(callSuper = true)
@@ -41,28 +39,25 @@ import lombok.experimental.Accessors;
 @AllArgsConstructor
 @Accessors(chain = true)
 @JsonInclude(Include.NON_NULL)
-public class MicoServiceInterfaceResponseDTO extends MicoServiceInterfaceRequestDTO {
+public class MicoEnvironmentVariableResponseDTO extends MicoEnvironmentVariableRequestDTO {
 	
 	// Note: as soon as someone adds fields to this class, please check
 	// whether Jackson requires this class to have a NoArgsConstructor,
 	// if so, add the @NoArgsConstructor to this class.
 	
+    
     // -------------------
     // -> Constructors ---
     // -------------------
     
     /**
-     * Creates an instance of {@code MicoServiceInterfaceResponseDTO} based on a
-     * {@code MicoServiceInterface}.
-     * 
-     * @param serviceInterface the {@link MicoServiceInterface}.
-     */
-	public MicoServiceInterfaceResponseDTO(MicoServiceInterface serviceInterface) {
-		super(serviceInterface);
-		// Ports need to be set explicitly to have a list of MicoServicePortResponseDTOs
-		// and not a list of MicoServicePortRequestDTOs, since the list is declared
-		// in MicoServiceInterfaceRequestDTO and typed to MicoServicePortRequestDTO.
-		setPorts(serviceInterface.getPorts().stream().map(MicoServicePortResponseDTO::new).collect(Collectors.toList()));
+   	 * Creates an instance of {@code MicoEnvironmentVariableResponseDTO} based on a
+   	 * {@code MicoEnvironmentVariable}.
+   	 * 
+   	 * @param environmentVariable the {@link MicoEnvironmentVariable}.
+   	 */
+	public MicoEnvironmentVariableResponseDTO(MicoEnvironmentVariable environmentVariable) {
+		super(environmentVariable);
 	}
 
 }

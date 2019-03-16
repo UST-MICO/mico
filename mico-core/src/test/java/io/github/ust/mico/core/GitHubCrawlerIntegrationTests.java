@@ -45,6 +45,9 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
     private static final String REPO_URI_HTML = "https://github.com/octokit/octokit.rb";
     private static final String RELEASE = "v4.12.0";
 
+    private static final String REPO_HELLO_URI_API = "https://api.github.com/repos/UST-MICO/hello";
+    private static final String HELLO_REPO_SUB_DIR_DOCKERFILE = "DockerfileSubDir/Dockerfile";
+
     @Autowired
     private MicoServiceRepository serviceRepository;
 
@@ -101,6 +104,18 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
         prettyPrint(service);
 
         assertEquals("Expected that repo name 'octokit.rb' is normalized", "octokit-rb", service.getShortName());
+    }
+
+    @Test
+    public void testCrawlerInSubDir() throws IOException {
+        MicoService service = crawler.crawlGitHubRepoLatestRelease(REPO_HELLO_URI_API, HELLO_REPO_SUB_DIR_DOCKERFILE);
+        assertEquals(HELLO_REPO_SUB_DIR_DOCKERFILE, service.getDockerfilePath());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testCrawlerInSubDirNotThere() throws IOException {
+        String dockerfilePath = HELLO_REPO_SUB_DIR_DOCKERFILE + "NOT_THERE";
+        MicoService service = crawler.crawlGitHubRepoLatestRelease(REPO_HELLO_URI_API, dockerfilePath);
     }
 
     private void prettyPrint(Object object) {

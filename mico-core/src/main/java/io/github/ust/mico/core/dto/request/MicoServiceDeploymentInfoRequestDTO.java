@@ -21,6 +21,7 @@ package io.github.ust.mico.core.dto.request;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
@@ -29,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
-import io.github.ust.mico.core.model.MicoLabel;
+import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo.ImagePullPolicy;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo.RestartPolicy;
@@ -71,7 +72,7 @@ public class MicoServiceDeploymentInfoRequestDTO {
 
     /**
      * Those labels are key-value pairs that are attached to the deployment
-     * of this service. Intended to be used to specify identifying attributes
+     * of this {@link MicoService}. Intended to be used to specify identifying attributes
      * that are meaningful and relevant to users, but do not directly imply
      * semantics to the core system. Labels can be used to organize and to select
      * subsets of objects. Labels can be attached to objects at creation time and
@@ -96,7 +97,30 @@ public class MicoServiceDeploymentInfoRequestDTO {
     )})
     @JsonSetter(nulls = Nulls.SKIP)
     @Valid
-    private List<MicoLabel> labels = new ArrayList<>();
+    private List<MicoLabelRequestDTO> labels = new ArrayList<>();
+
+    /**
+     * Environment variables as key-value pairs that are attached to the deployment
+     * of this {@link MicoService}. These environment values can be used by the deployed
+     * {@link MicoService} during runtime. This could be useful to pass information to the
+     * {@link MicoService} that is not known during design time or is likely to change.
+     * Example could be an URL to another {@link MicoService} or an external service.
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Environment Variables"),
+            @ExtensionProperty(name = "x-order", value = "45"),
+            @ExtensionProperty(name = "description", value = "Environment variables as key-value pairs that are attached to the deployment " +
+                "of this MicoService. These environment values can be used by the deployed " +
+                "MicoService during runtime. This could be useful to pass information to the " +
+                "MicoService that is not known during design time or is likely to change. " +
+                "Example could be an URL to another MicoService or an external service.")
+        }
+    )})
+    @JsonSetter(nulls = Nulls.SKIP)
+    @Valid
+    private List<MicoEnvironmentVariableRequestDTO> environmentVariables = new ArrayList<>();
 
     /**
      * Indicates whether and when to pull the image.
@@ -147,7 +171,8 @@ public class MicoServiceDeploymentInfoRequestDTO {
 	 */
 	public MicoServiceDeploymentInfoRequestDTO(MicoServiceDeploymentInfo serviceDeploymentInfo) {
 		this.replicas = serviceDeploymentInfo.getReplicas();
-		this.labels = serviceDeploymentInfo.getLabels();
+		this.labels = serviceDeploymentInfo.getLabels().stream().map(MicoLabelRequestDTO::new).collect(Collectors.toList());
+		this.environmentVariables = serviceDeploymentInfo.getEnvironmentVariables().stream().map(MicoEnvironmentVariableRequestDTO::new).collect(Collectors.toList());
 		this.imagePullPolicy = serviceDeploymentInfo.getImagePullPolicy();
 		this.restartPolicy = serviceDeploymentInfo.getRestartPolicy();
 	}

@@ -17,18 +17,19 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.service.imagebuilder;
+package io.github.ust.mico.core.persistence;
 
-import io.fabric8.kubernetes.api.builder.Function;
-import io.fabric8.kubernetes.client.CustomResourceDoneable;
-import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
+import org.springframework.data.neo4j.annotation.Query;
+import org.springframework.data.neo4j.repository.Neo4jRepository;
 
-@SuppressWarnings("rawtypes")
-public class DoneableBuild extends CustomResourceDoneable<Build> {
+import io.github.ust.mico.core.model.MicoLabel;
+
+public interface MicoLabelRepository extends Neo4jRepository<MicoLabel, Long> {
 	
-	@SuppressWarnings("unchecked")
-	public DoneableBuild(Build resource, Function function) {
-        super(resource, function);
-    }
+	/**
+	 * Deletes all labels that do <b>not</b> have any relationship to another node.
+	 */
+	@Query("MATCH (label:MicoLabel) WHERE size((label)--()) = 0 DELETE (label)")
+	void cleanUp();
 	
 }

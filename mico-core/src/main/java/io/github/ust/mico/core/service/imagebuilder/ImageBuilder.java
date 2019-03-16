@@ -174,7 +174,7 @@ public class ImageBuilder {
     /**
      * @param buildName   the name of the build
      * @param destination the url of the image destination
-     * @param dockerfile  the relative path to the dockerfile
+     * @param dockerfile  the relative path to the Dockerfile
      * @param gitUrl      the URL to the remote git repository
      * @param gitRevision the revision of the git repository. e.g. `master`, commit id or a tag
      * @param namespace   the namespace in which the build is executed
