@@ -38,7 +38,7 @@ import lombok.experimental.Accessors;
 @EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonInclude(Include.NON_NULL)
+@JsonInclude(Include.ALWAYS)
 public class MicoLabelResponseDTO extends MicoLabelRequestDTO {
 	
 	// Note: as soon as someone adds fields to this class, please check
