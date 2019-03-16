@@ -356,20 +356,14 @@ public class ServiceResource {
     public ResponseEntity<Resource<MicoServiceDependencyGraphResponseDTO>> getDependencyGraph(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                               @PathVariable(PATH_VARIABLE_VERSION) String version) {
         MicoService micoServiceRoot = getServiceFromMicoServiceBroker(shortName, version);
-        List<MicoService> micoServices = serviceRepository.findDependeesIncludeDepender(micoServiceRoot.getShortName(), micoServiceRoot.getVersion());
-        List<MicoServiceResponseDTO> micoServiceDTOS = micoServices.stream().map(MicoServiceResponseDTO::new).collect(Collectors.toList());
-        MicoServiceDependencyGraphResponseDTO micoServiceDependencyGraph = new MicoServiceDependencyGraphResponseDTO().setMicoServices(micoServiceDTOS);
-        LinkedList<MicoServiceDependencyGraphEdgeResponseDTO> micoServiceDependencyGraphEdgeList = new LinkedList<>();
-        for (MicoService micoService : micoServices) {
-            //Request each mico service again from the db, because the dependencies are not included
-            //in the result of the custom query. TODO improve query to also include the dependencies (Depth parameter)
-            MicoService micoServiceFromDB = getServiceFromMicoServiceBroker(micoService.getShortName(), micoService.getVersion());
-            micoServiceFromDB.getDependencies().forEach(micoServiceDependency -> {
-                MicoServiceDependencyGraphEdgeResponseDTO edge = new MicoServiceDependencyGraphEdgeResponseDTO(micoService, micoServiceDependency.getDependedService());
-                micoServiceDependencyGraphEdgeList.add(edge);
-            });
+
+        MicoServiceDependencyGraphResponseDTO micoServiceDependencyGraph = null;
+        try {
+            micoServiceDependencyGraph = micoServiceBroker.getDependencyGraph(micoServiceRoot);
+        } catch (MicoServiceNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
-        micoServiceDependencyGraph.setMicoServiceDependencyGraphEdgeList(micoServiceDependencyGraphEdgeList);
+
         return ResponseEntity.ok(new Resource<>(micoServiceDependencyGraph,
                 linkTo(methodOn(ServiceResource.class).getDependencyGraph(shortName, version)).withSelfRel()));
     }
@@ -382,20 +376,6 @@ public class ServiceResource {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
         return micoServiceList;
-    }
-
-    /**
-     * Checks if a service is deployed and throws a ResponseStatusException with the http status CONFLICT (409) if
-     * the service is deployed.
-     *
-     * @param service Checks if this {@link MicoService} is deployed
-     * @throws KubernetesResourceException if the service is deployed. It uses the http status CONFLICT
-     */
-    private void throwConflictIfServiceIsDeployed(MicoService service) throws KubernetesResourceException {
-        if (micoKubernetesClient.isMicoServiceDeployed(service)) {
-            log.info("Micoservice '{}' in version '{}' is deployed. It is not possible to delete a deployed service.", service.getShortName(), service.getVersion());
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Service is currently deployed!");
-        }
     }
 
     protected static Resource<MicoServiceResponseDTO> getServiceResponseDTOResource(MicoService service) {

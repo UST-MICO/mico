@@ -99,8 +99,8 @@ public class ServiceResourceTests {
     @MockBean
     private MicoStatusService micoStatusService;
 
-    @MockBean
-    private MicoServiceRepository serviceRepository;
+//    @MockBean
+//    private MicoServiceRepository serviceRepository;
 
     @MockBean
     private GitHubCrawler crawler;
@@ -537,7 +537,8 @@ public class ServiceResourceTests {
                 .setVersion(VERSION)
                 .setName(null);
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingService));
+        given(micoServiceBroker.getServiceFromDatabase(SHORT_NAME, VERSION)).willReturn(existingService);
+        //given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingService));
 
         ResultActions resultUpdate = mvc.perform(put(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION)
                 .content(mapper.writeValueAsBytes(new MicoServiceRequestDTO(updatedService)))
@@ -570,8 +571,10 @@ public class ServiceResourceTests {
 
         ArgumentCaptor<MicoService> serviceArgumentCaptor = ArgumentCaptor.forClass(MicoService.class);
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingService));
-        given(serviceRepository.save(any(MicoService.class))).willReturn(expectedService);
+        given(micoServiceBroker.getServiceFromDatabase(SHORT_NAME, VERSION)).willReturn(existingService);
+
+//        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingService));
+//        given(serviceRepository.save(any(MicoService.class))).willReturn(expectedService);
 
         mvc.perform(put(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION)
                 .content(mapper.writeValueAsBytes(updatedServiceRequestDto))
@@ -579,7 +582,7 @@ public class ServiceResourceTests {
                 .andDo(print())
                 .andExpect(status().isOk());
 
-        verify(serviceRepository, times(1)).save(serviceArgumentCaptor.capture());
+        verify(micoServiceBroker, times(1)).persistService(serviceArgumentCaptor.capture());
         MicoService savedMicoService = serviceArgumentCaptor.getValue();
         assertNotNull(savedMicoService);
         assertEquals("Actual service does not match expected", expectedService, savedMicoService);
@@ -718,7 +721,7 @@ public class ServiceResourceTests {
                 .setVersion(VERSION)
                 .setDescription(DESCRIPTION);
 
-        given(serviceRepository.findByShortName(SHORT_NAME)).willReturn(Collections.singletonList(service));
+        given(micoServiceBroker.getAllVersionsOfServiceFromDatabase(SHORT_NAME)).willReturn(Collections.singletonList(service));
         given(micoKubernetesClient.isMicoServiceDeployed(any())).willReturn(true);
 
         mvc.perform(delete(SERVICES_PATH + "/" + SHORT_NAME)
@@ -734,7 +737,7 @@ public class ServiceResourceTests {
                 .setVersion(VERSION)
                 .setDescription(DESCRIPTION);
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
+        given(micoServiceBroker.getServiceFromDatabase(SHORT_NAME, VERSION)).willReturn(service);
         given(micoKubernetesClient.isMicoServiceDeployed(any())).willReturn(true);
 
         mvc.perform(delete(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION)

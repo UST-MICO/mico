@@ -1,5 +1,8 @@
 package io.github.ust.mico.core.broker;
 
+import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphEdgeResponseDTO;
+import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphResponseDTO;
+import io.github.ust.mico.core.dto.response.MicoServiceResponseDTO;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.MicoServiceAlreadyExistsException;
 import io.github.ust.mico.core.exception.MicoServiceHasDependersException;
@@ -18,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -246,6 +250,29 @@ public class MicoServiceBroker {
         log.debug("Updated service: {}", updatedService);
 
         return updatedService;
+    }
+
+    //TODO: Create test
+    //TODO: We shoud not use DTOs here, improve
+    public MicoServiceDependencyGraphResponseDTO getDependencyGraph(MicoService micoServiceRoot) throws MicoServiceNotFoundException {
+        List<MicoService> micoServices = serviceRepository.findDependeesIncludeDepender(micoServiceRoot.getShortName(),
+                micoServiceRoot.getVersion());
+
+        List<MicoServiceResponseDTO> micoServiceDTOS = micoServices.stream().map(MicoServiceResponseDTO::new).collect(Collectors.toList());
+        MicoServiceDependencyGraphResponseDTO micoServiceDependencyGraph = new MicoServiceDependencyGraphResponseDTO().setMicoServices(micoServiceDTOS);
+        LinkedList<MicoServiceDependencyGraphEdgeResponseDTO> micoServiceDependencyGraphEdgeList = new LinkedList<>();
+        for (MicoService micoService : micoServices) {
+            //Request each mico service again from the db, because the dependencies are not included
+            //in the result of the custom query. TODO improve query to also include the dependencies (Depth parameter)
+            MicoService micoServiceFromDB = getServiceFromDatabase(micoService.getShortName(), micoService.getVersion());
+            micoServiceFromDB.getDependencies().forEach(micoServiceDependency -> {
+                MicoServiceDependencyGraphEdgeResponseDTO edge = new MicoServiceDependencyGraphEdgeResponseDTO(micoService, micoServiceDependency.getDependedService());
+                micoServiceDependencyGraphEdgeList.add(edge);
+            });
+        }
+        micoServiceDependencyGraph.setMicoServiceDependencyGraphEdgeList(micoServiceDependencyGraphEdgeList);
+
+        return micoServiceDependencyGraph;
     }
 
 }
