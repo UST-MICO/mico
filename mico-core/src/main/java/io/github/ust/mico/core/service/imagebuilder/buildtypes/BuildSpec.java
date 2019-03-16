@@ -19,6 +19,7 @@
 
 package io.github.ust.mico.core.service.imagebuilder.buildtypes;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.*;
@@ -29,6 +30,7 @@ import java.util.List;
  * BuildSpec is the spec for a Build resource.
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonIgnoreProperties(value = "Status")
 @JsonPropertyOrder({
     "serviceAccountName",
     "template",
