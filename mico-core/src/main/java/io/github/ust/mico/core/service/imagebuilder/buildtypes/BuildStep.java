@@ -21,10 +21,13 @@ package io.github.ust.mico.core.service.imagebuilder.buildtypes;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import io.fabric8.kubernetes.api.model.EnvVar;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -32,19 +35,10 @@ import java.util.List;
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonPropertyOrder({
-    "name",
-    "image",
-    "args",
-    "env",
-    "command"
-})
-@Getter
-@Builder
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
-@EqualsAndHashCode
+@Accessors(chain = true)
 public class BuildStep {
 
     /**
@@ -72,8 +66,7 @@ public class BuildStep {
      * Cannot be updated.
      * More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
      */
-    @Singular("command")
-    private List<String> command;
+    private List<String> command = new ArrayList<>();
 
     /**
      * Optional. Arguments to the entrypoint.
@@ -85,8 +78,7 @@ public class BuildStep {
      * Cannot be updated.
      * More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
      */
-    @Singular
-    private List<String> args;
+    private List<String> args = new ArrayList<>();
 
     /**
      * Optional. Container's working directory.
@@ -104,8 +96,7 @@ public class BuildStep {
      * Optional. List of environment variables to set in the container.
      * Cannot be updated.
      */
-    @Singular("env")
-    private List<EnvVar> env;
+    private List<EnvVar> env = new ArrayList<>();
 
     // private ResourceRequirements resources;
 
