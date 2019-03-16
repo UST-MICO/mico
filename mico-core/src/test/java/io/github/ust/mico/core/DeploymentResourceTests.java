@@ -54,7 +54,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -77,40 +77,54 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @EnableAutoConfiguration
 @EnableConfigurationProperties(value = {CorsConfig.class})
 public class DeploymentResourceTests {
-    public static @ClassRule
-    RuleChain rules = RuleChain.outerRule(EmbeddedRedisServer.runningAt(6379).suppressExceptions());
+    
+    @ClassRule
+    public static RuleChain rules = RuleChain.outerRule(EmbeddedRedisServer.runningAt(6379).suppressExceptions());
+    
     private static final String BASE_PATH = "/applications";
     private static final String DEPLOYMENT_NAME = "deployment-name";
     private static final String SERVICE_NAME = "service-name";
     private static final String NAMESPACE_NAME = "namespace-name";
 
     @Captor
-    ArgumentCaptor<Consumer<String>> onSuccessArgumentCaptor;
+    private ArgumentCaptor<Consumer<String>> onSuccessArgumentCaptor;
+    
     @Captor
-    ArgumentCaptor<Function<Throwable, Void>> onErrorArgumentCaptor;
+    private ArgumentCaptor<Function<Throwable, Void>> onErrorArgumentCaptor;
+    
     @Captor
-    ArgumentCaptor<MicoService> micoServiceArgumentCaptor;
+    private ArgumentCaptor<MicoService> micoServiceArgumentCaptor;
+    
     @Captor
-    ArgumentCaptor<MicoServiceInterface> micoServiceInterfaceArgumentCaptor;
+    private ArgumentCaptor<MicoServiceInterface> micoServiceInterfaceArgumentCaptor;
+    
     @Captor
-    ArgumentCaptor<MicoServiceDeploymentInfo> serviceDeploymentInfoArgumentCaptor;
+    private ArgumentCaptor<MicoServiceDeploymentInfo> serviceDeploymentInfoArgumentCaptor;
 
     @Autowired
     private MockMvc mvc;
+    
     @MockBean
     private MicoApplicationRepository applicationRepository;
+    
     @MockBean
     private MicoServiceRepository serviceRepository;
+    
     @MockBean
     private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
+    
     @MockBean
     private MicoBackgroundTaskRepository backgroundTaskRepository;
+    
     @MockBean
     private BackgroundTaskBroker backgroundTaskBroker;
+    
     @MockBean
     private ImageBuilder imageBuilder;
+    
     @MockBean
     private MicoCoreBackgroundTaskFactory factory;
+    
     @MockBean
     private MicoKubernetesClient micoKubernetesClient;
 
@@ -165,7 +179,7 @@ public class DeploymentResourceTests {
                 .setApplicationShortName(SHORT_NAME)
                 .setApplicationVersion(VERSION)
                 .setStatus(MicoServiceBackgroundTask.Status.PENDING)
-                .setJobs(Arrays.asList(mockTask)));
+                .setJobs(Collections.singletonList(mockTask)));
 
         mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/deploy"))
             .andDo(print())
@@ -244,4 +258,5 @@ public class DeploymentResourceTests {
 
         return service;
     }
+    
 }

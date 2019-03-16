@@ -86,6 +86,9 @@ public class ApplicationResource {
     
     @Autowired
     private MicoEnvironmentVariableRepository environmentVariableRepository;
+    
+    @Autowired
+    private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
 
     @Autowired
     private MicoKubernetesClient micoKubernetesClient;
@@ -363,7 +366,7 @@ public class ApplicationResource {
     	// "tangling" (without relationships) labels (nodes), hence the manual clean up.
     	labelRepository.cleanUp();
     	environmentVariableRepository.cleanUp();
-    	// NOTE: Clean up Kubernetes deployment info.
+    	kubernetesDeploymentInfoRepository.cleanUp();
     	log.debug("Service deployment information for service '{}' in application '{}' '{}' has been updated.", serviceShortName, shortName, version);
     	
         // TODO: Update actual Kubernetes deployment (see issue mico#416).

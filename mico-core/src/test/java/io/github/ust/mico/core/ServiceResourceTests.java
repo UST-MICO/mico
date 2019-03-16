@@ -805,4 +805,5 @@ public class ServiceResourceTests {
 
         resultPromotion.andExpect(status().isOk());
     }
+
 }

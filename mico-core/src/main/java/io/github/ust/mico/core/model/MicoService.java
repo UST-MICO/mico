@@ -22,12 +22,6 @@ package io.github.ust.mico.core.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
-import io.github.ust.mico.core.util.Patterns;
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.Extension;
-import io.swagger.annotations.ExtensionProperty;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
@@ -39,8 +33,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
-
-import javax.validation.constraints.Pattern;
 
 /**
  * Represents a service in the context of MICO.
@@ -137,35 +129,9 @@ public class MicoService {
     private String gitCloneUrl;
 
     /**
-     * The URL to the get the information about a specific git release.
+     * The path to the Dockerfile must be relative to the root folder of the git repository.
      */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Git Release Info Url"),
-            @ExtensionProperty(name = "readOnly", value = "true"),
-            @ExtensionProperty(name = "x-order", value = "120"),
-            @ExtensionProperty(name = "description", value = "The URL to the get the information about a specific " +
-                "git release.")
-        }
-    )})
-    // TODO: Not required by the UI. Omit it in the DTO. Covered in mico#512
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private String gitReleaseInfoUrl;
 
-    /**
-     * The path to the Dockerfile must be relative to the root folder of the git repository
-     */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Path to Dockerfile"),
-            @ExtensionProperty(name = "pattern", value = Patterns.RELATIVE_PATH_REGEX),
-            @ExtensionProperty(name = "x-order", value = "130"),
-            @ExtensionProperty(name = "description", value = "The path to the Dockerfile must be relative to the root folder of the git repository")
-        }
-    )})
-    @Pattern(regexp = Patterns.RELATIVE_PATH_REGEX, message = "must be relative to the root folder of the git repository")
     private String dockerfilePath;
 
     /**

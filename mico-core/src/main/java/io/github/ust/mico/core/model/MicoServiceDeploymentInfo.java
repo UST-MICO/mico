@@ -73,13 +73,6 @@ public class MicoServiceDeploymentInfo {
     // ----------------------
 
     /**
-     * Information about the actual Kubernetes resources created by a deployment.
-     * Contains details about the used Kubernetes {@link Deployment} and {@link Service Services}.
-     */
-    @Relationship(type = "HAS")
-    private KubernetesDeploymentInfo kubernetesDeploymentInfo;
-
-    /**
      * Number of desired instances. Defaults to 1.
      */
     private int replicas = 1;
@@ -119,6 +112,14 @@ public class MicoServiceDeploymentInfo {
     private RestartPolicy restartPolicy = RestartPolicy.ALWAYS;
 
     /**
+     * Information about the actual Kubernetes resources created by a deployment.
+     * Contains details about the used Kubernetes {@link Deployment} and {@link Service Services}.
+     */
+    @Relationship(type = "HAS")
+    private KubernetesDeploymentInfo kubernetesDeploymentInfo;
+
+
+    /**
      * Enumeration for the different policies specifying
      * when to pull an image.
      */
@@ -148,7 +149,6 @@ public class MicoServiceDeploymentInfo {
             return value;
         }
     }
-
 
     /**
      * Enumeration for all supported restart policies.
@@ -214,9 +214,9 @@ public class MicoServiceDeploymentInfo {
      * of the properties of the given {@link MicoServiceDeploymentInfoResponseDTO}.
      */
     public MicoServiceDeploymentInfo applyValuesFrom(MicoServiceDeploymentInfoResponseDTO serviceDeploymentInfoDto) {
-    	return applyValuesFrom((MicoServiceDeploymentInfoRequestDTO) serviceDeploymentInfoDto)
-		    .setKubernetesDeploymentInfo(serviceDeploymentInfoDto.getKubernetesDeploymentInfo() == null ? null
-		        : KubernetesDeploymentInfo.valueOf(serviceDeploymentInfoDto.getKubernetesDeploymentInfo()));
+        return applyValuesFrom((MicoServiceDeploymentInfoRequestDTO) serviceDeploymentInfoDto)
+            .setKubernetesDeploymentInfo(serviceDeploymentInfoDto.getKubernetesDeploymentInfo() == null ? null
+                : KubernetesDeploymentInfo.valueOf(serviceDeploymentInfoDto.getKubernetesDeploymentInfo()));
     }
 
 }
