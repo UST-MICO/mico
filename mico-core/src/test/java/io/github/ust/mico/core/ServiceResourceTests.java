@@ -658,9 +658,9 @@ public class ServiceResourceTests {
 
         prettyPrint(expectedService);
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingService1));
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME_1, VERSION_1_0_1)).willReturn(Optional.of(existingService2));
-        given(serviceRepository.save(any(MicoService.class))).willReturn(expectedService);
+        given(micoServiceBroker.getServiceFromDatabase(SHORT_NAME, VERSION)).willReturn(existingService1);
+        given(micoServiceBroker.getServiceFromDatabase(SHORT_NAME_1, VERSION_1_0_1)).willReturn(existingService2);
+        given(micoServiceBroker.persistNewDependencyBetweenServices(existingService1,existingService2)).willReturn(expectedService);
 
         final ResultActions result = mvc.perform(post(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION +
             DEPENDEES_SUBPATH + "/" + newDependency.getDependedService().getShortName() + "/" + newDependency.getDependedService().getVersion())

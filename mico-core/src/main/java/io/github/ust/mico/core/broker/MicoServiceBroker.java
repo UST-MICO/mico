@@ -187,4 +187,33 @@ public class MicoServiceBroker {
         return serviceRepository.findDependees(service.getShortName(), service.getVersion());
     }
 
+    //TODO: Create test
+    public boolean checkIfDependencyAlreadyExists(MicoService service, MicoService serviceDependee) {
+        boolean dependencyAlreadyExists = (service.getDependencies() != null) && service.getDependencies().stream().anyMatch(
+                dependency -> dependency.getDependedService().getShortName().equals(serviceDependee.getShortName())
+                        && dependency.getDependedService().getVersion().equals(serviceDependee.getVersion()));
+
+        log.debug("Check if the dependency already exists is '{}", dependencyAlreadyExists);
+
+        return dependencyAlreadyExists;
+    }
+
+    //TODO: Create test
+    public MicoService persistNewDependencyBetweenServices(MicoService service, MicoService serviceDependee) {
+        MicoServiceDependency processedServiceDependee = new MicoServiceDependency()
+                .setDependedService(serviceDependee)
+                .setService(service);
+
+        log.info("New dependency for MicoService '{}' '{}' -[:DEPENDS_ON]-> '{}' '{}'",
+                service.getShortName(),
+                service.getVersion(),
+                processedServiceDependee.getDependedService().getShortName(),
+                processedServiceDependee.getDependedService().getVersion());
+
+        service.getDependencies().add(processedServiceDependee);
+        serviceRepository.save(service);
+
+        return service;
+    }
+
 }
