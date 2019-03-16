@@ -157,7 +157,7 @@ public class DeploymentResourceTests {
             .setServiceVersion(service.getVersion())
             .setType(MicoServiceBackgroundTask.Type.BUILD);
 
-        given(backgroundTaskRepository.findByMicoServiceShortNameAndMicoServiceVersionAndType(service.getShortName(), service.getVersion(), MicoServiceBackgroundTask.Type.BUILD))
+        given(backgroundTaskRepository.findByServiceShortNameAndServiceVersionAndType(service.getShortName(), service.getVersion(), MicoServiceBackgroundTask.Type.BUILD))
             .willReturn(Optional.of(mockTask));
 
         given(backgroundTaskBroker.getJobStatusByApplicationShortNameAndVersion(SHORT_NAME, VERSION))

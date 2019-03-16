@@ -159,7 +159,7 @@ public class DeploymentResource {
     }
 
     private Optional<MicoServiceBackgroundTask> getTaskByMicoService(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundTask.Type type) {
-        return backgroundTaskRepo.findByMicoServiceShortNameAndMicoServiceVersionAndType(micoServiceShortName, micoServiceVersion, type);
+        return backgroundTaskRepo.findByServiceShortNameAndServiceVersionAndType(micoServiceShortName, micoServiceVersion, type);
     }
 
     private void saveMicoBackgroundTaskStatus(String micoServiceShortName, String micoServiceVersion,
