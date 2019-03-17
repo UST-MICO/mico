@@ -181,15 +181,15 @@ public class ApplicationResource {
         application.getServiceDeploymentInfos().forEach(sdi -> sdi.setId(null));
         application.getServiceDeploymentInfos().forEach(sdi -> sdi.getLabels().forEach(label -> label.setId(null)));
         application.getServiceDeploymentInfos().forEach(sdi -> sdi.getEnvironmentVariables().forEach(envVar -> envVar.setId(null)));
-        application.getServiceDeploymentInfos().forEach(sdi -> {
-        	if (sdi.getKubernetesDeploymentInfo() != null) {
-        		sdi.getKubernetesDeploymentInfo().setId(null);
-        	}
-        });
+        // The actual Kubernetes deployment information must not be copied, because the new application
+        // is considered to be not deployed yet.
+        application.getServiceDeploymentInfos().forEach(sdi -> sdi.setKubernetesDeploymentInfo(null));
 
         // Save the new (promoted) application in the database.
         MicoApplication updatedApplication = applicationRepository.save(application);
         log.debug("Saved following application in database: {}", updatedApplication);
+
+        log.info("Promoted application '{}': {} → {}", shortName, version, updatedApplication.getVersion());
 
         return ResponseEntity.ok(getApplicationWithServicesResponseDTOResourceWithDeploymentStatus(updatedApplication));
     }

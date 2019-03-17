@@ -25,8 +25,7 @@ import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
 import static io.github.ust.mico.core.TestConstants.VERSION;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -450,10 +449,21 @@ public class ApplicationResourceTests {
     @Test
     public void promoteApplication() throws Exception {
         MicoService service = new MicoService()
+            .setId(ID_1)
             .setShortName(SERVICE_SHORT_NAME)
             .setVersion(SERVICE_VERSION)
             .setName(NAME);
-        MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo().setId(ID_1).setService(service);
+        MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo()
+            .setId(2000L)
+            .setService(service)
+            .setReplicas(5)
+            .setLabels(CollectionUtils.listOf(new MicoLabel(3000L, "key", "value")))
+            .setEnvironmentVariables(CollectionUtils.listOf(new MicoEnvironmentVariable(4000L, "name", "key")))
+            .setKubernetesDeploymentInfo(new KubernetesDeploymentInfo()
+                .setId(5000L)
+                .setNamespace("namespace")
+                .setDeploymentName("deployment")
+                .setServiceNames(CollectionUtils.listOf("service")));
 
         MicoApplication application = new MicoApplication()
             .setId(ID)
@@ -472,7 +482,9 @@ public class ApplicationResourceTests {
             .setVersion(newVersion)
             .setName(NAME);
         updatedApplication.getServices().add(service);
-        MicoServiceDeploymentInfo updatedDeploymentInfo = new MicoServiceDeploymentInfo().setId(null).setService(service);
+        // Service deployment information is copied without the actual Kubernetes deployment information.
+        MicoServiceDeploymentInfo updatedDeploymentInfo = new MicoServiceDeploymentInfo()
+            .setId(null).setService(service).setReplicas(5).setKubernetesDeploymentInfo(null);
         updatedApplication.getServiceDeploymentInfos().add(updatedDeploymentInfo);
 
         MicoApplication expectedApplication = new MicoApplication()
@@ -481,11 +493,14 @@ public class ApplicationResourceTests {
             .setVersion(newVersion)
             .setName(NAME);
         expectedApplication.getServices().add(service);
-        MicoServiceDeploymentInfo expectedDeploymentInfo = new MicoServiceDeploymentInfo().setId(ID_2).setService(service);
+        MicoServiceDeploymentInfo expectedDeploymentInfo = new MicoServiceDeploymentInfo()
+            .setId(ID_2).setService(service).setReplicas(5).setKubernetesDeploymentInfo(null);
         expectedApplication.getServiceDeploymentInfos().add(expectedDeploymentInfo);
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
-        given(applicationRepository.save(eq(updatedApplication))).willReturn(expectedApplication);
+        given(applicationRepository.save(any(MicoApplication.class))).willReturn(expectedApplication);
+
+        ArgumentCaptor<MicoApplication> applicationArgumentCaptor = ArgumentCaptor.forClass(MicoApplication.class);
 
         mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_PROMOTE)
             .content(mapper.writeValueAsBytes(new MicoVersionRequestDTO(newVersion)))
@@ -499,6 +514,18 @@ public class ApplicationResourceTests {
             .andExpect(jsonPath(SERVICE_LIST_PATH + "[0].shortName", is(SERVICE_SHORT_NAME)))
             .andExpect(jsonPath(SERVICE_LIST_PATH + "[0].version", is(SERVICE_VERSION)))
             .andExpect(jsonPath(SERVICE_LIST_PATH + "[0].name", is(NAME)));
+
+        verify(applicationRepository, times(1)).save(applicationArgumentCaptor.capture());
+        MicoApplication savedMicoApplication = applicationArgumentCaptor.getValue();
+        assertNotNull(savedMicoApplication);
+        assertEquals("Expected that new application includes 1 MicoService",1, savedMicoApplication.getServices().size());
+        assertEquals("MicoService does not match expected", service, savedMicoApplication.getServices().get(0));
+        assertEquals("Expected that new application includes 1 service deployment information",1, savedMicoApplication.getServiceDeploymentInfos().size());
+        assertEquals("MicoService in service deployment information does not match expected", service, savedMicoApplication.getServiceDeploymentInfos().get(0).getService());
+        assertEquals("Replicas do not match expected", 5, savedMicoApplication.getServiceDeploymentInfos().get(0).getReplicas());
+        assertEquals("Expected one Kubernetes label", 1, savedMicoApplication.getServiceDeploymentInfos().get(0).getLabels().size());
+        assertEquals("Expected one Kubernetes environment variable", 1, savedMicoApplication.getServiceDeploymentInfos().get(0).getEnvironmentVariables().size());
+        assertNull("Expected actual Kubernetes deployment information to be null", savedMicoApplication.getServiceDeploymentInfos().get(0).getKubernetesDeploymentInfo());
     }
 
     @Test
