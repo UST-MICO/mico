@@ -41,7 +41,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
      */
     @Query("MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
     	+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
-        + "RETURN (sdi:MicoServiceDeploymentInfo)-[:HAS*0..1]->()")
+        + "RETURN (sdi:MicoServiceDeploymentInfo)-[:FOR|:HAS*0..1]->()")
     List<MicoServiceDeploymentInfo> findAllByApplication(
         @Param("applicationShortName") String applicationShortName,
         @Param("applicationVersion") String applicationVersion);
@@ -57,7 +57,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
     @Query("MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
     	+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
 		+ "AND s.shortName = {serviceShortName} " 
-        + "RETURN (sdi:MicoServiceDeploymentInfo)-[:HAS*0..1]->()")
+        + "RETURN (sdi:MicoServiceDeploymentInfo)-[:FOR|:HAS*0..1]->()")
     Optional<MicoServiceDeploymentInfo> findByApplicationAndService(
         @Param("applicationShortName") String applicationShortName,
         @Param("applicationVersion") String applicationVersion,
@@ -75,7 +75,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
     @Query("MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
     	+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
     	+ "AND s.shortName = {serviceShortName} AND s.version = {serviceVersion} "
-        + "RETURN (sdi:MicoServiceDeploymentInfo)-[:HAS*0..1]->()")
+        + "RETURN (sdi:MicoServiceDeploymentInfo)-[:FOR|:HAS*0..1]->()")
     Optional<MicoServiceDeploymentInfo> findByApplicationAndService(
         @Param("applicationShortName") String applicationShortName,
         @Param("applicationVersion") String applicationVersion,
