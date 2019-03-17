@@ -106,12 +106,6 @@ public class MicoServiceDeploymentInfo {
     private ImagePullPolicy imagePullPolicy = ImagePullPolicy.ALWAYS;
 
     /**
-     * Restart policy for all containers.
-     * Default restart policy is {@link RestartPolicy#ALWAYS}.
-     */
-    private RestartPolicy restartPolicy = RestartPolicy.ALWAYS;
-
-    /**
      * Information about the actual Kubernetes resources created by a deployment.
      * Contains details about the used Kubernetes {@link Deployment} and {@link Service Services}.
      */
@@ -151,36 +145,6 @@ public class MicoServiceDeploymentInfo {
     }
 
     /**
-     * Enumeration for all supported restart policies.
-     */
-    public enum RestartPolicy {
-
-        @JsonProperty("Always")
-        ALWAYS("Always"),
-        @JsonProperty("OnFailure")
-        ON_FAILURE("OnFailure"),
-        @JsonProperty("Never")
-        NEVER("Never");
-
-        private final String value;
-
-        /**
-         * @param value the value
-         */
-        RestartPolicy(final String value) {
-            this.value = value;
-        }
-
-        /* (non-Javadoc)
-         * @see java.lang.Enum#toString()
-         */
-        @Override
-        public String toString() {
-            return value;
-        }
-    }
-
-    /**
      * Applies the values of all properties of a
      * {@code MicoServiceDeploymentInfoRequestDTO} to this
      * {@code MicoServiceDeploymentInfo}. Note that the id
@@ -194,8 +158,7 @@ public class MicoServiceDeploymentInfo {
         return setReplicas(serviceDeploymentInfoDto.getReplicas())
             .setLabels(serviceDeploymentInfoDto.getLabels().stream().map(MicoLabel::valueOf).collect(Collectors.toList()))
             .setEnvironmentVariables(serviceDeploymentInfoDto.getEnvironmentVariables().stream().map(MicoEnvironmentVariable::valueOf).collect(Collectors.toList()))
-            .setImagePullPolicy(serviceDeploymentInfoDto.getImagePullPolicy())
-            .setRestartPolicy(serviceDeploymentInfoDto.getRestartPolicy());
+            .setImagePullPolicy(serviceDeploymentInfoDto.getImagePullPolicy());
     }
 
 

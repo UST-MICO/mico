@@ -33,7 +33,6 @@ import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPl
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo.ImagePullPolicy;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo.RestartPolicy;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -140,24 +139,6 @@ public class MicoServiceDeploymentInfoRequestDTO {
     @JsonSetter(nulls = Nulls.SKIP)
     private ImagePullPolicy imagePullPolicy = ImagePullPolicy.ALWAYS;
 
-    /**
-     * Restart policy for all containers.
-     * Default restart policy is {@link RestartPolicy#ALWAYS}.
-     * {@code null} is ignored.
-     */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Restart Policy"),
-            @ExtensionProperty(name = "default", value = "ALWAYS"),
-            @ExtensionProperty(name = "x-order", value = "60"),
-            @ExtensionProperty(name = "description", value = "Restart policy for all containers.\n " +
-                "Null is ignored.")
-        }
-    )})
-    @JsonSetter(nulls = Nulls.SKIP)
-    private RestartPolicy restartPolicy = RestartPolicy.ALWAYS;
-
     
     // -------------------
     // -> Constructors ---
@@ -174,7 +155,6 @@ public class MicoServiceDeploymentInfoRequestDTO {
 		this.labels = serviceDeploymentInfo.getLabels().stream().map(MicoLabelRequestDTO::new).collect(Collectors.toList());
 		this.environmentVariables = serviceDeploymentInfo.getEnvironmentVariables().stream().map(MicoEnvironmentVariableRequestDTO::new).collect(Collectors.toList());
 		this.imagePullPolicy = serviceDeploymentInfo.getImagePullPolicy();
-		this.restartPolicy = serviceDeploymentInfo.getRestartPolicy();
 	}
 
 }

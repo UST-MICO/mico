@@ -118,7 +118,6 @@ public class MicoKubernetesClientTests {
         MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
             .setService(micoService)
             .setReplicas(3)
-            .setRestartPolicy(MicoServiceDeploymentInfo.RestartPolicy.NEVER)
             .setImagePullPolicy(MicoServiceDeploymentInfo.ImagePullPolicy.NEVER)
             .setLabels(CollectionUtils.listOf(label))
             .setEnvironmentVariables(CollectionUtils.listOf(environmentVariable));
@@ -132,7 +131,6 @@ public class MicoKubernetesClientTests {
         assertNotNull(actualDeployment);
         assertTrue("Custom label does not exist", actualDeployment.getMetadata().getLabels().containsKey(label.getKey()));
         assertEquals("Replicas does not match expected", serviceDeploymentInfo.getReplicas(), actualDeployment.getSpec().getReplicas().intValue());
-        assertEquals("RestartPolicy does not match expected", serviceDeploymentInfo.getRestartPolicy().toString(), actualDeployment.getSpec().getTemplate().getSpec().getRestartPolicy());
         assertEquals("Expected 1 container", 1, actualDeployment.getSpec().getTemplate().getSpec().getContainers().size());
         assertEquals("Name of container does not match short name of the MicoService",micoService.getShortName(), actualDeployment.getSpec().getTemplate().getSpec().getContainers().get(0).getName());
         assertEquals("Image of container does not match expected", micoService.getDockerImageUri(), actualDeployment.getSpec().getTemplate().getSpec().getContainers().get(0).getImage());

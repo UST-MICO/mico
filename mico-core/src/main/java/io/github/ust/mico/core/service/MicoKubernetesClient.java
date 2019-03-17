@@ -147,7 +147,6 @@ public class MicoKubernetesClient {
             .addToLabels(LABEL_INSTANCE_KEY, deploymentUid)
             .endMetadata()
             .withNewSpec()
-            .withRestartPolicy(serviceDeploymentInfo.getRestartPolicy().toString())
             .withContainers(
                 new ContainerBuilder()
                     .withName(micoService.getShortName())
