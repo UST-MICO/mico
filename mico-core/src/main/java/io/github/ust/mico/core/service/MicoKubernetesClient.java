@@ -106,6 +106,9 @@ public class MicoKubernetesClient {
      */
     public Deployment createMicoService(MicoServiceDeploymentInfo serviceDeploymentInfo) throws KubernetesResourceException {
         MicoService micoService = serviceDeploymentInfo.getService();
+        if(micoService == null) {
+            throw new IllegalArgumentException("MicoService of service deployment information must not be null!");
+        }
         String namespace = micoKubernetesConfig.getNamespaceMicoWorkspace();
         String deploymentUid;
 
@@ -391,7 +394,7 @@ public class MicoKubernetesClient {
         String namespace = micoKubernetesConfig.getNamespaceMicoWorkspace();
 
         List<Deployment> deploymentList = kubernetesClient.apps().deployments().inNamespace(namespace).withLabels(labels).list().getItems();
-        log.debug("Found {} Kubernetes deployment(s) that match the labels '{}': '{}'", deploymentList.size(), labels.toString(), deploymentList);
+        log.debug("Found {} Kubernetes deployment(s) that match the labels '{}'.", deploymentList.size(), labels.toString());
 
         if (deploymentList.isEmpty()) {
             log.debug("No Kubernetes deployment found for MicoService '{}' '{}'", micoService.getShortName(), micoService.getVersion());
@@ -416,8 +419,7 @@ public class MicoKubernetesClient {
      * @return an {@link Optional<Service>} with the Kubernetes {@link Service},
      * or an empty {@link Optional<Service>} if there is no Kubernetes {@link Service} for this {@link MicoServiceInterface}.
      */
-    public Optional<Service> getInterfaceByNameOfMicoService(MicoService micoService, String
-        micoServiceInterfaceName) throws KubernetesResourceException {
+    public Optional<Service> getInterfaceByNameOfMicoService(MicoService micoService, String micoServiceInterfaceName) throws KubernetesResourceException {
         Map<String, String> labels = CollectionUtils.mapOf(
             LABEL_NAME_KEY, micoService.getShortName(),
             LABEL_VERSION_KEY, micoService.getVersion(),
@@ -425,7 +427,7 @@ public class MicoKubernetesClient {
         );
         String namespace = micoKubernetesConfig.getNamespaceMicoWorkspace();
         List<Service> serviceList = kubernetesClient.services().inNamespace(namespace).withLabels(labels).list().getItems();
-        log.debug("Found {} Kubernetes service(s) that match the labels '{}': '{}'", serviceList.size(), labels.toString(), serviceList);
+        log.debug("Found {} Kubernetes service(s) that match the labels '{}'.", serviceList.size(), labels.toString());
 
         if (serviceList.isEmpty()) {
             log.debug("No Kubernetes Service found for MicoServiceInterface '{}' of MicoService '{}' '{}'",
@@ -456,7 +458,7 @@ public class MicoKubernetesClient {
         );
         String namespace = micoKubernetesConfig.getNamespaceMicoWorkspace();
         List<Service> serviceList = kubernetesClient.services().inNamespace(namespace).withLabels(labels).list().getItems();
-        log.debug("Found {} Kubernetes service(s) that match the labels '{}': '{}'", serviceList.size(), labels.toString(), serviceList);
+        log.debug("Found {} Kubernetes service(s) that match the labels '{}'.", serviceList.size(), labels.toString());
 
         return serviceList;
     }
@@ -475,7 +477,7 @@ public class MicoKubernetesClient {
         );
         String namespace = micoKubernetesConfig.getNamespaceMicoWorkspace();
         List<Pod> podList = kubernetesClient.pods().inNamespace(namespace).withLabels(labels).list().getItems();
-        log.debug("Found {} Kubernetes pod(s) that match the labels '{}': '{}'", podList.size(), labels.toString(), podList);
+        log.debug("Found {} Kubernetes pod(s) that match the labels '{}'.", podList.size(), labels.toString());
 
         return podList;
     }

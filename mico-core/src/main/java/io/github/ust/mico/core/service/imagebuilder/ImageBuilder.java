@@ -76,6 +76,7 @@ public class ImageBuilder {
      * @throws NotInitializedException if the image builder was not initialized
      */
     public void init() throws NotInitializedException {
+        log.debug("Initializing image builder...");
         String namespace = buildBotConfig.getNamespaceBuildExecution();
         String serviceAccountName = buildBotConfig.getDockerRegistryServiceAccountName();
 
@@ -94,7 +95,6 @@ public class ImageBuilder {
             Build.class, BuildList.class, DoneableBuild.class);
 
         String resourceScope = buildCRD.get().getSpec().getScope();
-        log.debug("Build CRD has scope `{}`", resourceScope);
 
         // Resource scope is either 'Namespaced' or 'Cluster'
         boolean resourceNamespaced = false;
@@ -210,7 +210,7 @@ public class ImageBuilder {
         build.setMetadata(metadata);
 
         Build createdBuild = buildClient.createOrReplace(build);
-        log.info("Build created with name '{}'", buildName);
+        log.info("Started build with name '{}'", buildName);
         log.debug("Created build: {} ", createdBuild);
 
         return createdBuild;
