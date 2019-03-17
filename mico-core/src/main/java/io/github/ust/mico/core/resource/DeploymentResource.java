@@ -214,18 +214,13 @@ public class DeploymentResource {
     private void createKubernetesResources(MicoApplication micoApplication, MicoService micoService) throws KubernetesResourceException {
 
         // Get service deployment information
-		Optional<MicoServiceDeploymentInfo> serviceDeploymentInfoOptional = serviceDeploymentInfoRepository
+        Optional<MicoServiceDeploymentInfo> serviceDeploymentInfoOptional = serviceDeploymentInfoRepository
 		    .findByApplicationAndService(micoApplication.getShortName(), micoApplication.getVersion(),
 		        micoService.getShortName(), micoService.getVersion());
-        MicoServiceDeploymentInfo serviceDeploymentInfo;
-        if (serviceDeploymentInfoOptional.isPresent()) {
-            serviceDeploymentInfo = serviceDeploymentInfoOptional.get();
-        } else {
-            serviceDeploymentInfo = new MicoServiceDeploymentInfo().setService(micoService);
-            log.debug("There are no service deployment information for MicoApplication '{}' '{}' for MicoService '{}' '{}'. " +
-                    "Use default deployment information.",
-                micoApplication.getShortName(), micoApplication.getShortName(), micoService.getShortName(), micoService.getVersion());
-        }
+        MicoServiceDeploymentInfo serviceDeploymentInfo = serviceDeploymentInfoOptional.orElseThrow(() ->
+            new RuntimeException("Service deployment information for service '" + micoService.getShortName()
+                + "' in application '" + micoApplication.getShortName() + "' '" + micoApplication.getVersion()
+                + "' could not be found."));
 
         log.info("Creating Kubernetes resources for MicoService '{}' in version '{}'", micoService.getShortName(), micoService.getVersion());
         log.debug("Using deployment information for MicoService '{}' in version '{}': {}",
