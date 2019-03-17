@@ -86,6 +86,14 @@ public class MicoKubernetesClient {
      */
     private static final String LABEL_INSTANCE_KEY = LABEL_PREFIX + "instance";
 
+
+    /**
+     * The revision history limit specifies the number of old ReplicaSets to retain to allow rollback.
+     * Setting this field to zero means that all old ReplicaSets with 0 replicas will be cleaned up.
+     * For more information see https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#revision-history-limit
+     */
+    private static final Integer REVISION_HISTORY_LIMIT = 0;
+
     private final MicoKubernetesConfig micoKubernetesConfig;
     private final KubernetesClient kubernetesClient;
     private final MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
@@ -137,6 +145,7 @@ public class MicoKubernetesClient {
             .addToLabels(LABEL_INSTANCE_KEY, deploymentUid)
             .endMetadata()
             .withNewSpec()
+            .withRevisionHistoryLimit(REVISION_HISTORY_LIMIT)
             .withReplicas(serviceDeploymentInfo.getReplicas())
             .withNewSelector()
             .addToMatchLabels(LABEL_INSTANCE_KEY, deploymentUid)
