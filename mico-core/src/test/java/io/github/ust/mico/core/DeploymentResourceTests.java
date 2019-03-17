@@ -28,7 +28,6 @@ import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoBackgroundTaskRepository;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.resource.DeploymentResource;
@@ -67,7 +66,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -78,10 +78,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @EnableAutoConfiguration
 @EnableConfigurationProperties(value = {CorsConfig.class})
 public class DeploymentResourceTests {
-    
+
     @ClassRule
     public static RuleChain rules = RuleChain.outerRule(EmbeddedRedisServer.runningAt(6379).suppressExceptions());
-    
+
     private static final String BASE_PATH = "/applications";
     private static final String DEPLOYMENT_NAME = "deployment-name";
     private static final String SERVICE_NAME = "service-name";
@@ -89,43 +89,40 @@ public class DeploymentResourceTests {
 
     @Captor
     private ArgumentCaptor<Consumer<String>> onSuccessArgumentCaptor;
-    
+
     @Captor
     private ArgumentCaptor<Function<Throwable, Void>> onErrorArgumentCaptor;
-    
+
     @Captor
     private ArgumentCaptor<MicoService> micoServiceArgumentCaptor;
-    
+
     @Captor
     private ArgumentCaptor<MicoServiceInterface> micoServiceInterfaceArgumentCaptor;
-    
+
     @Captor
     private ArgumentCaptor<MicoServiceDeploymentInfo> serviceDeploymentInfoArgumentCaptor;
 
     @Autowired
     private MockMvc mvc;
-    
+
     @MockBean
     private MicoApplicationRepository applicationRepository;
-    
+
     @MockBean
     private MicoServiceRepository serviceRepository;
-    
+
     @MockBean
     private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
-    
-    @MockBean
-    private MicoBackgroundTaskRepository backgroundTaskRepository;
-    
+
     @MockBean
     private BackgroundTaskBroker backgroundTaskBroker;
-    
+
     @MockBean
     private ImageBuilder imageBuilder;
-    
+
     @MockBean
     private MicoCoreBackgroundTaskFactory factory;
-    
+
     @MockBean
     private MicoKubernetesClient micoKubernetesClient;
 
@@ -178,9 +175,9 @@ public class DeploymentResourceTests {
             .setServiceVersion(service.getVersion())
             .setType(MicoServiceBackgroundTask.Type.BUILD);
 
-        given(backgroundTaskRepository.findByServiceShortNameAndServiceVersionAndType(service.getShortName(), service.getVersion(), MicoServiceBackgroundTask.Type.BUILD))
+        given(backgroundTaskBroker.getTaskByMicoService(service.getShortName(), service.getVersion(), MicoServiceBackgroundTask.Type.BUILD))
             .willReturn(Optional.of(mockTask));
-        given(backgroundTaskRepository.save(mockTask)).willReturn(mockTask);
+        given(backgroundTaskBroker.saveJob(mockTask)).willReturn(mockTask);
 
         given(backgroundTaskBroker.getJobStatusByApplicationShortNameAndVersion(SHORT_NAME, VERSION))
             .willReturn(new MicoApplicationJobStatus()
@@ -292,5 +289,5 @@ public class DeploymentResourceTests {
 
         return service;
     }
-    
+
 }

@@ -23,30 +23,35 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import io.github.ust.mico.core.model.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoApplicationJobStatus;
-import io.github.ust.mico.core.model.MicoServiceBackgroundTask;
 import io.github.ust.mico.core.model.MicoServiceBackgroundTask.Status;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoBackgroundTaskRepository;
 
 /**
- * Broker to find and delete jobs.
+ * Broker to operate with jobs.
  */
+@Slf4j
 @Service
 public class BackgroundTaskBroker {
 	
-    @Autowired
-    private MicoBackgroundTaskRepository jobRepository;
+    private final MicoBackgroundTaskRepository jobRepository;
+
+    private final MicoApplicationRepository applicationRepository;
 
     @Autowired
-    private MicoApplicationRepository applicationRepository;
+    public BackgroundTaskBroker(MicoBackgroundTaskRepository jobRepository, MicoApplicationRepository applicationRepository) {
+        this.jobRepository = jobRepository;
+        this.applicationRepository = applicationRepository;
+    }
 
     /**
      * Retrieves all jobs saved in database.
@@ -65,6 +70,16 @@ public class BackgroundTaskBroker {
      */
     public Optional<MicoServiceBackgroundTask> getJobById(String id) {
         return jobRepository.findById(id);
+    }
+
+    /**
+     * Save a job to the database.
+     *
+     * @param job the {@link MicoServiceBackgroundTask}
+     * @return the saved {@link MicoServiceBackgroundTask}
+     */
+    public MicoServiceBackgroundTask saveJob(MicoServiceBackgroundTask job) {
+        return jobRepository.save(job);
     }
 
     /**
@@ -101,6 +116,50 @@ public class BackgroundTaskBroker {
     }
 
     /**
+     * Saves a new status of a job to the database.
+     *
+     * @param micoServiceShortName the short name of a {@link MicoService}
+     * @param micoServiceVersion the version of a {@link MicoService}
+     * @param newStatus the new {@link MicoServiceBackgroundTask.Status}
+     * @param type the {@link MicoServiceBackgroundTask.Type}
+     * @param errorMessage the optional error message if the job has failed
+     */
+    public void saveNewStatus(String micoServiceShortName, String micoServiceVersion,
+                              MicoServiceBackgroundTask.Status newStatus, MicoServiceBackgroundTask.Type type,
+                              @Nullable String errorMessage) {
+        Optional<MicoServiceBackgroundTask> taskOptional = getTaskByMicoService(micoServiceShortName, micoServiceVersion, type);
+        if (taskOptional.isPresent()) {
+            MicoServiceBackgroundTask existingTask = taskOptional.get();
+            if(!existingTask.getStatus().equals(newStatus)) {
+                log.info("Job task of '{}' '{}' with type '{}' changed its status: {} → {}.",
+                    micoServiceShortName, micoServiceVersion, type, existingTask.getStatus(), newStatus);
+                if(newStatus.equals(MicoServiceBackgroundTask.Status.ERROR) && !StringUtils.isEmpty(errorMessage)) {
+                    log.info("Job task of '{}' '{}' with type '{}' failed. Reason: {}.",
+                        micoServiceShortName, micoServiceVersion, type, errorMessage);
+                }
+                existingTask.setStatus(newStatus);
+                existingTask.setErrorMessage(errorMessage);
+                MicoServiceBackgroundTask savedTask = jobRepository.save(existingTask);
+                log.debug("Saved new status of job task: {}", savedTask);
+            }
+        } else {
+            log.warn("No job of type '{}' exists for '{}' '{}'.", type, micoServiceShortName, micoServiceVersion);
+        }
+    }
+
+    /**
+     * Return a {@code MicoServiceBackgroundTask} for a given {@code MicoService} and {@code MicoServiceBackgroundTask.Type}.
+     *
+     * @param micoServiceShortName the short name of a {@link MicoService}
+     * @param micoServiceVersion the version of a {@link MicoService}
+     * @param type the {@link MicoServiceBackgroundTask.Type}
+     * @return the optional task. Is empty if no task exist for the given {@link MicoService}
+     */
+    public Optional<MicoServiceBackgroundTask> getTaskByMicoService(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundTask.Type type) {
+        return jobRepository.findByServiceShortNameAndServiceVersionAndType(micoServiceShortName, micoServiceVersion, type);
+    }
+
+    /**
      * Retrieves the {@code Status} which is most relevant. The order
      * of relevance is as follows:
      * <ol>
@@ -113,17 +172,17 @@ public class BackgroundTaskBroker {
      * @param statusList the {@link List} of {@link Status} to check.
      * @return the {@link Status} which is most relevant.
      */
-    private MicoServiceBackgroundTask.Status checkStatus(List<MicoServiceBackgroundTask.Status> statusList) {
-        if (statusList.contains(MicoServiceBackgroundTask.Status.ERROR)) {
-            return MicoServiceBackgroundTask.Status.ERROR;
-        } else if (statusList.contains(MicoServiceBackgroundTask.Status.PENDING)) {
-            return MicoServiceBackgroundTask.Status.PENDING;
-        } else if (statusList.contains(MicoServiceBackgroundTask.Status.RUNNING)) {
-            return MicoServiceBackgroundTask.Status.RUNNING;
-        } else if (statusList.contains(MicoServiceBackgroundTask.Status.DONE)) {
-            return MicoServiceBackgroundTask.Status.DONE;
+    private Status checkStatus(List<Status> statusList) {
+        if (statusList.contains(Status.ERROR)) {
+            return Status.ERROR;
+        } else if (statusList.contains(Status.PENDING)) {
+            return Status.PENDING;
+        } else if (statusList.contains(Status.RUNNING)) {
+            return Status.RUNNING;
+        } else if (statusList.contains(Status.DONE)) {
+            return Status.DONE;
         }
-        return MicoServiceBackgroundTask.Status.ERROR;
+        return Status.UNDEFINED;
     }
     
 }
