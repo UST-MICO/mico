@@ -19,9 +19,9 @@
 
 package io.github.ust.mico.core;
 
-import static io.github.ust.mico.core.JsonPathBuilder.*;
-
 import io.github.ust.mico.core.model.MicoVersion;
+
+import static io.github.ust.mico.core.JsonPathBuilder.*;
 
 class TestConstants {
 
@@ -122,7 +122,7 @@ class TestConstants {
 
 
     /*
-     * For tests in ServiceResourceTests, a MicoServiceStatusDTO is used.
+     * For tests in ServiceResourceUnitTests, a MicoServiceStatusDTO is used.
      * All paths are build on the base path of this object.
      */
     static final String SERVICE_DTO_SERVICE_NAME = buildAttributePath("name");
