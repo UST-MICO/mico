@@ -24,7 +24,7 @@ public class DeploymentException extends Exception {
     private static final long serialVersionUID = -4549786998711676875L;
 
     public DeploymentException() {
-        
+        super();
     }
 
     public DeploymentException(String message) {
