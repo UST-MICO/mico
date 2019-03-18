@@ -52,6 +52,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * TODO: add description and explain difference between test classes
+ */
 @RunWith(SpringRunner.class)
 @EnableAutoConfiguration
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
