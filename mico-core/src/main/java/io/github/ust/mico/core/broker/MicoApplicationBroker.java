@@ -75,11 +75,21 @@ public class MicoApplicationBroker {
         return micoApplicationList;
     }
 
-    public void deleteMicoApplicationByShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException, KubernetesResourceException, MicoApplicationIsDeployedException {
+    public void deleteMicoApplicationByShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException, MicoApplicationIsDeployedException {
+        // Retrieve application to delete from the database (checks whether it exists)
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(shortName, version);
+
+        // Check whether application is currently deployed, i.e., it cannot be deleted
         if (micoKubernetesClient.isApplicationDeployed(micoApplication)) {
             throw new MicoApplicationIsDeployedException(shortName, version);
         }
+
+        // Any service deployment information this application provides must be deleted
+        // before (!) the actual application is deleted, otherwise the query for
+        // deleting the service deployment information would not work.
+        serviceDeploymentInfoRepository.deleteAllByApplication(shortName, version);
+
+        // Delete actual application
         applicationRepository.delete(micoApplication);
     }
 
@@ -119,15 +129,39 @@ public class MicoApplicationBroker {
         throw new MicoApplicationAlreadyExistsException(micoApplication.getShortName(), micoApplication.getVersion());
     }
 
-    public MicoApplication updateMicoApplication(MicoApplication micoApplication) throws MicoApplicationNotFoundException {
+    public MicoApplication updateMicoApplication(String shortName, String version, MicoApplication micoApplication) throws MicoApplicationNotFoundException, ShortNameOfMicoApplicationDoesNotMatchException, VersionOfMicoApplicationDoesNotMatchException {
+        if (!micoApplication.getShortName().equals(shortName)) {
+            throw new ShortNameOfMicoApplicationDoesNotMatchException();
+        }
+        if (!micoApplication.getVersion().equals(version)) {
+            throw new VersionOfMicoApplicationDoesNotMatchException();
+        }
         MicoApplication existingMicoApplication = getMicoApplicationByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion());
-        micoApplication.setId(existingMicoApplication.getId());
+        micoApplication.setId(existingMicoApplication.getId())
+            .setServices(existingMicoApplication.getServices())
+            .setServiceDeploymentInfos(existingMicoApplication.getServiceDeploymentInfos());
         return applicationRepository.save(micoApplication);
     }
 
     public MicoApplication copyAndUpgradeMicoApplicationByShortNameAndVersion(String shortName, String version, String newVersion) throws MicoApplicationNotFoundException {
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(shortName, version);
-        micoApplication.setVersion(newVersion).setId(null);
+
+        // Update the version of the application
+        micoApplication.setVersion(newVersion);
+
+        // In order to copy the application along with all service deployment information nodes
+        // it provides and the nodes the service deployment information node(s) is/are connected to,
+        // we need to set the id of all those nodes to null. That way, Neo4j will create new entities
+        // instead of updating the existing ones.
+        micoApplication.setId(null);
+        micoApplication.getServiceDeploymentInfos().forEach(sdi -> sdi.setId(null));
+        micoApplication.getServiceDeploymentInfos().forEach(sdi -> sdi.getLabels().forEach(label -> label.setId(null)));
+        micoApplication.getServiceDeploymentInfos().forEach(sdi -> sdi.getEnvironmentVariables().forEach(envVar -> envVar.setId(null)));
+
+        // The actual Kubernetes deployment information must not be copied, because the new application
+        // is considered to be not deployed yet.
+        micoApplication.getServiceDeploymentInfos().forEach(sdi -> sdi.setKubernetesDeploymentInfo(null));
+
         return applicationRepository.save(micoApplication);
     }
 

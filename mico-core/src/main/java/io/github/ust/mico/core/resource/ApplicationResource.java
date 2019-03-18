@@ -28,7 +28,7 @@ import io.github.ust.mico.core.dto.response.MicoApplicationWithServicesResponseD
 import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceResponseDTO;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
-import io.github.ust.mico.core.exception.KubernetesResourceException;
+import io.github.ust.mico.core.exception.*;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
@@ -71,155 +71,141 @@ public class ApplicationResource {
     private static final String PATH_VARIABLE_SERVICE_VERSION = "serviceVersion";
 
     @Autowired
-    private MicoApplicationBroker micoApplicationBroker;
+    private MicoApplicationBroker broker;
 
     @Autowired
-    private MicoApplicationRepository applicationRepository; //TODO: remove?
+    private MicoApplicationRepository applicationRepository;
 
     @Autowired
-    private MicoServiceRepository serviceRepository; //TODO: remove?
+    private MicoServiceRepository serviceRepository;
 
     @Autowired
-    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository; //TODO: remove?
+    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
     
     @Autowired
-    private MicoLabelRepository labelRepository; //TODO: remove?
+    private MicoLabelRepository labelRepository;
     
     @Autowired
-    private MicoEnvironmentVariableRepository environmentVariableRepository; //TODO: remove?
+    private MicoEnvironmentVariableRepository environmentVariableRepository;
     
     @Autowired
-    private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository; //TODO: remove?
+    private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
 
     @Autowired
-    private MicoKubernetesClient micoKubernetesClient; //TODO: remove?
+    private MicoKubernetesClient micoKubernetesClient;
 
     @Autowired
-    private MicoStatusService micoStatusService; //TODO: remove?
+    private MicoStatusService micoStatusService;
 
     @GetMapping()
     public ResponseEntity<Resources<Resource<MicoApplicationWithServicesResponseDTO>>> getAllApplications() {
+        List<MicoApplication> applications;
+        try {
+            applications = broker.getMicoApplications();
+        } catch (MicoApplicationNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+
         return ResponseEntity.ok(
-            new Resources<>(getApplicationWithServicesResponseDTOResourceList(applicationRepository.findAll(3)),
+            new Resources<>(getApplicationWithServicesResponseDTOResourceList(applications),
                 linkTo(methodOn(ApplicationResource.class).getAllApplications()).withSelfRel()));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
     public ResponseEntity<Resources<Resource<MicoApplicationWithServicesResponseDTO>>> getApplicationsByShortName(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
-        List<MicoApplication> micoApplicationList = applicationRepository.findByShortName(shortName);
+        List<MicoApplication> applications;
+        try {
+            applications = broker.getMicoApplicationsByShortName(shortName);
+        } catch (MicoApplicationNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
 
         return ResponseEntity.ok(
-            new Resources<>(getApplicationWithServicesResponseDTOResourceList(micoApplicationList),
+            new Resources<>(getApplicationWithServicesResponseDTOResourceList(applications),
                 linkTo(methodOn(ApplicationResource.class).getApplicationsByShortName(shortName)).withSelfRel()));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     public ResponseEntity<Resource<MicoApplicationWithServicesResponseDTO>> getApplicationByShortNameAndVersion(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                                         @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        MicoApplication application = getApplicationFromDatabase(shortName, version);
+        MicoApplication application;
+        try {
+            application = broker.getMicoApplicationByShortNameAndVersion(shortName, version);
+        } catch (MicoApplicationNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+
+        //TODO: HAL standard?
         return ResponseEntity.ok(getApplicationWithServicesResponseDTOResourceWithDeploymentStatus(application));
     }
 
     @PostMapping
     public ResponseEntity<Resource<MicoApplicationWithServicesResponseDTO>> createApplication(@Valid @RequestBody MicoApplicationRequestDTO applicationDto) {
-        // Check whether application already exists (not allowed)
-        Optional<MicoApplication> applicationOptional = applicationRepository.
-            findByShortNameAndVersion(applicationDto.getShortName(), applicationDto.getVersion());
-        if (applicationOptional.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "Application '" + applicationDto.getShortName() + "' '" + applicationDto.getVersion() + "' already exists.");
+        MicoApplication application;
+        try {
+            application = broker.createMicoApplication(MicoApplication.valueOf(applicationDto));
+        } catch (MicoApplicationAlreadyExistsException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
 
-        MicoApplication savedApplication = applicationRepository.save(MicoApplication.valueOf(applicationDto));
-        MicoApplicationWithServicesResponseDTO dto = new MicoApplicationWithServicesResponseDTO(savedApplication);
-        dto.setDeploymentStatus(MicoApplicationDeploymentStatus.NOT_DEPLOYED);
+        MicoApplicationWithServicesResponseDTO dto = new MicoApplicationWithServicesResponseDTO(application);
+        dto.setDeploymentStatus(MicoApplicationDeploymentStatus.NOT_DEPLOYED); //TODO: necessary?
 
         return ResponseEntity
             .created(linkTo(methodOn(ApplicationResource.class)
-                .getApplicationByShortNameAndVersion(savedApplication.getShortName(), savedApplication.getVersion())).toUri())
-            .body(new Resource<>(dto, getApplicationLinks(savedApplication)));
+                .getApplicationByShortNameAndVersion(application.getShortName(), application.getVersion())).toUri())
+            .body(new Resource<>(dto, getApplicationLinks(application)));
     }
 
     @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     public ResponseEntity<Resource<MicoApplicationWithServicesResponseDTO>> updateApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                               @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                                               @Valid @RequestBody MicoApplicationRequestDTO applicationRequestDto) {
-        if (!applicationRequestDto.getShortName().equals(shortName)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "ShortName of the provided application does not match the request parameter");
+        MicoApplication application;
+        try {
+            application = broker.updateMicoApplication(shortName, version, MicoApplication.valueOf(applicationRequestDto));
+        } catch (MicoApplicationNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (ShortNameOfMicoApplicationDoesNotMatchException | VersionOfMicoApplicationDoesNotMatchException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
-        if (!applicationRequestDto.getVersion().equals(version)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "Version of the provided application does not match the request parameter");
-        }
-        MicoApplication existingApplication = getApplicationFromDatabase(shortName, version);
-        MicoApplication updatedApplication = applicationRepository.save(MicoApplication.valueOf(applicationRequestDto)
-        	.setId(existingApplication.getId())
-        	.setServices(existingApplication.getServices())
-        	.setServiceDeploymentInfos(existingApplication.getServiceDeploymentInfos()));
 
-        return ResponseEntity.ok(getApplicationWithServicesResponseDTOResourceWithDeploymentStatus(updatedApplication));
+        //TODO: HAL standard?
+        return ResponseEntity.ok(getApplicationWithServicesResponseDTOResourceWithDeploymentStatus(application));
     }
 
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_PROMOTE)
     public ResponseEntity<Resource<MicoApplicationWithServicesResponseDTO>> promoteApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                            @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                            @Valid @RequestBody MicoVersionRequestDTO newVersionDto) {
-    	log.debug("Received request to promote application '{}' '{}' to version '{}'", shortName, version, newVersionDto.getVersion());
-    	
-    	// Retrieve application to promote (copy) from the database (checks whether it exists)
-        MicoApplication application = getApplicationFromDatabase(shortName, version);
-        log.debug("Retrieved following application from database: {}", application);
-        
-        // Update the version of the application
-        application.setVersion(newVersionDto.getVersion());
-        
-        // In order to copy the application along with all service deployment information nodes
-        // it provides and the nodes the service deployment information node(s) is/are connected to,
-        // we need to set the id of all those nodes to null. That way, Neo4j will create new entities
-        // instead of updating the existing ones.
-        application.setId(null);
-        application.getServiceDeploymentInfos().forEach(sdi -> sdi.setId(null));
-        application.getServiceDeploymentInfos().forEach(sdi -> sdi.getLabels().forEach(label -> label.setId(null)));
-        application.getServiceDeploymentInfos().forEach(sdi -> sdi.getEnvironmentVariables().forEach(envVar -> envVar.setId(null)));
-        // The actual Kubernetes deployment information must not be copied, because the new application
-        // is considered to be not deployed yet.
-        application.getServiceDeploymentInfos().forEach(sdi -> sdi.setKubernetesDeploymentInfo(null));
+        MicoApplication application;
+        try {
+            application = broker.copyAndUpgradeMicoApplicationByShortNameAndVersion(shortName, version, newVersionDto.getVersion());
+        } catch (MicoApplicationNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
 
-        // Save the new (promoted) application in the database.
-        MicoApplication updatedApplication = applicationRepository.save(application);
-        log.debug("Saved following application in database: {}", updatedApplication);
-
-        log.info("Promoted application '{}': {} → {}", shortName, version, updatedApplication.getVersion());
-
-        return ResponseEntity.ok(getApplicationWithServicesResponseDTOResourceWithDeploymentStatus(updatedApplication));
+        return ResponseEntity.ok(getApplicationWithServicesResponseDTOResourceWithDeploymentStatus(application));
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     public ResponseEntity<Void> deleteApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                  @PathVariable(PATH_VARIABLE_VERSION) String version) throws KubernetesResourceException {
-    	// Retrieve application to delete from the database (checks whether it exists)
-    	MicoApplication application = getApplicationFromDatabase(shortName, version);
-
-        // Check whether application is currently deployed, i.e., it cannot be deleted
-        if (micoKubernetesClient.isApplicationDeployed(application)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Application is currently deployed!");
+                                                  @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        try {
+            broker.deleteMicoApplicationByShortNameAndVersion(shortName, version);
+        } catch (MicoApplicationNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (MicoApplicationIsDeployedException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
-
-        // Any service deployment information this application provides must be deleted
-        // before (!) the actual application is deleted, otherwise the query for
-        // deleting the service deployment information would not work.
-        serviceDeploymentInfoRepository.deleteAllByApplication(shortName, version);
-        
-        // Delete actual application
-        applicationRepository.delete(application);
 
         return ResponseEntity.noContent().build();
     }
 
+    //TODO: continue here!!!
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
     public ResponseEntity<Void> deleteAllVersionsOfAnApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) throws KubernetesResourceException {
-    	// Retrieve applications to delete from database (checks whether they all exist)
+        // Retrieve applications to delete from database (checks whether they all exist)
         List<MicoApplication> applicationList = applicationRepository.findByShortName(shortName);
 
         // Check whether there is any version of the application in the database at all
@@ -235,7 +221,7 @@ public class ApplicationResource {
                     "Application is currently deployed in version " + application.getVersion() + "!");
             }
         }
-        
+
         // Any service deployment information one of the applications provides must be deleted
         // before (!) the actual application is deleted, otherwise the query for
         // deleting the service deployment information would not work.
