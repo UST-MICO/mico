@@ -746,7 +746,7 @@ public class ApplicationResourceTests {
         given(serviceDeploymentInfoRepository.findByApplicationAndService(SHORT_NAME, VERSION, SERVICE_SHORT_NAME, SERVICE_VERSION))
             .willReturn(Optional.of(application.getServiceDeploymentInfos().get(0)));
 
-        mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/services/" + SERVICE_SHORT_NAME))
+        mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/services/" + SERVICE_SHORT_NAME + "/" + SERVICE_VERSION))
             .andDo(print())
             .andExpect(status().isNoContent());
     }

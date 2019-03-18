@@ -110,29 +110,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
     void deleteAllByApplication(
     	@Param("applicationShortName") String applicationShortName,
         @Param("applicationVersion") String applicationVersion);
-    
-    /**
-     * Deletes the deployment information for a particular application and service.
-     * All additional properties of a {@link MicoServiceDeploymentInfo} that
-     * are stored as a separate node entity and connected to it via a {@code [:HAS]}
-     * relationship will be deleted, too.
-     * 
-     * @param applicationShortName the short name of the {@link MicoApplication}.
-     * @param applicationVersion the version of the {@link MicoApplication}.
-     * @param serviceShortName the short name of the {@link MicoService}.
-     */
-	@Query("MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
-		+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
-		+ "AND s.shortName = {serviceShortName} " 
-		+ "WITH a, sdi, s OPTIONAL MATCH (sdi)-[:HAS]->(additionalProperty) "
-	    + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
-	    + "AND s.shortName = {serviceShortName} " 
-	    + "DETACH DELETE sdi, additionalProperty")
-    void deleteByApplicationAndService(
-    	@Param("applicationShortName") String applicationShortName,
-        @Param("applicationVersion") String applicationVersion,
-        @Param("serviceShortName") String serviceShortName);
-	
+
     /**
      * Deletes the deployment information for a particular application and service.
      * All additional properties of a {@link MicoServiceDeploymentInfo} that

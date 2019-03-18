@@ -278,26 +278,28 @@ public class ApplicationResource {
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES + "/{" + PATH_VARIABLE_SERVICE_SHORT_NAME + "}")
+    @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES
+        + "/{" + PATH_VARIABLE_SERVICE_SHORT_NAME + "}/{" + PATH_VARIABLE_SERVICE_VERSION + "}")
     public ResponseEntity<Void> deleteServiceFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                              @PathVariable(PATH_VARIABLE_VERSION) String version,
-                                                             @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName) {
+                                                             @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName,
+                                                             @PathVariable(PATH_VARIABLE_SERVICE_VERSION) String serviceVersion) {
         // Retrieve application from database (checks whether it exists)
         MicoApplication application = getApplicationFromDatabase(shortName, version);
         
         // Check whether the application contains the service
-        if (application.getServices().stream().noneMatch(service -> service.getShortName().equals(serviceShortName))) {
+        if (application.getServices().stream().noneMatch(service -> service.getShortName().equals(serviceShortName) && service.getVersion().equals(serviceVersion))) {
         	// Application does not include the service -> cannot not be deleted from it
-			log.debug("Application '{}' '{}' does not include service '{}', thus it cannot be deleted from it.",
-			    shortName, version, serviceShortName);
+			log.debug("Application '{}' '{}' does not include service '{}' '{}', thus it cannot be deleted from it.",
+			    shortName, version, serviceShortName, serviceVersion);
         } else {
-        	log.info("Delete service '{}' from application '{}' '{}'.",
-        		serviceShortName, shortName, version);
+        	log.info("Delete service '{}' '{}' from application '{}' '{}'.",
+        		serviceShortName, serviceVersion, shortName, version);
         	// 1. Remove the service from the application
-        	application.getServices().removeIf(service -> service.getShortName().equals(serviceShortName));
+        	application.getServices().removeIf(service -> service.getShortName().equals(serviceShortName) && service.getVersion().equals(serviceVersion));
         	applicationRepository.save(application);
         	// 2. Delete the corresponding service deployment information
-        	serviceDeploymentInfoRepository.deleteByApplicationAndService(shortName, version, serviceShortName);
+        	serviceDeploymentInfoRepository.deleteByApplicationAndService(shortName, version, serviceShortName, serviceVersion);
         }
         
         // TODO: Update Kubernetes deployment
