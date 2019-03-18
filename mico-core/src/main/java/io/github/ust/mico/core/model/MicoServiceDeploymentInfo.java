@@ -27,6 +27,7 @@ import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -65,6 +66,7 @@ public class MicoServiceDeploymentInfo {
      * The {@link MicoService} this deployment information refers to.
      */
     @Relationship(type = "FOR")
+    @ToString.Exclude
     private MicoService service;
 
 
