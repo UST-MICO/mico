@@ -234,16 +234,9 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         this.subCreateNextVersion = dialogRef.afterClosed().subscribe(nextVersion => {
 
             if (nextVersion) {
-
-                // deep copy of the application (will be done in the backend soon)
-                const nextApplication = JSON.parse(JSON.stringify(this.application));
-                nextApplication.version = nextVersion;
-                nextApplication.id = null;
-
-                this.apiService.postApplication(nextApplication).subscribe(val => {
+                this.apiService.promoteApplication(this.application.shortName, this.application.version, nextVersion).subscribe(val => {
                     this.updateVersion(null);
                 });
-
             }
         });
     }

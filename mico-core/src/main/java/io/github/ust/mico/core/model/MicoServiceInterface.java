@@ -75,11 +75,6 @@ public class MicoServiceInterface {
     // ----------------------
 
     /**
-     * The public DNS.
-     */
-    private String publicDns;
-
-    /**
      * Human readable description of this service interface,
      * e.g., the functionality provided.
      * {@code null} values are skipped.
@@ -91,18 +86,14 @@ public class MicoServiceInterface {
      */
     private String protocol;
 
-    /**
-     * The transport protocol, e.g., TCP.
-     */
-    private String transportProtocol;
-
 
     // ----------------------
     // -> Static Creators ---
     // ----------------------
     
     /**
-     * Creates a {@code MicoServiceInterface} based on a {@code MicoServiceInterfaceRequestDTO}.
+     * Creates a new {@code MicoServiceInterface} based on a {@code MicoServiceInterfaceRequestDTO}.
+     * Note that the id will be set to {@code null}.
      * 
      * @param serviceInterfaceDto the {@link MicoServiceInterfaceRequestDTO}.
      * @return a {@link MicoServiceInterface}.
@@ -111,10 +102,8 @@ public class MicoServiceInterface {
         return new MicoServiceInterface()
         	.setServiceInterfaceName(serviceInterfaceDto.getServiceInterfaceName())
         	.setPorts(serviceInterfaceDto.getPorts().stream().map(MicoServicePort::valueOf).collect(Collectors.toList()))
-        	.setPublicDns(serviceInterfaceDto.getPublicDns())
         	.setDescription(serviceInterfaceDto.getDescription())
-        	.setProtocol(serviceInterfaceDto.getProtocol())
-        	.setTransportProtocol(serviceInterfaceDto.getTransportProtocol());
+        	.setProtocol(serviceInterfaceDto.getProtocol());
     }
 
 }

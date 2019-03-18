@@ -110,13 +110,12 @@ public class GitHubCrawler {
                 .setVersion(releaseInfoJson.get("tag_name").textValue())
                 .setDescription(basicInfoJson.get("description").textValue())
                 .setServiceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
-                .setGitCloneUrl(basicInfoJson.get("clone_url").textValue())
-                .setGitReleaseInfoUrl(releaseInfoJson.get("url").textValue());
+                .setGitCloneUrl(basicInfoJson.get("clone_url").textValue());
             if (!StringUtils.isEmpty(dockerfilePath)) {
                 if (existsFileInGithubRepo(gitHubRepositoryApiUrl, dockerfilePath)) {
                     micoService.setDockerfilePath(dockerfilePath);
                 } else {
-                    throw new IllegalArgumentException("The Dockerfile path must be a valid path relativ to the repository root");
+                    throw new IllegalArgumentException("The Dockerfile path must be a valid path relative to the repository root");
                 }
             }
             return micoService;

@@ -47,7 +47,7 @@ public interface MicoApplicationRepository extends Neo4jRepository<MicoApplicati
      * Find all applications that are using the given service.
      *
      * @param shortName the shortName of the {@link MicoService}
-     * @param version   the version of the {@link MicoService}
+     * @param version the version of the {@link MicoService}
      * @return a list of {@link MicoApplication}
      */
     @Query("MATCH (a:MicoApplication)-[i:INCLUDES]-(s:MicoService) "

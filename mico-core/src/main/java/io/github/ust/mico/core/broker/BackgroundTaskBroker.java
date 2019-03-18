@@ -92,7 +92,7 @@ public class BackgroundTaskBroker {
 
         List<MicoServiceBackgroundTask> jobList = new ArrayList<>();
         for (MicoServiceDeploymentInfo deploymentInfo : micoApplication.getServiceDeploymentInfos()) {
-            jobList.addAll(jobRepository.findByMicoServiceShortNameAndMicoServiceVersion(deploymentInfo.getService().getShortName(), deploymentInfo.getService().getVersion()));
+            jobList.addAll(jobRepository.findByServiceShortNameAndServiceVersion(deploymentInfo.getService().getShortName(), deploymentInfo.getService().getVersion()));
         }
 
         List<MicoServiceBackgroundTask.Status> statusList = jobList.stream().map(MicoServiceBackgroundTask::getStatus).distinct().collect(Collectors.toList());

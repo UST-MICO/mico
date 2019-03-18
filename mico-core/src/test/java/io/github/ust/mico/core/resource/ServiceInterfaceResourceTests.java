@@ -72,7 +72,7 @@ import io.github.ust.mico.core.util.CollectionUtils;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(ServiceInterfaceResource.class)
-@OverrideAutoConfiguration(enabled = true) //Needed to override our neo4j config
+@OverrideAutoConfiguration(enabled = true) // Needed to override our neo4j config
 @EnableAutoConfiguration
 @EnableConfigurationProperties(value = {CorsConfig.class})
 public class ServiceInterfaceResourceTests {
@@ -86,9 +86,7 @@ public class ServiceInterfaceResourceTests {
     private static final MicoPortType INTERFACE_PORT_TYPE = MicoPortType.TCP;
     private static final int INTERFACE_TARGET_PORT = 1025;
     private static final String INTERFACE_DESCRIPTION = "This is a service interface.";
-    private static final String INTERFACE_PUBLIC_DNS = "DNS";
     private static final String INTERFACE_PROTOCOL = "HTTPS";
-    private static final String INTERFACE_TRANSPORT_PROTOCOL = "TCP";
     private static final String SERVICES_HREF = buildPath(ROOT, LINKS, "service", HREF);
     private static final String SERVICE_URL = "/services/" + SHORT_NAME + "/" + VERSION;
     private static final String INTERFACES_URL = SERVICE_URL + "/interfaces";
@@ -338,9 +336,7 @@ public class ServiceInterfaceResourceTests {
                 .setType(INTERFACE_PORT_TYPE)
                 .setTargetPort(INTERFACE_TARGET_PORT)))
             .setDescription(INTERFACE_DESCRIPTION)
-            .setPublicDns(INTERFACE_PUBLIC_DNS)
-            .setProtocol(INTERFACE_PROTOCOL)
-            .setTransportProtocol(INTERFACE_TRANSPORT_PROTOCOL);
+            .setProtocol(INTERFACE_PROTOCOL);
     }
 
     private MicoServiceInterface getInvalidTestServiceInterface() {
@@ -351,9 +347,7 @@ public class ServiceInterfaceResourceTests {
                 .setType(INTERFACE_PORT_TYPE)
                 .setTargetPort(INTERFACE_TARGET_PORT)))
             .setDescription(INTERFACE_DESCRIPTION)
-            .setPublicDns(INTERFACE_PUBLIC_DNS)
-            .setProtocol(INTERFACE_PROTOCOL)
-            .setTransportProtocol(INTERFACE_TRANSPORT_PROTOCOL);
+            .setProtocol(INTERFACE_PROTOCOL);
     }
 
     private ResultMatcher getServiceInterfaceMatcher(MicoServiceInterface serviceInterface, String selfBaseUrl, String serviceUrl) {
@@ -364,8 +358,6 @@ public class ServiceInterfaceResourceTests {
             jsonPath("$.ports", not(empty())),
             jsonPath("$.protocol", is(serviceInterface.getProtocol())),
             jsonPath("$.description", is(serviceInterface.getDescription())),
-            jsonPath("$.publicDns", is(serviceInterface.getPublicDns())),
-            jsonPath("$.transportProtocol", is(serviceInterface.getTransportProtocol())),
             jsonPath(SELF_HREF, endsWith(selfHrefEnding.toString())),
             jsonPath(INTERFACES_HREF, endsWith(selfBaseUrl)),
             jsonPath(SERVICES_HREF, endsWith(serviceUrl)));

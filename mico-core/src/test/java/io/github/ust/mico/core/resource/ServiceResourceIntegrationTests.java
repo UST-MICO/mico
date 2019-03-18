@@ -801,4 +801,5 @@ public class ServiceResourceIntegrationTests {
 
         resultPromotion.andExpect(status().isOk());
     }
+
 }

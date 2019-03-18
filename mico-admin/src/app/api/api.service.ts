@@ -236,6 +236,31 @@ export class ApiService {
     }
 
     /**
+     * Creates a new application version from an existing application
+     * uses: POST applications/{shortName}/{version}/promote
+     *
+     * @param shortName shortName of the application
+     * @param version version of the application
+     * @param newVersion the new version of the application
+     */
+    promoteApplication(shortName, version, newVersion: string) {
+
+        const resource = 'applications/' + shortName + '/' + version + '/promote';
+
+        return this.rest.post<ApiObject>(resource, {version: newVersion}).pipe(flatMap(val => {
+            this.getApplications();
+            this.getApplicationVersions(val.shortName);
+
+            const stream = this.getStreamSource<ApiObject>(val._links.self.href);
+            stream.next(val);
+
+            return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
+                filter(service => service !== undefined)
+            );
+        }));
+    }
+
+    /**
      * Updates an existing application
      * uses: PUT applications/{shortName}/{version}
      *

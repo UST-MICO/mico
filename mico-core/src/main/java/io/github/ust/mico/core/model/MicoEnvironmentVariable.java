@@ -62,7 +62,8 @@ public class MicoEnvironmentVariable {
     // ----------------------
     
     /**
-     * Creates a {@code MicoEnvironmentVariable} based on a {@code MicoEnvironmentVariableRequestDTO}.
+     * Creates a new {@code MicoEnvironmentVariable} based on a {@code MicoEnvironmentVariableRequestDTO}.
+     * Note that the id will be set to {@code null}.
      * 
      * @param environmentVariableDto the {@link MicoEnvironmentVariableRequestDTO}.
      * @return a {@link MicoEnvironmentVariable}.
