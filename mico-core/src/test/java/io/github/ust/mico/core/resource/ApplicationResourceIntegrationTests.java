@@ -31,7 +31,6 @@ import io.github.ust.mico.core.dto.response.status.*;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo.ImagePullPolicy;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoLabelRepository;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
@@ -79,17 +78,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 public class ApplicationResourceIntegrationTests {
 
-    public static final String APPLICATION_DTO_LIST_PATH = buildPath(EMBEDDED, "micoApplicationResponseDTOList");
-    public static final String APPLICATION_WITH_SERVICES_DTO_LIST_PATH = buildPath(EMBEDDED, "micoApplicationWithServicesResponseDTOList");
-    public static final String APPLICATION_PATH = buildPath(ROOT, "application");
-    public static final String SHORT_NAME_PATH = buildPath(ROOT, "shortName");
-    public static final String VERSION_PATH = buildPath(ROOT, "version");
-    public static final String NAME_PATH = buildPath(ROOT, "name");
-    public static final String DESCRIPTION_PATH = buildPath(ROOT, "description");
-    public static final String OWNER_PATH = buildPath(ROOT, "owner");
-    public static final String SERVICE_LIST_PATH = buildPath(ROOT, "services");
-    public static final String INTERFACES_LIST_PATH = buildPath(ROOT, "serviceInterfaces");
-    public static final String ID_PATH = buildPath(ROOT, "id");
+    private static final String APPLICATION_WITH_SERVICES_DTO_LIST_PATH = buildPath(EMBEDDED, "micoApplicationWithServicesResponseDTOList");
+    private static final String SHORT_NAME_PATH = buildPath(ROOT, "shortName");
+    private static final String VERSION_PATH = buildPath(ROOT, "version");
+    private static final String NAME_PATH = buildPath(ROOT, "name");
+    private static final String DESCRIPTION_PATH = buildPath(ROOT, "description");
+    private static final String OWNER_PATH = buildPath(ROOT, "owner");
+    private static final String SERVICE_LIST_PATH = buildPath(ROOT, "services");
     private static final String JSON_PATH_LINKS_SECTION = "$._links.";
     private static final String BASE_PATH = "/applications";
     private static final String PATH_SERVICES = "services";
@@ -105,9 +100,6 @@ public class ApplicationResourceIntegrationTests {
 
     @MockBean
     private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
-
-    @MockBean
-    private MicoLabelRepository labelRepository;
 
     @MockBean
     private MicoKubernetesClient micoKubernetesClient;
