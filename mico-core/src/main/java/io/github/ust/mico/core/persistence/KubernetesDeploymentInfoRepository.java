@@ -16,23 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package io.github.ust.mico.core.persistence;
 
-import io.github.ust.mico.core.model.MicoServiceBackgroundTask;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.neo4j.annotation.Query;
+import org.springframework.data.neo4j.repository.Neo4jRepository;
 
-import java.util.List;
-import java.util.Optional;
+import io.github.ust.mico.core.model.KubernetesDeploymentInfo;
 
-@Repository
-public interface MicoBackgroundTaskRepository extends CrudRepository<MicoServiceBackgroundTask, String> {
+public interface KubernetesDeploymentInfoRepository extends Neo4jRepository<KubernetesDeploymentInfo, Long> {
 	
-    @Override
-    List<MicoServiceBackgroundTask> findAll();
-
-    List<MicoServiceBackgroundTask> findByServiceShortNameAndServiceVersion(String micoServiceShortName, String micoServiceVersion);
-    
-    Optional<MicoServiceBackgroundTask> findByServiceShortNameAndServiceVersionAndType(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundTask.Type type);
-    
+	/**
+	 * Deletes all {@link KubernetesDeploymentInfo} nodes that do <b>not</b> have any relationship to another node.
+	 */
+	@Query("MATCH (kdi:KubernetesDeploymentInfo) WHERE size((kdi)--()) = 0 DELETE (kdi)")
+	void cleanUp();
+	
 }

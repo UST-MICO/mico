@@ -84,8 +84,6 @@ public class MicoApplicationJobStatusResponseDTO {
 	 * {@link MicoApplicationJobStatus}.
 	 *
 	 * @param applicationJobStatus the {@link MicoApplicationJobStatus}.
-	 * @return a {@link MicoApplicationJobStatusResponseDTO} with all the values of
-	 *         the given {@code MicoApplicationJobStatus}.
 	 */
 	public MicoApplicationJobStatusResponseDTO(MicoApplicationJobStatus applicationJobStatus) {
 		this.status = applicationJobStatus.getStatus();

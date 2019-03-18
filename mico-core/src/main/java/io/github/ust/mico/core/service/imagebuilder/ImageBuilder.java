@@ -76,6 +76,7 @@ public class ImageBuilder {
      * @throws NotInitializedException if the image builder was not initialized
      */
     public void init() throws NotInitializedException {
+        log.debug("Initializing image builder...");
         String namespace = buildBotConfig.getNamespaceBuildExecution();
         String serviceAccountName = buildBotConfig.getDockerRegistryServiceAccountName();
 
@@ -94,7 +95,6 @@ public class ImageBuilder {
             Build.class, BuildList.class, DoneableBuild.class);
 
         String resourceScope = buildCRD.get().getSpec().getScope();
-        log.debug("Build CRD has scope `{}`", resourceScope);
 
         // Resource scope is either 'Namespaced' or 'Cluster'
         boolean resourceNamespaced = false;
@@ -210,7 +210,7 @@ public class ImageBuilder {
         build.setMetadata(metadata);
 
         Build createdBuild = buildClient.createOrReplace(build);
-        log.info("Build created with name '{}'", buildName);
+        log.info("Started build with name '{}'", buildName);
         log.debug("Created build: {} ", createdBuild);
 
         return createdBuild;
@@ -219,29 +219,27 @@ public class ImageBuilder {
     public CompletableFuture<Boolean> waitUntilBuildIsFinished(String buildName) throws InterruptedException, ExecutionException, TimeoutException {
         CompletableFuture<Boolean> completionFuture = new CompletableFuture<>();
 
-        // Create a future that polls every second with a delay of 10 seconds.
+        // Create a future that polls every 5 seconds with a delay of 10 seconds.
         final ScheduledFuture<?> checkFuture = scheduledBuildStatusCheckService.scheduleAtFixedRate(() -> {
 
             Build build = getBuild(buildName);
             if (build.getStatus() != null && build.getStatus().getCluster() != null) {
                 String buildPodName = build.getStatus().getCluster().getPodName();
                 String buildNamespace = build.getStatus().getCluster().getNamespace();
-                log.debug("Build is executed with pod '{}' in namespace '{}'", buildPodName, buildNamespace);
+                Pod buildPod = this.kubernetesClient.pods().inNamespace(buildNamespace).withName(buildPodName).get();
 
-                Pod buildPod = this.kubernetesClient.pods().inNamespace(buildBotConfig.getNamespaceBuildExecution()).withName(buildPodName).get();
-
-                log.debug("Current build phase: {}", buildPod.getStatus().getPhase());
-                if (buildPod.getStatus().getPhase().equals("Succeeded")) {
+                String currentBuildPhase = buildPod.getStatus().getPhase();
+                log.debug("Current phase of build pod '{}' is '{}'.", buildPodName, currentBuildPhase);
+                if (currentBuildPhase.equals("Succeeded")) {
                     completionFuture.complete(true);
-                    // TODO Clean up build (delete build pod)
-                } else if (buildPod.getStatus().getPhase().equals("Failed")) {
+                } else if (currentBuildPhase.equals("Failed")) {
                     completionFuture.complete(false);
                 }
             } else {
                 log.error("Build was not started!");
                 completionFuture.complete(false);
             }
-        }, 10, 1, TimeUnit.SECONDS);
+        }, 10, 5, TimeUnit.SECONDS);
 
         // Add a timeout. This is synchronous and blocks the execution.
         completionFuture.get(buildBotConfig.getBuildTimeout(), TimeUnit.SECONDS);

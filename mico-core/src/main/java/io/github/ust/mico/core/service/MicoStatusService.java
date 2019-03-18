@@ -148,10 +148,12 @@ public class MicoStatusService {
             serviceStatus.getErrorMessages().addAll(errorMessages);
         }
 
-        // Return the names of all applications that are using this service
+        // Return all applications that are using this service and are actually deployed
         List<MicoApplication> usingApplications = micoApplicationRepository.findAllByUsedService(micoService.getShortName(), micoService.getVersion());
         for (MicoApplication application : usingApplications) {
-            serviceStatus.getApplicationsUsingThisService().add(new MicoApplicationResponseDTO(application));
+            if(micoKubernetesClient.isApplicationDeployed(application)) {
+                serviceStatus.getApplicationsUsingThisService().add(new MicoApplicationResponseDTO(application));
+            }
         }
 
         // Get status information for all pods of a service

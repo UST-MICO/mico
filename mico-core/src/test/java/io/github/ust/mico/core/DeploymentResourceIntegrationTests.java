@@ -27,11 +27,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.concurrent.CompletableFuture;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import io.github.ust.mico.core.util.EmbeddedRedisServer;
+import org.junit.*;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -56,6 +55,9 @@ import lombok.extern.slf4j.Slf4j;
 public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
 
     private static final String BASE_PATH = "/applications";
+
+    @ClassRule
+    public static RuleChain rules = RuleChain.outerRule(EmbeddedRedisServer.runningAt(6379).suppressExceptions());
 
     @Autowired
     private MockMvc mvc;
@@ -110,7 +112,7 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
 
         mvc.perform(post(BASE_PATH + "/" + applicationShortName + "/" + applicationVersion + "/deploy"))
             .andDo(print())
-            .andExpect(status().isOk());
+            .andExpect(status().isAccepted());
 
         // Wait until all pods (inclusive build pod) are running or succeeded
         CompletableFuture<Boolean> allPodsInNamespaceAreRunning = integrationTestsUtils.waitUntilAllPodsInNamespaceAreRunning(

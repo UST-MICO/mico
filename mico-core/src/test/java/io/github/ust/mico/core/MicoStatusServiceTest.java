@@ -310,6 +310,7 @@ public class MicoStatusServiceTest {
             given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(deployment);
             given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(kubernetesService);
             given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(any(MicoService.class))).willReturn(podList.getItems());
+            given(micoKubernetesClient.isApplicationDeployed(otherMicoApplication)).willReturn(true);
         } catch (KubernetesResourceException e) {
             e.printStackTrace();
         }
@@ -384,6 +385,7 @@ public class MicoStatusServiceTest {
             given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(deployment);
             given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(kubernetesServiceWithoutIps);
             given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(any(MicoService.class))).willReturn(podListWithOnePod.getItems());
+            given(micoKubernetesClient.isApplicationDeployed(otherMicoApplication)).willReturn(true);
         } catch (KubernetesResourceException e) {
             e.printStackTrace();
         }
@@ -507,6 +509,7 @@ public class MicoStatusServiceTest {
             given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(deployment);
             given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(kubernetesService);
             given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(any(MicoService.class))).willReturn(podList.getItems());
+            given(micoKubernetesClient.isApplicationDeployed(otherMicoApplication)).willReturn(true);
         } catch (KubernetesResourceException e) {
             e.printStackTrace();
         }

@@ -86,6 +86,9 @@ public class ApplicationResource {
     
     @Autowired
     private MicoEnvironmentVariableRepository environmentVariableRepository;
+    
+    @Autowired
+    private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
 
     @Autowired
     private MicoKubernetesClient micoKubernetesClient;
@@ -178,11 +181,15 @@ public class ApplicationResource {
         application.getServiceDeploymentInfos().forEach(sdi -> sdi.setId(null));
         application.getServiceDeploymentInfos().forEach(sdi -> sdi.getLabels().forEach(label -> label.setId(null)));
         application.getServiceDeploymentInfos().forEach(sdi -> sdi.getEnvironmentVariables().forEach(envVar -> envVar.setId(null)));
-        // NOTE: Also clear ids for Kubernetes deployment information.
+        // The actual Kubernetes deployment information must not be copied, because the new application
+        // is considered to be not deployed yet.
+        application.getServiceDeploymentInfos().forEach(sdi -> sdi.setKubernetesDeploymentInfo(null));
 
         // Save the new (promoted) application in the database.
         MicoApplication updatedApplication = applicationRepository.save(application);
         log.debug("Saved following application in database: {}", updatedApplication);
+
+        log.info("Promoted application '{}': {} → {}", shortName, version, updatedApplication.getVersion());
 
         return ResponseEntity.ok(getApplicationWithServicesResponseDTOResourceWithDeploymentStatus(updatedApplication));
     }
@@ -359,7 +366,7 @@ public class ApplicationResource {
     	// "tangling" (without relationships) labels (nodes), hence the manual clean up.
     	labelRepository.cleanUp();
     	environmentVariableRepository.cleanUp();
-    	// NOTE: Clean up Kubernetes deployment info.
+    	kubernetesDeploymentInfoRepository.cleanUp();
     	log.debug("Service deployment information for service '{}' in application '{}' '{}' has been updated.", serviceShortName, shortName, version);
     	
         // TODO: Update actual Kubernetes deployment (see issue mico#416).
@@ -421,14 +428,9 @@ public class ApplicationResource {
     }
 
     private MicoApplicationDeploymentStatus getApplicationDeploymentStatus(MicoApplication application) {
-        try {
-        	if (micoKubernetesClient.isApplicationDeployed(application)) {
-        		return MicoApplicationDeploymentStatus.DEPLOYED;
-        	}
-        } catch (KubernetesResourceException e) {
-            log.debug(e.getMessage(), e);
-        }
-        return MicoApplicationDeploymentStatus.NOT_DEPLOYED;
+        return micoKubernetesClient.isApplicationDeployed(application)
+            ? MicoApplicationDeploymentStatus.DEPLOYED
+            : MicoApplicationDeploymentStatus.NOT_DEPLOYED;
     }
 
     private Iterable<Link> getApplicationLinks(MicoApplication application) {

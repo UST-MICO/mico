@@ -98,19 +98,6 @@ public class MicoServiceInterfaceRequestDTO {
     // ----------------------
 
     /**
-     * The public DNS.
-     */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Public DNS"),
-            @ExtensionProperty(name = "x-order", value = "100"),
-            @ExtensionProperty(name = "description", value = "The public DNS.")
-        }
-    )})
-    private String publicDns;
-
-    /**
      * Human readable description of this service interface,
      * e.g., the functionality provided.
      */
@@ -137,19 +124,6 @@ public class MicoServiceInterfaceRequestDTO {
         }
     )})
     private String protocol;
-
-    /**
-     * The transport protocol, e.g., TCP.
-     */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Transport Protocol"),
-            @ExtensionProperty(name = "x-order", value = "130"),
-            @ExtensionProperty(name = "description", value = "The transport protocol of this interface.")
-        }
-    )})
-    private String transportProtocol;
     
     
     // -------------------
@@ -165,10 +139,8 @@ public class MicoServiceInterfaceRequestDTO {
     public MicoServiceInterfaceRequestDTO(MicoServiceInterface serviceInterface) {
     	this.serviceInterfaceName = serviceInterface.getServiceInterfaceName();
     	this.ports = serviceInterface.getPorts().stream().map(MicoServicePortRequestDTO::new).collect(Collectors.toList());
-    	this.publicDns = serviceInterface.getPublicDns();
     	this.description = serviceInterface.getDescription();
     	this.protocol = serviceInterface.getProtocol();
-    	this.transportProtocol = serviceInterface.getTransportProtocol();
     	
     }
 
