@@ -20,18 +20,19 @@
 package io.github.ust.mico.core.service.imagebuilder.buildtypes;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 /**
  * ArgumentSpec defines the actual values to use to populate a template's parameters.
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@Getter
-@Builder
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
-@EqualsAndHashCode
+@Accessors(chain = true)
 public class ArgumentSpec {
 
     /**

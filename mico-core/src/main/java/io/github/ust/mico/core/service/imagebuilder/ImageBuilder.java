@@ -32,6 +32,7 @@ import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.exception.NotInitializedException;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.service.imagebuilder.buildtypes.*;
+import io.github.ust.mico.core.util.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -187,24 +188,21 @@ public class ImageBuilder {
             throw new NotInitializedException("ImageBuilder is not initialized.");
         }
 
-        Build build = Build.builder()
-            .spec(BuildSpec.builder()
-                .serviceAccountName(buildBotConfig.getDockerRegistryServiceAccountName())
-                .source(SourceSpec.builder()
-                    .git(GitSourceSpec.builder()
-                        .url(gitUrl)
-                        .revision(gitRevision)
-                        .build())
-                    .build())
-                .step(BuildStep.builder()
-                    .name(BUILD_STEP_NAME)
-                    .image(buildBotConfig.getKanikoExecutorImageUrl())
-                    .arg("--dockerfile=" + dockerfile)
-                    .arg("--destination=" + destination)
-                    .build())
-                .timeout(buildBotConfig.getBuildTimeout() + "s")
-                .build())
-            .build();
+        Build build = new Build()
+            .setSpec(new BuildSpec()
+                .setServiceAccountName(buildBotConfig.getDockerRegistryServiceAccountName())
+                .setSource(new SourceSpec()
+                    .setGit(new GitSourceSpec()
+                        .setUrl(gitUrl)
+                        .setRevision(gitRevision)))
+                .setSteps(CollectionUtils.listOf(new BuildStep()
+                    .setName(BUILD_STEP_NAME)
+                    .setImage(buildBotConfig.getKanikoExecutorImageUrl())
+                    .setArgs(CollectionUtils.listOf(
+                        "--dockerfile=" + dockerfile,
+                        "--destination=" + destination)
+                    )))
+                .setTimeout(buildBotConfig.getBuildTimeout() + "s"));
 
         ObjectMeta metadata = new ObjectMeta();
         metadata.setName(buildName);
@@ -261,9 +259,8 @@ public class ImageBuilder {
      */
     private List<CustomResourceDefinition> getCustomResourceDefinitions() {
         CustomResourceDefinitionList crds = kubernetesClient.customResourceDefinitions().list();
-        List<CustomResourceDefinition> crdsItems = crds.getItems();
 
-        return crdsItems;
+        return crds.getItems();
     }
 
     /**
