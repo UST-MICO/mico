@@ -200,7 +200,6 @@ public class MicoServiceBroker {
         return dependencyAlreadyExists;
     }
 
-    //TODO: Create test
     public MicoService persistNewDependencyBetweenServices(MicoService service, MicoService serviceDependee) {
         MicoServiceDependency processedServiceDependee = new MicoServiceDependency()
                 .setDependedService(serviceDependee)
@@ -219,9 +218,10 @@ public class MicoServiceBroker {
     }
 
     //TODO: Create test
-    public void deleteDependencyBetweenServices(MicoService service, MicoService serviceToDelete) {
-        service.getDependencies().removeIf(dependency -> dependency.getDependedService().getId() == serviceToDelete.getId());
-        serviceRepository.save(service);
+    public MicoService deleteDependencyBetweenServices(MicoService service, MicoService serviceToDelete) {
+        service.getDependencies().removeIf(dependency -> dependency.getDependedService().getId().equals(serviceToDelete.getId()));
+        MicoService updatedService = serviceRepository.save(service);
+        return updatedService;
     }
 
     //TODO: Create test

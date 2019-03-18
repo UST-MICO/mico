@@ -372,4 +372,36 @@ public class MicoServiceBrokerTests {
         assertThat(updatedService.getDependencies().get(0).getDependedService()).isEqualTo(service2);
     }
 
+    @Test
+    public void deleteDependencyBetweenServices() {
+        MicoService service1 = new MicoService()
+                .setId(new Long(1))
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_1)
+                .setDescription(DESCRIPTION_1);
+        MicoService service2 = new MicoService()
+                .setId(new Long(2))
+                .setShortName(SHORT_NAME_2)
+                .setVersion(VERSION_1_0_2)
+                .setName(NAME_2)
+                .setDescription(DESCRIPTION_2);
+
+        MicoServiceDependency dependency = new MicoServiceDependency().setService(service1).setDependedService(service2);
+
+        service1.setDependencies(Collections.singletonList(dependency));
+
+        MicoService expectedService = new MicoService()
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_1)
+                .setDescription(DESCRIPTION_1);
+
+        given(serviceRepository.save(service1)).willReturn(expectedService);
+
+        MicoService updatedService = micoServiceBroker.deleteDependencyBetweenServices(service1, service2);
+
+        assertThat(updatedService.getDependencies()).doesNotContain(dependency);
+    }
+
 }
