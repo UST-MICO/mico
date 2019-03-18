@@ -99,9 +99,6 @@ public class ServiceResourceTests {
     @MockBean
     private MicoStatusService micoStatusService;
 
-//    @MockBean
-//    private MicoServiceRepository serviceRepository;
-
     @MockBean
     private GitHubCrawler crawler;
 
@@ -475,7 +472,7 @@ public class ServiceResourceTests {
         service2.setDependencies(Collections.singletonList(dependency2));
         service3.setDependencies(Collections.singletonList(dependency3));
 
-        given(micoServiceBroker.findDependers(service.getShortName(), service.getVersion())).willReturn(CollectionUtils.listOf(service1, service2, service3));
+        given(micoServiceBroker.findDependers(service)).willReturn(CollectionUtils.listOf(service1, service2, service3));
 
         String urlPath = SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + DEPENDERS_SUBPATH;
         ResultActions result = mvc.perform(get(urlPath)

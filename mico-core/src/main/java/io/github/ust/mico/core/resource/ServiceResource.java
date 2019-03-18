@@ -137,7 +137,7 @@ public class ServiceResource {
         MicoService service = getServiceFromMicoServiceBroker(shortName, version);
 
         //TODO: findDependers and getDependers inside deleteService seem to be a logical copy
-        if (!micoServiceBroker.findDependers(shortName, version).isEmpty()) {
+        if (!micoServiceBroker.findDependers(service).isEmpty()) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
                     "Service '" + service.getShortName() + "' '" + service.getVersion() + "' has dependers, therefore it can't be deleted.");
         }
@@ -290,7 +290,8 @@ public class ServiceResource {
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPENDERS)
     public ResponseEntity<Resources<Resource<MicoServiceResponseDTO>>> getDependers(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        List<MicoService> dependers = micoServiceBroker.findDependers(shortName, version);
+        MicoService service = getServiceFromMicoServiceBroker(shortName, version);
+        List<MicoService> dependers = micoServiceBroker.findDependers(service);
 
         return ResponseEntity.ok(
                 new Resources<>(getServiceResponseDTOResourcesList(dependers),

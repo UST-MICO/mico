@@ -11,6 +11,7 @@ import io.github.ust.mico.core.util.CollectionUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
+import org.neo4j.cypher.internal.v3_4.expressions.True;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -189,6 +190,46 @@ public class MicoServiceBrokerTests {
     }
 
     @Test
+    public void getAllDependersOfServiceByQuery() throws Exception {
+        MicoService service = new MicoService()
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION)
+                .setName(NAME)
+                .setDescription(DESCRIPTION);
+
+        MicoService service1 = new MicoService()
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME)
+                .setDescription(DESCRIPTION_1);
+        MicoService service2 = new MicoService()
+                .setShortName(SHORT_NAME_2)
+                .setVersion(VERSION_1_0_2)
+                .setDescription(DESCRIPTION_2);
+        MicoService service3 = new MicoService()
+                .setShortName(SHORT_NAME_3)
+                .setVersion(VERSION_1_0_3)
+                .setName(NAME)
+                .setDescription(DESCRIPTION_3);
+
+        MicoServiceDependency dependency1 = new MicoServiceDependency().setService(service1).setDependedService(service);
+        MicoServiceDependency dependency2 = new MicoServiceDependency().setService(service2).setDependedService(service);
+        MicoServiceDependency dependency3 = new MicoServiceDependency().setService(service3).setDependedService(service);
+
+        service1.setDependencies(Collections.singletonList(dependency1));
+        service2.setDependencies(Collections.singletonList(dependency2));
+        service3.setDependencies(Collections.singletonList(dependency3));
+
+        given(serviceRepository.findDependers(service.getShortName(), service.getVersion())).willReturn(CollectionUtils.listOf(service, service1, service2, service3));
+
+        List<MicoService> dependers = micoServiceBroker.findDependers(service);
+
+        assertThat(dependers).contains(service1);
+        assertThat(dependers).contains(service2);
+        assertThat(dependers).contains(service3);
+    }
+
+    @Test
     public void getDependentServicesOfService() {
         MicoService service1 = new MicoService()
                 .setShortName(SHORT_NAME_1)
@@ -216,6 +257,74 @@ public class MicoServiceBrokerTests {
 
         assertThat(dependentServices).contains(service1);
         assertThat(dependentServices).contains(service2);
+    }
+
+    @Test
+    public void getDependeesByQuery() {
+        MicoService service1 = new MicoService()
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_1)
+                .setDescription(DESCRIPTION_1);
+        MicoService service2 = new MicoService()
+                .setShortName(SHORT_NAME_2)
+                .setVersion(VERSION_1_0_2)
+                .setName(NAME_2)
+                .setDescription(DESCRIPTION_2);
+        MicoService service = new MicoService()
+                .setShortName(SHORT_NAME)
+                .setName(NAME)
+                .setVersion(VERSION);
+        MicoServiceDependency dependency1 = new MicoServiceDependency().setService(service).setDependedService(service1);
+        MicoServiceDependency dependency2 = new MicoServiceDependency().setService(service).setDependedService(service2);
+        service.setDependencies(CollectionUtils.listOf(dependency1, dependency2));
+
+        given(serviceRepository.findDependees(service.getShortName(), service.getVersion())).willReturn(CollectionUtils.listOf(service1,service2));
+
+        List<MicoService> dependentServices = micoServiceBroker.getDependeesByMicoService(service);
+
+        assertThat(dependentServices).contains(service1);
+        assertThat(dependentServices).contains(service2);
+    }
+
+    @Test
+    public void checkIfDependencyAlreadyExistsAndCheckForTrue() {
+        MicoService service = new MicoService()
+                .setShortName(SHORT_NAME)
+                .setName(NAME)
+                .setVersion(VERSION);
+
+        MicoService service1 = new MicoService()
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_1)
+                .setDescription(DESCRIPTION_1);
+
+        MicoServiceDependency dependency1 = new MicoServiceDependency().setService(service).setDependedService(service1);
+
+        service.setDependencies(Collections.singletonList(dependency1));
+
+        boolean result = micoServiceBroker.checkIfDependencyAlreadyExists(service, service1);
+
+        assertThat(result).isEqualTo(true);
+    }
+
+    @Test
+    public void checkIfDependencyAlreadyExistsAndCheckForFalse() {
+        MicoService service = new MicoService()
+                .setShortName(SHORT_NAME)
+                .setName(NAME)
+                .setVersion(VERSION);
+
+        MicoService service1 = new MicoService()
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_1)
+                .setDescription(DESCRIPTION_1);
+
+        boolean result = micoServiceBroker.checkIfDependencyAlreadyExists(service, service1);
+
+        assertThat(result).isEqualTo(false);
     }
 
 }

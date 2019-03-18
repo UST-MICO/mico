@@ -137,8 +137,8 @@ public class MicoServiceBroker {
     }
 
     //TODO: Same functionality as getDependers?
-    public List<MicoService> findDependers(String shortName, String version) {
-        return serviceRepository.findDependers(shortName, version);
+    public List<MicoService> findDependers(MicoService service) {
+        return serviceRepository.findDependers(service.getShortName(), service.getVersion());
     }
 
 //    public MicoServiceStatusDTO getStatusOfService(String shortName, String version) throws MicoServiceNotFoundException {
@@ -186,7 +186,6 @@ public class MicoServiceBroker {
         return services;
     }
 
-    //TODO: Create test
     public List<MicoService> getDependeesByMicoService(MicoService service) {
         return serviceRepository.findDependees(service.getShortName(), service.getVersion());
     }
