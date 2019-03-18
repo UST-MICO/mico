@@ -190,7 +190,6 @@ public class MicoServiceBroker {
         return serviceRepository.findDependees(service.getShortName(), service.getVersion());
     }
 
-    //TODO: Create test
     public boolean checkIfDependencyAlreadyExists(MicoService service, MicoService serviceDependee) {
         boolean dependencyAlreadyExists = (service.getDependencies() != null) && service.getDependencies().stream().anyMatch(
                 dependency -> dependency.getDependedService().getShortName().equals(serviceDependee.getShortName())
