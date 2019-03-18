@@ -54,29 +54,6 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
         @Param("applicationVersion") String applicationVersion);
     
     /**
-     * Retrieves the deployment information for a particular application and service. 
-     * 
-     * @param applicationShortName the short name of the {@link MicoApplication}.
-     * @param applicationVersion the version of the {@link MicoApplication}.
-     * @param serviceShortName the short name of the {@link MicoService}.
-     * @return an {@link Optional} of {@link MicoServiceDeploymentInfo}.
-     */
-    @Query("MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
-    	+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
-		+ "AND s.shortName = {serviceShortName} " 
-    	+ "WITH a, sdi , s OPTIONAL MATCH (sdi)-[:HAS]->(label:MicoLabel) "
-    	+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
-		+ "AND s.shortName = {serviceShortName} " 
-    	+ "WITH a, sdi , s OPTIONAL MATCH (sdi)-[:HAS]->(env:MicoEnvironmentVariable) "
-        + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
-        + "AND s.shortName = {serviceShortName} "
-        + "RETURN (sdi:MicoServiceDeploymentInfo)-->()")
-    Optional<MicoServiceDeploymentInfo> findByApplicationAndService(
-        @Param("applicationShortName") String applicationShortName,
-        @Param("applicationVersion") String applicationVersion,
-        @Param("serviceShortName") String serviceShortName);
-    
-    /**
      * Retrieves the deployment information for a particular application and service.
      * 
      * @param applicationShortName the short name of the {@link MicoApplication}.

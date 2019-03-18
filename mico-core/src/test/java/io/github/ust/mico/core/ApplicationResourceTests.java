@@ -743,7 +743,7 @@ public class ApplicationResourceTests {
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(serviceRepository.findByShortNameAndVersion(SERVICE_SHORT_NAME, SERVICE_VERSION)).willReturn(Optional.of(service));
-        given(serviceDeploymentInfoRepository.findByApplicationAndService(SHORT_NAME, VERSION, SERVICE_SHORT_NAME))
+        given(serviceDeploymentInfoRepository.findByApplicationAndService(SHORT_NAME, VERSION, SERVICE_SHORT_NAME, SERVICE_VERSION))
             .willReturn(Optional.of(application.getServiceDeploymentInfos().get(0)));
 
         mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/services/" + SERVICE_SHORT_NAME))
@@ -773,9 +773,10 @@ public class ApplicationResourceTests {
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
 		given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(),
-		    application.getVersion(), service.getShortName())).willReturn(Optional.of(serviceDeploymentInfo));
+		    application.getVersion(), service.getShortName(), service.getVersion())).willReturn(Optional.of(serviceDeploymentInfo));
 
-        mvc.perform(get(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName()))
+        mvc.perform(get(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/"
+            + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName() + "/" + service.getVersion()))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath(SDI_REPLICAS_PATH, is(serviceDeploymentInfo.getReplicas())))
@@ -817,10 +818,11 @@ public class ApplicationResourceTests {
 
         given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion())).willReturn(Optional.of(application));
         given(applicationRepository.save(eq(expectedApplication))).willReturn(expectedApplication);
-        given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName())).willReturn(Optional.of(serviceDeploymentInfo));
+        given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName(), service.getVersion())).willReturn(Optional.of(serviceDeploymentInfo));
         given(serviceDeploymentInfoRepository.save(eq(serviceDeploymentInfo.applyValuesFrom(updatedServiceDeploymentInfoDTO)))).willReturn(serviceDeploymentInfo.applyValuesFrom(updatedServiceDeploymentInfoDTO));
 
-        mvc.perform(put(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName())
+        mvc.perform(put(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/"
+            + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName() + "/" + service.getVersion())
             .content(mapper.writeValueAsBytes(updatedServiceDeploymentInfoDTO))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -906,7 +908,8 @@ public class ApplicationResourceTests {
         given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion()))
             .willReturn(Optional.of(application));
 
-        final ResultActions result = mvc.perform(put(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName())
+        final ResultActions result = mvc.perform(put(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion()
+            + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName() + "/" + service.getVersion())
             .content(mapper.writeValueAsBytes(updatedServiceDeploymentInfoDTO))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print());
