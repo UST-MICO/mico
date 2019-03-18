@@ -16,6 +16,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
@@ -346,7 +347,8 @@ public class MicoServiceBrokerTests {
                 .setShortName(SHORT_NAME_1)
                 .setVersion(VERSION_1_0_1)
                 .setName(NAME_1)
-                .setDescription(DESCRIPTION_1);
+                .setDescription(DESCRIPTION_1)
+                .setDependencies(new LinkedList<>());
         MicoService service2 = new MicoService()
                 .setShortName(SHORT_NAME_2)
                 .setVersion(VERSION_1_0_2)
@@ -367,7 +369,7 @@ public class MicoServiceBrokerTests {
         MicoService updatedService = micoServiceBroker.persistNewDependencyBetweenServices(service1, service2);
 
         assertThat(updatedService.getDependencies().size()).isEqualTo(1);
-        assertThat(updatedService.getDependencies().get(0)).isEqualTo(service2);
+        assertThat(updatedService.getDependencies().get(0).getDependedService()).isEqualTo(service2);
     }
 
 }
