@@ -156,6 +156,7 @@ public class ServiceResource {
             serviceStatus = micoStatusService.getServiceStatus(micoServiceOptional.get());
         } else {
             log.error("MicoService not found in service repository.");
+            return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(new Resource<>(serviceStatus));
     }
