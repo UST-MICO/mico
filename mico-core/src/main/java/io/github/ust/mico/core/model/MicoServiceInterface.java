@@ -75,11 +75,6 @@ public class MicoServiceInterface {
     // ----------------------
 
     /**
-     * The public DNS.
-     */
-    private String publicDns;
-
-    /**
      * Human readable description of this service interface,
      * e.g., the functionality provided.
      * {@code null} values are skipped.
@@ -90,11 +85,6 @@ public class MicoServiceInterface {
      * The protocol of this interface, e.g., HTTPS.
      */
     private String protocol;
-
-    /**
-     * The transport protocol, e.g., TCP.
-     */
-    private String transportProtocol;
 
 
     // ----------------------
@@ -112,10 +102,8 @@ public class MicoServiceInterface {
         return new MicoServiceInterface()
         	.setServiceInterfaceName(serviceInterfaceDto.getServiceInterfaceName())
         	.setPorts(serviceInterfaceDto.getPorts().stream().map(MicoServicePort::valueOf).collect(Collectors.toList()))
-        	.setPublicDns(serviceInterfaceDto.getPublicDns())
         	.setDescription(serviceInterfaceDto.getDescription())
-        	.setProtocol(serviceInterfaceDto.getProtocol())
-        	.setTransportProtocol(serviceInterfaceDto.getTransportProtocol());
+        	.setProtocol(serviceInterfaceDto.getProtocol());
     }
 
 }

@@ -50,7 +50,6 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
     private static final int TEST_TARGET_PORT = 8081;
     private static final String TEST_SERVICE_INTERFACE_DESCRIPTION = "This is an interface of an service";
     private static final String TEST_PROTOCOL = "http";
-    private static final String TEST_DNS = "DNS";
     private static final String TEST_SERVICE_INTERFACE_NAME = "Service interface name";
     private static final String TEST_LONGER_NAME = "TEST LONGER APPLICATION_NAME";
     private static final String TEST_VERSION = "1.0";
@@ -85,7 +84,6 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
         assertEquals(TEST_TARGET_PORT, serviceInterfaceTest.getPorts().get(0).getTargetPort());
         assertEquals(TEST_SERVICE_INTERFACE_DESCRIPTION, serviceInterfaceTest.getDescription());
         assertEquals(TEST_PROTOCOL, serviceInterfaceTest.getProtocol());
-        assertEquals(TEST_DNS, serviceInterfaceTest.getPublicDns());
         assertEquals(TEST_SERVICE_INTERFACE_NAME, serviceInterfaceTest.getServiceInterfaceName());
     }
 
@@ -101,7 +99,6 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
                                 .setPort(8080)
                                 .setType(MicoPortType.TCP)
                                 .setTargetPort(8081)))
-                        .setPublicDns(TEST_DNS)
                         .setDescription(TEST_SERVICE_INTERFACE_DESCRIPTION)
                         .setProtocol(TEST_PROTOCOL)))
                 .setServiceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
@@ -123,7 +120,6 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
         String testInterface2Name = "Service Interface 2";
         int testInterface2Port = 9000;
         int testInterface2TargetPort = 9001;
-        String testInterface2PublicDns = "DNS 2";
         String testInterface2Description = "This is service interface 2";
         String testInterface2Protocol = "TCP";
 
@@ -138,7 +134,6 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
                         .setPort(testInterface2Port)
                         .setType(MicoPortType.TCP)
                         .setTargetPort(testInterface2TargetPort)))
-                .setPublicDns(testInterface2PublicDns)
                 .setDescription(testInterface2Description)
                 .setProtocol(testInterface2Protocol)))
         .setServiceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
