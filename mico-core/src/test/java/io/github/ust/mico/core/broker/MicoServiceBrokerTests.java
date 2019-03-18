@@ -379,7 +379,8 @@ public class MicoServiceBrokerTests {
                 .setShortName(SHORT_NAME_1)
                 .setVersion(VERSION_1_0_1)
                 .setName(NAME_1)
-                .setDescription(DESCRIPTION_1);
+                .setDescription(DESCRIPTION_1)
+                .setDependencies(new LinkedList<>());
         MicoService service2 = new MicoService()
                 .setId(new Long(2))
                 .setShortName(SHORT_NAME_2)
@@ -389,7 +390,7 @@ public class MicoServiceBrokerTests {
 
         MicoServiceDependency dependency = new MicoServiceDependency().setService(service1).setDependedService(service2);
 
-        service1.setDependencies(Collections.singletonList(dependency));
+        service1.getDependencies().add(dependency);
 
         MicoService expectedService = new MicoService()
                 .setShortName(SHORT_NAME_1)

@@ -88,8 +88,7 @@ public class MicoServiceInterfaceBrokerTests {
                         .setPort(INTERFACE_PORT)
                         .setType(INTERFACE_PORT_TYPE)
                         .setTargetPort(INTERFACE_TARGET_PORT)))
-                .setDescription(INTERFACE_DESCRIPTION)
-                .setPublicDns(INTERFACE_PUBLIC_DNS);
+                .setDescription(INTERFACE_DESCRIPTION);
     }
 
 }
