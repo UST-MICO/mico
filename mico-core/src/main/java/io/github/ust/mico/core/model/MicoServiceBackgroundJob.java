@@ -36,7 +36,7 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @RedisHash("BackgroundJob")
 @Accessors(chain = true)
-public class MicoServiceBackgroundTask implements Serializable {
+public class MicoServiceBackgroundJob implements Serializable {
 
 	private static final long serialVersionUID = -8247189361567566737L;
 	

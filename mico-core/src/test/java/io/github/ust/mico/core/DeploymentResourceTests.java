@@ -23,16 +23,16 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
-import io.github.ust.mico.core.broker.BackgroundTaskBroker;
+import io.github.ust.mico.core.broker.BackgroundJobBroker;
 import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoBackgroundTaskRepository;
+import io.github.ust.mico.core.persistence.MicoBackgroundJobRepository;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.resource.DeploymentResource;
-import io.github.ust.mico.core.service.MicoCoreBackgroundTaskFactory;
+import io.github.ust.mico.core.service.MicoCoreBackgroundJobFactory;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.util.CollectionUtils;
@@ -115,16 +115,16 @@ public class DeploymentResourceTests {
     private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
     
     @MockBean
-    private MicoBackgroundTaskRepository backgroundTaskRepository;
+    private MicoBackgroundJobRepository backgroundJobRepository;
     
     @MockBean
-    private BackgroundTaskBroker backgroundTaskBroker;
+    private BackgroundJobBroker backgroundJobBroker;
     
     @MockBean
     private ImageBuilder imageBuilder;
     
     @MockBean
-    private MicoCoreBackgroundTaskFactory factory;
+    private MicoCoreBackgroundJobFactory factory;
     
     @MockBean
     private MicoKubernetesClient micoKubernetesClient;
@@ -172,22 +172,22 @@ public class DeploymentResourceTests {
         CompletableFuture<?> future = CompletableFuture.completedFuture(service);
         given(factory.runAsync(any(), onSuccessArgumentCaptor.capture(), onErrorArgumentCaptor.capture())).willReturn(future);
 
-        MicoServiceBackgroundTask mockTask = new MicoServiceBackgroundTask()
+        MicoServiceBackgroundJob mockJob = new MicoServiceBackgroundJob()
             .setJob(future)
             .setServiceShortName(service.getShortName())
             .setServiceVersion(service.getVersion())
-            .setType(MicoServiceBackgroundTask.Type.BUILD);
+            .setType(MicoServiceBackgroundJob.Type.BUILD);
 
-        given(backgroundTaskRepository.findByServiceShortNameAndServiceVersionAndType(service.getShortName(), service.getVersion(), MicoServiceBackgroundTask.Type.BUILD))
-            .willReturn(Optional.of(mockTask));
-        given(backgroundTaskRepository.save(mockTask)).willReturn(mockTask);
+        given(backgroundJobRepository.findByServiceShortNameAndServiceVersionAndType(service.getShortName(), service.getVersion(), MicoServiceBackgroundJob.Type.BUILD))
+            .willReturn(Optional.of(mockJob));
+        given(backgroundJobRepository.save(mockJob)).willReturn(mockJob);
 
-        given(backgroundTaskBroker.getJobStatusByApplicationShortNameAndVersion(SHORT_NAME, VERSION))
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(SHORT_NAME, VERSION))
             .willReturn(new MicoApplicationJobStatus()
                 .setApplicationShortName(SHORT_NAME)
                 .setApplicationVersion(VERSION)
-                .setStatus(MicoServiceBackgroundTask.Status.PENDING)
-                .setJobs(Collections.singletonList(mockTask)));
+                .setStatus(MicoServiceBackgroundJob.Status.PENDING)
+                .setJobs(Collections.singletonList(mockJob)));
 
         mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/deploy"))
             .andDo(print())
