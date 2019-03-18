@@ -1,16 +1,23 @@
 package io.github.ust.mico.core.exception;
 
 public class MicoServiceNotFoundException extends Exception {
-    public MicoServiceNotFoundException(String shortName, String version){
-        //TODO
+
+    private static final long serialVersionUID = -935780471998542258L;
+
+    public MicoServiceNotFoundException(String shortName, String version) {
+        super("Service '" + shortName + "' '" + version + "' was not found!");
     }
 
-    public MicoServiceNotFoundException(String shortName){
-        //TODO
+    public MicoServiceNotFoundException(String shortName) {
+        super("Service '" + shortName + "' was not found!");
     }
 
-    public MicoServiceNotFoundException(Long id){
-        //TODO
+    public MicoServiceNotFoundException(Long id) {
+        super("Service '" + id + "' was not found!");
+    }
+
+    public MicoServiceNotFoundException() {
+        super("Service was not found!");
     }
 
 }

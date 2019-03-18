@@ -1,19 +1,22 @@
 package io.github.ust.mico.core.exception;
 
 public class MicoApplicationNotFoundException extends Exception {
+
+    private static final long serialVersionUID = -5838689647461478220L;
+
     public MicoApplicationNotFoundException(String shortName, String version) {
-        //TODO: Implementation
+        super("Application '" + shortName + "' '" + version + "' was not found!");
     }
 
     public MicoApplicationNotFoundException(String shortName) {
-        //TODO: Implementation
+        super("Application '" + shortName + "' was not found!");
     }
 
     public MicoApplicationNotFoundException(Long id) {
-        //TODO: Implementation
+        super("Application '" + id + "' was not found!");
     }
 
     public MicoApplicationNotFoundException() {
-        //TODO: Implementation
+        super("Application was not found!");
     }
 }
