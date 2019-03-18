@@ -28,7 +28,6 @@ import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.NotInitializedException;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoBackgroundTaskRepository;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoCoreBackgroundTaskFactory;
@@ -41,7 +40,6 @@ import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -84,12 +82,9 @@ public class DeploymentResource {
     @Autowired
     private MicoKubernetesClient micoKubernetesClient;
 
-    @Autowired
-    private MicoBackgroundTaskRepository backgroundTaskRepo;
-
     @PostMapping
     public ResponseEntity<Resource<MicoApplicationJobStatusResponseDTO>> deploy(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                        @PathVariable(PATH_VARIABLE_VERSION) String version) {
+                                                                                @PathVariable(PATH_VARIABLE_VERSION) String version) {
         try {
             imageBuilder.init();
         } catch (NotInitializedException e) {
@@ -99,7 +94,6 @@ public class DeploymentResource {
         }
 
         Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
-
         if (!micoApplicationOptional.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' was not found!");
         }
@@ -113,11 +107,11 @@ public class DeploymentResource {
             // Check if a build for this MicoService is already running.
             // If yes no build is required, lock changes to running jobs.
             // If the current job status is done, error or cancel delete it and create a new job to get a new id.
-            Optional<MicoServiceBackgroundTask> taskOptional = getTaskByMicoService(
+            Optional<MicoServiceBackgroundTask> taskOptional = backgroundTaskBroker.getTaskByMicoService(
                 micoService.getShortName(), micoService.getVersion(), MicoServiceBackgroundTask.Type.BUILD);
             if (taskOptional.isPresent()) {
                 if (taskOptional.get().getStatus() != MicoServiceBackgroundTask.Status.RUNNING) {
-                    backgroundTaskRepo.delete(taskOptional.get());
+                    backgroundTaskBroker.deleteJob(taskOptional.get().getId());
                 } else {
                     log.debug("Build task of MicoService '{}' '{}' is already running.",
                         micoService.getShortName(), micoService.getVersion());
@@ -130,9 +124,10 @@ public class DeploymentResource {
                 .setServiceShortName(micoService.getShortName())
                 .setServiceVersion(micoService.getVersion())
                 .setType(MicoServiceBackgroundTask.Type.BUILD);
-            backgroundTaskRepo.save(task);
+            backgroundTaskBroker.saveJob(task);
+
             task.setJob(backgroundTaskFactory.runAsync(() -> buildImageAndWait(micoService), dockerImageUri -> {
-                if(dockerImageUri != null) {
+                if (dockerImageUri != null) {
                     log.info("Build of MicoService '{}' in version '{}' finished with image '{}'.",
                         micoService.getShortName(), micoService.getVersion(), dockerImageUri);
 
@@ -140,11 +135,11 @@ public class DeploymentResource {
                     MicoService savedMicoService = serviceRepository.save(micoService);
                     try {
                         createKubernetesResources(micoApplication, savedMicoService);
-                        saveMicoBackgroundTaskStatus(micoService.getShortName(), micoService.getVersion(),
-                            MicoServiceBackgroundTask.Status.DONE, MicoServiceBackgroundTask.Type.BUILD, null);
+                        backgroundTaskBroker.saveNewStatus(micoService.getShortName(), micoService.getVersion(),
+                            MicoServiceBackgroundTask.Type.BUILD, MicoServiceBackgroundTask.Status.DONE);
                     } catch (KubernetesResourceException kre) {
-                        saveMicoBackgroundTaskStatus(micoService.getShortName(), micoService.getVersion(),
-                            MicoServiceBackgroundTask.Status.ERROR, MicoServiceBackgroundTask.Type.BUILD, kre.getMessage());
+                        backgroundTaskBroker.saveNewStatus(micoService.getShortName(), micoService.getVersion(),
+                            MicoServiceBackgroundTask.Type.BUILD, MicoServiceBackgroundTask.Status.ERROR, kre.getMessage());
                         log.error(kre.getMessage(), kre);
                         exceptionHandler(kre);
                     }
@@ -152,44 +147,27 @@ public class DeploymentResource {
                     log.error("Build of MicoService '{}' in version '{}' failed.", micoService.getShortName(), micoService.getVersion());
                 }
             }, this::exceptionHandler));
-            backgroundTaskRepo.save(task);
 
+            backgroundTaskBroker.saveJob(task);
         }
+
         return ResponseEntity
             .accepted()
             .body(new Resource<>(new MicoApplicationJobStatusResponseDTO(backgroundTaskBroker.getJobStatusByApplicationShortNameAndVersion(shortName, version))));
     }
 
-    private Optional<MicoServiceBackgroundTask> getTaskByMicoService(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundTask.Type type) {
-        return backgroundTaskRepo.findByServiceShortNameAndServiceVersionAndType(micoServiceShortName, micoServiceVersion, type);
-    }
-
-    private void saveMicoBackgroundTaskStatus(String micoServiceShortName, String micoServiceVersion,
-                                              MicoServiceBackgroundTask.Status status, MicoServiceBackgroundTask.Type type,
-                                              @Nullable String errorMessage) {
-        Optional<MicoServiceBackgroundTask> taskOptional = getTaskByMicoService(micoServiceShortName, micoServiceVersion, type);
-        if (taskOptional.isPresent()) {
-            MicoServiceBackgroundTask task = taskOptional.get();
-            log.debug("Saving status of '{}'", task);
-            task.setErrorMessage(errorMessage);
-            task.setStatus(status);
-            MicoServiceBackgroundTask savedTask = backgroundTaskRepo.save(task);
-            log.info("Job status of '{}' is '{}'", savedTask.getId(), savedTask.getStatus());
-        }
-    }
-
     private void checkIfMicoApplicationIsDeployable(MicoApplication micoApplication) {
-        if(micoApplication.getServices() == null || micoApplication.getServices().isEmpty()) {
+        if (micoApplication.getServices() == null || micoApplication.getServices().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
                 "Application '" + micoApplication.getShortName() + "' '" + micoApplication.getVersion() + "' does not include any services!");
         }
         for (MicoService micoService : micoApplication.getServices()) {
-            if(micoService.getServiceInterfaces() == null || micoService.getServiceInterfaces().isEmpty()) {
+            if (micoService.getServiceInterfaces() == null || micoService.getServiceInterfaces().isEmpty()) {
                 throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
                     "Application '" + micoApplication.getShortName() + "' '" + micoApplication.getVersion() + "' includes the service '"
                         + micoService.getShortName() + "' '" + micoService.getVersion() + "' that does not include any interfaces!");
             }
-            if(!micoService.getDependencies().isEmpty()) {
+            if (!micoService.getDependencies().isEmpty()) {
                 // TODO: Check if dependencies are valid. Covered by mico#583
                 throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED,
                     "The deployment of service dependencies is currently not implemented. " +
@@ -199,13 +177,15 @@ public class DeploymentResource {
     }
 
     private String buildImageAndWait(MicoService micoService) {
-        saveMicoBackgroundTaskStatus(micoService.getShortName(), micoService.getVersion(), MicoServiceBackgroundTask.Status.RUNNING, MicoServiceBackgroundTask.Type.BUILD, null);
+        backgroundTaskBroker.saveNewStatus(micoService.getShortName(), micoService.getVersion(),
+            MicoServiceBackgroundTask.Type.BUILD, MicoServiceBackgroundTask.Status.RUNNING);
         try {
             Build build = imageBuilder.build(micoService);
             String buildName = build.getMetadata().getName();
 
             // Blocks this thread until build is finished, failed or TimeoutException is thrown
             CompletableFuture<Boolean> booleanCompletableFuture = imageBuilder.waitUntilBuildIsFinished(buildName);
+            backgroundTaskBroker.saveJobOfTask(micoService.getShortName(), micoService.getVersion(), MicoServiceBackgroundTask.Type.BUILD, booleanCompletableFuture);
             if (booleanCompletableFuture.get()) {
                 return imageBuilder.createImageName(micoService.getShortName(), micoService.getVersion());
             } else {
@@ -214,7 +194,8 @@ public class DeploymentResource {
             }
         } catch (NotInitializedException | InterruptedException | ExecutionException | ImageBuildException | TimeoutException e) {
             log.error(e.getMessage(), e);
-            saveMicoBackgroundTaskStatus(micoService.getShortName(), micoService.getVersion(), MicoServiceBackgroundTask.Status.ERROR, MicoServiceBackgroundTask.Type.BUILD, e.getMessage());
+            backgroundTaskBroker.saveNewStatus(micoService.getShortName(), micoService.getVersion(),
+                MicoServiceBackgroundTask.Type.BUILD, MicoServiceBackgroundTask.Status.ERROR, e.getMessage());
             // TODO Handle NotInitializedException in async task properly
             return null;
         }
@@ -232,8 +213,8 @@ public class DeploymentResource {
 
         // Get service deployment information
         Optional<MicoServiceDeploymentInfo> serviceDeploymentInfoOptional = serviceDeploymentInfoRepository
-		    .findByApplicationAndService(micoApplication.getShortName(), micoApplication.getVersion(),
-		        micoService.getShortName(), micoService.getVersion());
+            .findByApplicationAndService(micoApplication.getShortName(), micoApplication.getVersion(),
+                micoService.getShortName(), micoService.getVersion());
         MicoServiceDeploymentInfo serviceDeploymentInfo = serviceDeploymentInfoOptional.orElseThrow(() ->
             new RuntimeException("Service deployment information for service '" + micoService.getShortName()
                 + "' in application '" + micoApplication.getShortName() + "' '" + micoApplication.getVersion()
