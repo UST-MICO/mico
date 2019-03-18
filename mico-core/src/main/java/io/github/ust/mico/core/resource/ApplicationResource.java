@@ -71,6 +71,7 @@ public class ApplicationResource {
     private static final String PATH_VARIABLE_VERSION = "version";
     private static final String PATH_VARIABLE_SERVICE_SHORT_NAME = "serviceShortName";
     private static final String PATH_VARIABLE_SERVICE_VERSION = "serviceVersion";
+    protected static final int MAX_MICO_SERVICES_WITH_SAME_SHORT_NAME = 1;
 
     @Autowired
     private MicoApplicationRepository applicationRepository;
@@ -255,33 +256,56 @@ public class ApplicationResource {
     }
 
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES + "/{" + PATH_VARIABLE_SERVICE_SHORT_NAME + "}/{" + PATH_VARIABLE_SERVICE_VERSION + "}")
-    public ResponseEntity<Void> addServiceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                        @PathVariable(PATH_VARIABLE_VERSION) String version,
-                                                        @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName,
-                                                        @PathVariable(PATH_VARIABLE_SERVICE_VERSION) String serviceVersion) {
-        MicoApplication application = getApplicationFromDatabase(shortName, version);
-        MicoService existingService = getServiceFromDatabase(serviceShortName, serviceVersion);
-        
-        // Check whether the application already contains the service
-        if (application.getServices().contains(existingService)) {
-        	// Application already contains the service -> not allowed
-        	log.info("Application '{}' '{}' already contains service '{}' '{}'.",
-        		shortName, version, serviceShortName, serviceVersion);
-        } else {
-        	log.info("Add service '{}' '{}' to application '{}' '{}'.",
-        		serviceShortName, serviceVersion, shortName, version);
-			// Create default service deployment information for new service
-			MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
-			    .setService(existingService);
-			// Both the service list and the service deployment info list
-			// of the application need to be updated
-			application.getServices().add(existingService);
-			application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
-			// Save the application (also creates the new node for the service deployment information)
-			applicationRepository.save(application);
-		}
-        
+    public ResponseEntity<Void> addServiceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String micoApplicationShortName,
+                                                        @PathVariable(PATH_VARIABLE_VERSION) String micoApplicationVersion,
+                                                        @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String micoServiceShortName,
+                                                        @PathVariable(PATH_VARIABLE_SERVICE_VERSION) String micoServiceVersion) {
+        MicoApplication micoApplication = getApplicationFromDatabase(micoApplicationShortName, micoApplicationVersion);
+        MicoService existingService = getServiceFromDatabase(micoServiceShortName, micoServiceVersion);
+        List<MicoService> micoServicesWithIdenticalShortName = getAllMicoServicesFromMicoApplicationWithShortName(micoServiceShortName, micoApplication);
+        if (micoServicesWithIdenticalShortName.size() > MAX_MICO_SERVICES_WITH_SAME_SHORT_NAME) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "There are more than " + MAX_MICO_SERVICES_WITH_SAME_SHORT_NAME + " MicoService with the same shortName");
+        } else if (micoServicesWithIdenticalShortName.size() == 0) {
+            log.info("Add service '{}' '{}' to application '{}' '{}'.",
+                micoServiceShortName, micoServiceVersion, micoApplicationShortName, micoApplicationVersion);
+            // Create default service deployment information for new service
+            MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
+                .setService(existingService);
+            // Both the service list and the service deployment info list
+            // of the application need to be updated
+            micoApplication.getServices().add(existingService);
+            micoApplication.getServiceDeploymentInfos().add(serviceDeploymentInfo);
+            applicationRepository.save(micoApplication);
+        } else if (micoServicesWithIdenticalShortName.size() == MAX_MICO_SERVICES_WITH_SAME_SHORT_NAME) {
+            MicoService associatedMicService = micoServicesWithIdenticalShortName.get(0);
+            if (associatedMicService.equals(existingService)) {
+                // Application already contains the service -> not allowed to add multiple times
+                log.info("Application '{}' '{}' already contains service '{}' '{}'.",
+                    micoApplicationShortName, micoApplicationVersion, micoServiceShortName, micoServiceVersion);
+            } else {
+                // Same shortName but different version -> update the old
+                log.info("The MicoApplication '{}' '{}' already contains a MicoService with the shortName '{}', " +
+                        "but the given version '{}' is different from the already associated version." +
+                        "The associated MicoService will be replaced with the given one.",
+                    micoApplicationShortName, micoApplicationVersion, micoServiceShortName, micoServiceVersion, associatedMicService.getVersion());
+                //Replace MicoService
+                micoApplication.getServices().remove(associatedMicService);
+                micoApplication.getServices().add(existingService);
+                //Update old deployment info
+                for (MicoServiceDeploymentInfo micoServiceDeploymentInfo : micoApplication.getServiceDeploymentInfos()) {
+                    if (micoServiceDeploymentInfo.getService().equals(associatedMicService)) {
+                        micoServiceDeploymentInfo.setService(existingService);
+                    }
+                }
+                applicationRepository.save(micoApplication);
+            }
+        }
         return ResponseEntity.noContent().build();
+    }
+
+    private List<MicoService> getAllMicoServicesFromMicoApplicationWithShortName(@PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String micoServiceShortName, MicoApplication application) {
+        return application.getServices().stream().filter(micoService -> micoService.getShortName().equals(micoServiceShortName)).collect(Collectors.toList());
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES + "/{" + PATH_VARIABLE_SERVICE_SHORT_NAME + "}")
