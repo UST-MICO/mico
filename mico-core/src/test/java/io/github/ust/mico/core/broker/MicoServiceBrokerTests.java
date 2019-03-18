@@ -1,6 +1,5 @@
 package io.github.ust.mico.core.broker;
 
-import io.github.ust.mico.core.broker.MicoServiceBroker;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
@@ -11,7 +10,6 @@ import io.github.ust.mico.core.util.CollectionUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
-import org.neo4j.cypher.internal.v3_4.expressions.True;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -47,6 +45,12 @@ public class MicoServiceBrokerTests {
 
     @Test
     public void getAllServicesAsList() throws Exception {
+        given(serviceRepository.findAll(ArgumentMatchers.anyInt())).willReturn(
+                CollectionUtils.listOf(
+                        new MicoService().setShortName(SHORT_NAME_1).setVersion(VERSION_1_0_1).setName(NAME_1).setDescription(DESCRIPTION_1),
+                        new MicoService().setShortName(SHORT_NAME_2).setVersion(VERSION_1_0_2).setName(NAME_2).setDescription(DESCRIPTION_2),
+                        new MicoService().setShortName(SHORT_NAME_3).setVersion(VERSION_1_0_3).setName(NAME_3).setDescription(DESCRIPTION_3)));
+
         List<MicoService> micoServiceList = micoServiceBroker.getAllServicesAsList();
 
         assertThat(micoServiceList.get(0).getShortName()).isEqualTo(SHORT_NAME_1);
@@ -56,6 +60,14 @@ public class MicoServiceBrokerTests {
 
     @Test
     public void getServiceFromDatabase() throws Exception {
+        MicoService service = new MicoService()
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_2)
+                .setDescription(DESCRIPTION_2);
+
+        given(serviceRepository.findByShortNameAndVersion(service.getShortName(), service.getVersion())).willReturn(Optional.of(service));
+
         MicoService micoService = micoServiceBroker.getServiceFromDatabase(SHORT_NAME_1, VERSION_1_0_1);
         assertThat(micoService.getShortName()).isEqualTo(SHORT_NAME_1);
         assertThat(micoService.getVersion()).isEqualTo(VERSION_1_0_1);
@@ -75,6 +87,7 @@ public class MicoServiceBrokerTests {
                 .setName(NAME_2)
                 .setDescription(DESCRIPTION_2);
 
+        given(serviceRepository.findByShortNameAndVersion(resultUpdatedService.getShortName(), resultUpdatedService.getVersion())).willReturn(Optional.of(resultUpdatedService));
         given(serviceRepository.save(any(MicoService.class))).willReturn(resultUpdatedService);
 
         MicoService updatedService = micoServiceBroker.updateExistingService(SHORT_NAME_1, VERSION_1_0_1, micoServiceTwo);
@@ -279,7 +292,7 @@ public class MicoServiceBrokerTests {
         MicoServiceDependency dependency2 = new MicoServiceDependency().setService(service).setDependedService(service2);
         service.setDependencies(CollectionUtils.listOf(dependency1, dependency2));
 
-        given(serviceRepository.findDependees(service.getShortName(), service.getVersion())).willReturn(CollectionUtils.listOf(service1,service2));
+        given(serviceRepository.findDependees(service.getShortName(), service.getVersion())).willReturn(CollectionUtils.listOf(service1, service2));
 
         List<MicoService> dependentServices = micoServiceBroker.getDependeesByMicoService(service);
 
@@ -325,6 +338,36 @@ public class MicoServiceBrokerTests {
         boolean result = micoServiceBroker.checkIfDependencyAlreadyExists(service, service1);
 
         assertThat(result).isEqualTo(false);
+    }
+
+    @Test
+    public void persistNewDependencyBetweenServices() {
+        MicoService service1 = new MicoService()
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_1)
+                .setDescription(DESCRIPTION_1);
+        MicoService service2 = new MicoService()
+                .setShortName(SHORT_NAME_2)
+                .setVersion(VERSION_1_0_2)
+                .setName(NAME_2)
+                .setDescription(DESCRIPTION_2);
+
+        MicoServiceDependency dependency = new MicoServiceDependency().setService(service1).setDependedService(service2);
+
+        MicoService expectedService = new MicoService()
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_1)
+                .setDescription(DESCRIPTION_1)
+                .setDependencies(Collections.singletonList(dependency));
+
+        given(serviceRepository.save(service1)).willReturn(expectedService);
+
+        MicoService updatedService = micoServiceBroker.persistNewDependencyBetweenServices(service1, service2);
+
+        assertThat(updatedService.getDependencies().size()).isEqualTo(1);
+        assertThat(updatedService.getDependencies().get(0)).isEqualTo(service2);
     }
 
 }

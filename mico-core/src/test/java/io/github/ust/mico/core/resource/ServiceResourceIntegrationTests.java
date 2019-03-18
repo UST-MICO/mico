@@ -494,11 +494,13 @@ public class ServiceResourceIntegrationTests {
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setName(NAME);
+
         MicoServiceRequestDTO updatedServiceRequestDto = new MicoServiceRequestDTO()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setName(NAME)
             .setDescription(updatedDescription);
+
         MicoService expectedService = new MicoService()
             .setId(existingService.getId())
             .setShortName(updatedServiceRequestDto.getShortName())
