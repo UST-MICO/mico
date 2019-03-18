@@ -105,13 +105,11 @@ public class DeploymentResource {
         }
 
         MicoApplication micoApplication = micoApplicationOptional.get();
-        List<MicoService> micoServices = serviceRepository.findAllByApplication(shortName, version);
+        checkIfMicoApplicationIsDeployable(micoApplication);
 
-        log.info("MicoApplication '{}' in version '{}' includes {} MicoService(s).",
-            shortName, version, micoServices.size());
-
-        for (MicoService micoService : micoServices) {
-
+        log.info("Deploy MicoApplication '{}' in version '{}' with {} included MicoService(s).",
+            shortName, version, micoApplication.getServices().size());
+        for (MicoService micoService : micoApplication.getServices()) {
             // Check if a build for this MicoService is already running.
             // If yes no build is required, lock changes to running jobs.
             // If the current job status is done, error or cancel delete it and create a new job to get a new id.
@@ -152,7 +150,6 @@ public class DeploymentResource {
                     }
                 } else {
                     log.error("Build of MicoService '{}' in version '{}' failed.", micoService.getShortName(), micoService.getVersion());
-
                 }
             }, this::exceptionHandler));
             backgroundTaskRepo.save(task);
@@ -178,6 +175,26 @@ public class DeploymentResource {
             task.setStatus(status);
             MicoServiceBackgroundTask savedTask = backgroundTaskRepo.save(task);
             log.info("Job status of '{}' is '{}'", savedTask.getId(), savedTask.getStatus());
+        }
+    }
+
+    private void checkIfMicoApplicationIsDeployable(MicoApplication micoApplication) {
+        if(micoApplication.getServices() == null || micoApplication.getServices().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                "Application '" + micoApplication.getShortName() + "' '" + micoApplication.getVersion() + "' does not include any services!");
+        }
+        for (MicoService micoService : micoApplication.getServices()) {
+            if(micoService.getServiceInterfaces() == null || micoService.getServiceInterfaces().isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "Application '" + micoApplication.getShortName() + "' '" + micoApplication.getVersion() + "' includes the service '"
+                        + micoService.getShortName() + "' '" + micoService.getVersion() + "' that does not include any interfaces!");
+            }
+            if(!micoService.getDependencies().isEmpty()) {
+                // TODO: Check if dependencies are valid. Covered by mico#583
+                throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED,
+                    "The deployment of service dependencies is currently not implemented. " +
+                        "See https://github.com/UST-MICO/mico/issues/583");
+            }
         }
     }
 
@@ -234,6 +251,8 @@ public class DeploymentResource {
             Service createdService = micoKubernetesClient.createMicoServiceInterface(serviceInterface, micoService);
             createdServices.add(createdService);
         }
+        log.info("Successfully created Kubernetes resources for MicoService '{}' in version '{}'",
+            micoService.getShortName(), micoService.getVersion());
 
         // Store the names of the created Kubernetes resources in the database
         serviceDeploymentInfo.setKubernetesDeploymentInfo(new KubernetesDeploymentInfo()
@@ -241,9 +260,9 @@ public class DeploymentResource {
             .setDeploymentName(createdDeployment.getMetadata().getName())
             .setServiceNames(createdServices.stream().map(service -> service.getMetadata().getName()).collect(Collectors.toList()))
         );
-        serviceDeploymentInfoRepository.save(serviceDeploymentInfo);
-        log.info("Successfully created Kubernetes resources for MicoService '{}' in version '{}'",
-            micoService.getShortName(), micoService.getVersion());
+        MicoServiceDeploymentInfo savedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(serviceDeploymentInfo);
+        log.debug("Saved new Kubernetes deployment information of '{}' '{}' to database: {}",
+            micoService.getShortName(), micoService.getVersion(), savedServiceDeploymentInfo.getKubernetesDeploymentInfo());
     }
 
     private Void exceptionHandler(Throwable e) {

@@ -37,6 +37,7 @@ import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.EmbeddedRedisServer;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -54,6 +55,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -65,8 +67,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -155,12 +156,18 @@ public class DeploymentResourceTests {
         application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(service));
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
-        given(serviceRepository.save(any(MicoService.class))).willReturn(service);
-        given(serviceRepository.findAllByApplication(SHORT_NAME, VERSION)).willReturn(CollectionUtils.listOf(service));
+
         given(serviceDeploymentInfoRepository
             .findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName(), service.getVersion()))
-            .willReturn(Optional.of(new MicoServiceDeploymentInfo()
-                .setService(service)));
+            .willReturn(Optional.of(new MicoServiceDeploymentInfo().setService(service)));
+        given(serviceRepository.save(any(MicoService.class))).willReturn(service);
+        given(serviceDeploymentInfoRepository.save(any(MicoServiceDeploymentInfo.class)))
+            .willReturn(new MicoServiceDeploymentInfo()
+                .setService(service)
+                .setKubernetesDeploymentInfo(new KubernetesDeploymentInfo()
+                    .setNamespace("namespace")
+                    .setDeploymentName("deployment")
+                    .setServiceNames(CollectionUtils.listOf("service"))));
 
         CompletableFuture<?> future = CompletableFuture.completedFuture(service);
         given(factory.runAsync(any(), onSuccessArgumentCaptor.capture(), onErrorArgumentCaptor.capture())).willReturn(future);
@@ -230,6 +237,32 @@ public class DeploymentResourceTests {
         assertEquals(1, kubernetesDeploymentInfo.getServiceNames().size());
         assertEquals(SERVICE_NAME, kubernetesDeploymentInfo.getServiceNames().get(0));
         assertEquals(NAMESPACE_NAME, kubernetesDeploymentInfo.getNamespace());
+    }
+
+    @Test
+    public void deployApplicationWithoutServices() throws Exception {
+        MicoApplication application = getTestApplication();
+        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
+
+        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/deploy"))
+            .andDo(print())
+            .andExpect(status().isUnprocessableEntity())
+            .andExpect(status().reason(Matchers.containsString("services")));
+    }
+
+    @Test
+    public void deployApplicationWithServiceWithoutServiceInterface() throws Exception {
+        MicoService service = getTestService();
+        service.setServiceInterfaces(new ArrayList<>()); // There are no interfaces
+        MicoApplication application = getTestApplication();
+        application.getServices().add(service);
+        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(service));
+        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
+
+        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/deploy"))
+            .andDo(print())
+            .andExpect(status().isUnprocessableEntity())
+            .andExpect(status().reason(Matchers.containsString("interfaces")));
     }
 
     private MicoApplication getTestApplication() {

@@ -359,7 +359,7 @@ public class MicoKubernetesClient {
                 .setDeploymentName(actualKubernetesDeployment.getMetadata().getName())
                 .setServiceNames(actualKubernetesServices.stream().map(svc -> svc.getMetadata().getName()).collect(Collectors.toList()));
         } else {
-            log.warn("Actual Kubernetes deployment of MicoService  '{}' '{}' is not valid!",
+            log.warn("Actual Kubernetes deployment of MicoService '{}' '{}' is not valid!",
                 micoService.getShortName(), micoService.getVersion());
         }
         serviceDeploymentInfo.setKubernetesDeploymentInfo(updatedKubernetesDeploymentInfo);
