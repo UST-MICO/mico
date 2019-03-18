@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
@@ -255,6 +256,9 @@ public class ApplicationResource {
                 linkTo(methodOn(ApplicationResource.class).getServicesFromApplication(shortName, version)).withSelfRel()));
     }
 
+    @ApiOperation(value = "Adds or updates an association between a mico application and a mico service. An existing and" +
+        " already associated mico service with an equal shortName it will be replaced." +
+        " Only one mico service in one specific version is allowed per mico application.")
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES + "/{" + PATH_VARIABLE_SERVICE_SHORT_NAME + "}/{" + PATH_VARIABLE_SERVICE_VERSION + "}")
     public ResponseEntity<Void> addServiceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String micoApplicationShortName,
                                                         @PathVariable(PATH_VARIABLE_VERSION) String micoApplicationVersion,
@@ -269,7 +273,6 @@ public class ApplicationResource {
         } else if (micoServicesWithIdenticalShortName.size() == 0) {
             log.info("Add service '{}' '{}' to application '{}' '{}'.",
                 micoServiceShortName, micoServiceVersion, micoApplicationShortName, micoApplicationVersion);
-            // Create default service deployment information for new service
             MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
                 .setService(micoServiceFromParameter);
             // Both the service list and the service deployment info list
@@ -280,11 +283,9 @@ public class ApplicationResource {
         } else if (micoServicesWithIdenticalShortName.size() == MAX_MICO_SERVICES_WITH_SAME_SHORT_NAME) {
             MicoService associatedMicService = micoServicesWithIdenticalShortName.get(0);
             if (associatedMicService.equals(micoServiceFromParameter)) {
-                // Application already contains the service -> not allowed to add multiple times
-                log.info("Application '{}' '{}' already contains service '{}' '{}'.",
+                log.info("Application '{}' '{}' already contains service '{}' '{}'. Therefore it is not possible to add it again.",
                     micoApplicationShortName, micoApplicationVersion, micoServiceShortName, micoServiceVersion);
             } else {
-                // Same shortName but different version -> update the old
                 log.info("The MicoApplication '{}' '{}' already contains a MicoService with the shortName '{}', " +
                         "but the given version '{}' is different from the already associated version." +
                         "The associated MicoService will be replaced with the given one.",
@@ -448,6 +449,7 @@ public class ApplicationResource {
     }
     
     /**
+     * //TODO This is a duplicate of {@link ServiceResource#getServiceFromDatabase(String, String)} this should be resolved
      * Returns the existing {@link MicoService} object from the database
      * for the given shortName and version.
      *

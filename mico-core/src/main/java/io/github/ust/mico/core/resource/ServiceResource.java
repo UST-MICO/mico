@@ -366,6 +366,7 @@ public class ServiceResource {
 	}
 
     /**
+     * //TODO This is a duplicate of {@link ApplicationResource#getServiceFromDatabase(String, String)} this should be resolved
      * Returns the existing {@link MicoService} object from the database for the given shortName and version.
      *
      * @param shortName the short name of a {@link MicoService}
