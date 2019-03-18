@@ -202,41 +202,24 @@ public class ApplicationResource {
         return ResponseEntity.noContent().build();
     }
 
-    //TODO: continue here!!!
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
-    public ResponseEntity<Void> deleteAllVersionsOfAnApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) throws KubernetesResourceException {
-        // Retrieve applications to delete from database (checks whether they all exist)
-        List<MicoApplication> applicationList = applicationRepository.findByShortName(shortName);
-
-        // Check whether there is any version of the application in the database at all
-        if (applicationList.isEmpty()) {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<Void> deleteAllVersionsOfAnApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
+        try {
+            broker.deleteMicoApplicationsByShortName(shortName);
+        } catch (MicoApplicationNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (MicoApplicationIsDeployedException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
-
-        // If at least one version of the application is currently deployed,
-        // none of the versions shall be deleted
-        for (MicoApplication application : applicationList) {
-            if (micoKubernetesClient.isApplicationDeployed(application)) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Application is currently deployed in version " + application.getVersion() + "!");
-            }
-        }
-
-        // Any service deployment information one of the applications provides must be deleted
-        // before (!) the actual application is deleted, otherwise the query for
-        // deleting the service deployment information would not work.
-        serviceDeploymentInfoRepository.deleteAllByApplication(shortName);
-
-        // No version of the application is deployed -> delete all
-        applicationRepository.deleteAll(applicationList);
 
         return ResponseEntity.noContent().build();
     }
 
+    //TODO: continue here!!!
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES)
     public ResponseEntity<Resources<Resource<MicoServiceResponseDTO>>> getServicesFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                                       @PathVariable(PATH_VARIABLE_VERSION) String version) {
-    	return ResponseEntity.ok(
+                                                                                                  @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        return ResponseEntity.ok(
             new Resources<>(getServiceResponseDTOResourceList(shortName, version),
                 linkTo(methodOn(ApplicationResource.class).getServicesFromApplication(shortName, version)).withSelfRel()));
     }

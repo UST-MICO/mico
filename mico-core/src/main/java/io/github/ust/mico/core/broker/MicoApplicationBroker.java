@@ -93,7 +93,7 @@ public class MicoApplicationBroker {
         applicationRepository.delete(micoApplication);
     }
 
-    public void deleteMicoApplicationById(Long id) throws MicoApplicationNotFoundException, KubernetesResourceException, MicoApplicationIsDeployedException {
+    public void deleteMicoApplicationById(Long id) throws MicoApplicationNotFoundException, MicoApplicationIsDeployedException {
         MicoApplication micoApplication = getMicoApplicationById(id);
         if (micoKubernetesClient.isApplicationDeployed(micoApplication)) {
             throw new MicoApplicationIsDeployedException(id);
@@ -101,22 +101,23 @@ public class MicoApplicationBroker {
         applicationRepository.deleteById(id);
     }
 
-    public void deleteMicoApplicationsByShortName(String shortName) throws MicoApplicationNotFoundException, KubernetesResourceException, MicoApplicationIsDeployedException {
+    public void deleteMicoApplicationsByShortName(String shortName) throws MicoApplicationNotFoundException, MicoApplicationIsDeployedException {
         List<MicoApplication> micoApplicationList = getMicoApplicationsByShortName(shortName);
-        deleteListOfMicoApplications(micoApplicationList);
-    }
 
-    public void deleteMicoApplications() throws MicoApplicationNotFoundException, KubernetesResourceException, MicoApplicationIsDeployedException {
-        List<MicoApplication> micoApplicationList = getMicoApplications();
-        deleteListOfMicoApplications(micoApplicationList);
-    }
-
-    private void deleteListOfMicoApplications(List<MicoApplication> micoApplicationList) throws KubernetesResourceException, MicoApplicationIsDeployedException {
+        // If at least one version of the application is currently deployed,
+        // none of the versions shall be deleted
         for (MicoApplication micoApplication : micoApplicationList) {
             if (micoKubernetesClient.isApplicationDeployed(micoApplication)) {
                 throw new MicoApplicationIsDeployedException(micoApplication.getShortName(), micoApplication.getVersion());
             }
         }
+
+        // Any service deployment information one of the applications provides must be deleted
+        // before (!) the actual application is deleted, otherwise the query for
+        // deleting the service deployment information would not work.
+        serviceDeploymentInfoRepository.deleteAllByApplication(shortName);
+
+        // No version of the application is deployed -> delete all
         applicationRepository.deleteAll(micoApplicationList);
     }
 
