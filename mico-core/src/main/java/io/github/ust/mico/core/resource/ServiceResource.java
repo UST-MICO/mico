@@ -316,15 +316,22 @@ public class ServiceResource {
     	
         // Service to promote (copy)
         MicoService service = getServiceFromDatabase(shortName, version);
-        log.debug("Received following MicoService from database: {}", service);
+        log.debug("Retrieved following MicoService from database: {}", service);
 
-        // Update the version and set id to null, otherwise the original service
-        // would be updated but we want a new service instance to be created.
-        service.setVersion(newVersionDto.getVersion()).setId(null);
+        // Update the version of the service.
+        service.setVersion(newVersionDto.getVersion());
 
-        // Save the new (promoted) service in the database
+        // In order to copy the service along with all service interfaces nodes
+        // it provides we need to set the id of all those nodes to null.
+        // That way, Neo4j will create new entities instead of updating the existing ones.
+        service.setId(null);
+        service.getServiceInterfaces().forEach(serviceInterface -> serviceInterface.setId(null));
+
+        // Save the new (promoted) service in the database.
         MicoService updatedService = serviceRepository.save(service);
         log.debug("Saved following MicoService in database: {}", updatedService);
+
+        log.info("Promoted service '{}': {} → {}", shortName, version, updatedService.getVersion());
 
         return ResponseEntity.ok(getServiceResponseDTOResource(updatedService));
     }

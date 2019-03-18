@@ -26,8 +26,7 @@ import static io.github.ust.mico.core.TestConstants.VERSION;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
@@ -753,20 +752,22 @@ public class ServiceResourceTests {
     @Test
     public void promoteService() throws Exception {
         MicoServiceInterface micoServiceInterface = new MicoServiceInterface()
+                .setId(2000L)
                 .setServiceInterfaceName(SERVICE_INTERFACE_NAME);
 
         MicoServiceInterface micoServiceInterfaceTwo = new MicoServiceInterface()
+                .setId(3000L)
                 .setServiceInterfaceName(SERVICE_INTERFACE_NAME_1);
 
-        List<MicoServiceInterface> micoServiceInterfaces = new LinkedList<>();
+        List<MicoServiceInterface> micoServiceInterfaces = new ArrayList<>();
         micoServiceInterfaces.add(micoServiceInterface);
         micoServiceInterfaces.add(micoServiceInterfaceTwo);
 
         MicoService micoService = new MicoService()
+                .setId(ID)
                 .setShortName(SHORT_NAME_1)
                 .setVersion(VERSION_1_0_1)
                 .setDescription(DESCRIPTION_1)
-                .setId(ID)
                 .setServiceInterfaces(micoServiceInterfaces);
 
         String newVersion = VERSION_1_0_1;
@@ -778,15 +779,24 @@ public class ServiceResourceTests {
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoService));
         given(serviceRepository.save(eq(promotedService))).willReturn(savedPromotedService);
 
-        ResultActions resultPromotion = mvc.perform(post(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_PROMOTE)
+        ArgumentCaptor<MicoService> serviceArgumentCaptor = ArgumentCaptor.forClass(MicoService.class);
+
+        mvc.perform(post(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_PROMOTE)
                 .content(mapper.writeValueAsBytes(new MicoVersionRequestDTO(newVersion)))
                 .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andDo(print())
                 .andExpect(jsonPath(SHORT_NAME_PATH, is(savedPromotedService.getShortName())))
                 .andExpect(jsonPath(VERSION_PATH, is(newVersion)))
-                .andExpect(jsonPath(DESCRIPTION_PATH, is(savedPromotedService.getDescription())));
+                .andExpect(jsonPath(DESCRIPTION_PATH, is(savedPromotedService.getDescription())))
+                .andExpect(status().isOk());
 
-        resultPromotion.andExpect(status().isOk());
+        verify(serviceRepository, times(1)).save(serviceArgumentCaptor.capture());
+        MicoService savedMicoService = serviceArgumentCaptor.getValue();
+        assertNotNull(savedMicoService);
+        assertNull("Expected id of copied service to be null (will be created by Neo4j)", savedMicoService.getId());
+        assertEquals("Expected that new service includes 2 MicoServiceInterfaces",2, savedMicoService.getServiceInterfaces().size());
+        assertNull("Expected id of copied service interface 1 to be null (will be created by Neo4j)", savedMicoService.getServiceInterfaces().get(0).getId());
+        assertNull("Expected id of copied service interface 2 to be null (will be created by Neo4j)", savedMicoService.getServiceInterfaces().get(1).getId());
     }
     
     @Test
