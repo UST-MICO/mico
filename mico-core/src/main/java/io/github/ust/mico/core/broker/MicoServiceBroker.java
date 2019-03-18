@@ -3,10 +3,7 @@ package io.github.ust.mico.core.broker;
 import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphEdgeResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceResponseDTO;
-import io.github.ust.mico.core.exception.KubernetesResourceException;
-import io.github.ust.mico.core.exception.MicoServiceAlreadyExistsException;
-import io.github.ust.mico.core.exception.MicoServiceHasDependersException;
-import io.github.ust.mico.core.exception.MicoServiceNotFoundException;
+import io.github.ust.mico.core.exception.*;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.model.MicoServiceInterface;
@@ -52,12 +49,8 @@ public class MicoServiceBroker {
         return existingService;
     }
 
-    public MicoService updateExistingService(String shortName, String version, MicoService service) throws MicoServiceNotFoundException {
-        MicoService existingService = getServiceFromDatabase(shortName, version);
-        log.debug("Got following service from the database: {}", existingService);
+    public MicoService updateExistingService(MicoService service) throws MicoServiceNotFoundException {
         log.debug("Got following service from the request body: {}", service);
-        service.setId(existingService.getId());
-        service.setServiceInterfaces(existingService.getServiceInterfaces());
         log.debug("Updated service, before saving to database: {}", service);
         MicoService updatedService = serviceRepository.save(service);
         log.debug("Updated service, after saving to database: {}", updatedService);
@@ -86,7 +79,7 @@ public class MicoServiceBroker {
         return micoServiceList;
     }
 
-    public void deleteService(MicoService service) throws KubernetesResourceException, MicoServiceHasDependersException {
+    public void deleteService(MicoService service) throws KubernetesResourceException, MicoServiceHasDependersException, MicoServiceIsDeployedException {
         throwConflictIfServiceIsDeployed(service);
         if (!getDependers(service).isEmpty()) {
             throw new MicoServiceHasDependersException(service.getShortName(), service.getVersion());
@@ -94,7 +87,7 @@ public class MicoServiceBroker {
         serviceRepository.deleteServiceByShortNameAndVersion(service.getShortName(), service.getVersion());
     }
 
-    public void deleteAllVersionsOfService(String shortName) throws MicoServiceNotFoundException, KubernetesResourceException {
+    public void deleteAllVersionsOfService(String shortName) throws MicoServiceNotFoundException, KubernetesResourceException, MicoServiceIsDeployedException {
         List<MicoService> micoServiceList = getAllVersionsOfServiceFromDatabase(shortName);
         log.debug("Got following services from database: {}", micoServiceList);
         for (MicoService micoService : micoServiceList) {
@@ -110,9 +103,10 @@ public class MicoServiceBroker {
      * @param service Checks if this service is deployed
      * @throws KubernetesResourceException if the service is deployed. It uses the http status CONFLICT
      */
-    private void throwConflictIfServiceIsDeployed(MicoService service) throws KubernetesResourceException {
+    private void throwConflictIfServiceIsDeployed(MicoService service) throws KubernetesResourceException, MicoServiceIsDeployedException {
         if (micoKubernetesClient.isMicoServiceDeployed(service)) {
             log.info("Micoservice '{}' in version '{}' is deployed. It is not possible to delete a deployed service.", service.getShortName(), service.getVersion());
+            throw new MicoServiceIsDeployedException(service.getShortName(), service.getVersion());
         }
     }
 

@@ -710,7 +710,7 @@ public class ServiceResourceIntegrationTests {
     }
 
     @Test
-    public void deleteServiceWithDeployedService() throws Exception {
+    public void deleteServicesWithDeployedService() throws Exception {
         MicoService service = new MicoService()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)

@@ -27,10 +27,7 @@ import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphEdgeRespon
 import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceResponseDTO;
 import io.github.ust.mico.core.dto.response.status.MicoServiceStatusResponseDTO;
-import io.github.ust.mico.core.exception.KubernetesResourceException;
-import io.github.ust.mico.core.exception.MicoServiceAlreadyExistsException;
-import io.github.ust.mico.core.exception.MicoServiceHasDependersException;
-import io.github.ust.mico.core.exception.MicoServiceNotFoundException;
+import io.github.ust.mico.core.exception.*;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
@@ -78,17 +75,17 @@ public class ServiceResource {
     @Autowired
     private MicoServiceBroker micoServiceBroker;
 
-    //TODO: remove serviceRepository from ServiceResource
-    @Autowired
-    private MicoServiceRepository serviceRepository;
+//    //TODO: remove serviceRepository from ServiceResource
+//    @Autowired
+//    private MicoServiceRepository serviceRepository;
 
     //TODO. Verfiy if this object can be removed from ServiceResource
     @Autowired
     private MicoStatusService micoStatusService;
 
-    //TODO. Verfiy if this object can be removed from ServiceResource
-    @Autowired
-    private MicoKubernetesClient micoKubernetesClient;
+//    //TODO. Verfiy if this object can be removed from ServiceResource
+//    @Autowired
+//    private MicoKubernetesClient micoKubernetesClient;
 
     //TODO. Verfiy if this object can be removed from ServiceResource
     @Autowired
@@ -147,6 +144,8 @@ public class ServiceResource {
             micoServiceBroker.deleteService(service);
         } catch (MicoServiceHasDependersException e) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+        } catch (MicoServiceIsDeployedException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
 
         return ResponseEntity.noContent().build();
@@ -164,6 +163,8 @@ public class ServiceResource {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Service is currently deployed!");
             } catch (MicoServiceHasDependersException e) {
                 throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+            } catch (MicoServiceIsDeployedException e) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
             }
         });
 
@@ -416,9 +417,9 @@ public class ServiceResource {
         MicoService existingService = getServiceFromMicoServiceBroker(shortName, version);
         MicoService updatedService;
         try {
-            updatedService = micoServiceBroker.persistService(MicoService.valueOf(serviceDto).setId(existingService.getId()));
-        } catch (MicoServiceAlreadyExistsException e) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+            updatedService = micoServiceBroker.updateExistingService(MicoService.valueOf(serviceDto).setId(existingService.getId()));
+        } catch (MicoServiceNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
         return updatedService;
     }

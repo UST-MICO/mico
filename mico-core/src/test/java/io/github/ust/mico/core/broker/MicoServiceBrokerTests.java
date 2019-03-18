@@ -80,7 +80,7 @@ public class MicoServiceBrokerTests {
                 .setShortName(SHORT_NAME_2)
                 .setVersion(VERSION_1_0_2)
                 .setName(NAME_2)
-                .setDescription(DESCRIPTION_2);
+                .setDescription(DESCRIPTION_1);
 
         MicoService resultUpdatedService = new MicoService()
                 .setShortName(SHORT_NAME_1)
@@ -91,7 +91,7 @@ public class MicoServiceBrokerTests {
         given(serviceRepository.findByShortNameAndVersion(resultUpdatedService.getShortName(), resultUpdatedService.getVersion())).willReturn(Optional.of(resultUpdatedService));
         given(serviceRepository.save(any(MicoService.class))).willReturn(resultUpdatedService);
 
-        MicoService updatedService = micoServiceBroker.updateExistingService(SHORT_NAME_1, VERSION_1_0_1, micoServiceTwo);
+        MicoService updatedService = micoServiceBroker.updateExistingService(micoServiceTwo);
 
         assertThat(updatedService.getShortName()).isEqualTo(SHORT_NAME_1);
         assertThat(updatedService.getVersion()).isEqualTo(VERSION_1_0_1);
