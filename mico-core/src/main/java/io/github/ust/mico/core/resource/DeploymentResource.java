@@ -136,10 +136,10 @@ public class DeploymentResource {
                     try {
                         createKubernetesResources(micoApplication, savedMicoService);
                         backgroundTaskBroker.saveNewStatus(micoService.getShortName(), micoService.getVersion(),
-                            MicoServiceBackgroundTask.Status.DONE, MicoServiceBackgroundTask.Type.BUILD, null);
+                            MicoServiceBackgroundTask.Type.BUILD, MicoServiceBackgroundTask.Status.DONE);
                     } catch (KubernetesResourceException kre) {
                         backgroundTaskBroker.saveNewStatus(micoService.getShortName(), micoService.getVersion(),
-                            MicoServiceBackgroundTask.Status.ERROR, MicoServiceBackgroundTask.Type.BUILD, kre.getMessage());
+                            MicoServiceBackgroundTask.Type.BUILD, MicoServiceBackgroundTask.Status.ERROR, kre.getMessage());
                         log.error(kre.getMessage(), kre);
                         exceptionHandler(kre);
                     }
@@ -177,13 +177,15 @@ public class DeploymentResource {
     }
 
     private String buildImageAndWait(MicoService micoService) {
-        backgroundTaskBroker.saveNewStatus(micoService.getShortName(), micoService.getVersion(), MicoServiceBackgroundTask.Status.RUNNING, MicoServiceBackgroundTask.Type.BUILD, null);
+        backgroundTaskBroker.saveNewStatus(micoService.getShortName(), micoService.getVersion(),
+            MicoServiceBackgroundTask.Type.BUILD, MicoServiceBackgroundTask.Status.RUNNING);
         try {
             Build build = imageBuilder.build(micoService);
             String buildName = build.getMetadata().getName();
 
             // Blocks this thread until build is finished, failed or TimeoutException is thrown
             CompletableFuture<Boolean> booleanCompletableFuture = imageBuilder.waitUntilBuildIsFinished(buildName);
+            backgroundTaskBroker.saveJobOfTask(micoService.getShortName(), micoService.getVersion(), MicoServiceBackgroundTask.Type.BUILD, booleanCompletableFuture);
             if (booleanCompletableFuture.get()) {
                 return imageBuilder.createImageName(micoService.getShortName(), micoService.getVersion());
             } else {
@@ -192,7 +194,8 @@ public class DeploymentResource {
             }
         } catch (NotInitializedException | InterruptedException | ExecutionException | ImageBuildException | TimeoutException e) {
             log.error(e.getMessage(), e);
-            backgroundTaskBroker.saveNewStatus(micoService.getShortName(), micoService.getVersion(), MicoServiceBackgroundTask.Status.ERROR, MicoServiceBackgroundTask.Type.BUILD, e.getMessage());
+            backgroundTaskBroker.saveNewStatus(micoService.getShortName(), micoService.getVersion(),
+                MicoServiceBackgroundTask.Type.BUILD, MicoServiceBackgroundTask.Status.ERROR, e.getMessage());
             // TODO Handle NotInitializedException in async task properly
             return null;
         }

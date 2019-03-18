@@ -21,6 +21,7 @@ package io.github.ust.mico.core.broker;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import io.github.ust.mico.core.model.*;
@@ -116,38 +117,6 @@ public class BackgroundTaskBroker {
     }
 
     /**
-     * Saves a new status of a job to the database.
-     *
-     * @param micoServiceShortName the short name of a {@link MicoService}
-     * @param micoServiceVersion the version of a {@link MicoService}
-     * @param newStatus the new {@link MicoServiceBackgroundTask.Status}
-     * @param type the {@link MicoServiceBackgroundTask.Type}
-     * @param errorMessage the optional error message if the job has failed
-     */
-    public void saveNewStatus(String micoServiceShortName, String micoServiceVersion,
-                              MicoServiceBackgroundTask.Status newStatus, MicoServiceBackgroundTask.Type type,
-                              @Nullable String errorMessage) {
-        Optional<MicoServiceBackgroundTask> taskOptional = getTaskByMicoService(micoServiceShortName, micoServiceVersion, type);
-        if (taskOptional.isPresent()) {
-            MicoServiceBackgroundTask existingTask = taskOptional.get();
-            if(!existingTask.getStatus().equals(newStatus)) {
-                log.info("Job task of '{}' '{}' with type '{}' changed its status: {} → {}.",
-                    micoServiceShortName, micoServiceVersion, type, existingTask.getStatus(), newStatus);
-                if(newStatus.equals(MicoServiceBackgroundTask.Status.ERROR) && !StringUtils.isEmpty(errorMessage)) {
-                    log.info("Job task of '{}' '{}' with type '{}' failed. Reason: {}.",
-                        micoServiceShortName, micoServiceVersion, type, errorMessage);
-                }
-                existingTask.setStatus(newStatus);
-                existingTask.setErrorMessage(errorMessage);
-                MicoServiceBackgroundTask savedTask = jobRepository.save(existingTask);
-                log.debug("Saved new status of job task: {}", savedTask);
-            }
-        } else {
-            log.warn("No job of type '{}' exists for '{}' '{}'.", type, micoServiceShortName, micoServiceVersion);
-        }
-    }
-
-    /**
      * Return a {@code MicoServiceBackgroundTask} for a given {@code MicoService} and {@code MicoServiceBackgroundTask.Type}.
      *
      * @param micoServiceShortName the short name of a {@link MicoService}
@@ -157,6 +126,71 @@ public class BackgroundTaskBroker {
      */
     public Optional<MicoServiceBackgroundTask> getTaskByMicoService(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundTask.Type type) {
         return jobRepository.findByServiceShortNameAndServiceVersionAndType(micoServiceShortName, micoServiceVersion, type);
+    }
+
+    /**
+     * Saves a job of a task to the database.
+     *
+     * @param micoServiceShortName the short name of a {@link MicoService}
+     * @param micoServiceVersion the version of a {@link MicoService}
+     * @param job the job as a {@link CompletableFuture}
+     * @param type the {@link MicoServiceBackgroundTask.Type}
+     */
+    public void saveJobOfTask(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundTask.Type type,
+                              CompletableFuture<?> job) {
+        Optional<MicoServiceBackgroundTask> taskOptional = getTaskByMicoService(micoServiceShortName, micoServiceVersion, type);
+        if (taskOptional.isPresent()) {
+            MicoServiceBackgroundTask task = taskOptional.get();
+            task.setJob(job);
+            saveJob(task);
+            log.debug("Saved new job of task with type '{}' for '{}' '{}' .", type, micoServiceShortName, micoServiceVersion);
+        } else {
+            log.warn("No task of type '{}' exists for '{}' '{}'.", type, micoServiceShortName, micoServiceVersion);
+        }
+    }
+
+    /**
+     * Saves a new status of a task to the database.
+     *
+     * @param micoServiceShortName the short name of a {@link MicoService}
+     * @param micoServiceVersion the version of a {@link MicoService}
+     * @param type the {@link MicoServiceBackgroundTask.Type}
+     * @param newStatus the new {@link MicoServiceBackgroundTask.Status}
+     */
+    public void saveNewStatus(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundTask.Type type,
+                              MicoServiceBackgroundTask.Status newStatus) {
+        saveNewStatus(micoServiceShortName, micoServiceVersion, type, newStatus, null);
+    }
+
+    /**
+     * Saves a new status of a task to the database.
+     *
+     * @param micoServiceShortName the short name of a {@link MicoService}
+     * @param micoServiceVersion the version of a {@link MicoService}
+     * @param type the {@link MicoServiceBackgroundTask.Type}
+     * @param newStatus the new {@link MicoServiceBackgroundTask.Status}
+     * @param errorMessage the optional error message if the job has failed
+     */
+    public void saveNewStatus(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundTask.Type type,
+                              MicoServiceBackgroundTask.Status newStatus, @Nullable String errorMessage) {
+        Optional<MicoServiceBackgroundTask> taskOptional = getTaskByMicoService(micoServiceShortName, micoServiceVersion, type);
+        if (taskOptional.isPresent()) {
+            MicoServiceBackgroundTask task = taskOptional.get();
+            if(!task.getStatus().equals(newStatus)) {
+                log.info("Task of '{}' '{}' with type '{}' changed its status: {} → {}.",
+                    micoServiceShortName, micoServiceVersion, type, task.getStatus(), newStatus);
+                if(newStatus.equals(MicoServiceBackgroundTask.Status.ERROR) && !StringUtils.isEmpty(errorMessage)) {
+                    log.info("Task of '{}' '{}' with type '{}' failed. Reason: {}.",
+                        micoServiceShortName, micoServiceVersion, type, errorMessage);
+                }
+                task.setStatus(newStatus);
+                task.setErrorMessage(errorMessage);
+                MicoServiceBackgroundTask savedTask = saveJob(task);
+                log.debug("Saved new status of task: {}", savedTask);
+            }
+        } else {
+            log.warn("No task of type '{}' exists for '{}' '{}'.", type, micoServiceShortName, micoServiceVersion);
+        }
     }
 
     /**
@@ -184,5 +218,5 @@ public class BackgroundTaskBroker {
         }
         return Status.UNDEFINED;
     }
-    
+
 }
