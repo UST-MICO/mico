@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.github.ust.mico.core;
+package io.github.ust.mico.core.resource;
 
 import static io.github.ust.mico.core.JsonPathBuilder.*;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME;

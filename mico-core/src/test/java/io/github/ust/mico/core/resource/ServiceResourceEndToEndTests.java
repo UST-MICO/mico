@@ -17,8 +17,10 @@
  * under the License.
  */
 
-package io.github.ust.mico.core;
+package io.github.ust.mico.core.resource;
 
+import io.github.ust.mico.core.JsonPathBuilder;
+import io.github.ust.mico.core.Neo4jTestClass;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;

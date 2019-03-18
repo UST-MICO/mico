@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.github.ust.mico.core;
+package io.github.ust.mico.core.resource;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

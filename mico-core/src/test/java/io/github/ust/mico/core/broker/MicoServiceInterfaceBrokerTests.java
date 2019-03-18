@@ -1,4 +1,4 @@
-package io.github.ust.mico.core;
+package io.github.ust.mico.core.broker;
 
 import io.github.ust.mico.core.broker.MicoServiceInterfaceBroker;
 import io.github.ust.mico.core.model.MicoPortType;
