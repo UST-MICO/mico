@@ -304,7 +304,6 @@ public class MicoKubernetesClient {
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}
      * @return the updated {@link KubernetesDeploymentInfo}. Is {@code null} if there is no deployment.
      */
-    // TODO: Use caching
     private KubernetesDeploymentInfo updateKubernetesDeploymentInfo(MicoServiceDeploymentInfo serviceDeploymentInfo) {
 
         MicoService micoService = serviceDeploymentInfo.getService();
