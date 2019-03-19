@@ -63,8 +63,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @EnableAutoConfiguration
 @EnableConfigurationProperties(value = {CorsConfig.class})
 public class BackgroundJobResourceTest {
-	
-	@ClassRule
+
+    @ClassRule
     public static RuleChain rules = RuleChain.outerRule(EmbeddedRedisServer.runningAt(6379).suppressExceptions());
 
     private static final String JSON_PATH_LINKS_SECTION = "$._links.";
@@ -77,18 +77,18 @@ public class BackgroundJobResourceTest {
 
     @MockBean
     private BackgroundJobBroker backgroundJobBroker;
-    
+
     @MockBean
     private MicoApplicationRepository applicationRepository;
-    
+
     @Autowired
     private MockMvc mvc;
 
     @Test
     public void getAllJobs() throws Exception {
-        List<MicoServiceBackgroundJob> jobList = CollectionUtils.listOf(new MicoServiceBackgroundJob().setJob(CompletableFuture.completedFuture(true)).setServiceShortName(SHORT_NAME).setServiceVersion(VERSION).setType(MicoServiceBackgroundJob.Type.BUILD),
-            new MicoServiceBackgroundJob().setJob(CompletableFuture.completedFuture(true)).setServiceShortName(SHORT_NAME_1).setServiceVersion(VERSION).setType(MicoServiceBackgroundJob.Type.BUILD),
-            new MicoServiceBackgroundJob().setJob(CompletableFuture.completedFuture(true)).setServiceShortName(SHORT_NAME_2).setServiceVersion(VERSION).setType(MicoServiceBackgroundJob.Type.BUILD));
+        List<MicoServiceBackgroundJob> jobList = CollectionUtils.listOf(new MicoServiceBackgroundJob().setFuture(CompletableFuture.completedFuture(true)).setServiceShortName(SHORT_NAME).setServiceVersion(VERSION).setType(MicoServiceBackgroundJob.Type.BUILD),
+            new MicoServiceBackgroundJob().setFuture(CompletableFuture.completedFuture(true)).setServiceShortName(SHORT_NAME_1).setServiceVersion(VERSION).setType(MicoServiceBackgroundJob.Type.BUILD),
+            new MicoServiceBackgroundJob().setFuture(CompletableFuture.completedFuture(true)).setServiceShortName(SHORT_NAME_2).setServiceVersion(VERSION).setType(MicoServiceBackgroundJob.Type.BUILD));
 
         given(backgroundJobBroker.getAllJobs()).willReturn(jobList);
 
@@ -109,15 +109,15 @@ public class BackgroundJobResourceTest {
         MicoService service1 = new MicoService()
             .setId(ID_1)
             .setShortName(SERVICE_SHORT_NAME).setVersion(VERSION);
-        
+
         MicoService service2 = new MicoService()
             .setId(ID_1)
             .setShortName(SERVICE_SHORT_NAME_1).setVersion(VERSION);
-        
+
         MicoApplication application = new MicoApplication()
             .setId(ID)
             .setShortName(SHORT_NAME).setVersion(VERSION);
-        
+
         MicoServiceDeploymentInfo serviceDeploymentInfo1 = new MicoServiceDeploymentInfo().setService(service1);
         MicoServiceDeploymentInfo serviceDeploymentInfo2 = new MicoServiceDeploymentInfo().setService(service2);
 
@@ -129,13 +129,13 @@ public class BackgroundJobResourceTest {
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
 
         MicoServiceBackgroundJob pendingJob = new MicoServiceBackgroundJob()
-            .setJob(CompletableFuture.completedFuture(true))
+            .setFuture(CompletableFuture.completedFuture(true))
             .setServiceShortName(SHORT_NAME)
             .setServiceVersion(VERSION)
             .setType(MicoServiceBackgroundJob.Type.BUILD);
-        
+
         MicoServiceBackgroundJob runningJob = new MicoServiceBackgroundJob()
-            .setJob(CompletableFuture.completedFuture(true))
+            .setFuture(CompletableFuture.completedFuture(true))
             .setServiceShortName(SHORT_NAME)
             .setServiceVersion(VERSION)
             .setType(MicoServiceBackgroundJob.Type.BUILD)
@@ -158,7 +158,7 @@ public class BackgroundJobResourceTest {
     @Test
     public void getJobById() throws Exception {
         MicoServiceBackgroundJob doneJob = new MicoServiceBackgroundJob()
-            .setJob(CompletableFuture.completedFuture(true))
+            .setFuture(CompletableFuture.completedFuture(true))
             .setServiceShortName(SHORT_NAME)
             .setServiceVersion(VERSION)
             .setType(MicoServiceBackgroundJob.Type.BUILD)
@@ -173,7 +173,7 @@ public class BackgroundJobResourceTest {
             .andReturn();
 
         MicoServiceBackgroundJob pendingJob = new MicoServiceBackgroundJob()
-            .setJob(CompletableFuture.completedFuture(true))
+            .setFuture(CompletableFuture.completedFuture(true))
             .setServiceShortName(SHORT_NAME)
             .setServiceVersion(VERSION)
             .setType(MicoServiceBackgroundJob.Type.BUILD);
@@ -192,7 +192,7 @@ public class BackgroundJobResourceTest {
             .andReturn();
 
         MicoServiceBackgroundJob runningJob = new MicoServiceBackgroundJob()
-            .setJob(CompletableFuture.completedFuture(true))
+            .setFuture(CompletableFuture.completedFuture(true))
             .setServiceShortName(SHORT_NAME)
             .setServiceVersion(VERSION)
             .setType(MicoServiceBackgroundJob.Type.BUILD)
@@ -216,7 +216,7 @@ public class BackgroundJobResourceTest {
     @Test
     public void deleteJob() throws Exception {
         MicoServiceBackgroundJob pendingJob = new MicoServiceBackgroundJob()
-            .setJob(CompletableFuture.completedFuture(true))
+            .setFuture(CompletableFuture.completedFuture(true))
             .setServiceShortName(SHORT_NAME)
             .setServiceVersion(VERSION)
             .setType(MicoServiceBackgroundJob.Type.BUILD);
@@ -228,5 +228,5 @@ public class BackgroundJobResourceTest {
             .andExpect(status().isNoContent())
             .andReturn();
     }
-    
+
 }

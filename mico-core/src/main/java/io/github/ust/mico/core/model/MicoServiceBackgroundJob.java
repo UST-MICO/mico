@@ -18,16 +18,15 @@
  */
 package io.github.ust.mico.core.model;
 
-import java.io.Serializable;
-import java.util.concurrent.CompletableFuture;
-
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 import org.neo4j.ogm.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.Accessors;
+import java.io.Serializable;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Background job for a {@link MicoService}.
@@ -38,49 +37,49 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class MicoServiceBackgroundJob implements Serializable {
 
-	private static final long serialVersionUID = -8247189361567566737L;
-	
+    private static final long serialVersionUID = -8247189361567566737L;
+
     /**
      * The generated job id.
      */
     @Id
     private String id;
-    
-	/**
-	 * The actual job.
-	 */
-	private CompletableFuture<?> job;
-    
+
+    /**
+     * The actual job future.
+     */
+    private CompletableFuture<?> future;
+
     /**
      * The short name of the corresponding {@link MicoService}.
      */
     @Indexed
     private String serviceShortName;
-    
+
     /**
      * The version of the corresponding {@link MicoService}.
      */
     @Indexed
     private String serviceVersion;
-    
+
     /**
      * The {@link Type} of this job.
      */
     @Indexed
     private Type type;
-    
+
     /**
      * The current {@link Status} of this job.
      */
     private Status status = Status.PENDING;
-    
+
     /**
      * An error message in case the job has failed.
      */
     private String errorMessage;
 
 
-	// Build contains currently build and deploy.
+    // Build contains currently build and deploy.
     public enum Type {
         BUILD, UNDEPLOY
     }
@@ -88,5 +87,5 @@ public class MicoServiceBackgroundJob implements Serializable {
     public enum Status {
         PENDING, RUNNING, ERROR, DONE, UNDEFINED
     }
-    
+
 }
