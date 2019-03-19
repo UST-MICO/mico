@@ -120,27 +120,38 @@ public class ServiceResource {
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     public ResponseEntity<Void> deleteService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                               @PathVariable(PATH_VARIABLE_VERSION) String version) throws KubernetesResourceException {
+    	// Retrieve service from database (checks whether it exists)
         MicoService service = getServiceFromDatabase(shortName, version);
 
+        // Check whether service is currently deployed,
+        // in this case it cannot be deleted.
         throwConflictIfServiceIsDeployed(service);
 
-        if (!serviceRepository.findDependers(shortName, version).isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                "Service '" + service.getShortName() + "' '" + service.getVersion() + "' has dependers, therefore it can't be deleted.");
-        }
+        // Check whether other services depend on this service,
+        // in this case it also cannot be deleted.
+        throwUnprocessableEntitiyIfServiceIsDependedOn(service);
 
+        // Delete service in database
         serviceRepository.deleteServiceByShortNameAndVersion(shortName, version);
+        
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
     public ResponseEntity<Void> deleteAllVersionsOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) throws KubernetesResourceException {
-        List<MicoService> micoServiceList = getAllVersionsOfServiceFromDatabase(shortName);
+    	// Retrieve services from database (checks whether they exist)
+        List<MicoService> services = getAllVersionsOfServiceFromDatabase(shortName);
 
-        for (MicoService micoService : micoServiceList) {
-            throwConflictIfServiceIsDeployed(micoService);
+        // Check for each service whether it is currently deployed or
+        // other services depend on it, in this case it cannot be deleted,
+        // in fact none of the services shall be deleted.
+        for (MicoService service : services) {
+            throwConflictIfServiceIsDeployed(service);
+            throwUnprocessableEntitiyIfServiceIsDependedOn(service);
         }
-        micoServiceList.forEach(service -> serviceRepository.delete(service));
+        
+        // Delete each service in database
+        services.forEach(service -> serviceRepository.delete(service));
 
         return ResponseEntity.noContent().build();
     }
@@ -398,16 +409,33 @@ public class ServiceResource {
     }
 
     /**
-     * Checks if a service is deployed and throws a ResponseStatusException with the http status CONFLICT (409) if
-     * the service is deployed.
+     * Checks whether a given service is currently deployed.
      *
-     * @param service Checks if this {@link MicoService} is deployed
-     * @throws KubernetesResourceException if the service is deployed. It uses the http status CONFLICT
+     * @param service the {@link MicoService}.
+     * @throws KubernetesResourceException if there are multiple
+     * 		   Kubernetes deployments for the given {@code MicoService}.
+     * @throws ResponseStatusException with HTTP status 409 (conflict)
+     * 		   if the given {@code MicoService} is currently deployed.
      */
     private void throwConflictIfServiceIsDeployed(MicoService service) throws KubernetesResourceException {
         if (micoKubernetesClient.isMicoServiceDeployed(service)) {
             log.info("Micoservice '{}' in version '{}' is deployed. It is not possible to delete a deployed service.", service.getShortName(), service.getVersion());
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Service is currently deployed!");
+        }
+    }
+
+    /**
+     * Checks whether a given service is depended on by other services.
+     *
+     * @param service the {@link MicoService}.
+     * @throws ResponseStatusException with HTTP status 422 (unprocessable entity)
+     * 		   if the given {@code MicoService} is depended on by other {@code MicoServices}.
+     */
+    private void throwUnprocessableEntitiyIfServiceIsDependedOn(MicoService service) throws KubernetesResourceException {
+    	if (!serviceRepository.findDependers(service.getShortName(), service.getVersion()).isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                "Service '" + service.getShortName() + "' '" + service.getVersion() + "' has dependers,"
+                	+ "therefore it cannot be deleted.");
         }
     }
 
