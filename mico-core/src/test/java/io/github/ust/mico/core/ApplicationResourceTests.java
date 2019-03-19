@@ -943,32 +943,42 @@ public class ApplicationResourceTests {
 
     @Test
     public void updateVersionOfAssociatedService() throws Exception {
-        MicoApplication micoApplication = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
+        MicoApplication application = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
         MicoService serviceOld = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(VERSION_1_0_1);
-        micoApplication.getServices().add(serviceOld);
-        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
-            .setService(serviceOld);
-        micoApplication.getServiceDeploymentInfos().add(serviceDeploymentInfo);
-
         MicoService serviceNew = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(VERSION_1_0_2);
-        given(applicationRepository.findByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion()))
-            .willReturn(Optional.of(micoApplication));
+        MicoServiceDeploymentInfo serviceDeploymentInfoOld = new MicoServiceDeploymentInfo().setService(serviceOld);
+        
+        application.getServices().add(serviceOld);
+        application.getServiceDeploymentInfos().add(serviceDeploymentInfoOld);
+
+        given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion()))
+            .willReturn(Optional.of(application));
         given(serviceRepository.findByShortNameAndVersion(serviceNew.getShortName(), serviceNew.getVersion()))
-            .willReturn(Optional.of(serviceNew));
-        ArgumentCaptor<MicoApplication> micoApplicationCaptor = ArgumentCaptor.forClass(MicoApplication.class);
-        mvc.perform(post(BASE_PATH + "/" + micoApplication.getShortName() +
-            "/" + micoApplication.getVersion() + "/" + PATH_SERVICES + "/" + serviceNew.getShortName() + "/" +
-            serviceNew.getVersion())
+    		.willReturn(Optional.of(serviceNew));
+        given(serviceRepository.findAllByApplicationAndShortName(application.getShortName(), application.getVersion(), serviceNew.getShortName()))
+            .willReturn(CollectionUtils.listOf(serviceOld));
+        given(serviceDeploymentInfoRepository.findByApplicationAndService(
+        		application.getShortName(), application.getVersion(), serviceOld.getShortName(), serviceOld.getVersion()))
+        	.willReturn(Optional.of(serviceDeploymentInfoOld));
+        
+        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + VERSION_1_0_2)
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isNoContent());
 
-        verify(applicationRepository, times(1)).save(micoApplicationCaptor.capture());
-        MicoApplication savedMicoApplication = micoApplicationCaptor.getValue();
-        assertEquals("Expected one service", 1, savedMicoApplication.getServices().size());
-        assertEquals("Expected one serviceDeploymentInfo", 1, savedMicoApplication.getServiceDeploymentInfos().size());
-        assertEquals(serviceNew, savedMicoApplication.getServiceDeploymentInfos().get(0).getService());
-        assertEquals(serviceNew, savedMicoApplication.getServices().get(0));
+        ArgumentCaptor<MicoApplication> applicationCaptor = ArgumentCaptor.forClass(MicoApplication.class);
+        ArgumentCaptor<MicoServiceDeploymentInfo> serviceDeploymentInfoCaptor = ArgumentCaptor.forClass(MicoServiceDeploymentInfo.class);
+
+        verify(applicationRepository, times(1)).save(applicationCaptor.capture());
+        MicoApplication savedApplication = applicationCaptor.getValue();
+        assertEquals("Expected one service", 1, savedApplication.getServices().size());
+        assertEquals("Expected one serviceDeploymentInfo", 1, savedApplication.getServiceDeploymentInfos().size());
+        assertEquals(serviceNew, savedApplication.getServiceDeploymentInfos().get(0).getService());
+        assertEquals(serviceNew, savedApplication.getServices().get(0));
+
+        verify(serviceDeploymentInfoRepository, times(1)).save(serviceDeploymentInfoCaptor.capture());
+        MicoServiceDeploymentInfo savedServiceDeploymentInfo = serviceDeploymentInfoCaptor.getValue();
+        assertEquals(serviceNew, savedServiceDeploymentInfo.getService());
     }
 
     @Test
@@ -983,10 +993,10 @@ public class ApplicationResourceTests {
             .willReturn(Optional.of(micoApplication));
         given(serviceRepository.findByShortNameAndVersion(service1.getShortName(), service1.getVersion()))
             .willReturn(Optional.of(service1));
+        given(serviceRepository.findAllByApplicationAndShortName(SHORT_NAME, VERSION, SERVICE_SHORT_NAME))
+        	.willReturn(CollectionUtils.listOf(service1, service2));
 
-        mvc.perform(post(BASE_PATH + "/" + micoApplication.getShortName() +
-            "/" + micoApplication.getVersion() + "/" + PATH_SERVICES + "/" + service1.getShortName() + "/" +
-            service1.getVersion())
+        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + VERSION_1_0_1)
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isConflict());

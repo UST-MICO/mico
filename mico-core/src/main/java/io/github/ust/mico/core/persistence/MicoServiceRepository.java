@@ -27,6 +27,7 @@ import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
+import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 
 public interface MicoServiceRepository extends Neo4jRepository<MicoService, Long> {
@@ -37,12 +38,37 @@ public interface MicoServiceRepository extends Neo4jRepository<MicoService, Long
     @Override
     List<MicoService> findAll(@Depth int depth);
     
+    /**
+     * Finds all services that are included by a given application.
+     * 
+     * @param applicationShortName the short name of the {@link MicoApplication}.
+     * @param applicationVersion the version of the {@link MicoApplication}.
+     * @return a list of {@link MicoService MicoServices}.
+     */
     @Query("MATCH (a:MicoApplication)-[:INCLUDES]-(s:MicoService) "
     	+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
     	+ "RETURN COLLECT(s) AS services")
     List<MicoService> findAllByApplication(
     	@Param("applicationShortName") String applicationShortName,
     	@Param("applicationVersion") String applicationVersion);
+    
+    /**
+     * Finds all services that are included by a given application
+     * for a given service short name.
+     * 
+     * @param applicationShortName the short name of the {@link MicoApplication}.
+     * @param applicationVersion the version of the {@link MicoApplication}.
+     * @param serviceShortName the short name of the {@link MicoService}.
+     * @return a list of {@link MicoService MicoServices}.
+     */
+    @Query("MATCH (a:MicoApplication)-[:INCLUDES]-(s:MicoService) "
+    	+ "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
+    	+ "AND s.shortName = {serviceShortName} "
+    	+ "RETURN COLLECT(s) AS services")
+    List<MicoService> findAllByApplicationAndShortName(
+    	@Param("applicationShortName") String applicationShortName,
+    	@Param("applicationVersion") String applicationVersion,
+    	@Param("serviceShortName") String serviceShortName);
 
     @Depth(2)
     List<MicoService> findByShortName(@Param("shortName") String shortName);
