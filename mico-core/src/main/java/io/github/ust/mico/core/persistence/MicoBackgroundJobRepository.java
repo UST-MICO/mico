@@ -16,31 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package io.github.ust.mico.core.persistence;
 
-package io.github.ust.mico.core.configuration;
+import io.github.ust.mico.core.model.MicoServiceBackgroundJob;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
 
-import javax.validation.constraints.NotNull;
+import java.util.List;
+import java.util.Optional;
 
-import io.github.ust.mico.core.service.MicoCoreBackgroundTaskFactory;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+@Repository
+public interface MicoBackgroundJobRepository extends CrudRepository<MicoServiceBackgroundJob, String> {
+	
+    @Override
+    List<MicoServiceBackgroundJob> findAll();
 
-import lombok.Getter;
-import lombok.Setter;
-
-/**
- * Configuration for {@link MicoCoreBackgroundTaskFactory}.
- */
-@Component
-@ConfigurationProperties(prefix = "mico-core.concurrency")
-public class MicoCoreBackgroundTaskFactoryConfig {
-
-    /**
-     * The number of threads in the {@link MicoCoreBackgroundTaskFactory}.
-     */
-    @Getter
-    @Setter
-    @NotNull
-    private int threadPoolSize;
-
+    List<MicoServiceBackgroundJob> findByServiceShortNameAndServiceVersion(String micoServiceShortName, String micoServiceVersion);
+    
+    Optional<MicoServiceBackgroundJob> findByServiceShortNameAndServiceVersionAndType(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundJob.Type type);
+    
 }
