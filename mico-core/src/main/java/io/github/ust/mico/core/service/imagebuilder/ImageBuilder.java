@@ -19,11 +19,18 @@
 
 package io.github.ust.mico.core.service.imagebuilder;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.*;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.ServiceAccount;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
-import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinitionList;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
@@ -35,23 +42,16 @@ import io.github.ust.mico.core.service.imagebuilder.buildtypes.*;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.KubernetesNameNormalizer;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.*;
 
 /**
- * Builds container images by using Knative Build and Kaniko
+ * Builds container images by using Knative Build and Kaniko.
  */
 @Slf4j
 @Service
 public class ImageBuilder {
 
     private static final String BUILD_STEP_NAME = "build-and-push";
-    private static final String BUILD_CRD_GROUP = "build.knative.dev";
+    public static final String BUILD_CRD_GROUP = "build.knative.dev";
     private static final String BUILD_CRD_NAME = "builds." + BUILD_CRD_GROUP;
 
     private final MicoKubernetesBuildBotConfig buildBotConfig;
@@ -144,10 +144,8 @@ public class ImageBuilder {
      * @return the build object
      */
     public Build getBuild(String buildName) {
-
         return this.buildClient.withName(buildName).get();
     }
-
 
     /**
      * @param micoService the MICO service for which the image should be build
@@ -155,14 +153,13 @@ public class ImageBuilder {
      * @throws NotInitializedException if the image builder was not initialized
      */
     public Build build(MicoService micoService) throws NotInitializedException, IllegalArgumentException {
-
         if (StringUtils.isEmpty(micoService.getGitCloneUrl())) {
             throw new IllegalArgumentException("Git clone url is missing");
         }
 
         String namespace = buildBotConfig.getNamespaceBuildExecution();
 
-        String buildName = createBuildName(micoService.getShortName(), micoService.getVersion());
+        String buildName = kubernetesNameNormalizer.createBuildName(micoService.getShortName(), micoService.getVersion());
         String destination = createImageName(micoService.getShortName(), micoService.getVersion());
         String dockerfilePath;
         if (!StringUtils.isEmpty(micoService.getDockerfilePath())) {
@@ -188,7 +185,6 @@ public class ImageBuilder {
      * @throws NotInitializedException if the image builder was not initialized
      */
     private Build createBuild(String buildName, String destination, String dockerfile, String gitUrl, String gitRevision, String namespace) throws NotInitializedException {
-
         if (buildClient == null) {
             throw new NotInitializedException("ImageBuilder is not initialized.");
         }
@@ -261,48 +257,54 @@ public class ImageBuilder {
      * @return the list of custom resource definitions
      */
     private List<CustomResourceDefinition> getCustomResourceDefinitions() {
-        CustomResourceDefinitionList crds = kubernetesClient.customResourceDefinitions().list();
-
-        return crds.getItems();
+        return kubernetesClient.customResourceDefinitions().list().getItems();
     }
 
     /**
-     * Creates a image name based on the service name and the service version (used as image tag).
+     * Creates an image name based on the short name and version of a service (used as image tag).
      *
-     * @param serviceName    the name of the MICO service
-     * @param serviceVersion the version of the MICO service
-     * @return the image name
+     * @param serviceShortName the short name of the {@link MicoService}.
+     * @param serviceVersion the version of the {@link MicoService}.
+     * @return the image name.
      */
-    public String createImageName(String serviceName, String serviceVersion) {
-        return buildBotConfig.getDockerImageRepositoryUrl() + "/" + serviceName + ":" + serviceVersion;
+    public String createImageName(String serviceShortName, String serviceVersion) {
+        return buildBotConfig.getDockerImageRepositoryUrl() + "/" + serviceShortName + ":" + serviceVersion;
     }
 
     /**
-     * Creates a build name based on the service name.
+     * Creates an image name based on a service (used as image tag).
      *
-     * @param serviceName    the name of the MICO service
-     * @param serviceVersion the name of the MICO service
-     * @return the name of the build
+     * @param service the {@link MicoService}.
+     * @return the image name.
      */
-    private String createBuildName(String serviceName, String serviceVersion) {
-        return kubernetesNameNormalizer.normalizeName("build-" + serviceName + "-" + serviceVersion);
+    public String createImageName(MicoService service) {
+        return createImageName(service.getShortName(), service.getVersion());
     }
 
     /**
-     * Delete the build
+     * Deletes the build for a given build name.
      *
-     * @param buildName the name of the build
+     * @param buildName the name of the build.
      */
     public void deleteBuild(String buildName) {
         buildClient.withName(buildName).delete();
     }
 
     /**
-     * Delete the build
+     * Deletes a given {@code Build}.
      *
-     * @param build the build object
+     * @param build the {@link Build}.
      */
     public void deleteBuild(Build build) {
         buildClient.delete(build);
+    }
+
+    /**
+     * Deletes the {@link Build} for a given service.
+     *
+     * @param service the {@link MicoService}.
+     */
+    public void deleteBuild(MicoService service) {
+        deleteBuild(kubernetesNameNormalizer.createBuildName(service));
     }
 }
