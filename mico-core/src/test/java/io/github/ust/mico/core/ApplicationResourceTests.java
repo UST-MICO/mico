@@ -940,4 +940,55 @@ public class ApplicationResourceTests {
 
         result.andExpect(status().isUnprocessableEntity());
     }
+
+    @Test
+    public void updateVersionOfAssociatedService() throws Exception {
+        MicoApplication application = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
+        MicoService serviceOld = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(VERSION_1_0_1);
+        MicoService serviceNew = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(VERSION_1_0_2);
+        MicoServiceDeploymentInfo serviceDeploymentInfoOld = new MicoServiceDeploymentInfo().setService(serviceOld);
+        
+        application.getServices().add(serviceOld);
+        application.getServiceDeploymentInfos().add(serviceDeploymentInfoOld);
+
+        given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion()))
+            .willReturn(Optional.of(application));
+        given(serviceRepository.findByShortNameAndVersion(serviceNew.getShortName(), serviceNew.getVersion()))
+    		.willReturn(Optional.of(serviceNew));
+
+        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + VERSION_1_0_2)
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isNoContent());
+
+        ArgumentCaptor<MicoApplication> applicationCaptor = ArgumentCaptor.forClass(MicoApplication.class);
+
+        verify(applicationRepository, times(1)).save(applicationCaptor.capture());
+        MicoApplication savedApplication = applicationCaptor.getValue();
+        assertEquals("Expected one service", 1, savedApplication.getServices().size());
+        assertEquals("Expected one serviceDeploymentInfo", 1, savedApplication.getServiceDeploymentInfos().size());
+        assertEquals(serviceNew, savedApplication.getServiceDeploymentInfos().get(0).getService());
+        assertEquals(serviceNew, savedApplication.getServices().get(0));
+    }
+
+    @Test
+    public void updateVersionOfAssociatedServiceConflict() throws Exception {
+        MicoApplication micoApplication = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
+        MicoService service1 = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(VERSION_1_0_1);
+        MicoService service2 = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(VERSION_1_0_2);
+        micoApplication.getServices().add(service1);
+        micoApplication.getServices().add(service2);
+
+        given(applicationRepository.findByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion()))
+            .willReturn(Optional.of(micoApplication));
+        given(serviceRepository.findByShortNameAndVersion(service1.getShortName(), service1.getVersion()))
+            .willReturn(Optional.of(service1));
+        given(serviceRepository.findAllByApplicationAndShortName(SHORT_NAME, VERSION, SERVICE_SHORT_NAME))
+        	.willReturn(CollectionUtils.listOf(service1, service2));
+
+        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + VERSION_1_0_1)
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isConflict());
+    }
 }
