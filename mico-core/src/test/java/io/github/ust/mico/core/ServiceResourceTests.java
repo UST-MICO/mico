@@ -26,9 +26,7 @@ import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
 import io.github.ust.mico.core.dto.response.status.*;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDependency;
-import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.resource.ServiceResource;
 import io.github.ust.mico.core.service.GitHubCrawler;
@@ -61,8 +59,7 @@ import static io.github.ust.mico.core.TestConstants.*;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
@@ -93,10 +90,10 @@ public class ServiceResourceTests {
     //TODO: Use these variables inside the tests instead of the local variables
 
     @Value("${cors-policy.allowed-origins}")
-    String[] allowedOrigins;
+    private String[] allowedOrigins;
 
     @MockBean
-    MicoStatusService micoStatusService;
+    private MicoStatusService micoStatusService;
 
     @MockBean
     private MicoServiceRepository serviceRepository;
@@ -198,6 +195,13 @@ public class ServiceResourceTests {
             .andExpect(jsonPath(SERVICE_DTO_POD_INFO_METRICS_CPU_LOAD_2, is(cpuLoadPod2)))
             .andExpect(jsonPath(SERVICE_DTO_POD_INFO_METRICS_AVAILABLE_2, is(true)))
             .andExpect(jsonPath(SERVICE_DTO_ERROR_MESSAGES, is(CollectionUtils.listOf())));
+    }
+
+    @Test
+    public void getStatusOfNotExistentService() throws Exception {
+        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME_2 + "/" + VERSION + "/status"))
+            .andDo(print())
+            .andExpect(status().isNotFound());
     }
 
     @Test
@@ -750,21 +754,27 @@ public class ServiceResourceTests {
 
     @Test
     public void promoteService() throws Exception {
+        MicoServicePort port = new MicoServicePort().setPort(1234).setType(MicoPortType.TCP).setTargetPort(5678);
+
         MicoServiceInterface micoServiceInterface = new MicoServiceInterface()
-            .setServiceInterfaceName(SERVICE_INTERFACE_NAME);
+            .setId(2000L)
+            .setServiceInterfaceName(SERVICE_INTERFACE_NAME)
+            .setPorts(CollectionUtils.listOf(port));
 
         MicoServiceInterface micoServiceInterfaceTwo = new MicoServiceInterface()
+            .setId(3000L)
             .setServiceInterfaceName(SERVICE_INTERFACE_NAME_1);
 
-        List<MicoServiceInterface> micoServiceInterfaces = new LinkedList<>();
+        List<MicoServiceInterface> micoServiceInterfaces = new ArrayList<>();
         micoServiceInterfaces.add(micoServiceInterface);
         micoServiceInterfaces.add(micoServiceInterfaceTwo);
 
+
         MicoService micoService = new MicoService()
+            .setId(ID)
             .setShortName(SHORT_NAME_1)
             .setVersion(VERSION_1_0_1)
             .setDescription(DESCRIPTION_1)
-            .setId(ID)
             .setServiceInterfaces(micoServiceInterfaces);
 
         String newVersion = VERSION_1_0_1;
@@ -776,15 +786,25 @@ public class ServiceResourceTests {
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoService));
         given(serviceRepository.save(eq(promotedService))).willReturn(savedPromotedService);
 
-        ResultActions resultPromotion = mvc.perform(post(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_PROMOTE)
+        ArgumentCaptor<MicoService> serviceArgumentCaptor = ArgumentCaptor.forClass(MicoService.class);
+
+        mvc.perform(post(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_PROMOTE)
             .content(mapper.writeValueAsBytes(new MicoVersionRequestDTO(newVersion)))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(jsonPath(SHORT_NAME_PATH, is(savedPromotedService.getShortName())))
             .andExpect(jsonPath(VERSION_PATH, is(newVersion)))
-            .andExpect(jsonPath(DESCRIPTION_PATH, is(savedPromotedService.getDescription())));
+            .andExpect(jsonPath(DESCRIPTION_PATH, is(savedPromotedService.getDescription())))
+            .andExpect(status().isOk());
 
-        resultPromotion.andExpect(status().isOk());
+        verify(serviceRepository, times(1)).save(serviceArgumentCaptor.capture());
+        MicoService savedMicoService = serviceArgumentCaptor.getValue();
+        assertNotNull(savedMicoService);
+        assertNull("Expected id of copied service to be null (will be created by Neo4j)", savedMicoService.getId());
+        assertEquals("Expected that new service includes 2 MicoServiceInterfaces", 2, savedMicoService.getServiceInterfaces().size());
+        assertNull("Expected id of copied service interface 1 to be null (will be created by Neo4j)", savedMicoService.getServiceInterfaces().get(0).getId());
+        assertNull("Expected id of copied service interface 2 to be null (will be created by Neo4j)", savedMicoService.getServiceInterfaces().get(1).getId());
+        assertNull("Expected id of copied port of service interface 1 to be null (will be created by Neo4j)", savedMicoService.getServiceInterfaces().get(0).getPorts().get(0).getId());
     }
 
     @Test
