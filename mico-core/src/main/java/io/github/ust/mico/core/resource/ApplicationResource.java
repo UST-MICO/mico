@@ -269,13 +269,13 @@ public class ApplicationResource {
         MicoService service = getServiceFromDatabase(serviceShortName, serviceVersion);
         
         // Find all services with identical short name within this application
-		List<MicoService> micoServicesWithIdenticalShortName = serviceRepository
-		    .findAllByApplicationAndShortName(applicationShortName, applicationVersion, serviceShortName);
+		List<MicoService> micoServicesWithIdenticalShortName = application.getServices().stream()
+		    .filter(s -> s.getShortName().equals(serviceShortName)).collect(Collectors.toList());
 		
         if (micoServicesWithIdenticalShortName.size() > 1) {
         	// Illegal state, each service is allowed only once in every application
             throw new ResponseStatusException(HttpStatus.CONFLICT,
-			    "There are more than 1 MicoServices with identical short names for MicoApplication '"
+			    "There are multiple MicoServices with identical short names for MicoApplication '"
 			        + applicationShortName + "' '" + applicationVersion + "'.");
         } else if (micoServicesWithIdenticalShortName.size() == 0) {
         	// Service not included yet, simply add it
@@ -288,7 +288,7 @@ public class ApplicationResource {
             application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
             // ... before the application can be saved.
             applicationRepository.save(application);
-        } else if (micoServicesWithIdenticalShortName.size() == 1) {
+        } else {
         	// Service already included, replace it with its newer version, ...
         	MicoService currentService = micoServicesWithIdenticalShortName.get(0);
         	
@@ -302,20 +302,17 @@ public class ApplicationResource {
         		// Replace service in list of services in application
         		application.getServices().remove(currentService);
         		application.getServices().add(service);
-        		applicationRepository.save(application);
-        		
+
         		// Move the edge between the application and the service to the new version of the service
         		// by updating the corresponding deployment info.
-				Optional<MicoServiceDeploymentInfo> serviceDeploymentInfoOptional = serviceDeploymentInfoRepository
-				    .findByApplicationAndService(applicationShortName, applicationVersion, serviceShortName, currentService.getVersion());
-				if (!serviceDeploymentInfoOptional.isPresent()) {
-					throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-					    "Service deployment information for MicoApplication '" + applicationShortName + "' '" + applicationVersion + "'"
-					    	+ "and MicoService '" + serviceShortName + "' '" + currentService.getVersion() + "' does not exist.");
-				}
-				MicoServiceDeploymentInfo serviceDeploymentInfo = serviceDeploymentInfoOptional.get();
-				serviceDeploymentInfo.setService(service);
-				serviceDeploymentInfoRepository.save(serviceDeploymentInfo);
+				application.getServiceDeploymentInfos().stream()
+				    .filter(sdi -> sdi.getService().getShortName().equals(serviceShortName))
+				    .collect(Collectors.toList())
+				    .forEach(sdi -> sdi.setService(service));
+        		
+				// Save the application with the updated list of services
+				// and service deployment infos in the database
+        		applicationRepository.save(application);
         	}
         }
         
