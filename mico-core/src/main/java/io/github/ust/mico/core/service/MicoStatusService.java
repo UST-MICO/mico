@@ -133,7 +133,11 @@ public class MicoStatusService {
                 Deployment deployment = deploymentOptional.get();
                 serviceStatus.setRequestedReplicas(deployment.getSpec().getReplicas());
                 // Check if there are no replicas available of the deployment of a MicoService.
-                if ((deployment.getStatus().getUnavailableReplicas() != null) &&
+                if (deployment.getStatus().getUnavailableReplicas() == null) {
+                    log.info("The MicoService '{}' with version '{}' has '{}' available replicas.",
+                        micoService.getShortName(), micoService.getVersion(), deployment.getStatus().getAvailableReplicas());
+                    serviceStatus.setAvailableReplicas(deployment.getStatus().getAvailableReplicas());
+                } else if ((deployment.getStatus().getUnavailableReplicas() != null) &&
                     deployment.getStatus().getUnavailableReplicas() < deployment.getSpec().getReplicas()) {
                     log.info("The MicoService '{}' with version '{}' has '{}' available replicas.",
                         micoService.getShortName(), micoService.getVersion(), deployment.getStatus().getAvailableReplicas());
