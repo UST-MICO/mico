@@ -32,7 +32,6 @@ import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -176,24 +175,6 @@ public class DeploymentResource {
         }
         
         return ResponseEntity.noContent().build();
-    }
-
-    private Optional<MicoServiceBackgroundJob> getTaskByMicoService(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundJob.Type type) {
-        return backgroundJobRepo.findByServiceShortNameAndServiceVersionAndType(micoServiceShortName, micoServiceVersion, type);
-    }
-
-    private void saveMicoBackgroundTaskStatus(String micoServiceShortName, String micoServiceVersion,
-                                              MicoServiceBackgroundTask.Status status, MicoServiceBackgroundTask.Type type,
-                                              @Nullable String errorMessage) {
-        Optional<MicoServiceBackgroundTask> taskOptional = getTaskByMicoService(micoServiceShortName, micoServiceVersion, type);
-        if (taskOptional.isPresent()) {
-            MicoServiceBackgroundTask task = taskOptional.get();
-            log.debug("Saving status of '{}'", task);
-            task.setErrorMessage(errorMessage);
-            task.setStatus(status);
-            MicoServiceBackgroundTask savedTask = backgroundTaskRepo.save(task);
-            log.info("Job status of '{}' is '{}'", savedTask.getId(), savedTask.getStatus());
-        }
     }
 
     private void checkIfMicoApplicationIsDeployable(MicoApplication micoApplication) {
