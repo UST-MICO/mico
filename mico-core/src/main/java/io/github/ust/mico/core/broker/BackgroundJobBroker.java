@@ -142,7 +142,7 @@ public class BackgroundJobBroker {
             MicoServiceBackgroundJob job = jobOptional.get();
             job.setFuture(future);
             saveJob(job);
-            log.debug("Saved new future of job with type '{}' for '{}' '{}' .", type, micoServiceShortName, micoServiceVersion);
+            log.debug("Saved new future of job with type '{}' for '{}' '{}'.", type, micoServiceShortName, micoServiceVersion);
         } else {
             log.warn("No job of type '{}' exists for '{}' '{}'.", type, micoServiceShortName, micoServiceVersion);
         }

@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
+import io.github.ust.mico.core.model.MicoInterfaceConnection;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
@@ -88,7 +89,10 @@ public class ApplicationResource {
     
     @Autowired
     private MicoEnvironmentVariableRepository environmentVariableRepository;
-    
+
+    @Autowired
+    private MicoInterfaceConnectionRepository interfaceConnectionRepository;
+
     @Autowired
     private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
 
@@ -401,7 +405,8 @@ public class ApplicationResource {
     	// "tangling" (without relationships) labels (nodes), hence the manual clean up.
     	labelRepository.cleanUp();
     	environmentVariableRepository.cleanUp();
-    	kubernetesDeploymentInfoRepository.cleanUp();
+        kubernetesDeploymentInfoRepository.cleanUp();
+        interfaceConnectionRepository.cleanUp();
     	log.debug("Service deployment information for service '{}' in application '{}' '{}' has been updated.", serviceShortName, shortName, version);
     	
         // TODO: Update actual Kubernetes deployment (see issue mico#416).

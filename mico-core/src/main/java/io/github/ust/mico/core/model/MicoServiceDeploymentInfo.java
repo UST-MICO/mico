@@ -22,6 +22,7 @@ package io.github.ust.mico.core.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.github.ust.mico.core.dto.request.MicoInterfaceConnectionRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO;
 import lombok.AllArgsConstructor;
@@ -102,6 +103,15 @@ public class MicoServiceDeploymentInfo {
     private List<MicoEnvironmentVariable> environmentVariables = new ArrayList<>();
 
     /**
+     * Interface connections includes all required information to be able to connect a {@link MicoService}
+     * with {@link MicoServiceInterface MicoServiceInterfaces} of other {@link MicoService MicoServices}.
+     * The backend uses the information to set environment variables so that e.g. the frontend knows
+     * how to connect to the backend.
+     */
+    @Relationship(type = "HAS")
+    private List<MicoInterfaceConnection> interfaceConnections = new ArrayList<>();
+
+    /**
      * Indicates whether and when to pull the image.
      * Default image pull policy is {@link ImagePullPolicy#ALWAYS}.
      */
@@ -160,6 +170,7 @@ public class MicoServiceDeploymentInfo {
         return setReplicas(serviceDeploymentInfoDto.getReplicas())
             .setLabels(serviceDeploymentInfoDto.getLabels().stream().map(MicoLabel::valueOf).collect(Collectors.toList()))
             .setEnvironmentVariables(serviceDeploymentInfoDto.getEnvironmentVariables().stream().map(MicoEnvironmentVariable::valueOf).collect(Collectors.toList()))
+            .setInterfaceConnections(serviceDeploymentInfoDto.getInterfaceConnections().stream().map(MicoInterfaceConnection::valueOf).collect(Collectors.toList()))
             .setImagePullPolicy(serviceDeploymentInfoDto.getImagePullPolicy());
     }
 

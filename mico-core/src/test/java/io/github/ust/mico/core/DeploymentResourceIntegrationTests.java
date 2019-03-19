@@ -25,8 +25,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.util.EmbeddedRedisServer;
 import org.junit.*;
 import org.junit.experimental.categories.Category;
@@ -68,6 +70,9 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
     @Autowired
     private MicoApplicationRepository applicationRepository;
 
+    @Autowired
+    MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
+
     private String namespace;
     private MicoService service;
     private MicoApplication application;
@@ -94,6 +99,15 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
         application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(service));
         
         applicationRepository.save(application);
+
+        Optional<MicoServiceDeploymentInfo> serviceDeploymentInfoOptional = serviceDeploymentInfoRepository
+            .findByApplicationAndService("hello", "v0.0.1", "hello-integration-test", "v1.0.0");
+        if(serviceDeploymentInfoOptional.isPresent()) {
+            System.out.println("1 found");
+        } else {
+            System.out.println("1 not found");
+        }
+
     }
 
     /**

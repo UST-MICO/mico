@@ -19,6 +19,7 @@
 
 package io.github.ust.mico.core.service;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -29,6 +30,8 @@ import java.util.function.Supplier;
 import io.github.ust.mico.core.configuration.MicoCoreBackgroundJobFactoryConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * Helper class for background job with the functionality
@@ -98,6 +101,23 @@ public class MicoCoreBackgroundJobFactory {
     @SuppressWarnings("rawtypes")
     public <T> CompletableFuture runAsync(Supplier<T> job, Consumer<? super T> onSuccess, Function<Throwable, ? extends Void> onError) {
         return CompletableFuture.supplyAsync(job, executorService).thenAccept(onSuccess).exceptionally(onError);
+    }
+
+
+    /**
+     * Waits for *all* futures to complete and returns a list of results.
+     * If *any* future completes exceptionally then the resulting future will also complete exceptionally.
+     *
+     * @param futures the {@link CompletableFuture CompletableFutures}
+     * @param <T> the generic type of the {@link CompletableFuture CompletableFutures}
+     * @return the list of {@link CompletableFuture CompletableFutures}
+     */
+    public static <T> CompletableFuture<List<T>> all(List<CompletableFuture<T>> futures) {
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture<?>[futures.size()]))
+            .thenApply(v -> futures.stream()
+                .map(CompletableFuture::join)
+                .collect(toList())
+            );
     }
 
 }

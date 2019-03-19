@@ -65,7 +65,7 @@ public class IntegrationTestsUtils {
     @Getter
     private String dockerRegistrySecretName;
 
-    private ScheduledExecutorService podStatusChecker = Executors.newSingleThreadScheduledExecutor();
+    private ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
     private ScheduledExecutorService buildPodStatusChecker = Executors.newSingleThreadScheduledExecutor();
 
     /**
@@ -153,7 +153,7 @@ public class IntegrationTestsUtils {
     CompletableFuture<Boolean> waitUntilAllPodsInNamespaceAreRunning(String namespace, int initialDelay, int period, int timeout) throws InterruptedException, ExecutionException, TimeoutException {
         CompletableFuture<Boolean> completionFuture = new CompletableFuture<>();
 
-        final ScheduledFuture<?> checkFuture = podStatusChecker.scheduleAtFixedRate(() -> {
+        executorService.scheduleAtFixedRate(() -> {
 
             PodList podList = kubernetesClient.pods().inNamespace(namespace).list();
             List<Pod> pods = podList.getItems();
@@ -190,8 +190,11 @@ public class IntegrationTestsUtils {
         // Waits until timeout is reached or the future completes.
         completionFuture.get(timeout, TimeUnit.SECONDS);
 
+        log.info("Finished with build.");
+
         // When completed cancel future
-        completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
+        // TODO
+        //completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
 
         return completionFuture;
     }
@@ -212,7 +215,8 @@ public class IntegrationTestsUtils {
     CompletableFuture<Boolean> waitUntilPodIsRunning(String podName, String namespace, int initialDelay, int period, int timeout) throws InterruptedException, ExecutionException, TimeoutException {
         CompletableFuture<Boolean> completionFuture = new CompletableFuture<>();
 
-        final ScheduledFuture<?> checkFuture = podStatusChecker.scheduleAtFixedRate(() -> {
+        log.info("Wait until pod '{}' is running", podName);
+        final ScheduledFuture<?> checkFuture = executorService.scheduleAtFixedRate(() -> {
             try {
                 Boolean running = checkIfPodIsRunning(podName, namespace);
                 if (running) {
@@ -248,7 +252,8 @@ public class IntegrationTestsUtils {
     CompletableFuture<Deployment> waitUntilDeploymentIsCreated(MicoService micoService, int initialDelay, int period, int timeout) throws InterruptedException, ExecutionException, TimeoutException {
         CompletableFuture<Deployment> completionFuture = new CompletableFuture<>();
 
-        final ScheduledFuture<?> checkFuture = podStatusChecker.scheduleAtFixedRate(() -> {
+        log.info("Wait until deployment of MicoService '{}' '{}' is created", micoService.getShortName(), micoService.getVersion());
+        executorService.scheduleAtFixedRate(() -> {
 
             Optional<Deployment> deployment = Optional.empty();
             try {
@@ -264,7 +269,7 @@ public class IntegrationTestsUtils {
         completionFuture.get(timeout, TimeUnit.SECONDS);
 
         // When completed cancel future
-        completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
+        //completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
 
         return completionFuture;
     }
@@ -284,7 +289,8 @@ public class IntegrationTestsUtils {
     CompletableFuture<Service> waitUntilServiceIsCreated(MicoService micoService, int initialDelay, int period, int timeout) throws InterruptedException, ExecutionException, TimeoutException {
         CompletableFuture<Service> completionFuture = new CompletableFuture<>();
 
-        final ScheduledFuture<?> checkFuture = podStatusChecker.scheduleAtFixedRate(() -> {
+        log.info("Wait until Kubernetes Service for MicoService '{}' '{}' is created", micoService.getShortName(), micoService.getVersion());
+        executorService.scheduleAtFixedRate(() -> {
             List<Service> services = micoKubernetesClient.getInterfacesOfMicoService(micoService);
             if (!services.isEmpty()) {
                 completionFuture.complete(services.get(0));
@@ -295,7 +301,7 @@ public class IntegrationTestsUtils {
         completionFuture.get(timeout, TimeUnit.SECONDS);
 
         // When completed cancel future
-        completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
+        //completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
 
         return completionFuture;
     }
@@ -317,6 +323,7 @@ public class IntegrationTestsUtils {
     CompletableFuture<Boolean> waitUntilBuildIsFinished(ImageBuilder imageBuilder, String buildName, String namespace, int initialDelay, int period, int timeout) throws InterruptedException, ExecutionException, TimeoutException {
         CompletableFuture<Boolean> completionFuture = new CompletableFuture<>();
 
+        log.info("Wait until build '{}' is finished", buildName);
         // Create a future that polls every second with a delay of 10 seconds.
         final ScheduledFuture<?> checkFuture = buildPodStatusChecker.scheduleAtFixedRate(() -> {
 
@@ -337,7 +344,7 @@ public class IntegrationTestsUtils {
         completionFuture.get(timeout, TimeUnit.SECONDS);
 
         // When completed cancel future
-        completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
+        //completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
 
         return completionFuture;
     }

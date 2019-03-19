@@ -31,9 +31,9 @@ import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.resource.DeploymentResource;
-import io.github.ust.mico.core.service.MicoCoreBackgroundJobFactory;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
+import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.EmbeddedRedisServer;
 import org.hamcrest.Matchers;
@@ -43,7 +43,6 @@ import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -58,13 +57,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 import static io.github.ust.mico.core.TestConstants.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -86,12 +84,6 @@ public class DeploymentResourceTests {
     private static final String DEPLOYMENT_NAME = "deployment-name";
     private static final String SERVICE_NAME = "service-name";
     private static final String NAMESPACE_NAME = "namespace-name";
-
-    @Captor
-    private ArgumentCaptor<Consumer<String>> onSuccessArgumentCaptor;
-
-    @Captor
-    private ArgumentCaptor<Function<Throwable, Void>> onErrorArgumentCaptor;
 
     @Captor
     private ArgumentCaptor<MicoService> micoServiceArgumentCaptor;
@@ -121,14 +113,11 @@ public class DeploymentResourceTests {
     private ImageBuilder imageBuilder;
 
     @MockBean
-    private MicoCoreBackgroundJobFactory factory;
-
-    @MockBean
     private MicoKubernetesClient micoKubernetesClient;
 
     @Before
     public void setUp() throws KubernetesResourceException {
-        given(imageBuilder.createImageName(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).willReturn(
+        given(imageBuilder.createImageName(anyString(), anyString())).willReturn(
             TestConstants.IntegrationTest.DOCKER_IMAGE_URI);
 
         Deployment deployment = new DeploymentBuilder()
@@ -165,12 +154,16 @@ public class DeploymentResourceTests {
                     .setNamespace("namespace")
                     .setDeploymentName("deployment")
                     .setServiceNames(CollectionUtils.listOf("service"))));
+        Build build = new Build();
+        build.getMetadata().setName("build-name");
+        given(imageBuilder.build(service)).willReturn(build);
 
-        CompletableFuture<?> future = CompletableFuture.completedFuture(service);
-        given(factory.runAsync(any(), onSuccessArgumentCaptor.capture(), onErrorArgumentCaptor.capture())).willReturn(future);
+        // Assume asynchronous image build operation was successful
+        CompletableFuture<Boolean> futureOfBuildJob = CompletableFuture.completedFuture(true);
+        given(imageBuilder.waitUntilBuildIsFinished(anyString())).willReturn(futureOfBuildJob);
 
         MicoServiceBackgroundJob mockJob = new MicoServiceBackgroundJob()
-            .setFuture(future)
+            .setFuture(futureOfBuildJob)
             .setServiceShortName(service.getShortName())
             .setServiceVersion(service.getVersion())
             .setType(MicoServiceBackgroundJob.Type.BUILD);
@@ -189,9 +182,6 @@ public class DeploymentResourceTests {
         mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/deploy"))
             .andDo(print())
             .andExpect(status().isAccepted());
-
-        // Assume asynchronous image build operation was successful -> invoke onSuccess function
-        onSuccessArgumentCaptor.getValue().accept(service.getDockerImageUri());
 
         verify(serviceRepository, times(1)).save(micoServiceArgumentCaptor.capture());
 

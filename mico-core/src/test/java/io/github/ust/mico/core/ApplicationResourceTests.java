@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import io.github.ust.mico.core.persistence.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -69,10 +70,6 @@ import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO
 import io.github.ust.mico.core.dto.response.status.*;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo.ImagePullPolicy;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoLabelRepository;
-import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.resource.ApplicationResource;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
@@ -114,6 +111,15 @@ public class ApplicationResourceTests {
 
     @MockBean
     private MicoLabelRepository labelRepository;
+
+    @MockBean
+    private MicoEnvironmentVariableRepository environmentVariableRepository;
+
+    @MockBean
+    private MicoInterfaceConnectionRepository interfaceConnectionRepository;
+
+    @MockBean
+    private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
 
     @MockBean
     private MicoKubernetesClient micoKubernetesClient;
