@@ -179,13 +179,13 @@ public class BackgroundJobBroker {
                 log.info("job of '{}' '{}' with type '{}' changed its status: {} → {}.",
                     micoServiceShortName, micoServiceVersion, type, job.getStatus(), newStatus);
                 if (newStatus.equals(MicoServiceBackgroundJob.Status.ERROR) && !StringUtils.isEmpty(errorMessage)) {
-                    log.info("Job of '{}' '{}' with type '{}' failed. Reason: {}.",
+                    log.warn("Job of '{}' '{}' with type '{}' failed. Reason: {}.",
                         micoServiceShortName, micoServiceVersion, type, errorMessage);
                 }
                 job.setStatus(newStatus);
                 job.setErrorMessage(errorMessage);
-                MicoServiceBackgroundJob savedjob = saveJob(job);
-                log.debug("Saved new status of job: {}", savedjob);
+                MicoServiceBackgroundJob savedJob = saveJob(job);
+                log.debug("Saved new status of job: {}", savedJob);
             }
         } else {
             log.warn("No job of type '{}' exists for '{}' '{}'.", type, micoServiceShortName, micoServiceVersion);
