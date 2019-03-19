@@ -19,7 +19,7 @@
 
 package io.github.ust.mico.core;
 
-import io.github.ust.mico.core.service.MicoCoreBackgroundTaskFactory;
+import io.github.ust.mico.core.service.MicoCoreBackgroundJobFactory;
 import org.junit.ComparisonFailure;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -40,10 +40,10 @@ import static org.junit.Assert.fail;
 @Category(IntegrationTests.class)
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class MicoCoreBackgroundTaskFactoryTests {
+public class MicoCoreBackgroundJobFactoryTests {
 
     @Autowired
-    private MicoCoreBackgroundTaskFactory factory;
+    private MicoCoreBackgroundJobFactory factory;
 
     private CountDownLatch latch;
     private AtomicReference<AssertionError> failure = new AtomicReference<>();
@@ -52,7 +52,7 @@ public class MicoCoreBackgroundTaskFactoryTests {
     @Test
     public void testRunAsync() throws InterruptedException {
         latch = new CountDownLatch(1);
-        factory.runAsync(() -> veryLongLastingTask("MICO"), result -> {
+        factory.runAsync(() -> veryLongLastingJob("MICO"), result -> {
             try {
                 assertEquals("Hello MICO!", result);
             } catch (ComparisonFailure cf) {
@@ -69,7 +69,7 @@ public class MicoCoreBackgroundTaskFactoryTests {
     @Test(expected = ComparisonFailure.class)
     public void testRunAsyncFailure() throws InterruptedException {
         latch = new CountDownLatch(1);
-        factory.runAsync(() -> veryLongLastingTask("MICO"), result -> {
+        factory.runAsync(() -> veryLongLastingJob("MICO"), result -> {
             try {
                 assertEquals("Bye MICO!", result);
             } catch (ComparisonFailure cf) {
@@ -86,7 +86,7 @@ public class MicoCoreBackgroundTaskFactoryTests {
     @Test
     public void testRunAsyncException() throws InterruptedException {
         latch = new CountDownLatch(1);
-        factory.runAsync(() -> veryLongLastingTaskException(), result -> System.out.println(result), e -> {
+        factory.runAsync(() -> veryLongLastingJobException(), result -> System.out.println(result), e -> {
             exceptionHandler(e);
             latch.countDown();
             return null;
@@ -100,12 +100,12 @@ public class MicoCoreBackgroundTaskFactoryTests {
         return null;
     }
 
-    private String veryLongLastingTask(String name) {
+    private String veryLongLastingJob(String name) {
         pi_digits(100000);
         return "Hello " + name + "!";
     }
 
-    private String veryLongLastingTaskException() {
+    private String veryLongLastingJobException() {
         List<String> list = new ArrayList<>();
         list.get(0);
         return "This line is never executed!";

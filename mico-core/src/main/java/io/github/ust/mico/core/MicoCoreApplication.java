@@ -19,7 +19,7 @@
 
 package io.github.ust.mico.core;
 
-import io.github.ust.mico.core.persistence.MicoBackgroundTaskRepository;
+import io.github.ust.mico.core.persistence.MicoBackgroundJobRepository;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -36,9 +36,9 @@ import org.springframework.web.client.RestTemplate;
  */
 @SpringBootApplication
 @EnableNeo4jRepositories(basePackages = "io.github.ust.mico.core.persistence",
-    excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = MicoBackgroundTaskRepository.class))
+    excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = MicoBackgroundJobRepository.class))
 @EnableRedisRepositories(basePackages = "io.github.ust.mico.core.persistence",
-    includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = MicoBackgroundTaskRepository.class))
+    includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = MicoBackgroundJobRepository.class))
 @EnableScheduling
 public class MicoCoreApplication {
 

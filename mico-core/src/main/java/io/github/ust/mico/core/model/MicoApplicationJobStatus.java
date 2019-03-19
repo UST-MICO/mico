@@ -21,7 +21,7 @@ package io.github.ust.mico.core.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.github.ust.mico.core.model.MicoServiceBackgroundTask.Status;
+import io.github.ust.mico.core.model.MicoServiceBackgroundJob.Status;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -50,11 +50,11 @@ public class MicoApplicationJobStatus {
     /**
      * The aggregated status of jobs for the {@link MicoApplication}.
      */
-    private MicoServiceBackgroundTask.Status status = Status.UNDEFINED;
+    private MicoServiceBackgroundJob.Status status = Status.UNDEFINED;
     
     /**
      * The list of jobs for the {@link MicoApplication}.
      */
-    private List<MicoServiceBackgroundTask> jobs = new ArrayList<>();
+    private List<MicoServiceBackgroundJob> jobs = new ArrayList<>();
     
 }

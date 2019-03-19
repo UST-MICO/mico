@@ -26,79 +26,78 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import io.github.ust.mico.core.configuration.MicoCoreBackgroundJobFactoryConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import io.github.ust.mico.core.configuration.MicoCoreBackgroundTaskFactoryConfig;
-
 /**
- * Helper class for background task with the functionality
+ * Helper class for background job with the functionality
  * to attach callbacks for successful termination or failure.
  * for {@link CompletableFuture}.
  */
 @Component
-public class MicoCoreBackgroundTaskFactory {
+public class MicoCoreBackgroundJobFactory {
     
-    // The configuration for this background task factory.
-    private MicoCoreBackgroundTaskFactoryConfig config;
+    // The configuration for this background job factory.
+    private MicoCoreBackgroundJobFactoryConfig config;
     
-    // Executor service handling all background tasks with a fixed number of threads.
+    // Executor service handling all background jobs with a fixed number of threads.
     private ExecutorService executorService;
     
     @Autowired
-    public MicoCoreBackgroundTaskFactory(MicoCoreBackgroundTaskFactoryConfig config) {
+    public MicoCoreBackgroundJobFactory(MicoCoreBackgroundJobFactoryConfig config) {
         this.config = config;
         executorService = Executors.newFixedThreadPool(this.config.getThreadPoolSize());
     }
     
     /**
      * Returns a new CompletableFuture that is asynchronously completed
-     * by a task running in the {@link ExecutorService} defined in this class
+     * by a job running in the {@link ExecutorService} defined in this class
      * with the value obtained by calling the given supplier.
      * 
-     * @param <T> the task's return type.
-     * @param task a {@link Supplier} returning the value to be used
+     * @param <T> the job's return type.
+     * @param job a {@link Supplier} returning the value to be used
      *        to complete the returned CompletableFuture.
      * @return a new {@link CompletableFuture}.
      */
-    public <T> CompletableFuture<T> runAsync(Supplier<T> task) {
-        return CompletableFuture.supplyAsync(task, executorService);
+    public <T> CompletableFuture<T> runAsync(Supplier<T> job) {
+        return CompletableFuture.supplyAsync(job, executorService);
     }
     
     /**
      * Returns a new CompletableFuture that is asynchronously completed
-     * by a task running in the {@link ExecutorService} defined in this class
-     * with the value obtained by calling the given supplier. In case the task
+     * by a job running in the {@link ExecutorService} defined in this class
+     * with the value obtained by calling the given supplier. In case the job
      * succeeds, the given Consumer is executed.
      * 
-     * @param <T> the task's return type.
-     * @param task a {@link Supplier} returning the value to be used
+     * @param <T> the job's return type.
+     * @param job a {@link Supplier} returning the value to be used
      *        to complete the returned CompletableFuture.
-     * @param onSuccess a {@link Consumer} in case the task succeeds.
+     * @param onSuccess a {@link Consumer} in case the job succeeds.
      * @return a new {@link CompletableFuture}.
      */
     @SuppressWarnings("rawtypes")
-    public <T> CompletableFuture runAsync(Supplier<T> task, Consumer<? super T> onSuccess) {
-        return CompletableFuture.supplyAsync(task, executorService).thenAccept(onSuccess);
+    public <T> CompletableFuture runAsync(Supplier<T> job, Consumer<? super T> onSuccess) {
+        return CompletableFuture.supplyAsync(job, executorService).thenAccept(onSuccess);
     }
 
     /**
      * Returns a new CompletableFuture that is asynchronously completed
-     * by a task running in the {@link ExecutorService} defined in this class
-     * with the value obtained by calling the given supplier. In case the task
+     * by a job running in the {@link ExecutorService} defined in this class
+     * with the value obtained by calling the given supplier. In case the job
      * succeeds, the given Consumer is executed, otherwise (on failure) the given
      * Function is executed.
      *
-     * @param <T> the task's return type.
-     * @param task a {@link Supplier} returning the value to be used
+     * @param <T> the job's return type.
+     * @param job a {@link Supplier} returning the value to be used
      *        to complete the returned CompletableFuture.
-     * @param onSuccess a {@link Consumer} in case the task succeeds.
-     * @param onError a {@link Function} in case the task fails.
+     * @param onSuccess a {@link Consumer} in case the job succeeds.
+     * @param onError a {@link Function} in case the job fails.
      * @return a new {@link CompletableFuture}.
      */
     @SuppressWarnings("rawtypes")
-    public <T> CompletableFuture runAsync(Supplier<T> task, Consumer<? super T> onSuccess, Function<Throwable, ? extends Void> onError) {
-        return CompletableFuture.supplyAsync(task, executorService).thenAccept(onSuccess).exceptionally(onError);
+    public <T> CompletableFuture runAsync(Supplier<T> job, Consumer<? super T> onSuccess, Function<Throwable, ? extends Void> onError) {
+        return CompletableFuture.supplyAsync(job, executorService).thenAccept(onSuccess).exceptionally(onError);
     }
 
 }
