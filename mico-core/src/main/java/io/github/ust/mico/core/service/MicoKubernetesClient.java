@@ -26,9 +26,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.server.ResponseStatusException;
 
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
@@ -38,6 +36,8 @@ import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.persistence.KubernetesDeploymentInfoRepository;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.util.CollectionUtils;
@@ -103,17 +103,21 @@ public class MicoKubernetesClient {
     private final MicoKubernetesBuildBotConfig buildBotConfig;
     private final KubernetesClient kubernetesClient;
     private final ImageBuilder imageBuilder;
+    private final MicoApplicationRepository applicationRepository;
     private final MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
+    private final KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
 
     @Autowired
 	public MicoKubernetesClient(MicoKubernetesConfig micoKubernetesConfig, MicoKubernetesBuildBotConfig buildBotConfig,
-		MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository,
-	    ImageBuilder imageBuilder, KubernetesClient kubernetesClient) {
+		KubernetesClient kubernetesClient, ImageBuilder imageBuilder, MicoApplicationRepository applicationRepository,
+	    MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository, KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository) {
 		this.micoKubernetesConfig = micoKubernetesConfig;
 		this.buildBotConfig = buildBotConfig;
-		this.serviceDeploymentInfoRepository = serviceDeploymentInfoRepository;
-		this.imageBuilder = imageBuilder;
 		this.kubernetesClient = kubernetesClient;
+		this.imageBuilder = imageBuilder;
+		this.applicationRepository = applicationRepository;
+		this.serviceDeploymentInfoRepository = serviceDeploymentInfoRepository;
+		this.kubernetesDeploymentInfoRepository = kubernetesDeploymentInfoRepository;
 	}
 
     /**
@@ -250,9 +254,6 @@ public class MicoKubernetesClient {
             .addToSelector(LABEL_INSTANCE_KEY, serviceUid)
             .endSpec()
             .build();
-
-        // TODO: Check whether optional fields of MicoServiceInterface have to be used in some way
-        // (publicDns, description, protocol, transportProtocol)
 
         Service createdService = kubernetesClient.services().inNamespace(namespace).createOrReplace(service);
         log.debug("Successfully created Kubernetes service '{}' in namespace '{}' for MicoServiceInterface '{}' of MicoService '{}' '{}'",
@@ -560,34 +561,48 @@ public class MicoKubernetesClient {
 			List<MicoServiceDeploymentInfo> serviceDeploymentInfos = serviceDeploymentInfoRepository.findAllByService(service.getShortName(), service.getVersion());
 
 			// Service deployment info of the currently processed service
-			Optional<MicoServiceDeploymentInfo> currentServiceDeploymentInfoOptional = serviceDeploymentInfoRepository.findByApplicationAndService(
+			Optional<MicoServiceDeploymentInfo> serviceDeploymentInfoOptional = serviceDeploymentInfoRepository.findByApplicationAndService(
 				application.getShortName(), application.getVersion(), service.getShortName(), service.getVersion());
 			
 			// No service deployment info would mean that this service is not deployed
-			if (!currentServiceDeploymentInfoOptional.isPresent() || serviceDeploymentInfos.isEmpty()) {
-				// NOTE: Consider using an IllegalStateException or....
-				throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+			if (!serviceDeploymentInfoOptional.isPresent() || serviceDeploymentInfos.isEmpty()) {
+				log.error("Deployment info for MicoService '{}' in version '{}' is not available in the database.",
+				    service.getShortName(), service.getVersion());
+				throw new IllegalStateException(
 					"Service deployment info for MicoApplication '" 
 						+ application.getShortName() + "' '" + application.getVersion()
 						+ "' and MicoService '" + service.getShortName() + "' '" + service.getVersion() + "' does not exist!");
 			} else {
-				MicoServiceDeploymentInfo currentServiceDeploymentInfo = currentServiceDeploymentInfoOptional.get();
-				KubernetesDeploymentInfo kubernetesDeploymentInfo = currentServiceDeploymentInfo.getKubernetesDeploymentInfo();
+				MicoServiceDeploymentInfo serviceDeploymentInfo = serviceDeploymentInfoOptional.get();
 				if (serviceDeploymentInfos.size() == 1) {
 					// Service only used by this application -> simply undeploy it
+					log.debug("MicoService '{}' in version '{}' is only used by this MicoApplication.",
+					    service.getShortName(), service.getVersion());
 					undeploy(serviceDeploymentInfos.get(0));
-					// Clean up build resources if service is undeployed
-					imageBuilder.deleteBuild(service);
-					kubernetesClient
-						.pods()
-						.inNamespace(buildBotConfig.getNamespaceBuildExecution())
-						.withLabel(ImageBuilder.BUILD_CRD_GROUP + "/buildName", imageBuilder.createImageName(service))
-						.delete();
 				} else {
 					// Service used by multiple applications -> scale down
-					int currentTotalRequestedReplicas = serviceDeploymentInfos.stream().mapToInt(MicoServiceDeploymentInfo::getReplicas).sum();
-					int updatedTotalRequestedReplicas = currentTotalRequestedReplicas - currentServiceDeploymentInfo.getReplicas();
-					scale(kubernetesDeploymentInfo, updatedTotalRequestedReplicas);
+					log.debug("MicoService '{}' in version '{}' is also used by other MicoApplications.",
+						service.getShortName(), service.getVersion());
+					
+					// Calculate the current total number of requested replicas for 
+					// the currently processed service, which is the sum of requested
+					// replicas of all applications that are using the current service
+					// and are actually deployed.
+					int currentTotalRequestedReplicas = 0;
+					List<MicoApplication> applicationsUsingCurrentService = applicationRepository
+					    .findAllByUsedService(service.getShortName(), service.getVersion());
+					for (MicoApplication applicationUsingCurrentService : applicationsUsingCurrentService) {
+						if (isApplicationDeployed(applicationUsingCurrentService)) {
+							currentTotalRequestedReplicas += getServiceDeploymentInfo(applicationUsingCurrentService, service).getReplicas();
+						}
+					}
+					
+					// The updated number of total requested replicas for the current service
+					// is the current total minus the replicas of the current service.
+					int updatedTotalRequestedReplicas = currentTotalRequestedReplicas - serviceDeploymentInfo.getReplicas();
+					
+					// Actual scaling
+					scale(serviceDeploymentInfo, updatedTotalRequestedReplicas);
 				}
 			}
     	}
@@ -598,17 +613,29 @@ public class MicoKubernetesClient {
      * a given number of replicas. If the specified number of replicas
      * is {@code 0}, the deployment is undeployed.
      * 
-     * @param kubernetesDeploymentInfo the {@link KubernetesDeploymentInfo}.
+     * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.
      * @param scaleToNumberOfReplicas the updated number of requested replicas
      * 		  for the Kubernetes deployment for the {@link MicoService}.
      */
-    private void scale(KubernetesDeploymentInfo kubernetesDeploymentInfo, int scaleToNumberOfReplicas) {
-    	kubernetesClient
-			.apps()
-			.deployments()
-			.inNamespace(kubernetesDeploymentInfo.getNamespace())
-			.withName(kubernetesDeploymentInfo.getDeploymentName())
-			.scale(scaleToNumberOfReplicas);
+    private void scale(MicoServiceDeploymentInfo serviceDeploymentInfo, int scaleToNumberOfReplicas) {
+    	if (scaleToNumberOfReplicas < 0) {
+    		log.debug("Illegal number of requested replicas, no scaling action will be performed.");
+    		throw new IllegalArgumentException("Number of replicas must never be negative!");
+    	} else if (scaleToNumberOfReplicas == 0) {
+    		log.debug("Number of requested replicas is 0, service will be undeployed.");
+    		undeploy(serviceDeploymentInfo);
+    	} else {
+    		log.debug("Scale down (replicas) of MicoService '{}' in version '{}' to {}.",
+				serviceDeploymentInfo.getService().getShortName(),
+				serviceDeploymentInfo.getService().getVersion(),
+				scaleToNumberOfReplicas);
+    		kubernetesClient
+    			.apps()
+    			.deployments()
+    			.inNamespace(serviceDeploymentInfo.getKubernetesDeploymentInfo().getNamespace())
+    			.withName(serviceDeploymentInfo.getKubernetesDeploymentInfo().getDeploymentName())
+    			.scale(scaleToNumberOfReplicas);
+    	}
     }
     
     /**
@@ -617,13 +644,62 @@ public class MicoKubernetesClient {
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.
      */
     private void undeploy(MicoServiceDeploymentInfo serviceDeploymentInfo) {
-        KubernetesDeploymentInfo kubernetesDeploymentInfo = serviceDeploymentInfo.getKubernetesDeploymentInfo();
+    	// Undeploy Kubernetes deployment
+    	KubernetesDeploymentInfo kubernetesDeploymentInfo = serviceDeploymentInfo.getKubernetesDeploymentInfo();
+    	log.debug("Undeploy MicoService '{}' in version '{}'.",
+    		serviceDeploymentInfo.getService().getShortName(),
+    		serviceDeploymentInfo.getService().getVersion());
     	kubernetesClient
     		.apps()
     		.deployments()
     		.inNamespace(kubernetesDeploymentInfo.getNamespace())
     		.withName(kubernetesDeploymentInfo.getDeploymentName())
     		.delete();
+    	
+    	// Clean up build resources
+		log.debug("Clean up build resources for MicoService '{}' in version '{}'.",
+			serviceDeploymentInfo.getService().getShortName(),
+			serviceDeploymentInfo.getService().getVersion());
+		imageBuilder.deleteBuild(serviceDeploymentInfo.getService());
+		kubernetesClient
+			.pods()
+			.inNamespace(buildBotConfig.getNamespaceBuildExecution())
+			.withLabel(ImageBuilder.BUILD_CRD_GROUP + "/buildName", imageBuilder.createImageName(serviceDeploymentInfo.getService()))
+			.delete();
+    	
+    	// Delete Kubernetes deployment info in database
+		log.debug("Delete Kubernetes deployment info in database for MicoService '{}' in version '{}'.",
+			serviceDeploymentInfo.getService().getShortName(),
+			serviceDeploymentInfo.getService().getVersion());
+		kubernetesDeploymentInfoRepository.delete(serviceDeploymentInfo.getKubernetesDeploymentInfo());
+    }
+    
+    /**
+     * Retrieves the service deployment information for a given
+     * {@code MicoApplication} and {@code MicoService} from the database.
+     * 
+     * @param application the {@link MicoApplication}.
+     * @param service the {@link MicoService}.
+     * @return the {@link MicoServiceDeploymentInfo} if it exists.
+     * @throws IllegalStateException if the {@code MicoServiceDeploymentInfo}
+     * 		   does not exist in the database.
+     */
+    private MicoServiceDeploymentInfo getServiceDeploymentInfo(MicoApplication application, MicoService service) throws IllegalStateException {
+    	Optional<MicoServiceDeploymentInfo> serviceDeploymentInfoOptional =
+    		serviceDeploymentInfoRepository.findByApplicationAndService(
+				application.getShortName(), application.getVersion(),
+				service.getShortName(), service.getVersion());
+    	
+    	if (!serviceDeploymentInfoOptional.isPresent()) {
+    		log.error("Deployment info for MicoApplication '{}' in version '{}' and "
+    			+ "MicoService '{}' in version '{}' is not available in the database.",
+			    application.getShortName(), application.getVersion(), service.getShortName(), service.getVersion());
+    		throw new IllegalStateException("Service deployment info for MicoApplication '" 
+				+ application.getShortName() + "' '" + application.getVersion()
+				+ "' and MicoService '" + service.getShortName() + "' '" + service.getVersion() + "' does not exist!");
+    	}
+    	
+    	return serviceDeploymentInfoOptional.get();
     }
     
 }
