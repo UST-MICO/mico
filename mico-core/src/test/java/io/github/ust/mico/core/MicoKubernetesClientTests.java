@@ -42,11 +42,15 @@ import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentList;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.github.ust.mico.core.TestConstants.IntegrationTest;
+import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.persistence.KubernetesDeploymentInfoRepository;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.UIDUtils;
 
@@ -65,9 +69,21 @@ public class MicoKubernetesClientTests {
 
     @MockBean
     private MicoKubernetesConfig micoKubernetesConfig;
+    
+    @MockBean
+    private MicoKubernetesBuildBotConfig micoKubernetesBuildBotConfig;
+    
+    @MockBean
+    private ImageBuilder imageBuilder;
+    
+    @MockBean
+    private MicoApplicationRepository applicationRepository;
 
     @MockBean
     private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
+    
+    @MockBean
+    private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
 
     private MicoKubernetesClient micoKubernetesClient;
 
@@ -77,8 +93,9 @@ public class MicoKubernetesClientTests {
     public void setUp() {
         given(micoKubernetesConfig.getNamespaceMicoWorkspace()).willReturn(testNamespace);
 
-        micoKubernetesClient = new MicoKubernetesClient(micoKubernetesConfig, serviceDeploymentInfoRepository,
-            mockServer.getClient());
+        micoKubernetesClient = new MicoKubernetesClient(micoKubernetesConfig, micoKubernetesBuildBotConfig,
+        	mockServer.getClient(), imageBuilder, applicationRepository,
+        	serviceDeploymentInfoRepository, kubernetesDeploymentInfoRepository);
 
         mockServer.getClient().namespaces().create(new NamespaceBuilder().withNewMetadata().withName(testNamespace).endMetadata().build());
     }
