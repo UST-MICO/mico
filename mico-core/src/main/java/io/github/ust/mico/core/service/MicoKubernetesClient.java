@@ -19,10 +19,12 @@
 
 package io.github.ust.mico.core.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.internal.SerializationUtils;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.*;
@@ -114,7 +116,7 @@ public class MicoKubernetesClient {
      */
     public Deployment createMicoService(MicoServiceDeploymentInfo serviceDeploymentInfo) throws KubernetesResourceException {
         MicoService micoService = serviceDeploymentInfo.getService();
-        if(micoService == null) {
+        if (micoService == null) {
             throw new IllegalArgumentException("MicoService of service deployment information must not be null!");
         }
         String namespace = micoKubernetesConfig.getNamespaceMicoWorkspace();
@@ -488,6 +490,27 @@ public class MicoKubernetesClient {
         log.debug("Found {} Kubernetes pod(s) that match the labels '{}'.", podList.size(), labels.toString());
 
         return podList;
+    }
+
+    /**
+     * Retrieves the yaml for a MicoService, contains the interfaces if they exist.
+     *
+     * @param micoService
+     * @return
+     * @throws KubernetesResourceException
+     * @throws JsonProcessingException
+     */
+    public String getYaml(MicoService micoService) throws KubernetesResourceException, JsonProcessingException {
+        String yaml = "";
+        Optional<Deployment> deploymentOptional = getDeploymentOfMicoService(micoService);
+        if (deploymentOptional.isPresent()) {
+            yaml += SerializationUtils.dumpWithoutRuntimeStateAsYaml(deploymentOptional.get());
+        }
+        List<Service> kubernetesServices = getInterfacesOfMicoService(micoService);
+        for (Service kubernetesService : kubernetesServices) {
+            yaml += SerializationUtils.dumpWithoutRuntimeStateAsYaml(kubernetesService);
+        }
+        return yaml;
     }
 
     /**

@@ -19,25 +19,22 @@
 
 package io.github.ust.mico.core;
 
-import static io.github.ust.mico.core.JsonPathBuilder.*;
-import static io.github.ust.mico.core.TestConstants.*;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
-import static io.github.ust.mico.core.TestConstants.VERSION;
-import static org.hamcrest.CoreMatchers.endsWith;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import java.util.*;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import io.github.ust.mico.core.configuration.CorsConfig;
+import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
+import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
+import io.github.ust.mico.core.dto.response.status.*;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDependency;
+import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.resource.ServiceResource;
+import io.github.ust.mico.core.service.GitHubCrawler;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.service.MicoStatusService;
+import io.github.ust.mico.core.util.CollectionUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -55,23 +52,24 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import java.util.*;
 
-import io.github.ust.mico.core.configuration.CorsConfig;
-import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
-import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
-import io.github.ust.mico.core.dto.response.status.*;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDependency;
-import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.resource.ServiceResource;
-import io.github.ust.mico.core.service.GitHubCrawler;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.MicoStatusService;
-import io.github.ust.mico.core.util.CollectionUtils;
+import static io.github.ust.mico.core.JsonPathBuilder.*;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.VERSION;
+import static io.github.ust.mico.core.TestConstants.*;
+import static org.hamcrest.CoreMatchers.endsWith;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(ServiceResource.class)
@@ -232,20 +230,20 @@ public class ServiceResourceTests {
 
         String urlPath = SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION;
         mvc.perform(get(urlPath).accept(MediaTypes.HAL_JSON_VALUE))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
-                .andExpect(jsonPath(VERSION_PATH, is(VERSION)))
-                .andExpect(jsonPath(DESCRIPTION_PATH, is(DESCRIPTION)))
-                .andExpect(jsonPath(SELF_HREF, is(BASE_URL + urlPath)))
-                .andExpect(jsonPath(SERVICES_HREF, is(BASE_URL + SERVICES_PATH)))
-                .andReturn();
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
+            .andExpect(jsonPath(VERSION_PATH, is(VERSION)))
+            .andExpect(jsonPath(DESCRIPTION_PATH, is(DESCRIPTION)))
+            .andExpect(jsonPath(SELF_HREF, is(BASE_URL + urlPath)))
+            .andExpect(jsonPath(SERVICES_HREF, is(BASE_URL + SERVICES_PATH)))
+            .andReturn();
     }
 
     @Test
     public void createService() throws Exception {
-    	MicoService service = new MicoService()
+        MicoService service = new MicoService()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setName(NAME)
@@ -263,7 +261,7 @@ public class ServiceResourceTests {
 
     @Test
     public void createServiceWithInvalidShortName() throws Exception {
-    	MicoServiceRequestDTO serviceRequestDto = new MicoServiceRequestDTO()
+        MicoServiceRequestDTO serviceRequestDto = new MicoServiceRequestDTO()
             .setShortName(SHORT_NAME_INVALID)
             .setVersion(VERSION)
             .setName(NAME)
@@ -277,7 +275,7 @@ public class ServiceResourceTests {
 
     @Test
     public void createServiceWithoutRequiredName() throws Exception {
-    	MicoServiceRequestDTO serviceRequestDto = new MicoServiceRequestDTO()
+        MicoServiceRequestDTO serviceRequestDto = new MicoServiceRequestDTO()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setName(null)
@@ -421,28 +419,28 @@ public class ServiceResourceTests {
         given(serviceRepository.findByShortName(SHORT_NAME)).willReturn(CollectionUtils.listOf(micoServiceOne, micoServiceTwo, micoServiceThree));
 
         mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME))
-                .andDo(print())
-                .andExpect(status().isNoContent())
-                .andReturn();
+            .andDo(print())
+            .andExpect(status().isNoContent())
+            .andReturn();
     }
 
     @Test
     public void corsPolicy() throws Exception {
         mvc.perform(get(SERVICES_PATH).accept(MediaTypes.HAL_JSON_VALUE)
-                .header("Origin", (Object[]) allowedOrigins))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath(SELF_HREF, endsWith(SERVICES_PATH))).andReturn();
+            .header("Origin", (Object[]) allowedOrigins))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(SELF_HREF, endsWith(SERVICES_PATH))).andReturn();
     }
 
     @Test
     public void corsPolicyNotAllowedOrigin() throws Exception {
         mvc.perform(get(SERVICES_PATH).accept(MediaTypes.HAL_JSON_VALUE)
-                .header("Origin", "http://notAllowedOrigin.com"))
-                .andDo(print())
-                .andExpect(status().isForbidden())
-                .andExpect(content().string(is("Invalid CORS request")))
-                .andReturn();
+            .header("Origin", "http://notAllowedOrigin.com"))
+            .andDo(print())
+            .andExpect(status().isForbidden())
+            .andExpect(content().string(is("Invalid CORS request")))
+            .andReturn();
     }
 
     @Test
@@ -459,9 +457,9 @@ public class ServiceResourceTests {
             .setName(NAME)
             .setDescription(DESCRIPTION_1);
         MicoService service2 = new MicoService()
-                .setShortName(SHORT_NAME_2)
-                .setVersion(VERSION_1_0_2)
-                .setDescription(DESCRIPTION_2);
+            .setShortName(SHORT_NAME_2)
+            .setVersion(VERSION_1_0_2)
+            .setDescription(DESCRIPTION_2);
         MicoService service3 = new MicoService()
             .setShortName(SHORT_NAME_3)
             .setVersion(VERSION_1_0_3)
@@ -481,13 +479,13 @@ public class ServiceResourceTests {
 
         String urlPath = SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + DEPENDERS_SUBPATH;
         ResultActions result = mvc.perform(get(urlPath)
-                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andDo(print())
-                .andExpect(jsonPath(SERVICE_LIST + "[*]", hasSize(3)))
-                .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_1_MATCHER + " && " + VERSION_1_0_1_MATCHER + " && " + DESCRIPTION_1_MATCHER + ")]", hasSize(1)))
-                .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_2_MATCHER + " && " + VERSION_1_0_2_MATCHER + " && " + DESCRIPTION_2_MATCHER + ")]", hasSize(1)))
-                .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_3_MATCHER + " && " + VERSION_1_0_3_MATCHER + " && " + DESCRIPTION_3_MATCHER + ")]", hasSize(1)))
-                .andExpect(jsonPath(SELF_HREF, is(BASE_URL + urlPath)));
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(jsonPath(SERVICE_LIST + "[*]", hasSize(3)))
+            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_1_MATCHER + " && " + VERSION_1_0_1_MATCHER + " && " + DESCRIPTION_1_MATCHER + ")]", hasSize(1)))
+            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_2_MATCHER + " && " + VERSION_1_0_2_MATCHER + " && " + DESCRIPTION_2_MATCHER + ")]", hasSize(1)))
+            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_3_MATCHER + " && " + VERSION_1_0_3_MATCHER + " && " + DESCRIPTION_3_MATCHER + ")]", hasSize(1)))
+            .andExpect(jsonPath(SELF_HREF, is(BASE_URL + urlPath)));
 
         result.andExpect(status().isOk());
     }
@@ -613,15 +611,15 @@ public class ServiceResourceTests {
                 new MicoService().setShortName(SHORT_NAME).setVersion(VERSION_1_0_2).setName(NAME)));
 
         mvc.perform(get("/services/" + SHORT_NAME + "/").accept(MediaTypes.HAL_JSON_VALUE))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andExpect(jsonPath(SERVICE_LIST + "[*]", hasSize(3)))
-                .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_MATCHER + " && " + VERSION_MATCHER + ")]", hasSize(1)))
-                .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_MATCHER + " && " + VERSION_1_0_1_MATCHER + ")]", hasSize(1)))
-                .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_MATCHER + " && " + VERSION_1_0_2_MATCHER + ")]", hasSize(1)))
-                .andExpect(jsonPath(SELF_HREF, is(BASE_URL + SERVICES_PATH + "/" + SHORT_NAME)))
-                .andReturn();
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andExpect(jsonPath(SERVICE_LIST + "[*]", hasSize(3)))
+            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_MATCHER + " && " + VERSION_MATCHER + ")]", hasSize(1)))
+            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_MATCHER + " && " + VERSION_1_0_1_MATCHER + ")]", hasSize(1)))
+            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_MATCHER + " && " + VERSION_1_0_2_MATCHER + ")]", hasSize(1)))
+            .andExpect(jsonPath(SELF_HREF, is(BASE_URL + SERVICES_PATH + "/" + SHORT_NAME)))
+            .andReturn();
     }
 
     @Test
@@ -703,14 +701,14 @@ public class ServiceResourceTests {
         given(serviceRepository.findDependees(service.getShortName(), service.getVersion())).willReturn(CollectionUtils.listOf(service1, service2));
 
         mvc.perform(get("/services/" + SHORT_NAME + "/" + VERSION + DEPENDEES_SUBPATH).accept(MediaTypes.HAL_JSON_VALUE))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andExpect(jsonPath(SERVICE_LIST + "[*]", hasSize(2)))
-                .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_1_MATCHER + " && " + VERSION_1_0_1_MATCHER + ")]", hasSize(1)))
-                .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_2_MATCHER + " && " + VERSION_1_0_2_MATCHER + ")]", hasSize(1)))
-                .andExpect(jsonPath(SELF_HREF, is(BASE_URL + SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + DEPENDEES_SUBPATH)))
-                .andReturn();
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andExpect(jsonPath(SERVICE_LIST + "[*]", hasSize(2)))
+            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_1_MATCHER + " && " + VERSION_1_0_1_MATCHER + ")]", hasSize(1)))
+            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_2_MATCHER + " && " + VERSION_1_0_2_MATCHER + ")]", hasSize(1)))
+            .andExpect(jsonPath(SELF_HREF, is(BASE_URL + SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + DEPENDEES_SUBPATH)))
+            .andReturn();
     }
 
     @Test
@@ -753,21 +751,21 @@ public class ServiceResourceTests {
     @Test
     public void promoteService() throws Exception {
         MicoServiceInterface micoServiceInterface = new MicoServiceInterface()
-                .setServiceInterfaceName(SERVICE_INTERFACE_NAME);
+            .setServiceInterfaceName(SERVICE_INTERFACE_NAME);
 
         MicoServiceInterface micoServiceInterfaceTwo = new MicoServiceInterface()
-                .setServiceInterfaceName(SERVICE_INTERFACE_NAME_1);
+            .setServiceInterfaceName(SERVICE_INTERFACE_NAME_1);
 
         List<MicoServiceInterface> micoServiceInterfaces = new LinkedList<>();
         micoServiceInterfaces.add(micoServiceInterface);
         micoServiceInterfaces.add(micoServiceInterfaceTwo);
 
         MicoService micoService = new MicoService()
-                .setShortName(SHORT_NAME_1)
-                .setVersion(VERSION_1_0_1)
-                .setDescription(DESCRIPTION_1)
-                .setId(ID)
-                .setServiceInterfaces(micoServiceInterfaces);
+            .setShortName(SHORT_NAME_1)
+            .setVersion(VERSION_1_0_1)
+            .setDescription(DESCRIPTION_1)
+            .setId(ID)
+            .setServiceInterfaces(micoServiceInterfaces);
 
         String newVersion = VERSION_1_0_1;
         Long newId = ID_1;
@@ -779,29 +777,29 @@ public class ServiceResourceTests {
         given(serviceRepository.save(eq(promotedService))).willReturn(savedPromotedService);
 
         ResultActions resultPromotion = mvc.perform(post(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_PROMOTE)
-                .content(mapper.writeValueAsBytes(new MicoVersionRequestDTO(newVersion)))
-                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andDo(print())
-                .andExpect(jsonPath(SHORT_NAME_PATH, is(savedPromotedService.getShortName())))
-                .andExpect(jsonPath(VERSION_PATH, is(newVersion)))
-                .andExpect(jsonPath(DESCRIPTION_PATH, is(savedPromotedService.getDescription())));
+            .content(mapper.writeValueAsBytes(new MicoVersionRequestDTO(newVersion)))
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(jsonPath(SHORT_NAME_PATH, is(savedPromotedService.getShortName())))
+            .andExpect(jsonPath(VERSION_PATH, is(newVersion)))
+            .andExpect(jsonPath(DESCRIPTION_PATH, is(savedPromotedService.getDescription())));
 
         resultPromotion.andExpect(status().isOk());
     }
-    
+
     @Test
     public void getVersionsFromGitHub() throws Exception {
-    	List<String> versions = CollectionUtils.listOf("v1.0.0", "v2.0.0", "v3.0.0");
-    	
-    	given(crawler.getVersionsFromGitHubRepo(anyString())).willReturn(versions);
+        List<String> versions = CollectionUtils.listOf("v1.0.0", "v2.0.0", "v3.0.0");
+
+        given(crawler.getVersionsFromGitHubRepo(anyString())).willReturn(versions);
 
         ResultActions resultPromotion = mvc.perform(get(SERVICES_PATH + "/import/github")
-                .param("url", anyString()))
-                .andDo(print())
-                .andExpect(jsonPath(SERVICE_VERSIONS_LIST + "[*]", hasSize(3)))
-                .andExpect(jsonPath(SERVICE_VERSIONS_LIST + "[0].version", is(versions.get(0))))
-                .andExpect(jsonPath(SERVICE_VERSIONS_LIST + "[1].version", is(versions.get(1))))
-                .andExpect(jsonPath(SERVICE_VERSIONS_LIST + "[2].version", is(versions.get(2))));
+            .param("url", anyString()))
+            .andDo(print())
+            .andExpect(jsonPath(SERVICE_VERSIONS_LIST + "[*]", hasSize(3)))
+            .andExpect(jsonPath(SERVICE_VERSIONS_LIST + "[0].version", is(versions.get(0))))
+            .andExpect(jsonPath(SERVICE_VERSIONS_LIST + "[1].version", is(versions.get(1))))
+            .andExpect(jsonPath(SERVICE_VERSIONS_LIST + "[2].version", is(versions.get(2))));
 
         resultPromotion.andExpect(status().isOk());
     }
