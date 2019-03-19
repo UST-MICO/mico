@@ -62,9 +62,7 @@ import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
 import io.github.ust.mico.core.dto.response.status.*;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDependency;
-import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.resource.ServiceResource;
 import io.github.ust.mico.core.service.GitHubCrawler;
@@ -94,10 +92,10 @@ public class ServiceResourceTests {
     //TODO: Use these variables inside the tests instead of the local variables
 
     @Value("${cors-policy.allowed-origins}")
-    String[] allowedOrigins;
+    private String[] allowedOrigins;
 
     @MockBean
-    MicoStatusService micoStatusService;
+    private MicoStatusService micoStatusService;
 
     @MockBean
     private MicoServiceRepository serviceRepository;
@@ -751,9 +749,12 @@ public class ServiceResourceTests {
 
     @Test
     public void promoteService() throws Exception {
+    	MicoServicePort port = new MicoServicePort().setPort(1234).setType(MicoPortType.TCP).setTargetPort(5678);
+    	
         MicoServiceInterface micoServiceInterface = new MicoServiceInterface()
                 .setId(2000L)
-                .setServiceInterfaceName(SERVICE_INTERFACE_NAME);
+                .setServiceInterfaceName(SERVICE_INTERFACE_NAME)
+                .setPorts(CollectionUtils.listOf(port));
 
         MicoServiceInterface micoServiceInterfaceTwo = new MicoServiceInterface()
                 .setId(3000L)
@@ -762,6 +763,8 @@ public class ServiceResourceTests {
         List<MicoServiceInterface> micoServiceInterfaces = new ArrayList<>();
         micoServiceInterfaces.add(micoServiceInterface);
         micoServiceInterfaces.add(micoServiceInterfaceTwo);
+        
+        
 
         MicoService micoService = new MicoService()
                 .setId(ID)
@@ -797,6 +800,7 @@ public class ServiceResourceTests {
         assertEquals("Expected that new service includes 2 MicoServiceInterfaces",2, savedMicoService.getServiceInterfaces().size());
         assertNull("Expected id of copied service interface 1 to be null (will be created by Neo4j)", savedMicoService.getServiceInterfaces().get(0).getId());
         assertNull("Expected id of copied service interface 2 to be null (will be created by Neo4j)", savedMicoService.getServiceInterfaces().get(1).getId());
+        assertNull("Expected id of copied port of service interface 1 to be null (will be created by Neo4j)", savedMicoService.getServiceInterfaces().get(0).getPorts().get(0).getId());
     }
     
     @Test
