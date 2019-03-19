@@ -76,38 +76,19 @@ public class ServiceInterfaceResource {
     @GetMapping(SERVICE_INTERFACE_PATH)
     public ResponseEntity<Resources<Resource<MicoServiceInterfaceResponseDTO>>> getInterfacesOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                             @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        // Use service to get the fully mapped interface objects from the ogm
-        Optional<List<Resource<MicoServiceInterfaceResponseDTO>>> interfacesOpt =
-            serviceRepository.findByShortNameAndVersion(shortName, version)
-                .map(MicoService::getServiceInterfaces)
-                .map(interfaces -> interfaces.stream()
-                    .map(serviceInterface -> new Resource<>(new MicoServiceInterfaceResponseDTO(serviceInterface), getServiceInterfaceLinks(serviceInterface, shortName, version)))
-                    .collect(Collectors.toList()));
-        if (!interfacesOpt.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service interface '" + shortName + "' '" + version + "' was not found!");
-        }
-        return ResponseEntity.ok(new Resources<>(interfacesOpt.get(), linkTo(methodOn(ServiceInterfaceResource.class).getInterfacesOfService(shortName, version)).withSelfRel()));
+    	List<MicoServiceInterface> serviceInterfaces = serviceInterfaceRepository.findByService(shortName, version);
+		List<Resource<MicoServiceInterfaceResponseDTO>> serviceInterfaceResources = 
+			getServiceInterfaceResponseDTOResourcesList(shortName, version, serviceInterfaces);
+		return ResponseEntity.ok(new Resources<Resource<MicoServiceInterfaceResponseDTO>>(serviceInterfaceResources,
+		    linkTo(methodOn(ServiceInterfaceResource.class).getInterfacesOfService(shortName, version)).withSelfRel()));
     }
 
     @GetMapping(SERVICE_INTERFACE_PATH + "/{" + PATH_VARIABLE_SERVICE_INTERFACE_NAME + "}")
     public ResponseEntity<Resource<MicoServiceInterfaceResponseDTO>> getInterfaceByName(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                              @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                              @PathVariable(PATH_VARIABLE_SERVICE_INTERFACE_NAME) String serviceInterfaceName) {
-        Optional<MicoServiceInterface> serviceInterfaceOptional = serviceRepository.findByShortNameAndVersion(shortName, version).flatMap(service -> {
-            // Use service to get the fully mapped interface objects from the ogm
-            if (service.getServiceInterfaces() == null) {
-                return Optional.empty();
-            }
-            return service.getServiceInterfaces().stream().filter(serviceInterface ->
-                serviceInterface.getServiceInterfaceName().equals(serviceInterfaceName
-                )).findFirst();
-        });
-
-		return serviceInterfaceOptional
-		    .map(serviceInterface -> new Resource<>(new MicoServiceInterfaceResponseDTO(serviceInterface),
-		        getServiceInterfaceLinks(serviceInterface, shortName, version)))
-		    .map(ResponseEntity::ok).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-		        "Service interface '" + shortName + "' '" + version + "' links not found!"));
+    	MicoServiceInterface serviceInterface = getServiceInterfaceFromDatabase(shortName, version, serviceInterfaceName);
+    	return ResponseEntity.ok(getServiceInterfaceResponseDTOResource(shortName, version, serviceInterface));
     }
 
     @GetMapping(SERVICE_INTERFACE_PUBLIC_IP_PATH)
@@ -191,7 +172,8 @@ public class ServiceInterfaceResource {
 		return ResponseEntity
 		    .created(linkTo(methodOn(ServiceInterfaceResource.class).getInterfaceByName(shortName, version,
 		        serviceInterface.getServiceInterfaceName())).toUri())
-		    .body(new Resource<>(new MicoServiceInterfaceResponseDTO(serviceInterface), getServiceInterfaceLinks(serviceInterface, shortName, version)));
+		    .body(new Resource<>(new MicoServiceInterfaceResponseDTO(serviceInterface),
+		        getServiceInterfaceLinks(shortName, version, serviceInterface)));
     }
 
     /**
@@ -224,34 +206,54 @@ public class ServiceInterfaceResource {
         MicoServiceInterface updatedServiceInterface = MicoServiceInterface.valueOf(updatedServiceInterfaceRequestDto).setId(serviceInterface.getId());
         serviceInterfaceRepository.save(updatedServiceInterface);
         
-        return ResponseEntity.ok(new Resource<>(new MicoServiceInterfaceResponseDTO(updatedServiceInterface), getServiceInterfaceLinks(updatedServiceInterface, shortName, version)));
+		return ResponseEntity.ok(new Resource<>(new MicoServiceInterfaceResponseDTO(updatedServiceInterface),
+		    getServiceInterfaceLinks(shortName, version, updatedServiceInterface)));
     }
 
     /**
-     * Returns the existing {@link MicoService} object from the database for the given shortName and version.
+     * Retrieves a {@code MicoService} from the database for a given short name and version.
      *
-     * @param shortName the short name of a {@link MicoService}
-     * @param version   the version of a {@link MicoService}
-     * @return the existing {@link MicoService} from the database
-     * @throws ResponseStatusException if a {@link MicoService} for the given shortName and version does not exist
+     * @param shortName the short name of the {@link MicoService}.
+     * @param version the version of the {@link MicoService}.
+     * @return the {@link MicoService} if it exists.
+     * @throws ResponseStatusException if the {@code MicoService} does not exist in the database.
      */
     private MicoService getServiceFromDatabase(String shortName, String version) throws ResponseStatusException {
-        Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
-        if (!serviceOpt.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service '" + shortName + "' '" + version + "' was not found!");
+        Optional<MicoService> serviceOptional = serviceRepository.findByShortNameAndVersion(shortName, version);
+        if (!serviceOptional.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service '" + shortName + "' '" + version + "' could not be found!");
         }
-        return serviceOpt.get();
+        return serviceOptional.get();
+    }
+    
+    /**
+     * Retrieves a {@code MicoServiceInterface} from the database for a
+     * given service short name and version and service interface name.
+     *
+     * @param shortName the short name of the {@link MicoService}.
+     * @param version the version of the {@link MicoService}.
+     * @param serviceInterfaceName the name of the {@link MicoServiceInterface}.
+     * @return the {@link MicoServiceInterface} if it exists.
+     * @throws ResponseStatusException if the {@code MicoServiceInterface} does not exist in the database.
+     */
+    private MicoServiceInterface getServiceInterfaceFromDatabase(String shortName, String version, String serviceInterfaceName) throws ResponseStatusException {
+        Optional<MicoServiceInterface> serviceInterfaceOptional = serviceInterfaceRepository.findByServiceAndName(shortName, version, serviceInterfaceName);
+        if (!serviceInterfaceOptional.isPresent()) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service  interface '" + serviceInterfaceName
+			    + "' of service '" + shortName + "' '" + version + "' could not be found!");
+        }
+        return serviceInterfaceOptional.get();
     }
     
     protected Resource<MicoServiceInterfaceResponseDTO> getServiceInterfaceResponseDTOResource(String serviceShortName, String serviceVersion, MicoServiceInterface serviceInterface) {
-		return new Resource<>(new MicoServiceInterfaceResponseDTO(serviceInterface), getServiceInterfaceLinks(serviceInterface, serviceShortName, serviceVersion));
+		return new Resource<>(new MicoServiceInterfaceResponseDTO(serviceInterface), getServiceInterfaceLinks(serviceShortName, serviceVersion, serviceInterface));
     }
 
     protected List<Resource<MicoServiceInterfaceResponseDTO>> getServiceInterfaceResponseDTOResourcesList(String serviceShortName, String serviceVersion, List<MicoServiceInterface> serviceInterfaces) {
 		return serviceInterfaces.stream().map(serviceInterface -> getServiceInterfaceResponseDTOResource(serviceShortName, serviceVersion, serviceInterface)).collect(Collectors.toList());
     }
 
-    private Iterable<Link> getServiceInterfaceLinks(MicoServiceInterface serviceInterface, String shortName, String version) {
+    private Iterable<Link> getServiceInterfaceLinks(String shortName, String version, MicoServiceInterface serviceInterface) {
         LinkedList<Link> links = new LinkedList<>();
         links.add(linkTo(methodOn(ServiceInterfaceResource.class).getInterfaceByName(shortName, version, serviceInterface.getServiceInterfaceName())).withSelfRel());
         links.add(linkTo(methodOn(ServiceInterfaceResource.class).getInterfacesOfService(shortName, version)).withRel("interfaces"));

@@ -372,19 +372,19 @@ public class ServiceResource {
     }
 
     /**
-     * Returns the existing {@link MicoService} object from the database for the given shortName and version.
+     * Retrieves a {@code MicoService} from the database for a given short name and version.
      *
-     * @param shortName the short name of a {@link MicoService}
-     * @param version   the version of a {@link MicoService}
-     * @return the existing {@link MicoService} from the database
-     * @throws ResponseStatusException if a {@link MicoService} for the given shortName and version does not exist
+     * @param shortName the short name of the {@link MicoService}.
+     * @param version the version of the {@link MicoService}.
+     * @return the {@link MicoService} if it exists.
+     * @throws ResponseStatusException if the {@code MicoService} does not exist in the database.
      */
     private MicoService getServiceFromDatabase(String shortName, String version) throws ResponseStatusException {
-        Optional<MicoService> serviceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
-        if (!serviceOpt.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service '" + shortName + "' '" + version + "' was not found!");
+        Optional<MicoService> serviceOptional = serviceRepository.findByShortNameAndVersion(shortName, version);
+        if (!serviceOptional.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service '" + shortName + "' '" + version + "' could not be found!");
         }
-        return serviceOpt.get();
+        return serviceOptional.get();
     }
 
     private List<MicoService> getAllVersionsOfServiceFromDatabase(String shortName) throws ResponseStatusException {
@@ -392,7 +392,7 @@ public class ServiceResource {
         log.debug("Retrieve service list from database: {}", micoServiceList);
         if (micoServiceList.isEmpty()) {
             log.error("Service list is empty.");
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Could not find any Service with name: '" + shortName);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Could not find any service with name: '" + shortName);
         }
         return micoServiceList;
     }
