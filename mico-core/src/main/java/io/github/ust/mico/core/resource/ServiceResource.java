@@ -148,16 +148,13 @@ public class ServiceResource {
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")
     public ResponseEntity<Resource<MicoServiceStatusResponseDTO>> getStatusOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                      @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        MicoServiceStatusResponseDTO serviceStatus = new MicoServiceStatusResponseDTO();
         Optional<MicoService> micoServiceOptional = serviceRepository.findByShortNameAndVersion(shortName, version);
-        if (micoServiceOptional.isPresent()) {
-            log.debug("Retrieve status information of Mico service '{}' '{}'",
-                shortName, version);
-            serviceStatus = micoStatusService.getServiceStatus(micoServiceOptional.get());
-        } else {
-            log.error("MicoService not found in service repository.");
-            return ResponseEntity.notFound().build();
+        if (!micoServiceOptional.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service '" + shortName + "' '" + version + "' was not found!");
         }
+        log.debug("Retrieve status information of Mico service '{}' '{}'", shortName, version);
+        MicoServiceStatusResponseDTO serviceStatus = micoStatusService.getServiceStatus(micoServiceOptional.get());
+
         return ResponseEntity.ok(new Resource<>(serviceStatus));
     }
 
