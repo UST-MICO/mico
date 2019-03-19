@@ -156,24 +156,23 @@ public class DeploymentResource {
 
     @DeleteMapping
     public ResponseEntity<Void> undeploy(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                        @PathVariable(PATH_VARIABLE_VERSION) String version) {
-    	// Retrieve application from database and check whether it exists
-    	Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
+                                         @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        // Retrieve application from database and check whether it exists
+        Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
         if (!applicationOptional.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' was not found!");
         }
 
         MicoApplication application = applicationOptional.get();
         log.info("Undeploy MicoApplication '{}' in version '{}' with {} included MicoService(s).",
-        	shortName, version, application.getServices().size());
-        
-        // Check if application is deployed (only for debugging purposes)
-        if (!micoKubernetesClient.isApplicationDeployed(application)) {
-        	log.debug("MicoApplication '{}' in version '{}' currently is not deployed.", application.getShortName(), application.getVersion());
+            shortName, version, application.getServices().size());
+
+        if (micoKubernetesClient.isApplicationDeployed(application)) {
+            micoKubernetesClient.undeployApplication(application);
         } else {
-        	micoKubernetesClient.undeployApplication(application);
+            log.info("MicoApplication '{}' in version '{}' is currently not deployed.", application.getShortName(), application.getVersion());
         }
-        
+
         return ResponseEntity.noContent().build();
     }
 
