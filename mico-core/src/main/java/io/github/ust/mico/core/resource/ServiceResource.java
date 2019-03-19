@@ -19,12 +19,14 @@
 
 package io.github.ust.mico.core.resource;
 
+import ch.qos.logback.core.pattern.util.RegularEscapeUtil;
 import io.github.ust.mico.core.dto.request.CrawlingInfoRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphEdgeResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceResponseDTO;
+import io.github.ust.mico.core.dto.response.MicoYamlResponseDTO;
 import io.github.ust.mico.core.dto.response.status.MicoServiceStatusResponseDTO;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.MicoService;
@@ -365,6 +367,20 @@ public class ServiceResource {
            linkTo(methodOn(ServiceResource.class).getDependencyGraph(shortName, version)).withSelfRel()));
 	}
 
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/yaml")
+    public ResponseEntity<Resource<MicoYamlResponseDTO>> getServiceYamlByShortNameAndVersion(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                                             @PathVariable(PATH_VARIABLE_VERSION) String version) {
+
+        // TODO Fix namespace
+        String namespace = "";
+        // TODO Fix get deployment by labels
+        Deployment deployment = cluster.getDeployment(shortName + "." + version, namespace);
+        try {
+            return cluster.getYaml(deployment);
+        } catch (JsonProcessingException e) {
+            return e.toString();
+        }
+    }
     /**
      * Returns the existing {@link MicoService} object from the database for the given shortName and version.
      *
