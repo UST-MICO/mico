@@ -61,7 +61,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * Provides functionality to retrieve status information for a {@link MicoApplication} or a particular {@link
- * MicoService}
+ * MicoService}.
  */
 @Slf4j
 @Component
@@ -87,7 +87,7 @@ public class MicoStatusService {
     }
 
     /**
-     * Get status information for a {@link MicoApplication}
+     * Get status information for a {@link MicoApplication}.
      *
      * @param micoApplication the application the status is requested for
      * @return {@link MicoApplicationStatusResponseDTO} containing a list of {@link MicoServiceStatusResponseDTO} for
@@ -120,10 +120,11 @@ public class MicoStatusService {
 
     /**
      * Get status information for a single {@link MicoService}: # available replicas, # requested replicas, pod metrics
-     * (cpu load, memory load)
+     * (CPU load, memory usage).
      *
-     * @param micoService is a {@link MicoService}
-     * @return {@link MicoServiceStatusResponseDTO} which contains status information for a specific {@link MicoService}
+     * @param micoService is a {@link MicoService}.
+     * @return {@link MicoServiceStatusResponseDTO} which contains status information for a specific {@link
+     * MicoService}.
      */
     public MicoServiceStatusResponseDTO getServiceStatus(MicoService micoService) {
         MicoServiceStatusResponseDTO serviceStatus = new MicoServiceStatusResponseDTO();
@@ -270,9 +271,9 @@ public class MicoStatusService {
     /**
      * Get information and metrics for a {@link Pod} representing an instance of a {@link MicoService}.
      *
-     * @param pod is a {@link Pod} of Kubernetes
+     * @param pod is a {@link Pod} of Kubernetes.
      * @return a {@link KubernetesPodInformationResponseDTO} which has node name, pod name, phase, host ip, memory
-     * usage, and cpu load as status information
+     * usage, and CPU load as status information.
      */
     private KubernetesPodInformationResponseDTO getUiPodInfo(Pod pod) {
         String nodeName = pod.getSpec().getNodeName();
