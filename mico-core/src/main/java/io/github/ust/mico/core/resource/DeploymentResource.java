@@ -42,10 +42,7 @@ import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
@@ -158,6 +155,29 @@ public class DeploymentResource {
         return ResponseEntity
             .accepted()
             .body(new Resource<>(new MicoApplicationJobStatusResponseDTO(backgroundTaskBroker.getJobStatusByApplicationShortNameAndVersion(shortName, version))));
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Void> undeploy(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                        @PathVariable(PATH_VARIABLE_VERSION) String version) {
+    	// Retrieve application from database and check whether it exists
+    	Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
+        if (!applicationOptional.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' was not found!");
+        }
+
+        MicoApplication application = applicationOptional.get();
+        log.info("Undeploy MicoApplication '{}' in version '{}' with {} included MicoService(s).",
+        	shortName, version, application.getServices().size());
+        
+        // Check if application is deployed (only for debugging purposes)
+        if (!micoKubernetesClient.isApplicationDeployed(application)) {
+        	log.debug("MicoApplication '{}' in version '{}' currently is not deployed.", application.getShortName(), application.getVersion());
+        } else {
+        	micoKubernetesClient.undeployApplication(application);
+        }
+        
+        return ResponseEntity.noContent().build();
     }
 
     private Optional<MicoServiceBackgroundTask> getTaskByMicoService(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundTask.Type type) {
