@@ -20,23 +20,29 @@
 package io.github.ust.mico.core.service;
 
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import javax.validation.constraints.NotNull;
 
-import io.github.ust.mico.core.dto.response.internal.PrometheusResponseDTO;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
-
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.ContainerStatus;
+import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
+import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.github.ust.mico.core.configuration.PrometheusConfig;
-import io.github.ust.mico.core.dto.response.*;
-import io.github.ust.mico.core.dto.response.status.*;
+import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
+import io.github.ust.mico.core.dto.response.internal.PrometheusResponseDTO;
+import io.github.ust.mico.core.dto.response.status.KubernetesNodeMetricsResponseDTO;
+import io.github.ust.mico.core.dto.response.status.KubernetesPodInformationResponseDTO;
+import io.github.ust.mico.core.dto.response.status.KubernetesPodMetricsResponseDTO;
+import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
+import io.github.ust.mico.core.dto.response.status.MicoServiceInterfaceStatusResponseDTO;
+import io.github.ust.mico.core.dto.response.status.MicoServiceStatusResponseDTO;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.PrometheusRequestFailedException;
 import io.github.ust.mico.core.model.MicoApplication;
@@ -46,6 +52,12 @@ import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.util.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * Provides functionality to retrieve status information for a {@link MicoApplication} or a particular {@link
@@ -78,8 +90,8 @@ public class MicoStatusService {
      * Get status information for a {@link MicoApplication}
      *
      * @param micoApplication the application the status is requested for
-     * @return {@link MicoApplicationStatusResponseDTO} containing a list of {@link MicoServiceStatusResponseDTO} for status information
-     * of a single {@link MicoService}
+     * @return {@link MicoApplicationStatusResponseDTO} containing a list of {@link MicoServiceStatusResponseDTO} for
+     * status information of a single {@link MicoService}
      */
     public MicoApplicationStatusResponseDTO getApplicationStatus(MicoApplication micoApplication) {
         MicoApplicationStatusResponseDTO applicationStatus = new MicoApplicationStatusResponseDTO();
@@ -93,11 +105,9 @@ public class MicoStatusService {
             requestedReplicasCount += micoServiceStatus.getRequestedReplicas();
             availableReplicasCount += micoServiceStatus.getAvailableReplicas();
             // Remove the current application's name to retrieve a list with only the names of other applications that are sharing a service
-            micoServiceStatus.getApplicationsUsingThisService().remove(new MicoApplicationResponseDTO()
-                .setName(micoApplication.getName())
-                .setShortName(micoApplication.getShortName())
-                .setVersion(micoApplication.getVersion())
-                .setDescription(micoApplication.getDescription()));
+            micoServiceStatus.getApplicationsUsingThisService().removeIf(a ->
+                a.getShortName().equals(micoApplication.getShortName()) &&
+                    a.getVersion().equals(micoApplication.getVersion()));
             applicationStatus.getServiceStatuses().add(micoServiceStatus);
         }
         applicationStatus
@@ -121,8 +131,17 @@ public class MicoStatusService {
             Optional<Deployment> deploymentOptional = micoKubernetesClient.getDeploymentOfMicoService(micoService);
             if (deploymentOptional.isPresent()) {
                 Deployment deployment = deploymentOptional.get();
-                serviceStatus.setAvailableReplicas(deployment.getStatus().getAvailableReplicas());
                 serviceStatus.setRequestedReplicas(deployment.getSpec().getReplicas());
+                // Check if there are no replicas available of the deployment of a MicoService.
+                if ((deployment.getStatus().getUnavailableReplicas() != null) &&
+                    deployment.getStatus().getUnavailableReplicas() < deployment.getSpec().getReplicas()) {
+                    log.info("The MicoService '{}' with version '{}' has '{}' available replicas.",
+                        micoService.getShortName(), micoService.getVersion(), deployment.getStatus().getAvailableReplicas());
+                    serviceStatus.setAvailableReplicas(deployment.getStatus().getAvailableReplicas());
+                } else {
+                    log.info("The MicoService '{}' with version '{}' has no available replicas.", micoService.getShortName(), micoService.getVersion());
+                    serviceStatus.setAvailableReplicas(0);
+                }
             } else {
                 log.warn("There is no deployment of the MicoService '{}' '{}'. Continue with next one.",
                     micoService.getShortName(), micoService.getVersion());
@@ -151,7 +170,7 @@ public class MicoStatusService {
         // Return all applications that are using this service and are actually deployed
         List<MicoApplication> usingApplications = micoApplicationRepository.findAllByUsedService(micoService.getShortName(), micoService.getVersion());
         for (MicoApplication application : usingApplications) {
-            if(micoKubernetesClient.isApplicationDeployed(application)) {
+            if (micoKubernetesClient.isApplicationDeployed(application)) {
                 serviceStatus.getApplicationsUsingThisService().add(new MicoApplicationResponseDTO(application));
             }
         }
@@ -192,7 +211,7 @@ public class MicoStatusService {
     }
 
     public List<MicoServiceInterfaceStatusResponseDTO> getServiceInterfaceStatus(@NotNull MicoService micoService,
-                                                                         @NotNull List<String> errorMessages) {
+                                                                                 @NotNull List<String> errorMessages) {
         List<MicoServiceInterfaceStatusResponseDTO> interfacesInformation = new ArrayList<>();
         for (MicoServiceInterface serviceInterface : micoService.getServiceInterfaces()) {
             String interfaceName = serviceInterface.getServiceInterfaceName();
@@ -248,8 +267,8 @@ public class MicoStatusService {
      * Get information and metrics for a {@link Pod} representing an instance of a {@link MicoService}.
      *
      * @param pod is a {@link Pod} of Kubernetes
-     * @return a {@link KubernetesPodInformationResponseDTO} which has node name, pod name, phase, host ip, memory usage, and
-     * cpu load as status information
+     * @return a {@link KubernetesPodInformationResponseDTO} which has node name, pod name, phase, host ip, memory
+     * usage, and cpu load as status information
      */
     private KubernetesPodInformationResponseDTO getUiPodInfo(Pod pod) {
         String nodeName = pod.getSpec().getNodeName();
