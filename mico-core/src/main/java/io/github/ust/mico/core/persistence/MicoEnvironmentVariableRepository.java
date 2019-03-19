@@ -29,7 +29,7 @@ public interface MicoEnvironmentVariableRepository extends Neo4jRepository<MicoE
 	/**
 	 * Deletes all environment variables that do <b>not</b> have any relationship to another node.
 	 */
-	@Query("MATCH (env:MicoEnvironmentVariable) WHERE size((env)--()) = 0 DELETE (env)")
+	@Query("MATCH (env:MicoEnvironmentVariable) WHERE size((env)--()) = 0 DELETE env")
 	void cleanUp();
 	
 }

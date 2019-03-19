@@ -39,14 +39,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import io.github.ust.mico.core.broker.BackgroundTaskBroker;
+import io.github.ust.mico.core.broker.BackgroundJobBroker;
 import io.github.ust.mico.core.dto.response.MicoApplicationJobStatusResponseDTO;
-import io.github.ust.mico.core.dto.response.MicoServiceBackgroundTaskResponseDTO;
-import io.github.ust.mico.core.model.MicoServiceBackgroundTask;
+import io.github.ust.mico.core.dto.response.MicoServiceBackgroundJobResponseDTO;
+import io.github.ust.mico.core.model.MicoServiceBackgroundJob;
 
 @RestController
 @RequestMapping(value = "/jobs", produces = MediaTypes.HAL_JSON_VALUE)
-public class BackgroundTaskResource {
+public class BackgroundJobResource {
 
 	private static final String PATH_STATUS = "status";
     private static final String PATH_VARIABLE_ID = "id";
@@ -54,30 +54,30 @@ public class BackgroundTaskResource {
     private static final String PATH_VARIABLE_VERSION = "version";
 
     @Autowired
-    private BackgroundTaskBroker backgroundTaskBroker;
+    private BackgroundJobBroker backgroundJobBroker;
 
     @GetMapping()
-    public ResponseEntity<Resources<Resource<MicoServiceBackgroundTaskResponseDTO>>> getAllJobs() {
-        List<MicoServiceBackgroundTask> jobs = backgroundTaskBroker.getAllJobs();
-        List<Resource<MicoServiceBackgroundTaskResponseDTO>> jobResources = getJobResourceList(jobs);
+    public ResponseEntity<Resources<Resource<MicoServiceBackgroundJobResponseDTO>>> getAllJobs() {
+        List<MicoServiceBackgroundJob> jobs = backgroundJobBroker.getAllJobs();
+        List<Resource<MicoServiceBackgroundJobResponseDTO>> jobResources = getJobResourceList(jobs);
 
-        return ResponseEntity.ok(new Resources<>(jobResources, linkTo(methodOn(BackgroundTaskResource.class).getAllJobs()).withSelfRel()));
+        return ResponseEntity.ok(new Resources<>(jobResources, linkTo(methodOn(BackgroundJobResource.class).getAllJobs()).withSelfRel()));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_STATUS)
     public ResponseEntity<Resource<MicoApplicationJobStatusResponseDTO>> getJobStatusByApplicationShortNameAndVersion(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName, @PathVariable(PATH_VARIABLE_VERSION) String version) {
         return ResponseEntity.ok(new Resource<>(new MicoApplicationJobStatusResponseDTO(
-            backgroundTaskBroker.getJobStatusByApplicationShortNameAndVersion(shortName, version)), linkTo(methodOn(BackgroundTaskResource.class)
+            backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(shortName, version)), linkTo(methodOn(BackgroundJobResource.class)
             .getJobStatusByApplicationShortNameAndVersion(shortName, version)).withSelfRel()));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_ID + "}")
-    public ResponseEntity<Resource<MicoServiceBackgroundTaskResponseDTO>> getJobById(@PathVariable(PATH_VARIABLE_ID) String id) {
-        Optional<MicoServiceBackgroundTask> jobOptional = backgroundTaskBroker.getJobById(id);
+    public ResponseEntity<Resource<MicoServiceBackgroundJobResponseDTO>> getJobById(@PathVariable(PATH_VARIABLE_ID) String id) {
+        Optional<MicoServiceBackgroundJob> jobOptional = backgroundJobBroker.getJobById(id);
         if (!jobOptional.isPresent()) {
             // Likely to be permanent
             throw new ResponseStatusException(HttpStatus.GONE, "Job with id '" + id + "' was not found!");
-        } else if (jobOptional.get().getStatus() == MicoServiceBackgroundTask.Status.DONE) {
+        } else if (jobOptional.get().getStatus() == MicoServiceBackgroundJob.Status.DONE) {
             HttpHeaders responseHeaders = new HttpHeaders();
             try {
                 responseHeaders.setLocation(getLocationForJob(jobOptional.get()));
@@ -87,30 +87,30 @@ public class BackgroundTaskResource {
             return new ResponseEntity<>(responseHeaders, HttpStatus.SEE_OTHER);
 
         } else {
-        	return ResponseEntity.ok(new Resource<>(new MicoServiceBackgroundTaskResponseDTO(jobOptional.get()), getJobLinks(jobOptional.get())));
+        	return ResponseEntity.ok(new Resource<>(new MicoServiceBackgroundJobResponseDTO(jobOptional.get()), getJobLinks(jobOptional.get())));
         }
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_ID + "}")
     public ResponseEntity<Void> deleteJob(@PathVariable(PATH_VARIABLE_ID) String id) {
-        backgroundTaskBroker.deleteJob(id);
+        backgroundJobBroker.deleteJob(id);
         return ResponseEntity.noContent().build();
     }
 
-    private URI getLocationForJob(MicoServiceBackgroundTask job) throws URISyntaxException {
+    private URI getLocationForJob(MicoServiceBackgroundJob job) throws URISyntaxException {
         return new URI("/services/" + job.getServiceShortName() + "/" + job.getServiceVersion());
     }
 
-    private List<Resource<MicoServiceBackgroundTaskResponseDTO>> getJobResourceList(List<MicoServiceBackgroundTask> jobs) {
-        return jobs.stream().map(job -> new Resource<>(new MicoServiceBackgroundTaskResponseDTO(job), getJobLinks(job)))
+    private List<Resource<MicoServiceBackgroundJobResponseDTO>> getJobResourceList(List<MicoServiceBackgroundJob> jobs) {
+        return jobs.stream().map(job -> new Resource<>(new MicoServiceBackgroundJobResponseDTO(job), getJobLinks(job)))
             .collect(Collectors.toList());
     }
 
-    private Iterable<Link> getJobLinks(MicoServiceBackgroundTask task) {
+    private Iterable<Link> getJobLinks(MicoServiceBackgroundJob job) {
         List<Link> links = new ArrayList<>();
-        links.add(linkTo(methodOn(BackgroundTaskResource.class).getJobById(task.getId())).withSelfRel());
-        links.add(linkTo(methodOn(BackgroundTaskResource.class).deleteJob(task.getId())).withRel("cancel"));
-        links.add(linkTo(methodOn(BackgroundTaskResource.class).getAllJobs()).withRel("jobs"));
+        links.add(linkTo(methodOn(BackgroundJobResource.class).getJobById(job.getId())).withSelfRel());
+        links.add(linkTo(methodOn(BackgroundJobResource.class).deleteJob(job.getId())).withRel("cancel"));
+        links.add(linkTo(methodOn(BackgroundJobResource.class).getAllJobs()).withRel("jobs"));
         return links;
     }
 }

@@ -167,8 +167,8 @@ public class ServiceInterfaceResourceTests {
     public void getSpecificServiceInterface() throws Exception {
         MicoServiceInterface serviceInterface = getTestServiceInterface();
         
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
-            Optional.of(new MicoService().setServiceInterfaces(CollectionUtils.listOf(serviceInterface))));
+		given(serviceInterfaceRepository.findByServiceAndName(SHORT_NAME, VERSION,
+		    serviceInterface.getServiceInterfaceName())).willReturn(Optional.of(serviceInterface));
 
         mvc.perform(get(INTERFACES_URL + "/" + serviceInterface.getServiceInterfaceName()).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
@@ -194,8 +194,7 @@ public class ServiceInterfaceResourceTests {
         MicoServiceInterface serviceInterface1 = new MicoServiceInterface().setServiceInterfaceName("ServiceInterface1");
         List<MicoServiceInterface> serviceInterfaces = Arrays.asList(serviceInterface0, serviceInterface1);
         
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
-            Optional.of(new MicoService().setServiceInterfaces(serviceInterfaces)));
+        given(serviceInterfaceRepository.findByService(SHORT_NAME, VERSION)).willReturn(serviceInterfaces);
         
         mvc.perform(get(INTERFACES_URL).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
@@ -254,7 +253,7 @@ public class ServiceInterfaceResourceTests {
             .content(mapper.writeValueAsBytes(new MicoServiceInterfaceRequestDTO(serviceInterface))).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isNotFound())
-            .andExpect(status().reason("Service '" + SHORT_NAME + "' '" + VERSION + "' was not found!"))
+            .andExpect(status().reason("Service '" + SHORT_NAME + "' '" + VERSION + "' could not be found!"))
             .andReturn();
     }
 

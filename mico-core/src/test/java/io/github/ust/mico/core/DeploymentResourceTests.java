@@ -23,16 +23,15 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
-import io.github.ust.mico.core.broker.BackgroundTaskBroker;
+import io.github.ust.mico.core.broker.BackgroundJobBroker;
 import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoBackgroundTaskRepository;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.resource.DeploymentResource;
-import io.github.ust.mico.core.service.MicoCoreBackgroundTaskFactory;
+import io.github.ust.mico.core.service.MicoCoreBackgroundJobFactory;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.util.CollectionUtils;
@@ -67,7 +66,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -78,10 +78,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @EnableAutoConfiguration
 @EnableConfigurationProperties(value = {CorsConfig.class})
 public class DeploymentResourceTests {
-    
+
     @ClassRule
     public static RuleChain rules = RuleChain.outerRule(EmbeddedRedisServer.runningAt(6379).suppressExceptions());
-    
+
     private static final String BASE_PATH = "/applications";
     private static final String DEPLOYMENT_NAME = "deployment-name";
     private static final String SERVICE_NAME = "service-name";
@@ -89,43 +89,40 @@ public class DeploymentResourceTests {
 
     @Captor
     private ArgumentCaptor<Consumer<String>> onSuccessArgumentCaptor;
-    
+
     @Captor
     private ArgumentCaptor<Function<Throwable, Void>> onErrorArgumentCaptor;
-    
+
     @Captor
     private ArgumentCaptor<MicoService> micoServiceArgumentCaptor;
-    
+
     @Captor
     private ArgumentCaptor<MicoServiceInterface> micoServiceInterfaceArgumentCaptor;
-    
+
     @Captor
     private ArgumentCaptor<MicoServiceDeploymentInfo> serviceDeploymentInfoArgumentCaptor;
 
     @Autowired
     private MockMvc mvc;
-    
+
     @MockBean
     private MicoApplicationRepository applicationRepository;
-    
+
     @MockBean
     private MicoServiceRepository serviceRepository;
-    
+
     @MockBean
     private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
-    
+
     @MockBean
-    private MicoBackgroundTaskRepository backgroundTaskRepository;
-    
-    @MockBean
-    private BackgroundTaskBroker backgroundTaskBroker;
-    
+    private BackgroundJobBroker backgroundJobBroker;
+
     @MockBean
     private ImageBuilder imageBuilder;
-    
+
     @MockBean
-    private MicoCoreBackgroundTaskFactory factory;
-    
+    private MicoCoreBackgroundJobFactory factory;
+
     @MockBean
     private MicoKubernetesClient micoKubernetesClient;
 
@@ -172,22 +169,22 @@ public class DeploymentResourceTests {
         CompletableFuture<?> future = CompletableFuture.completedFuture(service);
         given(factory.runAsync(any(), onSuccessArgumentCaptor.capture(), onErrorArgumentCaptor.capture())).willReturn(future);
 
-        MicoServiceBackgroundTask mockTask = new MicoServiceBackgroundTask()
-            .setJob(future)
+        MicoServiceBackgroundJob mockJob = new MicoServiceBackgroundJob()
+            .setFuture(future)
             .setServiceShortName(service.getShortName())
             .setServiceVersion(service.getVersion())
-            .setType(MicoServiceBackgroundTask.Type.BUILD);
+            .setType(MicoServiceBackgroundJob.Type.BUILD);
 
-        given(backgroundTaskRepository.findByServiceShortNameAndServiceVersionAndType(service.getShortName(), service.getVersion(), MicoServiceBackgroundTask.Type.BUILD))
-            .willReturn(Optional.of(mockTask));
-        given(backgroundTaskRepository.save(mockTask)).willReturn(mockTask);
+        given(backgroundJobBroker.getJobByMicoService(service.getShortName(), service.getVersion(), MicoServiceBackgroundJob.Type.BUILD))
+            .willReturn(Optional.of(mockJob));
+        given(backgroundJobBroker.saveJob(mockJob)).willReturn(mockJob);
 
-        given(backgroundTaskBroker.getJobStatusByApplicationShortNameAndVersion(SHORT_NAME, VERSION))
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(SHORT_NAME, VERSION))
             .willReturn(new MicoApplicationJobStatus()
                 .setApplicationShortName(SHORT_NAME)
                 .setApplicationVersion(VERSION)
-                .setStatus(MicoServiceBackgroundTask.Status.PENDING)
-                .setJobs(Collections.singletonList(mockTask)));
+                .setStatus(MicoServiceBackgroundJob.Status.PENDING)
+                .setJobs(Collections.singletonList(mockJob)));
 
         mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/deploy"))
             .andDo(print())
@@ -292,5 +289,5 @@ public class DeploymentResourceTests {
 
         return service;
     }
-    
+
 }

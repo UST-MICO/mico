@@ -21,9 +21,9 @@ package io.github.ust.mico.core.dto.response;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
-import io.github.ust.mico.core.model.MicoServiceBackgroundTask;
-import io.github.ust.mico.core.model.MicoServiceBackgroundTask.Status;
-import io.github.ust.mico.core.model.MicoServiceBackgroundTask.Type;
+import io.github.ust.mico.core.model.MicoServiceBackgroundJob;
+import io.github.ust.mico.core.model.MicoServiceBackgroundJob.Status;
+import io.github.ust.mico.core.model.MicoServiceBackgroundJob.Type;
 import io.github.ust.mico.core.model.MicoService;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
@@ -34,14 +34,14 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for a {@link MicoServiceBackgroundTask} intended to use with responses only.
+ * DTO for a {@link MicoServiceBackgroundJob} intended to use with responses only.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class MicoServiceBackgroundTaskResponseDTO {
+public class MicoServiceBackgroundJobResponseDTO {
 
 	/**
 	 * The generated job id.
@@ -97,7 +97,7 @@ public class MicoServiceBackgroundTaskResponseDTO {
 	    })
 	})
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	private MicoServiceBackgroundTask.Type type;
+	private MicoServiceBackgroundJob.Type type;
 
 	/**
 	 * The current {@link Status} of the job.
@@ -111,7 +111,7 @@ public class MicoServiceBackgroundTaskResponseDTO {
 	    })
 	})
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	private MicoServiceBackgroundTask.Status status;
+	private MicoServiceBackgroundJob.Status status;
 
 	/**
 	 * An error message in case the job has failed.
@@ -133,20 +133,20 @@ public class MicoServiceBackgroundTaskResponseDTO {
 	// -------------------
 
 	/**
-	 * Creates a {@code MicoBackgroundTaskResponseDTO} based on a
-	 * {@code MicoServiceBackgroundTask}.
+	 * Creates a {@code MicoBackgroundJobResponseDTO} based on a
+	 * {@code MicoServiceBackgroundJob}.
 	 *
-	 * @param task the {@link MicoServiceBackgroundTask}.
-	 * @return a {@link MicoServiceBackgroundTaskResponseDTO} with all the values of the
-	 *         given {@code MicoServiceBackgroundTask}.
+	 * @param serviceBackgroundJob the {@link MicoServiceBackgroundJob}.
+	 * @return a {@link MicoServiceBackgroundJobResponseDTO} with all the values of the
+	 *         given {@code MicoServiceBackgroundJob}.
 	 */
-	public MicoServiceBackgroundTaskResponseDTO(MicoServiceBackgroundTask serviceBackgroundTask) {
-		this.id = serviceBackgroundTask.getId();
-		this.serviceShortName = serviceBackgroundTask.getServiceShortName();
-		this.serviceVersion = serviceBackgroundTask.getServiceVersion();
-		this.type = serviceBackgroundTask.getType();
-		this.status = serviceBackgroundTask.getStatus();
-		this.errorMessage = serviceBackgroundTask.getErrorMessage();
+	public MicoServiceBackgroundJobResponseDTO(MicoServiceBackgroundJob serviceBackgroundJob) {
+		this.id = serviceBackgroundJob.getId();
+		this.serviceShortName = serviceBackgroundJob.getServiceShortName();
+		this.serviceVersion = serviceBackgroundJob.getServiceVersion();
+		this.type = serviceBackgroundJob.getType();
+		this.status = serviceBackgroundJob.getStatus();
+		this.errorMessage = serviceBackgroundJob.getErrorMessage();
 	}
 
 }

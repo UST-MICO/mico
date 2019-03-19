@@ -29,7 +29,7 @@ public interface KubernetesDeploymentInfoRepository extends Neo4jRepository<Kube
 	/**
 	 * Deletes all {@link KubernetesDeploymentInfo} nodes that do <b>not</b> have any relationship to another node.
 	 */
-	@Query("MATCH (kdi:KubernetesDeploymentInfo) WHERE size((kdi)--()) = 0 DELETE (kdi)")
+	@Query("MATCH (kdi:KubernetesDeploymentInfo) WHERE size((kdi)--()) = 0 DELETE kdi")
 	void cleanUp();
 	
 }
