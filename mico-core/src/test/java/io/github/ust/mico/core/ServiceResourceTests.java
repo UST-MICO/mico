@@ -19,22 +19,24 @@
 
 package io.github.ust.mico.core;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import io.github.ust.mico.core.configuration.CorsConfig;
-import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
-import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
-import io.github.ust.mico.core.dto.response.status.*;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDependency;
-import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.resource.ServiceResource;
-import io.github.ust.mico.core.service.GitHubCrawler;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.MicoStatusService;
-import io.github.ust.mico.core.util.CollectionUtils;
+import static io.github.ust.mico.core.JsonPathBuilder.*;
+import static io.github.ust.mico.core.TestConstants.*;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.VERSION;
+import static org.hamcrest.CoreMatchers.endsWith;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.util.*;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -52,24 +54,21 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import java.util.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
-import static io.github.ust.mico.core.JsonPathBuilder.*;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
-import static io.github.ust.mico.core.TestConstants.VERSION;
-import static io.github.ust.mico.core.TestConstants.*;
-import static org.hamcrest.CoreMatchers.endsWith;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import io.github.ust.mico.core.configuration.CorsConfig;
+import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
+import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
+import io.github.ust.mico.core.dto.response.status.*;
+import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.resource.ServiceResource;
+import io.github.ust.mico.core.service.GitHubCrawler;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.service.MicoStatusService;
+import io.github.ust.mico.core.util.CollectionUtils;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(ServiceResource.class)
@@ -93,10 +92,10 @@ public class ServiceResourceTests {
     //TODO: Use these variables inside the tests instead of the local variables
 
     @Value("${cors-policy.allowed-origins}")
-    String[] allowedOrigins;
+    private String[] allowedOrigins;
 
     @MockBean
-    MicoStatusService micoStatusService;
+    private MicoStatusService micoStatusService;
 
     @MockBean
     private MicoServiceRepository serviceRepository;
@@ -757,22 +756,29 @@ public class ServiceResourceTests {
 
     @Test
     public void promoteService() throws Exception {
+    	MicoServicePort port = new MicoServicePort().setPort(1234).setType(MicoPortType.TCP).setTargetPort(5678);
+    	
         MicoServiceInterface micoServiceInterface = new MicoServiceInterface()
-            .setServiceInterfaceName(SERVICE_INTERFACE_NAME);
+                .setId(2000L)
+                .setServiceInterfaceName(SERVICE_INTERFACE_NAME)
+                .setPorts(CollectionUtils.listOf(port));
 
         MicoServiceInterface micoServiceInterfaceTwo = new MicoServiceInterface()
-            .setServiceInterfaceName(SERVICE_INTERFACE_NAME_1);
+                .setId(3000L)
+                .setServiceInterfaceName(SERVICE_INTERFACE_NAME_1);
 
-        List<MicoServiceInterface> micoServiceInterfaces = new LinkedList<>();
+        List<MicoServiceInterface> micoServiceInterfaces = new ArrayList<>();
         micoServiceInterfaces.add(micoServiceInterface);
         micoServiceInterfaces.add(micoServiceInterfaceTwo);
+        
+        
 
         MicoService micoService = new MicoService()
-            .setShortName(SHORT_NAME_1)
-            .setVersion(VERSION_1_0_1)
-            .setDescription(DESCRIPTION_1)
-            .setId(ID)
-            .setServiceInterfaces(micoServiceInterfaces);
+                .setId(ID)
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setDescription(DESCRIPTION_1)
+                .setServiceInterfaces(micoServiceInterfaces);
 
         String newVersion = VERSION_1_0_1;
         Long newId = ID_1;
@@ -783,15 +789,25 @@ public class ServiceResourceTests {
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoService));
         given(serviceRepository.save(eq(promotedService))).willReturn(savedPromotedService);
 
-        ResultActions resultPromotion = mvc.perform(post(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_PROMOTE)
-            .content(mapper.writeValueAsBytes(new MicoVersionRequestDTO(newVersion)))
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print())
-            .andExpect(jsonPath(SHORT_NAME_PATH, is(savedPromotedService.getShortName())))
-            .andExpect(jsonPath(VERSION_PATH, is(newVersion)))
-            .andExpect(jsonPath(DESCRIPTION_PATH, is(savedPromotedService.getDescription())));
+        ArgumentCaptor<MicoService> serviceArgumentCaptor = ArgumentCaptor.forClass(MicoService.class);
 
-        resultPromotion.andExpect(status().isOk());
+        mvc.perform(post(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_PROMOTE)
+                .content(mapper.writeValueAsBytes(new MicoVersionRequestDTO(newVersion)))
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print())
+                .andExpect(jsonPath(SHORT_NAME_PATH, is(savedPromotedService.getShortName())))
+                .andExpect(jsonPath(VERSION_PATH, is(newVersion)))
+                .andExpect(jsonPath(DESCRIPTION_PATH, is(savedPromotedService.getDescription())))
+                .andExpect(status().isOk());
+
+        verify(serviceRepository, times(1)).save(serviceArgumentCaptor.capture());
+        MicoService savedMicoService = serviceArgumentCaptor.getValue();
+        assertNotNull(savedMicoService);
+        assertNull("Expected id of copied service to be null (will be created by Neo4j)", savedMicoService.getId());
+        assertEquals("Expected that new service includes 2 MicoServiceInterfaces",2, savedMicoService.getServiceInterfaces().size());
+        assertNull("Expected id of copied service interface 1 to be null (will be created by Neo4j)", savedMicoService.getServiceInterfaces().get(0).getId());
+        assertNull("Expected id of copied service interface 2 to be null (will be created by Neo4j)", savedMicoService.getServiceInterfaces().get(1).getId());
+        assertNull("Expected id of copied port of service interface 1 to be null (will be created by Neo4j)", savedMicoService.getServiceInterfaces().get(0).getPorts().get(0).getId());
     }
 
     @Test
