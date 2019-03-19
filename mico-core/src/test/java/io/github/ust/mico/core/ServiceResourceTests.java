@@ -200,6 +200,13 @@ public class ServiceResourceTests {
     }
 
     @Test
+    public void getStatusOfNotExistentService() throws Exception {
+        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME_2 + "/" + VERSION + "/status"))
+            .andDo(print())
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
     public void getCompleteServiceList() throws Exception {
         given(serviceRepository.findAll(ArgumentMatchers.anyInt())).willReturn(
             CollectionUtils.listOf(
@@ -229,20 +236,20 @@ public class ServiceResourceTests {
 
         String urlPath = SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION;
         mvc.perform(get(urlPath).accept(MediaTypes.HAL_JSON_VALUE))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
-                .andExpect(jsonPath(VERSION_PATH, is(VERSION)))
-                .andExpect(jsonPath(DESCRIPTION_PATH, is(DESCRIPTION)))
-                .andExpect(jsonPath(SELF_HREF, is(BASE_URL + urlPath)))
-                .andExpect(jsonPath(SERVICES_HREF, is(BASE_URL + SERVICES_PATH)))
-                .andReturn();
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
+            .andExpect(jsonPath(VERSION_PATH, is(VERSION)))
+            .andExpect(jsonPath(DESCRIPTION_PATH, is(DESCRIPTION)))
+            .andExpect(jsonPath(SELF_HREF, is(BASE_URL + urlPath)))
+            .andExpect(jsonPath(SERVICES_HREF, is(BASE_URL + SERVICES_PATH)))
+            .andReturn();
     }
 
     @Test
     public void createService() throws Exception {
-    	MicoService service = new MicoService()
+        MicoService service = new MicoService()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setName(NAME)
@@ -260,7 +267,7 @@ public class ServiceResourceTests {
 
     @Test
     public void createServiceWithInvalidShortName() throws Exception {
-    	MicoServiceRequestDTO serviceRequestDto = new MicoServiceRequestDTO()
+        MicoServiceRequestDTO serviceRequestDto = new MicoServiceRequestDTO()
             .setShortName(SHORT_NAME_INVALID)
             .setVersion(VERSION)
             .setName(NAME)
@@ -274,7 +281,7 @@ public class ServiceResourceTests {
 
     @Test
     public void createServiceWithoutRequiredName() throws Exception {
-    	MicoServiceRequestDTO serviceRequestDto = new MicoServiceRequestDTO()
+        MicoServiceRequestDTO serviceRequestDto = new MicoServiceRequestDTO()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setName(null)
@@ -418,28 +425,28 @@ public class ServiceResourceTests {
         given(serviceRepository.findByShortName(SHORT_NAME)).willReturn(CollectionUtils.listOf(micoServiceOne, micoServiceTwo, micoServiceThree));
 
         mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME))
-                .andDo(print())
-                .andExpect(status().isNoContent())
-                .andReturn();
+            .andDo(print())
+            .andExpect(status().isNoContent())
+            .andReturn();
     }
 
     @Test
     public void corsPolicy() throws Exception {
         mvc.perform(get(SERVICES_PATH).accept(MediaTypes.HAL_JSON_VALUE)
-                .header("Origin", (Object[]) allowedOrigins))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath(SELF_HREF, endsWith(SERVICES_PATH))).andReturn();
+            .header("Origin", (Object[]) allowedOrigins))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(SELF_HREF, endsWith(SERVICES_PATH))).andReturn();
     }
 
     @Test
     public void corsPolicyNotAllowedOrigin() throws Exception {
         mvc.perform(get(SERVICES_PATH).accept(MediaTypes.HAL_JSON_VALUE)
-                .header("Origin", "http://notAllowedOrigin.com"))
-                .andDo(print())
-                .andExpect(status().isForbidden())
-                .andExpect(content().string(is("Invalid CORS request")))
-                .andReturn();
+            .header("Origin", "http://notAllowedOrigin.com"))
+            .andDo(print())
+            .andExpect(status().isForbidden())
+            .andExpect(content().string(is("Invalid CORS request")))
+            .andReturn();
     }
 
     @Test
@@ -456,9 +463,9 @@ public class ServiceResourceTests {
             .setName(NAME)
             .setDescription(DESCRIPTION_1);
         MicoService service2 = new MicoService()
-                .setShortName(SHORT_NAME_2)
-                .setVersion(VERSION_1_0_2)
-                .setDescription(DESCRIPTION_2);
+            .setShortName(SHORT_NAME_2)
+            .setVersion(VERSION_1_0_2)
+            .setDescription(DESCRIPTION_2);
         MicoService service3 = new MicoService()
             .setShortName(SHORT_NAME_3)
             .setVersion(VERSION_1_0_3)
@@ -478,13 +485,13 @@ public class ServiceResourceTests {
 
         String urlPath = SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + DEPENDERS_SUBPATH;
         ResultActions result = mvc.perform(get(urlPath)
-                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andDo(print())
-                .andExpect(jsonPath(SERVICE_LIST + "[*]", hasSize(3)))
-                .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_1_MATCHER + " && " + VERSION_1_0_1_MATCHER + " && " + DESCRIPTION_1_MATCHER + ")]", hasSize(1)))
-                .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_2_MATCHER + " && " + VERSION_1_0_2_MATCHER + " && " + DESCRIPTION_2_MATCHER + ")]", hasSize(1)))
-                .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_3_MATCHER + " && " + VERSION_1_0_3_MATCHER + " && " + DESCRIPTION_3_MATCHER + ")]", hasSize(1)))
-                .andExpect(jsonPath(SELF_HREF, is(BASE_URL + urlPath)));
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(jsonPath(SERVICE_LIST + "[*]", hasSize(3)))
+            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_1_MATCHER + " && " + VERSION_1_0_1_MATCHER + " && " + DESCRIPTION_1_MATCHER + ")]", hasSize(1)))
+            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_2_MATCHER + " && " + VERSION_1_0_2_MATCHER + " && " + DESCRIPTION_2_MATCHER + ")]", hasSize(1)))
+            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_3_MATCHER + " && " + VERSION_1_0_3_MATCHER + " && " + DESCRIPTION_3_MATCHER + ")]", hasSize(1)))
+            .andExpect(jsonPath(SELF_HREF, is(BASE_URL + urlPath)));
 
         result.andExpect(status().isOk());
     }
@@ -610,15 +617,15 @@ public class ServiceResourceTests {
                 new MicoService().setShortName(SHORT_NAME).setVersion(VERSION_1_0_2).setName(NAME)));
 
         mvc.perform(get("/services/" + SHORT_NAME + "/").accept(MediaTypes.HAL_JSON_VALUE))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andExpect(jsonPath(SERVICE_LIST + "[*]", hasSize(3)))
-                .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_MATCHER + " && " + VERSION_MATCHER + ")]", hasSize(1)))
-                .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_MATCHER + " && " + VERSION_1_0_1_MATCHER + ")]", hasSize(1)))
-                .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_MATCHER + " && " + VERSION_1_0_2_MATCHER + ")]", hasSize(1)))
-                .andExpect(jsonPath(SELF_HREF, is(BASE_URL + SERVICES_PATH + "/" + SHORT_NAME)))
-                .andReturn();
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andExpect(jsonPath(SERVICE_LIST + "[*]", hasSize(3)))
+            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_MATCHER + " && " + VERSION_MATCHER + ")]", hasSize(1)))
+            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_MATCHER + " && " + VERSION_1_0_1_MATCHER + ")]", hasSize(1)))
+            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_MATCHER + " && " + VERSION_1_0_2_MATCHER + ")]", hasSize(1)))
+            .andExpect(jsonPath(SELF_HREF, is(BASE_URL + SERVICES_PATH + "/" + SHORT_NAME)))
+            .andReturn();
     }
 
     @Test
@@ -700,14 +707,14 @@ public class ServiceResourceTests {
         given(serviceRepository.findDependees(service.getShortName(), service.getVersion())).willReturn(CollectionUtils.listOf(service1, service2));
 
         mvc.perform(get("/services/" + SHORT_NAME + "/" + VERSION + DEPENDEES_SUBPATH).accept(MediaTypes.HAL_JSON_VALUE))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andExpect(jsonPath(SERVICE_LIST + "[*]", hasSize(2)))
-                .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_1_MATCHER + " && " + VERSION_1_0_1_MATCHER + ")]", hasSize(1)))
-                .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_2_MATCHER + " && " + VERSION_1_0_2_MATCHER + ")]", hasSize(1)))
-                .andExpect(jsonPath(SELF_HREF, is(BASE_URL + SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + DEPENDEES_SUBPATH)))
-                .andReturn();
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andExpect(jsonPath(SERVICE_LIST + "[*]", hasSize(2)))
+            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_1_MATCHER + " && " + VERSION_1_0_1_MATCHER + ")]", hasSize(1)))
+            .andExpect(jsonPath(SERVICE_LIST + "[?(" + SHORT_NAME_2_MATCHER + " && " + VERSION_1_0_2_MATCHER + ")]", hasSize(1)))
+            .andExpect(jsonPath(SELF_HREF, is(BASE_URL + SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + DEPENDEES_SUBPATH)))
+            .andReturn();
     }
 
     @Test
@@ -802,20 +809,20 @@ public class ServiceResourceTests {
         assertNull("Expected id of copied service interface 2 to be null (will be created by Neo4j)", savedMicoService.getServiceInterfaces().get(1).getId());
         assertNull("Expected id of copied port of service interface 1 to be null (will be created by Neo4j)", savedMicoService.getServiceInterfaces().get(0).getPorts().get(0).getId());
     }
-    
+
     @Test
     public void getVersionsFromGitHub() throws Exception {
-    	List<String> versions = CollectionUtils.listOf("v1.0.0", "v2.0.0", "v3.0.0");
-    	
-    	given(crawler.getVersionsFromGitHubRepo(anyString())).willReturn(versions);
+        List<String> versions = CollectionUtils.listOf("v1.0.0", "v2.0.0", "v3.0.0");
+
+        given(crawler.getVersionsFromGitHubRepo(anyString())).willReturn(versions);
 
         ResultActions resultPromotion = mvc.perform(get(SERVICES_PATH + "/import/github")
-                .param("url", anyString()))
-                .andDo(print())
-                .andExpect(jsonPath(SERVICE_VERSIONS_LIST + "[*]", hasSize(3)))
-                .andExpect(jsonPath(SERVICE_VERSIONS_LIST + "[0].version", is(versions.get(0))))
-                .andExpect(jsonPath(SERVICE_VERSIONS_LIST + "[1].version", is(versions.get(1))))
-                .andExpect(jsonPath(SERVICE_VERSIONS_LIST + "[2].version", is(versions.get(2))));
+            .param("url", anyString()))
+            .andDo(print())
+            .andExpect(jsonPath(SERVICE_VERSIONS_LIST + "[*]", hasSize(3)))
+            .andExpect(jsonPath(SERVICE_VERSIONS_LIST + "[0].version", is(versions.get(0))))
+            .andExpect(jsonPath(SERVICE_VERSIONS_LIST + "[1].version", is(versions.get(1))))
+            .andExpect(jsonPath(SERVICE_VERSIONS_LIST + "[2].version", is(versions.get(2))));
 
         resultPromotion.andExpect(status().isOk());
     }

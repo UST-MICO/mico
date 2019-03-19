@@ -18,11 +18,11 @@
  */
 package io.github.ust.mico.core;
 
-import io.github.ust.mico.core.broker.BackgroundTaskBroker;
+import io.github.ust.mico.core.broker.BackgroundJobBroker;
 import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.resource.BackgroundTaskResource;
+import io.github.ust.mico.core.resource.BackgroundJobResource;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.EmbeddedRedisServer;
 import org.junit.ClassRule;
@@ -58,48 +58,48 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
-@WebMvcTest(BackgroundTaskResource.class)
+@WebMvcTest(BackgroundJobResource.class)
 @OverrideAutoConfiguration(enabled = true) //Needed to override our neo4j config
 @EnableAutoConfiguration
 @EnableConfigurationProperties(value = {CorsConfig.class})
-public class BackgroundTaskResourceTest {
-	
-	@ClassRule
+public class BackgroundJobResourceTest {
+
+    @ClassRule
     public static RuleChain rules = RuleChain.outerRule(EmbeddedRedisServer.runningAt(6379).suppressExceptions());
 
     private static final String JSON_PATH_LINKS_SECTION = "$._links.";
 
-    public static final String BACKGROUND_TASK_LIST = buildPath(EMBEDDED, "micoServiceBackgroundTaskResponseDTOList");
+    public static final String BACKGROUND_JOBS_LIST = buildPath(EMBEDDED, "micoServiceBackgroundJobResponseDTOList");
     public static final String SHORT_NAME_PATH = buildPath(ROOT, "serviceShortName");
     public static final String STATUS_PATH = buildPath(ROOT, "status");
     public static final String LINKS_CANCEL_HREF = buildPath(LINKS, "cancel", HREF);
     public static final String LINKS_JOBS_HREF = buildPath(LINKS, "jobs", HREF);
 
     @MockBean
-    private BackgroundTaskBroker backgroundTaskBroker;
-    
+    private BackgroundJobBroker backgroundJobBroker;
+
     @MockBean
     private MicoApplicationRepository applicationRepository;
-    
+
     @Autowired
     private MockMvc mvc;
 
     @Test
     public void getAllJobs() throws Exception {
-        List<MicoServiceBackgroundTask> jobList = CollectionUtils.listOf(new MicoServiceBackgroundTask().setJob(CompletableFuture.completedFuture(true)).setServiceShortName(SHORT_NAME).setServiceVersion(VERSION).setType(MicoServiceBackgroundTask.Type.BUILD),
-            new MicoServiceBackgroundTask().setJob(CompletableFuture.completedFuture(true)).setServiceShortName(SHORT_NAME_1).setServiceVersion(VERSION).setType(MicoServiceBackgroundTask.Type.BUILD),
-            new MicoServiceBackgroundTask().setJob(CompletableFuture.completedFuture(true)).setServiceShortName(SHORT_NAME_2).setServiceVersion(VERSION).setType(MicoServiceBackgroundTask.Type.BUILD));
+        List<MicoServiceBackgroundJob> jobList = CollectionUtils.listOf(new MicoServiceBackgroundJob().setFuture(CompletableFuture.completedFuture(true)).setServiceShortName(SHORT_NAME).setServiceVersion(VERSION).setType(MicoServiceBackgroundJob.Type.BUILD),
+            new MicoServiceBackgroundJob().setFuture(CompletableFuture.completedFuture(true)).setServiceShortName(SHORT_NAME_1).setServiceVersion(VERSION).setType(MicoServiceBackgroundJob.Type.BUILD),
+            new MicoServiceBackgroundJob().setFuture(CompletableFuture.completedFuture(true)).setServiceShortName(SHORT_NAME_2).setServiceVersion(VERSION).setType(MicoServiceBackgroundJob.Type.BUILD));
 
-        given(backgroundTaskBroker.getAllJobs()).willReturn(jobList);
+        given(backgroundJobBroker.getAllJobs()).willReturn(jobList);
 
         mvc.perform(get("/jobs").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andExpect(jsonPath(BACKGROUND_TASK_LIST + "[*]", hasSize(3)))
-            .andExpect(jsonPath(BACKGROUND_TASK_LIST + "[?(@.serviceShortName=='" + SHORT_NAME + "' && @.serviceVersion=='" + VERSION + "')]", hasSize(1)))
-            .andExpect(jsonPath(BACKGROUND_TASK_LIST + "[?(@.serviceShortName=='" + SHORT_NAME_1 + "' && @.serviceVersion=='" + VERSION + "')]", hasSize(1)))
-            .andExpect(jsonPath(BACKGROUND_TASK_LIST + "[?(@.serviceShortName=='" + SHORT_NAME_2 + "' && @.serviceVersion=='" + VERSION + "')]", hasSize(1)))
+            .andExpect(jsonPath(BACKGROUND_JOBS_LIST + "[*]", hasSize(3)))
+            .andExpect(jsonPath(BACKGROUND_JOBS_LIST + "[?(@.serviceShortName=='" + SHORT_NAME + "' && @.serviceVersion=='" + VERSION + "')]", hasSize(1)))
+            .andExpect(jsonPath(BACKGROUND_JOBS_LIST + "[?(@.serviceShortName=='" + SHORT_NAME_1 + "' && @.serviceVersion=='" + VERSION + "')]", hasSize(1)))
+            .andExpect(jsonPath(BACKGROUND_JOBS_LIST + "[?(@.serviceShortName=='" + SHORT_NAME_2 + "' && @.serviceVersion=='" + VERSION + "')]", hasSize(1)))
             .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/jobs")))
             .andReturn();
     }
@@ -109,15 +109,15 @@ public class BackgroundTaskResourceTest {
         MicoService service1 = new MicoService()
             .setId(ID_1)
             .setShortName(SERVICE_SHORT_NAME).setVersion(VERSION);
-        
+
         MicoService service2 = new MicoService()
             .setId(ID_1)
             .setShortName(SERVICE_SHORT_NAME_1).setVersion(VERSION);
-        
+
         MicoApplication application = new MicoApplication()
             .setId(ID)
             .setShortName(SHORT_NAME).setVersion(VERSION);
-        
+
         MicoServiceDeploymentInfo serviceDeploymentInfo1 = new MicoServiceDeploymentInfo().setService(service1);
         MicoServiceDeploymentInfo serviceDeploymentInfo2 = new MicoServiceDeploymentInfo().setService(service2);
 
@@ -128,43 +128,43 @@ public class BackgroundTaskResourceTest {
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
 
-        MicoServiceBackgroundTask pendingJob = new MicoServiceBackgroundTask()
-            .setJob(CompletableFuture.completedFuture(true))
+        MicoServiceBackgroundJob pendingJob = new MicoServiceBackgroundJob()
+            .setFuture(CompletableFuture.completedFuture(true))
             .setServiceShortName(SHORT_NAME)
             .setServiceVersion(VERSION)
-            .setType(MicoServiceBackgroundTask.Type.BUILD);
-        
-        MicoServiceBackgroundTask runningJob = new MicoServiceBackgroundTask()
-            .setJob(CompletableFuture.completedFuture(true))
-            .setServiceShortName(SHORT_NAME)
-            .setServiceVersion(VERSION)
-            .setType(MicoServiceBackgroundTask.Type.BUILD)
-            .setStatus(MicoServiceBackgroundTask.Status.RUNNING);
+            .setType(MicoServiceBackgroundJob.Type.BUILD);
 
-        given(backgroundTaskBroker.getJobStatusByApplicationShortNameAndVersion(SHORT_NAME, VERSION))
+        MicoServiceBackgroundJob runningJob = new MicoServiceBackgroundJob()
+            .setFuture(CompletableFuture.completedFuture(true))
+            .setServiceShortName(SHORT_NAME)
+            .setServiceVersion(VERSION)
+            .setType(MicoServiceBackgroundJob.Type.BUILD)
+            .setStatus(MicoServiceBackgroundJob.Status.RUNNING);
+
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(SHORT_NAME, VERSION))
             .willReturn(new MicoApplicationJobStatus()
                 .setApplicationShortName(SHORT_NAME)
                 .setApplicationVersion(VERSION)
-                .setStatus(MicoServiceBackgroundTask.Status.PENDING)
+                .setStatus(MicoServiceBackgroundJob.Status.PENDING)
                 .setJobs(Arrays.asList(runningJob, pendingJob)));
 
         mvc.perform(get("/jobs/" + SHORT_NAME + "/" + VERSION + "/status").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
-            .andExpect(jsonPath(STATUS_PATH, is(MicoServiceBackgroundTask.Status.PENDING.toString())))
+            .andExpect(jsonPath(STATUS_PATH, is(MicoServiceBackgroundJob.Status.PENDING.toString())))
             .andReturn();
     }
 
     @Test
     public void getJobById() throws Exception {
-        MicoServiceBackgroundTask doneJob = new MicoServiceBackgroundTask()
-            .setJob(CompletableFuture.completedFuture(true))
+        MicoServiceBackgroundJob doneJob = new MicoServiceBackgroundJob()
+            .setFuture(CompletableFuture.completedFuture(true))
             .setServiceShortName(SHORT_NAME)
             .setServiceVersion(VERSION)
-            .setType(MicoServiceBackgroundTask.Type.BUILD)
-            .setStatus(MicoServiceBackgroundTask.Status.DONE);
+            .setType(MicoServiceBackgroundJob.Type.BUILD)
+            .setStatus(MicoServiceBackgroundJob.Status.DONE);
 
-        given(backgroundTaskBroker.getJobById(STRING_ID)).willReturn(Optional.of(doneJob));
+        given(backgroundJobBroker.getJobById(STRING_ID)).willReturn(Optional.of(doneJob));
 
         mvc.perform(get("/jobs/" + STRING_ID).accept(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -172,41 +172,41 @@ public class BackgroundTaskResourceTest {
             .andExpect(redirectedUrl("/services/" + SHORT_NAME + "/" + VERSION))
             .andReturn();
 
-        MicoServiceBackgroundTask pendingJob = new MicoServiceBackgroundTask()
-            .setJob(CompletableFuture.completedFuture(true))
+        MicoServiceBackgroundJob pendingJob = new MicoServiceBackgroundJob()
+            .setFuture(CompletableFuture.completedFuture(true))
             .setServiceShortName(SHORT_NAME)
             .setServiceVersion(VERSION)
-            .setType(MicoServiceBackgroundTask.Type.BUILD);
+            .setType(MicoServiceBackgroundJob.Type.BUILD);
         pendingJob.setId(STRING_ID);
 
-        given(backgroundTaskBroker.getJobById(STRING_ID)).willReturn(Optional.of(pendingJob));
+        given(backgroundJobBroker.getJobById(STRING_ID)).willReturn(Optional.of(pendingJob));
 
         mvc.perform(get("/jobs/" + STRING_ID).accept(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
-            .andExpect(jsonPath(STATUS_PATH, is(MicoServiceBackgroundTask.Status.PENDING.toString())))
+            .andExpect(jsonPath(STATUS_PATH, is(MicoServiceBackgroundJob.Status.PENDING.toString())))
             .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/jobs/" + STRING_ID)))
             .andExpect(jsonPath(LINKS_CANCEL_HREF, is("http://localhost/jobs/" + STRING_ID)))
             .andExpect(jsonPath(LINKS_JOBS_HREF, is("http://localhost/jobs")))
             .andReturn();
 
-        MicoServiceBackgroundTask runningJob = new MicoServiceBackgroundTask()
-            .setJob(CompletableFuture.completedFuture(true))
+        MicoServiceBackgroundJob runningJob = new MicoServiceBackgroundJob()
+            .setFuture(CompletableFuture.completedFuture(true))
             .setServiceShortName(SHORT_NAME)
             .setServiceVersion(VERSION)
-            .setType(MicoServiceBackgroundTask.Type.BUILD)
-            .setStatus(MicoServiceBackgroundTask.Status.RUNNING);
+            .setType(MicoServiceBackgroundJob.Type.BUILD)
+            .setStatus(MicoServiceBackgroundJob.Status.RUNNING);
 
         runningJob.setId(STRING_ID);
 
-        given(backgroundTaskBroker.getJobById(STRING_ID)).willReturn(Optional.of(runningJob));
+        given(backgroundJobBroker.getJobById(STRING_ID)).willReturn(Optional.of(runningJob));
 
         mvc.perform(get("/jobs/" + STRING_ID).accept(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
-            .andExpect(jsonPath(STATUS_PATH, is(MicoServiceBackgroundTask.Status.RUNNING.toString())))
+            .andExpect(jsonPath(STATUS_PATH, is(MicoServiceBackgroundJob.Status.RUNNING.toString())))
             .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/jobs/" + STRING_ID)))
             .andExpect(jsonPath(LINKS_CANCEL_HREF, is("http://localhost/jobs/" + STRING_ID)))
             .andExpect(jsonPath(LINKS_JOBS_HREF, is("http://localhost/jobs")))
@@ -215,18 +215,18 @@ public class BackgroundTaskResourceTest {
 
     @Test
     public void deleteJob() throws Exception {
-        MicoServiceBackgroundTask pendingJob = new MicoServiceBackgroundTask()
-            .setJob(CompletableFuture.completedFuture(true))
+        MicoServiceBackgroundJob pendingJob = new MicoServiceBackgroundJob()
+            .setFuture(CompletableFuture.completedFuture(true))
             .setServiceShortName(SHORT_NAME)
             .setServiceVersion(VERSION)
-            .setType(MicoServiceBackgroundTask.Type.BUILD);
+            .setType(MicoServiceBackgroundJob.Type.BUILD);
 
-        given(backgroundTaskBroker.getJobById(STRING_ID)).willReturn(Optional.of(pendingJob));
+        given(backgroundJobBroker.getJobById(STRING_ID)).willReturn(Optional.of(pendingJob));
 
         mvc.perform(delete("/jobs/" + STRING_ID).accept(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isNoContent())
             .andReturn();
     }
-    
+
 }
