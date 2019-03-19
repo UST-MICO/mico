@@ -41,7 +41,6 @@ import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.util.CollectionUtils;
-import io.github.ust.mico.core.util.KubernetesNameNormalizer;
 import io.github.ust.mico.core.util.UIDUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -104,18 +103,16 @@ public class MicoKubernetesClient {
     private final MicoKubernetesBuildBotConfig buildBotConfig;
     private final KubernetesClient kubernetesClient;
     private final ImageBuilder imageBuilder;
-    private final KubernetesNameNormalizer kubernetesNameNormalizer;
     private final MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
 
     @Autowired
 	public MicoKubernetesClient(MicoKubernetesConfig micoKubernetesConfig, MicoKubernetesBuildBotConfig buildBotConfig,
 		MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository,
-	    KubernetesNameNormalizer kubernetesNameNormalizer, ImageBuilder imageBuilder, KubernetesClient kubernetesClient) {
+	    ImageBuilder imageBuilder, KubernetesClient kubernetesClient) {
 		this.micoKubernetesConfig = micoKubernetesConfig;
 		this.buildBotConfig = buildBotConfig;
 		this.serviceDeploymentInfoRepository = serviceDeploymentInfoRepository;
 		this.imageBuilder = imageBuilder;
-		this.kubernetesNameNormalizer = kubernetesNameNormalizer;
 		this.kubernetesClient = kubernetesClient;
 	}
 
@@ -588,7 +585,7 @@ public class MicoKubernetesClient {
 						.delete();
 				} else {
 					// Service used by multiple applications -> scale down
-					int currentTotalRequestedReplicas = serviceDeploymentInfos.stream().collect(Collectors.summingInt(sdi -> sdi.getReplicas())).intValue();
+					int currentTotalRequestedReplicas = serviceDeploymentInfos.stream().mapToInt(MicoServiceDeploymentInfo::getReplicas).sum();
 					int updatedTotalRequestedReplicas = currentTotalRequestedReplicas - currentServiceDeploymentInfo.getReplicas();
 					scale(kubernetesDeploymentInfo, updatedTotalRequestedReplicas);
 				}
