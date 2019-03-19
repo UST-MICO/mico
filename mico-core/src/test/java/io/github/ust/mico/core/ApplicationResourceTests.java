@@ -955,19 +955,13 @@ public class ApplicationResourceTests {
             .willReturn(Optional.of(application));
         given(serviceRepository.findByShortNameAndVersion(serviceNew.getShortName(), serviceNew.getVersion()))
     		.willReturn(Optional.of(serviceNew));
-        given(serviceRepository.findAllByApplicationAndShortName(application.getShortName(), application.getVersion(), serviceNew.getShortName()))
-            .willReturn(CollectionUtils.listOf(serviceOld));
-        given(serviceDeploymentInfoRepository.findByApplicationAndService(
-        		application.getShortName(), application.getVersion(), serviceOld.getShortName(), serviceOld.getVersion()))
-        	.willReturn(Optional.of(serviceDeploymentInfoOld));
-        
+
         mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + VERSION_1_0_2)
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isNoContent());
 
         ArgumentCaptor<MicoApplication> applicationCaptor = ArgumentCaptor.forClass(MicoApplication.class);
-        ArgumentCaptor<MicoServiceDeploymentInfo> serviceDeploymentInfoCaptor = ArgumentCaptor.forClass(MicoServiceDeploymentInfo.class);
 
         verify(applicationRepository, times(1)).save(applicationCaptor.capture());
         MicoApplication savedApplication = applicationCaptor.getValue();
@@ -975,10 +969,6 @@ public class ApplicationResourceTests {
         assertEquals("Expected one serviceDeploymentInfo", 1, savedApplication.getServiceDeploymentInfos().size());
         assertEquals(serviceNew, savedApplication.getServiceDeploymentInfos().get(0).getService());
         assertEquals(serviceNew, savedApplication.getServices().get(0));
-
-        verify(serviceDeploymentInfoRepository, times(1)).save(serviceDeploymentInfoCaptor.capture());
-        MicoServiceDeploymentInfo savedServiceDeploymentInfo = serviceDeploymentInfoCaptor.getValue();
-        assertEquals(serviceNew, savedServiceDeploymentInfo.getService());
     }
 
     @Test
