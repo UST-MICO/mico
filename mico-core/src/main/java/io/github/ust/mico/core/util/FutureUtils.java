@@ -23,11 +23,12 @@ import lombok.experimental.UtilityClass;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 
 import static java.util.stream.Collectors.toList;
 
 /**
- * Provides some utility functions for Futures / CompletableFutures.
+ * Provides some utility functions for {@link Future} / {@link CompletableFuture}.
  */
 @UtilityClass
 public class FutureUtils {

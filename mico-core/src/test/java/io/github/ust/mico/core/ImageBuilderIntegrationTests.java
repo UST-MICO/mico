@@ -19,21 +19,13 @@
 
 package io.github.ust.mico.core;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
-import io.github.ust.mico.core.exception.NotInitializedException;
-import io.github.ust.mico.core.exception.VersionNotSupportedException;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoVersion;
-import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
-import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
-import lombok.extern.slf4j.Slf4j;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -44,15 +36,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
+import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
+import io.github.ust.mico.core.exception.NotInitializedException;
+import io.github.ust.mico.core.exception.VersionNotSupportedException;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
+import lombok.extern.slf4j.Slf4j;
 
 @Ignore
 // TODO Upgrade to JUnit5

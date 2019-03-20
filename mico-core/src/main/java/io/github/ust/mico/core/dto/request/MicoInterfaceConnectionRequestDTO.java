@@ -19,8 +19,10 @@
 
 package io.github.ust.mico.core.dto.request;
 
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Pattern;
+
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
-import io.github.ust.mico.core.model.MicoEnvironmentVariable;
 import io.github.ust.mico.core.model.MicoInterfaceConnection;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
@@ -32,9 +34,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
-
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.Pattern;
 
 /**
  * DTO for the information needed to connect a {@link MicoService} to an {@link MicoServiceInterface}

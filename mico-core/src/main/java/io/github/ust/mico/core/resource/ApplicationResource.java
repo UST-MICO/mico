@@ -29,8 +29,6 @@ import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
-import io.github.ust.mico.core.model.MicoInterfaceConnection;
-import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
@@ -56,6 +54,7 @@ import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.persistence.*;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -186,10 +185,14 @@ public class ApplicationResource {
         application.setId(null);
         application.getServiceDeploymentInfos().forEach(sdi -> sdi.setId(null));
         application.getServiceDeploymentInfos().forEach(sdi -> sdi.getLabels().forEach(label -> label.setId(null)));
-        application.getServiceDeploymentInfos().forEach(sdi -> sdi.getEnvironmentVariables().forEach(envVar -> envVar.setId(null)));
+        application.getServiceDeploymentInfos().forEach(sdi -> {
+        	sdi.getEnvironmentVariables().forEach(envVar -> envVar.setId(null));
+        	sdi.getInterfaceConnections().forEach(ic -> ic.setId(null));
+        });
         // The actual Kubernetes deployment information must not be copied, because the new application
         // is considered to be not deployed yet.
         application.getServiceDeploymentInfos().forEach(sdi -> sdi.setKubernetesDeploymentInfo(null));
+        
 
         // Save the new (promoted) application in the database.
         MicoApplication updatedApplication = applicationRepository.save(application);

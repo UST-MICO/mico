@@ -288,16 +288,6 @@ public class ImageBuilder {
     }
 
     /**
-     * Creates an image name based on the service name and the service version (used as image tag).
-     *
-     * @param service the {@link MicoService}.
-     * @return the image name
-     */
-    private String createImageName(MicoService service) {
-        return createImageName(service.getShortName(), service.getVersion());
-    }
-
-    /**
      * Creates a build name based on the service name.
      *
      * @param serviceName    the name of the MICO service

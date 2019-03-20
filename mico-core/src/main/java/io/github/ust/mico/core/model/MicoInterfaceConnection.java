@@ -19,14 +19,16 @@
 
 package io.github.ust.mico.core.model;
 
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import io.github.ust.mico.core.dto.request.MicoInterfaceConnectionRequestDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
 
 
 /**
@@ -39,10 +41,15 @@ import org.neo4j.ogm.annotation.Id;
 @Accessors(chain = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MicoInterfaceConnection {
-
-    @Id
+	
+	@Id
     @GeneratedValue
     private Long id;
+
+	
+    // ----------------------
+    // -> Required fields ---
+    // ----------------------
 
     /**
      * Name of the environment variable that is used to set the fully qualified name of an interface.

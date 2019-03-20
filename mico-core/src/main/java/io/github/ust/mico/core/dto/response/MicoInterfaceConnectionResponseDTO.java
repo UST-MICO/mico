@@ -21,9 +21,8 @@ package io.github.ust.mico.core.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import io.github.ust.mico.core.dto.request.MicoEnvironmentVariableRequestDTO;
+
 import io.github.ust.mico.core.dto.request.MicoInterfaceConnectionRequestDTO;
-import io.github.ust.mico.core.model.MicoEnvironmentVariable;
 import io.github.ust.mico.core.model.MicoInterfaceConnection;
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -155,7 +155,7 @@ public class DeploymentResource {
         // When all build jobs are finished, create the Kubernetes resources for the deployment of a MicoService
         CompletableFuture<List<MicoServiceDeploymentInfo>> allBuildJobs = FutureUtils.all(buildJobs);
         allBuildJobs.whenComplete((serviceDeploymentInfosWithNullValues, throwable) -> {
-            log.info("All build jobs for deployment of MicoApplication '{}' '{}' finished. Start creating or updating Kubernetes resources.",
+            log.info("All build jobs for deployment of MicoApplication '{}' '{}' are finished. Start creating or updating Kubernetes resources.",
                 micoApplication.getShortName(), micoApplication.getVersion());
             // All failed builds lead to a null in the service deployment list.
             List<MicoServiceDeploymentInfo> serviceDeploymentInfos = serviceDeploymentInfosWithNullValues.stream().filter(Objects::nonNull).collect(toList());
@@ -173,7 +173,7 @@ public class DeploymentResource {
                 }
             }
 
-            // After the Kubernetes are created, save the actual deployment information to the database.
+            // After the Kubernetes deployments are created, save the actual deployment information to the database.
             for (MicoServiceDeploymentInfo serviceDeploymentInfo : serviceDeploymentInfos) {
                 log.debug("Saved new Kubernetes deployment information of '{}' '{}' to database: {}",
                     serviceDeploymentInfo.getService().getShortName(), serviceDeploymentInfo.getService().getVersion(),
