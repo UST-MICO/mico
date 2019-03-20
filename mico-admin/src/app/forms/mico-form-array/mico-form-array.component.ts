@@ -49,6 +49,8 @@ export class MicoFormArrayComponent implements OnInit, AfterViewInit, AsyncValid
     lastValidSub: Subscription;
     valid: Subject<boolean> = new BehaviorSubject<boolean>(false);
     currentValue: any[] = [];
+    minLimitText;
+    maxLimitText;
 
     @Input() config: ApiModel;
     nestedModel: ApiModel;
@@ -143,6 +145,19 @@ export class MicoFormArrayComponent implements OnInit, AfterViewInit, AsyncValid
         this.models.getModel(modelUrl).subscribe(model => {
             this.nestedModel = model;
         });
+
+        // build strings for min/max limit
+        if (this.config.hasOwnProperty('minItems')) {
+            this.minLimitText = this.config.minItems;
+        } else {
+            this.minLimitText = '0';
+        }
+
+        if (this.config.hasOwnProperty('maxItems')) {
+            this.maxLimitText = this.config.maxItems;
+        } else {
+            this.maxLimitText = '\u221E';
+        }
     }
 
     ngAfterViewInit() {

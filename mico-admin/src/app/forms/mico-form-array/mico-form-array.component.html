@@ -1,6 +1,13 @@
 <div class="mv2">
-    <div class="mb1">
-        {{nestedModel?.title}}
+    <div class="mb1 flex">
+        <span class="flex-grow-1">
+            {{nestedModel?.title}}
+        </span>
+        <span style="align-content: flex-end">
+            <i>
+                current: {{currentValue.length}}, min: {{minLimitText}}, max: {{maxLimitText}}
+            </i>
+        </span>
     </div>
     <div class="flex mb2 hide-child" *ngFor="let entry of currentValue; let index=index;trackBy:trackBy">
         <mat-card class="w-100">
