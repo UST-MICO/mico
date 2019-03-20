@@ -413,6 +413,8 @@ public class MicoKubernetesClientTests {
             "    ust.mico/version: \"" + SERVICE_VERSION + "\"\n" +
             "  name: \"" + deploymentUid + "\"\n" +
             "  namespace: \"" + testNamespace + "\"\n" +
+            "spec:\n" +
+            "  replicas: 1\n" +
             "---\n" +
             "apiVersion: \"v1\"\n" +
             "kind: \"Service\"\n" +
@@ -424,7 +426,9 @@ public class MicoKubernetesClientTests {
             "    ust.mico/name: \"" + SERVICE_SHORT_NAME + "\"\n" +
             "    ust.mico/version: \"" + SERVICE_VERSION + "\"\n" +
             "  name: \"" + serviceUid + "\"\n" +
-            "  namespace: \"" + testNamespace + "\"\n", micoKubernetesClient.getYaml(micoService));
+            "  namespace: \"" + testNamespace + "\"\n" +
+            "spec:\n" +
+            "  selector: {}\n", micoKubernetesClient.getYaml(micoService));
     }
 
     private Deployment getDeploymentObject(MicoService micoService, String deploymentUid) {
