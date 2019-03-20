@@ -33,6 +33,7 @@ import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPl
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo.ImagePullPolicy;
+import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -122,6 +123,27 @@ public class MicoServiceDeploymentInfoRequestDTO {
     private List<MicoEnvironmentVariableRequestDTO> environmentVariables = new ArrayList<>();
 
     /**
+     * Interface connections includes all required information to be able to connect a {@link MicoService}
+     * with {@link MicoServiceInterface MicoServiceInterfaces} of other {@link MicoService MicoServices}.
+     * The backend uses the information to set environment variables so that e.g. the frontend knows
+     * how to connect to the backend.
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Interface Connections"),
+            @ExtensionProperty(name = "x-order", value = "46"),
+            @ExtensionProperty(name = "description", value = "Interface connections includes all required information " +
+                "to be able to connect a MicoService with MicoServiceInterfaces of other MicoServices.\n " +
+                "The backend uses the information to set environment variables so that e.g. the frontend knows " +
+                "how to connect to the backend.")
+        }
+    )})
+    @JsonSetter(nulls = Nulls.SKIP)
+    @Valid
+    private List<MicoInterfaceConnectionRequestDTO> interfaceConnections = new ArrayList<>();
+
+    /**
      * Indicates whether and when to pull the image.
      * Default image pull policy is {@link ImagePullPolicy#ALWAYS}.
      * {@code null} is ignored.
@@ -154,6 +176,7 @@ public class MicoServiceDeploymentInfoRequestDTO {
 		this.replicas = serviceDeploymentInfo.getReplicas();
 		this.labels = serviceDeploymentInfo.getLabels().stream().map(MicoLabelRequestDTO::new).collect(Collectors.toList());
 		this.environmentVariables = serviceDeploymentInfo.getEnvironmentVariables().stream().map(MicoEnvironmentVariableRequestDTO::new).collect(Collectors.toList());
+		this.interfaceConnections = serviceDeploymentInfo.getInterfaceConnections().stream().map(MicoInterfaceConnectionRequestDTO::new).collect(Collectors.toList());
 		this.imagePullPolicy = serviceDeploymentInfo.getImagePullPolicy();
 	}
 

@@ -17,30 +17,18 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.configuration;
+package io.github.ust.mico.core.persistence;
 
-import javax.validation.constraints.NotNull;
+import io.github.ust.mico.core.model.MicoInterfaceConnection;
+import org.springframework.data.neo4j.annotation.Query;
+import org.springframework.data.neo4j.repository.Neo4jRepository;
 
-import io.github.ust.mico.core.service.MicoCoreBackgroundJobFactory;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
-
-import lombok.Getter;
-import lombok.Setter;
-
-/**
- * Configuration for {@link MicoCoreBackgroundJobFactory}.
- */
-@Component
-@ConfigurationProperties(prefix = "mico-core.concurrency")
-public class MicoCoreBackgroundJobFactoryConfig {
+public interface MicoInterfaceConnectionRepository extends Neo4jRepository<MicoInterfaceConnection, Long> {
 
     /**
-     * The number of threads in the {@link MicoCoreBackgroundJobFactory}.
+     * Deletes all interface connections that do <b>not</b> have any relationship to another node.
      */
-    @Getter
-    @Setter
-    @NotNull
-    private int threadPoolSize;
+    @Query("MATCH (con:MicoInterfaceConnection) WHERE size((con)--()) = 0 DELETE (con)")
+    void cleanUp();
 
 }

@@ -27,7 +27,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.concurrent.CompletableFuture;
 
-import io.github.ust.mico.core.util.EmbeddedRedisServer;
+import io.github.ust.mico.core.exception.NotInitializedException;
+import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 import org.junit.*;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.RuleChain;
@@ -35,18 +36,24 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.util.CollectionUtils;
+import io.github.ust.mico.core.util.EmbeddedRedisServer;
 import lombok.extern.slf4j.Slf4j;
 
+// Is ignored because Travis can't execute integration tests
+// that requires a connection to Kubernetes.
 @Ignore
-// TODO Upgrade to JUnit5
+// TODO: Upgrade to JUnit5
 @Category(IntegrationTests.class)
 @Slf4j
 @SpringBootTest
@@ -66,7 +73,13 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
     private IntegrationTestsUtils integrationTestsUtils;
 
     @Autowired
+    private MicoKubernetesBuildBotConfig micoKubernetesBuildBotConfig;
+
+    @Autowired
     private MicoApplicationRepository applicationRepository;
+
+    @Autowired
+    private ImageBuilder imageBuilder;
 
     private String namespace;
     private MicoService service;
@@ -87,6 +100,9 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
             throw e;
         }
 
+        // Set timeout to 60 seconds.
+        micoKubernetesBuildBotConfig.setBuildTimeout(60);
+
         application = getTestApplication();
         service = getTestService();
         
@@ -106,6 +122,9 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
 
     @Test
     public void deployApplicationWithOneService() throws Exception {
+
+        // Manual initialization is necessary so it will use the provided namespace (see setup method).
+        imageBuilder.init();
 
         String applicationShortName = application.getShortName();
         String applicationVersion = application.getVersion();
