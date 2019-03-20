@@ -19,20 +19,16 @@
 
 package io.github.ust.mico.core;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
-import io.fabric8.kubernetes.api.model.apps.DeploymentList;
-import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
-import io.github.ust.mico.core.TestConstants.*;
-import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
-import io.github.ust.mico.core.exception.KubernetesResourceException;
-import io.github.ust.mico.core.model.*;
-import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.util.CollectionUtils;
-import io.github.ust.mico.core.util.UIDUtils;
+import static io.github.ust.mico.core.TestConstants.*;
+import static org.junit.Assert.*;
+import static org.mockito.BDDMockito.given;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -41,14 +37,24 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import static io.github.ust.mico.core.TestConstants.*;
-import static org.junit.Assert.*;
-import static org.mockito.BDDMockito.given;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.fabric8.kubernetes.api.model.apps.DeploymentList;
+import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
+import io.github.ust.mico.core.TestConstants.IntegrationTest;
+import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
+import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
+import io.github.ust.mico.core.exception.KubernetesResourceException;
+import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.persistence.KubernetesDeploymentInfoRepository;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
+import io.github.ust.mico.core.util.CollectionUtils;
+import io.github.ust.mico.core.util.UIDUtils;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -67,18 +73,34 @@ public class MicoKubernetesClientTests {
     private MicoKubernetesConfig micoKubernetesConfig;
 
     @MockBean
+    private MicoKubernetesBuildBotConfig micoKubernetesBuildBotConfig;
+
+    @MockBean
+    private ImageBuilder imageBuilder;
+
+    @MockBean
+    private MicoApplicationRepository applicationRepository;
+
+    @MockBean
     private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
+
+    @MockBean
+    private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
 
     private MicoKubernetesClient micoKubernetesClient;
 
     private static String testNamespace = "test-namespace";
+    private static String buildTestNamespace = "test-namespace";
 
     @Before
     public void setUp() {
         given(micoKubernetesConfig.getNamespaceMicoWorkspace()).willReturn(testNamespace);
+        given(micoKubernetesBuildBotConfig.getNamespaceBuildExecution()).willReturn(buildTestNamespace);
+        given(micoKubernetesBuildBotConfig.isBuildCleanUpByUndeploy()).willReturn(true);
 
-        micoKubernetesClient = new MicoKubernetesClient(micoKubernetesConfig, serviceDeploymentInfoRepository,
-            mockServer.getClient());
+        micoKubernetesClient = new MicoKubernetesClient(micoKubernetesConfig, micoKubernetesBuildBotConfig,
+        	mockServer.getClient(), imageBuilder, applicationRepository,
+        	serviceDeploymentInfoRepository, kubernetesDeploymentInfoRepository);
 
         mockServer.getClient().namespaces().create(new NamespaceBuilder().withNewMetadata().withName(testNamespace).endMetadata().build());
     }
@@ -236,11 +258,87 @@ public class MicoKubernetesClientTests {
 
     @Test
     public void isApplicationDeployed() {
+        MicoApplication micoApplication = setUpApplicationDeployment();
+        assertTrue("Expected application is deployed", micoKubernetesClient.isApplicationDeployed(micoApplication));
+    }
+
+    @Test
+    public void isApplicationDeployedWithServicesUsedConcurrentlyByOtherApplications() {
+        // Arrange already existing MicoService that was deployed by another application
+        MicoApplication otherMicoApplication = setUpApplicationDeployment();
+        MicoService otherMicoService = otherMicoApplication.getServices().get(0);
+
+        // Arrange new MicoApplication and ServiceDeploymentInfo
+        MicoApplication micoApplication = new MicoApplication()
+            .setShortName(SHORT_NAME_2)
+            .setVersion(VERSION)
+            .setName(NAME_2);
+
+        // Kubernetes deployment information is null, because the service was not deployed by this application
+        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
+            .setService(otherMicoService)
+            .setKubernetesDeploymentInfo(null);
+        micoApplication.getServiceDeploymentInfos().add(serviceDeploymentInfo);
+
+        given(serviceDeploymentInfoRepository.findAllByApplication(SHORT_NAME_2, VERSION))
+            .willReturn(CollectionUtils.listOf(serviceDeploymentInfo));
+
+        boolean result = micoKubernetesClient.isApplicationDeployed(micoApplication);
+        assertFalse("Application is not deployed, because MicoService was deployed by other application", result);
+    }
+
+    @Test
+    public void isApplicationDeployedWithNotExistingServiceInterfaces() {
+        MicoApplication micoApplication = setUpApplicationDeployment();
+        // There are no Kubernetes Services
+        micoApplication.getServiceDeploymentInfos().get(0).getKubernetesDeploymentInfo().setServiceNames(new ArrayList<>());
+
+        assertFalse("Expected application is not deployed, because there are no Kubernetes Services", micoKubernetesClient.isApplicationDeployed(micoApplication));
+    }
+
+    @Test
+    public void undeployApplication() {
+        MicoApplication micoApplication = setUpApplicationDeployment();
+        MicoService micoService = micoApplication.getServices().get(0);
+        KubernetesDeploymentInfo kubernetesDeploymentInfo = micoApplication.getServiceDeploymentInfos().get(0).getKubernetesDeploymentInfo();
+        // Prepare build
+        mockServer.getClient()
+            .pods()
+            .inNamespace(testNamespace)
+            .create(new PodBuilder()
+                .withNewMetadata()
+                .withLabels(CollectionUtils.mapOf(
+                    ImageBuilder.BUILD_CRD_GROUP + "/buildName",
+                    imageBuilder.createBuildName(micoService)))
+                .endMetadata()
+                .build());
+
+        micoKubernetesClient.undeployApplication(micoApplication);
+
+        Deployment actualDeployment = mockServer.getClient()
+            .apps()
+            .deployments()
+            .inNamespace(kubernetesDeploymentInfo.getNamespace())
+            .withName(kubernetesDeploymentInfo.getDeploymentName()).get();
+        Service actualService = mockServer.getClient()
+            .services()
+            .inNamespace(kubernetesDeploymentInfo.getNamespace())
+            .withName(kubernetesDeploymentInfo.getServiceNames().get(0)).get();
+        List<Pod> actualPods = mockServer.getClient()
+            .pods()
+            .inAnyNamespace()
+            .withLabel(ImageBuilder.BUILD_CRD_GROUP + "/buildName", imageBuilder.createBuildName(micoService))
+            .list().getItems();
+        assertNull("Expected Kubernetes deployment is deleted", actualDeployment);
+        assertNull("Expected Kubernetes service is deleted", actualService);
+        assertTrue("Expected there is no Kubernetes Build pod", actualPods.isEmpty());
+    }
+
+    public MicoApplication setUpApplicationDeployment() {
         MicoApplication micoApplication = new MicoApplication()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setName(NAME);
-
         MicoService micoService = getMicoService();
         String deploymentUid = UIDUtils.uidFor(micoService);
         Deployment existingKubernetesDeployment = getDeploymentObject(micoService, deploymentUid);
@@ -274,81 +372,18 @@ public class MicoKubernetesClientTests {
                 .setServiceNames(existingKubernetesServices.stream().map(service -> service.getMetadata().getName()).collect(Collectors.toList()))
             );
 
-        given(serviceDeploymentInfoRepository.findAllByApplication(SHORT_NAME, VERSION)).willReturn(CollectionUtils.listOf(serviceDeploymentInfo));
+        micoApplication.setServices(CollectionUtils.listOf(micoService));
+        micoApplication.setServiceDeploymentInfos(CollectionUtils.listOf(serviceDeploymentInfo));
 
-        assertTrue("Expected application is deployed", micoKubernetesClient.isApplicationDeployed(micoApplication));
-    }
-
-    @Test
-    public void isApplicationDeployedWithServicesUsedConcurrentlyByOtherApplications() {
-        // Arrange already existing MicoService that was deployed by another application
-        MicoService otherMicoService = getMicoService();
-        String deploymentUid = UIDUtils.uidFor(otherMicoService);
-        Deployment existingDeploymentByOtherApplication = getDeploymentObject(otherMicoService, deploymentUid);
-        Map<String, String> labels = CollectionUtils.mapOf(
-            LABEL_NAME_KEY, otherMicoService.getShortName(),
-            LABEL_VERSION_KEY, otherMicoService.getVersion(),
-            LABEL_INSTANCE_KEY, deploymentUid);
-        existingDeploymentByOtherApplication.getMetadata().setLabels(labels);
-
-        MicoServiceDeploymentInfo otherServiceDeploymentInfo = new MicoServiceDeploymentInfo().setService(otherMicoService)
-            .setKubernetesDeploymentInfo(new KubernetesDeploymentInfo()
-                .setNamespace(testNamespace)
-                .setDeploymentName(existingDeploymentByOtherApplication.getMetadata().getName())
-                .setServiceNames(new ArrayList<>())
-            );
-
-        given(serviceDeploymentInfoRepository.findAllByApplication(SHORT_NAME_1, VERSION)).willReturn(CollectionUtils.listOf(otherServiceDeploymentInfo));
-
-        mockServer.getClient().apps().deployments().inNamespace(testNamespace).createOrReplace(existingDeploymentByOtherApplication);
-
-        // Arrange new MicoApplication and ServiceDeploymentInfo
-        MicoApplication micoApplication = new MicoApplication()
-            .setShortName(SHORT_NAME_2)
-            .setVersion(VERSION)
-            .setName(NAME_2);
-
-        // Kubernetes deployment information is null, because the service was not deployed by this application
-        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
-            .setService(otherMicoService)
-            .setKubernetesDeploymentInfo(null);
-        micoApplication.getServiceDeploymentInfos().add(serviceDeploymentInfo);
-
-        given(serviceDeploymentInfoRepository.findAllByApplication(SHORT_NAME_2, VERSION))
+        given(serviceDeploymentInfoRepository.findAllByService(micoService.getShortName(), micoService.getVersion()))
+            .willReturn(CollectionUtils.listOf(serviceDeploymentInfo));
+        given(serviceDeploymentInfoRepository.findByApplicationAndService(
+            micoApplication.getShortName(), micoApplication.getVersion(), micoService.getShortName(), micoService.getVersion()))
+            .willReturn(Optional.of(serviceDeploymentInfo));
+        given(serviceDeploymentInfoRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion()))
             .willReturn(CollectionUtils.listOf(serviceDeploymentInfo));
 
-        boolean result = micoKubernetesClient.isApplicationDeployed(micoApplication);
-        assertFalse("Application is not deployed, because MicoService was deployed by other application", result);
-    }
-
-    @Test
-    public void isApplicationDeployedWithNotExistingServiceInterfaces() {
-        MicoApplication micoApplication = new MicoApplication()
-            .setShortName(SHORT_NAME)
-            .setVersion(VERSION)
-            .setName(NAME);
-
-        MicoService micoService = getMicoService();
-        String deploymentUid = UIDUtils.uidFor(micoService);
-        Deployment existingDeployment = getDeploymentObject(micoService, deploymentUid);
-        Map<String, String> labels = CollectionUtils.mapOf(
-            LABEL_NAME_KEY, micoService.getShortName(),
-            LABEL_VERSION_KEY, micoService.getVersion(),
-            LABEL_INSTANCE_KEY, deploymentUid);
-        existingDeployment.getMetadata().setLabels(labels);
-
-        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
-            .setService(micoService)
-            .setKubernetesDeploymentInfo(new KubernetesDeploymentInfo()
-                .setNamespace(testNamespace)
-                .setDeploymentName(existingDeployment.getMetadata().getName())
-                .setServiceNames(new ArrayList<>()) // There are no Kubernetes Services
-            );
-
-        mockServer.getClient().apps().deployments().inNamespace(testNamespace).createOrReplace(existingDeployment);
-        given(serviceDeploymentInfoRepository.findAllByApplication(SHORT_NAME, VERSION)).willReturn(CollectionUtils.listOf(serviceDeploymentInfo));
-
-        assertFalse("Expected application is not deployed, because there are no Kubernetes Services", micoKubernetesClient.isApplicationDeployed(micoApplication));
+        return micoApplication;
     }
 
     @Test
@@ -403,6 +438,9 @@ public class MicoKubernetesClientTests {
             .withNamespace(testNamespace)
             .withLabels(labels)
             .endMetadata()
+            .withNewSpec()
+            .withReplicas(1)
+            .endSpec()
             .build();
     }
 
@@ -418,6 +456,8 @@ public class MicoKubernetesClientTests {
             .withNamespace(testNamespace)
             .withLabels(labels)
             .endMetadata()
+            .withNewSpec()
+            .endSpec()
             .build();
     }
 

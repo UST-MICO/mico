@@ -47,6 +47,21 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
         @Param("applicationVersion") String applicationVersion);
     
     /**
+     * Retrieves all service deployment information of a service.
+     * Note that one service can be used by (included in) multiple applications.
+     * 
+     * @param serviceShortName the short name of the {@link MicoService}.
+     * @param serviceVersion the version of the {@link MicoService}.
+     * @return a {@link List} of {@link MicoServiceDeploymentInfo} instances.
+     */
+    @Query("MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
+    	+ "WHERE s.shortName = {serviceShortName} AND s.version = {serviceVersion} "
+        + "RETURN (sdi:MicoServiceDeploymentInfo)-[:FOR|:HAS*0..1]->()")
+    List<MicoServiceDeploymentInfo> findAllByService(
+        @Param("serviceShortName") String serviceShortName,
+        @Param("serviceVersion") String serviceVersion);
+    
+    /**
      * Retrieves the deployment information for a particular application and service. 
      * 
      * @param applicationShortName the short name of the {@link MicoApplication}.

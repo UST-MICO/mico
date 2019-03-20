@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
@@ -67,10 +68,11 @@ public class ApplicationResource {
     public static final String PATH_PROMOTE = "promote";
     public static final String PATH_STATUS = "status";
 
-    private static final String PATH_VARIABLE_SHORT_NAME = "shortName";
-    private static final String PATH_VARIABLE_VERSION = "version";
-    private static final String PATH_VARIABLE_SERVICE_SHORT_NAME = "serviceShortName";
-    private static final String PATH_VARIABLE_SERVICE_VERSION = "serviceVersion";
+    private static final String PATH_VARIABLE_SHORT_NAME = "micoApplicationShortName";
+    private static final String PATH_VARIABLE_VERSION = "micoApplicationVersion";
+    private static final String PATH_VARIABLE_SERVICE_SHORT_NAME = "micoServiceShortName";
+    private static final String PATH_VARIABLE_SERVICE_VERSION = "micoServiceVersion";
+    protected static final int MAX_MICO_SERVICES_WITH_SAME_SHORT_NAME = 1;
 
     @Autowired
     private MicoApplicationRepository applicationRepository;
@@ -254,32 +256,65 @@ public class ApplicationResource {
                 linkTo(methodOn(ApplicationResource.class).getServicesFromApplication(shortName, version)).withSelfRel()));
     }
 
+    @ApiOperation(value = "Adds or updates an association between a MicoApplication and a MicoService. An existing and" +
+        " already associated MicoService with an equal short name will be replaced with its new version." +
+        " Only one MicoService in one specific version is allowed per MicoApplication.")
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES + "/{" + PATH_VARIABLE_SERVICE_SHORT_NAME + "}/{" + PATH_VARIABLE_SERVICE_VERSION + "}")
-    public ResponseEntity<Void> addServiceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                        @PathVariable(PATH_VARIABLE_VERSION) String version,
+    public ResponseEntity<Void> addServiceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
+                                                        @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
                                                         @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName,
                                                         @PathVariable(PATH_VARIABLE_SERVICE_VERSION) String serviceVersion) {
-        MicoApplication application = getApplicationFromDatabase(shortName, version);
-        MicoService existingService = getServiceFromDatabase(serviceShortName, serviceVersion);
+    	// Retrieve application and service from database (checks whether they exist)
+        MicoApplication application = getApplicationFromDatabase(applicationShortName, applicationVersion);
+        MicoService service = getServiceFromDatabase(serviceShortName, serviceVersion);
         
-        // Check whether the application already contains the service
-        if (application.getServices().contains(existingService)) {
-        	// Application already contains the service -> not allowed
-        	log.info("Application '{}' '{}' already contains service '{}' '{}'.",
-        		shortName, version, serviceShortName, serviceVersion);
+        // Find all services with identical short name within this application
+		List<MicoService> micoServicesWithIdenticalShortName = application.getServices().stream()
+		    .filter(s -> s.getShortName().equals(serviceShortName)).collect(Collectors.toList());
+		
+        if (micoServicesWithIdenticalShortName.size() > 1) {
+        	// Illegal state, each service is allowed only once in every application
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+			    "There are multiple MicoServices with identical short names for MicoApplication '"
+			        + applicationShortName + "' '" + applicationVersion + "'.");
+        } else if (micoServicesWithIdenticalShortName.size() == 0) {
+        	// Service not included yet, simply add it
+            log.info("Add service '{}' '{}' to application '{}' '{}'.",
+                serviceShortName, serviceVersion, applicationShortName, applicationVersion);
+            MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo().setService(service);
+            // Both the service list and the service deployment info list
+            // of the application need to be updated ...
+            application.getServices().add(service);
+            application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
+            // ... before the application can be saved.
+            applicationRepository.save(application);
         } else {
-        	log.info("Add service '{}' '{}' to application '{}' '{}'.",
-        		serviceShortName, serviceVersion, shortName, version);
-			// Create default service deployment information for new service
-			MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
-			    .setService(existingService);
-			// Both the service list and the service deployment info list
-			// of the application need to be updated
-			application.getServices().add(existingService);
-			application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
-			// Save the application (also creates the new node for the service deployment information)
-			applicationRepository.save(application);
-		}
+        	// Service already included, replace it with its newer version, ...
+        	MicoService currentService = micoServicesWithIdenticalShortName.get(0);
+        	
+        	// ... but only replace if the new version is different from the current version
+        	if (currentService.getVersion().equals(serviceVersion)) {
+        		log.info("Application '{}' '{}' already contains service '{}' in version '{}'. Service will not be added to the application.",
+                    applicationShortName, applicationVersion, serviceShortName, serviceVersion);
+        	} else {
+        		log.info("Replace service '{}' '{}' in application '{}' '{}' with new version '{}'.",
+                    serviceShortName, currentService.getVersion(), applicationShortName, applicationVersion, serviceVersion);
+        		// Replace service in list of services in application
+        		application.getServices().remove(currentService);
+        		application.getServices().add(service);
+
+        		// Move the edge between the application and the service to the new version of the service
+        		// by updating the corresponding deployment info.
+				application.getServiceDeploymentInfos().stream()
+				    .filter(sdi -> sdi.getService().getShortName().equals(serviceShortName))
+				    .collect(Collectors.toList())
+				    .forEach(sdi -> sdi.setService(service));
+        		
+				// Save the application with the updated list of services
+				// and service deployment infos in the database
+        		applicationRepository.save(application);
+        	}
+        }
         
         return ResponseEntity.noContent().build();
     }
@@ -401,6 +436,7 @@ public class ApplicationResource {
     }
     
     /**
+     * //TODO This is a duplicate of {@link ServiceResource#getServiceFromDatabase(String, String)} this should be resolved
      * Returns the existing {@link MicoService} object from the database
      * for the given shortName and version.
      *

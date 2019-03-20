@@ -183,6 +183,23 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     }
 
     /**
+     * calls the undeploy endpoint
+     * uses: POST application/{shortName}/{version}/undeploy
+     */
+    undeployApplication() {
+        this.subDeploy = this.apiService.postApplicationUndeployCommand(this.application.shortName, this.application.version)
+            .subscribe(val => {
+                // TODO wait for propper return value from deploy endpoint
+                // add some deployment monitoring (e.g. state)
+                console.log(val);
+                this.snackBar.open('Application undeployment initialized.', 'Ok', {
+                    duration: 5000,
+                });
+
+            });
+    }
+
+    /**
      * returns the last elements version of the allVersions list (list is sorted in ngOnInit)
      */
     getLatestVersion() {
