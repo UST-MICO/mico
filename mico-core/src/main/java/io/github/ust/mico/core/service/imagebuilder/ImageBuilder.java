@@ -19,14 +19,6 @@
 
 package io.github.ust.mico.core.service.imagebuilder;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.*;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.ServiceAccount;
@@ -43,8 +35,18 @@ import io.github.ust.mico.core.service.imagebuilder.buildtypes.*;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.KubernetesNameNormalizer;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.*;
 
 /**
  * Builds container images by using Knative Build and Kaniko.
@@ -95,7 +97,17 @@ public class ImageBuilder {
      * @throws NotInitializedException if there are errors during initialization
      */
     @EventListener
-    public void init(ContextRefreshedEvent cre) throws NotInitializedException {
+    public void init(@Nullable ContextRefreshedEvent cre) throws NotInitializedException {
+        // Initialization must only be executed in an environment with a connection to Kubernetes.
+        // Skip the initialization if we are in the 'test' profile (e.g. Travis CI).
+        if (cre != null) {
+            Environment environment = cre.getApplicationContext().getEnvironment();
+            if (environment.acceptsProfiles(Profiles.of("test"))) {
+                log.info("Test profile is active. Don't initialize image builder.");
+                return;
+            }
+        }
+
         log.info("Application context refreshed -> initialize image builder.");
         String namespace = buildBotConfig.getNamespaceBuildExecution();
         String serviceAccountName = buildBotConfig.getDockerRegistryServiceAccountName();

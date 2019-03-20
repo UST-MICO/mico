@@ -31,6 +31,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -43,7 +44,7 @@ import org.springframework.web.context.WebApplicationContext;
 import io.github.ust.mico.core.configuration.SwaggerConfig;
 
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = {MicoCoreApplication.class, SwaggerConfig.class})
+@ContextConfiguration(classes = {SwaggerConfig.class})
 @WebAppConfiguration
 @TestPropertySource("classpath:application.properties")
 public class SwaggerTests {
