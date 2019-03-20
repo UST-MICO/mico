@@ -149,7 +149,7 @@ public class DeploymentResource {
                 });
             log.debug("Started build of MicoService '{}' in version '{}'.", micoService.getShortName(), micoService.getVersion());
             buildJobs.add(buildJob);
-            backgroundJobBroker.saveFutureOfJob(micoService.getShortName(), micoService.getShortName(), MicoServiceBackgroundJob.Type.BUILD, buildJob);
+            backgroundJobBroker.saveFutureOfJob(micoService.getShortName(), micoService.getVersion(), MicoServiceBackgroundJob.Type.BUILD, buildJob);
         }
 
         // When all build jobs are finished, create the Kubernetes resources for the deployment of a MicoService

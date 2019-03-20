@@ -176,7 +176,7 @@ public class BackgroundJobBroker {
         if (jobOptional.isPresent()) {
             MicoServiceBackgroundJob job = jobOptional.get();
             if (!job.getStatus().equals(newStatus)) {
-                log.info("job of '{}' '{}' with type '{}' changed its status: {} → {}.",
+                log.info("Job of '{}' '{}' with type '{}' changed its status: {} → {}.",
                     micoServiceShortName, micoServiceVersion, type, job.getStatus(), newStatus);
                 if (newStatus.equals(MicoServiceBackgroundJob.Status.ERROR) && !StringUtils.isEmpty(errorMessage)) {
                     log.warn("Job of '{}' '{}' with type '{}' failed. Reason: {}.",
