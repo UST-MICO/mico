@@ -247,7 +247,7 @@ export class ApiService {
 
         const resource = 'applications/' + shortName + '/' + version + '/promote';
 
-        return this.rest.post<ApiObject>(resource, {version: newVersion}).pipe(flatMap(val => {
+        return this.rest.post<ApiObject>(resource, { version: newVersion }).pipe(flatMap(val => {
             this.getApplications();
             this.getApplicationVersions(val.shortName);
 
@@ -415,6 +415,23 @@ export class ApiService {
      */
     postApplicationDeployCommand(shortName: string, version: string) {
         const resource = 'applications/' + shortName + '/' + version + '/deploy';
+
+        return this.rest.post<any>(resource, null).pipe(map(val => {
+
+            // TODO handle job ressource as soon as the api call returns a job ressource
+            return true;
+        }));
+    }
+
+    /**
+     * commands the mico-core application to undeploy an application
+     * uses: POST applications/{shortName}/{version}/undeploy
+     *
+     * @param shortName the applications shortName
+     * @param version the applications version
+     */
+    postApplicationUndeployCommand(shortName: string, version: string) {
+        const resource = 'applications/' + shortName + '/' + version + '/undeploy';
 
         return this.rest.post<any>(resource, null).pipe(map(val => {
 
@@ -740,12 +757,12 @@ export class ApiService {
 
         return this.rest.post<ApiObject>(url, undefined, undefined, false).pipe(flatMap(val => {
 
-                const stream = this.getService(serviceShortName, serviceVersion);
-                this.getServiceDependees(serviceShortName, serviceVersion);
-                this.getServiceDependencyGraph(serviceShortName, serviceVersion);
+            const stream = this.getService(serviceShortName, serviceVersion);
+            this.getServiceDependees(serviceShortName, serviceVersion);
+            this.getServiceDependencyGraph(serviceShortName, serviceVersion);
 
-                return stream;
-            }));
+            return stream;
+        }));
     }
 
     /**

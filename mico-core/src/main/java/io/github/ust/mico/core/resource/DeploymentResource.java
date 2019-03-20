@@ -19,6 +19,22 @@
 
 package io.github.ust.mico.core.resource;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.Resource;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.github.ust.mico.core.broker.BackgroundJobBroker;
@@ -35,28 +51,10 @@ import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.MediaTypes;
-import org.springframework.hateoas.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
-@RequestMapping(value = "/applications/{shortName}/{version}/deploy", produces = MediaTypes.HAL_JSON_VALUE)
+@RequestMapping(value = "/applications/{shortName}/{version}", produces = MediaTypes.HAL_JSON_VALUE)
 public class DeploymentResource {
     private static final String PATH_VARIABLE_SHORT_NAME = "shortName";
     private static final String PATH_VARIABLE_VERSION = "version";
@@ -82,7 +80,7 @@ public class DeploymentResource {
     @Autowired
     private MicoKubernetesClient micoKubernetesClient;
 
-    @PostMapping
+    @PostMapping("/deploy")
     public ResponseEntity<Resource<MicoApplicationJobStatusResponseDTO>> deploy(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                 @PathVariable(PATH_VARIABLE_VERSION) String version) {
         try {
@@ -154,6 +152,34 @@ public class DeploymentResource {
         return ResponseEntity
             .accepted()
             .body(new Resource<>(new MicoApplicationJobStatusResponseDTO(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(shortName, version))));
+    }
+
+    @PostMapping("/undeploy")
+    public ResponseEntity<Void> undeploy(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                         @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        // Retrieve application from database and check whether it exists
+        Optional<MicoApplication> applicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
+        if (!applicationOptional.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' was not found!");
+        }
+
+        MicoApplication application = applicationOptional.get();
+        log.info("Undeploy MicoApplication '{}' in version '{}' with {} included MicoService(s).",
+            shortName, version, application.getServices().size());
+
+        if (!micoKubernetesClient.isApplicationDeployed(application)) {
+            // Currently we undeploy all MicoServices regardless whether the application is considered
+            // to be deployed or not.
+            // The reason is that there are possible some MicoServices deployed successfully and some not.
+            // This undeployment should delete/scale the actually existing deployments.
+            log.info("MicoApplication '{}' in version '{}' is considered to be not deployed. " +
+                "Nevertheless check if there are any MicoServices that should be undeployed.",
+                application.getShortName(), application.getVersion());
+        }
+        // TODO: Undeploy only if application is deployed or it is in a conflicted state. Covered by mico#535
+        micoKubernetesClient.undeployApplication(application);
+
+        return ResponseEntity.noContent().build();
     }
 
     private void checkIfMicoApplicationIsDeployable(MicoApplication micoApplication) {
