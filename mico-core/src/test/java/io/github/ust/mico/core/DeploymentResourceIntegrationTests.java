@@ -28,6 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.util.EmbeddedRedisServer;
 import org.junit.*;
@@ -68,6 +69,9 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
     private IntegrationTestsUtils integrationTestsUtils;
 
     @Autowired
+    private MicoKubernetesBuildBotConfig micoKubernetesBuildBotConfig;
+
+    @Autowired
     private MicoApplicationRepository applicationRepository;
 
     @Autowired
@@ -91,6 +95,9 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
             tearDown();
             throw e;
         }
+
+        // Set timeout to 60 seconds.
+        micoKubernetesBuildBotConfig.setBuildTimeout(60);
 
         application = getTestApplication();
         service = getTestService();

@@ -117,9 +117,6 @@ public class DeploymentResourceTests {
 
     @Before
     public void setUp() throws KubernetesResourceException {
-        given(imageBuilder.createImageName(anyString(), anyString())).willReturn(
-            TestConstants.IntegrationTest.DOCKER_IMAGE_URI);
-
         Deployment deployment = new DeploymentBuilder()
             .withNewMetadata().withName(DEPLOYMENT_NAME).withNamespace(NAMESPACE_NAME).endMetadata()
             .build();
@@ -154,13 +151,10 @@ public class DeploymentResourceTests {
                     .setNamespace("namespace")
                     .setDeploymentName("deployment")
                     .setServiceNames(CollectionUtils.listOf("service"))));
-        Build build = new Build();
-        build.getMetadata().setName("build-name");
-        given(imageBuilder.build(service)).willReturn(build);
 
         // Assume asynchronous image build operation was successful
-        CompletableFuture<Boolean> futureOfBuildJob = CompletableFuture.completedFuture(true);
-        given(imageBuilder.waitUntilBuildIsFinished(anyString())).willReturn(futureOfBuildJob);
+        CompletableFuture<String> futureOfBuildJob = CompletableFuture.completedFuture(IntegrationTest.DOCKER_IMAGE_URI);
+        given(imageBuilder.build(service)).willReturn(futureOfBuildJob);
 
         MicoServiceBackgroundJob mockJob = new MicoServiceBackgroundJob()
             .setFuture(futureOfBuildJob)

@@ -23,7 +23,6 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.github.ust.mico.core.broker.BackgroundJobBroker;
 import io.github.ust.mico.core.dto.response.MicoApplicationJobStatusResponseDTO;
-import io.github.ust.mico.core.exception.ImageBuildException;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.NotInitializedException;
 import io.github.ust.mico.core.model.*;
@@ -33,7 +32,6 @@ import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoCoreBackgroundJobFactory;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
-import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.MediaTypes;
@@ -48,6 +46,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -153,16 +152,14 @@ public class DeploymentResource {
             backgroundJobBroker.saveFutureOfJob(micoService.getShortName(), micoService.getShortName(), MicoServiceBackgroundJob.Type.BUILD, buildJob);
         }
 
+        // When all build jobs are finished, create the Kubernetes resources for the deployment of a MicoService
         CompletableFuture<List<MicoServiceDeploymentInfo>> allBuildJobs = MicoCoreBackgroundJobFactory.all(buildJobs);
-        allBuildJobs.whenComplete((serviceDeploymentInfos, throwable) -> {
+        allBuildJobs.whenComplete((serviceDeploymentInfosWithNullValues, throwable) -> {
             log.info("All build jobs for deployment of MicoApplication '{}' '{}' finished. Start creating or updating Kubernetes resources.",
                 micoApplication.getShortName(), micoApplication.getVersion());
-
+            // All failed builds lead to a null in the service deployment list.
+            List<MicoServiceDeploymentInfo> serviceDeploymentInfos = serviceDeploymentInfosWithNullValues.stream().filter(Objects::nonNull).collect(toList());
             for (MicoServiceDeploymentInfo serviceDeploymentInfo : serviceDeploymentInfos) {
-                if(serviceDeploymentInfo == null) {
-                    // Build failed
-                    continue;
-                }
                 MicoService micoService = serviceDeploymentInfo.getService();
                 try {
                     KubernetesDeploymentInfo kubernetesDeploymentInfo = createKubernetesResources(serviceDeploymentInfo);
@@ -175,16 +172,9 @@ public class DeploymentResource {
                     log.error(e.getMessage(), e);
                 }
             }
-        }).handle((serviceDeploymentInfos, ex) -> {
-            if (ex != null) {
-                log.error(ex.getMessage(), ex);
-                return null;
-            }
+
+            // After the Kubernetes are created, save the actual deployment information to the database.
             for (MicoServiceDeploymentInfo serviceDeploymentInfo : serviceDeploymentInfos) {
-                if(serviceDeploymentInfo == null) {
-                    // Build failed
-                    continue;
-                }
                 log.debug("Saved new Kubernetes deployment information of '{}' '{}' to database: {}",
                     serviceDeploymentInfo.getService().getShortName(), serviceDeploymentInfo.getService().getVersion(),
                     serviceDeploymentInfo.getKubernetesDeploymentInfo());
@@ -193,9 +183,8 @@ public class DeploymentResource {
             log.info("Finished creating or updating Kubernetes resources for deployment of MicoApplication '{}' '{}'. " +
                 "Start creating or updating interface connections.", micoApplication.getShortName(), micoApplication.getVersion());
 
-            // Set up the connections between the deployed MicoServices
+            // At last set up the connections between the deployed MicoServices
             micoKubernetesClient.createOrUpdateInterfaceConnections(micoApplication);
-            return null;
         });
 
         return ResponseEntity.accepted()
@@ -205,29 +194,20 @@ public class DeploymentResource {
     private MicoServiceDeploymentInfo buildMicoService(MicoServiceDeploymentInfo serviceDeploymentInfo) {
         MicoService micoService = serviceDeploymentInfo.getService();
         try {
-            Build build = imageBuilder.build(micoService);
-            String buildName = build.getMetadata().getName();
-
             // Blocks this thread until build is finished, failed or TimeoutException is thrown
-            // TODO: Refactor to only use one completable future. Will be covered by mico#600
-            CompletableFuture<Boolean> booleanCompletableFuture = imageBuilder.waitUntilBuildIsFinished(buildName);
+            CompletableFuture<String> buildFuture = imageBuilder.build(micoService);
             log.debug("Build of MicoService '{}' in version '{}' finished.", micoService.getShortName(), micoService.getVersion());
 
-            if (booleanCompletableFuture.get()) {
-                String dockerImageUri = imageBuilder.createImageName(micoService.getShortName(), micoService.getVersion());
-                if (dockerImageUri != null) {
-                    log.info("Build of MicoService '{}' in version '{}' finished with image '{}'.",
-                        micoService.getShortName(), micoService.getVersion(), dockerImageUri);
-                    micoService.setDockerImageUri(dockerImageUri);
-                } else {
-                    String errorMessage = "Build of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' failed.";
-                    throw new CompletionException(new RuntimeException(errorMessage));
-                }
+            if (buildFuture.get() != null) {
+                String dockerImageUri = buildFuture.get();
+                log.info("Build of MicoService '{}' in version '{}' finished with image '{}'.",
+                    micoService.getShortName(), micoService.getVersion(), dockerImageUri);
+                micoService.setDockerImageUri(dockerImageUri);
             } else {
-                booleanCompletableFuture.cancel(true);
-                throw new ImageBuildException("Build for service " + micoService.getShortName() + " in version " + micoService.getVersion() + " failed");
+                String errorMessage = "Build of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' didn't return a Docker image URI.";
+                throw new CompletionException(new RuntimeException(errorMessage));
             }
-        } catch (NotInitializedException | InterruptedException | ExecutionException | ImageBuildException | TimeoutException e) {
+        } catch (InterruptedException | ExecutionException | NotInitializedException | TimeoutException e) {
             throw new RuntimeException(e);
         }
         return serviceDeploymentInfo;

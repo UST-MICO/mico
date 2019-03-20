@@ -26,6 +26,7 @@ import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.exception.NotInitializedException;
 import io.github.ust.mico.core.exception.VersionNotSupportedException;
 import io.github.ust.mico.core.model.MicoService;
@@ -67,7 +68,8 @@ public class ImageBuilderIntegrationTests {
     @Autowired
     private IntegrationTestsUtils integrationTestsUtils;
 
-    private KubernetesClient kubernetesClient = new DefaultKubernetesClient();
+    @Autowired
+    private MicoKubernetesBuildBotConfig micoKubernetesBuildBotConfig;
 
     private String namespace;
 
@@ -78,6 +80,7 @@ public class ImageBuilderIntegrationTests {
     public void setUp() {
         namespace = integrationTestsUtils.setUpEnvironment(true);
         integrationTestsUtils.setUpDockerRegistryConnection(namespace);
+        micoKubernetesBuildBotConfig.setBuildTimeout(60);
     }
 
     /**
@@ -122,49 +125,11 @@ public class ImageBuilderIntegrationTests {
             .setGitCloneUrl(TestConstants.IntegrationTest.GIT_CLONE_URL)
             .setDockerfilePath(TestConstants.IntegrationTest.DOCKERFILE_PATH);
 
-        Build build = imageBuilder.build(micoService);
+        CompletableFuture<String> buildJob = imageBuilder.build(micoService);
 
-        try {
-            ObjectMapper mapper = new YAMLMapper();
-            mapper.enable(SerializationFeature.INDENT_OUTPUT);
-            StringWriter sw = new StringWriter();
-            mapper.writeValue(sw, build);
-            log.debug("Build: {}{}", System.lineSeparator(), sw.toString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        String buildName = build.getMetadata().getName();
-
-        CompletableFuture<Boolean> buildPodResult = integrationTestsUtils.waitUntilBuildIsFinished(imageBuilder, buildName, namespace, 10, 1, 60);
-        boolean success = buildPodResult.get();
-        assertTrue("Build failed!", success);
-    }
-
-    // Test if docker image exists is currently not required
-    @Ignore
-    @Test
-    public void dockerImageExists() throws ExecutionException, InterruptedException, TimeoutException, VersionNotSupportedException {
-        String imageName = imageBuilder.createImageName("hello-integration-test", MicoVersion.valueOf("v1.0").toString());
-        boolean result = checkIfDockerImageExists(imageName);
-        assertTrue("Pod creation failed!", result);
-    }
-
-    private boolean checkIfDockerImageExists(String imagePath) throws ExecutionException, InterruptedException, TimeoutException {
-        String dockerRegistrySecretName = integrationTestsUtils.getDockerRegistrySecretName();
-        Pod pod = new PodBuilder()
-            .withNewMetadata().withName("testpod").withNamespace(namespace).endMetadata()
-            .withSpec(new PodSpecBuilder()
-                .withContainers(new ContainerBuilder().withName("testpod-container").withImage(imagePath).build())
-                .withImagePullSecrets(
-                    new LocalObjectReferenceBuilder().withName(dockerRegistrySecretName).build()
-                ).build())
-            .build();
-        Pod createdPod = kubernetesClient.pods().inNamespace(namespace).createOrReplace(pod);
-        String podName = createdPod.getMetadata().getName();
-        CompletableFuture<Boolean> podCreationResult = integrationTestsUtils.waitUntilPodIsRunning(
-            podName, namespace, 1, 1, 20);
-        return podCreationResult.get();
+        //CompletableFuture<Boolean> buildPodResult = integrationTestsUtils.waitUntilBuildIsFinished(imageBuilder, buildName, namespace, 10, 1, 60);
+        String dockerImageURI = buildJob.get();
+        assertNotNull("Build failed!", dockerImageURI);
     }
 
 }

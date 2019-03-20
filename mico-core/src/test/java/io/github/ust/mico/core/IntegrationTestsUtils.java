@@ -298,46 +298,6 @@ public class IntegrationTestsUtils {
     }
 
     /**
-     * Create a future that polls the build pod until the build is finished.
-     *
-     * @param imageBuilder the {@link ImageBuilder} object
-     * @param buildName    the build name
-     * @param namespace    the Kubernetes namespace
-     * @param initialDelay the initial delay in seconds
-     * @param period       the period in seconds
-     * @param timeout      the timeout in seconds
-     * @return CompletableFuture with a boolean. True indicates that it finished successful.
-     * @throws InterruptedException if the build process is interrupted unexpectedly
-     * @throws TimeoutException     if the build does not finish or fail in the expected time
-     * @throws ExecutionException   if the build process fails unexpectedly
-     */
-    CompletableFuture<Boolean> waitUntilBuildIsFinished(ImageBuilder imageBuilder, String buildName, String namespace, int initialDelay, int period, int timeout) throws InterruptedException, ExecutionException, TimeoutException {
-        CompletableFuture<Boolean> completionFuture = new CompletableFuture<>();
-
-        log.info("Wait until build '{}' is finished", buildName);
-        // Create a future that polls every second with a delay of 10 seconds.
-        buildPodStatusChecker.scheduleAtFixedRate(() -> {
-
-            Build build = imageBuilder.getBuild(buildName);
-            if (build.getStatus() != null && build.getStatus().getCluster() != null) {
-                String buildPodName = build.getStatus().getCluster().getPodName();
-                Pod buildPod = kubernetesClient.pods().inNamespace(namespace).withName(buildPodName).get();
-
-                log.debug("Current build phase: {}", buildPod.getStatus().getPhase());
-                if (buildPod.getStatus().getPhase().equals("Succeeded")) {
-                    completionFuture.complete(true);
-                } else if (buildPod.getStatus().getPhase().equals("Failed")) {
-                    completionFuture.complete(false);
-                }
-            }
-        }, initialDelay, period, TimeUnit.SECONDS);
-
-        completionFuture.get(timeout, TimeUnit.SECONDS);
-
-        return completionFuture;
-    }
-
-    /**
      * Checks if the specified pod is running
      *
      * @param podName   the pod name
