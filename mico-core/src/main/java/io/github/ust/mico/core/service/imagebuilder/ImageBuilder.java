@@ -113,7 +113,6 @@ public class ImageBuilder {
                 buildClient).inNamespace(namespace);
         }
 
-        // TODO Use thread pool
         scheduledBuildStatusCheckService = Executors.newSingleThreadScheduledExecutor();
     }
 

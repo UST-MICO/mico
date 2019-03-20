@@ -192,10 +192,6 @@ public class IntegrationTestsUtils {
 
         log.info("Finished with build.");
 
-        // When completed cancel future
-        // TODO
-        //completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
-
         return completionFuture;
     }
 

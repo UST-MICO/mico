@@ -29,9 +29,9 @@ import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.service.MicoCoreBackgroundJobFactory;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
+import io.github.ust.mico.core.util.FutureUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.MediaTypes;
@@ -153,7 +153,7 @@ public class DeploymentResource {
         }
 
         // When all build jobs are finished, create the Kubernetes resources for the deployment of a MicoService
-        CompletableFuture<List<MicoServiceDeploymentInfo>> allBuildJobs = MicoCoreBackgroundJobFactory.all(buildJobs);
+        CompletableFuture<List<MicoServiceDeploymentInfo>> allBuildJobs = FutureUtils.all(buildJobs);
         allBuildJobs.whenComplete((serviceDeploymentInfosWithNullValues, throwable) -> {
             log.info("All build jobs for deployment of MicoApplication '{}' '{}' finished. Start creating or updating Kubernetes resources.",
                 micoApplication.getShortName(), micoApplication.getVersion());
