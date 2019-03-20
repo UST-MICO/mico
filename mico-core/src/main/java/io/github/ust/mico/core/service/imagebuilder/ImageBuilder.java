@@ -282,6 +282,29 @@ public class ImageBuilder {
     }
 
     /**
+     * Creates a build name based on the service name and version
+     * that is used for the build pod.
+     *
+     * @param serviceName    the name of the MICO service
+     * @param serviceVersion the version of the MICO service
+     * @return the name of the build pod
+     */
+    public String createBuildName(String serviceName, String serviceVersion) {
+        return kubernetesNameNormalizer.normalizeName("build-" + serviceName + "-" + serviceVersion);
+    }
+
+    /**
+     * Creates a build name based on the service name and version
+     * that is used for the build pod.
+     *
+     * @param service the {@link MicoService}.
+     * @return the image name.
+     */
+    public String createBuildName(MicoService service) {
+        return createBuildName(service.getShortName(), service.getVersion());
+    }
+
+    /**
      * Deletes the build for a given build name.
      *
      * @param buildName the name of the build.

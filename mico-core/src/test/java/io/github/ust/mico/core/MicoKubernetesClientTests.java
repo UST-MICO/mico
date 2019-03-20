@@ -307,7 +307,7 @@ public class MicoKubernetesClientTests {
                 .withNewMetadata()
                 .withLabels(CollectionUtils.mapOf(
                     ImageBuilder.BUILD_CRD_GROUP + "/buildName",
-                    imageBuilder.createImageName(micoService)))
+                    imageBuilder.createBuildName(micoService)))
                 .endMetadata()
                 .build());
 
@@ -325,7 +325,7 @@ public class MicoKubernetesClientTests {
         List<Pod> actualPods = mockServer.getClient()
             .pods()
             .inAnyNamespace()
-            .withLabel(ImageBuilder.BUILD_CRD_GROUP + "/buildName", imageBuilder.createImageName(micoService))
+            .withLabel(ImageBuilder.BUILD_CRD_GROUP + "/buildName", imageBuilder.createBuildName(micoService))
             .list().getItems();
         assertNull("Expected Kubernetes deployment is deleted", actualDeployment);
         assertNull("Expected Kubernetes service is deleted", actualService);

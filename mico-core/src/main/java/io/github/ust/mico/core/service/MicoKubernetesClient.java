@@ -654,13 +654,12 @@ public class MicoKubernetesClient {
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}
      */
     private void undeploy(MicoServiceDeploymentInfo serviceDeploymentInfo) {
-    	log.debug("Undeploy MicoService '{}' in version '{}'.",
-    		serviceDeploymentInfo.getService().getShortName(),
-    		serviceDeploymentInfo.getService().getVersion());
-
     	KubernetesDeploymentInfo kubernetesDeploymentInfo = serviceDeploymentInfo.getKubernetesDeploymentInfo();
 
         // Delete Kubernetes Deployment
+        log.debug("Delete the Kubernetes deployment '{}' of MicoService '{}' in version '{}'.",
+            kubernetesDeploymentInfo.getDeploymentName(), serviceDeploymentInfo.getService().getShortName(),
+            serviceDeploymentInfo.getService().getVersion());
     	kubernetesClient
     		.apps()
     		.deployments()
@@ -670,6 +669,9 @@ public class MicoKubernetesClient {
 
         // Delete Kubernetes Services
         for (String kubernetesServiceName : kubernetesDeploymentInfo.getServiceNames()) {
+            log.debug("Delete the Kubernetes service '{}' of MicoService '{}' in version '{}'.",
+                kubernetesServiceName, serviceDeploymentInfo.getService().getShortName(),
+                serviceDeploymentInfo.getService().getVersion());
             kubernetesClient
                 .services()
                 .inNamespace(kubernetesDeploymentInfo.getNamespace())
@@ -679,19 +681,17 @@ public class MicoKubernetesClient {
 
     	// Clean up Kubernetes Build resources
 		log.debug("Clean up build resources for MicoService '{}' in version '{}'.",
-			serviceDeploymentInfo.getService().getShortName(),
-			serviceDeploymentInfo.getService().getVersion());
+			serviceDeploymentInfo.getService().getShortName(), serviceDeploymentInfo.getService().getVersion());
 		imageBuilder.deleteBuild(serviceDeploymentInfo.getService());
 		kubernetesClient
 			.pods()
 			.inNamespace(buildBotConfig.getNamespaceBuildExecution())
-			.withLabel(ImageBuilder.BUILD_CRD_GROUP + "/buildName", imageBuilder.createImageName(serviceDeploymentInfo.getService()))
+			.withLabel(ImageBuilder.BUILD_CRD_GROUP + "/buildName", imageBuilder.createBuildName(serviceDeploymentInfo.getService()))
 			.delete();
     	
     	// Delete Kubernetes deployment info in database
 		log.debug("Delete Kubernetes deployment info in database for MicoService '{}' in version '{}'.",
-			serviceDeploymentInfo.getService().getShortName(),
-			serviceDeploymentInfo.getService().getVersion());
+			serviceDeploymentInfo.getService().getShortName(), serviceDeploymentInfo.getService().getVersion());
 		kubernetesDeploymentInfoRepository.delete(serviceDeploymentInfo.getKubernetesDeploymentInfo());
     }
     
