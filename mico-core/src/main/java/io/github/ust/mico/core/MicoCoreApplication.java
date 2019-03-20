@@ -19,11 +19,15 @@
 
 package io.github.ust.mico.core;
 
+import io.github.ust.mico.core.persistence.MicoBackgroundJobRepository;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
+import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
 
@@ -31,7 +35,10 @@ import org.springframework.web.client.RestTemplate;
  * Entry point for the MICO core application.
  */
 @SpringBootApplication
-@EnableNeo4jRepositories
+@EnableNeo4jRepositories(basePackages = "io.github.ust.mico.core.persistence",
+    excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = MicoBackgroundJobRepository.class))
+@EnableRedisRepositories(basePackages = "io.github.ust.mico.core.persistence",
+    includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = MicoBackgroundJobRepository.class))
 @EnableScheduling
 public class MicoCoreApplication {
 
@@ -40,13 +47,12 @@ public class MicoCoreApplication {
     }
 
     /**
-     * https://gist.github.com/RealDeanZhao/38821bc1efeb7e2a9bcd554cc06cdf96
      * @param builder
      * @return
+     * @see <a href="https://gist.github.com/RealDeanZhao/38821bc1efeb7e2a9bcd554cc06cdf96">RealDeanZhao/autowire-resttemplate.md</a>
      */
     @Bean
     public RestTemplate restTemplate(RestTemplateBuilder builder) {
         return builder.build();
     }
-
 }

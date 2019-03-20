@@ -3,11 +3,18 @@
         <h3>Application {{application?.name}}</h3>
 
         <!-- BUTTONS -->
-        <mat-button-toggle mat-raised-button (click)="deployApplication()">
+        <mat-button-toggle mat-raised-button (click)="deployApplication()" class="mr2">
             <span>
                 deploy
             </span>
             <mat-icon>cloud_upload</mat-icon>
+        </mat-button-toggle>
+
+        <mat-button-toggle mat-raised-button (click)="undeployApplication()" class="mh2">
+            <span>
+                undeploy
+            </span>
+            <mat-icon>cloud_off</mat-icon>
         </mat-button-toggle>
 
         <span *ngIf="isLatestVersion()" class="mh2">
@@ -62,7 +69,7 @@
             </div>
             <ng-container *ngIf="edit">
                 <!-- edit version (dynamic form) -->
-                <mico-form [modelUrl]="'remote/MicoApplicationDTO'"
+                <mico-form [modelUrl]="'remote/MicoApplicationRequestDTO'"
                     [filter]="['deploymentStatus', 'deploymentInfo', 'services']" [isBlacklist]="true"
                     (data)="applicationData = $event" [startData]="application"></mico-form>
 
@@ -77,7 +84,7 @@
             </ng-container>
             <ng-container *ngIf="!edit">
                 <!-- display version (data-view) -->
-                <mico-data [modelUrl]="'remote/MicoApplicationDTO'" [startData]="application"></mico-data>
+                <mico-data [modelUrl]="'remote/MicoApplicationResponseDTO'" [startData]="application"></mico-data>
             </ng-container>
         </mat-tab>
         <!-- STATUS TAB -->

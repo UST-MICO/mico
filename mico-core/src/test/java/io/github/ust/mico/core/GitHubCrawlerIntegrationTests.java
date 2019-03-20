@@ -19,12 +19,10 @@
 
 package io.github.ust.mico.core;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.service.GitHubCrawler;
+import static org.junit.Assert.assertEquals;
+
+import java.io.IOException;
+
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -32,9 +30,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.io.IOException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
-import static org.junit.Assert.assertEquals;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.GitHubCrawler;
 
 @Category(IntegrationTests.class)
 @RunWith(SpringRunner.class)
@@ -44,6 +46,9 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
     private static final String REPO_URI_API = "https://api.github.com/repos/octokit/octokit.rb";
     private static final String REPO_URI_HTML = "https://github.com/octokit/octokit.rb";
     private static final String RELEASE = "v4.12.0";
+
+    private static final String REPO_HELLO_URI_API = "https://api.github.com/repos/UST-MICO/hello";
+    private static final String HELLO_REPO_SUB_DIR_DOCKERFILE = "DockerfileSubDir/Dockerfile";
 
     @Autowired
     private MicoServiceRepository serviceRepository;
@@ -62,7 +67,6 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
         assertEquals(service.getId(), readService.getId());
         assertEquals(service.getVersion(), readService.getVersion());
         assertEquals(service.getGitCloneUrl(), readService.getGitCloneUrl());
-        assertEquals(service.getGitReleaseInfoUrl(), readService.getGitReleaseInfoUrl());
         assertEquals(service.getName(), readService.getName());
     }
 
@@ -77,7 +81,6 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
         assertEquals(service.getId(), readService.getId());
         assertEquals(service.getVersion(), readService.getVersion());
         assertEquals(service.getGitCloneUrl(), readService.getGitCloneUrl());
-        assertEquals(service.getGitReleaseInfoUrl(), readService.getGitReleaseInfoUrl());
         assertEquals(service.getName(), readService.getName());
     }
 
@@ -92,7 +95,6 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
         assertEquals(service.getId(), readService.getId());
         assertEquals(service.getVersion(), readService.getVersion());
         assertEquals(service.getGitCloneUrl(), readService.getGitCloneUrl());
-        assertEquals(service.getGitReleaseInfoUrl(), readService.getGitReleaseInfoUrl());
         assertEquals(service.getName(), readService.getName());
     }
 
@@ -104,6 +106,18 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
         prettyPrint(service);
 
         assertEquals("Expected that repo name 'octokit.rb' is normalized", "octokit-rb", service.getShortName());
+    }
+
+    @Test
+    public void testCrawlerInSubDir() throws IOException {
+        MicoService service = crawler.crawlGitHubRepoLatestRelease(REPO_HELLO_URI_API, HELLO_REPO_SUB_DIR_DOCKERFILE);
+        assertEquals(HELLO_REPO_SUB_DIR_DOCKERFILE, service.getDockerfilePath());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testCrawlerInSubDirNotThere() throws IOException {
+        String dockerfilePath = HELLO_REPO_SUB_DIR_DOCKERFILE + "NOT_THERE";
+        crawler.crawlGitHubRepoLatestRelease(REPO_HELLO_URI_API, dockerfilePath);
     }
 
     private void prettyPrint(Object object) {

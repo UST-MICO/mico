@@ -19,16 +19,19 @@
 
 package io.github.ust.mico.core.util;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
 import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
+
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
+
+import org.springframework.stereotype.Component;
 
 /**
  * Normalizes names to be valid Kubernetes resource names.
  */
-@Slf4j
 @Component
 public class KubernetesNameNormalizer {
 
@@ -39,6 +42,13 @@ public class KubernetesNameNormalizer {
     private final static String REGEX_MULTIPLE_DASHES = "[-]+";
     private final static String REGEX_FIRST_OR_LAST_CHAR_IS_A_DASH = "^-|-$";
     private final static String REGEX_MATCH_VALID_FIRST_CHAR = "^[a-z]+.*";
+
+    /**
+     * A max limit of the MICO names ({@link MicoApplication}, {@link MicoService} and {@link MicoServiceInterface}) is
+     * required because they are used as values of Kubernetes labels that have a limit of 63. Furthermore the name is
+     * used to create a UID that adds 9 characters to it. Therefore the limit have to be set to 54.
+     */
+    public final static int MICO_NAME_MAX_SIZE = 54;
 
     /**
      * Normalizes a name so it is a valid Kubernetes resource name.
@@ -71,10 +81,33 @@ public class KubernetesNameNormalizer {
             result = "short-name-" + s8;
         }
 
-        if (!result.matches(Patterns.KUBERNETES_NAMING_REGEX) || result.length() > 253) {
+        if (!result.matches(Patterns.KUBERNETES_NAMING_REGEX) || result.length() > MICO_NAME_MAX_SIZE) {
             throw new IllegalArgumentException("Name '" + name + "' could not be normalized correctly");
         }
 
         return result;
     }
+    
+    /**
+     * Creates a build name based on the short name
+     * and version of a service.
+     *
+     * @param serviceShortName the short name of the {@link MicoService}.
+     * @param serviceVersion the version of the {@link MicoService}.
+     * @return the name of the {@link Build}.
+     */
+    public String createBuildName(String serviceShortName, String serviceVersion) {
+        return normalizeName("build-" + serviceShortName + "-" + serviceVersion);
+    }
+    
+    /**
+     * Creates a build name based on a service.
+     *
+     * @param service the {@link MicoService}.
+     * @return the name of the {@link Build}.
+     */
+    public String createBuildName(MicoService service) {
+        return createBuildName(service.getShortName(), service.getVersion());
+    }
+    
 }

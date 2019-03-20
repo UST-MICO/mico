@@ -8,6 +8,7 @@ io.github.ust.mico.core.exception
 
    AmbiguousKubernetesResourceException
    DeploymentException
+   GlobalExceptionHandler
    ImageBuildException
    KubernetesResourceException
    NotInitializedException

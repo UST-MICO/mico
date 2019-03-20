@@ -1,7 +1,7 @@
-sudo: required
+sudo: false
 language: java
-services:
-  - docker
+env:
+    - spring_profiles_active=test
 cache:
   npm: true
   directories:

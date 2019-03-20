@@ -13,6 +13,7 @@ RUN mkdir -p mico-core/target/dependency && (cd mico-core/target/dependency; jar
 FROM openjdk:8-jre-alpine
 ENV JAVA_OPTS="-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap"
 VOLUME /tmp
+EXPOSE 8080
 ARG DEPENDENCY=/workspace/mico-core/target/dependency
 COPY --from=builder ${DEPENDENCY}/BOOT-INF/lib /app/lib
 COPY --from=builder ${DEPENDENCY}/META-INF /app/META-INF

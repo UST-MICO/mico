@@ -1,3 +1,5 @@
+.. java:import:: java.util.regex Pattern
+
 .. java:import:: com.github.zafarkhaja.semver ParseException
 
 .. java:import:: com.github.zafarkhaja.semver UnexpectedCharacterException
@@ -5,6 +7,8 @@
 .. java:import:: com.github.zafarkhaja.semver Version
 
 .. java:import:: io.github.ust.mico.core.exception VersionNotSupportedException
+
+.. java:import:: io.github.ust.mico.core.util Patterns
 
 .. java:import:: lombok Getter
 
@@ -202,8 +206,8 @@ incrementMajorVersion
 
    :param preRelease: the pre-release version to append.
    :throws IllegalArgumentException: if the input string is \ ``NULL``\  or empty.
-   :throws UnexpectedCharacterException: is a special case of \ ``ParseException``\ .
    :throws ParseException: when invalid version string is provided.
+   :throws UnexpectedCharacterException: is a special case of \ ``ParseException``\ .
    :return: the updated instance of the \ ``MicoVersion``\  class.
 
 incrementMinorVersion
@@ -226,8 +230,8 @@ incrementMinorVersion
 
    :param preRelease: the pre-release version to append.
    :throws IllegalArgumentException: if the input string is \ ``NULL``\  or empty.
-   :throws UnexpectedCharacterException: is a special case of \ ``ParseException``\ .
    :throws ParseException: when invalid version string is provided.
+   :throws UnexpectedCharacterException: is a special case of \ ``ParseException``\ .
    :return: the updated instance of the \ ``MicoVersion``\  class.
 
 incrementPatchVersion
@@ -250,8 +254,8 @@ incrementPatchVersion
 
    :param preRelease: the pre-release version to append.
    :throws IllegalArgumentException: if the input string is \ ``NULL``\  or empty.
-   :throws UnexpectedCharacterException: is a special case of \ ``ParseException``\ .
    :throws ParseException: when invalid version string is provided.
+   :throws UnexpectedCharacterException: is a special case of \ ``ParseException``\ .
    :return: the updated instance of the \ ``MicoVersion``\  class.
 
 incrementPreReleaseVersion
@@ -296,8 +300,8 @@ setBuildMetadata
 
    :param build: the build metadata to set.
    :throws IllegalArgumentException: if the input string is \ ``NULL``\  or empty.
-   :throws UnexpectedCharacterException: is a special case of \ ``ParseException``\ .
    :throws ParseException: when invalid version string is provided.
+   :throws UnexpectedCharacterException: is a special case of \ ``ParseException``\ .
    :return: the updated instance of the \ ``MicoVersion``\  class.
 
 setPreReleaseVersion
@@ -310,8 +314,8 @@ setPreReleaseVersion
 
    :param preRelease: the pre-release version to set.
    :throws IllegalArgumentException: if the input string is \ ``NULL``\  or empty.
-   :throws UnexpectedCharacterException: is a special case of \ ``ParseException``\ .
    :throws ParseException: when invalid version string is provided.
+   :throws UnexpectedCharacterException: is a special case of \ ``ParseException``\ .
    :return: the updated instance of the \ ``MicoVersion``\  class.
 
 toString
@@ -328,7 +332,7 @@ valueOf
 .. java:method:: public static MicoVersion valueOf(String version) throws VersionNotSupportedException
    :outertype: MicoVersion
 
-   Creates a new instance of \ ``MicoVersion``\  as a result of parsing the specified version string. Prefixes are possible as everything before the first digit in the given version string is treated as a prefix to the actual semantic version.
+   Creates a new instance of \ ``MicoVersion``\  as a result of parsing the specified version string. Prefixes are possible as everything before the first digit in the given version string is treated as a prefix to the actual semantic version. Note that the prefix can only consist of letters.
 
    :param version: the version string to parse (may include a prefix).
    :throws VersionNotSupportedException: if the version is not a semantic version with a string prefix.

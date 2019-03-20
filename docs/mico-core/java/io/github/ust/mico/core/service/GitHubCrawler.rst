@@ -8,19 +8,21 @@
 
 .. java:import:: io.github.ust.mico.core.model MicoServiceCrawlingOrigin
 
+.. java:import:: io.github.ust.mico.core.util KubernetesNameNormalizer
+
 .. java:import:: lombok.extern.slf4j Slf4j
 
-.. java:import:: org.springframework.boot.web.client RestTemplateBuilder
+.. java:import:: org.springframework.beans.factory.annotation Autowired
 
 .. java:import:: org.springframework.http ResponseEntity
+
+.. java:import:: org.springframework.stereotype Component
 
 .. java:import:: org.springframework.web.client RestTemplate
 
 .. java:import:: java.io IOException
 
-.. java:import:: java.util ArrayList
-
-.. java:import:: java.util List
+.. java:import:: java.util LinkedList
 
 GitHubCrawler
 =============
@@ -28,39 +30,39 @@ GitHubCrawler
 .. java:package:: io.github.ust.mico.core.service
    :noindex:
 
-.. java:type:: @Slf4j public class GitHubCrawler
+.. java:type:: @Slf4j @Component public class GitHubCrawler
 
 Constructors
 ------------
 GitHubCrawler
 ^^^^^^^^^^^^^
 
-.. java:constructor:: public GitHubCrawler(RestTemplateBuilder restTemplateBuilder)
+.. java:constructor:: @Autowired public GitHubCrawler(RestTemplate restTemplate, KubernetesNameNormalizer kubernetesNameNormalizer)
    :outertype: GitHubCrawler
 
 Methods
 -------
-crawlGitHubRepoAllReleases
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+adaptUriForGitHubApi
+^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public List<MicoService> crawlGitHubRepoAllReleases(String uri)
+.. java:method:: public String adaptUriForGitHubApi(String uri)
    :outertype: GitHubCrawler
 
 crawlGitHubRepoLatestRelease
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public MicoService crawlGitHubRepoLatestRelease(String uri)
+.. java:method:: public MicoService crawlGitHubRepoLatestRelease(String uri) throws IOException
    :outertype: GitHubCrawler
 
 crawlGitHubRepoSpecificRelease
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public MicoService crawlGitHubRepoSpecificRelease(String uri, String version)
+.. java:method:: public MicoService crawlGitHubRepoSpecificRelease(String uri, String version) throws IOException
    :outertype: GitHubCrawler
 
-makeUriToMatchGitHubApi
-^^^^^^^^^^^^^^^^^^^^^^^
+getVersionsFromGitHubRepo
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public String makeUriToMatchGitHubApi(String uri)
+.. java:method:: public LinkedList<String> getVersionsFromGitHubRepo(String uri) throws IOException
    :outertype: GitHubCrawler
 

@@ -59,8 +59,12 @@ public class KubernetesNameNormalizerTests {
             equalTo("first-second"));
 
         collector.checkThat("Combined characters should be replaced",
-            normalizer.normalizeName("r̀r̂r̃r̈rʼŕřt̀t̂ẗţỳỹẙyʼy̎ýÿŷp̂p̈s̀s̃s̈s̊sʼs̸śŝŞşšd̂d̃d̈ďdʼḑf̈f̸g̀g̃g̈gʼģq\u200C\u200B́ĝǧḧĥj̈jʼḱk̂k̈k̸ǩl̂l̃l̈Łłẅẍc̃c̈c̊cʼc̸Çççćĉčv̂v̈vʼv̸b́b̧ǹn̂n̈n̊nʼńņňñm̀m̂m̃m̈\u200C\u200Bm̊m̌ǵß"),
-            equalTo("rrrrrrrttttyyyyyyyyppsssssssssssddddddffgggggqgghhjjkkkkklllwxcccccccccccvvvvbbnnnnnnnnnmmmmmmg"));
+            normalizer.normalizeName("r̀r̂r̃r̈rʼŕřt̀t̂ẗţỳỹẙyʼy̎ýÿŷp̂p̈s̀s̃s̈s̊sʼs̸śŝŞşšd̂d̃d̈ďdʼḑf̈f̸g̀g̃g̈gʼģq\u200C\u200B́ĝǧḧĥ"),
+            equalTo("rrrrrrrttttyyyyyyyyppsssssssssssddddddffgggggqgghh"));
+
+        collector.checkThat("Combined characters should be replaced",
+            normalizer.normalizeName("j̈jʼḱk̂k̈k̸ǩl̂l̃l̈Łłẅẍc̃c̈c̊cʼc̸Çççćĉčv̂v̈vʼv̸b́b̧ǹn̂n̈n̊nʼńņňñm̀m̂m̃m̈\u200C\u200Bm̊m̌ǵß"),
+            equalTo("jjkkkkklllwxcccccccccccvvvvbbnnnnnnnnnmmmmmmg"));
 
         collector.checkThat("Special characters '_' and '.' should be replaced by a dash",
             normalizer.normalizeName("name.js_notes"),
@@ -85,5 +89,10 @@ public class KubernetesNameNormalizerTests {
         collector.checkThat("Last character is a dash",
             normalizer.normalizeName("name-"),
             equalTo("name"));
+    }
+
+    @Test(expected=IllegalArgumentException.class)
+    public void nameToLong() {
+        normalizer.normalizeName("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"); //55 chars
     }
 }

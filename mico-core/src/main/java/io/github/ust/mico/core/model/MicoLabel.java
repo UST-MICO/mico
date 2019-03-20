@@ -19,68 +19,57 @@
 
 package io.github.ust.mico.core.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
-import io.github.ust.mico.core.util.Patterns;
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.Extension;
-import io.swagger.annotations.ExtensionProperty;
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+
+import io.github.ust.mico.core.dto.request.MicoLabelRequestDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
-import java.util.Map;
-
 /**
- * Represents a simple key-value pair label.
+ * A label represented as a simple key-value pair.
  * Necessary since Neo4j does not allow to persist
- * {@link Map} implementations.
+ * properties of composite types.
  *
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class MicoLabel {
+	
+	@Id
+	@GeneratedValue
+	private Long id;
 
     /**
      * Key of the label.
      */
-    @ApiModelProperty(required = true, extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Key"),
-            @ExtensionProperty(name = "pattern", value = Patterns.KUBERNETES_LABEL_KEY_REGEX),
-            @ExtensionProperty(name = "minLength", value = "1"),
-            @ExtensionProperty(name = "maxLength", value = "253"),
-            @ExtensionProperty(name = "x-order", value = "10"),
-            @ExtensionProperty(name = "description", value = "Key of the label.")
-        }
-    )})
-    @Size(min = 1, max = 253, message = "must have a length between 1 and 63 without prefix or a length between 1 and 253 with prefix")
-    @Pattern(regexp = Patterns.KUBERNETES_LABEL_KEY_REGEX, message = Patterns.KUBERNETES_LABEL_KEY_MESSAGE)
     private String key;
 
     /**
      * Value of the label.
      */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Value"),
-            @ExtensionProperty(name = "pattern", value = Patterns.KUBERNETES_LABEL_VALUE_REGEX),
-            @ExtensionProperty(name = "minLength", value = "0"),
-            @ExtensionProperty(name = "maxLength", value = "63"),
-            @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "Value of the label.")
-        }
-    )})
-    @Size(max = 63, message = "must be 63 characters or less")
-    @Pattern(regexp = Patterns.KUBERNETES_LABEL_VALUE_REGEX, message = Patterns.KUBERNETES_LABEL_VALUE_MESSAGE)
     private String value;
 
+
+    // ----------------------
+    // -> Static Creators ---
+    // ----------------------
+    
+    /**
+     * Creates a new {@code MicoLabel} based on a {@code MicoLabelRequestDTO}.
+     * Note that the id will be set to {@code null}.
+     * 
+     * @param labelDto the {@link MicoLabelRequestDTO}.
+     * @return a {@link MicoLabel}.
+     */
+    public static MicoLabel valueOf(MicoLabelRequestDTO labelDto) {
+        return new MicoLabel()
+                .setKey(labelDto.getKey())
+                .setValue(labelDto.getValue());
+    }
+    
 }

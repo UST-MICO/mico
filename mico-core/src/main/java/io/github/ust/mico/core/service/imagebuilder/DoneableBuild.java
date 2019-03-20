@@ -23,9 +23,12 @@ import io.fabric8.kubernetes.api.builder.Function;
 import io.fabric8.kubernetes.client.CustomResourceDoneable;
 import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
 
-@SuppressWarnings("SpellCheckingInspection")
+@SuppressWarnings("rawtypes")
 public class DoneableBuild extends CustomResourceDoneable<Build> {
-    public DoneableBuild(Build resource, Function function) {
+	
+	@SuppressWarnings("unchecked")
+	public DoneableBuild(Build resource, Function function) {
         super(resource, function);
     }
+	
 }

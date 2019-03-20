@@ -17,12 +17,11 @@
  * under the License.
  */
 
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { ApiService } from 'src/app/api/api.service';
 import { Subscription } from 'rxjs';
 import { MatDialog } from '@angular/material';
 import { ServicePickerComponent } from '../service-picker/service-picker.component';
-import { ApiModel } from 'src/app/api/apimodel';
 import { safeUnsubscribe } from 'src/app/util/utils';
 
 @Component({
@@ -30,7 +29,7 @@ import { safeUnsubscribe } from 'src/app/util/utils';
     templateUrl: './create-application.component.html',
     styleUrls: ['./create-application.component.css']
 })
-export class CreateApplicationComponent implements OnInit, OnDestroy {
+export class CreateApplicationComponent implements OnDestroy {
 
     subDependeesDialog: Subscription;
     subModelDefinitions: Subscription;
@@ -38,19 +37,10 @@ export class CreateApplicationComponent implements OnInit, OnDestroy {
     applicationData;
     services = [];
 
-    filterList: string[];
-
     constructor(
         private apiService: ApiService,
         private dialog: MatDialog,
     ) {
-    }
-
-    ngOnInit() {
-        // only show required fields
-        this.subModelDefinitions = this.apiService.getModelDefinitions().subscribe(val => {
-            this.filterList = (val['MicoApplicationDTO'] as ApiModel).required;
-        });
     }
 
     ngOnDestroy() {
