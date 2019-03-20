@@ -54,7 +54,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
-@RequestMapping(value = "/applications/{shortName}/{version}/deploy", produces = MediaTypes.HAL_JSON_VALUE)
+@RequestMapping(value = "/applications/{shortName}/{version}", produces = MediaTypes.HAL_JSON_VALUE)
 public class DeploymentResource {
     private static final String PATH_VARIABLE_SHORT_NAME = "shortName";
     private static final String PATH_VARIABLE_VERSION = "version";
@@ -80,7 +80,7 @@ public class DeploymentResource {
     @Autowired
     private MicoKubernetesClient micoKubernetesClient;
 
-    @PostMapping
+    @PostMapping("/deploy")
     public ResponseEntity<Resource<MicoApplicationJobStatusResponseDTO>> deploy(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                 @PathVariable(PATH_VARIABLE_VERSION) String version) {
         try {
@@ -154,7 +154,7 @@ public class DeploymentResource {
             .body(new Resource<>(new MicoApplicationJobStatusResponseDTO(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(shortName, version))));
     }
 
-    @DeleteMapping
+    @PostMapping("/undeploy")
     public ResponseEntity<Void> undeploy(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                          @PathVariable(PATH_VARIABLE_VERSION) String version) {
         // Retrieve application from database and check whether it exists
