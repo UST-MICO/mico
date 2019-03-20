@@ -32,12 +32,12 @@ public enum MicoApplicationDeploymentStatus {
 
 	@JsonProperty("Deployed")
     DEPLOYED("Deployed"),
+    @JsonProperty("Undeployed")
+	UNDEPLOYED("Undeployed"),
     @JsonProperty("Pending")
     PENDING("Pending"),
     @JsonProperty("Incompleted")
     INCOMPLETED("Incompleted"),
-    @JsonProperty("NotDeployed")
-    NOT_DEPLOYED("NotDeployed"),
     @JsonProperty("Unknown")
     UNKNOWN("Unknown");
 	
