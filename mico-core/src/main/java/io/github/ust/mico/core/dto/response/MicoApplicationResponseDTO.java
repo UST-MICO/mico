@@ -49,7 +49,7 @@ import lombok.experimental.Accessors;
 public class MicoApplicationResponseDTO extends MicoApplicationRequestDTO {
 	
     // ----------------------
-    // -> Optional fields ---
+    // -> Optional Fields ---
     // ----------------------
 
     /**

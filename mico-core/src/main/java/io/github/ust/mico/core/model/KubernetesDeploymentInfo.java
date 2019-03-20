@@ -54,7 +54,7 @@ public class KubernetesDeploymentInfo {
 
 
     // ----------------------
-    // -> Optional fields ---
+    // -> Optional Fields ---
     // ----------------------
 
     /**

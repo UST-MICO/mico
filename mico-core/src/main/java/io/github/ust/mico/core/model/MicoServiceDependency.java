@@ -46,7 +46,7 @@ public class MicoServiceDependency {
 
 
     // ----------------------
-    // -> Required fields ---
+    // -> Required Fields ---
     // ----------------------
 
     /**

@@ -48,7 +48,7 @@ import lombok.experimental.Accessors;
 public class MicoServiceResponseDTO extends MicoServiceRequestDTO {
 	
     // ----------------------
-    // -> Required fields ---
+    // -> Required Fields ---
     // ----------------------
 
     /**
