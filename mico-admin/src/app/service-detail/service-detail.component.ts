@@ -145,16 +145,11 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
 
 
     /**
-     * call-back from the version picker to open the selevted version.
-     * Also used after version promoting
+     * call-back from the version picker to open the selevted version
      */
     updateVersion(version) {
-        if (version != null) {
-            this.selectedVersion = version;
-            this.router.navigate(['service-detail', this.shortName, version]);
-        } else {
-            this.router.navigate(['service-detail', this.shortName]);
-        }
+        this.selectedVersion = version;
+        this.router.navigate(['service-detail', this.shortName, version]);
     }
 
     /**
@@ -222,7 +217,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
 
             if (nextVersion) {
                 this.apiService.promoteService(this.shortName, this.selectedVersion, nextVersion).subscribe(val => {
-                    this.updateVersion(null);
+                    this.setVersion(val.shortName, val.version);
                 });
             }
         });
