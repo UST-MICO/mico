@@ -27,6 +27,7 @@ import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPl
 import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus;
+import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus.Value;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -67,7 +68,7 @@ public class MicoApplicationResponseDTO extends MicoApplicationRequestDTO {
         }
     )})
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private MicoApplicationDeploymentStatus deploymentStatus = MicoApplicationDeploymentStatus.UNDEPLOYED;
+    private MicoApplicationDeploymentStatus deploymentStatus = new MicoApplicationDeploymentStatus(Value.UNDEPLOYED);
     
     
     // -------------------
