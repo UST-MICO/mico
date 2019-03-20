@@ -133,7 +133,7 @@ public class ApplicationResource {
 
         MicoApplication savedApplication = applicationRepository.save(MicoApplication.valueOf(applicationDto));
         MicoApplicationWithServicesResponseDTO dto = new MicoApplicationWithServicesResponseDTO(savedApplication);
-        dto.setDeploymentStatus(MicoApplicationDeploymentStatus.UNDEPLOYED);
+        dto.setDeploymentStatus(MicoApplicationDeploymentStatus.undeployed("Initially not deployed."));
 
         return ResponseEntity
             .created(linkTo(methodOn(ApplicationResource.class)
@@ -459,14 +459,8 @@ public class ApplicationResource {
 
     private Resource<MicoApplicationWithServicesResponseDTO> getApplicationWithServicesResponseDTOResourceWithDeploymentStatus(MicoApplication application) {
         MicoApplicationWithServicesResponseDTO dto = new MicoApplicationWithServicesResponseDTO(application);
-        dto.setDeploymentStatus(getApplicationDeploymentStatus(application));
+        dto.setDeploymentStatus(micoKubernetesClient.getDeploymentStatusOfAppliation(application));
         return new Resource<>(dto, getApplicationLinks(application));
-    }
-
-    private MicoApplicationDeploymentStatus getApplicationDeploymentStatus(MicoApplication application) {
-        return micoKubernetesClient.isApplicationDeployed(application)
-            ? MicoApplicationDeploymentStatus.DEPLOYED
-            : MicoApplicationDeploymentStatus.UNDEPLOYED;
     }
 
     private Iterable<Link> getApplicationLinks(MicoApplication application) {
