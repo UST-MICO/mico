@@ -3,14 +3,14 @@
         <h3>Application {{application?.name}}</h3>
 
         <!-- BUTTONS -->
-        <mat-button-toggle mat-raised-button (click)="deployApplication()">
+        <mat-button-toggle mat-raised-button (click)="deployApplication()" class="mr2">
             <span>
                 deploy
             </span>
             <mat-icon>cloud_upload</mat-icon>
         </mat-button-toggle>
 
-        <mat-button-toggle mat-raised-button (click)="undeployApplication()">
+        <mat-button-toggle mat-raised-button (click)="undeployApplication()" class="mh2">
             <span>
                 undeploy
             </span>
