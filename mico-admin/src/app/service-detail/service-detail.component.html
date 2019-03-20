@@ -32,9 +32,10 @@
             <mico-service-dependency-graph [shortName]="shortName" [version]="selectedVersion">
             </mico-service-dependency-graph>
         </mat-tab>
-        <!-- DEPLOYMENT TAB-->
-        <mat-tab label="Deployment">
-            Service-Detail-Deployment...
+        <!-- KUBECONFIG TAB-->
+        <mat-tab label="kube config yaml">
+            <mico-service-detail-kubeconfig [shortName]="shortName" [version]="selectedVersion">
+            </mico-service-detail-kubeconfig>
         </mat-tab>
         <!-- STATUS TAB -->
         <mat-tab label="Status">

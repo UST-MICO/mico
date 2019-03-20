@@ -836,6 +836,26 @@ export class ApiService {
         );
     }
 
+    /**
+     * Get a yaml string containing a services kubeconfig
+     * uses: GET services/{shortName}/{version}/yaml
+     *
+     * @param shortName unique short name of the service
+     * @param version service version
+     */
+    getServiceYamlConfig(shortName: string, version: string) {
+        const resource = 'services/' + shortName + '/' + version + '/yaml';
+        const stream = this.getStreamSource<ApiObject>(resource);
+
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+            stream.next(freezeObject(val));
+        });
+
+        return stream.asObservable().pipe(
+            filter(data => data !== undefined)
+        );
+    }
+
     // =======================
     // SERVICE INTERFACE CALLS
     // =======================
