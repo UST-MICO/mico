@@ -67,7 +67,7 @@ public class MicoApplicationResponseDTO extends MicoApplicationRequestDTO {
         }
     )})
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private MicoApplicationDeploymentStatus deploymentStatus = MicoApplicationDeploymentStatus.NOT_DEPLOYED;
+    private MicoApplicationDeploymentStatus deploymentStatus = MicoApplicationDeploymentStatus.UNDEPLOYED;
     
     
     // -------------------
