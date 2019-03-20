@@ -43,6 +43,8 @@ import io.github.ust.mico.core.service.imagebuilder.buildtypes.*;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.KubernetesNameNormalizer;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 
 /**
  * Builds container images by using Knative Build and Kaniko.
@@ -78,12 +80,23 @@ public class ImageBuilder {
     }
 
     /**
-     * Initialize the image builder.
+     * Initialize the image builder manually.
      *
-     * @throws NotInitializedException if the image builder was not initialized
+     * @throws NotInitializedException if there are errors during initialization
      */
     public void init() throws NotInitializedException {
-        log.debug("Initializing image builder...");
+        init(null);
+    }
+
+    /**
+     * Initialize the image builder every time the application context is refreshed.
+     *
+     * @param cre the {@link ContextRefreshedEvent}
+     * @throws NotInitializedException if there are errors during initialization
+     */
+    @EventListener
+    public void init(ContextRefreshedEvent cre) throws NotInitializedException {
+        log.info("Application context refreshed -> initialize image builder.");
         String namespace = buildBotConfig.getNamespaceBuildExecution();
         String serviceAccountName = buildBotConfig.getDockerRegistryServiceAccountName();
 

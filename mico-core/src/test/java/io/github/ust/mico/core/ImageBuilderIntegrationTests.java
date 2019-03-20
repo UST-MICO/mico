@@ -39,13 +39,14 @@ import org.springframework.test.context.junit4.SpringRunner;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.exception.NotInitializedException;
-import io.github.ust.mico.core.exception.VersionNotSupportedException;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 import lombok.extern.slf4j.Slf4j;
 
+// Is ignored because Travis can't execute integration tests
+// that requires a connection to Kubernetes.
 @Ignore
-// TODO Upgrade to JUnit5
+// TODO: Upgrade to JUnit5
 @Category(IntegrationTests.class)
 @Slf4j
 @SpringBootTest
@@ -70,6 +71,7 @@ public class ImageBuilderIntegrationTests {
     public void setUp() {
         namespace = integrationTestsUtils.setUpEnvironment(true);
         integrationTestsUtils.setUpDockerRegistryConnection(namespace);
+        micoKubernetesBuildBotConfig.setNamespaceBuildExecution(namespace);
         micoKubernetesBuildBotConfig.setBuildTimeout(60);
     }
 
@@ -100,11 +102,11 @@ public class ImageBuilderIntegrationTests {
      * @throws InterruptedException         if the build process is interrupted unexpectedly
      * @throws TimeoutException             if the build does not finish or fail in the expected time
      * @throws ExecutionException           if the build process fails unexpectedly
-     * @throws VersionNotSupportedException if the provided Git release tag is not supported as a MICO version
      */
     @Test
-    public void buildAndPushImageWorks() throws NotInitializedException, InterruptedException, TimeoutException, ExecutionException, VersionNotSupportedException {
+    public void buildAndPushImageWorks() throws NotInitializedException, InterruptedException, TimeoutException, ExecutionException {
 
+        // Manual initialization is necessary so it will use the provided namespace (see setup method).
         imageBuilder.init();
 
         MicoService micoService = new MicoService()
@@ -117,7 +119,6 @@ public class ImageBuilderIntegrationTests {
 
         CompletableFuture<String> buildJob = imageBuilder.build(micoService);
 
-        //CompletableFuture<Boolean> buildPodResult = integrationTestsUtils.waitUntilBuildIsFinished(imageBuilder, buildName, namespace, 10, 1, 60);
         String dockerImageURI = buildJob.get();
         assertNotNull("Build failed!", dockerImageURI);
     }
