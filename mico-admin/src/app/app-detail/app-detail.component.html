@@ -10,6 +10,13 @@
             <mat-icon>cloud_upload</mat-icon>
         </mat-button-toggle>
 
+        <mat-button-toggle mat-raised-button (click)="undeployApplication()">
+            <span>
+                undeploy
+            </span>
+            <mat-icon>cloud_off</mat-icon>
+        </mat-button-toggle>
+
         <span *ngIf="isLatestVersion()" class="mh2">
             <mat-button-toggle mat-raised-button (click)="promoteNextVersion()">
                 <span>
