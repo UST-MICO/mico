@@ -124,7 +124,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
      */
     getLatestVersion() {
         if (this.versions != null && this.versions.length > 0) {
-            return this.versions[this.versions.length - 1];
+            return this.versions[this.versions.length - 1].version;
         }
     }
 
