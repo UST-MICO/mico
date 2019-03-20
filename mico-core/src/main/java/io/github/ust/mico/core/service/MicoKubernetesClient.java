@@ -679,16 +679,18 @@ public class MicoKubernetesClient {
                 .delete();
         }
 
-    	// Clean up Kubernetes Build resources
-		log.debug("Clean up build resources for MicoService '{}' in version '{}'.",
-			serviceDeploymentInfo.getService().getShortName(), serviceDeploymentInfo.getService().getVersion());
-		imageBuilder.deleteBuild(serviceDeploymentInfo.getService());
-		kubernetesClient
-			.pods()
-			.inNamespace(buildBotConfig.getNamespaceBuildExecution())
-			.withLabel(ImageBuilder.BUILD_CRD_GROUP + "/buildName", imageBuilder.createBuildName(serviceDeploymentInfo.getService()))
-			.delete();
-    	
+        if(buildBotConfig.isBuildCleanUpByUndeploy()) {
+            // Clean up Kubernetes Build resources
+            log.debug("Clean up build resources for MicoService '{}' in version '{}'.",
+                serviceDeploymentInfo.getService().getShortName(), serviceDeploymentInfo.getService().getVersion());
+            imageBuilder.deleteBuild(serviceDeploymentInfo.getService());
+            kubernetesClient
+                .pods()
+                .inNamespace(buildBotConfig.getNamespaceBuildExecution())
+                .withLabel(ImageBuilder.BUILD_CRD_GROUP + "/buildName", imageBuilder.createBuildName(serviceDeploymentInfo.getService()))
+                .delete();
+        }
+
     	// Delete Kubernetes deployment info in database
 		log.debug("Delete Kubernetes deployment info in database for MicoService '{}' in version '{}'.",
 			serviceDeploymentInfo.getService().getShortName(), serviceDeploymentInfo.getService().getVersion());

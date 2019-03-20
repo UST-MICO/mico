@@ -22,7 +22,6 @@ package io.github.ust.mico.core;
 import static io.github.ust.mico.core.TestConstants.*;
 import static org.junit.Assert.*;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,19 +70,19 @@ public class MicoKubernetesClientTests {
 
     @MockBean
     private MicoKubernetesConfig micoKubernetesConfig;
-    
+
     @MockBean
     private MicoKubernetesBuildBotConfig micoKubernetesBuildBotConfig;
-    
+
     @MockBean
     private ImageBuilder imageBuilder;
-    
+
     @MockBean
     private MicoApplicationRepository applicationRepository;
 
     @MockBean
     private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
-    
+
     @MockBean
     private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
 
@@ -96,6 +95,8 @@ public class MicoKubernetesClientTests {
     public void setUp() {
         given(micoKubernetesConfig.getNamespaceMicoWorkspace()).willReturn(testNamespace);
         given(micoKubernetesBuildBotConfig.getNamespaceBuildExecution()).willReturn(buildTestNamespace);
+        given(micoKubernetesBuildBotConfig.isBuildCleanUpByUndeploy()).willReturn(true);
+
         micoKubernetesClient = new MicoKubernetesClient(micoKubernetesConfig, micoKubernetesBuildBotConfig,
         	mockServer.getClient(), imageBuilder, applicationRepository,
         	serviceDeploymentInfoRepository, kubernetesDeploymentInfoRepository);
