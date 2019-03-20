@@ -216,7 +216,7 @@ public class IntegrationTestsUtils {
         CompletableFuture<Boolean> completionFuture = new CompletableFuture<>();
 
         log.info("Wait until pod '{}' is running", podName);
-        final ScheduledFuture<?> checkFuture = executorService.scheduleAtFixedRate(() -> {
+        executorService.scheduleAtFixedRate(() -> {
             try {
                 Boolean running = checkIfPodIsRunning(podName, namespace);
                 if (running) {
@@ -230,9 +230,6 @@ public class IntegrationTestsUtils {
 
         // Waits until timeout is reached or the future completes.
         completionFuture.get(timeout, TimeUnit.SECONDS);
-
-        // When completed cancel future
-        completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
 
         return completionFuture;
     }
@@ -268,9 +265,6 @@ public class IntegrationTestsUtils {
         // Waits until timeout is reached or the future completes.
         completionFuture.get(timeout, TimeUnit.SECONDS);
 
-        // When completed cancel future
-        //completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
-
         return completionFuture;
     }
 
@@ -300,9 +294,6 @@ public class IntegrationTestsUtils {
         // Waits until timeout is reached or the future completes.
         completionFuture.get(timeout, TimeUnit.SECONDS);
 
-        // When completed cancel future
-        //completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
-
         return completionFuture;
     }
 
@@ -325,7 +316,7 @@ public class IntegrationTestsUtils {
 
         log.info("Wait until build '{}' is finished", buildName);
         // Create a future that polls every second with a delay of 10 seconds.
-        final ScheduledFuture<?> checkFuture = buildPodStatusChecker.scheduleAtFixedRate(() -> {
+        buildPodStatusChecker.scheduleAtFixedRate(() -> {
 
             Build build = imageBuilder.getBuild(buildName);
             if (build.getStatus() != null && build.getStatus().getCluster() != null) {
@@ -342,9 +333,6 @@ public class IntegrationTestsUtils {
         }, initialDelay, period, TimeUnit.SECONDS);
 
         completionFuture.get(timeout, TimeUnit.SECONDS);
-
-        // When completed cancel future
-        //completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
 
         return completionFuture;
     }

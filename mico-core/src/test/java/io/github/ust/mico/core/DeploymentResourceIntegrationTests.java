@@ -99,15 +99,6 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
         application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(service));
         
         applicationRepository.save(application);
-
-        Optional<MicoServiceDeploymentInfo> serviceDeploymentInfoOptional = serviceDeploymentInfoRepository
-            .findByApplicationAndService("hello", "v0.0.1", "hello-integration-test", "v1.0.0");
-        if(serviceDeploymentInfoOptional.isPresent()) {
-            System.out.println("1 found");
-        } else {
-            System.out.println("1 not found");
-        }
-
     }
 
     /**
