@@ -30,14 +30,39 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public enum MicoApplicationDeploymentStatus {
 
+	/** 
+	 * Indicates that a {@link MicoApplication} with all its {@link MicoService}
+	 * has been deployed successfully.
+	 */
 	@JsonProperty("Deployed")
     DEPLOYED("Deployed"),
+    
+    /** 
+	 * Indicates that a {@link MicoApplication} with all its {@link MicoService}
+	 * has been undeployed successfully.
+	 */
     @JsonProperty("Undeployed")
 	UNDEPLOYED("Undeployed"),
+	
+	/**
+	 * Indicates that a {@link MicoApplication} is currently being
+	 * deployed / undeployed.
+	 */
     @JsonProperty("Pending")
     PENDING("Pending"),
+    
+    /**
+	 * Indicates that the deployment / undeployment of a {@link MicoApplication}
+	 * did not complete due to at least one {@link MicoService} of the {@code MicoApplication}
+	 * that couldn't be deployed / undeployed successfully.
+	 */
     @JsonProperty("Incompleted")
     INCOMPLETED("Incompleted"),
+    
+    /**
+	 * Indicates that the current deployment status of a {@link MicoApplication}
+	 * is not known.
+	 */
     @JsonProperty("Unknown")
     UNKNOWN("Unknown");
 	
