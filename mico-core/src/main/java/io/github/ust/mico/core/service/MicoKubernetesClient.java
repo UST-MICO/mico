@@ -37,6 +37,7 @@ import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus.Value;
 import io.github.ust.mico.core.persistence.KubernetesDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
@@ -268,7 +269,7 @@ public class MicoKubernetesClient {
      * @param micoApplication the {@link MicoApplication}
      * @return {@code true} if the application is deployed.
      */
-    public boolean isApplicationDeployed(MicoApplication micoApplication) {
+    public MicoApplicationDeploymentStatus getDeploymentStatusOfAppliation(MicoApplication micoApplication) {
         boolean result = false;
 
         List<MicoServiceDeploymentInfo> serviceDeploymentInfos = serviceDeploymentInfoRepository.findAllByApplication(
@@ -302,10 +303,27 @@ public class MicoKubernetesClient {
                 micoApplication.getShortName(), micoApplication.getVersion());
         }
 
-        String deploymentStatus = result ? "deployed" : "not deployed";
-        log.info("MicoApplication '{}' in version '{}' is {}.",
-            micoApplication.getShortName(), micoApplication.getVersion(), deploymentStatus);
-        return result;
+//        String deploymentStatus = result ? "deployed" : "not deployed";
+//        log.info("MicoApplication '{}' in version '{}' is {}.",
+//            micoApplication.getShortName(), micoApplication.getVersion(), deploymentStatus);
+        // TODO: Add log with deployment status
+        if (result) {
+        	return MicoApplicationDeploymentStatus.deployed("MicoApplication is currently deployed.");
+        } else {
+        	return MicoApplicationDeploymentStatus.undeployed("MicoApplication is currently not deployed.");
+        }
+    }
+    
+    /**
+     * Checks whether a given {@code MicoApplication} is currently deployed.
+     * 
+     * @param micoApplication the {@link MicoApplication}.
+     * @return {@code true} if and only if {@link #getDeploymentStatusOfAppliation(MicoApplication)}
+     * 		   returns a {@link MicoApplicationDeploymentStatus} with {@link Value#DEPLOYED};
+     * 		   {@code false} otherwise.
+     */
+    public boolean isApplicationDeployed(MicoApplication micoApplication) {
+    	return getDeploymentStatusOfAppliation(micoApplication).getValue() == Value.DEPLOYED;
     }
 
     /**
