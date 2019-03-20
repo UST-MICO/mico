@@ -19,15 +19,41 @@
 
 package io.github.ust.mico.core;
 
-import static io.github.ust.mico.core.TestConstants.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.BDDMockito.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
 
-import java.util.*;
-
+import io.fabric8.kubernetes.api.model.PodList;
+import io.fabric8.kubernetes.api.model.PodListBuilder;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.github.ust.mico.core.configuration.PrometheusConfig;
+import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
 import io.github.ust.mico.core.dto.response.internal.PrometheusResponseDTO;
+import io.github.ust.mico.core.dto.response.status.KubernetesNodeMetricsResponseDTO;
+import io.github.ust.mico.core.dto.response.status.KubernetesPodInformationResponseDTO;
+import io.github.ust.mico.core.dto.response.status.KubernetesPodMetricsResponseDTO;
+import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
+import io.github.ust.mico.core.dto.response.status.MicoServiceInterfaceStatusResponseDTO;
+import io.github.ust.mico.core.dto.response.status.MicoServiceStatusResponseDTO;
+import io.github.ust.mico.core.exception.KubernetesResourceException;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoPortType;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.model.MicoServicePort;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceInterfaceRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.service.MicoStatusService;
+import io.github.ust.mico.core.util.CollectionUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,26 +64,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 
-import io.fabric8.kubernetes.api.model.PodList;
-import io.fabric8.kubernetes.api.model.PodListBuilder;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
-import io.github.ust.mico.core.configuration.PrometheusConfig;
-import io.github.ust.mico.core.dto.response.*;
-import io.github.ust.mico.core.dto.response.status.*;
-import io.github.ust.mico.core.exception.KubernetesResourceException;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.MicoStatusService;
-import io.github.ust.mico.core.util.CollectionUtils;
+import static io.github.ust.mico.core.TestConstants.NAME;
+import static io.github.ust.mico.core.TestConstants.SERVICE_INTERFACE_NAME;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME_OTHER;
+import static io.github.ust.mico.core.TestConstants.VERSION;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.mock;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -78,15 +98,19 @@ public class MicoStatusServiceTest {
     @MockBean
     private MicoServiceRepository serviceRepository;
 
+    @MockBean
+    private MicoServiceInterfaceRepository serviceInterfaceRepository;
+
     @Autowired
     private MicoStatusService micoStatusService;
 
     private MicoApplication micoApplication;
     private MicoApplication otherMicoApplication;
     private MicoService micoService;
+    private MicoServiceInterface micoServiceInterface;
     private Optional<Deployment> deployment;
     private Optional<Service> kubernetesService;
-    private Optional<Service> kubernetesServiceWithoutIps;
+    private Optional<Service> kubernetesServiceWithoutIp;
     private PodList podList;
     private PodList podListWithOnePod;
 
@@ -133,7 +157,7 @@ public class MicoStatusServiceTest {
     public void setupMicoApplication() {
         micoApplication = new MicoApplication()
             .setShortName(SHORT_NAME)
-             .setVersion(VERSION);
+            .setVersion(VERSION);
 
         otherMicoApplication = new MicoApplication()
             .setName(NAME)
@@ -148,6 +172,13 @@ public class MicoStatusServiceTest {
                 new MicoServiceInterface()
                     .setServiceInterfaceName(SERVICE_INTERFACE_NAME)
             ));
+
+        micoServiceInterface = new MicoServiceInterface()
+            .setServiceInterfaceName(SERVICE_INTERFACE_NAME)
+            .setPorts(CollectionUtils.listOf(new MicoServicePort()
+                .setPort(80)
+                .setTargetPort(80)
+                .setType(MicoPortType.TCP)));
 
         micoApplication.getServices().add(micoService);
         micoApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(micoService));
@@ -174,7 +205,7 @@ public class MicoStatusServiceTest {
             .endStatus()
             .build());
 
-        kubernetesServiceWithoutIps = Optional.of(new ServiceBuilder()
+        kubernetesServiceWithoutIp = Optional.of(new ServiceBuilder()
             .withNewMetadata().withName(SERVICE_INTERFACE_NAME).endMetadata()
             .withNewSpec().endSpec()
             .withNewStatus().endStatus()
@@ -318,6 +349,7 @@ public class MicoStatusServiceTest {
         given(applicationRepository.findAllByUsedService(any(), any())).willReturn(CollectionUtils.listOf(otherMicoApplication, micoApplication));
         given(serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion())).willReturn(CollectionUtils.listOf(micoService));
         given(prometheusConfig.getUri()).willReturn("http://localhost:9090/api/v1/query");
+        given(serviceInterfaceRepository.findByServiceAndName(micoService.getShortName(), micoService.getVersion(), SERVICE_INTERFACE_NAME)).willReturn(Optional.of(micoServiceInterface));
         ResponseEntity responseEntityMemoryUsagePod1 = getPrometheusResponseEntity(memoryUsagePod1);
         ResponseEntity responseEntityCpuLoadPod1 = getPrometheusResponseEntity(cpuLoadPod1);
         ResponseEntity responseEntityMemoryUsagePod2 = getPrometheusResponseEntity(memoryUsagePod2);
@@ -338,8 +370,8 @@ public class MicoStatusServiceTest {
         assertEquals(micoApplicationStatus, micoStatusService.getApplicationStatus(micoApplication));
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-	@Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    @Test
     public void getApplicationStatusWithMissingKubernetesService() {
         MicoApplicationStatusResponseDTO micoApplicationStatus = new MicoApplicationStatusResponseDTO();
         micoApplicationStatus
@@ -373,9 +405,8 @@ public class MicoStatusServiceTest {
                             .setMemoryUsage(memoryUsagePod1)
                             .setCpuLoad(cpuLoadPod1)
                             .setAvailable(podAvailablePod1))))
-                .setErrorMessages(CollectionUtils.listOf("There is no Kubernetes service for the interface '" +
-                    SERVICE_INTERFACE_NAME + "' of MicoService '" +
-                    micoService.getShortName() + "' '" + micoService.getVersion() + "'."))
+                .setErrorMessages(CollectionUtils.listOf(new ResponseStatusException(HttpStatus.NOT_FOUND, "No deployed service interface '" + SERVICE_INTERFACE_NAME
+                    + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' was found!").getMessage()))
                 .setInterfacesInformation(CollectionUtils.listOf(
                     new MicoServiceInterfaceStatusResponseDTO()
                         .setName(SERVICE_INTERFACE_NAME)
@@ -383,7 +414,8 @@ public class MicoStatusServiceTest {
                         .setExternalIp("")))));
         try {
             given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(deployment);
-            given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(kubernetesServiceWithoutIps);
+            given(serviceInterfaceRepository.findByServiceAndName(micoService.getShortName(), micoService.getVersion(), SERVICE_INTERFACE_NAME)).willReturn(Optional.of(micoServiceInterface));
+            given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(Optional.empty());
             given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(any(MicoService.class))).willReturn(podListWithOnePod.getItems());
             given(micoKubernetesClient.isApplicationDeployed(otherMicoApplication)).willReturn(true);
         } catch (KubernetesResourceException e) {
@@ -516,6 +548,7 @@ public class MicoStatusServiceTest {
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
         given(applicationRepository.findAllByUsedService(any(), any())).willReturn(CollectionUtils.listOf(otherMicoApplication));
         given(prometheusConfig.getUri()).willReturn("http://localhost:9090/api/v1/query");
+        given(serviceInterfaceRepository.findByServiceAndName(micoService.getShortName(), micoService.getVersion(), SERVICE_INTERFACE_NAME)).willReturn(Optional.of(micoServiceInterface));
         ResponseEntity responseEntityMemoryUsagePod1 = getPrometheusResponseEntity(memoryUsagePod1);
         ResponseEntity responseEntityCpuLoadPod1 = getPrometheusResponseEntity(cpuLoadPod1);
         ResponseEntity responseEntityMemoryUsagePod2 = getPrometheusResponseEntity(memoryUsagePod2);
@@ -541,6 +574,7 @@ public class MicoStatusServiceTest {
 
         given(micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, SERVICE_INTERFACE_NAME))
             .willReturn(kubernetesService);
+        given(serviceInterfaceRepository.findByServiceAndName(micoService.getShortName(), micoService.getVersion(), SERVICE_INTERFACE_NAME)).willReturn(Optional.of(micoServiceInterface));
 
         MicoServiceInterfaceStatusResponseDTO expectedServiceInterface = new MicoServiceInterfaceStatusResponseDTO()
             .setName(SERVICE_INTERFACE_NAME)
@@ -558,8 +592,9 @@ public class MicoStatusServiceTest {
     @Test
     public void getServiceInterfaceStatusWithErrors() throws KubernetesResourceException {
 
+        given(serviceInterfaceRepository.findByServiceAndName(micoService.getShortName(), micoService.getVersion(), SERVICE_INTERFACE_NAME)).willReturn(Optional.empty());
         given(micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, SERVICE_INTERFACE_NAME))
-            .willThrow(new KubernetesResourceException("Unexpected error"));
+            .willReturn(Optional.empty());
 
         MicoServiceInterfaceStatusResponseDTO expectedServiceInterface = new MicoServiceInterfaceStatusResponseDTO()
             .setName(SERVICE_INTERFACE_NAME)

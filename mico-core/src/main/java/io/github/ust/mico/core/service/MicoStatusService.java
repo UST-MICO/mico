@@ -49,6 +49,7 @@ import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceInterfaceRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.util.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -76,15 +77,17 @@ public class MicoStatusService {
     private final MicoKubernetesClient micoKubernetesClient;
     private final RestTemplate restTemplate;
     private final MicoServiceRepository serviceRepository;
+    private final MicoServiceInterfaceRepository serviceInterfaceRepository;
     private final MicoApplicationRepository micoApplicationRepository;
 
     @Autowired
     public MicoStatusService(PrometheusConfig prometheusConfig, MicoKubernetesClient micoKubernetesClient,
-                             RestTemplate restTemplate, MicoServiceRepository serviceRepository, MicoApplicationRepository micoApplicationRepository) {
+                             RestTemplate restTemplate, MicoServiceRepository serviceRepository, MicoServiceInterfaceRepository serviceInterfaceRepository, MicoApplicationRepository micoApplicationRepository) {
         this.prometheusConfig = prometheusConfig;
         this.micoKubernetesClient = micoKubernetesClient;
         this.restTemplate = restTemplate;
         this.serviceRepository = serviceRepository;
+        this.serviceInterfaceRepository = serviceInterfaceRepository;
         this.micoApplicationRepository = micoApplicationRepository;
     }
 
@@ -217,9 +220,6 @@ public class MicoStatusService {
         return serviceStatus;
     }
 
-    public List<MicoServiceInterfaceStatusResponseDTO> getServiceInterfaceStatus(@NotNull MicoService micoService,
-                                                                                 @NotNull List<String> errorMessages) {
-        List<MicoServiceInterfaceStatusResponseDTO> interfacesInformation = new ArrayList<>();
     /**
      * Get the status information for all {@link MicoServiceInterface MicoServiceInterfaces} of the {@link
      * MicoService}.
@@ -227,20 +227,20 @@ public class MicoStatusService {
      * @param micoService   is the {@link MicoService} for which the status information of the MicoServiceInterfaces is
      *                      requested.
      * @param errorMessages is the list of error messages, which is empty if no error occurs.
-     * @return a list of {@link MicoServiceInterfaceStatusDTO}, one DTO per MicoServiceInterface.
+     * @return a list of {@link MicoServiceInterfaceStatusResponseDTO}, one DTO per MicoServiceInterface.
      */
     public List<MicoServiceInterfaceStatusResponseDTO> getServiceInterfaceStatus(@NotNull MicoService micoService,
-                                                                         @NotNull List<String> errorMessages) {
+                                                                                 @NotNull List<String> errorMessages) {
         List<MicoServiceInterfaceStatusResponseDTO> interfacesInformation = new ArrayList<>();
         for (MicoServiceInterface serviceInterface : micoService.getServiceInterfaces()) {
             String serviceInterfaceName = serviceInterface.getServiceInterfaceName();
-            String publicIp = "";
             try {
-                publicIp = getPublicIpOfKubernetesService(micoService, serviceInterfaceName);
+                MicoServiceInterfaceStatusResponseDTO interfaceStatusResponseDTO = getPublicIpOfKubernetesService(micoService, serviceInterfaceName);
+                interfacesInformation.add(interfaceStatusResponseDTO);
             } catch (ResponseStatusException e) {
+                interfacesInformation.add(new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName).setExternalIp(""));
                 errorMessages.add(e.getMessage());
             }
-            interfacesInformation.add(new MicoServiceInterfaceStatusResponseDTO(serviceInterfaceName, publicIp));
         }
         return interfacesInformation;
     }
@@ -253,9 +253,8 @@ public class MicoStatusService {
      * @param serviceInterfaceName is the MicoServiceInterface, that is deployed as Kubernetes service .
      * @return the  public IP of the provided Kubernetes Service
      */
-    // TODO: Duplicate exists in ServiceInterfaceResource. Will be covered by mico#491
-    public String getPublicIpOfKubernetesService(MicoService micoService, String serviceInterfaceName) {
-        Optional<MicoServiceInterface> serviceInterfaceOptional = serviceRepository.findInterfaceOfServiceByName(serviceInterfaceName, micoService.getShortName(), micoService.getVersion());
+    public MicoServiceInterfaceStatusResponseDTO getPublicIpOfKubernetesService(MicoService micoService, String serviceInterfaceName) {
+        Optional<MicoServiceInterface> serviceInterfaceOptional = serviceInterfaceRepository.findByServiceAndName(micoService.getShortName(), micoService.getVersion(), serviceInterfaceName);
         if (!serviceInterfaceOptional.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                 "Service interface '" + serviceInterfaceName + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' was not found!");
@@ -283,10 +282,10 @@ public class MicoStatusService {
             if (ingressList != null && ingressList.size() == 1) {
                 log.info("Service interface with name '{}' of MicoService '{}' in version '{}' has external IP: {}",
                     serviceInterfaceName, micoService.getShortName(), micoService.getVersion(), ingressList.get(0).getIp());
-                return ingressList.get(0).getIp();
+                return new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName).setExternalIp(ingressList.get(0).getIp());
             } else if (ingressList != null && ingressList.size() > 1) {
                 log.warn("There are " + ingressList.size() + " IP addresses for the MicoServiceInterface " + serviceInterfaceName + ". Only one IP address is returned.");
-                return ingressList.get(0).getIp();
+                return new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName).setExternalIp(ingressList.get(0).getIp());
             } else {
                 log.error("There is no Kubernetes service for the interface '{}' of MicoService '{}' in version '{}'.",
                     serviceInterfaceName, micoService.getShortName(), micoService.getVersion());

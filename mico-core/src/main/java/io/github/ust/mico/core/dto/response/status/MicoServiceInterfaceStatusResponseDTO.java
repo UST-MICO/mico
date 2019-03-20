@@ -19,9 +19,6 @@
 
 package io.github.ust.mico.core.dto.response.status;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
