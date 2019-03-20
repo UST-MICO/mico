@@ -22,11 +22,12 @@ import { ActivatedRoute, Router } from '@angular/router';
 
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
-import { Subscription } from 'rxjs';
+import { Subscription, timer, from } from 'rxjs';
 import { versionComparator } from '../api/semantic-version';
 import { CreateNextVersionComponent } from '../dialogs/create-next-version/create-next-version.component';
 import { MatDialog, MatSnackBar } from '@angular/material';
 import { UtilsService } from '../util/utils.service';
+import { concatMap, take, filter, map } from 'rxjs/operators';
 
 @Component({
     selector: 'mico-app-detail',
@@ -51,6 +52,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     subApplication: Subscription;
     subServiceDependency: Subscription;
     subCreateNextVersion: Subscription;
+    subJobStatus: Subscription;
 
 
     // immutable application  object which is updated, when new data is pushed
@@ -162,6 +164,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         this.util.safeUnsubscribe(this.subApplication);
         this.util.safeUnsubscribe(this.subServiceDependency);
         this.util.safeUnsubscribe(this.subCreateNextVersion);
+        // TODO correct unsubscribe for subJobStatus
     }
 
 
@@ -179,6 +182,33 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                     duration: 5000,
                 });
 
+
+                // polling
+                timer(0, 500)
+                    .pipe(concatMap(() => this.apiService.getJobStatus(this.shortName, this.selectedVersion))
+                    )
+                    .pipe(filter(newStatus => {
+                        console.log('filter status', newStatus, ((newStatus as any).status === 'DONE' ||
+                            (newStatus as any).status === 'ERROR'));
+                        return ((newStatus as any).status === 'DONE' ||
+                            (newStatus as any).status === 'ERROR');
+                    }))
+                    .pipe(take(1))
+                    .subscribe(finalStatus => {
+
+                        console.log('finished');
+
+                        if ((finalStatus as any).status === 'DONE') {
+
+                            this.snackBar.open('Application deployment finished.', 'Ok', {
+                                duration: 5000,
+                            });
+                        } else if ((finalStatus as any).status === 'ERROR') {
+                            this.snackBar.open('Application deployment failed.', 'Ok', {
+                                duration: 8000,
+                            });
+                        }
+                    });
             });
     }
 
@@ -191,11 +221,9 @@ export class AppDetailComponent implements OnInit, OnDestroy {
             .subscribe(val => {
                 // TODO wait for propper return value from deploy endpoint
                 // add some deployment monitoring (e.g. state)
-                console.log(val);
                 this.snackBar.open('Application undeployment initialized.', 'Ok', {
                     duration: 5000,
                 });
-
             });
     }
 
