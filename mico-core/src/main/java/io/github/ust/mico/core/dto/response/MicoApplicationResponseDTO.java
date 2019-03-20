@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
 import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -96,22 +97,5 @@ public class MicoApplicationResponseDTO extends MicoApplicationRequestDTO {
 		super(application);
 		this.deploymentStatus = deploymentStatus;
 	}
-
-
-    /**
-     * Enumeration for all possible states a deployment of
-     * a {@link MicoApplication} can be in.
-     */
-    public enum MicoApplicationDeploymentStatus {
-
-        DEPLOYED,
-        NOT_DEPLOYED;
-    	
-        @Override
-        public String toString() {
-            return super.toString().toLowerCase();
-        }
-
-    }
 
 }
