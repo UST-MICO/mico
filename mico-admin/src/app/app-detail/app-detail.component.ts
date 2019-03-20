@@ -22,12 +22,12 @@ import { ActivatedRoute, Router } from '@angular/router';
 
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
-import { Subscription, timer, from } from 'rxjs';
+import { Subscription, timer, Observable, interval } from 'rxjs';
 import { versionComparator } from '../api/semantic-version';
 import { CreateNextVersionComponent } from '../dialogs/create-next-version/create-next-version.component';
 import { MatDialog, MatSnackBar } from '@angular/material';
 import { UtilsService } from '../util/utils.service';
-import { concatMap, take, filter, map } from 'rxjs/operators';
+import { concatMap, take, filter } from 'rxjs/operators';
 
 @Component({
     selector: 'mico-app-detail',
@@ -175,38 +175,32 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     deployApplication() {
         this.subDeploy = this.apiService.postApplicationDeployCommand(this.application.shortName, this.application.version)
             .subscribe(val => {
-                // TODO wait for propper return value from deploy endpoint
-                // add some deployment monitoring (e.g. state)
-                console.log(val);
                 this.snackBar.open('Application deployment initialized.', 'Ok', {
                     duration: 5000,
                 });
 
+                // poll status
+                const subPolling = interval(500).subscribe(() => {
+                    this.apiService.getJobStatus(this.shortName, this.selectedVersion);
+                });
 
-                // polling
-                timer(0, 500)
-                    .pipe(concatMap(() => this.apiService.getJobStatus(this.shortName, this.selectedVersion))
-                    )
-                    .pipe(filter(newStatus => {
-                        console.log('filter status', newStatus, ((newStatus as any).status === 'DONE' ||
-                            (newStatus as any).status === 'ERROR'));
-                        return ((newStatus as any).status === 'DONE' ||
-                            (newStatus as any).status === 'ERROR');
-                    }))
-                    .pipe(take(1))
-                    .subscribe(finalStatus => {
+                this.subJobStatus = this.apiService.getJobStatus(this.shortName, this.selectedVersion)
+                    .subscribe(newStatus => {
+                        if (newStatus.status === 'DONE') {
 
-                        console.log('finished');
-
-                        if ((finalStatus as any).status === 'DONE') {
-
-                            this.snackBar.open('Application deployment finished.', 'Ok', {
-                                duration: 5000,
-                            });
-                        } else if ((finalStatus as any).status === 'ERROR') {
-                            this.snackBar.open('Application deployment failed.', 'Ok', {
-                                duration: 8000,
-                            });
+                            this.snackBar.open('Application deployment finished: ' +
+                                this.shortName + ' ' + this.selectedVersion, 'Ok', {
+                                    duration: 5000,
+                                });
+                            // TODO save unsubscribe
+                            subPolling.unsubscribe();
+                        } else if (newStatus.status === 'ERROR') {
+                            this.snackBar.open('Application deployment failed: ' +
+                                this.shortName + ' ' + this.selectedVersion, 'Ok', {
+                                    duration: 8000,
+                                });
+                            // TODO save unsubscribe
+                            subPolling.unsubscribe();
                         }
                     });
             });
