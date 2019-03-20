@@ -419,7 +419,7 @@ export class ApiService {
         return this.rest.post<any>(resource, null).pipe(map(val => {
 
             // TODO handle job ressource as soon as the api call returns a job ressource
-            return true;
+            return val;
         }));
     }
 
@@ -436,7 +436,7 @@ export class ApiService {
         return this.rest.post<any>(resource, null).pipe(map(val => {
 
             // TODO handle job ressource as soon as the api call returns a job ressource
-            return true;
+            return val;
         }));
     }
 
@@ -935,5 +935,30 @@ export class ApiService {
 
                 return true;
             }));
+    }
+
+    // ===============
+    // BACKGROUND JOBS
+    // ===============
+
+    /**
+     * retrieves the status of a deployment
+     * uses: GET jobs/{applicationShortName}/{applicationVersion}/status
+     *
+     * @param applicationShortName shortName of the application
+     * @param applicationVersion version of the application
+     */
+    getJobStatus(applicationShortName: string, applicationVersion: string) {
+        const resource = 'jobs/' + applicationShortName + '/' + applicationVersion + '/status';
+        const stream = this.getStreamSource<ApiObject>(resource);
+
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+
+            stream.next(freezeObject(val));
+        });
+
+        return stream.asObservable().pipe(
+            filter(data => data !== undefined)
+        );
     }
 }
