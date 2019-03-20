@@ -17,30 +17,19 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.configuration;
+package io.github.ust.mico.core.persistence;
 
-import javax.validation.constraints.NotNull;
+import org.springframework.data.neo4j.annotation.Query;
+import org.springframework.data.neo4j.repository.Neo4jRepository;
 
-import io.github.ust.mico.core.service.MicoCoreBackgroundTaskFactory;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import io.github.ust.mico.core.model.KubernetesDeploymentInfo;
 
-import lombok.Getter;
-import lombok.Setter;
-
-/**
- * Configuration for {@link MicoCoreBackgroundTaskFactory}.
- */
-@Component
-@ConfigurationProperties(prefix = "mico-core.concurrency")
-public class MicoCoreBackgroundTaskFactoryConfig {
-
-    /**
-     * The number of threads in the {@link MicoCoreBackgroundTaskFactory}.
-     */
-    @Getter
-    @Setter
-    @NotNull
-    private int threadPoolSize;
-
+public interface KubernetesDeploymentInfoRepository extends Neo4jRepository<KubernetesDeploymentInfo, Long> {
+	
+	/**
+	 * Deletes all {@link KubernetesDeploymentInfo} nodes that do <b>not</b> have any relationship to another node.
+	 */
+	@Query("MATCH (kdi:KubernetesDeploymentInfo) WHERE size((kdi)--()) = 0 DELETE kdi")
+	void cleanUp();
+	
 }

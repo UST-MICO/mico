@@ -16,24 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package io.github.ust.mico.core.persistence;
 
-package io.github.ust.mico.core.dto;
+import io.github.ust.mico.core.model.MicoServiceBackgroundJob;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
 
-import io.github.ust.mico.core.model.MicoService;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.Accessors;
-
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Accessors(chain = true)
-public class MicoServiceDependencyGraphDTO {
+@Repository
+public interface MicoBackgroundJobRepository extends CrudRepository<MicoServiceBackgroundJob, String> {
+	
+    @Override
+    List<MicoServiceBackgroundJob> findAll();
 
-   private List<MicoService> micoServices = new LinkedList<>();
-   private List<MicoServiceDependencyGraphEdgeDTO> micoServiceDependencyGraphEdgeList = new LinkedList<>();
+    List<MicoServiceBackgroundJob> findByServiceShortNameAndServiceVersion(String micoServiceShortName, String micoServiceVersion);
+    
+    Optional<MicoServiceBackgroundJob> findByServiceShortNameAndServiceVersionAndType(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundJob.Type type);
+    
 }

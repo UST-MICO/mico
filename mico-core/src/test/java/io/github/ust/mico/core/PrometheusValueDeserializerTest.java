@@ -19,13 +19,15 @@
 
 package io.github.ust.mico.core;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.ust.mico.core.dto.PrometheusResponseDTO;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.github.ust.mico.core.dto.response.internal.PrometheusResponseDTO;
 
 public class PrometheusValueDeserializerTest {
 

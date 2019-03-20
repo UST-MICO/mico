@@ -17,11 +17,14 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto;
+package io.github.ust.mico.core.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.fabric8.kubernetes.api.model.Pod;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Pattern;
+
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
+import io.github.ust.mico.core.model.MicoEnvironmentVariable;
+import io.github.ust.mico.core.util.Patterns;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -31,51 +34,57 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * Contains information about CPU/memory load of a {@link Pod}.
+ * DTO for a {@link MicoEnvironmentVariable} intended to use with requests only.
  */
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Accessors(chain = true)
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class KubernetesPodMetricsDTO {
+public class MicoEnvironmentVariableRequestDTO {
 
-    /**
-     * Memory usage of a pod.
+	/**
+     * Name of the environment variable.
      */
-    @ApiModelProperty(extensions = {@Extension(
+    @ApiModelProperty(required = true, extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Memory Usage"),
+            @ExtensionProperty(name = "title", value = "Name"),
+            @ExtensionProperty(name = "pattern", value = Patterns.KUBERNETES_ENV_VAR_NAME_REGEX),
             @ExtensionProperty(name = "x-order", value = "10"),
-            @ExtensionProperty(name = "description", value = "Memory usage of a pod.")
+            @ExtensionProperty(name = "description", value = "Name of the environment variable.")
         }
     )})
-    private int memoryUsage;
+    @NotEmpty
+    @Pattern(regexp = Patterns.KUBERNETES_ENV_VAR_NAME_REGEX, message = Patterns.KUBERNETES_ENV_VAR_NAME_MESSAGE)
+    private String name;
 
     /**
-     * CPU load of a pod.
+     * Value of the environment variable.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "CPU Load"),
+            @ExtensionProperty(name = "title", value = "Value"),
             @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "CPU load of a pod.")
+            @ExtensionProperty(name = "description", value = "Value of the environment variable.")
         }
     )})
-    private int cpuLoad;
-
+    private String value;
+    
+    
+    // -------------------
+    // -> Constructors ---
+    // -------------------
+    
     /**
-     * Indicates if a pod is available or not.
-     */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Available"),
-            @ExtensionProperty(name = "x-order", value = "30"),
-            @ExtensionProperty(name = "description", value = "Indicates if a pod is available.")
-        }
-    )})
-    private boolean available;
+   	 * Creates an instance of {@code MicoEnvironmentVariableRequestDTO} based on a
+   	 * {@code MicoEnvironmentVariable}.
+   	 * 
+   	 * @param environmentVariable the {@link MicoEnvironmentVariable}.
+   	 */
+	public MicoEnvironmentVariableRequestDTO(MicoEnvironmentVariable environmentVariable) {
+		this.name = environmentVariable.getName();
+		this.value = environmentVariable.getValue();
+	}
+
 }

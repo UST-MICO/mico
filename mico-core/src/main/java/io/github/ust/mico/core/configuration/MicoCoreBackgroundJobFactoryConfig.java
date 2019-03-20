@@ -17,24 +17,30 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.model;
+package io.github.ust.mico.core.configuration;
 
-import org.springframework.data.neo4j.annotation.QueryResult;
+import javax.validation.constraints.NotNull;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.Accessors;
+import io.github.ust.mico.core.service.MicoCoreBackgroundJobFactory;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Accessors(chain = true)
-@QueryResult
-public class MicoServiceDeploymentInfoQueryResult {
-    
-    private MicoApplication application;
-    private MicoServiceDeploymentInfo serviceDeploymentInfo;
-    private MicoService service;
+import lombok.Getter;
+import lombok.Setter;
+
+/**
+ * Configuration for {@link MicoCoreBackgroundJobFactory}.
+ */
+@Component
+@ConfigurationProperties(prefix = "mico-core.concurrency")
+public class MicoCoreBackgroundJobFactoryConfig {
+
+    /**
+     * The number of threads in the {@link MicoCoreBackgroundJobFactory}.
+     */
+    @Getter
+    @Setter
+    @NotNull
+    private int threadPoolSize;
 
 }

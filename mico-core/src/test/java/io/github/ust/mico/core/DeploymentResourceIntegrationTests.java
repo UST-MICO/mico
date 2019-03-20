@@ -19,19 +19,18 @@
 
 package io.github.ust.mico.core;
 
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.github.ust.mico.core.model.*;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.util.CollectionUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.concurrent.CompletableFuture;
+
+import io.github.ust.mico.core.util.EmbeddedRedisServer;
+import org.junit.*;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -39,13 +38,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.concurrent.CompletableFuture;
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.util.CollectionUtils;
+import lombok.extern.slf4j.Slf4j;
 
 @Ignore
 // TODO Upgrade to JUnit5
@@ -58,6 +56,9 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
 
     private static final String BASE_PATH = "/applications";
 
+    @ClassRule
+    public static RuleChain rules = RuleChain.outerRule(EmbeddedRedisServer.runningAt(6379).suppressExceptions());
+
     @Autowired
     private MockMvc mvc;
 
@@ -65,13 +66,7 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
     private IntegrationTestsUtils integrationTestsUtils;
 
     @Autowired
-    private MicoServiceRepository serviceRepository;
-
-    @Autowired
     private MicoApplicationRepository applicationRepository;
-
-    @Autowired
-    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
 
     private String namespace;
     private MicoService service;
@@ -94,12 +89,11 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
 
         application = getTestApplication();
         service = getTestService();
-
+        
+        application.getServices().add(service);
+        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(service));
+        
         applicationRepository.save(application);
-        serviceRepository.save(service);
-        serviceDeploymentInfoRepository.save(new MicoServiceDeploymentInfo()
-            .setService(service)
-            .setApplication(application));
     }
 
     /**
@@ -118,7 +112,7 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
 
         mvc.perform(post(BASE_PATH + "/" + applicationShortName + "/" + applicationVersion + "/deploy"))
             .andDo(print())
-            .andExpect(status().isOk());
+            .andExpect(status().isAccepted());
 
         // Wait until all pods (inclusive build pod) are running or succeeded
         CompletableFuture<Boolean> allPodsInNamespaceAreRunning = integrationTestsUtils.waitUntilAllPodsInNamespaceAreRunning(

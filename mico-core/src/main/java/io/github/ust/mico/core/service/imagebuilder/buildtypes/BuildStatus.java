@@ -21,8 +21,12 @@ package io.github.ust.mico.core.service.imagebuilder.buildtypes;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -30,12 +34,10 @@ import java.util.List;
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Getter
-@Builder
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
-@EqualsAndHashCode
+@Accessors(chain = true)
 public class BuildStatus {
 
     /**
@@ -45,12 +47,12 @@ public class BuildStatus {
     // private GoogleSpec google;
     // private Time startTime;
     // private Time completionTime;
-    // private List<ContainerState> stepStatus;
+    // private List<ContainerState> stepStatus = new ArrayList<>();
 
     /**
      * Optional. StepsCompleted lists the name of build steps completed.
      */
-    private List<String> stepsCompleted;
+    private List<String> stepsCompleted = new ArrayList<>();
 
     // private BuildProvider builder;
 

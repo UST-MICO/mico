@@ -19,21 +19,20 @@
 
 package io.github.ust.mico.core.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import io.github.ust.mico.core.dto.MicoApplicationDTO;
-import io.github.ust.mico.core.exception.VersionNotSupportedException;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.Accessors;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
-import java.util.ArrayList;
-import java.util.List;
+import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
+import io.github.ust.mico.core.exception.VersionNotSupportedException;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 /**
  * Represents an application as a set of {@link MicoService}s
@@ -51,7 +50,6 @@ public class MicoApplication {
      */
     @Id
     @GeneratedValue
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
 
@@ -88,13 +86,18 @@ public class MicoApplication {
     // ----------------------
     // -> Optional fields ---
     // ----------------------
+    
+    /**
+     * The list of included {@link MicoService MicoServices}.
+     */
+    @Relationship(type = "INCLUDES")
+    private List<MicoService> services = new ArrayList<>();
 
     /**
      * The list of service deployment information
      * this application uses for the deployment of the required services.
-     * {@code null} values are skipped.
      */
-    @Relationship(type = "INCLUDES_SERVICE")
+    @Relationship(type = "PROVIDES")
     private List<MicoServiceDeploymentInfo> serviceDeploymentInfos = new ArrayList<>();
 
     /**
@@ -108,8 +111,24 @@ public class MicoApplication {
      */
     private String owner;
     
+    public MicoVersion getMicoVersion() throws VersionNotSupportedException {
+        MicoVersion micoVersion = MicoVersion.valueOf(this.version);
+        return micoVersion;
+    }
+
+
+    // ----------------------
+    // -> Static Creators ---
+    // ----------------------
     
-    public static MicoApplication valueOf(MicoApplicationDTO applicationDto) {
+    /**
+     * Creates a new {@code MicoApplication} based on a {@code MicoApplicationRequestDTO}.
+     * Note that the id will be set to {@code null}.
+     * 
+     * @param applicationDto the {@link MicoApplicationRequestDTO}.
+     * @return a {@link MicoApplication}.
+     */
+    public static MicoApplication valueOf(MicoApplicationRequestDTO applicationDto) {
         return new MicoApplication()
                 .setShortName(applicationDto.getShortName())
                 .setName(applicationDto.getName())
@@ -117,12 +136,6 @@ public class MicoApplication {
                 .setDescription(applicationDto.getDescription())
                 .setContact(applicationDto.getContact())
                 .setOwner(applicationDto.getOwner());
-    }
-
-    @JsonIgnore
-    public MicoVersion getMicoVersion() throws VersionNotSupportedException {
-        MicoVersion micoVersion = MicoVersion.valueOf(this.version);
-        return micoVersion;
     }
 
 }

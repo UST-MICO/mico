@@ -16,33 +16,45 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package io.github.ust.mico.core.model;
 
-package io.github.ust.mico.core.dto;
+import java.util.ArrayList;
+import java.util.List;
 
-import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceBackgroundJob.Status;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+/**
+ * Represents the job status for a {@link MicoApplication}.
+ * Contains a list of jobs.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-public class MicoServiceDependencyGraphEdgeDTO {
-
-
-    private String sourceShortName;
-    private String sourceVersion;
-    private String targetShortName;
-    private String targetVersion;
-
-    public MicoServiceDependencyGraphEdgeDTO(MicoService source, MicoService target){
-        this.sourceShortName = source.getShortName();
-        this.sourceVersion = source.getVersion();
-        this.targetShortName = target.getShortName();
-        this.targetVersion = target.getVersion();
-    }
-
-
+public class MicoApplicationJobStatus {
+	
+    /**
+     * The short name of the {@link MicoApplication}.
+     */
+    private String applicationShortName;
+    
+    /**
+     * The version of the {@link MicoApplication}.
+     */
+    private String applicationVersion;
+    
+    /**
+     * The aggregated status of jobs for the {@link MicoApplication}.
+     */
+    private MicoServiceBackgroundJob.Status status = Status.UNDEFINED;
+    
+    /**
+     * The list of jobs for the {@link MicoApplication}.
+     */
+    private List<MicoServiceBackgroundJob> jobs = new ArrayList<>();
+    
 }

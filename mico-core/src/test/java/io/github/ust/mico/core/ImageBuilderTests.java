@@ -20,10 +20,12 @@
 package io.github.ust.mico.core;
 
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
+import io.github.ust.mico.core.TestConstants.*;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.exception.NotInitializedException;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
+import io.github.ust.mico.core.util.KubernetesNameNormalizer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -51,7 +53,8 @@ public class ImageBuilderTests {
         buildBotConfig.setDockerRegistryServiceAccountName("service-account-name");
         buildBotConfig.setDockerImageRepositoryUrl("image-repository-url");
 
-        imageBuilder = new ImageBuilder(mockServer.getClient(), buildBotConfig);
+        KubernetesNameNormalizer kubernetesNameNormalizer = new KubernetesNameNormalizer();
+        imageBuilder = new ImageBuilder(mockServer.getClient(), buildBotConfig, kubernetesNameNormalizer);
     }
 
     @After

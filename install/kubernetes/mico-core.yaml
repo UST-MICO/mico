@@ -8,6 +8,8 @@ data:
   application.properties: |-
     spring.data.neo4j.uri=bolt://neo4j.mico-system:7687
     kubernetes.prometheus.uri=http://prometheus.monitoring:9090/api/v1/query
+    spring.redis.host=redis.mico-system
+    spring.redis.port=6379
 ---
 apiVersion: v1
 kind: Service

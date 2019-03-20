@@ -19,22 +19,17 @@
 
 package io.github.ust.mico.core.resource;
 
-import io.github.ust.mico.core.dto.MicoApplicationDTO;
-import io.github.ust.mico.core.dto.MicoApplicationDTO.MicoApplicationDeploymentStatus;
-import io.github.ust.mico.core.dto.MicoApplicationStatusDTO;
-import io.github.ust.mico.core.dto.MicoApplicationWithServicesDTO;
-import io.github.ust.mico.core.dto.MicoServiceDeploymentInfoDTO;
-import io.github.ust.mico.core.exception.KubernetesResourceException;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfoQueryResult;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.MicoStatusService;
-import lombok.extern.slf4j.Slf4j;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import javax.validation.Valid;
+
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
@@ -45,15 +40,22 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
+import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
+import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
+import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO.MicoApplicationDeploymentStatus;
+import io.github.ust.mico.core.dto.response.MicoApplicationWithServicesResponseDTO;
+import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO;
+import io.github.ust.mico.core.dto.response.MicoServiceResponseDTO;
+import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
+import io.github.ust.mico.core.exception.KubernetesResourceException;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.persistence.*;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.service.MicoStatusService;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
@@ -64,11 +66,13 @@ public class ApplicationResource {
     public static final String PATH_SERVICES = "services";
     public static final String PATH_DEPLOYMENT_INFORMATION = "deploymentInformation";
     public static final String PATH_PROMOTE = "promote";
+    public static final String PATH_STATUS = "status";
 
-    private static final String PATH_VARIABLE_SHORT_NAME = "shortName";
-    private static final String PATH_VARIABLE_VERSION = "version";
-    private static final String PATH_VARIABLE_SERVICE_SHORT_NAME = "serviceShortName";
-    private static final String PATH_VARIABLE_SERVICE_VERSION = "serviceVersion";
+    private static final String PATH_VARIABLE_SHORT_NAME = "micoApplicationShortName";
+    private static final String PATH_VARIABLE_VERSION = "micoApplicationVersion";
+    private static final String PATH_VARIABLE_SERVICE_SHORT_NAME = "micoServiceShortName";
+    private static final String PATH_VARIABLE_SERVICE_VERSION = "micoServiceVersion";
+    protected static final int MAX_MICO_SERVICES_WITH_SAME_SHORT_NAME = 1;
 
     @Autowired
     private MicoApplicationRepository applicationRepository;
@@ -78,6 +82,15 @@ public class ApplicationResource {
 
     @Autowired
     private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
+    
+    @Autowired
+    private MicoLabelRepository labelRepository;
+    
+    @Autowired
+    private MicoEnvironmentVariableRepository environmentVariableRepository;
+    
+    @Autowired
+    private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
 
     @Autowired
     private MicoKubernetesClient micoKubernetesClient;
@@ -86,96 +99,120 @@ public class ApplicationResource {
     private MicoStatusService micoStatusService;
 
     @GetMapping()
-    public ResponseEntity<Resources<Resource<MicoApplicationWithServicesDTO>>> getAllApplications() {
+    public ResponseEntity<Resources<Resource<MicoApplicationWithServicesResponseDTO>>> getAllApplications() {
         return ResponseEntity.ok(
-            new Resources<>(getApplicationWithServicesDTOResourceList(applicationRepository.findAll(3)),
+            new Resources<>(getApplicationWithServicesResponseDTOResourceList(applicationRepository.findAll(3)),
                 linkTo(methodOn(ApplicationResource.class).getAllApplications()).withSelfRel()));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
-    public ResponseEntity<Resources<Resource<MicoApplicationWithServicesDTO>>> getApplicationsByShortName(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
+    public ResponseEntity<Resources<Resource<MicoApplicationWithServicesResponseDTO>>> getApplicationsByShortName(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
         List<MicoApplication> micoApplicationList = applicationRepository.findByShortName(shortName);
 
         return ResponseEntity.ok(
-            new Resources<>(getApplicationWithServicesDTOResourceList(micoApplicationList),
+            new Resources<>(getApplicationWithServicesResponseDTOResourceList(micoApplicationList),
                 linkTo(methodOn(ApplicationResource.class).getApplicationsByShortName(shortName)).withSelfRel()));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
-    public ResponseEntity<Resource<MicoApplicationWithServicesDTO>> getApplicationByShortNameAndVersion(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+    public ResponseEntity<Resource<MicoApplicationWithServicesResponseDTO>> getApplicationByShortNameAndVersion(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                                         @PathVariable(PATH_VARIABLE_VERSION) String version) {
         MicoApplication application = getApplicationFromDatabase(shortName, version);
-        return ResponseEntity.ok(getApplicationWithServicesDTOResourceWithDeploymentStatus(application));
+        return ResponseEntity.ok(getApplicationWithServicesResponseDTOResourceWithDeploymentStatus(application));
     }
 
     @PostMapping
-    public ResponseEntity<?> createApplication(@Valid @RequestBody MicoApplicationDTO newApplicationDto) {
+    public ResponseEntity<Resource<MicoApplicationWithServicesResponseDTO>> createApplication(@Valid @RequestBody MicoApplicationRequestDTO applicationDto) {
         // Check whether application already exists (not allowed)
         Optional<MicoApplication> applicationOptional = applicationRepository.
-            findByShortNameAndVersion(newApplicationDto.getShortName(), newApplicationDto.getVersion());
+            findByShortNameAndVersion(applicationDto.getShortName(), applicationDto.getVersion());
         if (applicationOptional.isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "Application '" + newApplicationDto.getShortName() + "' '" + newApplicationDto.getVersion() + "' already exists.");
+                "Application '" + applicationDto.getShortName() + "' '" + applicationDto.getVersion() + "' already exists.");
         }
 
-        MicoApplication savedApplication = applicationRepository.save(MicoApplication.valueOf(newApplicationDto));
+        MicoApplication savedApplication = applicationRepository.save(MicoApplication.valueOf(applicationDto));
+        MicoApplicationWithServicesResponseDTO dto = new MicoApplicationWithServicesResponseDTO(savedApplication);
+        dto.setDeploymentStatus(MicoApplicationDeploymentStatus.NOT_DEPLOYED);
 
         return ResponseEntity
             .created(linkTo(methodOn(ApplicationResource.class)
                 .getApplicationByShortNameAndVersion(savedApplication.getShortName(), savedApplication.getVersion())).toUri())
-            .body(new Resource<>(savedApplication, getApplicationLinks(savedApplication)));
+            .body(new Resource<>(dto, getApplicationLinks(savedApplication)));
     }
 
     @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
-    public ResponseEntity<?> updateApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                               @PathVariable(PATH_VARIABLE_VERSION) String version,
-                                               @Valid @RequestBody MicoApplicationDTO applicationDto) {
-        if (!applicationDto.getShortName().equals(shortName)) {
+    public ResponseEntity<Resource<MicoApplicationWithServicesResponseDTO>> updateApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                                              @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                                                              @Valid @RequestBody MicoApplicationRequestDTO applicationRequestDto) {
+        if (!applicationRequestDto.getShortName().equals(shortName)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "ShortName of the provided application does not match the request parameter");
         }
-        if (!applicationDto.getVersion().equals(version)) {
+        if (!applicationRequestDto.getVersion().equals(version)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "Version of the provided application does not match the request parameter");
         }
         MicoApplication existingApplication = getApplicationFromDatabase(shortName, version);
-        MicoApplication updatedApplication = applicationRepository.save(MicoApplication.valueOf(applicationDto).setId(existingApplication.getId()));
+        MicoApplication updatedApplication = applicationRepository.save(MicoApplication.valueOf(applicationRequestDto)
+        	.setId(existingApplication.getId())
+        	.setServices(existingApplication.getServices())
+        	.setServiceDeploymentInfos(existingApplication.getServiceDeploymentInfos()));
 
-        return ResponseEntity.ok(getApplicationDTOResourceWithDeploymentStatus(updatedApplication));
+        return ResponseEntity.ok(getApplicationWithServicesResponseDTOResourceWithDeploymentStatus(updatedApplication));
     }
 
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_PROMOTE)
-    public ResponseEntity<Resource<MicoApplicationDTO>> promoteApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+    public ResponseEntity<Resource<MicoApplicationWithServicesResponseDTO>> promoteApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                            @PathVariable(PATH_VARIABLE_VERSION) String version,
-                                                                           @NotEmpty @RequestBody String newVersion) {
-        // Application to promote (copy)
+                                                                           @Valid @RequestBody MicoVersionRequestDTO newVersionDto) {
+    	log.debug("Received request to promote application '{}' '{}' to version '{}'", shortName, version, newVersionDto.getVersion());
+    	
+    	// Retrieve application to promote (copy) from the database (checks whether it exists)
         MicoApplication application = getApplicationFromDatabase(shortName, version);
+        log.debug("Retrieved following application from database: {}", application);
+        
+        // Update the version of the application
+        application.setVersion(newVersionDto.getVersion());
+        
+        // In order to copy the application along with all service deployment information nodes
+        // it provides and the nodes the service deployment information node(s) is/are connected to,
+        // we need to set the id of all those nodes to null. That way, Neo4j will create new entities
+        // instead of updating the existing ones.
+        application.setId(null);
+        application.getServiceDeploymentInfos().forEach(sdi -> sdi.setId(null));
+        application.getServiceDeploymentInfos().forEach(sdi -> sdi.getLabels().forEach(label -> label.setId(null)));
+        application.getServiceDeploymentInfos().forEach(sdi -> sdi.getEnvironmentVariables().forEach(envVar -> envVar.setId(null)));
+        // The actual Kubernetes deployment information must not be copied, because the new application
+        // is considered to be not deployed yet.
+        application.getServiceDeploymentInfos().forEach(sdi -> sdi.setKubernetesDeploymentInfo(null));
 
-        // Update the version and set id to null, otherwise the original application
-        // would be updated but we want a new application instance to be created.
-        application.setVersion(newVersion).setId(null);
-
-        // Save the new (promoted) application in the database,
-        // all edges (deployment information) will be copied, too.
+        // Save the new (promoted) application in the database.
         MicoApplication updatedApplication = applicationRepository.save(application);
+        log.debug("Saved following application in database: {}", updatedApplication);
 
-        return ResponseEntity
-            .created(linkTo(methodOn(ApplicationResource.class)
-                .getApplicationByShortNameAndVersion(updatedApplication.getShortName(), updatedApplication.getVersion())).toUri())
-            .body(getApplicationDTOResourceWithDeploymentStatus(updatedApplication));
+        log.info("Promoted application '{}': {} → {}", shortName, version, updatedApplication.getVersion());
+
+        return ResponseEntity.ok(getApplicationWithServicesResponseDTOResourceWithDeploymentStatus(updatedApplication));
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     public ResponseEntity<Void> deleteApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                   @PathVariable(PATH_VARIABLE_VERSION) String version) throws KubernetesResourceException {
-        MicoApplication application = getApplicationFromDatabase(shortName, version);
+    	// Retrieve application to delete from the database (checks whether it exists)
+    	MicoApplication application = getApplicationFromDatabase(shortName, version);
 
         // Check whether application is currently deployed, i.e., it cannot be deleted
         if (micoKubernetesClient.isApplicationDeployed(application)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Application is currently deployed!");
         }
 
-        // Delete application in database
+        // Any service deployment information this application provides must be deleted
+        // before (!) the actual application is deleted, otherwise the query for
+        // deleting the service deployment information would not work.
+        serviceDeploymentInfoRepository.deleteAllByApplication(shortName, version);
+        
+        // Delete actual application
         applicationRepository.delete(application);
 
         return ResponseEntity.noContent().build();
@@ -183,68 +220,102 @@ public class ApplicationResource {
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
     public ResponseEntity<Void> deleteAllVersionsOfAnApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) throws KubernetesResourceException {
-        List<MicoApplication> micoApplicationList = applicationRepository.findByShortName(shortName);
+    	// Retrieve applications to delete from database (checks whether they all exist)
+        List<MicoApplication> applicationList = applicationRepository.findByShortName(shortName);
 
         // Check whether there is any version of the application in the database at all
-        if (micoApplicationList.isEmpty()) {
+        if (applicationList.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
         // If at least one version of the application is currently deployed,
         // none of the versions shall be deleted
-        for (MicoApplication application : micoApplicationList) {
+        for (MicoApplication application : applicationList) {
             if (micoKubernetesClient.isApplicationDeployed(application)) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Application is currently deployed in version " + application.getVersion() + "!");
             }
         }
+        
+        // Any service deployment information one of the applications provides must be deleted
+        // before (!) the actual application is deleted, otherwise the query for
+        // deleting the service deployment information would not work.
+        serviceDeploymentInfoRepository.deleteAllByApplication(shortName);
 
         // No version of the application is deployed -> delete all
-        applicationRepository.deleteAll(micoApplicationList);
+        applicationRepository.deleteAll(applicationList);
 
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Returns a list of services associated with the mico application specified by the parameters.
-     *
-     * @param shortName the name of the application
-     * @param version   the version of the application
-     * @return the list of mico services that are associated with the application
-     */
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES)
-    public ResponseEntity<Resources<Resource<MicoService>>> getServicesFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+    public ResponseEntity<Resources<Resource<MicoServiceResponseDTO>>> getServicesFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                        @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        MicoApplication micoApplication = getApplicationFromDatabase(shortName, version);
-        List<MicoService> micoServices = serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion());
-        List<Resource<MicoService>> micoServicesWithLinks = ServiceResource.getServiceResourcesList(micoServices);
-        return ResponseEntity.ok(
-            new Resources<>(micoServicesWithLinks,
+    	return ResponseEntity.ok(
+            new Resources<>(getServiceResponseDTOResourceList(shortName, version),
                 linkTo(methodOn(ApplicationResource.class).getServicesFromApplication(shortName, version)).withSelfRel()));
     }
 
+    @ApiOperation(value = "Adds or updates an association between a MicoApplication and a MicoService. An existing and" +
+        " already associated MicoService with an equal short name will be replaced with its new version." +
+        " Only one MicoService in one specific version is allowed per MicoApplication.")
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES + "/{" + PATH_VARIABLE_SERVICE_SHORT_NAME + "}/{" + PATH_VARIABLE_SERVICE_VERSION + "}")
     public ResponseEntity<Void> addServiceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
                                                         @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
                                                         @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName,
                                                         @PathVariable(PATH_VARIABLE_SERVICE_VERSION) String serviceVersion) {
+    	// Retrieve application and service from database (checks whether they exist)
         MicoApplication application = getApplicationFromDatabase(applicationShortName, applicationVersion);
-        MicoService existingService = getServiceFromDatabase(serviceShortName, serviceVersion);
-
-        // Each service can be added to one application only once
-        if (application.getServiceDeploymentInfos().stream().noneMatch(sdi -> sdi.getService().equals(existingService))) {
-            log.info("Add service '" + existingService.getShortName() + "' '" + existingService.getVersion()
-                + "' to application '" + applicationShortName + "' '" + applicationVersion + "'.");
-            MicoServiceDeploymentInfo sdi = new MicoServiceDeploymentInfo();
-
-            sdi.setApplication(application).setService(existingService);
-            application.getServiceDeploymentInfos().add(sdi);
+        MicoService service = getServiceFromDatabase(serviceShortName, serviceVersion);
+        
+        // Find all services with identical short name within this application
+		List<MicoService> micoServicesWithIdenticalShortName = application.getServices().stream()
+		    .filter(s -> s.getShortName().equals(serviceShortName)).collect(Collectors.toList());
+		
+        if (micoServicesWithIdenticalShortName.size() > 1) {
+        	// Illegal state, each service is allowed only once in every application
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+			    "There are multiple MicoServices with identical short names for MicoApplication '"
+			        + applicationShortName + "' '" + applicationVersion + "'.");
+        } else if (micoServicesWithIdenticalShortName.size() == 0) {
+        	// Service not included yet, simply add it
+            log.info("Add service '{}' '{}' to application '{}' '{}'.",
+                serviceShortName, serviceVersion, applicationShortName, applicationVersion);
+            MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo().setService(service);
+            // Both the service list and the service deployment info list
+            // of the application need to be updated ...
+            application.getServices().add(service);
+            application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
+            // ... before the application can be saved.
             applicationRepository.save(application);
         } else {
-            log.info("Application '" + applicationShortName + "' '" + applicationVersion + "' already contains service '"
-                + existingService.getShortName() + "' '" + existingService.getVersion() + "'.");
-        }
+        	// Service already included, replace it with its newer version, ...
+        	MicoService currentService = micoServicesWithIdenticalShortName.get(0);
+        	
+        	// ... but only replace if the new version is different from the current version
+        	if (currentService.getVersion().equals(serviceVersion)) {
+        		log.info("Application '{}' '{}' already contains service '{}' in version '{}'. Service will not be added to the application.",
+                    applicationShortName, applicationVersion, serviceShortName, serviceVersion);
+        	} else {
+        		log.info("Replace service '{}' '{}' in application '{}' '{}' with new version '{}'.",
+                    serviceShortName, currentService.getVersion(), applicationShortName, applicationVersion, serviceVersion);
+        		// Replace service in list of services in application
+        		application.getServices().remove(currentService);
+        		application.getServices().add(service);
 
+        		// Move the edge between the application and the service to the new version of the service
+        		// by updating the corresponding deployment info.
+				application.getServiceDeploymentInfos().stream()
+				    .filter(sdi -> sdi.getService().getShortName().equals(serviceShortName))
+				    .collect(Collectors.toList())
+				    .forEach(sdi -> sdi.setService(service));
+        		
+				// Save the application with the updated list of services
+				// and service deployment infos in the database
+        		applicationRepository.save(application);
+        	}
+        }
+        
         return ResponseEntity.noContent().build();
     }
 
@@ -252,86 +323,99 @@ public class ApplicationResource {
     public ResponseEntity<Void> deleteServiceFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                              @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                              @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName) {
-        log.debug("Delete Mico service '{}' from Mico application '{}' in version '{}'", serviceShortName, shortName, version);
-
-        // Retrieve the corresponding deployment info in order to remove it
-        // from the list of deployment infos in the given application.
-        // This will only remove the relationship (edge) between the given application
-        // and the service to delete.
-        Optional<MicoServiceDeploymentInfoQueryResult> sdiQueryResultOptional = serviceDeploymentInfoRepository
-            .findByApplicationAndService(shortName, version, serviceShortName);
-        if (sdiQueryResultOptional.isPresent()) {
-            MicoServiceDeploymentInfoQueryResult sdiQueryResult = sdiQueryResultOptional.get();
-            MicoApplication application = sdiQueryResult.getApplication();
-            application.getServiceDeploymentInfos().remove(sdiQueryResult.getServiceDeploymentInfo());
-            applicationRepository.save(application);
-
-            List<MicoService> remainingServices = serviceRepository.findAllByApplication(shortName, version);
-            log.debug("Service list of application '{}' '{}' has size: {}", shortName, version, remainingServices.size());
+        // Retrieve application from database (checks whether it exists)
+        MicoApplication application = getApplicationFromDatabase(shortName, version);
+        
+        // Check whether the application contains the service
+        if (application.getServices().stream().noneMatch(service -> service.getShortName().equals(serviceShortName))) {
+        	// Application does not include the service -> cannot not be deleted from it
+			log.debug("Application '{}' '{}' does not include service '{}', thus it cannot be deleted from it.",
+			    shortName, version, serviceShortName);
+        } else {
+        	log.info("Delete service '{}' from application '{}' '{}'.",
+        		serviceShortName, shortName, version);
+        	// 1. Remove the service from the application
+        	application.getServices().removeIf(service -> service.getShortName().equals(serviceShortName));
+        	applicationRepository.save(application);
+        	// 2. Delete the corresponding service deployment information
+        	serviceDeploymentInfoRepository.deleteByApplicationAndService(shortName, version, serviceShortName);
         }
-
+        
         // TODO: Update Kubernetes deployment
 
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPLOYMENT_INFORMATION + "/{" + PATH_VARIABLE_SERVICE_SHORT_NAME + "}")
-    public ResponseEntity<Resource<MicoServiceDeploymentInfoDTO>> getServiceDeploymentInformation(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+    public ResponseEntity<Resource<MicoServiceDeploymentInfoResponseDTO>> getServiceDeploymentInformation(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                                   @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                                                   @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName) {
-        // Retrieve service deployment info from database if there is any
-        Optional<MicoServiceDeploymentInfoQueryResult> serviceDeploymentInfoQueryResultOptional = serviceDeploymentInfoRepository.findByApplicationAndService(shortName, version, serviceShortName);
-        if (!serviceDeploymentInfoQueryResultOptional.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "Service deployment information for service '" + serviceShortName + "' in application '" + shortName
-                    + "' in version '" + version + "' could not be found.");
-        }
-
-        // Convert to service deployment info DTO and return it
-        MicoServiceDeploymentInfo serviceDeploymentInfo = serviceDeploymentInfoQueryResultOptional.get().getServiceDeploymentInfo();
-        return ResponseEntity.ok(new Resource<>(MicoServiceDeploymentInfoDTO.valueOf(serviceDeploymentInfo),
+    	// Check whether application contains service
+    	MicoApplication application = getApplicationFromDatabase(shortName, version);
+    	if (application.getServices().stream().noneMatch(service -> service.getShortName().equals(serviceShortName))) {
+    		throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                "Application '" + shortName + "' '" + version + "' does not include service '" + serviceShortName + "'.");
+    	}
+    	
+    	// Check whether the deployment information for the given application and service exists
+    	Optional<MicoServiceDeploymentInfo> serviceDeploymentInfoOptional = serviceDeploymentInfoRepository.findByApplicationAndService(shortName, version, serviceShortName);
+    	if (!serviceDeploymentInfoOptional.isPresent()) {
+    		throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+    			"Service deployment information for service '" + serviceShortName + "' in application '" + shortName
+                + "' '" + version + "' could not be found.");
+    	}
+    	
+    	// Convert to service deployment info DTO and return it
+    	MicoServiceDeploymentInfoResponseDTO serviceDeploymentInfoResponseDto = new MicoServiceDeploymentInfoResponseDTO(serviceDeploymentInfoOptional.get());
+        return ResponseEntity.ok(new Resource<>(serviceDeploymentInfoResponseDto,
             linkTo(methodOn(ApplicationResource.class)
                 .getServiceDeploymentInformation(shortName, version, serviceShortName)).withSelfRel()));
     }
 
     @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPLOYMENT_INFORMATION + "/{" + PATH_VARIABLE_SERVICE_SHORT_NAME + "}")
-    public ResponseEntity<Resource<MicoServiceDeploymentInfoDTO>> updateServiceDeploymentInformation(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+    public ResponseEntity<Resource<MicoServiceDeploymentInfoResponseDTO>> updateServiceDeploymentInformation(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                                      @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                                                      @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName,
-                                                                                                     @Valid @RequestBody MicoServiceDeploymentInfoDTO serviceDeploymentInfoDTO) {
-        // Check whether the corresponding service to update the deployment information for
-        // is available in the database (done via the deployment information relationship)
-        MicoApplication application = getApplicationFromDatabase(shortName, version);
-        if (application.getServiceDeploymentInfos().stream().noneMatch(sdi -> sdi.getService().getShortName().equals(serviceShortName))) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "Service deployment information for service '" + serviceShortName + "' in application '" + shortName
-                    + "' in version '" + version + "' could not be found.");
-        }
-
-        // Search the corresponding deployment information ...
-        for (MicoServiceDeploymentInfo serviceDeploymentInfo : application.getServiceDeploymentInfos()) {
-            if (serviceDeploymentInfo.getService().getShortName().equals(serviceShortName)) {
-                // ... and update it with the values from the deployment information from the DTO
-                serviceDeploymentInfo.applyValuesFrom(serviceDeploymentInfoDTO);
-                log.info("Service deployment information for service '{}' in application '{}' in version '{}' has been updated.",
-                    serviceShortName, shortName, version);
-                break;
-            }
-        }
-
-        applicationRepository.save(application);
-
+                                                                                                     @Valid @RequestBody MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) {
+    	// Check whether application contains service
+    	MicoApplication application = getApplicationFromDatabase(shortName, version);
+    	if (application.getServices().stream().noneMatch(service -> service.getShortName().equals(serviceShortName))) {
+    		throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                "Application '" + shortName + "' '" + version + "' does not include service '" + serviceShortName + "'.");
+    	}
+    	
+    	// Check whether the deployment information for the given application and service exists
+    	Optional<MicoServiceDeploymentInfo> serviceDeploymentInfoOptional = serviceDeploymentInfoRepository.findByApplicationAndService(shortName, version, serviceShortName);
+    	if (!serviceDeploymentInfoOptional.isPresent()) {
+    		throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+    			"Service deployment information for service '" + serviceShortName + "' in application '" + shortName
+                + "' '" + version + "' could not be found.");
+    	}
+    	
+    	// Update the service deployment information in the database
+    	MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(
+    	    serviceDeploymentInfoOptional.get().applyValuesFrom(serviceDeploymentInfoDTO));
+    	// In case addition properties (stored as separate node entity) such as labels, environment variables
+    	// have been removed from this service deployment information,
+    	// the standard save() function of the service deployment information repository will not delete those
+    	// "tangling" (without relationships) labels (nodes), hence the manual clean up.
+    	labelRepository.cleanUp();
+    	environmentVariableRepository.cleanUp();
+    	kubernetesDeploymentInfoRepository.cleanUp();
+    	log.debug("Service deployment information for service '{}' in application '{}' '{}' has been updated.", serviceShortName, shortName, version);
+    	
         // TODO: Update actual Kubernetes deployment (see issue mico#416).
 
-        return ResponseEntity.ok(new Resource<>(serviceDeploymentInfoDTO, linkTo(methodOn(ApplicationResource.class)
-            .getServiceDeploymentInformation(shortName, version, serviceShortName)).withSelfRel()));
+		return ResponseEntity.ok(new Resource<>(new MicoServiceDeploymentInfoResponseDTO(updatedServiceDeploymentInfo),
+			linkTo(methodOn(ApplicationResource.class).getServiceDeploymentInformation(shortName, version, serviceShortName))
+		        .withSelfRel()));
     }
 
-    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")
-    public ResponseEntity<Resource<MicoApplicationStatusDTO>> getStatusOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_STATUS)
+    public ResponseEntity<Resource<MicoApplicationStatusResponseDTO>> getStatusOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                      @PathVariable(PATH_VARIABLE_VERSION) String version) {
         MicoApplication micoApplication = getApplicationFromDatabase(shortName, version);
-        MicoApplicationStatusDTO applicationStatus = micoStatusService.getApplicationStatus(micoApplication);
+        MicoApplicationStatusResponseDTO applicationStatus = micoStatusService.getApplicationStatus(micoApplication);
         return ResponseEntity.ok(new Resource<>(applicationStatus));
     }
 
@@ -352,6 +436,7 @@ public class ApplicationResource {
     }
     
     /**
+     * //TODO This is a duplicate of {@link ServiceResource#getServiceFromDatabase(String, String)} this should be resolved
      * Returns the existing {@link MicoService} object from the database
      * for the given shortName and version.
      *
@@ -368,31 +453,20 @@ public class ApplicationResource {
         return existingServciceOptional.get();
     }
 
-    private List<Resource<MicoApplicationWithServicesDTO>> getApplicationWithServicesDTOResourceList(List<MicoApplication> applications) {
-        return applications.stream().map(application -> getApplicationWithServicesDTOResourceWithDeploymentStatus(application)).collect(Collectors.toList());
+    private List<Resource<MicoApplicationWithServicesResponseDTO>> getApplicationWithServicesResponseDTOResourceList(List<MicoApplication> applications) {
+        return applications.stream().map(application -> getApplicationWithServicesResponseDTOResourceWithDeploymentStatus(application)).collect(Collectors.toList());
     }
 
-    private Resource<MicoApplicationWithServicesDTO> getApplicationWithServicesDTOResourceWithDeploymentStatus(MicoApplication application) {
-        MicoApplicationWithServicesDTO dto = MicoApplicationWithServicesDTO.valueOf(application);
+    private Resource<MicoApplicationWithServicesResponseDTO> getApplicationWithServicesResponseDTOResourceWithDeploymentStatus(MicoApplication application) {
+        MicoApplicationWithServicesResponseDTO dto = new MicoApplicationWithServicesResponseDTO(application);
         dto.setDeploymentStatus(getApplicationDeploymentStatus(application));
-        return new Resource<MicoApplicationWithServicesDTO>(dto, getApplicationLinks(application));
-    }
-
-    private Resource<MicoApplicationDTO> getApplicationDTOResourceWithDeploymentStatus(MicoApplication application) {
-        MicoApplicationDTO dto = MicoApplicationDTO.valueOf(application);
-        dto.setDeploymentStatus(getApplicationDeploymentStatus(application));
-        return new Resource<MicoApplicationDTO>(dto, getApplicationLinks(application));
+        return new Resource<>(dto, getApplicationLinks(application));
     }
 
     private MicoApplicationDeploymentStatus getApplicationDeploymentStatus(MicoApplication application) {
-        try {
-            return micoKubernetesClient.isApplicationDeployed(application)
-                ? MicoApplicationDeploymentStatus.DEPLOYED
-                : MicoApplicationDeploymentStatus.NOT_DEPLOYED;
-        } catch (KubernetesResourceException e) {
-            log.debug(e.getMessage(), e);
-            return MicoApplicationDeploymentStatus.UNKNOWN;
-        }
+        return micoKubernetesClient.isApplicationDeployed(application)
+            ? MicoApplicationDeploymentStatus.DEPLOYED
+            : MicoApplicationDeploymentStatus.NOT_DEPLOYED;
     }
 
     private Iterable<Link> getApplicationLinks(MicoApplication application) {
@@ -400,6 +474,11 @@ public class ApplicationResource {
         links.add(linkTo(methodOn(ApplicationResource.class).getApplicationByShortNameAndVersion(application.getShortName(), application.getVersion())).withSelfRel());
         links.add(linkTo(methodOn(ApplicationResource.class).getAllApplications()).withRel("applications"));
         return links;
+    }
+    
+    private List<Resource<MicoServiceResponseDTO>> getServiceResponseDTOResourceList(String applicationShortName, String applicationVersion) {
+    	List<MicoService> services = serviceRepository.findAllByApplication(applicationShortName, applicationVersion);
+    	return ServiceResource.getServiceResponseDTOResourcesList(services);
     }
 
 }

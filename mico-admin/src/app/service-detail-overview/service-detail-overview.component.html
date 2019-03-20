@@ -5,7 +5,7 @@
         <div class="relative w-100">
             <!-- display view -->
             <ng-container *ngIf="!edit">
-                <mico-data [modelUrl]="'remote/MicoService'" [startData]="serviceData" [isBlacklist]="true"
+                <mico-data [modelUrl]="'remote/MicoServiceResponseDTO'" [startData]="serviceData" [isBlacklist]="true"
                     [filter]="serviceOverviewFilter"></mico-data>
 
                 <!-- TODO hard coded information - not yet part of the domain model/api-->
@@ -33,7 +33,7 @@
 
             <!-- edit view (dynamic form for mico service) -->
             <ng-container *ngIf="edit">
-                <mico-form [modelUrl]="'remote/MicoService'"
+                <mico-form [modelUrl]="'remote/MicoServiceRequestDTO'"
                     [filter]="['predecessor', 'dependencies', 'serviceInterfaces']" [isBlacklist]="true"
                     (data)="serviceData = $event" [startData]="serviceData">
                 </mico-form>
@@ -107,8 +107,8 @@
                                                 <div class="ml2">
                                                     <p class="mt0 mb1" *ngFor="let port of interface.ports">
                                                         <b>{{port.type}}</b>
-                                                        <span class="ml1">{{port.targetPort}}</span>
-                                                        <span class="ml1">(internal: {{port.port}})</span>
+                                                        <span class="ml1">{{port.port}}</span>
+                                                        <span class="ml1">(internal: {{port.targetPort}})</span>
                                                     </p>
                                                 </div>
                                             </div>

@@ -17,12 +17,12 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto;
+package io.github.ust.mico.core.dto.request;
 
 import com.fasterxml.jackson.annotation.*;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.util.KubernetesNameNormalizer;
 import io.github.ust.mico.core.util.Patterns;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
@@ -33,22 +33,20 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
 /**
- * DTO for a {@link MicoApplication} without services
- * and their deployment information. Contains the current
- * deployment status of this application (may be unknown).
+ * DTO for a {@link MicoApplication} intended to use with requests only.
+ * Note that the services are not included.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonInclude(Include.NON_NULL)
-public class MicoApplicationDTO {
-
+public class MicoApplicationRequestDTO {
+	
     // ----------------------
     // -> Required fields ---
     // ----------------------
@@ -63,28 +61,14 @@ public class MicoApplicationDTO {
             @ExtensionProperty(name = "title", value = "Short Name"),
             @ExtensionProperty(name = "pattern", value = Patterns.KUBERNETES_NAMING_REGEX),
             @ExtensionProperty(name = "minLength", value = "3"),
-            @ExtensionProperty(name = "maxLength", value = "253"),
+            @ExtensionProperty(name = "maxLength", value = KubernetesNameNormalizer.MICO_NAME_MAX_SIZE +""),
             @ExtensionProperty(name = "x-order", value = "10"),
             @ExtensionProperty(name = "description", value = "Unique short name of the application.")
         }
     )})
-    @Size(min = 3, max = 253, message = "must have a length between 3 and 253")
+    @Size(min = 3, max = KubernetesNameNormalizer.MICO_NAME_MAX_SIZE, message = "must have a length between 3 and " + KubernetesNameNormalizer.MICO_NAME_MAX_SIZE)
     @Pattern(regexp = Patterns.KUBERNETES_NAMING_REGEX, message = Patterns.KUBERNETES_NAMING_MESSAGE)
     private String shortName;
-
-    /**
-     * The name of the artifact. Intended for humans.
-     * Required only for the usage in the UI.
-     */
-    @ApiModelProperty(required = true, extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Name"),
-            @ExtensionProperty(name = "x-order", value = "30"),
-            @ExtensionProperty(name = "description", value = "Human readable name of the application.")
-        }
-    )})
-    private String name;
 
     /**
      * The version of this application.
@@ -101,6 +85,21 @@ public class MicoApplicationDTO {
     @NotEmpty
     @Pattern(regexp = Patterns.SEMANTIC_VERSION_WITH_PREFIX_REGEX, message = Patterns.SEMANTIC_VERSIONING_MESSAGE)
     private String version;
+
+    /**
+     * The name of the artifact. Intended for humans.
+     * Required only for the usage in the UI.
+     */
+    @ApiModelProperty(required = true, extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Name"),
+            @ExtensionProperty(name = "x-order", value = "30"),
+            @ExtensionProperty(name = "description", value = "Human readable name of the application.")
+        }
+    )})
+    @NotNull
+    private String name;
 
     /**
      * Human readable description of this application.
@@ -152,55 +151,24 @@ public class MicoApplicationDTO {
     )})
     private String owner;
 
+    
+    // -------------------
+    // -> Constructors ---
+    // -------------------
+	
     /**
-     * Indicates whether the {@link MicoApplication} is currently deployed.
-     * Default is {@link MicoApplicationDeploymentStatus#UNKNOWN}.
-     * Is read only and will be updated by the backend at every request.
-     */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Deployment Status"),
-            @ExtensionProperty(name = "readOnly", value = "true"),
-            @ExtensionProperty(name = "x-order", value = "220"),
-            @ExtensionProperty(name = "description", value = "Holds the current deployment status of this application.")
-        }
-    )})
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private MicoApplicationDeploymentStatus deploymentStatus = MicoApplicationDeploymentStatus.UNKNOWN;
-
-    /**
-     * Creates a {@code MicoApplicationDTO} based on a
-     * {@link MicoApplication}. Note that the deployment status
-     * needs to be set explicitly since it cannot be inferred
-     * from the given {@link MicoApplication} itself.
-     *
-     * @param application the {@link MicoApplication}.
-     * @return a {@link MicoApplicationDTO} with all the values
-     * of the given {@code MicoApplication}.
-     */
-    public static MicoApplicationDTO valueOf(MicoApplication application) {
-        return new MicoApplicationDTO()
-            .setShortName(application.getShortName())
-            .setName(application.getName())
-            .setVersion(application.getVersion())
-            .setDescription(application.getDescription())
-            .setContact(application.getContact())
-            .setOwner(application.getOwner());
-    }
-
-
-    public enum MicoApplicationDeploymentStatus {
-
-        DEPLOYED,
-        NOT_DEPLOYED,
-        UNKNOWN;
-
-        @Override
-        public String toString() {
-            return super.toString().toLowerCase();
-        }
-
-    }
+   	 * Creates an instance of {@code MicoApplicationRequestDTO} based on a
+   	 * {@code MicoApplication}.
+   	 * 
+   	 * @param application the {@link MicoApplication}.
+   	 */
+	public MicoApplicationRequestDTO(MicoApplication application) {
+		this.shortName = application.getShortName();
+		this.version = application.getVersion();
+		this.name = application.getName();
+		this.description = application.getDescription();
+		this.contact = application.getContact();
+		this.owner = application.getOwner();
+	}
 
 }
