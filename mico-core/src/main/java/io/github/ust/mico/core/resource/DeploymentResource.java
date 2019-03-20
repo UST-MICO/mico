@@ -159,6 +159,10 @@ public class DeploymentResource {
                 micoApplication.getShortName(), micoApplication.getVersion());
 
             for (MicoServiceDeploymentInfo serviceDeploymentInfo : serviceDeploymentInfos) {
+                if(serviceDeploymentInfo == null) {
+                    // Build failed
+                    continue;
+                }
                 MicoService micoService = serviceDeploymentInfo.getService();
                 try {
                     KubernetesDeploymentInfo kubernetesDeploymentInfo = createKubernetesResources(serviceDeploymentInfo);
@@ -177,6 +181,10 @@ public class DeploymentResource {
                 return null;
             }
             for (MicoServiceDeploymentInfo serviceDeploymentInfo : serviceDeploymentInfos) {
+                if(serviceDeploymentInfo == null) {
+                    // Build failed
+                    continue;
+                }
                 log.debug("Saved new Kubernetes deployment information of '{}' '{}' to database: {}",
                     serviceDeploymentInfo.getService().getShortName(), serviceDeploymentInfo.getService().getVersion(),
                     serviceDeploymentInfo.getKubernetesDeploymentInfo());
