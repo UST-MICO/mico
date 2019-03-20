@@ -167,11 +167,17 @@ public class DeploymentResource {
         log.info("Undeploy MicoApplication '{}' in version '{}' with {} included MicoService(s).",
             shortName, version, application.getServices().size());
 
-        if (micoKubernetesClient.isApplicationDeployed(application)) {
-            micoKubernetesClient.undeployApplication(application);
-        } else {
-            log.info("MicoApplication '{}' in version '{}' is currently not deployed.", application.getShortName(), application.getVersion());
+        if (!micoKubernetesClient.isApplicationDeployed(application)) {
+            // Currently we undeploy all MicoServices regardless whether the application is considered
+            // to be deployed or not.
+            // The reason is that there are possible some MicoServices deployed successfully and some not.
+            // This undeployment should delete/scale the actually existing deployments.
+            log.info("MicoApplication '{}' in version '{}' is considered to be not deployed. " +
+                "Nevertheless check if there are any MicoServices that should be undeployed.",
+                application.getShortName(), application.getVersion());
         }
+        // TODO: Undeploy only if application is deployed or it is in a conflicted state. Covered by mico#535
+        micoKubernetesClient.undeployApplication(application);
 
         return ResponseEntity.noContent().build();
     }

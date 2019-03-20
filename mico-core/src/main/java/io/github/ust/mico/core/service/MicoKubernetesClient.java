@@ -288,10 +288,9 @@ public class MicoKubernetesClient {
                 // Check if the stored information are still valid.
                 KubernetesDeploymentInfo kubernetesDeploymentInfo = updateKubernetesDeploymentInfo(serviceDeploymentInfo);
                 if (kubernetesDeploymentInfo != null) {
-                    log.debug("MicoService '{}' '{}' is deployed to the Kubernetes namespace '{}' " +
-                            "with the Kubernetes Deployment '{}' and the Kubernetes Services '{}'.",
-                        micoService.getShortName(), micoService.getVersion(), kubernetesDeploymentInfo.getNamespace(),
-                        kubernetesDeploymentInfo.getDeploymentName(), kubernetesDeploymentInfo.getServiceNames());
+                    log.debug("MicoService '{}' '{}' is deployed. The Kubernetes Deployment '{}' and the Services '{}' exist in the namespace '{}'.",
+                        micoService.getShortName(), micoService.getVersion(), kubernetesDeploymentInfo.getDeploymentName(),
+                        kubernetesDeploymentInfo.getServiceNames(), kubernetesDeploymentInfo.getNamespace());
                     actualNumberOfServiceDeployments++;
                 }
             }
@@ -576,8 +575,9 @@ public class MicoKubernetesClient {
 			} else {
 				MicoServiceDeploymentInfo serviceDeploymentInfo = serviceDeploymentInfoOptional.get();
                 if(serviceDeploymentInfo.getKubernetesDeploymentInfo() == null) {
-                    throw new IllegalStateException("MicoService '" + service.getShortName() + "' '" + service.getVersion()
-                        + "' has no Kubernetes deployment information stored in the database.");
+                    log.info("MicoService '{}' '{}' is not deployed for the MicoApplication '{}' '{}'. No undeployment/scaling required.",
+                        service.getShortName(), service.getVersion(), application.getShortName(), application.getVersion());
+                    continue;
                 }
 
 				if (serviceDeploymentInfos.size() == 1) {
