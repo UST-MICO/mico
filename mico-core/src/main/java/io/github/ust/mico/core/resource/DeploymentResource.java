@@ -125,18 +125,11 @@ public class DeploymentResource {
 
             log.info("Start build of MicoService '{}' in version '{}'.", micoService.getShortName(), micoService.getVersion());
             CompletableFuture<MicoServiceDeploymentInfo> buildJob = CompletableFuture.supplyAsync(() -> buildMicoService(serviceDeploymentInfo))
-                .handle((returnedServiceDeploymentInfo, ex) -> {
-                    if (ex == null) {
-                        // There was no exception during the build.
-                        // Save the MicoService with the updated Docker image URI to the database.
-                        serviceRepository.save(returnedServiceDeploymentInfo.getService());
-                        return returnedServiceDeploymentInfo;
-                    } else {
-                        log.error(ex.getMessage(), ex);
-                        backgroundJobBroker.saveNewStatus(micoService.getShortName(), micoService.getVersion(),
-                            MicoServiceBackgroundJob.Type.BUILD, MicoServiceBackgroundJob.Status.ERROR, ex.getMessage());
-                        return null;
-                    }
+                .exceptionally(ex -> {
+                    log.error(ex.getMessage(), ex);
+                    backgroundJobBroker.saveNewStatus(micoService.getShortName(), micoService.getVersion(),
+                        MicoServiceBackgroundJob.Type.BUILD, MicoServiceBackgroundJob.Status.ERROR, ex.getMessage());
+                    return null;
                 });
             log.debug("Started build of MicoService '{}' in version '{}'.", micoService.getShortName(), micoService.getVersion());
             buildJobs.add(buildJob);
@@ -222,6 +215,7 @@ public class DeploymentResource {
                 log.info("Build of MicoService '{}' in version '{}' finished with image '{}'.",
                     micoService.getShortName(), micoService.getVersion(), dockerImageUri);
                 micoService.setDockerImageUri(dockerImageUri);
+                serviceRepository.save(micoService);
             } else {
                 String errorMessage = "Build of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' didn't return a Docker image URI.";
                 throw new CompletionException(new RuntimeException(errorMessage));
