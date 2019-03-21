@@ -512,7 +512,7 @@ public class ServiceResourceUnitTests {
                 .setDescription(updatedServiceRequestDto.getDescription());
 
         given(micoServiceBroker.getServiceFromDatabase(SHORT_NAME, VERSION)).willReturn(existingService);
-        given(micoServiceBroker.persistService(eq(expectedService))).willReturn(expectedService);
+        given(micoServiceBroker.updateExistingService(eq(expectedService))).willReturn(expectedService);
 
         ResultActions resultUpdate = mvc.perform(put(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION)
                 .content(mapper.writeValueAsBytes(updatedServiceRequestDto))
@@ -539,7 +539,6 @@ public class ServiceResourceUnitTests {
                 .setName(null);
 
         given(micoServiceBroker.getServiceFromDatabase(SHORT_NAME, VERSION)).willReturn(existingService);
-        //given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingService));
 
         ResultActions resultUpdate = mvc.perform(put(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION)
                 .content(mapper.writeValueAsBytes(new MicoServiceRequestDTO(updatedService)))
@@ -573,9 +572,7 @@ public class ServiceResourceUnitTests {
         ArgumentCaptor<MicoService> serviceArgumentCaptor = ArgumentCaptor.forClass(MicoService.class);
 
         given(micoServiceBroker.getServiceFromDatabase(SHORT_NAME, VERSION)).willReturn(existingService);
-
-//        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingService));
-//        given(serviceRepository.save(any(MicoService.class))).willReturn(expectedService);
+        given(micoServiceBroker.updateExistingService(expectedService)).willReturn(expectedService);
 
         mvc.perform(put(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION)
                 .content(mapper.writeValueAsBytes(updatedServiceRequestDto))
@@ -583,7 +580,7 @@ public class ServiceResourceUnitTests {
                 .andDo(print())
                 .andExpect(status().isOk());
 
-        verify(micoServiceBroker, times(1)).persistService(serviceArgumentCaptor.capture());
+        verify(micoServiceBroker, times(1)).updateExistingService(serviceArgumentCaptor.capture());
         MicoService savedMicoService = serviceArgumentCaptor.getValue();
         assertNotNull(savedMicoService);
         assertEquals("Actual service does not match expected", expectedService, savedMicoService);
