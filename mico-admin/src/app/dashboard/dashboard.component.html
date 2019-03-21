@@ -10,16 +10,12 @@
             <mat-card-title>Applications</mat-card-title>
             <mat-card-content>
                 <mat-table [dataSource]="applications" class="mat-elevation-z2">
-                    <ng-container matColumnDef="id">
-                        <mat-header-cell class="ph1" *matHeaderCellDef>ID</mat-header-cell>
-                        <mat-cell class="ph1" *matCellDef="let element">{{element.id}}</mat-cell>
-                    </ng-container>
                     <ng-container matColumnDef="name">
-                        <mat-header-cell class="ph1" *matHeaderCellDef>Name</mat-header-cell>
+                        <mat-header-cell class="ph1" *matHeaderCellDef><b>Name</b></mat-header-cell>
                         <mat-cell class="ph1" *matCellDef="let element">{{element.name}}</mat-cell>
                     </ng-container>
                     <ng-container matColumnDef="shortName">
-                        <mat-header-cell class="ph1" *matHeaderCellDef>Short Name</mat-header-cell>
+                        <mat-header-cell class="ph1" *matHeaderCellDef><b>Short Name</b></mat-header-cell>
                         <mat-cell class="ph1" *matCellDef="let element">{{element.shortName}}</mat-cell>
                     </ng-container>
                     <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
@@ -40,12 +36,12 @@
                         <mat-divider></mat-divider>
                         <mat-list-item (click)="newService()">
                             <span mat-line>new Service</span>
-                            <mat-icon>add</mat-icon>
+                            <mat-icon color="accent">add</mat-icon>
                         </mat-list-item>
                         <mat-divider></mat-divider>
                         <mat-list-item (click)="newApplication()">
                             <span mat-line>new Application</span>
-                            <mat-icon>add</mat-icon>
+                            <mat-icon color="accent">add</mat-icon>
                         </mat-list-item>
                         <mat-divider></mat-divider>
                     </mat-action-list>

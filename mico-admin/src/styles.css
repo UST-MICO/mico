@@ -4,6 +4,8 @@
 @import '../node_modules/c3/c3.min.css';
 @import '~ng-pick-datetime/assets/style/picker.min.css';
 
+
+
 html,
 body {
     height: 100%;
@@ -495,4 +497,8 @@ Quick fix to avoid scroll bars
 */
 .mat-header-cell {
     min-width: 80px !important;
+}
+
+.mat-button-toggle {
+    background-color: #50ca20;
 }
