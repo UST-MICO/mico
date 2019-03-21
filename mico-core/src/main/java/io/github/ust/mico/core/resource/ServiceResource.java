@@ -19,6 +19,7 @@
 
 package io.github.ust.mico.core.resource;
 
+import io.github.ust.mico.core.broker.MicoServiceBroker;
 import io.github.ust.mico.core.dto.request.CrawlingInfoRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
@@ -72,20 +73,19 @@ public class ServiceResource {
     private static final String PATH_DEPENDENCY_GRAPH = "dependencyGraph";
 
     @Autowired
-    private MicoServiceRepository serviceRepository;
+    private MicoServiceBroker micoServiceBroker;
 
+    //TODO. Verfiy if this object can be removed from ServiceResource
     @Autowired
     private MicoStatusService micoStatusService;
 
-    @Autowired
-    private MicoKubernetesClient micoKubernetesClient;
-
+    //TODO. Verfiy if this object can be removed from ServiceResource
     @Autowired
     private GitHubCrawler crawler;
 
     @GetMapping()
     public ResponseEntity<Resources<Resource<MicoServiceResponseDTO>>> getServiceList() {
-        List<MicoService> services = serviceRepository.findAll(2);
+        List<MicoService> services = micoServiceBroker.getAllServicesAsList();
         List<Resource<MicoServiceResponseDTO>> serviceResources = getServiceResponseDTOResourcesList(services);
         return ResponseEntity.ok(
             new Resources<>(serviceResources, linkTo(methodOn(ServiceResource.class).getServiceList()).withSelfRel()));
