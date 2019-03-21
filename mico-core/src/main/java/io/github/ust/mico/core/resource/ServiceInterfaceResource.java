@@ -79,8 +79,8 @@ public class ServiceInterfaceResource {
     	List<MicoServiceInterface> serviceInterfaces = serviceInterfaceRepository.findByService(shortName, version);
 		List<Resource<MicoServiceInterfaceResponseDTO>> serviceInterfaceResources = 
 			getServiceInterfaceResponseDTOResourcesList(shortName, version, serviceInterfaces);
-		return ResponseEntity.ok(new Resources<Resource<MicoServiceInterfaceResponseDTO>>(serviceInterfaceResources,
-		    linkTo(methodOn(ServiceInterfaceResource.class).getInterfacesOfService(shortName, version)).withSelfRel()));
+        return ResponseEntity.ok(new Resources<>(serviceInterfaceResources,
+            linkTo(methodOn(ServiceInterfaceResource.class).getInterfacesOfService(shortName, version)).withSelfRel()));
     }
 
     @GetMapping(SERVICE_INTERFACE_PATH + "/{" + PATH_VARIABLE_SERVICE_INTERFACE_NAME + "}")
