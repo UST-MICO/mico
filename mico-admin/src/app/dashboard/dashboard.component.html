@@ -12,11 +12,13 @@
                 <mat-table [dataSource]="applications" class="mat-elevation-z2">
                     <ng-container matColumnDef="name">
                         <mat-header-cell class="ph1" *matHeaderCellDef><b>Name</b></mat-header-cell>
-                        <mat-cell class="ph1" *matCellDef="let element">{{element.name}}</mat-cell>
+                        <mat-cell class="ph1" *matCellDef="let element"
+                            [routerLink]="['/app-detail', element.shortName]">{{element.name}}</mat-cell>
                     </ng-container>
                     <ng-container matColumnDef="shortName">
                         <mat-header-cell class="ph1" *matHeaderCellDef><b>Short Name</b></mat-header-cell>
-                        <mat-cell class="ph1" *matCellDef="let element">{{element.shortName}}</mat-cell>
+                        <mat-cell class="ph1" *matCellDef="let element"
+                            [routerLink]="['/app-detail', element.shortName]">{{element.shortName}}</mat-cell>
                     </ng-container>
                     <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
                     <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>

@@ -507,9 +507,13 @@ Quick fix to avoid scroll bars
 }
 
 /*
-* Set toggle button colors (chosen color is for test purposes right now)
+* Set toggle button colors
 */
 .mat-button-toggle {
     background-color: var(--accent);
+    color: var(--accent-text-color);
+}
+
+.mat-button-toggle-checked.mat-button-toggle-appearance-standard {
     color: var(--accent-text-color);
 }
