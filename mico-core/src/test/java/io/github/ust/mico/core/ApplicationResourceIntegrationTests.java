@@ -67,9 +67,7 @@ import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO
 import io.github.ust.mico.core.dto.response.status.*;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo.ImagePullPolicy;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.persistence.*;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
 import io.github.ust.mico.core.util.CollectionUtils;
@@ -102,6 +100,18 @@ public class ApplicationResourceIntegrationTests {
 
     @MockBean
     private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
+
+    @MockBean
+    private MicoLabelRepository micoLabelRepository;
+
+    @MockBean
+    private MicoEnvironmentVariableRepository environmentVariableRepository;
+
+    @MockBean
+    private MicoInterfaceConnectionRepository interfaceConnectionRepository;
+
+    @MockBean
+    private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
 
     @MockBean
     private MicoKubernetesClient micoKubernetesClient;
