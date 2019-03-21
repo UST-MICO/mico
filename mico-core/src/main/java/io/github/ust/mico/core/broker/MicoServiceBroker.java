@@ -230,6 +230,9 @@ public class MicoServiceBroker {
 
     public MicoService promoteService(MicoService service, String newVersion) {
         service.setVersion(newVersion).setId(null);
+        service.setId(null);
+        service.getServiceInterfaces().forEach(serviceInterface -> serviceInterface.setId(null));
+        service.getServiceInterfaces().forEach(serviceInterface -> serviceInterface.getPorts().forEach(port -> port.setId(null)));
 
         log.debug("Set new version in service: {}", service);
 

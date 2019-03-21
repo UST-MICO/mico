@@ -300,32 +300,15 @@ public class ServiceResource {
         }
     }
 
-    //TODO: Update logic inside broker
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_PROMOTE)
     public ResponseEntity<Resource<MicoServiceResponseDTO>> promoteService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                            @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                            @Valid @RequestBody MicoVersionRequestDTO newVersionDto) {
         log.debug("Received request to promote MicoService '{}' '{}' to version '{}'", shortName, version, newVersionDto.getVersion());
 
-        // Service to promote (copy)
         MicoService service = getServiceFromMicoServiceBroker(shortName, version);
-        log.debug("Retrieved following MicoService from database: {}", service);
 
-        // Update the version of the service.
-        service.setVersion(newVersionDto.getVersion());
-
-        // In order to copy the service along with all service interfaces nodes
-        // and all port nodes of the service interface we need to set the id of
-        // service interfaces and ports to null.
-        // That way, Neo4j will create new entities instead of updating the existing ones.
-        service.setId(null);
-        service.getServiceInterfaces().forEach(serviceInterface -> serviceInterface.setId(null));
-        service.getServiceInterfaces().forEach(serviceInterface -> serviceInterface.getPorts().forEach(port -> port.setId(null)));
-
-        // Save the new (promoted) service in the database.
-        MicoService updatedService = serviceRepository.save(service);
-        log.debug("Saved following MicoService in database: {}", updatedService);
-        log.info("Promoted service '{}': {} → {}", shortName, version, updatedService.getVersion());
+        MicoService updatedService = micoServiceBroker.promoteService(service, newVersionDto.getVersion());
 
         return ResponseEntity.ok(getServiceResponseDTOResource(updatedService));
     }
