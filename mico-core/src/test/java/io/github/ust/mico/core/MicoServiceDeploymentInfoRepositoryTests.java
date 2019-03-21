@@ -19,7 +19,6 @@
 
 package io.github.ust.mico.core;
 
-<<<<<<< HEAD
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.*;
 import io.github.ust.mico.core.util.CollectionUtils;
@@ -33,7 +32,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Commit;
-=======
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
@@ -48,30 +46,23 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
->>>>>>> b79ea60e2b74b8d1c788bfe9e984e4ca1bffb5f5
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
-<<<<<<< HEAD
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-=======
 import static org.junit.Assert.*;
->>>>>>> b79ea60e2b74b8d1c788bfe9e984e4ca1bffb5f5
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @Transactional
 public class MicoServiceDeploymentInfoRepositoryTests {
-<<<<<<< HEAD
     public static @ClassRule
     RuleChain rules = RuleChain.outerRule(EmbeddedRedisServer.runningAt(6379).suppressExceptions());
 
-=======
->>>>>>> b79ea60e2b74b8d1c788bfe9e984e4ca1bffb5f5
     @Autowired
     private MicoApplicationRepository applicationRepository;
 
@@ -84,7 +75,6 @@ public class MicoServiceDeploymentInfoRepositoryTests {
     @Autowired
     private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
 
-<<<<<<< HEAD
     @Autowired
     private MicoServiceDependencyRepository serviceDependencyRepository;
 
@@ -100,22 +90,17 @@ public class MicoServiceDeploymentInfoRepositoryTests {
     @Autowired
     private MicoBackgroundTaskRepository backgroundTaskRepository;
 
-=======
->>>>>>> b79ea60e2b74b8d1c788bfe9e984e4ca1bffb5f5
     @Before
     public void setUp() {
         applicationRepository.deleteAll();
         serviceRepository.deleteAll();
         serviceInterfaceRepository.deleteAll();
         serviceDeploymentInfoRepository.deleteAll();
-<<<<<<< HEAD
         serviceDependencyRepository.deleteAll();
         servicePortRepository.deleteAll();
         labelRepository.deleteAll();
         environmentVariableRepository.deleteAll();
         backgroundTaskRepository.deleteAll();
-=======
->>>>>>> b79ea60e2b74b8d1c788bfe9e984e4ca1bffb5f5
     }
 
     @After
@@ -123,7 +108,6 @@ public class MicoServiceDeploymentInfoRepositoryTests {
 
     }
 
-<<<<<<< HEAD
     private MicoApplication a1;
     private MicoApplication a2;
 
@@ -320,7 +304,8 @@ public class MicoServiceDeploymentInfoRepositoryTests {
         environmentVariableRepository.save(v2);
         environmentVariableRepository.save(v3);
         environmentVariableRepository.save(v4);
-=======
+    }
+
     @Test
     public void findAllByApplication() {
         MicoApplication a1 = new MicoApplication().setShortName("a1").setVersion("v1.0.0");
@@ -385,7 +370,6 @@ public class MicoServiceDeploymentInfoRepositoryTests {
         assertEquals(5, serviceDeploymentInfo.get().getReplicas());
         assertNotNull(serviceDeploymentInfo.get().getService());
         assertEquals("s1", serviceDeploymentInfo.get().getService().getShortName());
->>>>>>> b79ea60e2b74b8d1c788bfe9e984e4ca1bffb5f5
     }
 
 }
