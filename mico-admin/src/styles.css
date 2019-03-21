@@ -15,6 +15,13 @@ body {
     font-family: Roboto, 'Helvetica Neue', sans-serif;
 }
 
+:root {
+    --primary: #3f51b5;
+    --accent: #ff4081;
+    --primary-text-color: #fff;
+    --accent-text-color: #fff;
+}
+
 .relative {
     position: relative;
 }
@@ -499,6 +506,10 @@ Quick fix to avoid scroll bars
     min-width: 80px !important;
 }
 
+/*
+* Set toggle button colors (chosen color is for test purposes right now)
+*/
 .mat-button-toggle {
-    background-color: #50ca20;
+    background-color: var(--accent);
+    color: var(--accent-text-color);
 }
