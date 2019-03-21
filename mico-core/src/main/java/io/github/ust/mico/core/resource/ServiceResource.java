@@ -207,7 +207,7 @@ public class ServiceResource {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Service dependees must not be null.");
         }
 
-        List<MicoService> services = serviceRepository.findDependees(shortName, version);
+        List<MicoService> services = micoServiceBroker.getDependeesByMicoService(service);
 
         return ResponseEntity.ok(
             new Resources<>(getServiceResponseDTOResourcesList(services),
@@ -224,31 +224,18 @@ public class ServiceResource {
                                                   @PathVariable(PATH_VARIABLE_DEPENDEE_SHORT_NAME) String dependeeShortName,
                                                   @PathVariable(PATH_VARIABLE_DEPENDEE_VERSION) String dependeeVersion) {
         MicoService service = getServiceFromMicoServiceBroker(shortName, version);
-
-        Optional<MicoService> serviceDependeeOpt = serviceRepository.findByShortNameAndVersion(dependeeShortName, dependeeVersion);
-        if (!serviceDependeeOpt.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The dependee service was not found!");
-        }
+        MicoService serviceDependee = getServiceFromMicoServiceBroker(dependeeShortName, dependeeVersion);
 
         // Check if dependency is already set
-        boolean dependencyAlreadyExists = (service.getDependencies() != null) && service.getDependencies().stream().anyMatch(
-            dependency -> dependency.getDependedService().getShortName().equals(dependeeShortName)
-                && dependency.getDependedService().getVersion().equals(dependeeVersion));
+        boolean dependencyAlreadyExists = micoServiceBroker.checkIfDependencyAlreadyExists(service, serviceDependee);
+
         if (dependencyAlreadyExists) {
-            return ResponseEntity.noContent().build();
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "The dependency between the given services already exists.");
         }
 
-        final MicoServiceDependency processedServiceDependee = new MicoServiceDependency()
-            .setDependedService(serviceDependeeOpt.get())
-            .setService(service);
+        MicoService processedServiceDependee = micoServiceBroker.persistNewDependencyBetweenServices(service, serviceDependee);
 
-        log.info("New dependency for MicoService '{}' '{}' -[:DEPENDS_ON]-> '{}' '{}'", shortName, version,
-            processedServiceDependee.getDependedService().getShortName(),
-            processedServiceDependee.getDependedService().getVersion());
-
-        service.getDependencies().add(processedServiceDependee);
-        serviceRepository.save(service);
-
+        //TODO: Shoudn't we return 201 created and the new service (processedServiceDependee) with dependency?
         return ResponseEntity.noContent().build();
     }
 
