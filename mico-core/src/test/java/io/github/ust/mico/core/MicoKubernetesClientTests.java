@@ -137,12 +137,17 @@ public class MicoKubernetesClientTests {
 
         MicoLabel label = new MicoLabel().setKey("some-label-key").setValue("some-label-value");
         MicoEnvironmentVariable environmentVariable = new MicoEnvironmentVariable().setName("some-env-name").setValue("some-env-value");
+        MicoInterfaceConnection interfaceConnection = new MicoInterfaceConnection()
+            .setEnvironmentVariableName("ENV_VAR")
+            .setMicoServiceInterfaceName("INTERFACE_NAME")
+            .setMicoServiceShortName("SERVICE_NAME");
         MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
             .setService(micoService)
             .setReplicas(3)
             .setImagePullPolicy(MicoServiceDeploymentInfo.ImagePullPolicy.NEVER)
             .setLabels(CollectionUtils.listOf(label))
-            .setEnvironmentVariables(CollectionUtils.listOf(environmentVariable));
+            .setEnvironmentVariables(CollectionUtils.listOf(environmentVariable))
+            .setInterfaceConnections(CollectionUtils.listOf(interfaceConnection));
 
         micoKubernetesClient.createMicoService(serviceDeploymentInfo);
 
@@ -158,9 +163,9 @@ public class MicoKubernetesClientTests {
         assertEquals("Image of container does not match expected", micoService.getDockerImageUri(), actualDeployment.getSpec().getTemplate().getSpec().getContainers().get(0).getImage());
         assertEquals("ImagePullPolicy does not match expected", serviceDeploymentInfo.getImagePullPolicy().toString(), actualDeployment.getSpec().getTemplate().getSpec().getContainers().get(0).getImagePullPolicy());
         assertTrue("Custom label in template does not exist", actualDeployment.getSpec().getTemplate().getMetadata().getLabels().containsKey(label.getKey()));
-        assertEquals("Environment variable does not exist",
-            serviceDeploymentInfo.getEnvironmentVariables(), actualDeployment.getSpec().getTemplate().getSpec().getContainers().get(0).getEnv().stream().map(
-                envVar -> new MicoEnvironmentVariable().setName(envVar.getName()).setValue(envVar.getValue())).collect(Collectors.toList()));
+        List<EnvVar> actualEnvVarList = actualDeployment.getSpec().getTemplate().getSpec().getContainers().get(0).getEnv();
+        Optional<EnvVar> actualCustomEnvVar = actualEnvVarList.stream().filter(envVar -> envVar.getName().equals(environmentVariable.getName()) && envVar.getValue().equals(environmentVariable.getValue())).findFirst();
+        assertTrue("Custom environment variable is not present", actualCustomEnvVar.isPresent());
     }
 
     @Test

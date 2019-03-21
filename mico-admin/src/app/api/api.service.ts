@@ -705,6 +705,31 @@ export class ApiService {
         }));
     }
 
+    /**
+     * Creates a new service version from an existing service
+     * uses: POST services/{shortName}/{version}/promote
+     *
+     * @param shortName shortName of the service
+     * @param version version of the service
+     * @param newVersion the new version of the service
+     */
+    promoteService(shortName, version, newVersion: string) {
+
+        const resource = 'services/' + shortName + '/' + version + '/promote';
+
+        return this.rest.post<ApiObject>(resource, { version: newVersion }).pipe(flatMap(val => {
+            this.getServices();
+            this.getServiceVersions(val.shortName);
+
+            const stream = this.getStreamSource<ApiObject>(val._links.self.href);
+            stream.next(val);
+
+            return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
+                filter(service => service !== undefined)
+            );
+        }));
+    }
+
     deleteService(shortName, version) {
         return this.rest.delete<ApiObject>('services/' + shortName + '/' + version)
             .pipe(map(val => {

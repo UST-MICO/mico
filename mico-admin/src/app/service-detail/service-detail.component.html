@@ -8,6 +8,15 @@
             <mat-icon>delete</mat-icon>
         </mat-button-toggle>
 
+        <span *ngIf="isLatestVersion()" class="mh2 mt1 mb2">
+            <mat-button-toggle mat-raised-button (click)="promoteNextVersion()">
+                <span>
+                    create next Version
+                </span>
+                <mat-icon>arrow_upward</mat-icon>
+            </mat-button-toggle>
+        </span>
+
     </div>
     <!-- Drop Down Menu for version selection-->
     <mat-form-field class="w25 ma2">
