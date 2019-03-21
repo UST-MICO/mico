@@ -43,6 +43,12 @@ public class MicoApplicationBroker {
     @Autowired
     private MicoEnvironmentVariableRepository micoEnvironmentVariableRepository;
 
+    @Autowired
+    private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
+
+    @Autowired
+    private MicoInterfaceConnectionRepository micoInterfaceConnectionRepository;
+
     public MicoApplication getMicoApplicationByShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException {
         Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
         if (!micoApplicationOptional.isPresent()) {
@@ -231,15 +237,23 @@ public class MicoApplicationBroker {
     }
 
     public MicoServiceDeploymentInfo updateMicoServiceDeploymentInformation(String applicationShortName, String applicationVersion, String serviceShortName, MicoServiceDeploymentInfo micoServiceDeploymentInfo) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException, MicoServiceDeploymentInformationNotFoundException {
-        checkForMicoServiceInMicoApplication(applicationShortName, applicationVersion, serviceShortName);
+        //checkForMicoServiceInMicoApplication(applicationShortName, applicationVersion, serviceShortName);
 
         MicoServiceDeploymentInfo existingMicoServiceDeploymentInfo = getMicoServiceDeploymentInformation(applicationShortName, applicationVersion, serviceShortName);
         micoServiceDeploymentInfo.setId(existingMicoServiceDeploymentInfo.getId());
 
+        // In case addition properties (stored as separate node entity) such as labels, environment variables
+        // have been removed from this service deployment information,
+        // the standard save() function of the service deployment information repository will not delete those
+        // "tangling" (without relationships) labels (nodes), hence the manual clean up.
         micoLabelRepository.cleanUp();
         micoEnvironmentVariableRepository.cleanUp();
+        kubernetesDeploymentInfoRepository.cleanUp();
+        micoInterfaceConnectionRepository.cleanUp();
 
         // TODO: Update actual Kubernetes deployment (see issue mico#416).
+
+        // Update the service deployment information in the database
         return serviceDeploymentInfoRepository.save(micoServiceDeploymentInfo);
     }
 

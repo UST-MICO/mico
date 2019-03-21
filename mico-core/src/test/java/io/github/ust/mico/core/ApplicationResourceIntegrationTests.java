@@ -883,7 +883,7 @@ public class ApplicationResourceIntegrationTests {
         mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME))
             .andDo(print())
             .andExpect(status().isConflict())
-            .andExpect(status().reason("Application is currently deployed in version 1.0.1!"))
+            .andExpect(status().reason("Application 'short-name' '1.0.1' is currently deployed!"))
             .andReturn();
 
         verify(applicationRepository, never()).deleteAll(micoApplicationListCaptor.capture());
