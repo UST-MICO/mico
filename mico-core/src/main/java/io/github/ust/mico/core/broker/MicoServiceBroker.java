@@ -3,6 +3,7 @@ package io.github.ust.mico.core.broker;
 import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphEdgeResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceResponseDTO;
+import io.github.ust.mico.core.dto.response.status.MicoServiceStatusResponseDTO;
 import io.github.ust.mico.core.exception.*;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
@@ -30,8 +31,8 @@ public class MicoServiceBroker {
     @Autowired
     private MicoKubernetesClient micoKubernetesClient;
 
-//    @Autowired
-//    private MicoStatusService micoStatusService;
+    @Autowired
+    private MicoStatusService micoStatusService;
 
     public List<MicoService> getAllServicesAsList() {
         return serviceRepository.findAll(2);
@@ -135,12 +136,13 @@ public class MicoServiceBroker {
         return serviceRepository.findDependers(service.getShortName(), service.getVersion());
     }
 
-//    public MicoServiceStatusDTO getStatusOfService(String shortName, String version) throws MicoServiceNotFoundException {
-//        MicoServiceStatusDTO serviceStatus = new MicoServiceStatusDTO();
-//        MicoService micoService = getServiceFromDatabase(shortName, version);
-//        serviceStatus = micoStatusService.getServiceStatus(micoService);
-//        return serviceStatus;
-//    }
+    //TODO: Update return from micoStatusRepository from DTO to model object
+    public MicoServiceStatusResponseDTO getStatusOfService(String shortName, String version) throws MicoServiceNotFoundException {
+        MicoServiceStatusResponseDTO serviceStatus;
+        MicoService micoService = getServiceFromDatabase(shortName, version);
+        serviceStatus = micoStatusService.getServiceStatus(micoService);
+        return serviceStatus;
+    }
 
     public MicoService persistService(MicoService newService) throws MicoServiceAlreadyExistsException {
         Optional<MicoService> micoServiceOptional = serviceRepository.findByShortNameAndVersion(newService.getShortName(), newService.getVersion());
