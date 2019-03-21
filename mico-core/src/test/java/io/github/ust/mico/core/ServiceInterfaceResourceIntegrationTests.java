@@ -73,7 +73,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @OverrideAutoConfiguration(enabled = true) // Needed to override our neo4j config
 @EnableAutoConfiguration
 @EnableConfigurationProperties(value = {CorsConfig.class})
-public class ServiceInterfaceResourceTests {
+public class ServiceInterfaceResourceIntegrationTests {
 
     private static final String JSON_PATH_LINKS_SECTION = buildPath(ROOT, LINKS);
     private static final String SELF_HREF = buildPath(JSON_PATH_LINKS_SECTION, SELF, HREF);
