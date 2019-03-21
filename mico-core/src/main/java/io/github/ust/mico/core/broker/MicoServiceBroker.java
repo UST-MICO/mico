@@ -216,7 +216,7 @@ public class MicoServiceBroker {
         MicoService updatedService = serviceRepository.save(service);
         return updatedService;
     }
-    
+
     public MicoService deleteAllDependees(MicoService service) {
         service.getDependencies().clear();
         MicoService resultingService = serviceRepository.save(service);
@@ -226,8 +226,6 @@ public class MicoServiceBroker {
         return resultingService;
     }
 
-    //TODO: Create test
-    //TODO: Reconsider naming, promote does not suite very well
     public MicoService promoteService(MicoService service, String newVersion) {
         service.setVersion(newVersion).setId(null);
 

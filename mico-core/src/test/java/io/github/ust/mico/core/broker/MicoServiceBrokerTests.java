@@ -420,7 +420,8 @@ public class MicoServiceBrokerTests {
         MicoService service = new MicoService()
                 .setShortName(SHORT_NAME)
                 .setName(NAME)
-                .setVersion(VERSION);
+                .setVersion(VERSION)
+                .setDescription(DESCRIPTION);
 
         MicoServiceDependency dependency1 = new MicoServiceDependency().setService(service).setDependedService(service1);
         MicoServiceDependency dependency2 = new MicoServiceDependency().setService(service).setDependedService(service2);
@@ -442,6 +443,27 @@ public class MicoServiceBrokerTests {
         MicoService updatedService = micoServiceBroker.deleteAllDependees(service);
 
         assertThat(updatedService.getDependencies()).isEqualTo(Collections.EMPTY_LIST);
+    }
+
+    @Test
+    public void promoteService() {
+        MicoService service = new MicoService()
+                .setShortName(SHORT_NAME)
+                .setName(NAME)
+                .setVersion(VERSION)
+                .setDescription(DESCRIPTION);
+
+        MicoService expectedService = new MicoService()
+                .setShortName(SHORT_NAME)
+                .setName(NAME)
+                .setVersion(VERSION_1_0_1)
+                .setDescription(DESCRIPTION);
+
+        given(serviceRepository.save(service)).willReturn(expectedService);
+
+        MicoService updatedService = micoServiceBroker.promoteService(service, VERSION_1_0_1);
+
+        assertThat(updatedService).isEqualTo(expectedService);
     }
 
 }
