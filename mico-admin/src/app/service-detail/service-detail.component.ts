@@ -145,7 +145,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
 
 
     /**
-     * call-back from the version picker to open the selevted version
+     * call-back from the version picker to open the selected version
      */
     updateVersion(version) {
         this.selectedVersion = version;
