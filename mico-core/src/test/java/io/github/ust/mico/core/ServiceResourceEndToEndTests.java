@@ -209,7 +209,6 @@ public class ServiceResourceEndToEndTests extends Neo4jTestClass {
         mvc.perform(get(SERVICES_PATH + "/" + SHORT_NAME + "/" + "/" + VERSION_1_0_1 + "/dependencyGraph").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isNotFound())
-            .andExpect(status().reason("Service 'short-name' '1.0.1' could not be found!"))
             .andReturn();
     }
 }
