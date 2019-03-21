@@ -122,7 +122,7 @@ class TestConstants {
 
 
     /*
-     * For tests in ServiceResourceTests, a MicoServiceStatusDTO is used.
+     * For tests in ServiceResourceIntegrationTests, a MicoServiceStatusDTO is used.
      * All paths are build on the base path of this object.
      */
     static final String SERVICE_DTO_SERVICE_NAME = buildAttributePath("name");
