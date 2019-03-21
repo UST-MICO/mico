@@ -348,7 +348,7 @@ public class ApplicationResource {
                                                                                                      @Valid @RequestBody MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) {
         MicoServiceDeploymentInfo micoServiceDeploymentInfo;
         try {
-            micoServiceDeploymentInfo = broker.updateMicoServiceDeploymentInformation(shortName, version, serviceShortName, new MicoServiceDeploymentInfo().applyValuesFrom(serviceDeploymentInfoDTO));
+            micoServiceDeploymentInfo = broker.updateMicoServiceDeploymentInformation(shortName, version, serviceShortName, serviceDeploymentInfoDTO);
         } catch (MicoApplicationNotFoundException | MicoServiceDeploymentInformationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoApplicationDoesNotIncludeMicoServiceException e) {

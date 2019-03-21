@@ -1,5 +1,6 @@
 package io.github.ust.mico.core.broker;
 
+import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
 import io.github.ust.mico.core.exception.*;
 import io.github.ust.mico.core.model.MicoApplication;
@@ -236,11 +237,13 @@ public class MicoApplicationBroker {
         return applicationRepository.save(micoApplication);
     }
 
-    public MicoServiceDeploymentInfo updateMicoServiceDeploymentInformation(String applicationShortName, String applicationVersion, String serviceShortName, MicoServiceDeploymentInfo micoServiceDeploymentInfo) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException, MicoServiceDeploymentInformationNotFoundException {
-        //checkForMicoServiceInMicoApplication(applicationShortName, applicationVersion, serviceShortName);
+    //TODO: change to MicoServiceDeploymentInfo micoServiceDeploymentInfo
+    public MicoServiceDeploymentInfo updateMicoServiceDeploymentInformation(String applicationShortName, String applicationVersion, String serviceShortName, MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException, MicoServiceDeploymentInformationNotFoundException {
+        MicoServiceDeploymentInfo micoServiceDeploymentInfo = getMicoServiceDeploymentInformation(applicationShortName, applicationVersion, serviceShortName);
+        micoServiceDeploymentInfo.applyValuesFrom(serviceDeploymentInfoDTO);
 
-        MicoServiceDeploymentInfo existingMicoServiceDeploymentInfo = getMicoServiceDeploymentInformation(applicationShortName, applicationVersion, serviceShortName);
-        micoServiceDeploymentInfo.setId(existingMicoServiceDeploymentInfo.getId());
+        // Update the service deployment information in the database
+        MicoServiceDeploymentInfo updatedMicoServiceDeploymentInfo = serviceDeploymentInfoRepository.save(micoServiceDeploymentInfo);
 
         // In case addition properties (stored as separate node entity) such as labels, environment variables
         // have been removed from this service deployment information,
@@ -253,8 +256,7 @@ public class MicoApplicationBroker {
 
         // TODO: Update actual Kubernetes deployment (see issue mico#416).
 
-        // Update the service deployment information in the database
-        return serviceDeploymentInfoRepository.save(micoServiceDeploymentInfo);
+        return updatedMicoServiceDeploymentInfo;
     }
 
     private MicoApplication checkForMicoServiceInMicoApplication(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException {
