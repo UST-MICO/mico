@@ -19,24 +19,20 @@
 
 package io.github.ust.mico.core;
 
-import static io.github.ust.mico.core.JsonPathBuilder.*;
-import static io.github.ust.mico.core.TestConstants.*;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
-import static io.github.ust.mico.core.TestConstants.VERSION;
-import static org.hamcrest.CoreMatchers.endsWith;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import java.util.*;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import io.github.ust.mico.core.configuration.CorsConfig;
+import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
+import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
+import io.github.ust.mico.core.dto.response.status.*;
+import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.resource.ServiceResource;
+import io.github.ust.mico.core.service.GitHubCrawler;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.service.MicoStatusService;
+import io.github.ust.mico.core.util.CollectionUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -54,21 +50,23 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import java.util.*;
 
-import io.github.ust.mico.core.configuration.CorsConfig;
-import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
-import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
-import io.github.ust.mico.core.dto.response.status.*;
-import io.github.ust.mico.core.model.*;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.resource.ServiceResource;
-import io.github.ust.mico.core.service.GitHubCrawler;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.MicoStatusService;
-import io.github.ust.mico.core.util.CollectionUtils;
+import static io.github.ust.mico.core.JsonPathBuilder.*;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.VERSION;
+import static io.github.ust.mico.core.TestConstants.*;
+import static org.hamcrest.CoreMatchers.endsWith;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(ServiceResource.class)
@@ -747,11 +745,6 @@ public class ServiceResourceTests {
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isConflict());
-    }
-
-    @Test
-    public void createServiceViaGitHubCrawler() {
-        //TODO: Implementation
     }
 
     @Test

@@ -19,6 +19,25 @@
 
 package io.github.ust.mico.core;
 
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDependency;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultMatcher;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+
 import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
 import static io.github.ust.mico.core.TestConstants.*;
 import static org.hamcrest.Matchers.hasSize;
@@ -28,28 +47,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.hateoas.MediaTypes;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultMatcher;
-
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDependency;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
 
 @RunWith(SpringRunner.class)
 @EnableAutoConfiguration
@@ -64,9 +61,6 @@ public class ServiceResourceIntegrationTests extends Neo4jTestClass {
 
     @Autowired
     private MockMvc mvc;
-
-    @MockBean
-    private MicoKubernetesClient micoKubernetesClient;
 
     @Test
     public void deleteService() throws Exception {

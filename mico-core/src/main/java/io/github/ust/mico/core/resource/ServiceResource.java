@@ -59,17 +59,17 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 @RequestMapping(value = "/services", produces = MediaTypes.HAL_JSON_VALUE)
 public class ServiceResource {
 
-    public static final String PATH_VARIABLE_SHORT_NAME = "shortName";
-    public static final String PATH_VARIABLE_VERSION = "version";
-    public static final String PATH_VARIABLE_DEPENDEE_SHORT_NAME = "dependeeShortName";
-    public static final String PATH_VARIABLE_DEPENDEE_VERSION = "dependeeVersion";
-    public static final String PATH_VARIABLE_IMPORT = "import";
-    public static final String PATH_VARIABLE_GITHUB = "github";
-    public static final String PATH_GITHUB_ENDPOINT = "/" + PATH_VARIABLE_IMPORT + "/" + PATH_VARIABLE_GITHUB;
-    public static final String PATH_DEPENDEES = "dependees";
-    public static final String PATH_DEPENDERS = "dependers";
-    public static final String PATH_PROMOTE = "promote";
-    public static final String PATH_DEPENDENCY_GRAPH = "dependencyGraph";
+    static final String PATH_VARIABLE_SHORT_NAME = "shortName";
+    static final String PATH_VARIABLE_VERSION = "version";
+    private static final String PATH_VARIABLE_DEPENDEE_SHORT_NAME = "dependeeShortName";
+    private static final String PATH_VARIABLE_DEPENDEE_VERSION = "dependeeVersion";
+    private static final String PATH_VARIABLE_IMPORT = "import";
+    private static final String PATH_VARIABLE_GITHUB = "github";
+    private static final String PATH_GITHUB_ENDPOINT = "/" + PATH_VARIABLE_IMPORT + "/" + PATH_VARIABLE_GITHUB;
+    private static final String PATH_DEPENDEES = "dependees";
+    private static final String PATH_DEPENDERS = "dependers";
+    private static final String PATH_PROMOTE = "promote";
+    private static final String PATH_DEPENDENCY_GRAPH = "dependencyGraph";
 
     @Autowired
     private MicoServiceRepository serviceRepository;
@@ -431,7 +431,7 @@ public class ServiceResource {
      * @throws ResponseStatusException with HTTP status 422 (unprocessable entity)
      * 		   if the given {@code MicoService} is depended on by other {@code MicoServices}.
      */
-    private void throwUnprocessableEntitiyIfServiceIsDependedOn(MicoService service) throws KubernetesResourceException {
+    private void throwUnprocessableEntitiyIfServiceIsDependedOn(MicoService service) {
     	if (!serviceRepository.findDependers(service.getShortName(), service.getVersion()).isEmpty()) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
                 "Service '" + service.getShortName() + "' '" + service.getVersion() + "' has dependers,"
@@ -444,7 +444,7 @@ public class ServiceResource {
     }
 
     protected static List<Resource<MicoServiceResponseDTO>> getServiceResponseDTOResourcesList(List<MicoService> services) {
-        return services.stream().map(service -> getServiceResponseDTOResource(service)).collect(Collectors.toList());
+        return services.stream().map(ServiceResource::getServiceResponseDTOResource).collect(Collectors.toList());
     }
 
     protected static Iterable<Link> getServiceLinks(MicoService service) {
