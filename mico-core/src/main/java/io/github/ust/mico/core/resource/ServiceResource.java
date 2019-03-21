@@ -27,7 +27,7 @@ import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphEdgeRespon
 import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceResponseDTO;
 import io.github.ust.mico.core.dto.response.status.MicoServiceStatusResponseDTO;
-import io.github.ust.mico.core.exception.KubernetesResourceException;
+import io.github.ust.mico.core.exception.*;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
@@ -73,6 +73,9 @@ public class ServiceResource {
     private static final String PATH_DEPENDENCY_GRAPH = "dependencyGraph";
 
     @Autowired
+    private MicoServiceRepository serviceRepository;
+
+    @Autowired
     private MicoServiceBroker micoServiceBroker;
 
     //TODO. Verfiy if this object can be removed from ServiceResource
@@ -94,7 +97,7 @@ public class ServiceResource {
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     public ResponseEntity<Resource<MicoServiceResponseDTO>> getServiceByShortNameAndVersion(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                             @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        MicoService service = getServiceFromDatabase(shortName, version);
+        MicoService service = getServiceFromMicoServiceBroker(shortName, version);
         return ResponseEntity.ok(getServiceResponseDTOResource(service));
     }
 
@@ -111,47 +114,45 @@ public class ServiceResource {
                 "Version of the provided service does not match the request parameter");
         }
 
-        MicoService existingService = getServiceFromDatabase(shortName, version);
-        MicoService updatedService = serviceRepository.save(MicoService.valueOf(serviceDto).setId(existingService.getId()));
+        MicoService updatedService = updateServiceViaMicoServiceBroker(shortName, version, serviceDto);
 
         return ResponseEntity.ok(getServiceResponseDTOResource(updatedService));
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     public ResponseEntity<Void> deleteService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                              @PathVariable(PATH_VARIABLE_VERSION) String version) throws KubernetesResourceException {
-    	// Retrieve service from database (checks whether it exists)
-        MicoService service = getServiceFromDatabase(shortName, version);
+                                              @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        MicoService service = getServiceFromMicoServiceBroker(shortName, version);
 
-        // Check whether service is currently deployed,
-        // in this case it cannot be deleted.
-        throwConflictIfServiceIsDeployed(service);
-
-        // Check whether other services depend on this service,
-        // in this case it also cannot be deleted.
-        throwUnprocessableEntitiyIfServiceIsDependedOn(service);
-
-        // Delete service in database
-        serviceRepository.deleteServiceByShortNameAndVersion(shortName, version);
+        //TODO: findDependers and getDependers inside deleteService seem to be a logical copy
+        try {
+            micoServiceBroker.deleteService(service);
+        } catch (MicoServiceHasDependersException e) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+        } catch (MicoServiceIsDeployedException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        } catch (KubernetesResourceException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        }
         
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
-    public ResponseEntity<Void> deleteAllVersionsOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) throws KubernetesResourceException {
-    	// Retrieve services from database (checks whether they exist)
-        List<MicoService> services = getAllVersionsOfServiceFromDatabase(shortName);
+    public ResponseEntity<Void> deleteAllVersionsOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
+        List<MicoService> micoServiceList = getAllVersionsOfServiceFromMicoServiceBroker(shortName);
 
-        // Check for each service whether it is currently deployed or
-        // other services depend on it, in this case it cannot be deleted,
-        // in fact none of the services shall be deleted.
-        for (MicoService service : services) {
-            throwConflictIfServiceIsDeployed(service);
-            throwUnprocessableEntitiyIfServiceIsDependedOn(service);
-        }
-        
-        // Delete each service in database
-        services.forEach(service -> serviceRepository.delete(service));
+        micoServiceList.forEach(service -> {
+            try {
+                micoServiceBroker.deleteService(service);
+            } catch (KubernetesResourceException e) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Service is currently deployed!");
+            } catch (MicoServiceHasDependersException e) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+            } catch (MicoServiceIsDeployedException e) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+            }
+        });
 
         return ResponseEntity.noContent().build();
     }
@@ -159,20 +160,24 @@ public class ServiceResource {
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")
     public ResponseEntity<Resource<MicoServiceStatusResponseDTO>> getStatusOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                      @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        Optional<MicoService> micoServiceOptional = serviceRepository.findByShortNameAndVersion(shortName, version);
-        if (!micoServiceOptional.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service '" + shortName + "' '" + version + "' was not found!");
-        }
-        log.debug("Retrieve status information of Mico service '{}' '{}'", shortName, version);
-        MicoServiceStatusResponseDTO serviceStatus = micoStatusService.getServiceStatus(micoServiceOptional.get());
+        MicoService micoService = getServiceFromMicoServiceBroker(shortName, version);
+
+        MicoServiceStatusResponseDTO serviceStatus = micoStatusService.getServiceStatus(micoService);
 
         return ResponseEntity.ok(new Resource<>(serviceStatus));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
     public ResponseEntity<Resources<Resource<MicoServiceResponseDTO>>> getVersionsOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
-        List<MicoService> services = serviceRepository.findByShortName(shortName);
+        List<MicoService> services;
+        try {
+            services = micoServiceBroker.getAllVersionsOfServiceFromDatabase(shortName);
+        } catch (MicoServiceNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+
         List<Resource<MicoServiceResponseDTO>> serviceResources = getServiceResponseDTOResourcesList(services);
+
         return ResponseEntity.ok(
             new Resources<>(serviceResources,
                 linkTo(methodOn(ServiceResource.class).getVersionsOfService(shortName)).withSelfRel()));
@@ -180,24 +185,23 @@ public class ServiceResource {
 
     @PostMapping
     public ResponseEntity<Resource<MicoServiceResponseDTO>> createService(@Valid @RequestBody MicoServiceRequestDTO serviceDto) {
-        Optional<MicoService> serviceOptional = serviceRepository.
-            findByShortNameAndVersion(serviceDto.getShortName(), serviceDto.getVersion());
-        if (serviceOptional.isPresent()) {
+        MicoService persistedService;
+        try {
+            persistedService = micoServiceBroker.persistService(MicoService.valueOf(serviceDto));
+        } catch (MicoServiceAlreadyExistsException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "Service '" + serviceDto.getShortName() + "' '" + serviceDto.getVersion() + "' already exists.");
+                    "Service '" + serviceDto.getShortName() + "' '" + serviceDto.getVersion() + "' already exists.");
         }
 
-        MicoService savedService = serviceRepository.save(MicoService.valueOf(serviceDto));
-
         return ResponseEntity
-            .created(linkTo(methodOn(ServiceResource.class).getServiceByShortNameAndVersion(savedService.getShortName(), savedService.getVersion())).toUri())
-            .body(new Resource<>(new MicoServiceResponseDTO(savedService), getServiceLinks(savedService)));
+            .created(linkTo(methodOn(ServiceResource.class).getServiceByShortNameAndVersion(persistedService.getShortName(), persistedService.getVersion())).toUri())
+            .body(new Resource<>(new MicoServiceResponseDTO(persistedService), getServiceLinks(persistedService)));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPENDEES)
     public ResponseEntity<Resources<Resource<MicoServiceResponseDTO>>> getDependees(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        MicoService service = getServiceFromDatabase(shortName, version);
+        MicoService service = getServiceFromMicoServiceBroker(shortName, version);
         List<MicoServiceDependency> dependees = service.getDependencies();
         if (dependees == null) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Service dependees must not be null.");
@@ -219,7 +223,7 @@ public class ServiceResource {
                                                   @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                   @PathVariable(PATH_VARIABLE_DEPENDEE_SHORT_NAME) String dependeeShortName,
                                                   @PathVariable(PATH_VARIABLE_DEPENDEE_VERSION) String dependeeVersion) {
-        MicoService service = getServiceFromDatabase(shortName, version);
+        MicoService service = getServiceFromMicoServiceBroker(shortName, version);
 
         Optional<MicoService> serviceDependeeOpt = serviceRepository.findByShortNameAndVersion(dependeeShortName, dependeeVersion);
         if (!serviceDependeeOpt.isPresent()) {
@@ -253,7 +257,7 @@ public class ServiceResource {
                                                    @PathVariable(PATH_VARIABLE_VERSION) String version) {
         // We only want to delete the relationships (the edges),
         // not the actual depended services.
-        MicoService service = getServiceFromDatabase(shortName, version);
+        MicoService service = getServiceFromMicoServiceBroker(shortName, version);
         service.getDependencies().clear();
 
         serviceRepository.save(service);
@@ -269,7 +273,7 @@ public class ServiceResource {
                                                @PathVariable(PATH_VARIABLE_DEPENDEE_VERSION) String dependeeVersion) {
         // We only want to delete the relationship (the edge),
         // not the actual depended service.
-        MicoService service = getServiceFromDatabase(shortName, version);
+        MicoService service = getServiceFromMicoServiceBroker(shortName, version);
 
         // Check whether dependee to delete exists
         Optional<MicoService> serviceOptToDelete = serviceRepository.findByShortNameAndVersion(dependeeShortName, dependeeVersion);
@@ -324,7 +328,7 @@ public class ServiceResource {
         log.debug("Received request to promote MicoService '{}' '{}' to version '{}'", shortName, version, newVersionDto.getVersion());
 
         // Service to promote (copy)
-        MicoService service = getServiceFromDatabase(shortName, version);
+        MicoService service = getServiceFromMicoServiceBroker(shortName, version);
         log.debug("Retrieved following MicoService from database: {}", service);
 
         // Update the version of the service.
@@ -363,7 +367,7 @@ public class ServiceResource {
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPENDENCY_GRAPH)
     public ResponseEntity<Resource<MicoServiceDependencyGraphResponseDTO>> getDependencyGraph(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                               @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        MicoService micoServiceRoot = getServiceFromDatabase(shortName, version);
+        MicoService micoServiceRoot = getServiceFromMicoServiceBroker(shortName, version);
         List<MicoService> micoServices = serviceRepository.findDependeesIncludeDepender(micoServiceRoot.getShortName(), micoServiceRoot.getVersion());
         List<MicoServiceResponseDTO> micoServiceDTOS = micoServices.stream().map(MicoServiceResponseDTO::new).collect(Collectors.toList());
         MicoServiceDependencyGraphResponseDTO micoServiceDependencyGraph = new MicoServiceDependencyGraphResponseDTO().setMicoServices(micoServiceDTOS);
@@ -371,7 +375,7 @@ public class ServiceResource {
         for (MicoService micoService : micoServices) {
             //Request each mico service again from the db, because the dependencies are not included
             //in the result of the custom query. TODO improve query to also include the dependencies (Depth parameter)
-            MicoService micoServiceFromDB = getServiceFromDatabase(micoService.getShortName(), micoService.getVersion());
+            MicoService micoServiceFromDB = getServiceFromMicoServiceBroker(micoService.getShortName(), micoService.getVersion());
             micoServiceFromDB.getDependencies().forEach(micoServiceDependency -> {
                 MicoServiceDependencyGraphEdgeResponseDTO edge = new MicoServiceDependencyGraphEdgeResponseDTO(micoService, micoServiceDependency.getDependedService());
                 micoServiceDependencyGraphEdgeList.add(edge);
@@ -382,22 +386,6 @@ public class ServiceResource {
             linkTo(methodOn(ServiceResource.class).getDependencyGraph(shortName, version)).withSelfRel()));
     }
 
-    /**
-     * Returns the existing {@link MicoService} object from the database for the given shortName and version.
-     *
-     * @param shortName the short name of the {@link MicoService}.
-     * @param version the version of the {@link MicoService}.
-     * @return the {@link MicoService} if it exists.
-     * @throws ResponseStatusException if the {@code MicoService} does not exist in the database.
-     */
-    private MicoService getServiceFromDatabase(String shortName, String version) throws ResponseStatusException {
-        Optional<MicoService> serviceOptional = serviceRepository.findByShortNameAndVersion(shortName, version);
-        if (!serviceOptional.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service '" + shortName + "' '" + version + "' could not be found!");
-        }
-        return serviceOptional.get();
-    }
-
     private List<MicoService> getAllVersionsOfServiceFromDatabase(String shortName) throws ResponseStatusException {
         List<MicoService> micoServiceList = serviceRepository.findByShortName(shortName);
         log.debug("Retrieve service list from database: {}", micoServiceList);
@@ -406,22 +394,6 @@ public class ServiceResource {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Could not find any service with name: '" + shortName);
         }
         return micoServiceList;
-    }
-
-    /**
-     * Checks whether a given service is currently deployed.
-     *
-     * @param service the {@link MicoService}.
-     * @throws KubernetesResourceException if there are multiple
-     * 		   Kubernetes deployments for the given {@code MicoService}.
-     * @throws ResponseStatusException with HTTP status 409 (conflict)
-     * 		   if the given {@code MicoService} is currently deployed.
-     */
-    private void throwConflictIfServiceIsDeployed(MicoService service) throws KubernetesResourceException {
-        if (micoKubernetesClient.isMicoServiceDeployed(service)) {
-            log.info("Micoservice '{}' in version '{}' is deployed. It is not possible to delete a deployed service.", service.getShortName(), service.getVersion());
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Service is currently deployed!");
-        }
     }
 
     /**
@@ -452,6 +424,58 @@ public class ServiceResource {
         links.add(linkTo(methodOn(ServiceResource.class).getServiceByShortNameAndVersion(service.getShortName(), service.getVersion())).withSelfRel());
         links.add(linkTo(methodOn(ServiceResource.class).getServiceList()).withRel("services"));
         return links;
+    }
+
+
+
+
+
+
+
+
+    //TODO NEW METHODS
+
+
+
+
+
+    /**
+     * Returns the existing {@link MicoService} object from the database for the given shortName and version.
+     *
+     * @param shortName the short name of a {@link MicoService}
+     * @param version   the version of a {@link MicoService}
+     * @return the existing {@link MicoService} from the database
+     * @throws ResponseStatusException if a {@link MicoService} for the given shortName and version does not exist
+     */
+    private MicoService getServiceFromMicoServiceBroker(String shortName, String version) throws ResponseStatusException {
+        MicoService service;
+        try {
+            service = micoServiceBroker.getServiceFromDatabase(shortName, version);
+        } catch (MicoServiceNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+        return service;
+    }
+
+    private MicoService updateServiceViaMicoServiceBroker(String shortName, String version, MicoServiceRequestDTO serviceDto) throws ResponseStatusException {
+        MicoService existingService = getServiceFromMicoServiceBroker(shortName, version);
+        MicoService updatedService;
+        try {
+            updatedService = micoServiceBroker.updateExistingService(MicoService.valueOf(serviceDto).setId(existingService.getId()));
+        } catch (MicoServiceNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+        return updatedService;
+    }
+
+    private List<MicoService> getAllVersionsOfServiceFromMicoServiceBroker(String shortName) throws ResponseStatusException {
+        List<MicoService> micoServiceList;
+        try {
+            micoServiceList = micoServiceBroker.getAllVersionsOfServiceFromDatabase(shortName);
+        } catch (MicoServiceNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+        return micoServiceList;
     }
 
 }
