@@ -30,8 +30,8 @@ public class MicoServiceBroker {
     @Autowired
     private MicoKubernetesClient micoKubernetesClient;
 
-    @Autowired
-    private MicoStatusService micoStatusService;
+//    @Autowired
+//    private MicoStatusService micoStatusService;
 
     public List<MicoService> getAllServicesAsList() {
         return serviceRepository.findAll(2);

@@ -130,14 +130,14 @@ public class ServiceResource {
     //Test exists and is green
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
     public ResponseEntity<Void> deleteService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                              @PathVariable(PATH_VARIABLE_VERSION) String version) throws KubernetesResourceException {
+                                              @PathVariable(PATH_VARIABLE_VERSION) String version) {
         MicoService service = getServiceFromMicoServiceBroker(shortName, version);
 
-        //TODO: findDependers and getDependers inside deleteService seem to be a logical copy
-        if (!micoServiceBroker.findDependers(service).isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                    "Service '" + service.getShortName() + "' '" + service.getVersion() + "' has dependers, therefore it can't be deleted.");
-        }
+//        //TODO: findDependers and getDependers inside deleteService seem to be a logical copy
+//        if (!micoServiceBroker.findDependers(service).isEmpty()) {
+//            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+//                    "Service '" + service.getShortName() + "' '" + service.getVersion() + "' has dependers, therefore it can't be deleted.");
+//        }
 
         //TODO: findDependers and getDependers inside deleteService seem to be a logical copy
         try {
@@ -145,6 +145,8 @@ public class ServiceResource {
         } catch (MicoServiceHasDependersException e) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
         } catch (MicoServiceIsDeployedException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        } catch (KubernetesResourceException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
 

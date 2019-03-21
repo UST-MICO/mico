@@ -27,6 +27,8 @@ import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
 import io.github.ust.mico.core.dto.response.status.*;
+import io.github.ust.mico.core.exception.MicoServiceHasDependersException;
+import io.github.ust.mico.core.exception.MicoServiceIsDeployedException;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.model.MicoServiceInterface;
@@ -35,6 +37,8 @@ import io.github.ust.mico.core.service.GitHubCrawler;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
 import io.github.ust.mico.core.util.CollectionUtils;
+import net.bytebuddy.description.annotation.AnnotationList;
+import org.apache.http.auth.MalformedChallengeException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -68,8 +72,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -714,7 +717,7 @@ public class ServiceResourceUnitTests {
     }
 
     @Test
-    public void deleteServiceWithDeployedService() throws Exception {
+    public void deleteServicesWithDeployedService() throws Exception {
         MicoService service = new MicoService()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
@@ -722,6 +725,8 @@ public class ServiceResourceUnitTests {
 
         given(micoServiceBroker.getAllVersionsOfServiceFromDatabase(SHORT_NAME)).willReturn(Collections.singletonList(service));
         given(micoKubernetesClient.isMicoServiceDeployed(any())).willReturn(true);
+
+        doThrow(MicoServiceIsDeployedException.class).when(micoServiceBroker).deleteService(service);
 
         mvc.perform(delete(SERVICES_PATH + "/" + SHORT_NAME)
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
@@ -736,13 +741,33 @@ public class ServiceResourceUnitTests {
             .setVersion(VERSION)
             .setDescription(DESCRIPTION);
 
-        given(micoServiceBroker.getServiceFromDatabase(SHORT_NAME, VERSION)).willReturn(service);
-        given(micoKubernetesClient.isMicoServiceDeployed(any())).willReturn(true);
+        given(micoServiceBroker.getServiceFromDatabase(service.getShortName(), service.getVersion())).willReturn(service);
+        given(micoServiceBroker.findDependers(service)).willReturn(new LinkedList<>());
+
+        doThrow(MicoServiceIsDeployedException.class).when(micoServiceBroker).deleteService(service);
 
         mvc.perform(delete(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION)
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isConflict());
+    }
+
+    @Test
+    public void deleteSpecificServiceWithDependers() throws Exception {
+        MicoService service = new MicoService()
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION)
+                .setDescription(DESCRIPTION);
+
+        given(micoServiceBroker.getServiceFromDatabase(service.getShortName(), service.getVersion())).willReturn(service);
+        given(micoServiceBroker.findDependers(service)).willReturn(Collections.singletonList(service));
+
+        doThrow(MicoServiceHasDependersException.class).when(micoServiceBroker).deleteService(service);
+
+        mvc.perform(delete(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION)
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print())
+                .andExpect(status().isUnprocessableEntity());
     }
 
     @Test
