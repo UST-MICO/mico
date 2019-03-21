@@ -211,17 +211,13 @@ public class MicoServiceBroker {
         return service;
     }
 
-    //TODO: Create test
     public MicoService deleteDependencyBetweenServices(MicoService service, MicoService serviceToDelete) {
         service.getDependencies().removeIf(dependency -> dependency.getDependedService().getId().equals(serviceToDelete.getId()));
         MicoService updatedService = serviceRepository.save(service);
         return updatedService;
     }
-
-    //TODO: Create test
+    
     public MicoService deleteAllDependees(MicoService service) {
-        // We only want to delete the relationships (the edges),
-        // not the actual depended services.
         service.getDependencies().clear();
         MicoService resultingService = serviceRepository.save(service);
 

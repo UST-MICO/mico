@@ -405,4 +405,43 @@ public class MicoServiceBrokerTests {
         assertThat(updatedService.getDependencies()).doesNotContain(dependency);
     }
 
+    @Test
+    public void deleteAllDependees() {
+        MicoService service1 = new MicoService()
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_1)
+                .setDescription(DESCRIPTION_1);
+        MicoService service2 = new MicoService()
+                .setShortName(SHORT_NAME_2)
+                .setVersion(VERSION_1_0_2)
+                .setName(NAME_2)
+                .setDescription(DESCRIPTION_2);
+        MicoService service = new MicoService()
+                .setShortName(SHORT_NAME)
+                .setName(NAME)
+                .setVersion(VERSION);
+
+        MicoServiceDependency dependency1 = new MicoServiceDependency().setService(service).setDependedService(service1);
+        MicoServiceDependency dependency2 = new MicoServiceDependency().setService(service).setDependedService(service2);
+
+        LinkedList<MicoServiceDependency> micoServiceDependencies = new LinkedList<>();
+        micoServiceDependencies.add(dependency1);
+        micoServiceDependencies.add(dependency2);
+
+        service.setDependencies(micoServiceDependencies);
+
+        MicoService expectedService = new MicoService()
+                .setShortName(SHORT_NAME)
+                .setName(NAME)
+                .setVersion(VERSION)
+                .setDescription(DESCRIPTION);
+
+        given(serviceRepository.save(service)).willReturn(expectedService);
+
+        MicoService updatedService = micoServiceBroker.deleteAllDependees(service);
+
+        assertThat(updatedService.getDependencies()).isEqualTo(Collections.EMPTY_LIST);
+    }
+
 }
