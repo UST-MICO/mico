@@ -475,6 +475,7 @@ public class ServiceResourceUnitTests {
         service2.setDependencies(Collections.singletonList(dependency2));
         service3.setDependencies(Collections.singletonList(dependency3));
 
+        given(micoServiceBroker.getServiceFromDatabase(SHORT_NAME, VERSION)).willReturn(service);
         given(micoServiceBroker.findDependers(service)).willReturn(CollectionUtils.listOf(service1, service2, service3));
 
         String urlPath = SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + DEPENDERS_SUBPATH;
