@@ -80,7 +80,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @OverrideAutoConfiguration(enabled = true) //Needed to override our neo4j config
 @EnableAutoConfiguration
 @EnableConfigurationProperties(value = {CorsConfig.class})
-public class ApplicationResourceTests {
+public class ApplicationResourceIntegrationTests {
 
     private static final String APPLICATION_WITH_SERVICES_DTO_LIST_PATH = buildPath(EMBEDDED, "micoApplicationWithServicesResponseDTOList");
     private static final String SHORT_NAME_PATH = buildPath(ROOT, "shortName");
