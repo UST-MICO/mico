@@ -19,4 +19,5 @@ public class MicoServiceIsDeployedException extends Exception {
     public MicoServiceIsDeployedException() {
         super("Service is currently deployed!");
     }
+
 }

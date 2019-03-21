@@ -19,4 +19,5 @@ public class MicoApplicationNotFoundException extends Exception {
     public MicoApplicationNotFoundException() {
         super("Application was not found!");
     }
+
 }

@@ -19,4 +19,5 @@ public class MicoApplicationIsDeployedException extends Exception {
     public MicoApplicationIsDeployedException() {
         super("Application is currently deployed!");
     }
+
 }
