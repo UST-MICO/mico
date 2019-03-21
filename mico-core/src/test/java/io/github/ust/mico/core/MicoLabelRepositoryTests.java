@@ -19,9 +19,10 @@
 
 package io.github.ust.mico.core;
 
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoLabel;
 import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.model.MicoServicePort;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.persistence.*;
 import io.github.ust.mico.core.util.CollectionUtils;
 import org.junit.After;
@@ -34,15 +35,12 @@ import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
-
 import static org.junit.Assert.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @Transactional
-public class MicoServiceInterfaceRepositoryTests {
+public class MicoLabelRepositoryTests {
     @Autowired
     private MicoApplicationRepository applicationRepository;
 
@@ -61,6 +59,9 @@ public class MicoServiceInterfaceRepositoryTests {
     @Autowired
     private MicoServicePortRepository servicePortRepository;
 
+    @Autowired
+    private MicoLabelRepository labelRepository;
+
     @Before
     public void setUp() {
         applicationRepository.deleteAll();
@@ -69,6 +70,7 @@ public class MicoServiceInterfaceRepositoryTests {
         serviceDeploymentInfoRepository.deleteAll();
         serviceDependencyRepository.deleteAll();
         servicePortRepository.deleteAll();
+        labelRepository.deleteAll();
     }
 
     @After
@@ -78,39 +80,44 @@ public class MicoServiceInterfaceRepositoryTests {
 
     @Commit
     @Test
-    public void findAndDeleteServiceInterfaceByServiceAndName() {
-        // Create some services and interfaces
-        MicoService s1 = new MicoService().setShortName("s1").setVersion("v1.0.0");
+    public void removeUnnecessaryLabel() {
+        // Create some applications and services
+        MicoApplication a1 = new MicoApplication().setShortName("a1").setVersion("v1.0.0");
+        MicoApplication a2 = new MicoApplication().setShortName("a4").setVersion("v1.0.3");
+        MicoService s1 = new MicoService().setShortName("s1").setVersion("v1.0.4");
+        MicoService s2 = new MicoService().setShortName("s2").setVersion("v1.0.5");
+        MicoLabel l1 = new MicoLabel().setKey("key1").setValue("value1");
+        MicoLabel l2 = new MicoLabel().setKey("key2").setValue("value2");
+        MicoLabel l3 = new MicoLabel().setKey("key3").setValue("value3");
+        MicoLabel l4 = new MicoLabel().setKey("key4").setValue("value4");
 
-        MicoServiceInterface i1 = new MicoServiceInterface().setServiceInterfaceName("i1");
-        MicoServiceInterface i2 = new MicoServiceInterface().setServiceInterfaceName("i2").setPorts(
-            CollectionUtils.listOf(new MicoServicePort().setPort(80).setTargetPort(81)));
-        MicoServiceInterface i3 = new MicoServiceInterface().setServiceInterfaceName("i3").setPorts(
-            CollectionUtils.listOf(new MicoServicePort().setPort(82).setTargetPort(83), new MicoServicePort().setPort(84).setTargetPort(85)));
+        // Add some services to the applications
+        a1.getServices().add(s1);
+        a1.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(s1).setReplicas(3).setLabels(CollectionUtils.listOf(l1, l2)));
+        a2.getServices().add(s2);
+        a2.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(s2).setReplicas(4).setLabels(CollectionUtils.listOf(l3)));
 
-        s1.setServiceInterfaces(CollectionUtils.listOf(i1, i2, i3));
-
+        // Save all created objects in their corresponding repositories
+        applicationRepository.save(a1);
+        applicationRepository.save(a2);
         serviceRepository.save(s1);
+        serviceRepository.save(s2);
+        labelRepository.save(l1);
+        labelRepository.save(l2);
+        labelRepository.save(l3);
+        labelRepository.save(l4);
 
-        // Find serviceInterface
-        Optional<MicoServiceInterface> micoServiceInterfaceOptional = serviceInterfaceRepository.findByServiceAndName("s1", "v1.0.0", "i2");
-        assertTrue(micoServiceInterfaceOptional.isPresent());
-        assertEquals("i2", micoServiceInterfaceOptional.get().getServiceInterfaceName());
+        // Remove all labels that do not have any relationship with another node
+        labelRepository.cleanUp();
 
-        // Delete serviceInterface
-        serviceInterfaceRepository.deleteByServiceAndName("s1", "v1.0.0", "i2");
-        assertFalse(serviceInterfaceRepository.findByServiceAndName("s1", "v1.0.0", "i2").isPresent());
-        assertTrue(serviceInterfaceRepository.findByServiceAndName("s1", "v1.0.0", "i1").isPresent());
-        assertTrue(serviceInterfaceRepository.findByServiceAndName("s1", "v1.0.0", "i3").isPresent());
-
-        // Two ports should be left
-        Iterable<MicoServicePort> micoServicePortIterable = servicePortRepository.findAll();
+        // Only label l4 shall be removed
+        Iterable<MicoLabel> micoLabelIterable = labelRepository.findAll();
         int size = 0;
-        for (MicoServicePort micoServicePort : micoServicePortIterable) {
+        for (MicoLabel micoLabel : micoLabelIterable) {
+            assertNotEquals("key4", micoLabel.getKey());
             size++;
         }
-        assertEquals(2, size);
+        assertEquals(3, size);
+
     }
-
-
 }

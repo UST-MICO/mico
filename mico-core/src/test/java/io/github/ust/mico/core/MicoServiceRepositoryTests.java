@@ -109,7 +109,7 @@ public class MicoServiceRepositoryTests {
 
     @Commit
     @Test
-    public void findDependees() {
+    public void findDependeesWithAndWithoutDepender() {
         // Create some services
         MicoService s1 = new MicoService().setShortName("s1").setVersion("v1.0.0");
         MicoService s2 = new MicoService().setShortName("s2").setVersion("v1.0.1");
