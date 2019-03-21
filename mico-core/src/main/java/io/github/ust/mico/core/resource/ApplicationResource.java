@@ -19,6 +19,7 @@
 
 package io.github.ust.mico.core.resource;
 
+import io.github.ust.mico.core.broker.MicoApplicationBroker;
 import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
@@ -97,6 +98,9 @@ public class ApplicationResource {
 
     @Autowired
     private MicoStatusService micoStatusService;
+
+    @Autowired
+    private MicoApplicationBroker broker;
 
     @GetMapping()
     public ResponseEntity<Resources<Resource<MicoApplicationWithServicesResponseDTO>>> getAllApplications() {
@@ -329,7 +333,7 @@ public class ApplicationResource {
                                                              @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName) {
         // Retrieve application from database (checks whether it exists)
         MicoApplication application = getApplicationFromDatabase(shortName, version);
-        
+
         // Check whether the application contains the service
         if (application.getServices().stream().noneMatch(service -> service.getShortName().equals(serviceShortName))) {
         	// Application does not include the service -> cannot not be deleted from it
