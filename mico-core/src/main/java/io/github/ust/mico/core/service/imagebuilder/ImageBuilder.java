@@ -102,7 +102,7 @@ public class ImageBuilder {
         // Skip the initialization if we are in the 'test' profile (e.g. Travis CI).
         if (cre != null) {
             Environment environment = cre.getApplicationContext().getEnvironment();
-            if (environment.acceptsProfiles(Profiles.of("test"))) {
+        if (environment.acceptsProfiles(Profiles.of("localtest"))) {
                 log.info("Test profile is active. Don't initialize image builder.");
                 return;
             }
