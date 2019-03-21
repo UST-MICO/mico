@@ -3,9 +3,7 @@ package io.github.ust.mico.core.broker;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.service.GitHubCrawler;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.MicoStatusService;
 import io.github.ust.mico.core.util.CollectionUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,13 +34,7 @@ public class MicoServiceBrokerTests {
     private MicoServiceBroker micoServiceBroker;
 
     @MockBean
-    private MicoStatusService micoStatusService;
-
-    @MockBean
     private MicoKubernetesClient micoKubernetesClient;
-
-    @MockBean
-    private GitHubCrawler crawler;
 
     @Test
     public void getAllServicesAsList() throws Exception {
