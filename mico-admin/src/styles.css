@@ -16,10 +16,10 @@ body {
 }
 
 :root {
-    --primary: #3f51b5;
-    --accent: #ff4081;
+    --primary: #673ab7;
+    --accent: #ffd740;
     --primary-text-color: #fff;
-    --accent-text-color: #fff;
+    --accent-text-color: rgba(0,0,0,.87);;
 }
 
 .relative {
