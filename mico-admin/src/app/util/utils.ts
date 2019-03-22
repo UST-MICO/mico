@@ -36,5 +36,6 @@ export function safeUnsubscribe(subscription: Subscription) {
 export function safeUnsubscribeList(subscriptionList: Subscription[]) {
     subscriptionList.forEach(element => {
         safeUnsubscribe(element);
+        subscriptionList = [];
     });
 }

@@ -1,7 +1,7 @@
 import { Component, Input, OnChanges, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { ApiService } from '../api/api.service';
 import { Subscription } from 'rxjs';
-import { safeUnsubscribeList } from '../util/utils';
+import { safeUnsubscribeList, safeUnsubscribe } from '../util/utils';
 
 @Component({
     selector: 'mico-app-detail-public-ip',
@@ -11,10 +11,12 @@ import { safeUnsubscribeList } from '../util/utils';
 })
 export class AppDetailPublicIpComponent implements OnInit, OnChanges, OnDestroy {
 
+    private subApplication: Subscription;
     private subPublicIps: Subscription[];
     private subServiceInterfaces: Subscription[];
 
-    @Input() application;
+    @Input() applicationShortName;
+    @Input() applicationVersion;
 
     publicIps = new Map();
 
@@ -29,6 +31,7 @@ export class AppDetailPublicIpComponent implements OnInit, OnChanges, OnDestroy 
     }
 
     ngOnDestroy() {
+        safeUnsubscribe(this.subApplication);
         safeUnsubscribeList(this.subPublicIps);
         safeUnsubscribeList(this.subServiceInterfaces);
     }
@@ -36,31 +39,39 @@ export class AppDetailPublicIpComponent implements OnInit, OnChanges, OnDestroy 
 
     ngOnChanges() {
 
-        if (this.application != null) {
+        if (this.applicationShortName != null && this.applicationVersion != null) {
+
+            safeUnsubscribeList(this.subPublicIps);
+            safeUnsubscribeList(this.subServiceInterfaces);
 
             // get the public ips
-            this.application.services.forEach(service => {
+            safeUnsubscribe(this.subApplication);
+            this.subApplication = this.apiService.getApplication(this.applicationShortName, this.applicationVersion)
+                .subscribe(application => {
 
-                safeUnsubscribeList(this.subServiceInterfaces);
-                // assumption: one public ip per interface
-                this.subServiceInterfaces.push(this.apiService.getServiceInterfaces(service.shortName, service.version)
-                    .subscribe(serviceInterfaces => {
+                    application.services.forEach(service => {
 
-                        safeUnsubscribeList(this.subPublicIps);
+                        safeUnsubscribeList(this.subServiceInterfaces);
+                        // assumption: one public ip per interface
+                        this.subServiceInterfaces.push(this.apiService.getServiceInterfaces(service.shortName, service.version)
+                            .subscribe(serviceInterfaces => {
 
-                        serviceInterfaces.forEach(micoInterface => {
-                            this.subPublicIps.push(this.apiService
-                                .getServiceInterfacePublicIp(service.shortName, service.version, micoInterface.serviceInterfaceName)
-                                .subscribe(publicIpDTO => {
+                                safeUnsubscribeList(this.subPublicIps);
 
-                                    this.publicIps.set(service.shortName + '#' + publicIpDTO.name, publicIpDTO);
-                                    this.changeDedection.markForCheck();
+                                serviceInterfaces.forEach(micoInterface => {
+                                    this.subPublicIps.push(this.apiService
+                                        .getServiceInterfacePublicIp(service.shortName, service.version, micoInterface.serviceInterfaceName)
+                                        .subscribe(publicIpDTO => {
 
-                                }));
-                        });
-                    }));
+                                            this.publicIps.set(service.shortName + '#' + publicIpDTO.name, publicIpDTO);
+                                            this.changeDedection.markForCheck();
 
-            });
+                                        }));
+                                });
+                            }));
+
+                    });
+                });
         }
     }
 }
