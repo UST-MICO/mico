@@ -38,6 +38,6 @@ export function safeUnsubscribeList(subscriptionList: Subscription[]) {
     subscriptionList.forEach(element => {
         safeUnsubscribe(element);
     });
-    // clear list
+    // clear list (see https://stackoverflow.com/questions/1232040/how-do-i-empty-an-array-in-javascript)
     subscriptionList.length = 0;
 }
