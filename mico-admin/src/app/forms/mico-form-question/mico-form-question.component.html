@@ -1,24 +1,35 @@
 <div class="flex flex-column items-stretch" [formGroup]="form">
     <ng-container [ngSwitch]="propertyType()" class="">
 
-        <mat-form-field class="form-element" *ngSwitchCase="'string'">
+        <mat-form-field class="form-element" *ngSwitchCase="'string'" matTooltip={{property?.description}}>
             <mat-label>{{property.title}}</mat-label>
-            <input matInput #input [formControlName]="property['x-key']" [attr.placeholder]="property.title" [required]="property['x-required']" [pattern]="property['pattern']">
-            <mat-hint align="end" *ngIf="property?.maxLength">{{input.value?.length || 0}}/{{property?.maxLength}}</mat-hint>
+            <input matInput #input [formControlName]="property['x-key']" [attr.placeholder]="property.title"
+                [required]="property['x-required']" [pattern]="property['pattern']">
+            <mat-hint align="end" *ngIf="property?.maxLength">{{input.value?.length || 0}}/{{property?.maxLength}}
+            </mat-hint>
             <mat-error *ngIf="formControl.invalid">{{getErrorMessage()}}</mat-error>
         </mat-form-field>
-        <mat-form-field class="form-element" *ngSwitchCase="'enum'">
-            <mat-select matInput [formControlName]="property['x-key']" [placeholder]="property?.title" [required]="property['x-required']">
+        <mat-form-field class="form-element" *ngSwitchCase="'enum'" matTooltip={{property?.description}}>
+            <mat-select matInput [formControlName]="property['x-key']" [placeholder]="property?.title"
+                [required]="property['x-required']">
                 <mat-option *ngFor="let option of property?.enum" [value]="option">
                     {{option}}
                 </mat-option>
             </mat-select>
         </mat-form-field>
-        <mico-form-boolean *ngSwitchCase="'boolean'" [formControlName]="property['x-key']" [config]="property"></mico-form-boolean>
-        <mico-form-number *ngSwitchCase="'number'" [formControlName]="property['x-key']" [config]="property"></mico-form-number>
-        <mico-form-number *ngSwitchCase="'integer'" [formControlName]="property['x-key']" [config]="property"></mico-form-number>
-        <mico-form-array *ngSwitchCase="'array'" [formControlName]="property['x-key']" [config]="property"></mico-form-array>
-        <mico-form-object *ngSwitchCase="'object'" [formControlName]="property['x-key']" [config]="property"></mico-form-object>
+        <mico-form-boolean *ngSwitchCase="'boolean'" [formControlName]="property['x-key']" [config]="property"
+            matTooltip={{property?.description}}>
+        </mico-form-boolean>
+        <mico-form-number *ngSwitchCase="'number'" [formControlName]="property['x-key']" [config]="property"
+            matTooltip={{property?.description}}>
+        </mico-form-number>
+        <mico-form-number *ngSwitchCase="'integer'" [formControlName]="property['x-key']" [config]="property"
+            matTooltip={{property?.description}}>
+        </mico-form-number>
+        <mico-form-array *ngSwitchCase="'array'" [formControlName]="property['x-key']" [config]="property">
+        </mico-form-array>
+        <mico-form-object *ngSwitchCase="'object'" [formControlName]="property['x-key']" [config]="property">
+        </mico-form-object>
         <div *ngSwitchDefault>
             <!-- debug output
                 {{property|json}}
