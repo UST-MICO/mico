@@ -27,7 +27,7 @@ public class NotInitializedException extends Exception {
     private static final long serialVersionUID = 5993454367311960994L;
 
     public NotInitializedException() {
-        
+        super();
     }
 
     public NotInitializedException(String message) {

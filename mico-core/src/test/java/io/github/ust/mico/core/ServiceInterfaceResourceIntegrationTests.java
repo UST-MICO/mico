@@ -19,29 +19,25 @@
 
 package io.github.ust.mico.core;
 
+import static io.github.ust.mico.core.JsonPathBuilder.*;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.VERSION;
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.github.ust.mico.core.configuration.CorsConfig;
-import io.github.ust.mico.core.dto.request.MicoServiceInterfaceRequestDTO;
-import io.github.ust.mico.core.dto.response.status.MicoServiceInterfaceStatusResponseDTO;
-import io.github.ust.mico.core.model.MicoPortType;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.model.MicoServicePort;
-import io.github.ust.mico.core.persistence.MicoServiceInterfaceRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.resource.ServiceInterfaceResource;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.MicoStatusService;
-import io.github.ust.mico.core.util.CollectionUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,35 +55,31 @@ import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import static io.github.ust.mico.core.JsonPathBuilder.HREF;
-import static io.github.ust.mico.core.JsonPathBuilder.LINKS;
-import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
-import static io.github.ust.mico.core.JsonPathBuilder.SELF;
-import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
-import static io.github.ust.mico.core.TestConstants.VERSION;
-import static org.hamcrest.CoreMatchers.endsWith;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.github.ust.mico.core.configuration.CorsConfig;
+import io.github.ust.mico.core.dto.request.MicoServiceInterfaceRequestDTO;
+import io.github.ust.mico.core.dto.response.status.MicoServiceInterfaceStatusResponseDTO;
+import io.github.ust.mico.core.model.MicoPortType;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.model.MicoServicePort;
+import io.github.ust.mico.core.persistence.MicoServiceInterfaceRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.resource.ServiceInterfaceResource;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.service.MicoStatusService;
+import io.github.ust.mico.core.util.CollectionUtils;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(ServiceInterfaceResource.class)
 @OverrideAutoConfiguration(enabled = true) // Needed to override our neo4j config
 @EnableAutoConfiguration
 @EnableConfigurationProperties(value = {CorsConfig.class})
-public class ServiceInterfaceResourceTests {
+public class ServiceInterfaceResourceIntegrationTests {
 
     private static final String JSON_PATH_LINKS_SECTION = buildPath(ROOT, LINKS);
     private static final String SELF_HREF = buildPath(JSON_PATH_LINKS_SECTION, SELF, HREF);
@@ -377,4 +369,5 @@ public class ServiceInterfaceResourceTests {
             jsonPath(INTERFACES_HREF, endsWith(selfBaseUrl)),
             jsonPath(SERVICES_HREF, endsWith(serviceUrl)));
     }
+
 }

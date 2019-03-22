@@ -19,14 +19,6 @@
 
 package io.github.ust.mico.core.service.imagebuilder;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.*;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.ServiceAccount;
@@ -36,12 +28,25 @@ import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
+import io.github.ust.mico.core.exception.ImageBuildException;
 import io.github.ust.mico.core.exception.NotInitializedException;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.service.imagebuilder.buildtypes.*;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.KubernetesNameNormalizer;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.*;
 
 /**
  * Builds container images by using Knative Build and Kaniko.
@@ -77,12 +82,33 @@ public class ImageBuilder {
     }
 
     /**
-     * Initialize the image builder.
+     * Initialize the image builder manually.
      *
-     * @throws NotInitializedException if the image builder was not initialized
+     * @throws NotInitializedException if there are errors during initialization
      */
     public void init() throws NotInitializedException {
-        log.debug("Initializing image builder...");
+        init(null);
+    }
+
+    /**
+     * Initialize the image builder every time the application context is refreshed.
+     *
+     * @param cre the {@link ContextRefreshedEvent}
+     * @throws NotInitializedException if there are errors during initialization
+     */
+    @EventListener
+    public void init(@Nullable ContextRefreshedEvent cre) throws NotInitializedException {
+        // Initialization must only be executed in an environment with a connection to Kubernetes.
+        // Skip the initialization if we are in the 'test' profile (e.g. Travis CI).
+        if (cre != null) {
+            Environment environment = cre.getApplicationContext().getEnvironment();
+            if (environment.acceptsProfiles(Profiles.of("test"))) {
+                log.info("Test profile is active. Don't initialize image builder.");
+                return;
+            }
+        }
+
+        log.info("Application context refreshed -> initialize image builder.");
         String namespace = buildBotConfig.getNamespaceBuildExecution();
         String serviceAccountName = buildBotConfig.getDockerRegistryServiceAccountName();
 
@@ -112,7 +138,6 @@ public class ImageBuilder {
                 buildClient).inNamespace(namespace);
         }
 
-        // TODO Use thread pool
         scheduledBuildStatusCheckService = Executors.newSingleThreadScheduledExecutor();
     }
 
@@ -138,21 +163,14 @@ public class ImageBuilder {
     }
 
     /**
-     * Returns the build object
+     * Builds an OCI image based on a Git repository provided by a {@code MicoService}.
+     * The result of the returned {@code CompletableFuture} is the Docker image URI.
      *
-     * @param buildName the name of the build
-     * @return the build object
-     */
-    public Build getBuild(String buildName) {
-        return this.buildClient.withName(buildName).get();
-    }
-
-    /**
      * @param micoService the MICO service for which the image should be build
-     * @return the resulting build
+     * @return the {@link CompletableFuture} that executes the build. The result is the Docker image URI.
      * @throws NotInitializedException if the image builder was not initialized
      */
-    public Build build(MicoService micoService) throws NotInitializedException, IllegalArgumentException {
+    public CompletableFuture<String> build(MicoService micoService) throws NotInitializedException, InterruptedException, ExecutionException, TimeoutException {
         if (StringUtils.isEmpty(micoService.getGitCloneUrl())) {
             throw new IllegalArgumentException("Git clone url is missing");
         }
@@ -171,7 +189,8 @@ public class ImageBuilder {
         String gitUrl = micoService.getGitCloneUrl();
         String gitRevision = micoService.getVersion();
 
-        return createBuild(buildName, destination, dockerfilePath, gitUrl, gitRevision, namespace);
+        Build build = createBuild(buildName, destination, dockerfilePath, gitUrl, gitRevision, namespace);
+        return waitUntilBuildIsFinished(build.getMetadata().getName(), micoService);
     }
 
     /**
@@ -217,12 +236,12 @@ public class ImageBuilder {
         return createdBuild;
     }
 
-    public CompletableFuture<Boolean> waitUntilBuildIsFinished(String buildName) throws InterruptedException, ExecutionException, TimeoutException {
-        CompletableFuture<Boolean> completionFuture = new CompletableFuture<>();
+    private CompletableFuture<String> waitUntilBuildIsFinished(String buildName, MicoService micoService) throws InterruptedException, ExecutionException, TimeoutException {
+        CompletableFuture<String> completionFuture = new CompletableFuture<>();
 
         // Create a future that polls every 5 seconds with a delay of 10 seconds.
-        final ScheduledFuture<?> checkFuture = scheduledBuildStatusCheckService.scheduleAtFixedRate(() -> {
-
+        final ScheduledFuture<?> pollingFuture = scheduledBuildStatusCheckService.scheduleAtFixedRate(() -> {
+            // Retrieve the build to get the current status of the build.
             Build build = getBuild(buildName);
             if (build.getStatus() != null && build.getStatus().getCluster() != null) {
                 String buildPodName = build.getStatus().getCluster().getPodName();
@@ -230,25 +249,45 @@ public class ImageBuilder {
                 Pod buildPod = this.kubernetesClient.pods().inNamespace(buildNamespace).withName(buildPodName).get();
 
                 String currentBuildPhase = buildPod.getStatus().getPhase();
-                log.debug("Current phase of build pod '{}' is '{}'.", buildPodName, currentBuildPhase);
+                log.debug("Current phase of build of MicoService '{}' '{}' is '{}'.", micoService.getShortName(),
+                    micoService.getVersion(), currentBuildPhase);
                 if (currentBuildPhase.equals("Succeeded")) {
-                    completionFuture.complete(true);
+                    String dockerImageUri = createImageName(micoService.getShortName(), micoService.getVersion());
+                    completionFuture.complete(dockerImageUri);
                 } else if (currentBuildPhase.equals("Failed")) {
-                    completionFuture.complete(false);
+                    completionFuture.completeExceptionally(new ImageBuildException("Build of MicoService '"
+                        + micoService.getShortName() + "' '" + micoService.getVersion() + "' failed!"));
                 }
             } else {
-                log.error("Build was not started!");
-                completionFuture.complete(false);
+                completionFuture.completeExceptionally(new ImageBuildException("Build of MicoService '"
+                    + micoService.getShortName() + "' '" + micoService.getVersion() + "' was not started!"));
             }
         }, 10, 5, TimeUnit.SECONDS);
 
         // Add a timeout. This is synchronous and blocks the execution.
-        completionFuture.get(buildBotConfig.getBuildTimeout(), TimeUnit.SECONDS);
+        log.debug("Set timeout of {}s for build of MicoService '{}' '{}'.", buildBotConfig.getBuildTimeout(),
+            micoService.getShortName(), micoService.getVersion());
+        try {
+            completionFuture.get(buildBotConfig.getBuildTimeout(), TimeUnit.SECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            pollingFuture.cancel(true);
+            throw e;
+        }
 
-        // When completed cancel future
-        completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
+        // When completed cancel polling future
+        completionFuture.whenComplete((result, thrown) -> pollingFuture.cancel(true));
 
         return completionFuture;
+    }
+
+    /**
+     * Returns the build object
+     *
+     * @param buildName the name of the build
+     * @return the build object
+     */
+    private Build getBuild(String buildName) {
+        return this.buildClient.withName(buildName).get();
     }
 
     /**

@@ -19,12 +19,25 @@
 
 package io.github.ust.mico.core.resource;
 
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.validation.Valid;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.Resources;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
@@ -38,51 +51,28 @@ import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import io.github.ust.mico.core.persistence.KubernetesDeploymentInfoRepository;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoEnvironmentVariableRepository;
-import io.github.ust.mico.core.persistence.MicoLabelRepository;
-import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.persistence.*;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Link;
-import org.springframework.hateoas.MediaTypes;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.Resources;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
-
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @Slf4j
 @RestController
 @RequestMapping(value = "/" + ApplicationResource.PATH_APPLICATIONS, produces = MediaTypes.HAL_JSON_VALUE)
 public class ApplicationResource {
 
-    public static final String PATH_APPLICATIONS = "applications";
-    public static final String PATH_SERVICES = "services";
-    public static final String PATH_DEPLOYMENT_INFORMATION = "deploymentInformation";
-    public static final String PATH_PROMOTE = "promote";
-    public static final String PATH_STATUS = "status";
-    protected static final int MAX_MICO_SERVICES_WITH_SAME_SHORT_NAME = 1;
+    static final String PATH_APPLICATIONS = "applications";
+    private static final String PATH_SERVICES = "services";
+    private static final String PATH_DEPLOYMENT_INFORMATION = "deploymentInformation";
+    private static final String PATH_PROMOTE = "promote";
+    private static final String PATH_STATUS = "status";
+
     private static final String PATH_VARIABLE_SHORT_NAME = "micoApplicationShortName";
     private static final String PATH_VARIABLE_VERSION = "micoApplicationVersion";
     private static final String PATH_VARIABLE_SERVICE_SHORT_NAME = "micoServiceShortName";
     private static final String PATH_VARIABLE_SERVICE_VERSION = "micoServiceVersion";
+    
     @Autowired
     private MicoApplicationRepository applicationRepository;
 
@@ -97,6 +87,9 @@ public class ApplicationResource {
 
     @Autowired
     private MicoEnvironmentVariableRepository environmentVariableRepository;
+
+    @Autowired
+    private MicoInterfaceConnectionRepository interfaceConnectionRepository;
 
     @Autowired
     private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
@@ -191,10 +184,14 @@ public class ApplicationResource {
         application.setId(null);
         application.getServiceDeploymentInfos().forEach(sdi -> sdi.setId(null));
         application.getServiceDeploymentInfos().forEach(sdi -> sdi.getLabels().forEach(label -> label.setId(null)));
-        application.getServiceDeploymentInfos().forEach(sdi -> sdi.getEnvironmentVariables().forEach(envVar -> envVar.setId(null)));
+        application.getServiceDeploymentInfos().forEach(sdi -> {
+        	sdi.getEnvironmentVariables().forEach(envVar -> envVar.setId(null));
+        	sdi.getInterfaceConnections().forEach(ic -> ic.setId(null));
+        });
         // The actual Kubernetes deployment information must not be copied, because the new application
         // is considered to be not deployed yet.
         application.getServiceDeploymentInfos().forEach(sdi -> sdi.setKubernetesDeploymentInfo(null));
+        
 
         // Save the new (promoted) application in the database.
         MicoApplication updatedApplication = applicationRepository.save(application);
@@ -391,28 +388,29 @@ public class ApplicationResource {
         if (application.getServices().stream().noneMatch(service -> service.getShortName().equals(serviceShortName))) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                 "Application '" + shortName + "' '" + version + "' does not include service '" + serviceShortName + "'.");
-        }
-
-        // Check whether the deployment information for the given application and service exists
-        Optional<MicoServiceDeploymentInfo> serviceDeploymentInfoOptional = serviceDeploymentInfoRepository.findByApplicationAndService(shortName, version, serviceShortName);
-        if (!serviceDeploymentInfoOptional.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "Service deployment information for service '" + serviceShortName + "' in application '" + shortName
-                    + "' '" + version + "' could not be found.");
-        }
-
-        // Update the service deployment information in the database
-        MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(
-            serviceDeploymentInfoOptional.get().applyValuesFrom(serviceDeploymentInfoDTO));
-        // In case addition properties (stored as separate node entity) such as labels, environment variables
-        // have been removed from this service deployment information,
-        // the standard save() function of the service deployment information repository will not delete those
-        // "tangling" (without relationships) labels (nodes), hence the manual clean up.
-        labelRepository.cleanUp();
-        environmentVariableRepository.cleanUp();
+    	}
+    	
+    	// Check whether the deployment information for the given application and service exists
+    	Optional<MicoServiceDeploymentInfo> serviceDeploymentInfoOptional = serviceDeploymentInfoRepository.findByApplicationAndService(shortName, version, serviceShortName);
+    	if (!serviceDeploymentInfoOptional.isPresent()) {
+    		throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+    			"Service deployment information for service '" + serviceShortName + "' in application '" + shortName
+                + "' '" + version + "' could not be found.");
+    	}
+    	
+    	// Update the service deployment information in the database
+    	MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(
+    	    serviceDeploymentInfoOptional.get().applyValuesFrom(serviceDeploymentInfoDTO));
+    	// In case addition properties (stored as separate node entity) such as labels, environment variables
+    	// have been removed from this service deployment information,
+    	// the standard save() function of the service deployment information repository will not delete those
+    	// "tangling" (without relationships) labels (nodes), hence the manual clean up.
+    	labelRepository.cleanUp();
+    	environmentVariableRepository.cleanUp();
         kubernetesDeploymentInfoRepository.cleanUp();
-        log.debug("Service deployment information for service '{}' in application '{}' '{}' has been updated.", serviceShortName, shortName, version);
-
+        interfaceConnectionRepository.cleanUp();
+    	log.debug("Service deployment information for service '{}' in application '{}' '{}' has been updated.", serviceShortName, shortName, version);
+    	
         // TODO: Update actual Kubernetes deployment (see issue mico#416).
 
         return ResponseEntity.ok(new Resource<>(new MicoServiceDeploymentInfoResponseDTO(updatedServiceDeploymentInfo),

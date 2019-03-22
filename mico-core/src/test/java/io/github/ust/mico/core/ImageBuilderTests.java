@@ -34,6 +34,9 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+
 import static io.github.ust.mico.core.TestConstants.*;
 
 @RunWith(SpringRunner.class)
@@ -63,7 +66,7 @@ public class ImageBuilderTests {
     }
 
     @Test(expected = NotInitializedException.class)
-    public void withoutInitializingAnErrorIsThrown() throws NotInitializedException {
+    public void withoutInitializingAnErrorIsThrown() throws NotInitializedException, InterruptedException, ExecutionException, TimeoutException {
 
         MicoService micoService = new MicoService()
             .setShortName(SERVICE_SHORT_NAME)

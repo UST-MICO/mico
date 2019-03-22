@@ -19,11 +19,9 @@
 
 package io.github.ust.mico.core;
 
-import io.github.ust.mico.core.model.MicoVersion;
+import static io.github.ust.mico.core.JsonPathBuilder.*;
 
-import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
-import static io.github.ust.mico.core.JsonPathBuilder.buildAttributePath;
-import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
+import io.github.ust.mico.core.model.MicoVersion;
 
 class TestConstants {
 
@@ -90,7 +88,7 @@ class TestConstants {
     static final String OWNER = "owner";
 
     /*
-     * For tests in ApplicationResourceTests, one service is added to the list of MicoServiceStatusDTOs in MicoApplicationStatusDTO.
+     * For tests in ApplicationResourceIntegrationTests, one service is added to the list of MicoServiceStatusDTOs in MicoApplicationStatusDTO.
      * All paths are build on the path for the status of this service.
      */
     static final String SERVICE_STATUS_PATH = buildPath(ROOT, "serviceStatuses[0]");
@@ -124,7 +122,7 @@ class TestConstants {
 
 
     /*
-     * For tests in ServiceResourceTests, a MicoServiceStatusDTO is used.
+     * For tests in ServiceResourceIntegrationTests, a MicoServiceStatusDTO is used.
      * All paths are build on the base path of this object.
      */
     static final String SERVICE_DTO_SERVICE_NAME = buildAttributePath("name");

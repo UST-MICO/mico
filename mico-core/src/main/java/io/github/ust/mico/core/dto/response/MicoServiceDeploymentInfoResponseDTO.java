@@ -89,8 +89,13 @@ public class MicoServiceDeploymentInfoResponseDTO extends MicoServiceDeploymentI
 		// and not a list of MicoEnvironmentVariableRequestDTOs, since the list is declared
 		// in MicoServiceDeploymentInfoRequestDTO and typed to MicoEnvironmentVariableRequestDTO.
 		setEnvironmentVariables(serviceDeploymentInfo.getEnvironmentVariables().stream().map(MicoEnvironmentVariableResponseDTO::new).collect(Collectors.toList()));
-		
-		// Kubernetes deployment info maybe null if not available
+
+        // Interface connections need to be set explicitly to have a list of MicoInterfaceConnectionResponseDTOs
+        // and not a list of MicoInterfaceConnectionRequestDTO, since the list is declared
+        // in MicoServiceDeploymentInfoRequestDTO and typed to MicoInterfaceConnectionRequestDTO.
+        setInterfaceConnections(serviceDeploymentInfo.getInterfaceConnections().stream().map(MicoInterfaceConnectionResponseDTO::new).collect(Collectors.toList()));
+
+        // Kubernetes deployment info maybe null if not available
 		if (serviceDeploymentInfo.getKubernetesDeploymentInfo() != null) {
 			setKubernetesDeploymentInfo(new KubernetesDeploymentInfoResponseDTO(serviceDeploymentInfo.getKubernetesDeploymentInfo()));
 		}
