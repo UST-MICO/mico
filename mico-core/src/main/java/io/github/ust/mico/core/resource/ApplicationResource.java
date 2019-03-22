@@ -126,7 +126,7 @@ public class ApplicationResource {
         return ResponseEntity
             .created(linkTo(methodOn(ApplicationResource.class)
                 .getApplicationByShortNameAndVersion(application.getShortName(), application.getVersion())).toUri())
-            .body(new Resource<>(dto, broker.getApplicationLinks(application)));
+            .body(new Resource<>(dto, broker.getLinksOfMicoApplication(application)));
     }
 
     @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
@@ -280,7 +280,7 @@ public class ApplicationResource {
                                                                                              @PathVariable(PATH_VARIABLE_VERSION) String version) {
         MicoApplicationStatusResponseDTO applicationStatus;
         try {
-            applicationStatus = broker.getMicoApplicationStatusOfMicoApplication(shortName, version);
+            applicationStatus = broker.getMicoApplicationStatusOfMicoApplicationByShortNameAndVersion(shortName, version);
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
@@ -293,8 +293,8 @@ public class ApplicationResource {
 
     private Resource<MicoApplicationWithServicesResponseDTO> getApplicationWithServicesResponseDTOResourceWithDeploymentStatus(MicoApplication application) {
         MicoApplicationWithServicesResponseDTO dto = new MicoApplicationWithServicesResponseDTO(application);
-        dto.setDeploymentStatus(broker.getApplicationDeploymentStatus(application));
-        return new Resource<>(dto, broker.getApplicationLinks(application));
+        dto.setDeploymentStatus(broker.getMicoApplicationDeploymentStatusOfMicoApplication(application));
+        return new Resource<>(dto, broker.getLinksOfMicoApplication(application));
     }
 
 }

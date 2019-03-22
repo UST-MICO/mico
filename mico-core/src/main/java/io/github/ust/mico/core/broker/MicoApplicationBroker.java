@@ -280,19 +280,20 @@ public class MicoApplicationBroker {
     }
 
     //TODO: Change return value to not use a DTO
-    public MicoApplicationStatusResponseDTO getMicoApplicationStatusOfMicoApplication(String shortName, String version) throws MicoApplicationNotFoundException {
+    public MicoApplicationStatusResponseDTO getMicoApplicationStatusOfMicoApplicationByShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException {
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(shortName, version);
         return micoStatusService.getApplicationStatus(micoApplication);
     }
 
     //TODO: Change return value to not use a DTO
-    public MicoApplicationResponseDTO.MicoApplicationDeploymentStatus getApplicationDeploymentStatus(MicoApplication application) {
+    public MicoApplicationResponseDTO.MicoApplicationDeploymentStatus getMicoApplicationDeploymentStatusOfMicoApplication(MicoApplication application) {
         return micoKubernetesClient.isApplicationDeployed(application)
             ? MicoApplicationResponseDTO.MicoApplicationDeploymentStatus.DEPLOYED
             : MicoApplicationResponseDTO.MicoApplicationDeploymentStatus.NOT_DEPLOYED;
     }
 
-    public Iterable<Link> getApplicationLinks(MicoApplication application) {
+    //TODO: Move to Resource or keep in Broker?
+    public Iterable<Link> getLinksOfMicoApplication(MicoApplication application) {
         LinkedList<Link> links = new LinkedList<>();
         links.add(linkTo(methodOn(ApplicationResource.class).getApplicationByShortNameAndVersion(application.getShortName(), application.getVersion())).withSelfRel());
         links.add(linkTo(methodOn(ApplicationResource.class).getAllApplications()).withRel("applications"));
