@@ -19,41 +19,15 @@
 
 package io.github.ust.mico.core;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import static io.github.ust.mico.core.TestConstants.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 
-import io.fabric8.kubernetes.api.model.PodList;
-import io.fabric8.kubernetes.api.model.PodListBuilder;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
-import io.github.ust.mico.core.configuration.PrometheusConfig;
-import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
-import io.github.ust.mico.core.dto.response.internal.PrometheusResponseDTO;
-import io.github.ust.mico.core.dto.response.status.KubernetesNodeMetricsResponseDTO;
-import io.github.ust.mico.core.dto.response.status.KubernetesPodInformationResponseDTO;
-import io.github.ust.mico.core.dto.response.status.KubernetesPodMetricsResponseDTO;
-import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
-import io.github.ust.mico.core.dto.response.status.MicoServiceInterfaceStatusResponseDTO;
-import io.github.ust.mico.core.dto.response.status.MicoServiceStatusResponseDTO;
-import io.github.ust.mico.core.exception.KubernetesResourceException;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoPortType;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.model.MicoServicePort;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoServiceInterfaceRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.MicoStatusService;
-import io.github.ust.mico.core.util.CollectionUtils;
+import java.util.*;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -66,18 +40,24 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
-import static io.github.ust.mico.core.TestConstants.NAME;
-import static io.github.ust.mico.core.TestConstants.SERVICE_INTERFACE_NAME;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME_OTHER;
-import static io.github.ust.mico.core.TestConstants.VERSION;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.mock;
+import io.fabric8.kubernetes.api.model.PodList;
+import io.fabric8.kubernetes.api.model.PodListBuilder;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.github.ust.mico.core.configuration.PrometheusConfig;
+import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
+import io.github.ust.mico.core.dto.response.internal.PrometheusResponseDTO;
+import io.github.ust.mico.core.dto.response.status.*;
+import io.github.ust.mico.core.exception.KubernetesResourceException;
+import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceInterfaceRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.service.MicoStatusService;
+import io.github.ust.mico.core.util.CollectionUtils;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -110,7 +90,6 @@ public class MicoStatusServiceTest {
     private MicoServiceInterface micoServiceInterface;
     private Optional<Deployment> deployment;
     private Optional<Service> kubernetesService;
-    private Optional<Service> kubernetesServiceWithoutIp;
     private PodList podList;
     private PodList podListWithOnePod;
 
@@ -203,12 +182,6 @@ public class MicoStatusServiceTest {
             .addNewIngress().withIp("192.168.2.113").endIngress()
             .endLoadBalancer()
             .endStatus()
-            .build());
-
-        kubernetesServiceWithoutIp = Optional.of(new ServiceBuilder()
-            .withNewMetadata().withName(SERVICE_INTERFACE_NAME).endMetadata()
-            .withNewSpec().endSpec()
-            .withNewStatus().endStatus()
             .build());
 
         podList = new PodListBuilder()

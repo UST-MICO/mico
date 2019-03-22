@@ -19,12 +19,27 @@
 
 package io.github.ust.mico.core.resource;
 
+import static io.github.ust.mico.core.resource.ServiceResource.PATH_VARIABLE_SHORT_NAME;
+import static io.github.ust.mico.core.resource.ServiceResource.PATH_VARIABLE_VERSION;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.validation.Valid;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.Resources;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import io.github.ust.mico.core.dto.request.MicoServiceInterfaceRequestDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceInterfaceResponseDTO;
@@ -34,30 +49,7 @@ import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoServiceInterfaceRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoStatusService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Link;
-import org.springframework.hateoas.MediaTypes;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.Resources;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
-import static io.github.ust.mico.core.resource.ServiceResource.PATH_VARIABLE_SHORT_NAME;
-import static io.github.ust.mico.core.resource.ServiceResource.PATH_VARIABLE_VERSION;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
-
-@Slf4j
 @RestController
 @RequestMapping(value = "/services", produces = MediaTypes.HAL_JSON_VALUE)
 public class ServiceInterfaceResource {

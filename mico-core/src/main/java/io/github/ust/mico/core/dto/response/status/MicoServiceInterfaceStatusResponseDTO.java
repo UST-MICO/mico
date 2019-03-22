@@ -32,7 +32,8 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for the status information of a {@link MicoServiceInterface}, that is mapped to a Kubernetes Service.
+ * DTO for the status information of a {@link MicoServiceInterface}
+ * that is mapped to a Kubernetes Service intended to use with responses only.
  */
 @Data
 @NoArgsConstructor

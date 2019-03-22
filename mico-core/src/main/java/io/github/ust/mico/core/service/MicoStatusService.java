@@ -82,7 +82,9 @@ public class MicoStatusService {
 
     @Autowired
     public MicoStatusService(PrometheusConfig prometheusConfig, MicoKubernetesClient micoKubernetesClient,
-                             RestTemplate restTemplate, MicoServiceRepository serviceRepository, MicoServiceInterfaceRepository serviceInterfaceRepository, MicoApplicationRepository micoApplicationRepository) {
+                             RestTemplate restTemplate, MicoServiceRepository serviceRepository,
+                             MicoServiceInterfaceRepository serviceInterfaceRepository,
+                             MicoApplicationRepository micoApplicationRepository) {
         this.prometheusConfig = prometheusConfig;
         this.micoKubernetesClient = micoKubernetesClient;
         this.restTemplate = restTemplate;
@@ -96,7 +98,7 @@ public class MicoStatusService {
      *
      * @param micoApplication the application the status is requested for
      * @return {@link MicoApplicationStatusResponseDTO} containing a list of {@link MicoServiceStatusResponseDTO} for
-     * status information of a single {@link MicoService}
+     * status information of a single {@link MicoService}.
      */
     public MicoApplicationStatusResponseDTO getApplicationStatus(MicoApplication micoApplication) {
         MicoApplicationStatusResponseDTO applicationStatus = new MicoApplicationStatusResponseDTO();
@@ -238,7 +240,7 @@ public class MicoStatusService {
                 MicoServiceInterfaceStatusResponseDTO interfaceStatusResponseDTO = getPublicIpOfKubernetesService(micoService, serviceInterfaceName);
                 interfacesInformation.add(interfaceStatusResponseDTO);
             } catch (ResponseStatusException e) {
-                interfacesInformation.add(new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName).setExternalIp(""));
+                interfacesInformation.add(new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName));
                 errorMessages.add(e.getMessage());
             }
         }

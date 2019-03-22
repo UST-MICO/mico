@@ -115,7 +115,7 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
     @Test(expected = IllegalArgumentException.class)
     public void testCrawlerInSubDirNotThere() throws IOException {
         String dockerfilePath = HELLO_REPO_SUB_DIR_DOCKERFILE + "NOT_THERE";
-        MicoService service = crawler.crawlGitHubRepoLatestRelease(REPO_HELLO_URI_API, dockerfilePath);
+        crawler.crawlGitHubRepoLatestRelease(REPO_HELLO_URI_API, dockerfilePath);
     }
 
     private void prettyPrint(Object object) {

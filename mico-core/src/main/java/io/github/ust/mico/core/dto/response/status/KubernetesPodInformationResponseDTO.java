@@ -33,7 +33,8 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * Represents basic information for a Pod in Kubernetes.
+ * Represents basic information for a Pod in Kubernetes
+ * intended to use with responses only..
  */
 @Data
 @NoArgsConstructor
