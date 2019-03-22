@@ -183,6 +183,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                         this.apiService.getJobStatus(this.shortName, this.selectedVersion);
                     });
 
+                safeUnsubscribe(this.subJobStatus);
                 this.subJobStatus = this.apiService.getJobStatus(this.shortName, this.selectedVersion)
                     .subscribe(newStatus => {
                         if (newStatus.status === 'DONE') {
