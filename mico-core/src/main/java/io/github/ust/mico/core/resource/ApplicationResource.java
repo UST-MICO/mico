@@ -32,9 +32,7 @@ import io.github.ust.mico.core.exception.*;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import io.github.ust.mico.core.persistence.*;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.MicoStatusService;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,31 +70,7 @@ public class ApplicationResource {
     private static final String PATH_VARIABLE_SERVICE_VERSION = "micoServiceVersion";
 
     @Autowired
-    private MicoApplicationRepository applicationRepository;
-
-    @Autowired
-    private MicoServiceRepository serviceRepository;
-
-    @Autowired
-    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
-    
-    @Autowired
-    private MicoLabelRepository labelRepository;
-    
-    @Autowired
-    private MicoEnvironmentVariableRepository environmentVariableRepository;
-
-    @Autowired
-    private MicoInterfaceConnectionRepository interfaceConnectionRepository;
-
-    @Autowired
-    private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
-
-    @Autowired
     private MicoKubernetesClient micoKubernetesClient;
-
-    @Autowired
-    private MicoStatusService micoStatusService;
 
     @Autowired
     private MicoApplicationBroker broker;

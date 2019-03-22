@@ -59,14 +59,6 @@ public class MicoApplicationBroker {
         return micoApplicationOptional.get();
     }
 
-    public MicoApplication getMicoApplicationById(Long id) throws MicoApplicationNotFoundException {
-        Optional<MicoApplication> micoApplicationOptional = applicationRepository.findById(id);
-        if (!micoApplicationOptional.isPresent()) {
-            throw new MicoApplicationNotFoundException(id);
-        }
-        return micoApplicationOptional.get();
-    }
-
     public List<MicoApplication> getMicoApplicationsByShortName(String shortName) throws MicoApplicationNotFoundException {
         List<MicoApplication> micoApplicationList = applicationRepository.findByShortName(shortName);
         if (micoApplicationList.isEmpty()) {
@@ -101,14 +93,6 @@ public class MicoApplicationBroker {
         applicationRepository.delete(micoApplication);
     }
 
-    public void deleteMicoApplicationById(Long id) throws MicoApplicationNotFoundException, MicoApplicationIsDeployedException {
-        MicoApplication micoApplication = getMicoApplicationById(id);
-        if (micoKubernetesClient.isApplicationDeployed(micoApplication)) {
-            throw new MicoApplicationIsDeployedException(id);
-        }
-        applicationRepository.deleteById(id);
-    }
-
     public void deleteMicoApplicationsByShortName(String shortName) throws MicoApplicationNotFoundException, MicoApplicationIsDeployedException {
         List<MicoApplication> micoApplicationList = getMicoApplicationsByShortName(shortName);
 
@@ -131,7 +115,7 @@ public class MicoApplicationBroker {
 
     public MicoApplication createMicoApplication(MicoApplication micoApplication) throws MicoApplicationAlreadyExistsException {
         try {
-            MicoApplication existingMicoApplication = getMicoApplicationByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion());
+            getMicoApplicationByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion());
         } catch (MicoApplicationNotFoundException e) {
             return applicationRepository.save(micoApplication);
         }
@@ -176,19 +160,8 @@ public class MicoApplicationBroker {
         return applicationRepository.save(micoApplication);
     }
 
-    public MicoApplication copyAndUpgradeMicoApplicationById(Long id, String newVersion) throws MicoApplicationNotFoundException {
-        MicoApplication micoApplication = getMicoApplicationById(id);
-        micoApplication.setVersion(newVersion).setId(null);
-        return applicationRepository.save(micoApplication);
-    }
-
     public List<MicoService> getMicoServicesOfMicoApplicationByShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException {
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(shortName, version);
-        return serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion());
-    }
-
-    public List<MicoService> getMicoServicesOfMicoApplicationById(Long id) throws MicoApplicationNotFoundException {
-        MicoApplication micoApplication = getMicoApplicationById(id);
         return serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion());
     }
 
@@ -237,17 +210,6 @@ public class MicoApplicationBroker {
         }
     }
 
-    public MicoServiceDeploymentInfo getMicoServiceDeploymentInformation(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoServiceDeploymentInformationNotFoundException, MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException {
-        checkForMicoServiceInMicoApplication(applicationShortName, applicationVersion, serviceShortName);
-
-        Optional<MicoServiceDeploymentInfo> micoServiceDeploymentInfoOptional = serviceDeploymentInfoRepository.findByApplicationAndService(applicationShortName, applicationVersion, serviceShortName);
-        if (micoServiceDeploymentInfoOptional.isPresent()) {
-            return micoServiceDeploymentInfoOptional.get();
-        } else {
-            throw new MicoServiceDeploymentInformationNotFoundException(applicationShortName, applicationVersion, serviceShortName);
-        }
-    }
-
     public MicoApplication removeMicoServiceFromMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException {
         // Retrieve application from database (checks whether it exists)
         MicoApplication micoApplication = checkForMicoServiceInMicoApplication(applicationShortName, applicationVersion, serviceShortName);
@@ -266,6 +228,26 @@ public class MicoApplicationBroker {
         }
 
         // TODO: Update Kubernetes deployment
+    }
+
+    public MicoServiceDeploymentInfo getMicoServiceDeploymentInformation(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoServiceDeploymentInformationNotFoundException, MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException {
+        checkForMicoServiceInMicoApplication(applicationShortName, applicationVersion, serviceShortName);
+
+        Optional<MicoServiceDeploymentInfo> micoServiceDeploymentInfoOptional = serviceDeploymentInfoRepository.findByApplicationAndService(applicationShortName, applicationVersion, serviceShortName);
+        if (micoServiceDeploymentInfoOptional.isPresent()) {
+            return micoServiceDeploymentInfoOptional.get();
+        } else {
+            throw new MicoServiceDeploymentInformationNotFoundException(applicationShortName, applicationVersion, serviceShortName);
+        }
+    }
+
+    private MicoApplication checkForMicoServiceInMicoApplication(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException {
+        MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
+
+        if (micoApplication.getServices().stream().noneMatch(service -> service.getShortName().equals(serviceShortName))) {
+            throw new MicoApplicationDoesNotIncludeMicoServiceException(applicationShortName, applicationVersion, serviceShortName);
+        }
+        return micoApplication;
     }
 
     //TODO: change to MicoServiceDeploymentInfo micoServiceDeploymentInfo
@@ -288,15 +270,6 @@ public class MicoApplicationBroker {
         // TODO: Update actual Kubernetes deployment (see issue mico#416).
 
         return updatedMicoServiceDeploymentInfo;
-    }
-
-    private MicoApplication checkForMicoServiceInMicoApplication(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException {
-        MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
-
-        if (micoApplication.getServices().stream().noneMatch(service -> service.getShortName().equals(serviceShortName))) {
-            throw new MicoApplicationDoesNotIncludeMicoServiceException(applicationShortName, applicationVersion, serviceShortName);
-        }
-        return micoApplication;
     }
 
     //TODO: Change return value to MicoApplicationStatus
