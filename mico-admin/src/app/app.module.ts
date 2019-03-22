@@ -97,6 +97,7 @@ import { ServiceDetailStatusComponent } from './service-detail-status/service-de
 import { AppDetailOverviewDeploymentInformationComponent } from './app-detail-overview-deployment-information/app-detail-overview-deployment-information.component';
 import { DeploymentInformationDialogComponent } from './dialogs/deployment-information-dialog/deployment-information-dialog.component';
 import { AppDetailPublicIpComponent } from './app-detail-public-ip/app-detail-public-ip.component';
+import { ServiceDetailKubeconfigComponent } from './service-detail-kubeconfig/service-detail-kubeconfig.component';
 
 @NgModule({
     declarations: [
@@ -136,7 +137,8 @@ import { AppDetailPublicIpComponent } from './app-detail-public-ip/app-detail-pu
         ServiceDetailStatusComponent,
         AppDetailOverviewDeploymentInformationComponent,
         DeploymentInformationDialogComponent,
-        AppDetailPublicIpComponent
+        AppDetailPublicIpComponent,
+        ServiceDetailKubeconfigComponent
     ],
     entryComponents: [
         // dialogs

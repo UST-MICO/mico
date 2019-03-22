@@ -1,5 +1,6 @@
 <mat-dialog-content>
     <h2>Deployment Information</h2>
+    <h3>{{serviceName}}</h3>
 
     <mico-form [modelUrl]="'remote/MicoServiceDeploymentInfoRequestDTO'" (data)="changedDeploymentInformation = $event"
         [startData]="deploymentInformation">

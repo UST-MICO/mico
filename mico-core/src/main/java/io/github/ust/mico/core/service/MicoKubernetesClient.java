@@ -29,11 +29,13 @@ import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
+import io.fabric8.kubernetes.client.internal.SerializationUtils;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.*;
@@ -612,6 +614,27 @@ public class MicoKubernetesClient {
         log.debug("Found {} Kubernetes pod(s) that match the labels '{}'.", podList.size(), labels.toString());
 
         return podList;
+    }
+
+    /**
+     * Retrieves the yaml for a MicoService, contains the interfaces if they exist.
+     *
+     * @param micoService the {@link MicoService}
+     * @return the kubernetes YAML for the {@link MicoService}.
+     * @throws KubernetesResourceException if there is an error while retrieving the Kubernetes objects
+     * @throws JsonProcessingException if there is a error processing the content.
+     */
+    public String getYaml(MicoService micoService) throws KubernetesResourceException, JsonProcessingException {
+        StringBuilder yaml = new StringBuilder();
+        Optional<Deployment> deploymentOptional = getDeploymentOfMicoService(micoService);
+        if (deploymentOptional.isPresent()) {
+            yaml.append(SerializationUtils.dumpWithoutRuntimeStateAsYaml(deploymentOptional.get()));
+        }
+        List<Service> kubernetesServices = getInterfacesOfMicoService(micoService);
+        for (Service kubernetesService : kubernetesServices) {
+            yaml.append(SerializationUtils.dumpWithoutRuntimeStateAsYaml(kubernetesService));
+        }
+        return yaml.toString();
     }
 
     /**
