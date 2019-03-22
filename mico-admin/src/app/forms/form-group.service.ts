@@ -36,7 +36,7 @@ export class FormGroupService {
      * @param model the source ApiModel to create a FormGroup for
      */
     modelToFormGroup(model: ApiModel): FormGroup {
-        const group: {[key: string]: AbstractControl} = {};
+        const group: { [key: string]: AbstractControl } = {};
         if (model.properties != null) {
             for (const key in model.properties) {
                 if (!model.properties.hasOwnProperty(key)) {
@@ -46,6 +46,11 @@ export class FormGroupService {
                 let value = null;
                 if (itemModel.hasOwnProperty('default')) {
                     value = (itemModel as ApiModel).default;
+                }
+                if ((itemModel as ApiModel).type === 'number') {
+                    if (value == null) {
+                        value = 0;
+                    }
                 }
                 const validators = [];
                 if (itemModel.hasOwnProperty('x-required')) {
@@ -60,7 +65,21 @@ export class FormGroupService {
                 if (itemModel.hasOwnProperty('pattern')) {
                     validators.push(Validators.pattern((itemModel as ApiModel).pattern));
                 }
-                group[key] = new FormControl( value, validators);
+                if (itemModel.hasOwnProperty('minimum')) {
+                    const min = (itemModel as ApiModel).minimum;
+                    validators.push(Validators.min(min));
+                    if (value == null || value < min) {
+                        value = min;
+                    }
+                }
+                if (itemModel.hasOwnProperty('maximum')) {
+                    const max = (itemModel as ApiModel).maximum;
+                    validators.push(Validators.max(max));
+                    if (value == null || value > max) {
+                        value = max;
+                    }
+                }
+                group[key] = new FormControl(value, validators);
             }
             return new FormGroup(group);
         }

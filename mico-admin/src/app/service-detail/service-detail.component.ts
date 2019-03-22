@@ -26,7 +26,7 @@ import { ApiObject } from '../api/apiobject';
 import { versionComparator } from '../api/semantic-version';
 import { MatDialog } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
-import { UtilsService } from '../util/utils.service';
+import { safeUnsubscribe } from '../util/utils';
 import { CreateNextVersionComponent } from '../dialogs/create-next-version/create-next-version.component';
 
 export interface Service extends ApiObject {
@@ -49,7 +49,6 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
         private route: ActivatedRoute,
         private router: Router,
         private dialog: MatDialog,
-        private util: UtilsService,
     ) { }
 
     service: Service;
@@ -68,9 +67,9 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
 
     ngOnDestroy() {
         // unsubscribe if observable is not null
-        this.util.safeUnsubscribe(this.subService);
-        this.util.safeUnsubscribe(this.subParam);
-        this.util.safeUnsubscribe(this.subCreateNextVersion);
+        safeUnsubscribe(this.subService);
+        safeUnsubscribe(this.subParam);
+        safeUnsubscribe(this.subCreateNextVersion);
     }
 
 
@@ -89,7 +88,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
             return;
         }
 
-        this.util.safeUnsubscribe(this.subService);
+        safeUnsubscribe(this.subService);
 
         // get latest version
         this.subService = this.apiService.getServiceVersions(shortName)
@@ -191,7 +190,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
                             this.router.navigate(['../service-detail/service-list']);
                         }
                     });
-                this.util.safeUnsubscribe(subDeleteDependency);
+                safeUnsubscribe(subDeleteDependency);
             }
         });
     }
@@ -209,7 +208,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
             }
         });
 
-        this.util.safeUnsubscribe(this.subCreateNextVersion);
+        safeUnsubscribe(this.subCreateNextVersion);
 
 
         // handle dialog result
