@@ -1,5 +1,6 @@
 package io.github.ust.mico.core.broker;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphEdgeResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceResponseDTO;
@@ -229,7 +230,13 @@ public class MicoServiceBroker {
     }
 
     public MicoService promoteService(MicoService service, String newVersion) {
+        // In order to copy the service along with all service interfaces nodes
+        // and all port nodes of the service interface we need to set the id of
+        // service interfaces and ports to null.
+        // That way, Neo4j will create new entities instead of updating the existing ones.
         service.setVersion(newVersion).setId(null);
+        service.getServiceInterfaces().forEach(serviceInterface -> serviceInterface.setId(null));
+        service.getServiceInterfaces().forEach(serviceInterface -> serviceInterface.getPorts().forEach(port -> port.setId(null)));
 
         log.debug("Set new version in service: {}", service);
 
@@ -263,4 +270,14 @@ public class MicoServiceBroker {
         return micoServiceDependencyGraph;
     }
 
+    /**
+     * Return yaml for a {@link MicoService} for the give shortName and version.
+     *
+     * @param shortName the short name of the {@link MicoService}.
+     * @param version   version the version of the {@link MicoService}.
+     * @return the kubernetes YAML for the {@link MicoService}.
+     */
+    public String getServiceYamlByShortNameAndVersion(String shortName, String version) throws MicoServiceNotFoundException, JsonProcessingException, KubernetesResourceException {
+        return micoKubernetesClient.getYaml(getServiceFromDatabase(shortName, version));
+    }
 }

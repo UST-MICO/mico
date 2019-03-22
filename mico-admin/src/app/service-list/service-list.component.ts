@@ -17,17 +17,16 @@
  * under the License.
  */
 
-import { Component, OnInit, OnDestroy, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ApiService } from '../api/api.service';
 import { Subscription } from 'rxjs';
 import { from } from 'rxjs';
 import { groupBy, mergeMap, toArray, map } from 'rxjs/operators';
 import { ApiObject } from '../api/apiobject';
-import { MatDialog, MatSnackBar } from '@angular/material';
+import { MatDialog } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
-import { UtilsService } from '../util/utils.service';
-import { Router } from '@angular/router';
-import { CreateServiceDialogComponent } from '../dialogs/create-service/create-service.component';
+import { safeUnsubscribe } from '../util/utils';
+import { UtilServiceService } from '../util/util-service.service';
 
 
 @Component({
@@ -42,9 +41,7 @@ export class ServiceListComponent implements OnInit, OnDestroy {
     constructor(
         private apiService: ApiService,
         private dialog: MatDialog,
-        private util: UtilsService,
-        private router: Router,
-        private snackBar: MatSnackBar,
+        private utilService: UtilServiceService,
     ) {
         this.getServices();
     }
@@ -58,7 +55,7 @@ export class ServiceListComponent implements OnInit, OnDestroy {
 
     ngOnDestroy() {
         // unsubscribe observables
-        this.util.safeUnsubscribe(this.subServices);
+        safeUnsubscribe(this.subServices);
     }
 
     /**
@@ -102,54 +99,16 @@ export class ServiceListComponent implements OnInit, OnDestroy {
         const subDeleteServiceVersions = dialogRef.afterClosed().subscribe(shouldDelete => {
             if (shouldDelete) {
                 this.apiService.deleteAllServiceVersions(service.shortName).subscribe();
-                this.util.safeUnsubscribe(subDeleteServiceVersions);
+                safeUnsubscribe(subDeleteServiceVersions);
             }
         });
     }
 
 
     /**
-     * dialog to create a new service. can be done:
-     * - manually
-     * - via github import
-     * uses: POST services or POST services/import/github
+     * opens a dialog to create a new service.
      */
     newService(): void {
-        const dialogRef = this.dialog.open(CreateServiceDialogComponent);
-
-        const subDialog = dialogRef.afterClosed().subscribe(result => {
-
-            // filter empty results (when dialog is aborted)
-            if (!result) {
-                return;
-            }
-
-            // check if returned object is complete
-            for (const property in result.data) {
-                if (result.data[property] == null) {
-
-                    if (property !== 'serviceInterfaces') {
-                        this.snackBar.open('Missing property: ' + property, 'Ok', {
-                            duration: 8000,
-                        });
-                        return;
-                    }
-                }
-            }
-
-            // decide if the service was created manually or is to be created via github crawler and create service
-            if (result.tab === 'manual') {
-                this.apiService.postService(result.data).subscribe(val => {
-                    this.router.navigate(['service-detail', val.shortName, val.version]);
-                });
-            } else if (result.tab === 'github') {
-
-                this.apiService.postServiceViaGithub(result.data.url, result.data.version).subscribe(val => {
-                    this.router.navigate(['service-detail', val.shortName, val.version]);
-                });
-            }
-
-            this.util.safeUnsubscribe(subDialog);
-        });
+        this.utilService.createNewService();
     }
 }
