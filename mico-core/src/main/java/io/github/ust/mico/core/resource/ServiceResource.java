@@ -385,11 +385,11 @@ public class ServiceResource {
     }
 
     /**
-     * Return yaml for a {@link MicoService} for the give shortname and version.
+     * Return yaml for a {@link MicoService} for the give shortName and version.
      *
-     * @param shortName
-     * @param version
-     * @return
+     * @param shortName the short name of the {@link MicoService}.
+     * @param version version the version of the {@link MicoService}.
+     * @return the kubernetes YAML for the {@link MicoService}.
      */
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/yaml")
     public ResponseEntity<Resource<MicoYamlResponseDTO>> getServiceYamlByShortNameAndVersion(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
@@ -398,7 +398,7 @@ public class ServiceResource {
         try {
             yaml = micoKubernetesClient.getYaml(getServiceFromDatabase(shortName, version));
         } catch (KubernetesResourceException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Could not find any Service with name: '" + shortName);
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Deployment of service '" + shortName + "' '" + version + "' has a conflict: " + e.getMessage());
         } catch (JsonProcessingException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }

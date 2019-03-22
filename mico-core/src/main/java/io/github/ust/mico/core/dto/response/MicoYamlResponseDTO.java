@@ -44,7 +44,7 @@ public class MicoYamlResponseDTO {
             @ExtensionProperty(name = "title", value = "Kubernetes YAML"),
             @ExtensionProperty(name = "readOnly", value = "true"),
             @ExtensionProperty(name = "x-order", value = "100"),
-            @ExtensionProperty(name = "description", value = "Yaml from Kubernetes resource")
+            @ExtensionProperty(name = "description", value = "YAML from Kubernetes resource")
         }
     )})
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)

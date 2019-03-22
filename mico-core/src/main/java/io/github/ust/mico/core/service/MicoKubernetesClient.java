@@ -619,22 +619,22 @@ public class MicoKubernetesClient {
     /**
      * Retrieves the yaml for a MicoService, contains the interfaces if they exist.
      *
-     * @param micoService
-     * @return
-     * @throws KubernetesResourceException
-     * @throws JsonProcessingException
+     * @param micoService the {@link MicoService}
+     * @return the kubernetes YAML for the {@link MicoService}.
+     * @throws KubernetesResourceException if there is an error while retrieving the Kubernetes objects
+     * @throws JsonProcessingException if there is a error processing the content.
      */
     public String getYaml(MicoService micoService) throws KubernetesResourceException, JsonProcessingException {
-        String yaml = "";
+        StringBuilder yaml = new StringBuilder();
         Optional<Deployment> deploymentOptional = getDeploymentOfMicoService(micoService);
         if (deploymentOptional.isPresent()) {
-            yaml += SerializationUtils.dumpWithoutRuntimeStateAsYaml(deploymentOptional.get());
+            yaml.append(SerializationUtils.dumpWithoutRuntimeStateAsYaml(deploymentOptional.get()));
         }
         List<Service> kubernetesServices = getInterfacesOfMicoService(micoService);
         for (Service kubernetesService : kubernetesServices) {
-            yaml += SerializationUtils.dumpWithoutRuntimeStateAsYaml(kubernetesService);
+            yaml.append(SerializationUtils.dumpWithoutRuntimeStateAsYaml(kubernetesService));
         }
-        return yaml;
+        return yaml.toString();
     }
 
     /**
