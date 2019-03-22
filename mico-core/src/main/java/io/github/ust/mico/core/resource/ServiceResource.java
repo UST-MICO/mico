@@ -274,7 +274,6 @@ public class ServiceResource {
                         linkTo(methodOn(ServiceResource.class).getDependers(shortName, version)).withSelfRel()));
     }
 
-    //TODO: Verfiy this endpoint
     @PostMapping(PATH_GITHUB_ENDPOINT)
     public ResponseEntity<Resource<MicoServiceResponseDTO>> importMicoServiceFromGitHub(@Valid @RequestBody CrawlingInfoRequestDTO crawlingInfo) {
         String url = crawlingInfo.getUrl();
@@ -313,7 +312,6 @@ public class ServiceResource {
         return ResponseEntity.ok(getServiceResponseDTOResource(updatedService));
     }
 
-    //TODO: Verfiy this endpoint
     @GetMapping(PATH_GITHUB_ENDPOINT)
     public ResponseEntity<Resources<Resource<MicoVersionRequestDTO>>> getVersionsFromGitHub(@RequestParam("url") String url) {
         try {
@@ -344,15 +342,15 @@ public class ServiceResource {
                 linkTo(methodOn(ServiceResource.class).getDependencyGraph(shortName, version)).withSelfRel()));
     }
 
-    protected static Resource<MicoServiceResponseDTO> getServiceResponseDTOResource(MicoService service) {
+    private static Resource<MicoServiceResponseDTO> getServiceResponseDTOResource(MicoService service) {
         return new Resource<>(new MicoServiceResponseDTO(service), getServiceLinks(service));
     }
 
-    protected static List<Resource<MicoServiceResponseDTO>> getServiceResponseDTOResourcesList(List<MicoService> services) {
+    private static List<Resource<MicoServiceResponseDTO>> getServiceResponseDTOResourcesList(List<MicoService> services) {
         return services.stream().map(ServiceResource::getServiceResponseDTOResource).collect(Collectors.toList());
     }
 
-    protected static Iterable<Link> getServiceLinks(MicoService service) {
+    private static Iterable<Link> getServiceLinks(MicoService service) {
         LinkedList<Link> links = new LinkedList<>();
         links.add(linkTo(methodOn(ServiceResource.class).getServiceByShortNameAndVersion(service.getShortName(), service.getVersion())).withSelfRel());
         links.add(linkTo(methodOn(ServiceResource.class).getServiceList()).withRel("services"));
