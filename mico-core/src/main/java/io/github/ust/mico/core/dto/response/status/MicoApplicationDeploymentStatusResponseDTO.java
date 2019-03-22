@@ -19,6 +19,10 @@
 
 package io.github.ust.mico.core.dto.response.status;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -74,14 +78,14 @@ public class MicoApplicationDeploymentStatusResponseDTO {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Message."),
+            @ExtensionProperty(name = "title", value = "Messages."),
             @ExtensionProperty(name = "readOnly", value = "true"),
             @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "An optional message.")
+            @ExtensionProperty(name = "description", value = "Some messages with more detailed information.")
         }
     )})
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private MicoMessageResponseDTO message;
+    private List<MicoMessageResponseDTO> messages = new ArrayList<>();
     
     
     // -------------------
@@ -96,7 +100,9 @@ public class MicoApplicationDeploymentStatusResponseDTO {
      */
 	public MicoApplicationDeploymentStatusResponseDTO(MicoApplicationDeploymentStatus applicationDeploymentStatus) {
 		this.value = applicationDeploymentStatus.getValue();
-		this.message = new MicoMessageResponseDTO(applicationDeploymentStatus.getMessage());
+		this.messages = applicationDeploymentStatus.getMessages()
+			.stream().map(MicoMessageResponseDTO::new)
+		    .collect(Collectors.toList());
 	}
     
 }

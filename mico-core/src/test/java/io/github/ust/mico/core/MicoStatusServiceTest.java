@@ -50,6 +50,7 @@ import io.github.ust.mico.core.dto.response.*;
 import io.github.ust.mico.core.dto.response.status.*;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoMessage.Type;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.model.MicoServiceInterface;
@@ -373,9 +374,9 @@ public class MicoStatusServiceTest {
                             .setMemoryUsage(memoryUsagePod1)
                             .setCpuLoad(cpuLoadPod1)
                             .setAvailable(podAvailablePod1))))
-                .setErrorMessages(CollectionUtils.listOf("There is no Kubernetes service for the interface '" +
+                .setErrorMessages(CollectionUtils.listOf(new MicoMessageResponseDTO().setContent("There is no Kubernetes service for the interface '" +
                     SERVICE_INTERFACE_NAME + "' of MicoService '" +
-                    micoService.getShortName() + "' '" + micoService.getVersion() + "'."))
+                    micoService.getShortName() + "' '" + micoService.getVersion() + "'.").setType(Type.ERROR)))
                 .setInterfacesInformation(CollectionUtils.listOf(
                     new MicoServiceInterfaceStatusResponseDTO()
                         .setName(SERVICE_INTERFACE_NAME)
@@ -409,7 +410,10 @@ public class MicoStatusServiceTest {
             .setTotalNumberOfAvailableReplicas(0)
             .setTotalNumberOfPods(0)
             .setTotalNumberOfMicoServices(1)
-            .setServiceStatuses(CollectionUtils.listOf(new MicoServiceStatusResponseDTO().setErrorMessages(CollectionUtils.listOf("No deployment of " + micoService.getShortName() + " " + micoService.getVersion() + " is available."))));
+            .setServiceStatuses(CollectionUtils.listOf(new MicoServiceStatusResponseDTO()
+		        .setErrorMessages(CollectionUtils
+		            .listOf(new MicoMessageResponseDTO().setContent("No deployment of " + micoService.getShortName()
+		                + " " + micoService.getVersion() + " is available.").setType(Type.ERROR)))));
         try {
             given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(Optional.empty());
             given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(kubernetesService);
@@ -547,7 +551,7 @@ public class MicoStatusServiceTest {
             .setExternalIps(CollectionUtils.listOf("192.168.2.112", "192.168.2.113"));
         List<MicoServiceInterfaceStatusResponseDTO> expectedInterfaceStatusDTO = new LinkedList<>();
         expectedInterfaceStatusDTO.add(expectedServiceInterface);
-        List<String> errorMessages = new ArrayList<>();
+        List<MicoMessageResponseDTO> errorMessages = new ArrayList<>();
 
         List<MicoServiceInterfaceStatusResponseDTO> actualInterfaceStatusDTO = micoStatusService.getServiceInterfaceStatus(micoService, errorMessages);
 
@@ -567,7 +571,7 @@ public class MicoStatusServiceTest {
         List<MicoServiceInterfaceStatusResponseDTO> expectedInterfaceStatusDTO = new LinkedList<>();
         expectedInterfaceStatusDTO.add(expectedServiceInterface);
 
-        List<String> errorMessages = new ArrayList<>();
+        List<MicoMessageResponseDTO> errorMessages = new ArrayList<>();
 
         List<MicoServiceInterfaceStatusResponseDTO> actualInterfaceStatusDTO = micoStatusService.getServiceInterfaceStatus(micoService, errorMessages);
 

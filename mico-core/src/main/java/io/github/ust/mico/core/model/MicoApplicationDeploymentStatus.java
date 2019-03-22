@@ -19,11 +19,17 @@
 
 package io.github.ust.mico.core.model;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.neo4j.ogm.annotation.NodeEntity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.github.ust.mico.core.model.MicoMessage.Type;
+import io.github.ust.mico.core.util.CollectionUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +37,7 @@ import lombok.experimental.Accessors;
 
 /**
  * Wraps the deployment status of a {@link MicoApplication}
- * and an optional message with more detailed information.
+ * and some messages (optional) with more detailed information.
  */
 @Data
 @RequiredArgsConstructor
@@ -55,10 +61,10 @@ public class MicoApplicationDeploymentStatus {
     // ----------------------
 	
 	/**
-	 * An optional message than can be passed along with
-	 * status to provide more detailed information.
+	 * Some messages (optional) that can be passed along with
+	 * the status to provide more detailed information.
 	 */
-	private MicoMessage message;
+	private List<MicoMessage> messages = new ArrayList<>();
 
 
     // ----------------------
@@ -70,11 +76,13 @@ public class MicoApplicationDeploymentStatus {
 	 * with the value {@link Value#DEPLOYED} as well as a {@code MicoMessage}
 	 * with the given message content and type {@link Type#INFO}.
 	 * 
-	 * @param message the content of the message.
+	 * @param messages one or messages.
 	 * @return a {@link MicoApplicationDeploymentStatus}.
 	 */
-	public static final MicoApplicationDeploymentStatus deployed(String message) {
-		return new MicoApplicationDeploymentStatus(Value.DEPLOYED).setMessage(new MicoMessage(message, Type.INFO));
+	public static final MicoApplicationDeploymentStatus deployed(String... messages) {
+		return new MicoApplicationDeploymentStatus(Value.DEPLOYED).setMessages(
+			Arrays.asList(messages).stream().map(m -> new MicoMessage(m, Type.INFO))
+			.collect(Collectors.toList()));
 	}
 	
 	/**
@@ -87,7 +95,8 @@ public class MicoApplicationDeploymentStatus {
 	 * @return a {@link MicoApplicationDeploymentStatus}.
 	 */
 	public static final MicoApplicationDeploymentStatus deployed(String message, Type messageType) {
-		return new MicoApplicationDeploymentStatus(Value.DEPLOYED).setMessage(new MicoMessage(message, messageType));
+		return new MicoApplicationDeploymentStatus(Value.DEPLOYED).setMessages(
+			CollectionUtils.listOf(new MicoMessage(message, messageType)));
 	}
 
 	/**
@@ -95,11 +104,13 @@ public class MicoApplicationDeploymentStatus {
 	 * with the value {@link Value#UNDEPLOYED} as well as a {@code MicoMessage}
 	 * with the given message content and type {@link Type#INFO}.
 	 * 
-	 * @param message the content of the message.
+	 * @param messages one or messages.
 	 * @return a {@link MicoApplicationDeploymentStatus}.
 	 */
-	public static final MicoApplicationDeploymentStatus undeployed(String message) {
-		return new MicoApplicationDeploymentStatus(Value.UNDEPLOYED).setMessage(new MicoMessage(message, Type.INFO));
+	public static final MicoApplicationDeploymentStatus undeployed(String... messages) {
+		return new MicoApplicationDeploymentStatus(Value.UNDEPLOYED).setMessages(
+			Arrays.asList(messages).stream().map(m -> new MicoMessage(m, Type.INFO))
+			.collect(Collectors.toList()));
 	}
 	
 	/**
@@ -112,7 +123,8 @@ public class MicoApplicationDeploymentStatus {
 	 * @return a {@link MicoApplicationDeploymentStatus}.
 	 */
 	public static final MicoApplicationDeploymentStatus undeployed(String message, Type messageType) {
-		return new MicoApplicationDeploymentStatus(Value.UNDEPLOYED).setMessage(new MicoMessage(message, messageType));
+		return new MicoApplicationDeploymentStatus(Value.UNDEPLOYED).setMessages(
+			CollectionUtils.listOf(new MicoMessage(message, messageType)));
 	}
 
 	/**
@@ -120,11 +132,13 @@ public class MicoApplicationDeploymentStatus {
 	 * with the value {@link Value#PENDING} as well as a {@code MicoMessage}
 	 * with the given message content and type {@link Type#INFO}.
 	 * 
-	 * @param message the content of the message.
+	 * @param messages one or messages.
 	 * @return a {@link MicoApplicationDeploymentStatus}.
 	 */
-	public static final MicoApplicationDeploymentStatus pending(String message) {
-		return new MicoApplicationDeploymentStatus(Value.PENDING).setMessage(new MicoMessage(message, Type.INFO));
+	public static final MicoApplicationDeploymentStatus pending(String... messages) {
+		return new MicoApplicationDeploymentStatus(Value.PENDING).setMessages(
+			Arrays.asList(messages).stream().map(m -> new MicoMessage(m, Type.INFO))
+			.collect(Collectors.toList()));
 	}
 	
 	/**
@@ -137,7 +151,8 @@ public class MicoApplicationDeploymentStatus {
 	 * @return a {@link MicoApplicationDeploymentStatus}.
 	 */
 	public static final MicoApplicationDeploymentStatus pending(String message, Type messageType) {
-		return new MicoApplicationDeploymentStatus(Value.PENDING).setMessage(new MicoMessage(message, messageType));
+		return new MicoApplicationDeploymentStatus(Value.PENDING).setMessages(
+			CollectionUtils.listOf(new MicoMessage(message, messageType)));
 	}
 
 	/**
@@ -145,11 +160,13 @@ public class MicoApplicationDeploymentStatus {
 	 * with the value {@link Value#INCOMPLETED} as well as a {@code MicoMessage}
 	 * with the given message content and type {@link Type#ERROR}.
 	 * 
-	 * @param message the content of the message.
+	 * @param messages one or messages.
 	 * @return a {@link MicoApplicationDeploymentStatus}.
 	 */
-	public static final MicoApplicationDeploymentStatus incompleted(String message) {
-		return new MicoApplicationDeploymentStatus(Value.INCOMPLETED).setMessage(new MicoMessage(message, Type.ERROR));
+	public static final MicoApplicationDeploymentStatus incompleted(String... messages) {
+		return new MicoApplicationDeploymentStatus(Value.INCOMPLETED).setMessages(
+			Arrays.asList(messages).stream().map(m -> new MicoMessage(m, Type.ERROR))
+			.collect(Collectors.toList()));
 	}
 	
 	/**
@@ -162,7 +179,8 @@ public class MicoApplicationDeploymentStatus {
 	 * @return a {@link MicoApplicationDeploymentStatus}.
 	 */
 	public static final MicoApplicationDeploymentStatus incompleted(String message, Type messageType) {
-		return new MicoApplicationDeploymentStatus(Value.INCOMPLETED).setMessage(new MicoMessage(message, messageType));
+		return new MicoApplicationDeploymentStatus(Value.INCOMPLETED).setMessages(
+			CollectionUtils.listOf(new MicoMessage(message, messageType)));
 	}
 
 	/**
@@ -170,11 +188,13 @@ public class MicoApplicationDeploymentStatus {
 	 * with the value {@link Value#UNKNOWN} as well as a {@code MicoMessage}
 	 * with the given message content and type {@link Type#INFO}.
 	 * 
-	 * @param message the content of the message.
+	 * @param messages one or messages.
 	 * @return a {@link MicoApplicationDeploymentStatus}.
 	 */
-	public static final MicoApplicationDeploymentStatus unknown(String message) {
-		return new MicoApplicationDeploymentStatus(Value.UNKNOWN).setMessage(new MicoMessage(message, Type.INFO));
+	public static final MicoApplicationDeploymentStatus unknown(String... messages) {
+		return new MicoApplicationDeploymentStatus(Value.UNKNOWN).setMessages(
+			Arrays.asList(messages).stream().map(m -> new MicoMessage(m, Type.INFO))
+			.collect(Collectors.toList()));
 	}
 	
 	/**
@@ -187,7 +207,8 @@ public class MicoApplicationDeploymentStatus {
 	 * @return a {@link MicoApplicationDeploymentStatus}.
 	 */
 	public static final MicoApplicationDeploymentStatus unknown(String message, Type messageType) {
-		return new MicoApplicationDeploymentStatus(Value.UNKNOWN).setMessage(new MicoMessage(message, messageType));
+		return new MicoApplicationDeploymentStatus(Value.UNKNOWN).setMessages(
+			CollectionUtils.listOf(new MicoMessage(message, messageType)));
 	}
 	
 

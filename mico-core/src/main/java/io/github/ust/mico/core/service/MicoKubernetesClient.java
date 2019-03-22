@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -33,15 +32,18 @@ import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.github.ust.mico.core.broker.BackgroundJobBroker;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus.Value;
+import io.github.ust.mico.core.model.MicoServiceBackgroundJob.Status;
 import io.github.ust.mico.core.persistence.KubernetesDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
+import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.UIDUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -105,18 +107,21 @@ public class MicoKubernetesClient {
     private final MicoKubernetesBuildBotConfig buildBotConfig;
     private final KubernetesClient kubernetesClient;
     private final ImageBuilder imageBuilder;
+    private final BackgroundJobBroker backgroundJobBroker;
     private final MicoApplicationRepository applicationRepository;
     private final MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
     private final KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
 
     @Autowired
 	public MicoKubernetesClient(MicoKubernetesConfig micoKubernetesConfig, MicoKubernetesBuildBotConfig buildBotConfig,
-		KubernetesClient kubernetesClient, ImageBuilder imageBuilder, MicoApplicationRepository applicationRepository,
-	    MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository, KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository) {
+		KubernetesClient kubernetesClient, ImageBuilder imageBuilder, BackgroundJobBroker backgroundJobBroker, 
+		MicoApplicationRepository applicationRepository, MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository,
+		KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository) {
 		this.micoKubernetesConfig = micoKubernetesConfig;
 		this.buildBotConfig = buildBotConfig;
 		this.kubernetesClient = kubernetesClient;
 		this.imageBuilder = imageBuilder;
+		this.backgroundJobBroker = backgroundJobBroker;
 		this.applicationRepository = applicationRepository;
 		this.serviceDeploymentInfoRepository = serviceDeploymentInfoRepository;
 		this.kubernetesDeploymentInfoRepository = kubernetesDeploymentInfoRepository;
@@ -269,49 +274,86 @@ public class MicoKubernetesClient {
      * @param micoApplication the {@link MicoApplication}
      * @return {@code true} if the application is deployed.
      */
-    public MicoApplicationDeploymentStatus getDeploymentStatusOfAppliation(MicoApplication micoApplication) {
-        boolean result = false;
-
-        List<MicoServiceDeploymentInfo> serviceDeploymentInfos = serviceDeploymentInfoRepository.findAllByApplication(
-            micoApplication.getShortName(), micoApplication.getVersion());
-
-        int expectedNumberOfServiceDeployments = serviceDeploymentInfos.size();
-        if (expectedNumberOfServiceDeployments > 0) {
-            int actualNumberOfServiceDeployments = 0;
-            for (MicoServiceDeploymentInfo serviceDeploymentInfo : serviceDeploymentInfos) {
-                MicoService micoService = serviceDeploymentInfo.getService();
-                if (serviceDeploymentInfo.getKubernetesDeploymentInfo() == null) {
-                    log.warn("There is no Kubernetes deployment information set for MicoService '{}' '{}'.",
-                        micoService.getShortName(), micoService.getVersion());
-                    continue;
-                }
-
-                // Check if the stored information are still valid.
-                KubernetesDeploymentInfo kubernetesDeploymentInfo = updateKubernetesDeploymentInfo(serviceDeploymentInfo);
-                if (kubernetesDeploymentInfo != null) {
-                    log.debug("MicoService '{}' '{}' is deployed. The Kubernetes Deployment '{}' and the Services '{}' exist in the namespace '{}'.",
-                        micoService.getShortName(), micoService.getVersion(), kubernetesDeploymentInfo.getDeploymentName(),
-                        kubernetesDeploymentInfo.getServiceNames(), kubernetesDeploymentInfo.getNamespace());
-                    actualNumberOfServiceDeployments++;
-                }
-            }
-            if (actualNumberOfServiceDeployments == expectedNumberOfServiceDeployments) {
-                result = true;
-            }
-        } else {
-            log.warn("There are no service deployment information for MicoApplication '{}' '{}'",
-                micoApplication.getShortName(), micoApplication.getVersion());
-        }
-
-//        String deploymentStatus = result ? "deployed" : "not deployed";
-//        log.info("MicoApplication '{}' in version '{}' is {}.",
-//            micoApplication.getShortName(), micoApplication.getVersion(), deploymentStatus);
-        // TODO: Add log with deployment status
-        if (result) {
-        	return MicoApplicationDeploymentStatus.deployed("MicoApplication is currently deployed.");
-        } else {
-        	return MicoApplicationDeploymentStatus.undeployed("MicoApplication is currently not deployed.");
-        }
+    public MicoApplicationDeploymentStatus getDeploymentStatusOfApplication(MicoApplication micoApplication) {
+   		return MicoApplicationDeploymentStatus.incompleted("Deployment of MicoApplication failed.",
+   			"Service 1 could not be deployed.", "Service 2 could not be deployed");
+    	
+//        boolean result = false;
+//        MicoApplicationDeploymentStatus.Value status = Value.UNKNOWN;
+//        List<MicoMessage> messages = new ArrayList<>();
+//
+//        List<MicoServiceDeploymentInfo> serviceDeploymentInfos = serviceDeploymentInfoRepository.findAllByApplication(
+//            micoApplication.getShortName(), micoApplication.getVersion());
+//        
+//        if (serviceDeploymentInfos.isEmpty()) {
+//        	
+//        }
+//
+//        // The expected number of deployments is the number of service deployment infos
+//        // the application provides. This number has to be equal to the number of
+//        // actual deployments in Kubernetes.
+//        int expectedNumberOfServiceDeployments = serviceDeploymentInfos.size();
+//        if (expectedNumberOfServiceDeployments > 0) {
+//            int actualNumberOfServiceDeployments = 0;
+//            for (MicoServiceDeploymentInfo serviceDeploymentInfo : serviceDeploymentInfos) {
+//                MicoService micoService = serviceDeploymentInfo.getService();
+//                if (serviceDeploymentInfo.getKubernetesDeploymentInfo() == null) {
+//                    log.warn("There is no Kubernetes deployment information set for MicoService '{}' '{}'.",
+//                        micoService.getShortName(), micoService.getVersion());
+//                    status = MicoApplicationDeploymentStatus.Value.INCOMPLETED;
+////                    messages.add(new MicoMessage)
+//                    continue;
+//                }
+//
+//                // Check if the stored information are still valid.
+//                KubernetesDeploymentInfo kubernetesDeploymentInfo = updateKubernetesDeploymentInfo(serviceDeploymentInfo);
+//                if (kubernetesDeploymentInfo != null) {
+//                    log.debug("MicoService '{}' '{}' is deployed. The Kubernetes Deployment '{}' and the Services '{}' exist in the namespace '{}'.",
+//                        micoService.getShortName(), micoService.getVersion(), kubernetesDeploymentInfo.getDeploymentName(),
+//                        kubernetesDeploymentInfo.getServiceNames(), kubernetesDeploymentInfo.getNamespace());
+//                    actualNumberOfServiceDeployments++;
+//                }
+//            }
+//            if (actualNumberOfServiceDeployments == 0) {
+//            	return MicoApplicationDeploymentStatus.undeployed("MicoApplication is currently not deployed.");
+//            }
+//            
+//            if (actualNumberOfServiceDeployments == expectedNumberOfServiceDeployments) {
+//                result = true;
+//                status = MicoApplicationDeploymentStatus.Value.DEPLOYED;
+//            } else {
+//				return MicoApplicationDeploymentStatus.incompleted(
+//				    "Deployment of MicoApplication is incomplete, not all MicoServices have been deployed successfully.");
+//            }
+//        } else {
+//            log.warn("There are no service deployment information for MicoApplication '{}' '{}'",
+//                micoApplication.getShortName(), micoApplication.getVersion());
+//            return MicoApplicationDeploymentStatus.undeployed("MicoApplication is currently not deployed.");
+//        }
+//
+////        String deploymentStatus = result ? "deployed" : "not deployed";
+////        log.info("MicoApplication '{}' in version '{}' is {}.",
+////            micoApplication.getShortName(), micoApplication.getVersion(), deploymentStatus);
+//        // TODO: Add log with deployment status
+//        
+//        // TODO: actualNumberOfServiceDeployments == 0 -> UNDEPLOYED
+//        
+//        // If a background job is 
+//		MicoApplicationJobStatus applicationJobStatus = backgroundJobBroker
+//		    .getJobStatusByApplicationShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion());
+//		if (applicationJobStatus.getStatus() == Status.RUNNING) {
+//			return MicoApplicationDeploymentStatus.pending("Deployment of MicoApplication is currently in progress.");
+//		} else if (applicationJobStatus.getStatus() == Status.ERROR) {
+//			return MicoApplicationDeploymentStatus.incompleted("Deployment of MicoApplication failed.");
+//		}
+//        
+//        // TODO: Check MIcoServiceInterfaces (Kubernetes Services) 
+//        
+//        if (result) {
+//        	return MicoApplicationDeploymentStatus.deployed("MicoApplication is currently deployed.");
+//        } else {
+//        	return MicoApplicationDeploymentStatus.incompleted("MicoApplication is currently not deployed.");
+//        }
     }
     
     /**
@@ -323,7 +365,7 @@ public class MicoKubernetesClient {
      * 		   {@code false} otherwise.
      */
     public boolean isApplicationDeployed(MicoApplication micoApplication) {
-    	return getDeploymentStatusOfAppliation(micoApplication).getValue() == Value.DEPLOYED;
+    	return getDeploymentStatusOfApplication(micoApplication).getValue() == Value.DEPLOYED;
     }
 
     /**

@@ -45,6 +45,7 @@ import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
 import io.github.ust.mico.core.dto.response.MicoApplicationWithServicesResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceResponseDTO;
+import io.github.ust.mico.core.dto.response.status.MicoApplicationDeploymentStatusResponseDTO;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.MicoApplication;
@@ -66,13 +67,13 @@ public class ApplicationResource {
     public static final String PATH_SERVICES = "services";
     public static final String PATH_DEPLOYMENT_INFORMATION = "deploymentInformation";
     public static final String PATH_PROMOTE = "promote";
+    public static final String PATH_DEPLOYMENT_STATUS = "deploymentStatus";
     public static final String PATH_STATUS = "status";
 
     private static final String PATH_VARIABLE_SHORT_NAME = "micoApplicationShortName";
     private static final String PATH_VARIABLE_VERSION = "micoApplicationVersion";
     private static final String PATH_VARIABLE_SERVICE_SHORT_NAME = "micoServiceShortName";
     private static final String PATH_VARIABLE_SERVICE_VERSION = "micoServiceVersion";
-    protected static final int MAX_MICO_SERVICES_WITH_SAME_SHORT_NAME = 1;
 
     @Autowired
     private MicoApplicationRepository applicationRepository;
@@ -410,12 +411,22 @@ public class ApplicationResource {
 			linkTo(methodOn(ApplicationResource.class).getServiceDeploymentInformation(shortName, version, serviceShortName))
 		        .withSelfRel()));
     }
+    
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPLOYMENT_STATUS)
+    public ResponseEntity<Resource<MicoApplicationDeploymentStatusResponseDTO>> getApplicationDeploymentStatus(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                                     				@PathVariable(PATH_VARIABLE_VERSION) String version) {
+    	// TODO: Write corresponding unit test!
+    	MicoApplication application = getApplicationFromDatabase(shortName, version);
+		MicoApplicationDeploymentStatusResponseDTO applicationDeploymentStatus = new MicoApplicationDeploymentStatusResponseDTO(
+		    micoKubernetesClient.getDeploymentStatusOfApplication(application));
+		return ResponseEntity.ok(new Resource<>(applicationDeploymentStatus));
+    }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_STATUS)
     public ResponseEntity<Resource<MicoApplicationStatusResponseDTO>> getStatusOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                      @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        MicoApplication micoApplication = getApplicationFromDatabase(shortName, version);
-        MicoApplicationStatusResponseDTO applicationStatus = micoStatusService.getApplicationStatus(micoApplication);
+        MicoApplication application = getApplicationFromDatabase(shortName, version);
+        MicoApplicationStatusResponseDTO applicationStatus = micoStatusService.getApplicationStatus(application);
         return ResponseEntity.ok(new Resource<>(applicationStatus));
     }
 
@@ -459,7 +470,7 @@ public class ApplicationResource {
 
     private Resource<MicoApplicationWithServicesResponseDTO> getApplicationWithServicesResponseDTOResourceWithDeploymentStatus(MicoApplication application) {
         MicoApplicationWithServicesResponseDTO dto = new MicoApplicationWithServicesResponseDTO(application);
-        dto.setDeploymentStatus(micoKubernetesClient.getDeploymentStatusOfAppliation(application));
+        dto.setDeploymentStatus(micoKubernetesClient.getDeploymentStatusOfApplication(application));
         return new Resource<>(dto, getApplicationLinks(application));
     }
 

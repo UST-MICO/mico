@@ -43,6 +43,7 @@ import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentList;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.github.ust.mico.core.TestConstants.IntegrationTest;
+import io.github.ust.mico.core.broker.BackgroundJobBroker;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
@@ -76,6 +77,9 @@ public class MicoKubernetesClientTests {
 
     @MockBean
     private ImageBuilder imageBuilder;
+    
+    @MockBean
+    private BackgroundJobBroker backgroundJobBroker;
 
     @MockBean
     private MicoApplicationRepository applicationRepository;
@@ -98,7 +102,7 @@ public class MicoKubernetesClientTests {
         given(micoKubernetesBuildBotConfig.isBuildCleanUpByUndeploy()).willReturn(true);
 
         micoKubernetesClient = new MicoKubernetesClient(micoKubernetesConfig, micoKubernetesBuildBotConfig,
-        	mockServer.getClient(), imageBuilder, applicationRepository,
+        	mockServer.getClient(), imageBuilder, backgroundJobBroker, applicationRepository,
         	serviceDeploymentInfoRepository, kubernetesDeploymentInfoRepository);
 
         mockServer.getClient().namespaces().create(new NamespaceBuilder().withNewMetadata().withName(testNamespace).endMetadata().build());

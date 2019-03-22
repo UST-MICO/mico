@@ -183,5 +183,5 @@ public class MicoServiceStatusResponseDTO {
             		+ "are not deployed or not available due to other reasons.")
         }
     )})
-    private List<String> errorMessages = new ArrayList<>();
+    private List<MicoMessageResponseDTO> errorMessages = new ArrayList<>();
 }
