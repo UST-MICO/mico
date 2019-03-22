@@ -37,6 +37,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
@@ -388,6 +389,51 @@ public class MicoKubernetesClientTests {
             .willReturn(CollectionUtils.listOf(serviceDeploymentInfo));
 
         return micoApplication;
+    }
+
+    @Test
+    public void getYaml() throws KubernetesResourceException, JsonProcessingException {
+        MicoService micoService = getMicoService();
+        String deploymentUid = UIDUtils.uidFor(micoService);
+        Deployment existingDeployment = getDeploymentObject(micoService, deploymentUid);
+        Map<String, String> labels = CollectionUtils.mapOf(
+            LABEL_NAME_KEY, micoService.getShortName(),
+            LABEL_VERSION_KEY, micoService.getVersion(),
+            LABEL_INSTANCE_KEY, deploymentUid);
+        existingDeployment.getMetadata().setLabels(labels);
+        MicoServiceInterface micoServiceInterface = getMicoServiceInterface();
+        String serviceUid = UIDUtils.uidFor(micoServiceInterface);
+
+        mockServer.getClient().services().inNamespace(testNamespace).createOrReplace(getServiceObject(micoServiceInterface, micoService, serviceUid));
+        mockServer.getClient().apps().deployments().inNamespace(testNamespace).createOrReplace(existingDeployment);
+        System.out.println(micoKubernetesClient.getYaml(micoService));
+        assertEquals("---\n" +
+            "apiVersion: \"apps/v1\"\n" +
+            "kind: \"Deployment\"\n" +
+            "metadata:\n" +
+            "  annotations: {}\n" +
+            "  labels:\n" +
+            "    ust.mico/instance: \"" + deploymentUid + "\"\n" +
+            "    ust.mico/name: \"" + SERVICE_SHORT_NAME + "\"\n" +
+            "    ust.mico/version: \"" + SERVICE_VERSION + "\"\n" +
+            "  name: \"" + deploymentUid + "\"\n" +
+            "  namespace: \"" + testNamespace + "\"\n" +
+            "spec:\n" +
+            "  replicas: 1\n" +
+            "---\n" +
+            "apiVersion: \"v1\"\n" +
+            "kind: \"Service\"\n" +
+            "metadata:\n" +
+            "  annotations: {}\n" +
+            "  labels:\n" +
+            "    ust.mico/interface: \"" + SERVICE_INTERFACE_NAME + "\"\n" +
+            "    ust.mico/instance: \"" + serviceUid + "\"\n" +
+            "    ust.mico/name: \"" + SERVICE_SHORT_NAME + "\"\n" +
+            "    ust.mico/version: \"" + SERVICE_VERSION + "\"\n" +
+            "  name: \"" + serviceUid + "\"\n" +
+            "  namespace: \"" + testNamespace + "\"\n" +
+            "spec:\n" +
+            "  selector: {}\n", micoKubernetesClient.getYaml(micoService));
     }
 
     private Deployment getDeploymentObject(MicoService micoService, String deploymentUid) {

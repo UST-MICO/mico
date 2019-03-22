@@ -117,7 +117,6 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
                         this.setVersion(shortName, this.getLatestVersion());
                     }
                 }
-
             });
     }
 
