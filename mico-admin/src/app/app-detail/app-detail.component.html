@@ -94,17 +94,5 @@
 </mat-card>
 
 <!-- PUBLIC IPs-->
-<mat-card class="ma2">
-    <mat-card-title>
-        Public IPs:
-    </mat-card-title>
-    <mat-card-content>
-        <div *ngFor="let ip of publicIps.values()">
-            {{ip?.name}}:
-            <a target="_blank" rel="noopener" href="http://{{ip.externalIp}}">
-                {{ip?.externalIp}}
-            </a><br />
-        </div>
-    </mat-card-content>
-
-</mat-card>
+<mico-app-detail-public-ip [application]="application">
+</mico-app-detail-public-ip>

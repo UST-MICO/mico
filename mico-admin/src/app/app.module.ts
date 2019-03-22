@@ -98,6 +98,7 @@ import { AppDetailStatusComponent } from './app-detail-status/app-detail-status.
 import { ServiceDetailStatusComponent } from './service-detail-status/service-detail-status.component';
 import { AppDetailOverviewDeploymentInformationComponent } from './app-detail-overview-deployment-information/app-detail-overview-deployment-information.component';
 import { DeploymentInformationDialogComponent } from './dialogs/deployment-information-dialog/deployment-information-dialog.component';
+import { AppDetailPublicIpComponent } from './app-detail-public-ip/app-detail-public-ip.component';
 
 @NgModule({
     declarations: [
@@ -138,7 +139,8 @@ import { DeploymentInformationDialogComponent } from './dialogs/deployment-infor
         AppDetailStatusComponent,
         ServiceDetailStatusComponent,
         AppDetailOverviewDeploymentInformationComponent,
-        DeploymentInformationDialogComponent
+        DeploymentInformationDialogComponent,
+        AppDetailPublicIpComponent
     ],
     entryComponents: [
         // dialogs

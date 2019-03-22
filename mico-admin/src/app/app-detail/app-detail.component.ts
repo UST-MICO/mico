@@ -58,7 +58,6 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     shortName: string;
     selectedVersion;
     allVersions;
-    publicIps = new Map();
 
     // modifiable application object
     applicationData;
@@ -120,38 +119,13 @@ export class AppDetailComponent implements OnInit, OnDestroy {
      */
     subscribeApplication(version: string) {
 
-        this.selectedVersion = version;
-
         this.util.safeUnsubscribe(this.subApplication);
         // get the application
-        this.subApplication = this.apiService.getApplication(this.shortName, version).subscribe(val => {
-            this.application = val;
-
-            // get the public ips
-            this.application.services.forEach(service => {
-
-                // assumption: one public ip per interface
-                const subServiceInterface = this.apiService.getServiceInterfaces(service.shortName, service.version)
-                    .subscribe(serviceInterfaces => {
-
-                        serviceInterfaces.forEach(micoInterface => {
-                            this.subPublicIps.push(this.apiService
-                                .getServiceInterfacePublicIp(service.shortName, service.version, micoInterface.serviceInterfaceName)
-                                .subscribe(publicIpDTO => {
-
-                                    this.publicIps.set(service.shortName + '#' + publicIpDTO.name, publicIpDTO);
-
-                                }));
-                        });
-
-                        // TODO safeUnsubscribe when in master
-                        if (subServiceInterface != null) {
-                            subServiceInterface.unsubscribe();
-                        }
-                    });
-
+        this.subApplication = this.apiService.getApplication(this.shortName, version)
+            .subscribe(val => {
+                this.application = val;
+                this.selectedVersion = version;
             });
-        });
     }
 
     /**
