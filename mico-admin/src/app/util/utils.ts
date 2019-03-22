@@ -28,3 +28,13 @@ export function safeUnsubscribe(subscription: Subscription) {
         subscription.unsubscribe();
     }
 }
+
+/**
+ * unsubsribes all subscriptions in the list if possible
+ * @param subscriptionList list of subscriptions to be unsubscribed
+ */
+export function safeUnsubscribeList(subscriptionList: Subscription[]) {
+    subscriptionList.forEach(element => {
+        safeUnsubscribe(element);
+    });
+}

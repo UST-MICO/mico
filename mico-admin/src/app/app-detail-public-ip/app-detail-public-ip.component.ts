@@ -1,6 +1,7 @@
 import { Component, Input, OnChanges, OnInit, OnDestroy } from '@angular/core';
 import { ApiService } from '../api/api.service';
 import { Subscription } from 'rxjs';
+import { safeUnsubscribeList } from '../util/utils';
 
 @Component({
     selector: 'mico-app-detail-public-ip',
@@ -10,7 +11,7 @@ import { Subscription } from 'rxjs';
 export class AppDetailPublicIpComponent implements OnInit, OnChanges, OnDestroy {
 
     private subPublicIps: Subscription[];
-    private subServiceInterface: Subscription[];
+    private subServiceInterfaces: Subscription[];
 
     @Input() application;
 
@@ -22,12 +23,12 @@ export class AppDetailPublicIpComponent implements OnInit, OnChanges, OnDestroy 
 
     ngOnInit() {
         this.subPublicIps = [];
-        this.subServiceInterface = [];
+        this.subServiceInterfaces = [];
     }
 
     ngOnDestroy() {
-        // TODO safe unsubscribe
-        // TODO safe unsubscribe for lists in util
+        safeUnsubscribeList(this.subPublicIps);
+        safeUnsubscribeList(this.subServiceInterfaces);
     }
 
 
@@ -38,9 +39,12 @@ export class AppDetailPublicIpComponent implements OnInit, OnChanges, OnDestroy 
             // get the public ips
             this.application.services.forEach(service => {
 
+                safeUnsubscribeList(this.subServiceInterfaces);
                 // assumption: one public ip per interface
-                this.subServiceInterface.push(this.apiService.getServiceInterfaces(service.shortName, service.version)
+                this.subServiceInterfaces.push(this.apiService.getServiceInterfaces(service.shortName, service.version)
                     .subscribe(serviceInterfaces => {
+
+                        safeUnsubscribeList(this.subPublicIps);
 
                         serviceInterfaces.forEach(micoInterface => {
                             this.subPublicIps.push(this.apiService
