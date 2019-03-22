@@ -278,7 +278,6 @@ public class ServiceInterfaceResourceIntegrationTests {
             .content(mapper.writeValueAsBytes(new MicoServiceInterfaceRequestDTO(serviceInterface))).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isNotFound())
-            .andExpect(status().reason("MicoServiceInterface was not found!"))
             .andReturn();
     }
 
@@ -292,6 +291,8 @@ public class ServiceInterfaceResourceIntegrationTests {
         given(serviceInterfaceRepository.findByServiceAndName(any(), any(), any())).willReturn(Optional.of(serviceInterface));
 
         MicoServiceInterface modifiedServiceInterface = getTestServiceInterface();
+
+        given(serviceInterfaceRepository.save(modifiedServiceInterface)).willReturn(modifiedServiceInterface);
         
         mvc.perform(put(INTERFACES_URL + "/" + modifiedServiceInterface.getServiceInterfaceName())
             .content(mapper.writeValueAsBytes(new MicoServiceInterfaceRequestDTO(modifiedServiceInterface))).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
