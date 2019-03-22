@@ -235,7 +235,6 @@ public class ApplicationResource {
                 linkTo(methodOn(ApplicationResource.class).getServicesFromApplication(shortName, version)).withSelfRel()));
     }
 
-    //TODO: use broker
     @ApiOperation(value = "Adds or updates an association between a MicoApplication and a MicoService. An existing and" +
         " already associated MicoService with an equal short name will be replaced with its new version." +
         " Only one MicoService in one specific version is allowed per MicoApplication.")
@@ -244,56 +243,12 @@ public class ApplicationResource {
                                                         @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
                                                         @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName,
                                                         @PathVariable(PATH_VARIABLE_SERVICE_VERSION) String serviceVersion) {
-        // Retrieve application and service from database (checks whether they exist)
-        MicoApplication application = getApplicationFromDatabase(applicationShortName, applicationVersion);
-        MicoService service = getServiceFromDatabase(serviceShortName, serviceVersion);
-
-        // Find all services with identical short name within this application
-        List<MicoService> micoServicesWithIdenticalShortName = application.getServices().stream()
-            .filter(s -> s.getShortName().equals(serviceShortName)).collect(Collectors.toList());
-
-        if (micoServicesWithIdenticalShortName.size() > 1) {
-            // Illegal state, each service is allowed only once in every application
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "There are multiple MicoServices with identical short names for MicoApplication '"
-                    + applicationShortName + "' '" + applicationVersion + "'.");
-        } else if (micoServicesWithIdenticalShortName.size() == 0) {
-            // Service not included yet, simply add it
-            log.info("Add service '{}' '{}' to application '{}' '{}'.",
-                serviceShortName, serviceVersion, applicationShortName, applicationVersion);
-            MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo().setService(service);
-            // Both the service list and the service deployment info list
-            // of the application need to be updated ...
-            application.getServices().add(service);
-            application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
-            // ... before the application can be saved.
-            applicationRepository.save(application);
-        } else {
-            // Service already included, replace it with its newer version, ...
-            MicoService currentService = micoServicesWithIdenticalShortName.get(0);
-
-            // ... but only replace if the new version is different from the current version
-            if (currentService.getVersion().equals(serviceVersion)) {
-                log.info("Application '{}' '{}' already contains service '{}' in version '{}'. Service will not be added to the application.",
-                    applicationShortName, applicationVersion, serviceShortName, serviceVersion);
-            } else {
-                log.info("Replace service '{}' '{}' in application '{}' '{}' with new version '{}'.",
-                    serviceShortName, currentService.getVersion(), applicationShortName, applicationVersion, serviceVersion);
-                // Replace service in list of services in application
-                application.getServices().remove(currentService);
-                application.getServices().add(service);
-
-                // Move the edge between the application and the service to the new version of the service
-                // by updating the corresponding deployment info.
-                application.getServiceDeploymentInfos().stream()
-                    .filter(sdi -> sdi.getService().getShortName().equals(serviceShortName))
-                    .collect(Collectors.toList())
-                    .forEach(sdi -> sdi.setService(service));
-
-                // Save the application with the updated list of services
-                // and service deployment infos in the database
-                applicationRepository.save(application);
-            }
+        try {
+            broker.addMicoServiceToMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion, serviceShortName, serviceVersion);
+        } catch (MicoApplicationNotFoundException | MicoServiceNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (MicoServiceAlreadyAddedToMicoApplicationException | MicoServiceAddedMoreThanOnceToMicoApplicationException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
 
         return ResponseEntity.noContent().build();

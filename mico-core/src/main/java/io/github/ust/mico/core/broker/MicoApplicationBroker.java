@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -191,28 +192,48 @@ public class MicoApplicationBroker {
         return serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion());
     }
 
-    public MicoApplication addMicoServiceToMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion) throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAlreadyAddedToMicoApplicationException {
+    public MicoApplication addMicoServiceToMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion) throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAlreadyAddedToMicoApplicationException, MicoServiceAddedMoreThanOnceToMicoApplicationException {
+        // Retrieve application and service from database (checks whether they exist)
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
         MicoService micoService = micoServiceBroker.getServiceFromDatabase(serviceShortName, serviceVersion);
 
-        return addMicoServiceToMicoApplication(micoApplication, micoService);
-    }
+        // Find all services with identical short name within this application
+        List<MicoService> micoServices = micoApplication.getServices().stream().filter(s -> s.getShortName().equals(serviceShortName)).collect(Collectors.toList());
 
-    public MicoApplication addMicoServiceToMicoApplicationById(Long applicationId, Long serviceId) throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAlreadyAddedToMicoApplicationException {
-        MicoApplication micoApplication = getMicoApplicationById(applicationId);
-        MicoService micoService = micoServiceBroker.getServiceById(serviceId);
-
-        return addMicoServiceToMicoApplication(micoApplication, micoService);
-    }
-
-    private MicoApplication addMicoServiceToMicoApplication(MicoApplication micoApplication, MicoService micoService) throws MicoServiceAlreadyAddedToMicoApplicationException {
-        if (micoApplication.getServices().contains(micoService)) {
-            throw new MicoServiceAlreadyAddedToMicoApplicationException(micoApplication.getShortName(), micoApplication.getVersion(), micoService.getShortName(), micoService.getVersion());
-        } else {
+        if (micoServices.size() > 1) {
+            // Illegal state, each service is allowed only once in every application
+            throw new MicoServiceAddedMoreThanOnceToMicoApplicationException(micoApplication.getShortName(), micoApplication.getVersion());
+        } else if (micoServices.size() == 0) {
+            // Service not included yet, simply add it
             MicoServiceDeploymentInfo micoServiceDeploymentInfo = new MicoServiceDeploymentInfo().setService(micoService);
+            // Both the service list and the service deployment info list of the application need to be updated ...
             micoApplication.getServices().add(micoService);
             micoApplication.getServiceDeploymentInfos().add(micoServiceDeploymentInfo);
+            // ... before the application can be saved.
             return applicationRepository.save(micoApplication);
+        } else {
+            // Service already included, replace it with its newer version, ...
+            MicoService existingMicoService = micoServices.get(0);
+
+            // ... but only replace if the new version is different from the current version
+            if (existingMicoService.getVersion().equals(serviceVersion)) {
+                throw new MicoServiceAlreadyAddedToMicoApplicationException(applicationShortName, applicationVersion, serviceShortName, serviceVersion);
+            } else {
+                // Replace service in list of services in application
+                micoApplication.getServices().remove(existingMicoService);
+                micoApplication.getServices().add(micoService);
+
+                // Move the edge between the application and the service to the new version of the service
+                // by updating the corresponding deployment info
+                micoApplication.getServiceDeploymentInfos().stream()
+                    .filter(sdi -> sdi.getService().getShortName().equals(serviceShortName))
+                    .collect(Collectors.toList())
+                    .forEach(sdi -> sdi.setService(micoService));
+
+                // Save the application with the updated list of services
+                // and service deployment infos in the database
+                return applicationRepository.save(micoApplication);
+            }
         }
     }
 
