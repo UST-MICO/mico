@@ -33,6 +33,7 @@ export class AppDetailOverviewDeploymentInformationComponent implements OnChange
         const dialogRef = this.dialog.open(DeploymentInformationDialogComponent, {
             data: {
                 deploymentInformation: this.deploymentInformation,
+                serviceName: this.service.name,
             }
         });
 
