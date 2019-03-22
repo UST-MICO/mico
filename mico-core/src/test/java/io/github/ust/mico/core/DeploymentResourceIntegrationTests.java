@@ -32,6 +32,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -47,14 +48,14 @@ import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.EmbeddedRedisServer;
 import lombok.extern.slf4j.Slf4j;
 
-// Is ignored because Travis can't execute integration tests
-// that requires a connection to Kubernetes.
+// Is ignored because Jenkins currently can't connect to Kubernetes.
 @Ignore
 // TODO: Upgrade to JUnit5
 @Category(IntegrationTests.class)
 @Slf4j
-@SpringBootTest
 @RunWith(SpringRunner.class)
+@EnableAutoConfiguration
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
 
