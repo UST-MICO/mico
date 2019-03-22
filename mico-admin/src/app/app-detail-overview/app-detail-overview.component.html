@@ -36,9 +36,9 @@
                                     </div>
                                 </mat-list-item.large>
                             </div>
-                            <div class="w-20">
+                            <div class="w-20" (click)="deleteService(dependee.shortName)">
                                 <mat-list-item>
-                                    <mat-icon (click)="deleteService(dependee.shortName)">delete</mat-icon>
+                                    <mat-icon>delete</mat-icon>
                                 </mat-list-item>
                             </div>
                         </div>
