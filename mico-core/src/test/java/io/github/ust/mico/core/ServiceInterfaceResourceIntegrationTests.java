@@ -40,7 +40,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
@@ -69,10 +71,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
-@WebMvcTest(ServiceInterfaceResource.class)
-@OverrideAutoConfiguration(enabled = true) // Needed to override our neo4j config
 @EnableAutoConfiguration
-@EnableConfigurationProperties(value = {CorsConfig.class})
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@AutoConfigureMockMvc
 public class ServiceInterfaceResourceIntegrationTests {
 
     private static final String JSON_PATH_LINKS_SECTION = buildPath(ROOT, LINKS);
@@ -251,7 +252,6 @@ public class ServiceInterfaceResourceIntegrationTests {
             .content(mapper.writeValueAsBytes(new MicoServiceInterfaceRequestDTO(serviceInterface))).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isNotFound())
-            .andExpect(status().reason("Service '" + SHORT_NAME + "' '" + VERSION + "' could not be found!"))
             .andReturn();
     }
 

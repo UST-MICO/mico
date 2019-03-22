@@ -22,11 +22,13 @@ package io.github.ust.mico.core.resource;
 import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
 import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
 import io.fabric8.kubernetes.api.model.Service;
+import io.github.ust.mico.core.broker.MicoServiceBroker;
 import io.github.ust.mico.core.broker.MicoServiceInterfaceBroker;
 import io.github.ust.mico.core.dto.request.MicoServiceInterfaceRequestDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceInterfaceResponseDTO;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.MicoServiceInterfaceNotFoundException;
+import io.github.ust.mico.core.exception.MicoServiceNotFoundException;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoServiceInterfaceRepository;
@@ -76,6 +78,9 @@ public class ServiceInterfaceResource {
     private MicoServiceInterfaceBroker micoServiceInterfaceBroker;
 
     @Autowired
+    private MicoServiceBroker micoServiceBroker;
+
+    @Autowired
     private MicoKubernetesClient micoKubernetesClient;
 
     @GetMapping(SERVICE_INTERFACE_PATH)
@@ -102,17 +107,13 @@ public class ServiceInterfaceResource {
     public ResponseEntity<List<String>> getInterfacePublicIpByName(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                    @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                    @PathVariable(PATH_VARIABLE_SERVICE_INTERFACE_NAME) String serviceInterfaceName) {
-        MicoService micoService = getServiceFromDatabase(shortName, version);
+        MicoService micoService = getServiceFromServiceBroker(shortName, version);
 
-        Optional<MicoServiceInterface> serviceInterfaceOptional = serviceInterfaceRepository.findByServiceAndName(shortName, version, serviceInterfaceName);
-        if (!serviceInterfaceOptional.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "Service interface '" + serviceInterfaceName + "' of MicoService '" + shortName + "' '" + version + "' was not found!");
-        }
+        MicoServiceInterface micoServiceInterface = getServiceInterfaceFromServiceInterfaceBroker(shortName, version, serviceInterfaceName);
 
         Optional<Service> kubernetesServiceOptional;
         try {
-            kubernetesServiceOptional = micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, serviceInterfaceName);
+            kubernetesServiceOptional = micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, micoServiceInterface.getServiceInterfaceName());
         } catch (KubernetesResourceException e) {
             log.error("Error occur while retrieving Kubernetes service of MicoServiceInterface '{}' of MicoService '{}' in version '{}'. Caused by: {}",
                     serviceInterfaceName, shortName, version, e.getMessage());
@@ -128,20 +129,8 @@ public class ServiceInterfaceResource {
         }
 
         Service kubernetesService = kubernetesServiceOptional.get();
-        List<String> publicIps = new ArrayList<>();
-        LoadBalancerStatus loadBalancer = kubernetesService.getStatus().getLoadBalancer();
-        if (loadBalancer != null) {
-            List<LoadBalancerIngress> ingressList = loadBalancer.getIngress();
-            if (ingressList != null && !ingressList.isEmpty()) {
-                log.debug("There is/are {} ingress(es) defined for Kubernetes service '{}' (MicoServiceInterface '{}').",
-                        ingressList.size(), kubernetesService.getMetadata().getName(), serviceInterfaceName);
-                for (LoadBalancerIngress ingress : ingressList) {
-                    publicIps.add(ingress.getIp());
-                }
-                log.info("Service interface with name '{}' of MicoService '{}' in version '{}' has external IPs: {}",
-                        serviceInterfaceName, shortName, version, publicIps);
-            }
-        }
+
+        List<String> publicIps = micoServiceInterfaceBroker.getPublicIpsOfInterfaceByInterfaceName(shortName, version, serviceInterfaceName, kubernetesService);
 
         return ResponseEntity.ok().body(new ArrayList<>(publicIps));
     }
@@ -167,7 +156,7 @@ public class ServiceInterfaceResource {
     public ResponseEntity<Resource<MicoServiceInterfaceResponseDTO>> createServiceInterface(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                             @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                                             @Valid @RequestBody MicoServiceInterfaceRequestDTO serviceInterfaceRequestDto) {
-        MicoService service = getServiceFromDatabase(shortName, version);
+        MicoService service = getServiceFromServiceBroker(shortName, version);
         if (serviceInterfaceRepository.findByServiceAndName(shortName, version, serviceInterfaceRequestDto.getServiceInterfaceName()).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "An interface with the name '" + serviceInterfaceRequestDto.getServiceInterfaceName() +
                     "' is already associated with the service '" + shortName + "' '" + version + "'.");
@@ -202,7 +191,7 @@ public class ServiceInterfaceResource {
         }
 
         // Used to check whether the corresponding service exists
-        getServiceFromDatabase(shortName, version);
+        getServiceFromServiceBroker(shortName, version);
 
         Optional<MicoServiceInterface> serviceInterfaceOptional = serviceInterfaceRepository.findByServiceAndName(shortName, version, serviceInterfaceName);
         if (!serviceInterfaceOptional.isPresent()) {
@@ -225,12 +214,15 @@ public class ServiceInterfaceResource {
      * @return the {@link MicoService} if it exists.
      * @throws ResponseStatusException if the {@code MicoService} does not exist in the database.
      */
-    private MicoService getServiceFromDatabase(String shortName, String version) throws ResponseStatusException {
-        Optional<MicoService> serviceOptional = serviceRepository.findByShortNameAndVersion(shortName, version);
-        if (!serviceOptional.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service '" + shortName + "' '" + version + "' could not be found!");
+    private MicoService getServiceFromServiceBroker(String shortName, String version) throws ResponseStatusException {
+        MicoService micoService;
+        try {
+            micoService = micoServiceBroker.getServiceFromDatabase(shortName, version);
+        } catch (MicoServiceNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
-        return serviceOptional.get();
+
+        return micoService;
     }
 
     /**
