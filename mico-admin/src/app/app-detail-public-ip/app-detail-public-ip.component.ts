@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { ApiService } from '../api/api.service';
 import { Subscription } from 'rxjs';
 import { safeUnsubscribeList } from '../util/utils';
@@ -6,7 +6,8 @@ import { safeUnsubscribeList } from '../util/utils';
 @Component({
     selector: 'mico-app-detail-public-ip',
     templateUrl: './app-detail-public-ip.component.html',
-    styleUrls: ['./app-detail-public-ip.component.css']
+    styleUrls: ['./app-detail-public-ip.component.css'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppDetailPublicIpComponent implements OnInit, OnChanges, OnDestroy {
 
@@ -19,6 +20,7 @@ export class AppDetailPublicIpComponent implements OnInit, OnChanges, OnDestroy 
 
     constructor(
         private apiService: ApiService,
+        private changeDedection: ChangeDetectorRef,
     ) { }
 
     ngOnInit() {
@@ -52,6 +54,7 @@ export class AppDetailPublicIpComponent implements OnInit, OnChanges, OnDestroy 
                                 .subscribe(publicIpDTO => {
 
                                     this.publicIps.set(service.shortName + '#' + publicIpDTO.name, publicIpDTO);
+                                    this.changeDedection.markForCheck();
 
                                 }));
                         });
