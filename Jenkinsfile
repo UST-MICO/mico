@@ -81,7 +81,7 @@ pipeline {
         stage('Docker clean up') {
             steps {
                 // Delete all images that are older than 10 days
-                sh '''docker image prune -a --force --filter "until=240h"'''
+                sh '''docker system prune --all --force --filter "until=240h"'''
             }
         }
     }

@@ -32,6 +32,8 @@ export class CreateServiceInterfaceComponent implements OnInit {
     serviceData;
     portData: any[];
 
+    isValid;
+
     ngOnInit() {
     }
 

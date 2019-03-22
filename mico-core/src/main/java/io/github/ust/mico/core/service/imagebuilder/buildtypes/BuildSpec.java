@@ -19,29 +19,25 @@
 
 package io.github.ust.mico.core.service.imagebuilder.buildtypes;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * BuildSpec is the spec for a Build resource.
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonPropertyOrder({
-    "serviceAccountName",
-    "template",
-    "source",
-    "sources",
-    "steps"
-})
-@Getter
-@Builder
+@JsonIgnoreProperties(value = "Status")
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
-@EqualsAndHashCode
+@Accessors(chain = true)
 public class BuildSpec {
 
     /**
@@ -54,8 +50,7 @@ public class BuildSpec {
      * Steps are the steps of the build;
      * each step is run sequentially with the source mounted into /workspace.
      */
-    @Singular
-    private List<BuildStep> steps;
+    private List<BuildStep> steps = new ArrayList<>();
 
     /**
      * Optional. TemplateInstantiationSpec, if specified, references a BuildTemplate resource to use to
@@ -72,7 +67,7 @@ public class BuildSpec {
     /**
      * Optional. Sources specifies the inputs to the build
      */
-    private List<SourceSpec> sources;
+    private List<SourceSpec> sources = new ArrayList<>();
 
     /**
      * Optional. The name of the service account as which to run this build
@@ -83,8 +78,7 @@ public class BuildSpec {
      * Optional. Volumes is a collection of volumes that are available to mount into the
      * steps of the build
      */
-    @Singular
-    private List<Volume> volumes;
+    private List<Volume> volumes = new ArrayList<>();
 
     /**
      * Optional. Time after which the build times out. Defaults to 10 minutes.

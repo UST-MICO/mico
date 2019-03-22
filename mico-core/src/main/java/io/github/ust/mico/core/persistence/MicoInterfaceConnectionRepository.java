@@ -16,23 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package io.github.ust.mico.core.persistence;
 
-import io.github.ust.mico.core.model.MicoServiceBackgroundTask;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
+import io.github.ust.mico.core.model.MicoInterfaceConnection;
+import org.springframework.data.neo4j.annotation.Query;
+import org.springframework.data.neo4j.repository.Neo4jRepository;
 
-import java.util.List;
-import java.util.Optional;
+public interface MicoInterfaceConnectionRepository extends Neo4jRepository<MicoInterfaceConnection, Long> {
 
-@Repository
-public interface MicoBackgroundTaskRepository extends CrudRepository<MicoServiceBackgroundTask, String> {
-	
-    @Override
-    List<MicoServiceBackgroundTask> findAll();
+    /**
+     * Deletes all interface connections that do <b>not</b> have any relationship to another node.
+     */
+    @Query("MATCH (con:MicoInterfaceConnection) WHERE size((con)--()) = 0 DELETE (con)")
+    void cleanUp();
 
-    List<MicoServiceBackgroundTask> findByMicoServiceShortNameAndMicoServiceVersion(String micoServiceShortName, String micoServiceVersion);
-    
-    Optional<MicoServiceBackgroundTask> findByMicoServiceShortNameAndMicoServiceVersionAndType(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundTask.Type type);
-    
 }

@@ -236,6 +236,31 @@ export class ApiService {
     }
 
     /**
+     * Creates a new application version from an existing application
+     * uses: POST applications/{shortName}/{version}/promote
+     *
+     * @param shortName shortName of the application
+     * @param version version of the application
+     * @param newVersion the new version of the application
+     */
+    promoteApplication(shortName, version, newVersion: string) {
+
+        const resource = 'applications/' + shortName + '/' + version + '/promote';
+
+        return this.rest.post<ApiObject>(resource, { version: newVersion }).pipe(flatMap(val => {
+            this.getApplications();
+            this.getApplicationVersions(val.shortName);
+
+            const stream = this.getStreamSource<ApiObject>(val._links.self.href);
+            stream.next(val);
+
+            return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
+                filter(service => service !== undefined)
+            );
+        }));
+    }
+
+    /**
      * Updates an existing application
      * uses: PUT applications/{shortName}/{version}
      *
@@ -390,6 +415,23 @@ export class ApiService {
      */
     postApplicationDeployCommand(shortName: string, version: string) {
         const resource = 'applications/' + shortName + '/' + version + '/deploy';
+
+        return this.rest.post<any>(resource, null).pipe(map(val => {
+
+            // TODO handle job ressource as soon as the api call returns a job ressource
+            return true;
+        }));
+    }
+
+    /**
+     * commands the mico-core application to undeploy an application
+     * uses: POST applications/{shortName}/{version}/undeploy
+     *
+     * @param shortName the applications shortName
+     * @param version the applications version
+     */
+    postApplicationUndeployCommand(shortName: string, version: string) {
+        const resource = 'applications/' + shortName + '/' + version + '/undeploy';
 
         return this.rest.post<any>(resource, null).pipe(map(val => {
 
@@ -663,6 +705,31 @@ export class ApiService {
         }));
     }
 
+    /**
+     * Creates a new service version from an existing service
+     * uses: POST services/{shortName}/{version}/promote
+     *
+     * @param shortName shortName of the service
+     * @param version version of the service
+     * @param newVersion the new version of the service
+     */
+    promoteService(shortName, version, newVersion: string) {
+
+        const resource = 'services/' + shortName + '/' + version + '/promote';
+
+        return this.rest.post<ApiObject>(resource, { version: newVersion }).pipe(flatMap(val => {
+            this.getServices();
+            this.getServiceVersions(val.shortName);
+
+            const stream = this.getStreamSource<ApiObject>(val._links.self.href);
+            stream.next(val);
+
+            return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
+                filter(service => service !== undefined)
+            );
+        }));
+    }
+
     deleteService(shortName, version) {
         return this.rest.delete<ApiObject>('services/' + shortName + '/' + version)
             .pipe(map(val => {
@@ -715,12 +782,12 @@ export class ApiService {
 
         return this.rest.post<ApiObject>(url, undefined, undefined, false).pipe(flatMap(val => {
 
-                const stream = this.getService(serviceShortName, serviceVersion);
-                this.getServiceDependees(serviceShortName, serviceVersion);
-                this.getServiceDependencyGraph(serviceShortName, serviceVersion);
+            const stream = this.getService(serviceShortName, serviceVersion);
+            this.getServiceDependees(serviceShortName, serviceVersion);
+            this.getServiceDependencyGraph(serviceShortName, serviceVersion);
 
-                return stream;
-            }));
+            return stream;
+        }));
     }
 
     /**

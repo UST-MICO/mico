@@ -7,7 +7,7 @@ if [[ -z "$uname" ]]; then
     echo "ERROR: No username provided"
     exit 1
 fi
-export DOCKERHUB_USERNAME_BASE64=$(echo -n $uname | base64 -w 0)
+export DOCKERHUB_USERNAME_BASE64=$(echo -n $uname | base64 | tr -d \\n)
 
 # Read in DockerHub password
 echo "Please provide the password for DockerHub:"
@@ -16,7 +16,7 @@ if [[ -z "$pw" ]]; then
     echo "ERROR: No password provided"
     exit 1
 fi
-export DOCKERHUB_PASSWORD_BASE64=$(echo -n $pw | base64 -w 0)
+export DOCKERHUB_PASSWORD_BASE64=$(echo -n $pw | base64 | tr -d \\n)
 
 # Read in name for test namespace
 echo "Please provide the name for the test namespace"

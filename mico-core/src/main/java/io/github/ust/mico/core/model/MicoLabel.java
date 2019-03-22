@@ -60,7 +60,8 @@ public class MicoLabel {
     // ----------------------
     
     /**
-     * Creates a {@code MicoLabel} based on a {@code MicoLabelRequestDTO}.
+     * Creates a new {@code MicoLabel} based on a {@code MicoLabelRequestDTO}.
+     * Note that the id will be set to {@code null}.
      * 
      * @param labelDto the {@link MicoLabelRequestDTO}.
      * @return a {@link MicoLabel}.

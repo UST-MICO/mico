@@ -20,21 +20,25 @@
 package io.github.ust.mico.core.service.imagebuilder.buildtypes;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 /**
  * Represents the source of a volume to mount.
  * Only one of its members may be specified.
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@Getter
-@Builder
+@Data
 @NoArgsConstructor
-//@AllArgsConstructor
-@ToString
-@EqualsAndHashCode
+@Accessors(chain = true)
 public class VolumeSource {
 
     // Not implemented yet.
-    // See https://github.com/knative/build/blob/9127bb7ec158b60da08dda6aa9081af98951f3bb/vendor/k8s.io/api/core/v1/types.go
+    // See https://github.com/knative/build/blob/release-0.4/vendor/k8s.io/api/core/v1/types.go
+
+    // Note: as soon as someone adds fields to this class, please add
+    // @AllArgsConstructor to this class in order
+    // to conform to the other build types.
 }

@@ -60,8 +60,6 @@ import { AppComponent } from './app.component';
 // page components
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { AppDetailOverviewComponent } from './app-detail-overview/app-detail-overview.component';
-import { AppDetailDeploystatusComponent } from './app-detail-deploystatus/app-detail-deploystatus.component';
-import { AppDetailDeploysettingsComponent } from './app-detail-deploysettings/app-detail-deploysettings.component';
 import { ServiceDetailDeploystatusComponent } from './service-detail-deploystatus/service-detail-deploystatus.component';
 import { ServiceDetailOverviewComponent } from './service-detail-overview/service-detail-overview.component';
 import { ToolbarComponent } from './toolbar/toolbar.component';
@@ -104,8 +102,6 @@ import { DeploymentInformationDialogComponent } from './dialogs/deployment-infor
         AppComponent,
         DashboardComponent,
         AppDetailOverviewComponent,
-        AppDetailDeploystatusComponent,
-        AppDetailDeploysettingsComponent,
         ServiceDetailDeploystatusComponent,
         ServiceDetailOverviewComponent,
         ToolbarComponent,

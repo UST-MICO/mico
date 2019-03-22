@@ -25,7 +25,7 @@ import { MatDialog } from '@angular/material';
 import { ServicePickerComponent } from '../dialogs/service-picker/service-picker.component';
 import { Subscription } from 'rxjs';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
-import { UtilsService } from '../util/utils.service';
+import { safeUnsubscribe } from '../util/utils';
 
 @Component({
     selector: 'mico-app-detail-overview',
@@ -41,13 +41,13 @@ export class AppDetailOverviewComponent implements OnDestroy {
 
     constructor(
         private apiService: ApiService,
-        private dialog: MatDialog,
-        private util: UtilsService) { }
+        private dialog: MatDialog
+    ) { }
 
 
     ngOnDestroy() {
-        this.util.safeUnsubscribe(this.subDependeesDialog);
-        this.util.safeUnsubscribe(this.subServiceDependency);
+        safeUnsubscribe(this.subDependeesDialog);
+        safeUnsubscribe(this.subServiceDependency);
     }
 
 

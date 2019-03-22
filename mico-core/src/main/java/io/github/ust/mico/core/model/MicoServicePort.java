@@ -73,7 +73,8 @@ public class MicoServicePort {
     // ----------------------
     
     /**
-     * Creates a {@code MicoServicePort} based on a {@code MicoServicePortRequestDTO}.
+     * Creates a new {@code MicoServicePort} based on a {@code MicoServicePortRequestDTO}.
+     * Note that the id will be set to {@code null}.
      * 
      * @param servicePortDto the {@link MicoServicePortRequestDTO}.
      * @return a {@link MicoServicePort}.

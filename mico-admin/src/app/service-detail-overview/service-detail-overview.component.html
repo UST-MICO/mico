@@ -7,27 +7,6 @@
             <ng-container *ngIf="!edit">
                 <mico-data [modelUrl]="'remote/MicoServiceResponseDTO'" [startData]="serviceData" [isBlacklist]="true"
                     [filter]="serviceOverviewFilter"></mico-data>
-
-                <!-- TODO hard coded information - not yet part of the domain model/api-->
-                <!-- might be used later -->
-                <!--
-                <mat-list dense>
-                    <mat-list-item class="mt2">
-                        <b>Info</b>
-                    </mat-list-item>
-                    <mat-divider></mat-divider>
-                    <mat-list-item>
-                        Type: service
-                    </mat-list-item>
-                    <mat-list-item>
-                        Tags:
-                        <mat-chip-list class="ma1">
-                            <mat-chip>awesome</mat-chip>
-                            <mat-chip>myService</mat-chip>
-                        </mat-chip-list>
-                    </mat-list-item>
-                </mat-list>
-                -->
                 <!-- EndOf display view-->
             </ng-container>
 
@@ -97,9 +76,11 @@
                                                 <span class="mr2"><b>Name:</b> {{interface.serviceInterfaceName}}</span>
                                                 <span class="mr2"><b>DNS:</b> {{interface.publicDns}}</span>
                                                 <span class="mr2"><b>Protocol:</b> {{interface.protocol}}</span>
-                                                <span class="mr2"><b>Transport Protocol:</b> {{interface.transportProtocol}}</span>
+                                                <span class="mr2"><b>Transport Protocol:</b>
+                                                    {{interface.transportProtocol}}</span>
                                             </div>
-                                            <p class="mt0 mb1" [hidden]="interface.description == null || interface.description == ''">
+                                            <p class="mt0 mb1"
+                                                [hidden]="interface.description == null || interface.description == ''">
                                                 {{interface.description}}
                                             </p>
                                             <div class="flex">
@@ -107,8 +88,8 @@
                                                 <div class="ml2">
                                                     <p class="mt0 mb1" *ngFor="let port of interface.ports">
                                                         <b>{{port.type}}</b>
-                                                        <span class="ml1">{{port.targetPort}}</span>
-                                                        <span class="ml1">(internal: {{port.port}})</span>
+                                                        <span class="ml1">{{port.port}}</span>
+                                                        <span class="ml1">(internal: {{port.targetPort}})</span>
                                                     </p>
                                                 </div>
                                             </div>

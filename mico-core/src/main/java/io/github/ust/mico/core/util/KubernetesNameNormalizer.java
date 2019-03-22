@@ -25,6 +25,8 @@ import java.text.Normalizer;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
+
 import org.springframework.stereotype.Component;
 
 /**
@@ -85,4 +87,27 @@ public class KubernetesNameNormalizer {
 
         return result;
     }
+    
+    /**
+     * Creates a build name based on the short name
+     * and version of a service.
+     *
+     * @param serviceShortName the short name of the {@link MicoService}.
+     * @param serviceVersion the version of the {@link MicoService}.
+     * @return the name of the {@link Build}.
+     */
+    public String createBuildName(String serviceShortName, String serviceVersion) {
+        return normalizeName("build-" + serviceShortName + "-" + serviceVersion);
+    }
+    
+    /**
+     * Creates a build name based on a service.
+     *
+     * @param service the {@link MicoService}.
+     * @return the name of the {@link Build}.
+     */
+    public String createBuildName(MicoService service) {
+        return createBuildName(service.getShortName(), service.getVersion());
+    }
+    
 }

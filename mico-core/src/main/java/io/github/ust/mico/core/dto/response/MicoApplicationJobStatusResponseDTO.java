@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoApplicationJobStatus;
-import io.github.ust.mico.core.model.MicoServiceBackgroundTask;
+import io.github.ust.mico.core.model.MicoServiceBackgroundJob;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -59,7 +59,7 @@ public class MicoApplicationJobStatusResponseDTO {
 	    })
 	})
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	private MicoServiceBackgroundTask.Status status;
+	private MicoServiceBackgroundJob.Status status;
 
 	/**
 	 * The list of jobs for a {@link MicoApplication} (read-only).
@@ -72,7 +72,7 @@ public class MicoApplicationJobStatusResponseDTO {
 	    })
 	})
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	private List<MicoServiceBackgroundTaskResponseDTO> jobs = new ArrayList<>();
+	private List<MicoServiceBackgroundJobResponseDTO> jobs = new ArrayList<>();
     
     
     // -------------------
@@ -84,11 +84,9 @@ public class MicoApplicationJobStatusResponseDTO {
 	 * {@link MicoApplicationJobStatus}.
 	 *
 	 * @param applicationJobStatus the {@link MicoApplicationJobStatus}.
-	 * @return a {@link MicoApplicationJobStatusResponseDTO} with all the values of
-	 *         the given {@code MicoApplicationJobStatus}.
 	 */
 	public MicoApplicationJobStatusResponseDTO(MicoApplicationJobStatus applicationJobStatus) {
 		this.status = applicationJobStatus.getStatus();
-		this.jobs = applicationJobStatus.getJobs().stream().map(MicoServiceBackgroundTaskResponseDTO::new).collect(Collectors.toList());
+		this.jobs = applicationJobStatus.getJobs().stream().map(MicoServiceBackgroundJobResponseDTO::new).collect(Collectors.toList());
 	}
 }

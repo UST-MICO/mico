@@ -17,18 +17,14 @@
  * under the License.
  */
 
-import { Component, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
 
-@Component({
-  selector: 'mico-app-detail-deploystatus',
-  templateUrl: './app-detail-deploystatus.component.html',
-  styleUrls: ['./app-detail-deploystatus.component.css']
-})
-export class AppDetailDeploystatusComponent implements OnInit {
-
-  constructor() { }
-
-  ngOnInit() {
-  }
-
+/**
+ * unsubscribes the subscription if possible
+ * @param subscription subscription to be unsubscribed
+ */
+export function safeUnsubscribe(subscription: Subscription) {
+    if (subscription != null) {
+        subscription.unsubscribe();
+    }
 }

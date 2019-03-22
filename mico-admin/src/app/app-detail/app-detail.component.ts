@@ -26,7 +26,7 @@ import { Subscription } from 'rxjs';
 import { versionComparator } from '../api/semantic-version';
 import { CreateNextVersionComponent } from '../dialogs/create-next-version/create-next-version.component';
 import { MatDialog, MatSnackBar } from '@angular/material';
-import { UtilsService } from '../util/utils.service';
+import { safeUnsubscribe } from '../util/utils';
 
 @Component({
     selector: 'mico-app-detail',
@@ -41,7 +41,6 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         private router: Router,
         private dialog: MatDialog,
         private snackBar: MatSnackBar,
-        private util: UtilsService,
     ) { }
 
     subRouteParams: Subscription;
@@ -122,7 +121,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
         this.selectedVersion = version;
 
-        this.util.safeUnsubscribe(this.subApplication);
+        safeUnsubscribe(this.subApplication);
         // get the application
         this.subApplication = this.apiService.getApplication(this.shortName, version).subscribe(val => {
             this.application = val;
@@ -153,15 +152,15 @@ export class AppDetailComponent implements OnInit, OnDestroy {
      * unsubscribe from all subscriptions
      */
     ngOnDestroy() {
-        this.util.safeUnsubscribe(this.subRouteParams);
-        this.util.safeUnsubscribe(this.subApplicationVersions);
-        this.util.safeUnsubscribe(this.subDeploy);
+        safeUnsubscribe(this.subRouteParams);
+        safeUnsubscribe(this.subApplicationVersions);
+        safeUnsubscribe(this.subDeploy);
         this.subPublicIps.forEach(subscription => {
-            this.util.safeUnsubscribe(subscription);
+            safeUnsubscribe(subscription);
         });
-        this.util.safeUnsubscribe(this.subApplication);
-        this.util.safeUnsubscribe(this.subServiceDependency);
-        this.util.safeUnsubscribe(this.subCreateNextVersion);
+        safeUnsubscribe(this.subApplication);
+        safeUnsubscribe(this.subServiceDependency);
+        safeUnsubscribe(this.subCreateNextVersion);
     }
 
 
@@ -176,6 +175,23 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                 // add some deployment monitoring (e.g. state)
                 console.log(val);
                 this.snackBar.open('Application deployment initialized.', 'Ok', {
+                    duration: 5000,
+                });
+
+            });
+    }
+
+    /**
+     * calls the undeploy endpoint
+     * uses: POST application/{shortName}/{version}/undeploy
+     */
+    undeployApplication() {
+        this.subDeploy = this.apiService.postApplicationUndeployCommand(this.application.shortName, this.application.version)
+            .subscribe(val => {
+                // TODO wait for propper return value from deploy endpoint
+                // add some deployment monitoring (e.g. state)
+                console.log(val);
+                this.snackBar.open('Application undeployment initialized.', 'Ok', {
                     duration: 5000,
                 });
 
@@ -227,23 +243,16 @@ export class AppDetailComponent implements OnInit, OnDestroy {
             }
         });
 
-        this.util.safeUnsubscribe(this.subCreateNextVersion);
+        safeUnsubscribe(this.subCreateNextVersion);
 
 
         // handle dialog result
         this.subCreateNextVersion = dialogRef.afterClosed().subscribe(nextVersion => {
 
             if (nextVersion) {
-
-                // deep copy of the application (will be done in the backend soon)
-                const nextApplication = JSON.parse(JSON.stringify(this.application));
-                nextApplication.version = nextVersion;
-                nextApplication.id = null;
-
-                this.apiService.postApplication(nextApplication).subscribe(val => {
+                this.apiService.promoteApplication(this.application.shortName, this.application.version, nextVersion).subscribe(val => {
                     this.updateVersion(null);
                 });
-
             }
         });
     }

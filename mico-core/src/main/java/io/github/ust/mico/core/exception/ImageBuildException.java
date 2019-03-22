@@ -24,10 +24,11 @@ public class ImageBuildException extends Exception {
     private static final long serialVersionUID = 827211546738052443L;
 
     public ImageBuildException() {
-    
+        super();
     }
 
     public ImageBuildException(String message) {
         super(message);
     }
+
 }

@@ -229,7 +229,7 @@ export class ApiBaseFunctionService {
 
                     // provide user feed back
                     this.snackBar.open('Element deleted successfully.', 'Ok', {
-                        duration: 5,
+                        duration: 5000,
                     });
 
                     if (res.hasOwnProperty('_body')) {
