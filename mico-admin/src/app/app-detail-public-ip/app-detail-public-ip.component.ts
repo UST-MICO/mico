@@ -37,7 +37,13 @@ export class AppDetailPublicIpComponent implements OnInit, OnChanges, OnDestroy 
     }
 
 
-    ngOnChanges() {
+    ngOnChanges(changes) {
+
+        if ((changes.hasOwnProperty('applicationShortName') && changes.applicationShortName.currentValue != null) ||
+            (changes.hasOwnProperty('applicationVersion') && changes.applicationVersion.currentValue != null)) {
+
+            this.publicIps.clear();
+        }
 
         if (this.applicationShortName != null && this.applicationVersion != null) {
 
