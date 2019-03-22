@@ -19,27 +19,25 @@
 
 package io.github.ust.mico.core;
 
-import static io.github.ust.mico.core.JsonPathBuilder.*;
-import static io.github.ust.mico.core.TestConstants.*;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
-import static io.github.ust.mico.core.TestConstants.VERSION;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.ust.mico.core.configuration.CorsConfig;
+import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
+import io.github.ust.mico.core.dto.request.MicoLabelRequestDTO;
+import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
+import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
+import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
+import io.github.ust.mico.core.dto.response.MicoLabelResponseDTO;
+import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO;
+import io.github.ust.mico.core.dto.response.status.*;
+import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo.ImagePullPolicy;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.resource.ApplicationResource;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.service.MicoStatusService;
+import io.github.ust.mico.core.util.CollectionUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -56,46 +54,41 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
-import io.github.ust.mico.core.configuration.CorsConfig;
-import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
-import io.github.ust.mico.core.dto.request.MicoLabelRequestDTO;
-import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
-import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
-import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
-import io.github.ust.mico.core.dto.response.MicoLabelResponseDTO;
-import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO;
-import io.github.ust.mico.core.dto.response.status.*;
-import io.github.ust.mico.core.model.*;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo.ImagePullPolicy;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoLabelRepository;
-import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.resource.ApplicationResource;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.MicoStatusService;
-import io.github.ust.mico.core.util.CollectionUtils;
+import static io.github.ust.mico.core.JsonPathBuilder.*;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.VERSION;
+import static io.github.ust.mico.core.TestConstants.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(ApplicationResource.class)
 @OverrideAutoConfiguration(enabled = true) //Needed to override our neo4j config
 @EnableAutoConfiguration
 @EnableConfigurationProperties(value = {CorsConfig.class})
-public class ApplicationResourceTests {
+public class ApplicationResourceIntegrationTests {
 
-    public static final String APPLICATION_DTO_LIST_PATH = buildPath(EMBEDDED, "micoApplicationResponseDTOList");
-    public static final String APPLICATION_WITH_SERVICES_DTO_LIST_PATH = buildPath(EMBEDDED, "micoApplicationWithServicesResponseDTOList");
-    public static final String APPLICATION_PATH = buildPath(ROOT, "application");
-    public static final String SHORT_NAME_PATH = buildPath(ROOT, "shortName");
-    public static final String VERSION_PATH = buildPath(ROOT, "version");
-    public static final String NAME_PATH = buildPath(ROOT, "name");
-    public static final String DESCRIPTION_PATH = buildPath(ROOT, "description");
-    public static final String OWNER_PATH = buildPath(ROOT, "owner");
-    public static final String SERVICE_LIST_PATH = buildPath(ROOT, "services");
-    public static final String INTERFACES_LIST_PATH = buildPath(ROOT, "serviceInterfaces");
-    public static final String ID_PATH = buildPath(ROOT, "id");
+    private static final String APPLICATION_WITH_SERVICES_DTO_LIST_PATH = buildPath(EMBEDDED, "micoApplicationWithServicesResponseDTOList");
+    private static final String SHORT_NAME_PATH = buildPath(ROOT, "shortName");
+    private static final String VERSION_PATH = buildPath(ROOT, "version");
+    private static final String NAME_PATH = buildPath(ROOT, "name");
+    private static final String DESCRIPTION_PATH = buildPath(ROOT, "description");
+    private static final String OWNER_PATH = buildPath(ROOT, "owner");
+    private static final String SERVICE_LIST_PATH = buildPath(ROOT, "services");
     private static final String JSON_PATH_LINKS_SECTION = "$._links.";
     private static final String BASE_PATH = "/applications";
     private static final String PATH_SERVICES = "services";
@@ -111,9 +104,6 @@ public class ApplicationResourceTests {
 
     @MockBean
     private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
-
-    @MockBean
-    private MicoLabelRepository labelRepository;
 
     @MockBean
     private MicoKubernetesClient micoKubernetesClient;

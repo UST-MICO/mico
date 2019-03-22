@@ -26,4 +26,8 @@ public class PrometheusRequestFailedException extends Exception {
     public PrometheusRequestFailedException(String message) {
         super(message);
     }
+
+    public PrometheusRequestFailedException() {
+        super();
+    }
 }

@@ -25,7 +25,7 @@ import { SelectionModel } from '@angular/cdk/collections';
 import { ApiObject } from 'src/app/api/apiobject';
 import { groupBy, mergeMap, toArray } from 'rxjs/operators';
 import { versionComparator } from 'src/app/api/semantic-version';
-import { UtilsService } from 'src/app/util/utils.service';
+import { safeUnsubscribe } from 'src/app/util/utils';
 
 
 enum FilterTypes {
@@ -73,7 +73,6 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
         public dialogRef: MatDialogRef<ServicePickerComponent>,
         @Inject(MAT_DIALOG_DATA) public data: any,
         private apiService: ApiService,
-        private util: UtilsService,
     ) {
 
         if (data.filter === 'internal') {
@@ -144,7 +143,7 @@ export class ServicePickerComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy() {
-        this.util.safeUnsubscribe(this.serviceSubscription);
+        safeUnsubscribe(this.serviceSubscription);
     }
 
     getSelectedService() {

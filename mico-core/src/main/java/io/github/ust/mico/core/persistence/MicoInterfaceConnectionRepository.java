@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,18 +17,18 @@
  * under the License.
  */
 
-import { Component, OnInit } from '@angular/core';
+package io.github.ust.mico.core.persistence;
 
-@Component({
-  selector: 'mico-app-detail-deploysettings',
-  templateUrl: './app-detail-deploysettings.component.html',
-  styleUrls: ['./app-detail-deploysettings.component.css']
-})
-export class AppDetailDeploysettingsComponent implements OnInit {
+import io.github.ust.mico.core.model.MicoInterfaceConnection;
+import org.springframework.data.neo4j.annotation.Query;
+import org.springframework.data.neo4j.repository.Neo4jRepository;
 
-  constructor() { }
+public interface MicoInterfaceConnectionRepository extends Neo4jRepository<MicoInterfaceConnection, Long> {
 
-  ngOnInit() {
-  }
+    /**
+     * Deletes all interface connections that do <b>not</b> have any relationship to another node.
+     */
+    @Query("MATCH (con:MicoInterfaceConnection) WHERE size((con)--()) = 0 DELETE (con)")
+    void cleanUp();
 
 }

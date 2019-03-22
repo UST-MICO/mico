@@ -19,27 +19,6 @@
 
 package io.github.ust.mico.core.resource;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
-
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import javax.validation.Valid;
-
-import io.swagger.annotations.ApiOperation;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Link;
-import org.springframework.hateoas.MediaTypes;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.Resources;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-
 import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
@@ -55,24 +34,42 @@ import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.persistence.*;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.Resources;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import javax.validation.Valid;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @Slf4j
 @RestController
 @RequestMapping(value = "/" + ApplicationResource.PATH_APPLICATIONS, produces = MediaTypes.HAL_JSON_VALUE)
 public class ApplicationResource {
 
-    public static final String PATH_APPLICATIONS = "applications";
-    public static final String PATH_SERVICES = "services";
-    public static final String PATH_DEPLOYMENT_INFORMATION = "deploymentInformation";
-    public static final String PATH_PROMOTE = "promote";
-    public static final String PATH_STATUS = "status";
+    static final String PATH_APPLICATIONS = "applications";
+    private static final String PATH_SERVICES = "services";
+    private static final String PATH_DEPLOYMENT_INFORMATION = "deploymentInformation";
+    private static final String PATH_PROMOTE = "promote";
+    private static final String PATH_STATUS = "status";
 
     private static final String PATH_VARIABLE_SHORT_NAME = "micoApplicationShortName";
     private static final String PATH_VARIABLE_VERSION = "micoApplicationVersion";
     private static final String PATH_VARIABLE_SERVICE_SHORT_NAME = "micoServiceShortName";
     private static final String PATH_VARIABLE_SERVICE_VERSION = "micoServiceVersion";
-    protected static final int MAX_MICO_SERVICES_WITH_SAME_SHORT_NAME = 1;
 
     @Autowired
     private MicoApplicationRepository applicationRepository;
@@ -88,7 +85,10 @@ public class ApplicationResource {
     
     @Autowired
     private MicoEnvironmentVariableRepository environmentVariableRepository;
-    
+
+    @Autowired
+    private MicoInterfaceConnectionRepository interfaceConnectionRepository;
+
     @Autowired
     private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
 
@@ -182,10 +182,14 @@ public class ApplicationResource {
         application.setId(null);
         application.getServiceDeploymentInfos().forEach(sdi -> sdi.setId(null));
         application.getServiceDeploymentInfos().forEach(sdi -> sdi.getLabels().forEach(label -> label.setId(null)));
-        application.getServiceDeploymentInfos().forEach(sdi -> sdi.getEnvironmentVariables().forEach(envVar -> envVar.setId(null)));
+        application.getServiceDeploymentInfos().forEach(sdi -> {
+        	sdi.getEnvironmentVariables().forEach(envVar -> envVar.setId(null));
+        	sdi.getInterfaceConnections().forEach(ic -> ic.setId(null));
+        });
         // The actual Kubernetes deployment information must not be copied, because the new application
         // is considered to be not deployed yet.
         application.getServiceDeploymentInfos().forEach(sdi -> sdi.setKubernetesDeploymentInfo(null));
+        
 
         // Save the new (promoted) application in the database.
         MicoApplication updatedApplication = applicationRepository.save(application);
@@ -401,7 +405,8 @@ public class ApplicationResource {
     	// "tangling" (without relationships) labels (nodes), hence the manual clean up.
     	labelRepository.cleanUp();
     	environmentVariableRepository.cleanUp();
-    	kubernetesDeploymentInfoRepository.cleanUp();
+        kubernetesDeploymentInfoRepository.cleanUp();
+        interfaceConnectionRepository.cleanUp();
     	log.debug("Service deployment information for service '{}' in application '{}' '{}' has been updated.", serviceShortName, shortName, version);
     	
         // TODO: Update actual Kubernetes deployment (see issue mico#416).

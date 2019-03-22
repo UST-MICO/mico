@@ -26,7 +26,8 @@ import { ApiObject } from '../api/apiobject';
 import { versionComparator } from '../api/semantic-version';
 import { MatDialog } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
-import { UtilsService } from '../util/utils.service';
+import { safeUnsubscribe } from '../util/utils';
+import { CreateNextVersionComponent } from '../dialogs/create-next-version/create-next-version.component';
 
 export interface Service extends ApiObject {
     name: string;
@@ -41,13 +42,13 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
 
     private subService: Subscription;
     private subParam: Subscription;
+    private subCreateNextVersion: Subscription;
 
     constructor(
         private apiService: ApiService,
         private route: ActivatedRoute,
         private router: Router,
         private dialog: MatDialog,
-        private util: UtilsService,
     ) { }
 
     service: Service;
@@ -66,8 +67,9 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
 
     ngOnDestroy() {
         // unsubscribe if observable is not null
-        this.util.safeUnsubscribe(this.subService);
-        this.util.safeUnsubscribe(this.subParam);
+        safeUnsubscribe(this.subService);
+        safeUnsubscribe(this.subParam);
+        safeUnsubscribe(this.subCreateNextVersion);
     }
 
 
@@ -86,7 +88,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
             return;
         }
 
-        this.util.safeUnsubscribe(this.subService);
+        safeUnsubscribe(this.subService);
 
         // get latest version
         this.subService = this.apiService.getServiceVersions(shortName)
@@ -128,9 +130,21 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
         }
     }
 
+    /**
+     * checks if the selected version is the latest service version
+     */
+    isLatestVersion = () => {
+        if (this.versions != null) {
+            if (this.selectedVersion === this.getLatestVersion()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     /**
-     * call-back from the version picker
+     * call-back from the version picker to open the selected version
      */
     updateVersion(version) {
         this.selectedVersion = version;
@@ -176,7 +190,34 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
                             this.router.navigate(['../service-detail/service-list']);
                         }
                     });
-                this.util.safeUnsubscribe(subDeleteDependency);
+                safeUnsubscribe(subDeleteDependency);
+            }
+        });
+    }
+
+    /**
+     * opens a dialog to choose the version part to be increased.
+     * Triggers the creation of the next service version afterwards.
+     */
+    promoteNextVersion() {
+
+        // open dialog
+        const dialogRef = this.dialog.open(CreateNextVersionComponent, {
+            data: {
+                version: this.selectedVersion,
+            }
+        });
+
+        safeUnsubscribe(this.subCreateNextVersion);
+
+
+        // handle dialog result
+        this.subCreateNextVersion = dialogRef.afterClosed().subscribe(nextVersion => {
+
+            if (nextVersion) {
+                this.apiService.promoteService(this.shortName, this.selectedVersion, nextVersion).subscribe(val => {
+                    this.setVersion(val.shortName, val.version);
+                });
             }
         });
     }

@@ -19,15 +19,14 @@
 
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
 import { Subscription, timer, Observable, interval } from 'rxjs';
 import { versionComparator } from '../api/semantic-version';
 import { CreateNextVersionComponent } from '../dialogs/create-next-version/create-next-version.component';
 import { MatDialog, MatSnackBar } from '@angular/material';
-import { UtilsService } from '../util/utils.service';
 import { concatMap, take, filter } from 'rxjs/operators';
+import { safeUnsubscribe } from '../util/utils';
 
 @Component({
     selector: 'mico-app-detail',
@@ -42,7 +41,6 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         private router: Router,
         private dialog: MatDialog,
         private snackBar: MatSnackBar,
-        private util: UtilsService,
     ) { }
 
     subRouteParams: Subscription;
@@ -124,7 +122,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
         this.selectedVersion = version;
 
-        this.util.safeUnsubscribe(this.subApplication);
+        safeUnsubscribe(this.subApplication);
         // get the application
         this.subApplication = this.apiService.getApplication(this.shortName, version).subscribe(val => {
             this.application = val;
@@ -155,16 +153,16 @@ export class AppDetailComponent implements OnInit, OnDestroy {
      * unsubscribe from all subscriptions
      */
     ngOnDestroy() {
-        this.util.safeUnsubscribe(this.subRouteParams);
-        this.util.safeUnsubscribe(this.subApplicationVersions);
-        this.util.safeUnsubscribe(this.subDeploy);
+        safeUnsubscribe(this.subRouteParams);
+        safeUnsubscribe(this.subApplicationVersions);
+        safeUnsubscribe(this.subDeploy);
         this.subPublicIps.forEach(subscription => {
-            this.util.safeUnsubscribe(subscription);
+            safeUnsubscribe(subscription);
         });
-        this.util.safeUnsubscribe(this.subApplication);
-        this.util.safeUnsubscribe(this.subServiceDependency);
-        this.util.safeUnsubscribe(this.subCreateNextVersion);
-        // TODO correct unsubscribe for subJobStatus
+        safeUnsubscribe(this.subApplication);
+        safeUnsubscribe(this.subServiceDependency);
+        safeUnsubscribe(this.subCreateNextVersion);
+        safeUnsubscribe(this.subJobStatus);
     }
 
 
@@ -190,17 +188,20 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
                             this.snackBar.open('Application deployment finished: ' +
                                 this.shortName + ' ' + this.selectedVersion, 'Ok', {
-                                    duration: 5000,
+                                    duration: 4000,
                                 });
-                            // TODO save unsubscribe
-                            subPolling.unsubscribe();
+
+                            safeUnsubscribe(subPolling);
+                            safeUnsubscribe(this.subJobStatus);
+
                         } else if (newStatus.status === 'ERROR') {
                             this.snackBar.open('Application deployment failed: ' +
                                 this.shortName + ' ' + this.selectedVersion, 'Ok', {
                                     duration: 8000,
                                 });
-                            // TODO save unsubscribe
-                            subPolling.unsubscribe();
+
+                            safeUnsubscribe(subPolling);
+                            safeUnsubscribe(this.subJobStatus);
                         }
                     });
             });
@@ -213,8 +214,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     undeployApplication() {
         this.subDeploy = this.apiService.postApplicationUndeployCommand(this.application.shortName, this.application.version)
             .subscribe(val => {
-                // TODO wait for propper return value from deploy endpoint
-                // add some deployment monitoring (e.g. state)
+
                 this.snackBar.open('Application undeployment initialized.', 'Ok', {
                     duration: 5000,
                 });
@@ -266,7 +266,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
             }
         });
 
-        this.util.safeUnsubscribe(this.subCreateNextVersion);
+        safeUnsubscribe(this.subCreateNextVersion);
 
 
         // handle dialog result

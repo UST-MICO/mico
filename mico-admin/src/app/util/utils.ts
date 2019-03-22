@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,30 +17,14 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.configuration;
-
-import javax.validation.constraints.NotNull;
-
-import io.github.ust.mico.core.service.MicoCoreBackgroundJobFactory;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
-
-import lombok.Getter;
-import lombok.Setter;
+import { Subscription } from 'rxjs';
 
 /**
- * Configuration for {@link MicoCoreBackgroundJobFactory}.
+ * unsubscribes the subscription if possible
+ * @param subscription subscription to be unsubscribed
  */
-@Component
-@ConfigurationProperties(prefix = "mico-core.concurrency")
-public class MicoCoreBackgroundJobFactoryConfig {
-
-    /**
-     * The number of threads in the {@link MicoCoreBackgroundJobFactory}.
-     */
-    @Getter
-    @Setter
-    @NotNull
-    private int threadPoolSize;
-
+export function safeUnsubscribe(subscription: Subscription) {
+    if (subscription != null) {
+        subscription.unsubscribe();
+    }
 }
