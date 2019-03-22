@@ -1,21 +1,28 @@
 package io.github.ust.mico.core.broker;
 
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
+import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
 import io.github.ust.mico.core.exception.*;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.persistence.*;
+import io.github.ust.mico.core.resource.ApplicationResource;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Link;
 import org.springframework.stereotype.Service;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @Slf4j
 @Service
@@ -276,5 +283,19 @@ public class MicoApplicationBroker {
     public MicoApplicationStatusResponseDTO getMicoApplicationStatusOfMicoApplication(String shortName, String version) throws MicoApplicationNotFoundException {
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(shortName, version);
         return micoStatusService.getApplicationStatus(micoApplication);
+    }
+
+    //TODO: Change return value to not use a DTO
+    public MicoApplicationResponseDTO.MicoApplicationDeploymentStatus getApplicationDeploymentStatus(MicoApplication application) {
+        return micoKubernetesClient.isApplicationDeployed(application)
+            ? MicoApplicationResponseDTO.MicoApplicationDeploymentStatus.DEPLOYED
+            : MicoApplicationResponseDTO.MicoApplicationDeploymentStatus.NOT_DEPLOYED;
+    }
+
+    public Iterable<Link> getApplicationLinks(MicoApplication application) {
+        LinkedList<Link> links = new LinkedList<>();
+        links.add(linkTo(methodOn(ApplicationResource.class).getApplicationByShortNameAndVersion(application.getShortName(), application.getVersion())).withSelfRel());
+        links.add(linkTo(methodOn(ApplicationResource.class).getAllApplications()).withRel("applications"));
+        return links;
     }
 }

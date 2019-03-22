@@ -32,11 +32,9 @@ import io.github.ust.mico.core.exception.*;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
@@ -46,7 +44,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.Valid;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -68,9 +65,6 @@ public class ApplicationResource {
     private static final String PATH_VARIABLE_VERSION = "micoApplicationVersion";
     private static final String PATH_VARIABLE_SERVICE_SHORT_NAME = "micoServiceShortName";
     private static final String PATH_VARIABLE_SERVICE_VERSION = "micoServiceVersion";
-
-    @Autowired
-    private MicoKubernetesClient micoKubernetesClient;
 
     @Autowired
     private MicoApplicationBroker broker;
@@ -132,7 +126,7 @@ public class ApplicationResource {
         return ResponseEntity
             .created(linkTo(methodOn(ApplicationResource.class)
                 .getApplicationByShortNameAndVersion(application.getShortName(), application.getVersion())).toUri())
-            .body(new Resource<>(dto, getApplicationLinks(application)));
+            .body(new Resource<>(dto, broker.getApplicationLinks(application)));
     }
 
     @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
@@ -299,21 +293,8 @@ public class ApplicationResource {
 
     private Resource<MicoApplicationWithServicesResponseDTO> getApplicationWithServicesResponseDTOResourceWithDeploymentStatus(MicoApplication application) {
         MicoApplicationWithServicesResponseDTO dto = new MicoApplicationWithServicesResponseDTO(application);
-        dto.setDeploymentStatus(getApplicationDeploymentStatus(application));
-        return new Resource<>(dto, getApplicationLinks(application));
-    }
-
-    private MicoApplicationDeploymentStatus getApplicationDeploymentStatus(MicoApplication application) {
-        return micoKubernetesClient.isApplicationDeployed(application)
-            ? MicoApplicationDeploymentStatus.DEPLOYED
-            : MicoApplicationDeploymentStatus.NOT_DEPLOYED;
-    }
-
-    private Iterable<Link> getApplicationLinks(MicoApplication application) {
-        LinkedList<Link> links = new LinkedList<>();
-        links.add(linkTo(methodOn(ApplicationResource.class).getApplicationByShortNameAndVersion(application.getShortName(), application.getVersion())).withSelfRel());
-        links.add(linkTo(methodOn(ApplicationResource.class).getAllApplications()).withRel("applications"));
-        return links;
+        dto.setDeploymentStatus(broker.getApplicationDeploymentStatus(application));
+        return new Resource<>(dto, broker.getApplicationLinks(application));
     }
 
 }
