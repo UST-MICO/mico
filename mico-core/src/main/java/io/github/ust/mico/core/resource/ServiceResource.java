@@ -342,11 +342,11 @@ public class ServiceResource {
                 linkTo(methodOn(ServiceResource.class).getDependencyGraph(shortName, version)).withSelfRel()));
     }
 
-    private static Resource<MicoServiceResponseDTO> getServiceResponseDTOResource(MicoService service) {
+    protected static Resource<MicoServiceResponseDTO> getServiceResponseDTOResource(MicoService service) {
         return new Resource<>(new MicoServiceResponseDTO(service), getServiceLinks(service));
     }
 
-    private static List<Resource<MicoServiceResponseDTO>> getServiceResponseDTOResourcesList(List<MicoService> services) {
+    protected static List<Resource<MicoServiceResponseDTO>> getServiceResponseDTOResourcesList(List<MicoService> services) {
         return services.stream().map(ServiceResource::getServiceResponseDTOResource).collect(Collectors.toList());
     }
 
