@@ -382,9 +382,7 @@ public class MicoStatusServiceTest {
                     + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' was found!").getMessage()))
                 .setInterfacesInformation(CollectionUtils.listOf(
                     new MicoServiceInterfaceStatusResponseDTO()
-                        .setName(SERVICE_INTERFACE_NAME)
-                        // Empty list of external IP addresses
-                        .setExternalIp("")))));
+                        .setName(SERVICE_INTERFACE_NAME))))); // No IPs
         try {
             given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(deployment);
             given(serviceInterfaceRepository.findByServiceAndName(micoService.getShortName(), micoService.getVersion(), SERVICE_INTERFACE_NAME)).willReturn(Optional.of(micoServiceInterface));
@@ -570,8 +568,7 @@ public class MicoStatusServiceTest {
             .willReturn(Optional.empty());
 
         MicoServiceInterfaceStatusResponseDTO expectedServiceInterface = new MicoServiceInterfaceStatusResponseDTO()
-            .setName(SERVICE_INTERFACE_NAME)
-            .setExternalIp(""); // Expect that there are no IPs
+            .setName(SERVICE_INTERFACE_NAME); // Expect that there are no IPs
         List<MicoServiceInterfaceStatusResponseDTO> expectedInterfaceStatusDTO = new LinkedList<>();
         expectedInterfaceStatusDTO.add(expectedServiceInterface);
 
