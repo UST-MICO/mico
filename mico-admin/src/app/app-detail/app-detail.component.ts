@@ -58,7 +58,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     shortName: string;
     selectedVersion;
     allVersions;
-    publicIps: string[] = [];
+    publicIps = new Map();
 
     // modifiable application object
     applicationData;
@@ -137,12 +137,10 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                         serviceInterfaces.forEach(micoInterface => {
                             this.subPublicIps.push(this.apiService
                                 .getServiceInterfacePublicIp(service.shortName, service.version, micoInterface.serviceInterfaceName)
-                                .subscribe(listOfPublicIps => {
-                                    const tempPublicIps = [];
-                                    listOfPublicIps.forEach(publicIp => {
-                                        tempPublicIps.push(publicIp);
-                                    });
-                                    this.publicIps = tempPublicIps;
+                                .subscribe(publicIpDTO => {
+
+                                    this.publicIps.set(service.shortName + '#' + publicIpDTO.name, publicIpDTO);
+
                                 }));
                         });
 
@@ -151,6 +149,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                             subServiceInterface.unsubscribe();
                         }
                     });
+
             });
         });
     }

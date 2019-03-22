@@ -99,9 +99,10 @@
         Public IPs:
     </mat-card-title>
     <mat-card-content>
-        <div *ngFor="let ip of publicIps">
-            <a target="_blank" rel="noopener" href="http://{{ip}}">
-                {{ip}}
+        <div *ngFor="let ip of publicIps.values()">
+            {{ip?.name}}:
+            <a target="_blank" rel="noopener" href="http://{{ip.externalIp}}">
+                {{ip?.externalIp}}
             </a><br />
         </div>
     </mat-card-content>
