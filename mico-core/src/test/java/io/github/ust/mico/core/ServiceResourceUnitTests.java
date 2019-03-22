@@ -22,12 +22,16 @@ package io.github.ust.mico.core;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import io.github.ust.mico.core.broker.MicoServiceBroker;
 import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
 import io.github.ust.mico.core.dto.response.status.*;
-import io.github.ust.mico.core.model.*;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.exception.MicoServiceHasDependersException;
+import io.github.ust.mico.core.exception.MicoServiceIsDeployedException;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDependency;
+import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.resource.ServiceResource;
 import io.github.ust.mico.core.service.GitHubCrawler;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
@@ -42,9 +46,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
@@ -52,7 +54,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 import static io.github.ust.mico.core.JsonPathBuilder.*;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
@@ -61,20 +66,21 @@ import static io.github.ust.mico.core.TestConstants.*;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
+@WebMvcTest(ServiceResource.class)
+@OverrideAutoConfiguration(enabled = true) //Needed to override our neo4j config
 @EnableAutoConfiguration
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-@AutoConfigureMockMvc
-public class ServiceResourceIntegrationTests {
+@EnableConfigurationProperties(value = {CorsConfig.class})
+public class ServiceResourceUnitTests {
 
     private static final String BASE_PATH = "/services";
 
@@ -91,16 +97,16 @@ public class ServiceResourceIntegrationTests {
     //TODO: Use these variables inside the tests instead of the local variables
 
     @Value("${cors-policy.allowed-origins}")
-    private String[] allowedOrigins;
+    String[] allowedOrigins;
 
     @MockBean
     private MicoStatusService micoStatusService;
 
     @MockBean
-    private MicoServiceRepository serviceRepository;
+    private GitHubCrawler crawler;
 
     @MockBean
-    private GitHubCrawler crawler;
+    private MicoServiceBroker micoServiceBroker;
 
     @Autowired
     private MockMvc mvc;
@@ -169,7 +175,7 @@ public class ServiceResourceIntegrationTests {
                 .setPodsInformation(Arrays.asList(kubernetesPodInfo1, kubernetesPodInfo2));
 
         given(micoStatusService.getServiceStatus(any(MicoService.class))).willReturn(micoServiceStatus);
-        given(serviceRepository.findByShortNameAndVersion(ArgumentMatchers.anyString(), ArgumentMatchers.any())).willReturn(Optional.of(micoService));
+        given(micoServiceBroker.getServiceFromDatabase(ArgumentMatchers.anyString(), ArgumentMatchers.any())).willReturn(micoService);
 
         mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/status"))
                 .andDo(print())
@@ -199,19 +205,11 @@ public class ServiceResourceIntegrationTests {
     }
 
     @Test
-    public void getStatusOfNotExistentService() throws Exception {
-        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME_2 + "/" + VERSION + "/status"))
-                .andDo(print())
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    public void getCompleteServiceList() throws Exception {
-        given(serviceRepository.findAll(ArgumentMatchers.anyInt())).willReturn(
-                CollectionUtils.listOf(
-                        new MicoService().setShortName(SHORT_NAME_1).setVersion(VERSION_1_0_1).setName(NAME_1).setDescription(DESCRIPTION_1),
-                        new MicoService().setShortName(SHORT_NAME_2).setVersion(VERSION_1_0_2).setName(NAME_2).setDescription(DESCRIPTION_2),
-                        new MicoService().setShortName(SHORT_NAME_3).setVersion(VERSION_1_0_3).setName(NAME_3).setDescription(DESCRIPTION_3)));
+    public void getAllServicesAsList() throws Exception {
+        given(micoServiceBroker.getAllServicesAsList()).willReturn(CollectionUtils.listOf(
+                new MicoService().setShortName(SHORT_NAME_1).setVersion(VERSION_1_0_1).setName(NAME_1).setDescription(DESCRIPTION_1),
+                new MicoService().setShortName(SHORT_NAME_2).setVersion(VERSION_1_0_2).setName(NAME_2).setDescription(DESCRIPTION_2),
+                new MicoService().setShortName(SHORT_NAME_3).setVersion(VERSION_1_0_3).setName(NAME_3).setDescription(DESCRIPTION_3)));
 
         mvc.perform(get("/services").accept(MediaTypes.HAL_JSON_VALUE))
                 .andDo(print())
@@ -229,9 +227,9 @@ public class ServiceResourceIntegrationTests {
     }
 
     @Test
-    public void getServiceViaShortNameAndVersion() throws Exception {
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
-                Optional.of(new MicoService().setShortName(SHORT_NAME).setVersion(VERSION).setDescription(DESCRIPTION)));
+    public void getServiceByShortNameAndVersion() throws Exception {
+        given(micoServiceBroker.getServiceFromDatabase(SHORT_NAME, VERSION)).willReturn(
+                new MicoService().setShortName(SHORT_NAME).setVersion(VERSION).setDescription(DESCRIPTION));
 
         String urlPath = SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION;
         mvc.perform(get(urlPath).accept(MediaTypes.HAL_JSON_VALUE))
@@ -254,7 +252,7 @@ public class ServiceResourceIntegrationTests {
                 .setName(NAME)
                 .setDescription(DESCRIPTION);
 
-        given(serviceRepository.save(any(MicoService.class))).willReturn(service);
+        given(micoServiceBroker.persistService(any(MicoService.class))).willReturn(service);
 
         final ResultActions result = mvc.perform(post(SERVICES_PATH)
                 .content(mapper.writeValueAsBytes(new MicoServiceRequestDTO(service)))
@@ -308,14 +306,14 @@ public class ServiceResourceIntegrationTests {
 
         ArgumentCaptor<MicoService> serviceArgumentCaptor = ArgumentCaptor.forClass(MicoService.class);
 
-        given(serviceRepository.save(any(MicoService.class))).willReturn(expectedService);
+        given(micoServiceBroker.persistService(any(MicoService.class))).willReturn(expectedService);
 
         mvc.perform(post(SERVICES_PATH)
                 .content(mapper.writeValueAsBytes(serviceRequestDto)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andDo(print())
                 .andExpect(status().isCreated());
 
-        verify(serviceRepository, times(1)).save(serviceArgumentCaptor.capture());
+        verify(micoServiceBroker, times(1)).persistService(serviceArgumentCaptor.capture());
         MicoService savedMicoService = serviceArgumentCaptor.getValue();
         assertNotNull(savedMicoService);
         assertEquals("Actual service does not match expected", expectedService, savedMicoService);
@@ -337,14 +335,14 @@ public class ServiceResourceIntegrationTests {
 
         ArgumentCaptor<MicoService> serviceArgumentCaptor = ArgumentCaptor.forClass(MicoService.class);
 
-        given(serviceRepository.save(any(MicoService.class))).willReturn(expectedService);
+        given(micoServiceBroker.persistService(any(MicoService.class))).willReturn(expectedService);
 
         mvc.perform(post(SERVICES_PATH)
                 .content(mapper.writeValueAsBytes(serviceRequestDto)).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andDo(print())
                 .andExpect(status().isCreated());
 
-        verify(serviceRepository, times(1)).save(serviceArgumentCaptor.capture());
+        verify(micoServiceBroker, times(1)).persistService(serviceArgumentCaptor.capture());
         MicoService savedMicoService = serviceArgumentCaptor.getValue();
         assertNotNull(savedMicoService);
         assertEquals("Actual service does not match expected", expectedService, savedMicoService);
@@ -359,7 +357,7 @@ public class ServiceResourceIntegrationTests {
                 .setDescription(DESCRIPTION)
                 .setGitCloneUrl("invalid-url");
 
-        given(serviceRepository.save(any(MicoService.class))).willReturn(service);
+        given(micoServiceBroker.persistService(any(MicoService.class))).willReturn(service);
 
         mvc.perform(post(SERVICES_PATH)
                 .content(mapper.writeValueAsBytes(new MicoServiceRequestDTO(service))).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
@@ -375,8 +373,7 @@ public class ServiceResourceIntegrationTests {
                 .setName(NAME)
                 .setDescription(DESCRIPTION);
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
-        given(serviceRepository.save(any(MicoService.class))).willReturn(service);
+        given(micoServiceBroker.getServiceFromDatabase(SHORT_NAME, VERSION)).willReturn(service);
 
         ResultActions resultDelete = mvc.perform(delete(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + DEPENDEES_SUBPATH)
                 .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
@@ -394,9 +391,8 @@ public class ServiceResourceIntegrationTests {
         MicoService service = new MicoService().setShortName(shortName).setVersion(version).setName(NAME);
         MicoService serviceToDelete = new MicoService().setShortName(shortNameToDelete).setVersion(versionToDelete).setName(NAME);
 
-        given(serviceRepository.findByShortNameAndVersion(shortName, version)).willReturn(Optional.of(service));
-        given(serviceRepository.save(any(MicoService.class))).willReturn(service);
-        given(serviceRepository.findByShortNameAndVersion(shortNameToDelete, versionToDelete)).willReturn(Optional.of(serviceToDelete));
+        given(micoServiceBroker.getServiceFromDatabase(shortName, version)).willReturn(service);
+        given(micoServiceBroker.getServiceFromDatabase(shortNameToDelete, versionToDelete)).willReturn(serviceToDelete);
 
         ResultActions resultDelete = mvc.perform(delete(SERVICES_PATH + "/" + shortName + "/" + version +
                 DEPENDEES_SUBPATH + "/" + shortNameToDelete + "/" + versionToDelete)
@@ -407,7 +403,7 @@ public class ServiceResourceIntegrationTests {
     }
 
     @Test
-    public void deleteAllServices() throws Exception {
+    public void deleteAllVersionsOfService() throws Exception {
         MicoService micoServiceOne = new MicoService()
                 .setShortName(SHORT_NAME)
                 .setVersion(VERSION)
@@ -421,7 +417,7 @@ public class ServiceResourceIntegrationTests {
                 .setVersion(VERSION_1_0_2)
                 .setName(NAME);
 
-        given(serviceRepository.findByShortName(SHORT_NAME)).willReturn(CollectionUtils.listOf(micoServiceOne, micoServiceTwo, micoServiceThree));
+        given(micoServiceBroker.getAllVersionsOfServiceFromDatabase(SHORT_NAME)).willReturn(CollectionUtils.listOf(micoServiceOne, micoServiceTwo, micoServiceThree));
 
         mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME))
                 .andDo(print())
@@ -479,8 +475,8 @@ public class ServiceResourceIntegrationTests {
         service2.setDependencies(Collections.singletonList(dependency2));
         service3.setDependencies(Collections.singletonList(dependency3));
 
-        given(serviceRepository.findDependers(service.getShortName(), service.getVersion())).willReturn(CollectionUtils.listOf(service1, service2, service3));
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
+        given(micoServiceBroker.getServiceFromDatabase(SHORT_NAME, VERSION)).willReturn(service);
+        given(micoServiceBroker.findDependers(service)).willReturn(CollectionUtils.listOf(service1, service2, service3));
 
         String urlPath = SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + DEPENDERS_SUBPATH;
         ResultActions result = mvc.perform(get(urlPath)
@@ -515,8 +511,8 @@ public class ServiceResourceIntegrationTests {
                 .setName(updatedServiceRequestDto.getName())
                 .setDescription(updatedServiceRequestDto.getDescription());
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingService));
-        given(serviceRepository.save(eq(expectedService))).willReturn(expectedService);
+        given(micoServiceBroker.getServiceFromDatabase(SHORT_NAME, VERSION)).willReturn(existingService);
+        given(micoServiceBroker.updateExistingService(eq(expectedService))).willReturn(expectedService);
 
         ResultActions resultUpdate = mvc.perform(put(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION)
                 .content(mapper.writeValueAsBytes(updatedServiceRequestDto))
@@ -542,7 +538,7 @@ public class ServiceResourceIntegrationTests {
                 .setVersion(VERSION)
                 .setName(null);
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingService));
+        given(micoServiceBroker.getServiceFromDatabase(SHORT_NAME, VERSION)).willReturn(existingService);
 
         ResultActions resultUpdate = mvc.perform(put(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION)
                 .content(mapper.writeValueAsBytes(new MicoServiceRequestDTO(updatedService)))
@@ -575,8 +571,8 @@ public class ServiceResourceIntegrationTests {
 
         ArgumentCaptor<MicoService> serviceArgumentCaptor = ArgumentCaptor.forClass(MicoService.class);
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingService));
-        given(serviceRepository.save(any(MicoService.class))).willReturn(expectedService);
+        given(micoServiceBroker.getServiceFromDatabase(SHORT_NAME, VERSION)).willReturn(existingService);
+        given(micoServiceBroker.updateExistingService(expectedService)).willReturn(expectedService);
 
         mvc.perform(put(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION)
                 .content(mapper.writeValueAsBytes(updatedServiceRequestDto))
@@ -584,7 +580,7 @@ public class ServiceResourceIntegrationTests {
                 .andDo(print())
                 .andExpect(status().isOk());
 
-        verify(serviceRepository, times(1)).save(serviceArgumentCaptor.capture());
+        verify(micoServiceBroker, times(1)).updateExistingService(serviceArgumentCaptor.capture());
         MicoService savedMicoService = serviceArgumentCaptor.getValue();
         assertNotNull(savedMicoService);
         assertEquals("Actual service does not match expected", expectedService, savedMicoService);
@@ -598,7 +594,7 @@ public class ServiceResourceIntegrationTests {
                 .setVersion(VERSION)
                 .setName(NAME);
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingService));
+        given(micoServiceBroker.getServiceFromDatabase(SHORT_NAME, VERSION)).willReturn(existingService);
 
         ResultActions resultDelete = mvc.perform(delete(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION)
                 .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
@@ -609,7 +605,7 @@ public class ServiceResourceIntegrationTests {
 
     @Test
     public void getVersionsOfService() throws Exception {
-        given(serviceRepository.findByShortName(SHORT_NAME)).willReturn(
+        given(micoServiceBroker.getAllVersionsOfServiceFromDatabase(SHORT_NAME)).willReturn(
                 CollectionUtils.listOf(
                         new MicoService().setShortName(SHORT_NAME).setVersion(VERSION).setName(NAME),
                         new MicoService().setShortName(SHORT_NAME).setVersion(VERSION_1_0_1).setName(NAME),
@@ -660,9 +656,9 @@ public class ServiceResourceIntegrationTests {
 
         prettyPrint(expectedService);
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingService1));
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME_1, VERSION_1_0_1)).willReturn(Optional.of(existingService2));
-        given(serviceRepository.save(any(MicoService.class))).willReturn(expectedService);
+        given(micoServiceBroker.getServiceFromDatabase(SHORT_NAME, VERSION)).willReturn(existingService1);
+        given(micoServiceBroker.getServiceFromDatabase(SHORT_NAME_1, VERSION_1_0_1)).willReturn(existingService2);
+        given(micoServiceBroker.persistNewDependencyBetweenServices(existingService1, existingService2)).willReturn(expectedService);
 
         final ResultActions result = mvc.perform(post(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION +
                 DEPENDEES_SUBPATH + "/" + newDependency.getDependedService().getShortName() + "/" + newDependency.getDependedService().getVersion())
@@ -702,8 +698,8 @@ public class ServiceResourceIntegrationTests {
         MicoServiceDependency dependency2 = new MicoServiceDependency().setService(service).setDependedService(service2);
         service.setDependencies(CollectionUtils.listOf(dependency1, dependency2));
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
-        given(serviceRepository.findDependees(service.getShortName(), service.getVersion())).willReturn(CollectionUtils.listOf(service1, service2));
+        given(micoServiceBroker.getServiceFromDatabase(SHORT_NAME, VERSION)).willReturn(service);
+        given(micoServiceBroker.getDependeesByMicoService(service)).willReturn(CollectionUtils.listOf(service1, service2));
 
         mvc.perform(get("/services/" + SHORT_NAME + "/" + VERSION + DEPENDEES_SUBPATH).accept(MediaTypes.HAL_JSON_VALUE))
                 .andDo(print())
@@ -717,14 +713,16 @@ public class ServiceResourceIntegrationTests {
     }
 
     @Test
-    public void deleteServiceWithDeployedService() throws Exception {
+    public void deleteServicesWithDeployedService() throws Exception {
         MicoService service = new MicoService()
                 .setShortName(SHORT_NAME)
                 .setVersion(VERSION)
                 .setDescription(DESCRIPTION);
 
-        given(serviceRepository.findByShortName(SHORT_NAME)).willReturn(Collections.singletonList(service));
+        given(micoServiceBroker.getAllVersionsOfServiceFromDatabase(SHORT_NAME)).willReturn(Collections.singletonList(service));
         given(micoKubernetesClient.isMicoServiceDeployed(any())).willReturn(true);
+
+        doThrow(MicoServiceIsDeployedException.class).when(micoServiceBroker).deleteService(service);
 
         mvc.perform(delete(SERVICES_PATH + "/" + SHORT_NAME)
                 .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
@@ -739,8 +737,10 @@ public class ServiceResourceIntegrationTests {
                 .setVersion(VERSION)
                 .setDescription(DESCRIPTION);
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
-        given(micoKubernetesClient.isMicoServiceDeployed(any())).willReturn(true);
+        given(micoServiceBroker.getServiceFromDatabase(service.getShortName(), service.getVersion())).willReturn(service);
+        given(micoServiceBroker.findDependers(service)).willReturn(new LinkedList<>());
+
+        doThrow(MicoServiceIsDeployedException.class).when(micoServiceBroker).deleteService(service);
 
         mvc.perform(delete(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION)
                 .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
@@ -749,28 +749,45 @@ public class ServiceResourceIntegrationTests {
     }
 
     @Test
-    public void promoteService() throws Exception {
-        MicoServicePort port = new MicoServicePort().setPort(1234).setType(MicoPortType.TCP).setTargetPort(5678);
+    public void deleteSpecificServiceWithDependers() throws Exception {
+        MicoService service = new MicoService()
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION)
+                .setDescription(DESCRIPTION);
 
+        given(micoServiceBroker.getServiceFromDatabase(service.getShortName(), service.getVersion())).willReturn(service);
+        given(micoServiceBroker.findDependers(service)).willReturn(Collections.singletonList(service));
+
+        doThrow(MicoServiceHasDependersException.class).when(micoServiceBroker).deleteService(service);
+
+        mvc.perform(delete(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION)
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print())
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    public void createServiceViaGitHubCrawler() {
+        //TODO: Implementation
+    }
+
+    @Test
+    public void promoteService() throws Exception {
         MicoServiceInterface micoServiceInterface = new MicoServiceInterface()
-                .setId(2000L)
-                .setServiceInterfaceName(SERVICE_INTERFACE_NAME)
-                .setPorts(CollectionUtils.listOf(port));
+                .setServiceInterfaceName(SERVICE_INTERFACE_NAME);
 
         MicoServiceInterface micoServiceInterfaceTwo = new MicoServiceInterface()
-                .setId(3000L)
                 .setServiceInterfaceName(SERVICE_INTERFACE_NAME_1);
 
-        List<MicoServiceInterface> micoServiceInterfaces = new ArrayList<>();
+        List<MicoServiceInterface> micoServiceInterfaces = new LinkedList<>();
         micoServiceInterfaces.add(micoServiceInterface);
         micoServiceInterfaces.add(micoServiceInterfaceTwo);
 
-
         MicoService micoService = new MicoService()
-                .setId(ID)
                 .setShortName(SHORT_NAME_1)
                 .setVersion(VERSION_1_0_1)
                 .setDescription(DESCRIPTION_1)
+                .setId(ID)
                 .setServiceInterfaces(micoServiceInterfaces);
 
         String newVersion = VERSION_1_0_1;
@@ -779,28 +796,18 @@ public class ServiceResourceIntegrationTests {
         MicoService promotedService = micoService.setId(null).setVersion(newVersion);
         MicoService savedPromotedService = promotedService.setId(newId);
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoService));
-        given(serviceRepository.save(eq(promotedService))).willReturn(savedPromotedService);
+        given(micoServiceBroker.getServiceFromDatabase(SHORT_NAME, VERSION)).willReturn(micoService);
+        given(micoServiceBroker.promoteService(micoService, VERSION_1_0_1)).willReturn(savedPromotedService);
 
-        ArgumentCaptor<MicoService> serviceArgumentCaptor = ArgumentCaptor.forClass(MicoService.class);
-
-        mvc.perform(post(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_PROMOTE)
+        ResultActions resultPromotion = mvc.perform(post(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_PROMOTE)
                 .content(mapper.writeValueAsBytes(new MicoVersionRequestDTO(newVersion)))
                 .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
                 .andDo(print())
                 .andExpect(jsonPath(SHORT_NAME_PATH, is(savedPromotedService.getShortName())))
                 .andExpect(jsonPath(VERSION_PATH, is(newVersion)))
-                .andExpect(jsonPath(DESCRIPTION_PATH, is(savedPromotedService.getDescription())))
-                .andExpect(status().isOk());
+                .andExpect(jsonPath(DESCRIPTION_PATH, is(savedPromotedService.getDescription())));
 
-        verify(serviceRepository, times(1)).save(serviceArgumentCaptor.capture());
-        MicoService savedMicoService = serviceArgumentCaptor.getValue();
-        assertNotNull(savedMicoService);
-        assertNull("Expected id of copied service to be null (will be created by Neo4j)", savedMicoService.getId());
-        assertEquals("Expected that new service includes 2 MicoServiceInterfaces", 2, savedMicoService.getServiceInterfaces().size());
-        assertNull("Expected id of copied service interface 1 to be null (will be created by Neo4j)", savedMicoService.getServiceInterfaces().get(0).getId());
-        assertNull("Expected id of copied service interface 2 to be null (will be created by Neo4j)", savedMicoService.getServiceInterfaces().get(1).getId());
-        assertNull("Expected id of copied port of service interface 1 to be null (will be created by Neo4j)", savedMicoService.getServiceInterfaces().get(0).getPorts().get(0).getId());
+        resultPromotion.andExpect(status().isOk());
     }
 
     @Test
@@ -819,5 +826,4 @@ public class ServiceResourceIntegrationTests {
 
         resultPromotion.andExpect(status().isOk());
     }
-
 }

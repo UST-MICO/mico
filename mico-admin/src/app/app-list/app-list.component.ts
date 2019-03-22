@@ -24,9 +24,9 @@ import { Subscription, from } from 'rxjs';
 import { groupBy, mergeMap, toArray, map } from 'rxjs/operators';
 import { MatDialog, MatSnackBar } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
-import { UtilsService } from '../util/utils.service';
-import { CreateApplicationComponent } from '../dialogs/create-application/create-application.component';
 import { Router } from '@angular/router';
+import { safeUnsubscribe } from '../util/utils';
+import { UtilServiceService } from '../util/util-service.service';
 
 @Component({
     selector: 'mico-app-list',
@@ -40,9 +40,9 @@ export class AppListComponent implements OnInit {
     constructor(
         private apiService: ApiService,
         private dialog: MatDialog,
-        private util: UtilsService,
         private snackBar: MatSnackBar,
         private router: Router,
+        private utilService: UtilServiceService,
     ) { }
 
     applications: Readonly<ApiObject[]>;
@@ -92,45 +92,15 @@ export class AppListComponent implements OnInit {
         const subDeleteServiceVersions = dialogRef.afterClosed().subscribe(shouldDelete => {
             if (shouldDelete) {
                 this.apiService.deleteAllApplicationVersions(application.shortName).subscribe();
-                this.util.safeUnsubscribe(subDeleteServiceVersions);
+                safeUnsubscribe(subDeleteServiceVersions);
             }
         });
     }
 
     /**
-     * create a new application
-     * uses: POST application
+     * opens a dialog to create a new application
      */
     newApplication() {
-        const dialogRef = this.dialog.open(CreateApplicationComponent);
-
-        const subDialog = dialogRef.afterClosed().subscribe(result => {
-
-            // filter empty results (when dialog is aborted)
-            if (!result) {
-                return;
-            }
-
-            // check if returned object is complete
-            for (const property in result.applicationProperties) {
-                if (result.applicationProperties[property] == null) {
-
-                    // show an error message containg the missing field
-                    this.snackBar.open('Missing property: ' + property, 'Ok', {
-                        duration: 8000,
-                    });
-                    return;
-                }
-            }
-
-            const data = result.applicationProperties;
-            data.services = result.services;
-
-            this.apiService.postApplication(data).subscribe(val => {
-                this.router.navigate(['app-detail', val.shortName, val.version]);
-            });
-
-            this.util.safeUnsubscribe(subDialog);
-        });
+        this.utilService.createNewApplication();
     }
 }

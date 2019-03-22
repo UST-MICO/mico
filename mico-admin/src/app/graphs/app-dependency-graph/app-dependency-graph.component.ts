@@ -27,8 +27,8 @@ import { Subscription } from 'rxjs';
 import { STYLE_TEMPLATE, APPLICATION_NODE_TEMPLATE, SERVICE_NODE_TEMPLATE, ARROW_TEMPLATE } from './app-dependency-graph-constants';
 import { MatDialog } from '@angular/material';
 import { ChangeServiceVersionComponent } from 'src/app/dialogs/change-service-version/change-service-version.component';
-import { UtilsService } from 'src/app/util/utils.service';
 import { debounceTime } from 'rxjs/operators';
+import { safeUnsubscribe } from 'src/app/util/utils';
 
 
 @Component({
@@ -52,7 +52,6 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
 
     constructor(private api: ApiService,
         private dialog: MatDialog,
-        private util: UtilsService,
     ) { }
 
     ngOnInit() {
@@ -82,7 +81,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
         if (changes.shortName != null || changes.version != null) {
             this.resetGraph();
 
-            this.util.safeUnsubscribe(this.appSubscription);
+            safeUnsubscribe(this.appSubscription);
 
             if (this.shortName != null && this.version != null) {
                 this.appSubscription = this.api.getApplication(this.shortName, this.version).subscribe(application => {
@@ -126,7 +125,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
      * @param newVersion new service version
      */
     changeServiceVersion(node: Node, newVersion: ApiObject) {
-        this.versionChangedFor = {node: node, newVersion: newVersion};
+        this.versionChangedFor = { node: node, newVersion: newVersion };
         this.api.deleteApplicationServices(this.shortName, this.version, node.service.shortName).pipe(
             debounceTime(300),
         ).subscribe((success) => {

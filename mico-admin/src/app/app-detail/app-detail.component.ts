@@ -26,7 +26,7 @@ import { Subscription } from 'rxjs';
 import { versionComparator } from '../api/semantic-version';
 import { CreateNextVersionComponent } from '../dialogs/create-next-version/create-next-version.component';
 import { MatDialog, MatSnackBar } from '@angular/material';
-import { UtilsService } from '../util/utils.service';
+import { safeUnsubscribe } from '../util/utils';
 
 @Component({
     selector: 'mico-app-detail',
@@ -41,7 +41,6 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         private router: Router,
         private dialog: MatDialog,
         private snackBar: MatSnackBar,
-        private util: UtilsService,
     ) { }
 
     subRouteParams: Subscription;
@@ -119,7 +118,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
      */
     subscribeApplication(version: string) {
 
-        this.util.safeUnsubscribe(this.subApplication);
+        safeUnsubscribe(this.subApplication);
         // get the application
         this.subApplication = this.apiService.getApplication(this.shortName, version)
             .subscribe(val => {
@@ -132,15 +131,15 @@ export class AppDetailComponent implements OnInit, OnDestroy {
      * unsubscribe from all subscriptions
      */
     ngOnDestroy() {
-        this.util.safeUnsubscribe(this.subRouteParams);
-        this.util.safeUnsubscribe(this.subApplicationVersions);
-        this.util.safeUnsubscribe(this.subDeploy);
+        safeUnsubscribe(this.subRouteParams);
+        safeUnsubscribe(this.subApplicationVersions);
+        safeUnsubscribe(this.subDeploy);
         this.subPublicIps.forEach(subscription => {
-            this.util.safeUnsubscribe(subscription);
+            safeUnsubscribe(subscription);
         });
-        this.util.safeUnsubscribe(this.subApplication);
-        this.util.safeUnsubscribe(this.subServiceDependency);
-        this.util.safeUnsubscribe(this.subCreateNextVersion);
+        safeUnsubscribe(this.subApplication);
+        safeUnsubscribe(this.subServiceDependency);
+        safeUnsubscribe(this.subCreateNextVersion);
     }
 
 
@@ -223,7 +222,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
             }
         });
 
-        this.util.safeUnsubscribe(this.subCreateNextVersion);
+        safeUnsubscribe(this.subCreateNextVersion);
 
 
         // handle dialog result

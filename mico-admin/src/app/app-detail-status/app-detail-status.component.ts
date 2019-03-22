@@ -1,7 +1,7 @@
 import { Component, Input, OnChanges, OnDestroy } from '@angular/core';
 import { ApiService } from '../api/api.service';
 import { Subscription } from 'rxjs';
-import { UtilsService } from '../util/utils.service';
+import { safeUnsubscribe } from '../util/utils';
 
 @Component({
     selector: 'mico-app-detail-status',
@@ -14,7 +14,6 @@ export class AppDetailStatusComponent implements OnChanges, OnDestroy {
 
     constructor(
         private apiService: ApiService,
-        private util: UtilsService,
     ) { }
 
     @Input() shortName;
@@ -28,7 +27,7 @@ export class AppDetailStatusComponent implements OnChanges, OnDestroy {
         }
 
         // get and set applicationStatus
-        this.util.safeUnsubscribe(this.subApplicationStatus);
+        safeUnsubscribe(this.subApplicationStatus);
         this.subApplicationStatus = this.apiService.getApplicationStatus(this.shortName, this.version)
             .subscribe(val => {
                 this.applicationStatus = JSON.parse(JSON.stringify(val));
@@ -38,6 +37,6 @@ export class AppDetailStatusComponent implements OnChanges, OnDestroy {
 
     ngOnDestroy() {
         // unsubscribe from observables
-        this.util.safeUnsubscribe(this.subApplicationStatus);
+        safeUnsubscribe(this.subApplicationStatus);
     }
 }

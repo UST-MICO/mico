@@ -29,6 +29,8 @@ interface PropertyRef {
     prop: ApiModel | ApiModelRef;
 }
 
+const numericPropertyKeys = new Set(['minLength', 'maxLength', 'minimum', 'maximum', 'minItems', 'maxItems', 'x-order']);
+
 @Injectable({
     providedIn: 'root'
 })
@@ -233,6 +235,29 @@ export class ModelsService {
     }
 
     /**
+     * Convert all property keys that should have numeric values (like 'minimum').
+     *
+     * @param property input PropertyRef
+     */
+    private handleNumericPropertyKeys = (property: PropertyRef): Observable<PropertyRef> => {
+        const propCopy = JSON.parse(JSON.stringify(property.prop));
+
+        for (const key in propCopy) {
+            if (propCopy.hasOwnProperty(key)) {
+                if (numericPropertyKeys.has(key)) {
+                    propCopy[key] = parseFloat(propCopy[key]);
+                }
+            }
+        }
+
+        return of({
+            key: property.key,
+            parent: property.parent,
+            prop: propCopy,
+        });
+    }
+
+    /**
      * Check all properties of model for complex properties like arrays or objects.
      *
      * Replaces all nested models with ApiModelRefs to nestedModelCache
@@ -248,6 +273,7 @@ export class ModelsService {
             }
         }
         return of(...props).pipe(
+            flatMap(this.handleNumericPropertyKeys),
             flatMap(this.handleObjectProperties),
             flatMap(this.handleArrayProperties),
             reduce((properties, prop: PropertyRef) => {

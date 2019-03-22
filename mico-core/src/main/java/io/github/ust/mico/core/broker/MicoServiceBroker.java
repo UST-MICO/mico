@@ -189,8 +189,8 @@ public class MicoServiceBroker {
 
     public boolean checkIfDependencyAlreadyExists(MicoService service, MicoService serviceDependee) {
         boolean dependencyAlreadyExists = (service.getDependencies() != null) && service.getDependencies().stream().anyMatch(
-            dependency -> dependency.getDependedService().getShortName().equals(serviceDependee.getShortName())
-                && dependency.getDependedService().getVersion().equals(serviceDependee.getVersion()));
+                dependency -> dependency.getDependedService().getShortName().equals(serviceDependee.getShortName())
+                        && dependency.getDependedService().getVersion().equals(serviceDependee.getVersion()));
 
         log.debug("Check if the dependency already exists is '{}", dependencyAlreadyExists);
 
@@ -199,14 +199,14 @@ public class MicoServiceBroker {
 
     public MicoService persistNewDependencyBetweenServices(MicoService service, MicoService serviceDependee) {
         MicoServiceDependency processedServiceDependee = new MicoServiceDependency()
-            .setDependedService(serviceDependee)
-            .setService(service);
+                .setDependedService(serviceDependee)
+                .setService(service);
 
         log.info("New dependency for MicoService '{}' '{}' -[:DEPENDS_ON]-> '{}' '{}'",
-            service.getShortName(),
-            service.getVersion(),
-            processedServiceDependee.getDependedService().getShortName(),
-            processedServiceDependee.getDependedService().getVersion());
+                service.getShortName(),
+                service.getVersion(),
+                processedServiceDependee.getDependedService().getShortName(),
+                processedServiceDependee.getDependedService().getVersion());
 
         service.getDependencies().add(processedServiceDependee);
         serviceRepository.save(service);
@@ -230,7 +230,13 @@ public class MicoServiceBroker {
     }
 
     public MicoService promoteService(MicoService service, String newVersion) {
+        // In order to copy the service along with all service interfaces nodes
+        // and all port nodes of the service interface we need to set the id of
+        // service interfaces and ports to null.
+        // That way, Neo4j will create new entities instead of updating the existing ones.
         service.setVersion(newVersion).setId(null);
+        service.getServiceInterfaces().forEach(serviceInterface -> serviceInterface.setId(null));
+        service.getServiceInterfaces().forEach(serviceInterface -> serviceInterface.getPorts().forEach(port -> port.setId(null)));
 
         log.debug("Set new version in service: {}", service);
 
@@ -245,7 +251,7 @@ public class MicoServiceBroker {
     //TODO: We shoud not use DTOs here, improve
     public MicoServiceDependencyGraphResponseDTO getDependencyGraph(MicoService micoServiceRoot) throws MicoServiceNotFoundException {
         List<MicoService> micoServices = serviceRepository.findDependeesIncludeDepender(micoServiceRoot.getShortName(),
-            micoServiceRoot.getVersion());
+                micoServiceRoot.getVersion());
 
         List<MicoServiceResponseDTO> micoServiceDTOS = micoServices.stream().map(MicoServiceResponseDTO::new).collect(Collectors.toList());
         MicoServiceDependencyGraphResponseDTO micoServiceDependencyGraph = new MicoServiceDependencyGraphResponseDTO().setMicoServices(micoServiceDTOS);

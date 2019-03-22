@@ -20,7 +20,7 @@
 import { Component } from '@angular/core';
 import { ApiService } from 'src/app/api/api.service';
 import { versionComparator } from 'src/app/api/semantic-version';
-import { UtilsService } from 'src/app/util/utils.service';
+import { safeUnsubscribe } from 'src/app/util/utils';
 
 @Component({
     selector: 'mico-create-service',
@@ -45,8 +45,7 @@ export class CreateServiceDialogComponent {
 
     constructor(
         private apiService: ApiService,
-        private util: UtilsService) {
-    }
+    ) { }
 
     mapTabIndexToString(index) {
         if (index === 0) {
