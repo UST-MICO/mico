@@ -1,7 +1,9 @@
 <div class="mv2">
     <mat-card>
         <mat-card-header>
-            <mat-card-title>{{config?.title}}</mat-card-title>
+            <mat-card-title>
+                {{config?.title}}
+            </mat-card-title>
         </mat-card-header>
         <mat-card-content>
             <mico-form [modelUrl]="config['$ref']" [startData]="currentValue" (data)="updateData($event)"></mico-form>

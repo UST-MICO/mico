@@ -1,6 +1,6 @@
 <div class="mv2">
     <div class="mb1 flex">
-        <span class="flex-grow-1">
+        <span class="flex-grow-1" matTooltip={{config?.description}}>
             {{nestedModel?.title}}
         </span>
         <span style="align-content: flex-end">
@@ -23,7 +23,7 @@
             </mat-card-content>
         </mat-card>
     </div>
-    <button class="w-100" (click)="addElement()" mat-raised-button>
+    <button class="w-100" (click)="addElement()" mat-raised-button matTooltip={{config?.description}}>
         <mat-icon>add</mat-icon>
     </button>
 </div>
