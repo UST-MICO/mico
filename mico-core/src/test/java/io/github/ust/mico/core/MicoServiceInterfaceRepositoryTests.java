@@ -61,6 +61,12 @@ public class MicoServiceInterfaceRepositoryTests {
     @Autowired
     private MicoServicePortRepository servicePortRepository;
 
+    private MicoService s1;
+
+    private MicoServiceInterface i1;
+    private MicoServiceInterface i2;
+    private MicoServiceInterface i3;
+
     @Before
     public void setUp() {
         applicationRepository.deleteAll();
@@ -78,24 +84,19 @@ public class MicoServiceInterfaceRepositoryTests {
 
     @Commit
     @Test
-    public void findAndDeleteServiceInterfaceByServiceAndName() {
-        // Create some services and interfaces
-        MicoService s1 = new MicoService().setShortName("s1").setVersion("v1.0.0");
-
-        MicoServiceInterface i1 = new MicoServiceInterface().setServiceInterfaceName("i1");
-        MicoServiceInterface i2 = new MicoServiceInterface().setServiceInterfaceName("i2").setPorts(
-            CollectionUtils.listOf(new MicoServicePort().setPort(80).setTargetPort(81)));
-        MicoServiceInterface i3 = new MicoServiceInterface().setServiceInterfaceName("i3").setPorts(
-            CollectionUtils.listOf(new MicoServicePort().setPort(82).setTargetPort(83), new MicoServicePort().setPort(84).setTargetPort(85)));
-
-        s1.setServiceInterfaces(CollectionUtils.listOf(i1, i2, i3));
-
-        serviceRepository.save(s1);
+    public void findServiceInterfaceByServiceAndName() {
+        createTestData();
 
         // Find serviceInterface
         Optional<MicoServiceInterface> micoServiceInterfaceOptional = serviceInterfaceRepository.findByServiceAndName("s1", "v1.0.0", "i2");
         assertTrue(micoServiceInterfaceOptional.isPresent());
         assertEquals("i2", micoServiceInterfaceOptional.get().getServiceInterfaceName());
+    }
+
+    @Commit
+    @Test
+    public void deleteServiceInterfaceByServiceAndName () {
+        createTestData();
 
         // Delete serviceInterface
         serviceInterfaceRepository.deleteByServiceAndName("s1", "v1.0.0", "i2");
@@ -109,7 +110,25 @@ public class MicoServiceInterfaceRepositoryTests {
         for (MicoServicePort micoServicePort : micoServicePortIterable) {
             size++;
         }
-        assertEquals(2, size);
+        assertEquals(3, size);
+    }
+
+    /**
+     * Create some services and interfaces
+     */
+    private void createTestData() {
+        s1 = new MicoService().setShortName("s1").setVersion("v1.0.0");
+
+        i1 = new MicoServiceInterface().setServiceInterfaceName("i1").setPorts(
+            CollectionUtils.listOf(new MicoServicePort().setPort(80).setTargetPort(81)));
+        i2 = new MicoServiceInterface().setServiceInterfaceName("i2").setPorts(
+            CollectionUtils.listOf(new MicoServicePort().setPort(82).setTargetPort(83)));
+        i3 = new MicoServiceInterface().setServiceInterfaceName("i3").setPorts(
+            CollectionUtils.listOf(new MicoServicePort().setPort(84).setTargetPort(85), new MicoServicePort().setPort(86).setTargetPort(87)));
+
+        s1.setServiceInterfaces(CollectionUtils.listOf(i1, i2, i3));
+
+        serviceRepository.save(s1);
     }
 
 

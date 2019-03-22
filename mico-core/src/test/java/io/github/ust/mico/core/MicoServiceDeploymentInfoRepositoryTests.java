@@ -255,57 +255,6 @@ public class MicoServiceDeploymentInfoRepositoryTests {
         assertEquals(3, serviceDeploymentInfoRepository.count());
     }
 
-    /**
-     * Creates several applications, services, labels, environment variables and deployment information
-     */
-    private void createTestData() {
-        MicoApplication a1 = new MicoApplication().setShortName("a1").setVersion("v1.0.0");
-        MicoApplication a2 = new MicoApplication().setShortName("a2").setVersion("v1.0.1");
-
-        MicoService s1 = new MicoService().setShortName("s1").setVersion("v1.0.2");
-        MicoService s2 = new MicoService().setShortName("s2").setVersion("v1.0.3");
-        MicoService s3 = new MicoService().setShortName("s3").setVersion("v1.0.4");
-        MicoService s4 = new MicoService().setShortName("s4").setVersion("v1.0.5");
-
-        MicoLabel l1 = new MicoLabel().setKey("key1").setValue("value1");
-        MicoLabel l2 = new MicoLabel().setKey("key2").setValue("value2");
-        MicoLabel l3 = new MicoLabel().setKey("key3").setValue("value3");
-        MicoLabel l4 = new MicoLabel().setKey("key4").setValue("value4");
-
-        MicoEnvironmentVariable v1 = new MicoEnvironmentVariable().setName("env1").setValue("val1");
-        MicoEnvironmentVariable v2 = new MicoEnvironmentVariable().setName("env2").setValue("val2");
-        MicoEnvironmentVariable v3 = new MicoEnvironmentVariable().setName("env3").setValue("val3");
-        MicoEnvironmentVariable v4 = new MicoEnvironmentVariable().setName("env4").setValue("val4");
-
-        // Add some services and deployment informations to the applications
-        a1.getServices().addAll(CollectionUtils.listOf(s1, s2, s3));
-        a1.getServiceDeploymentInfos().addAll(CollectionUtils.listOf(
-            new MicoServiceDeploymentInfo().setService(s1).setReplicas(3).setLabels(CollectionUtils.listOf(l1)).setEnvironmentVariables(CollectionUtils.listOf(v1, v2)),
-            new MicoServiceDeploymentInfo().setService(s2).setReplicas(4).setEnvironmentVariables(CollectionUtils.listOf(v3)),
-            new MicoServiceDeploymentInfo().setService(s3).setReplicas(5).setLabels(CollectionUtils.listOf(l2, l3))
-        ));
-        a2.getServices().add(s4);
-        a2.getServiceDeploymentInfos().add(
-            new MicoServiceDeploymentInfo().setService(s4).setReplicas(4).setLabels(CollectionUtils.listOf(l4)).setEnvironmentVariables(CollectionUtils.listOf(v4)
-            ));
-
-        // Save all created objects in their corresponding repositories
-        applicationRepository.save(a1);
-        applicationRepository.save(a2);
-        serviceRepository.save(s1);
-        serviceRepository.save(s2);
-        serviceRepository.save(s3);
-        serviceRepository.save(s4);
-        labelRepository.save(l1);
-        labelRepository.save(l2);
-        labelRepository.save(l3);
-        labelRepository.save(l4);
-        environmentVariableRepository.save(v1);
-        environmentVariableRepository.save(v2);
-        environmentVariableRepository.save(v3);
-        environmentVariableRepository.save(v4);
-    }
-
     @Test
     public void findAllByApplication() {
         MicoApplication a1 = new MicoApplication().setShortName("a1").setVersion("v1.0.0");
@@ -370,6 +319,57 @@ public class MicoServiceDeploymentInfoRepositoryTests {
         assertEquals(5, serviceDeploymentInfo.get().getReplicas());
         assertNotNull(serviceDeploymentInfo.get().getService());
         assertEquals("s1", serviceDeploymentInfo.get().getService().getShortName());
+    }
+
+    /**
+     * Creates several applications, services, labels, environment variables and deployment information
+     */
+    private void createTestData() {
+        MicoApplication a1 = new MicoApplication().setShortName("a1").setVersion("v1.0.0");
+        MicoApplication a2 = new MicoApplication().setShortName("a2").setVersion("v1.0.1");
+
+        MicoService s1 = new MicoService().setShortName("s1").setVersion("v1.0.2");
+        MicoService s2 = new MicoService().setShortName("s2").setVersion("v1.0.3");
+        MicoService s3 = new MicoService().setShortName("s3").setVersion("v1.0.4");
+        MicoService s4 = new MicoService().setShortName("s4").setVersion("v1.0.5");
+
+        MicoLabel l1 = new MicoLabel().setKey("key1").setValue("value1");
+        MicoLabel l2 = new MicoLabel().setKey("key2").setValue("value2");
+        MicoLabel l3 = new MicoLabel().setKey("key3").setValue("value3");
+        MicoLabel l4 = new MicoLabel().setKey("key4").setValue("value4");
+
+        MicoEnvironmentVariable v1 = new MicoEnvironmentVariable().setName("env1").setValue("val1");
+        MicoEnvironmentVariable v2 = new MicoEnvironmentVariable().setName("env2").setValue("val2");
+        MicoEnvironmentVariable v3 = new MicoEnvironmentVariable().setName("env3").setValue("val3");
+        MicoEnvironmentVariable v4 = new MicoEnvironmentVariable().setName("env4").setValue("val4");
+
+        // Add some services and deployment informations to the applications
+        a1.getServices().addAll(CollectionUtils.listOf(s1, s2, s3));
+        a1.getServiceDeploymentInfos().addAll(CollectionUtils.listOf(
+            new MicoServiceDeploymentInfo().setService(s1).setReplicas(3).setLabels(CollectionUtils.listOf(l1)).setEnvironmentVariables(CollectionUtils.listOf(v1, v2)),
+            new MicoServiceDeploymentInfo().setService(s2).setReplicas(4).setEnvironmentVariables(CollectionUtils.listOf(v3)),
+            new MicoServiceDeploymentInfo().setService(s3).setReplicas(5).setLabels(CollectionUtils.listOf(l2, l3))
+        ));
+        a2.getServices().add(s4);
+        a2.getServiceDeploymentInfos().add(
+            new MicoServiceDeploymentInfo().setService(s4).setReplicas(4).setLabels(CollectionUtils.listOf(l4)).setEnvironmentVariables(CollectionUtils.listOf(v4)
+            ));
+
+        // Save all created objects in their corresponding repositories
+        applicationRepository.save(a1);
+        applicationRepository.save(a2);
+        serviceRepository.save(s1);
+        serviceRepository.save(s2);
+        serviceRepository.save(s3);
+        serviceRepository.save(s4);
+        labelRepository.save(l1);
+        labelRepository.save(l2);
+        labelRepository.save(l3);
+        labelRepository.save(l4);
+        environmentVariableRepository.save(v1);
+        environmentVariableRepository.save(v2);
+        environmentVariableRepository.save(v3);
+        environmentVariableRepository.save(v4);
     }
 
 }
