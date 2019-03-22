@@ -20,7 +20,7 @@
 package io.github.ust.mico.core.service.imagebuilder.buildtypes;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AllArgsConstructor;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
@@ -29,10 +29,10 @@ import lombok.experimental.Accessors;
  * Represents the source of a volume to mount.
  * Only one of its members may be specified.
  */
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @Data
 @NoArgsConstructor
 @Accessors(chain = true)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class VolumeSource {
 
     // Not implemented yet.
