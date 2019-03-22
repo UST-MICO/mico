@@ -177,6 +177,9 @@ public class DeploymentResourceTests {
             .andDo(print())
             .andExpect(status().isAccepted());
 
+        // Sleep is required to wait for background job (another thread)
+        Thread.sleep(500);
+
         verify(serviceRepository, times(1)).save(micoServiceArgumentCaptor.capture());
 
         MicoService storedMicoService = micoServiceArgumentCaptor.getValue();

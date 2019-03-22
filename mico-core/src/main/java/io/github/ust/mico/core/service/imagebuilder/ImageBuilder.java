@@ -82,33 +82,36 @@ public class ImageBuilder {
     }
 
     /**
-     * Initialize the image builder manually.
-     *
-     * @throws NotInitializedException if there are errors during initialization
-     */
-    public void init() throws NotInitializedException {
-        init(null);
-    }
-
-    /**
      * Initialize the image builder every time the application context is refreshed.
      *
      * @param cre the {@link ContextRefreshedEvent}
      * @throws NotInitializedException if there are errors during initialization
      */
     @EventListener
-    public void init(@Nullable ContextRefreshedEvent cre) throws NotInitializedException {
+    public void init(ContextRefreshedEvent cre) throws NotInitializedException {
+        log.info("Application context refreshed.");
+
         // Initialization must only be executed in an environment with a connection to Kubernetes.
         // Skip the initialization if we are in the 'test' profile (e.g. Travis CI).
-        if (cre != null) {
-            Environment environment = cre.getApplicationContext().getEnvironment();
-            if (environment.acceptsProfiles(Profiles.of("test"))) {
-                log.info("Test profile is active. Don't initialize image builder.");
-                return;
-            }
+        Environment environment = cre.getApplicationContext().getEnvironment();
+        if (environment.acceptsProfiles(Profiles.of("local"))) {
+            log.info("Local profile is active. Don't initialize image builder.");
+            return;
         }
+        init();
+    }
 
-        log.info("Application context refreshed -> initialize image builder.");
+    /**
+     * Initialize the image builder.
+     * This is required to be able to use the image builder.
+     * It's not required to trigger the initialization manually,
+     * because at every application context refresh the method is
+     * called by the {@code @EventListener init} method.
+     *
+     * @throws NotInitializedException if there are errors during initialization
+     */
+    public void init() throws NotInitializedException {
+        log.info("Initializing image builder...");
         String namespace = buildBotConfig.getNamespaceBuildExecution();
         String serviceAccountName = buildBotConfig.getDockerRegistryServiceAccountName();
 
@@ -139,6 +142,7 @@ public class ImageBuilder {
         }
 
         scheduledBuildStatusCheckService = Executors.newSingleThreadScheduledExecutor();
+        log.info("Finished initializing image builder.");
     }
 
     /**
