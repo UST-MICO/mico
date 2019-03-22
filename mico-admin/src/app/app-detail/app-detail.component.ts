@@ -130,21 +130,27 @@ export class AppDetailComponent implements OnInit, OnDestroy {
             // get the public ips
             this.application.services.forEach(service => {
 
-                if (service.serviceInterfaces != null) {
+                // assumption: one public ip per interface
+                const subServiceInterface = this.apiService.getServiceInterfaces(service.shortName, service.version)
+                    .subscribe(serviceInterfaces => {
 
-                    // assumption: one public ip per interface
-                    service.serviceInterfaces.forEach(micoInterface => {
-                        this.subPublicIps.push(this.apiService
-                            .getServiceInterfacePublicIp(service.shortName, service.version, micoInterface.serviceInterfaceName)
-                            .subscribe(listOfPublicIps => {
-                                const tempPublicIps = [];
-                                listOfPublicIps.forEach(publicIp => {
-                                    tempPublicIps.push(publicIp);
-                                });
-                                this.publicIps = tempPublicIps;
-                            }));
+                        serviceInterfaces.forEach(micoInterface => {
+                            this.subPublicIps.push(this.apiService
+                                .getServiceInterfacePublicIp(service.shortName, service.version, micoInterface.serviceInterfaceName)
+                                .subscribe(listOfPublicIps => {
+                                    const tempPublicIps = [];
+                                    listOfPublicIps.forEach(publicIp => {
+                                        tempPublicIps.push(publicIp);
+                                    });
+                                    this.publicIps = tempPublicIps;
+                                }));
+                        });
+
+                        // TODO safeUnsubscribe when in master
+                        if (subServiceInterface != null) {
+                            subServiceInterface.unsubscribe();
+                        }
                     });
-                }
             });
         });
     }
