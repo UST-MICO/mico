@@ -220,12 +220,18 @@ public class ApplicationResource {
         return ResponseEntity.noContent().build();
     }
 
-    //TODO: use broker
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES)
     public ResponseEntity<Resources<Resource<MicoServiceResponseDTO>>> getServicesFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                                   @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        List<MicoService> micoServices;
+        try {
+            micoServices = broker.getMicoServicesOfMicoApplicationByShortNameAndVersion(shortName, version);
+        } catch (MicoApplicationNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+
         return ResponseEntity.ok(
-            new Resources<>(getServiceResponseDTOResourceList(shortName, version),
+            new Resources<>(ServiceResource.getServiceResponseDTOResourcesList(micoServices),
                 linkTo(methodOn(ApplicationResource.class).getServicesFromApplication(shortName, version)).withSelfRel()));
     }
 
@@ -360,12 +366,15 @@ public class ApplicationResource {
 		        .withSelfRel()));
     }
 
-    //TODO: use broker
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_STATUS)
     public ResponseEntity<Resource<MicoApplicationStatusResponseDTO>> getStatusOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                              @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        MicoApplication micoApplication = getApplicationFromDatabase(shortName, version);
-        MicoApplicationStatusResponseDTO applicationStatus = micoStatusService.getApplicationStatus(micoApplication);
+        MicoApplicationStatusResponseDTO applicationStatus;
+        try {
+            applicationStatus = broker.getMicoApplicationStatusOfMicoApplication(shortName, version);
+        } catch (MicoApplicationNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
         return ResponseEntity.ok(new Resource<>(applicationStatus));
     }
 
