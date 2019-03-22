@@ -44,7 +44,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import io.github.ust.mico.core.configuration.SwaggerConfig;
 
-@ActiveProfiles("dev-local") // If executed the image builder won't be initialized (no connection to Kubernetes)
+@ActiveProfiles("local") // If executed the image builder won't be initialized (no connection to Kubernetes)
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = {MicoCoreApplication.class, SwaggerConfig.class})
 @WebAppConfiguration
