@@ -5,12 +5,11 @@ metadata:
   name: mico-core
   namespace: mico-system
 data:
-  application.properties: |-
-    spring.profiles.active=prod
-    spring.data.neo4j.uri=bolt://neo4j.mico-system:7687
-    kubernetes.prometheus.uri=http://prometheus.monitoring:9090/api/v1/query
-    spring.redis.host=redis.mico-system
-    spring.redis.port=6379
+  SPRING_PROFILES_ACTIVE: prod
+  SPRING_DATA_NEO4J_URI: bolt://neo4j.mico-system:7687
+  KUBERNETES_PROMETHEUS_URI: http://prometheus.monitoring:9090/api/v1/query
+  SPRING_REDIS_HOST: redis.mico-system
+  SPRING_REDIS_PORT: '6379'
 ---
 apiVersion: v1
 kind: Service
@@ -21,8 +20,8 @@ metadata:
     run: mico-core
 spec:
   ports:
-  - port: 8080
-    targetPort: 8080
+    - port: 8080
+      targetPort: 8080
   selector:
     run: mico-core
 ---
@@ -43,8 +42,11 @@ spec:
         run: mico-core
     spec:
       containers:
-      - name: mico-core
-        image: ustmico/mico-core
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 8080
+        - name: mico-core
+          image: ustmico/mico-core
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: mico-core
+          ports:
+            - containerPort: 8080
