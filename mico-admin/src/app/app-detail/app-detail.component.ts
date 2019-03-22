@@ -21,11 +21,11 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
-import { Subscription, timer, Observable, interval } from 'rxjs';
+import { Subscription, timer, interval } from 'rxjs';
 import { versionComparator } from '../api/semantic-version';
 import { CreateNextVersionComponent } from '../dialogs/create-next-version/create-next-version.component';
 import { MatDialog, MatSnackBar } from '@angular/material';
-import { concatMap, take, filter } from 'rxjs/operators';
+import { takeUntil } from 'rxjs/operators';
 import { safeUnsubscribe } from '../util/utils';
 
 @Component({
@@ -177,10 +177,11 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                     duration: 5000,
                 });
 
-                // poll status
-                const subPolling = interval(500).subscribe(() => {
-                    this.apiService.getJobStatus(this.shortName, this.selectedVersion);
-                });
+                // poll status, end polling after 3 minutes
+                const subPolling = interval(500).pipe(takeUntil(timer(3 * 60 * 1000)))
+                    .subscribe(() => {
+                        this.apiService.getJobStatus(this.shortName, this.selectedVersion);
+                    });
 
                 this.subJobStatus = this.apiService.getJobStatus(this.shortName, this.selectedVersion)
                     .subscribe(newStatus => {
