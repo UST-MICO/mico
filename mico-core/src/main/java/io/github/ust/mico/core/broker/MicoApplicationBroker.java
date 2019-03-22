@@ -249,13 +249,23 @@ public class MicoApplicationBroker {
     }
 
     public MicoApplication removeMicoServiceFromMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException {
+        // Retrieve application from database (checks whether it exists)
         MicoApplication micoApplication = checkForMicoServiceInMicoApplication(applicationShortName, applicationVersion, serviceShortName);
 
-        micoApplication.getServices().removeIf(service -> service.getShortName().equals(serviceShortName));
-        serviceDeploymentInfoRepository.deleteByApplicationAndService(applicationShortName, applicationVersion, serviceShortName);
+        // Check whether the application contains the service
+        if (micoApplication.getServices().stream().noneMatch(s -> s.getShortName().equals(serviceShortName))) {
+            // Application does not include the service -> cannot not be deleted from it
+            throw new MicoApplicationDoesNotIncludeMicoServiceException(applicationShortName, applicationVersion, serviceShortName);
+        } else {
+            // 1. Remove the service from the application
+            micoApplication.getServices().removeIf(s -> s.getShortName().equals(serviceShortName));
+            MicoApplication updatedMicoApplication = applicationRepository.save(micoApplication);
+            // 2. Delete the corresponding service deployment information
+            serviceDeploymentInfoRepository.deleteByApplicationAndService(applicationShortName, applicationVersion, serviceShortName);
+            return updatedMicoApplication;
+        }
 
         // TODO: Update Kubernetes deployment
-        return applicationRepository.save(micoApplication);
     }
 
     //TODO: change to MicoServiceDeploymentInfo micoServiceDeploymentInfo

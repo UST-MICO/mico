@@ -50,7 +50,6 @@ import org.springframework.web.server.ResponseStatusException;
 import javax.validation.Valid;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
@@ -254,30 +253,17 @@ public class ApplicationResource {
         return ResponseEntity.noContent().build();
     }
 
-    //TODO: use broker
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES + "/{" + PATH_VARIABLE_SERVICE_SHORT_NAME + "}")
     public ResponseEntity<Void> deleteServiceFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                              @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                              @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName) {
-        // Retrieve application from database (checks whether it exists)
-        MicoApplication application = getApplicationFromDatabase(shortName, version);
-
-        // Check whether the application contains the service
-        if (application.getServices().stream().noneMatch(service -> service.getShortName().equals(serviceShortName))) {
-            // Application does not include the service -> cannot not be deleted from it
-            log.debug("Application '{}' '{}' does not include service '{}', thus it cannot be deleted from it.",
-                shortName, version, serviceShortName);
-        } else {
-            log.info("Delete service '{}' from application '{}' '{}'.",
-                serviceShortName, shortName, version);
-            // 1. Remove the service from the application
-            application.getServices().removeIf(service -> service.getShortName().equals(serviceShortName));
-            applicationRepository.save(application);
-            // 2. Delete the corresponding service deployment information
-            serviceDeploymentInfoRepository.deleteByApplicationAndService(shortName, version, serviceShortName);
+        try {
+            broker.removeMicoServiceFromMicoApplicationByShortNameAndVersion(shortName, version, serviceShortName);
+        } catch (MicoApplicationNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (MicoApplicationDoesNotIncludeMicoServiceException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
-
-        // TODO: Update Kubernetes deployment
 
         return ResponseEntity.noContent().build();
     }
@@ -333,40 +319,6 @@ public class ApplicationResource {
         return ResponseEntity.ok(new Resource<>(applicationStatus));
     }
 
-    /**
-     * Returns the existing {@link MicoApplication} object from the database for the given shortName and version.
-     *
-     * @param shortName the short name of a {@link MicoApplication}
-     * @param version   the version of a {@link MicoApplication}
-     * @return the existing {@link MicoApplication} from the database
-     * @throws ResponseStatusException if a {@link MicoApplication} for the given shortName and version does not exist
-     */
-    private MicoApplication getApplicationFromDatabase(String shortName, String version) throws ResponseStatusException {
-        Optional<MicoApplication> existingApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
-        if (!existingApplicationOptional.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' was not found!");
-        }
-        return existingApplicationOptional.get();
-    }
-    
-    /**
-     * //TODO This is a duplicate of {@link ServiceResource#getServiceFromDatabase(String, String)} this should be resolved
-     * Returns the existing {@link MicoService} object from the database
-     * for the given shortName and version.
-     *
-     * @param shortName the short name of the {@link MicoService}.
-     * @param version the version of the {@link MicoService}.
-     * @return the existing {@link MicoService} from the database if it exists.
-     * @throws ResponseStatusException if no {@link MicoService} exists for the given shortName and version.
-     */
-    private MicoService getServiceFromDatabase(String shortName, String version) throws ResponseStatusException {
-        Optional<MicoService> existingServciceOptional = serviceRepository.findByShortNameAndVersion(shortName, version);
-        if (!existingServciceOptional.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service '" + shortName + "' '" + version + "' was not found!");
-        }
-        return existingServciceOptional.get();
-    }
-
     private List<Resource<MicoApplicationWithServicesResponseDTO>> getApplicationWithServicesResponseDTOResourceList(List<MicoApplication> applications) {
         return applications.stream().map(application -> getApplicationWithServicesResponseDTOResourceWithDeploymentStatus(application)).collect(Collectors.toList());
     }
@@ -388,11 +340,6 @@ public class ApplicationResource {
         links.add(linkTo(methodOn(ApplicationResource.class).getApplicationByShortNameAndVersion(application.getShortName(), application.getVersion())).withSelfRel());
         links.add(linkTo(methodOn(ApplicationResource.class).getAllApplications()).withRel("applications"));
         return links;
-    }
-    
-    private List<Resource<MicoServiceResponseDTO>> getServiceResponseDTOResourceList(String applicationShortName, String applicationVersion) {
-    	List<MicoService> services = serviceRepository.findAllByApplication(applicationShortName, applicationVersion);
-    	return ServiceResource.getServiceResponseDTOResourcesList(services);
     }
 
 }
