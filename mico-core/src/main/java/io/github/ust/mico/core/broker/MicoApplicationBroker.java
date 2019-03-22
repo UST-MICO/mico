@@ -257,7 +257,7 @@ public class MicoApplicationBroker {
         return micoApplication;
     }
 
-    //TODO: change to MicoServiceDeploymentInfo micoServiceDeploymentInfo
+    //TODO: Change input value to not use a DTO
     public MicoServiceDeploymentInfo updateMicoServiceDeploymentInformation(String applicationShortName, String applicationVersion, String serviceShortName, MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException, MicoServiceDeploymentInformationNotFoundException {
         MicoServiceDeploymentInfo micoServiceDeploymentInfo = getMicoServiceDeploymentInformation(applicationShortName, applicationVersion, serviceShortName);
         micoServiceDeploymentInfo.applyValuesFrom(serviceDeploymentInfoDTO);
@@ -279,7 +279,7 @@ public class MicoApplicationBroker {
         return updatedMicoServiceDeploymentInfo;
     }
 
-    //TODO: Change return value to MicoApplicationStatus
+    //TODO: Change return value to not use a DTO
     public MicoApplicationStatusResponseDTO getMicoApplicationStatusOfMicoApplication(String shortName, String version) throws MicoApplicationNotFoundException {
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(shortName, version);
         return micoStatusService.getApplicationStatus(micoApplication);
@@ -298,4 +298,5 @@ public class MicoApplicationBroker {
         links.add(linkTo(methodOn(ApplicationResource.class).getAllApplications()).withRel("applications"));
         return links;
     }
+
 }
