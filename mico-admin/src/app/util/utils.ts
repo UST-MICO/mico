@@ -28,3 +28,16 @@ export function safeUnsubscribe(subscription: Subscription) {
         subscription.unsubscribe();
     }
 }
+
+/**
+ * unsubsribes all subscriptions in the list if possible and clears the list
+ * @param subscriptionList list of subscriptions to be unsubscribed
+ */
+export function safeUnsubscribeList(subscriptionList: Subscription[]) {
+
+    subscriptionList.forEach(element => {
+        safeUnsubscribe(element);
+    });
+    // clear list (see https://stackoverflow.com/questions/1232040/how-do-i-empty-an-array-in-javascript)
+    subscriptionList.length = 0;
+}

@@ -76,11 +76,11 @@ public class ServiceResource {
     @Autowired
     private MicoServiceBroker micoServiceBroker;
 
-    //TODO. Verfiy if this object can be removed from ServiceResource
+    // TODO: Verfiy if this object can be removed from ServiceResource
     @Autowired
     private MicoStatusService micoStatusService;
 
-    //TODO. Verfiy if this object can be removed from ServiceResource
+    // TODO: Verfiy if this object can be removed from ServiceResource
     @Autowired
     private GitHubCrawler crawler;
 

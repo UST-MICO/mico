@@ -65,7 +65,7 @@ public class ApplicationResource {
     private static final String PATH_VARIABLE_VERSION = "micoApplicationVersion";
     private static final String PATH_VARIABLE_SERVICE_SHORT_NAME = "micoServiceShortName";
     private static final String PATH_VARIABLE_SERVICE_VERSION = "micoServiceVersion";
-
+    
     @Autowired
     private MicoApplicationBroker broker;
 
@@ -296,5 +296,4 @@ public class ApplicationResource {
         dto.setDeploymentStatus(broker.getMicoApplicationDeploymentStatusOfMicoApplication(application));
         return new Resource<>(dto, broker.getLinksOfMicoApplication(application));
     }
-
 }

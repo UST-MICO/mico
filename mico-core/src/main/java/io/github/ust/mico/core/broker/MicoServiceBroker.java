@@ -153,6 +153,7 @@ public class MicoServiceBroker {
             throw new MicoServiceAlreadyExistsException(newService.getShortName(), newService.getVersion());
         }
         for (MicoServiceInterface serviceInterface : newService.getServiceInterfaces()) {
+        	serviceInterface.getDescription(); // Just to suppress the "unused" warning for serviceInterface ...
             //TODO: Verfiy how to put this into method into ServiceBroker
             //validateProvidedInterface(newService.getShortName(), newService.getVersion(), serviceInterface);
         }

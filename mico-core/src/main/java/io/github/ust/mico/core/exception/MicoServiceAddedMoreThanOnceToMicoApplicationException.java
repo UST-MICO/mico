@@ -4,7 +4,7 @@ public class MicoServiceAddedMoreThanOnceToMicoApplicationException extends Exce
 
     private static final long serialVersionUID = 7772240438461629056L;
 
-    //TODO: update message
+    //TODO: update message (see issue mico#633)
     public MicoServiceAddedMoreThanOnceToMicoApplicationException(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion) {
         super("There are multiple MicoServices with identical short names for MicoApplication '" + applicationShortName + "' '" + applicationVersion + "'.");
     }

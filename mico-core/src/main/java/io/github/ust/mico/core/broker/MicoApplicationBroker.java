@@ -233,7 +233,7 @@ public class MicoApplicationBroker {
             return updatedMicoApplication;
         }
 
-        // TODO: Update Kubernetes deployment
+        // TODO: Update Kubernetes deployment (see issue mico#627)
     }
 
     public MicoServiceDeploymentInfo getMicoServiceDeploymentInformation(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoServiceDeploymentInformationNotFoundException, MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException {
@@ -256,7 +256,7 @@ public class MicoApplicationBroker {
         return micoApplication;
     }
 
-    //TODO: Change input value to not use a DTO
+    //TODO: Change input value to not use a DTO (see issue mico#629)
     public MicoServiceDeploymentInfo updateMicoServiceDeploymentInformation(String applicationShortName, String applicationVersion, String serviceShortName, MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException, MicoServiceDeploymentInformationNotFoundException {
         MicoServiceDeploymentInfo micoServiceDeploymentInfo = getMicoServiceDeploymentInformation(applicationShortName, applicationVersion, serviceShortName);
         micoServiceDeploymentInfo.applyValuesFrom(serviceDeploymentInfoDTO);
@@ -273,25 +273,25 @@ public class MicoApplicationBroker {
         kubernetesDeploymentInfoRepository.cleanUp();
         micoInterfaceConnectionRepository.cleanUp();
 
-        // TODO: Update actual Kubernetes deployment (see issue mico#416).
+        // TODO: Update actual Kubernetes deployment (see issue mico#628)
 
         return updatedMicoServiceDeploymentInfo;
     }
 
-    //TODO: Change return value to not use a DTO
+    //TODO: Change return value to not use a DTO (see issue mico#630)
     public MicoApplicationStatusResponseDTO getMicoApplicationStatusOfMicoApplicationByShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException {
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(shortName, version);
         return micoStatusService.getApplicationStatus(micoApplication);
     }
 
-    //TODO: Change return value to not use a DTO
+    //TODO: Change return value to not use a DTO (see issue mico#631)
     public MicoApplicationResponseDTO.MicoApplicationDeploymentStatus getMicoApplicationDeploymentStatusOfMicoApplication(MicoApplication application) {
         return micoKubernetesClient.isApplicationDeployed(application)
             ? MicoApplicationResponseDTO.MicoApplicationDeploymentStatus.DEPLOYED
             : MicoApplicationResponseDTO.MicoApplicationDeploymentStatus.NOT_DEPLOYED;
     }
 
-    //TODO: Move to Resource or keep in Broker?
+    //TODO: Move to Resource or keep in Broker? (see issue mico#632)
     public Iterable<Link> getLinksOfMicoApplication(MicoApplication application) {
         LinkedList<Link> links = new LinkedList<>();
         links.add(linkTo(methodOn(ApplicationResource.class).getApplicationByShortNameAndVersion(application.getShortName(), application.getVersion())).withSelfRel());
