@@ -34,6 +34,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.Assert.*;
 
@@ -42,31 +43,41 @@ import static org.junit.Assert.*;
 @Transactional
 public class MicoServiceRepositoryTests {
     @Autowired
+    private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
+
+    @Autowired
     private MicoApplicationRepository applicationRepository;
 
     @Autowired
-    private MicoServiceRepository serviceRepository;
+    private MicoBackgroundJobRepository backgroundJobRepository;
 
     @Autowired
-    private MicoServiceInterfaceRepository serviceInterfaceRepository;
+    private MicoEnvironmentVariableRepository environmentVariableRepository;
 
     @Autowired
-    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
+    private MicoInterfaceConnectionRepository interfaceConnectionRepository;
+
+    @Autowired
+    private MicoLabelRepository labelRepository;
 
     @Autowired
     private MicoServiceDependencyRepository serviceDependencyRepository;
 
     @Autowired
+    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
+
+    @Autowired
+    private MicoServiceInterfaceRepository serviceInterfaceRepository;
+
+    @Autowired
     private MicoServicePortRepository servicePortRepository;
+
+    @Autowired
+    private MicoServiceRepository serviceRepository;
 
     @Before
     public void setUp() {
-        applicationRepository.deleteAll();
-        serviceRepository.deleteAll();
-        serviceInterfaceRepository.deleteAll();
-        serviceDeploymentInfoRepository.deleteAll();
-        serviceDependencyRepository.deleteAll();
-        servicePortRepository.deleteAll();
+
     }
 
     @After
@@ -105,6 +116,34 @@ public class MicoServiceRepositoryTests {
         assertTrue(micoServiceList.contains(s1));
         assertTrue(micoServiceList.contains(s2));
         assertFalse(micoServiceList.contains(s3));
+    }
+
+    @Commit
+    @Test
+    public void findAllServicesByApplicationAndShortName() {
+        // Create some applications and services
+        MicoApplication a1 = new MicoApplication().setShortName("a1").setVersion("v1.0.0");
+        MicoService s1 = new MicoService().setShortName("s1").setVersion("v1.0.1");
+        MicoService s2 = new MicoService().setShortName("s2").setVersion("v1.0.2");
+        MicoService s3 = new MicoService().setShortName("s3").setVersion("v1.0.3");
+
+        // Add some services to the applications
+        a1.getServices().addAll(CollectionUtils.listOf(s1, s2, s3));
+        a1.getServiceDeploymentInfos().addAll(CollectionUtils.listOf(
+            new MicoServiceDeploymentInfo().setService(s1).setReplicas(3),
+            new MicoServiceDeploymentInfo().setService(s2).setReplicas(4),
+            new MicoServiceDeploymentInfo().setService(s2).setReplicas(5)));
+
+        // Save all created objects in their corresponding repositories
+        applicationRepository.save(a1);
+        serviceRepository.save(s1);
+        serviceRepository.save(s2);
+        serviceRepository.save(s3);
+
+        Optional<MicoService> micoServiceOptional = serviceRepository.findAllByApplicationAndShortName("a1", "v1.0.0", "s1");
+        assertTrue(micoServiceOptional.isPresent());
+        assertEquals("s1", micoServiceOptional.get().getShortName());
+        assertEquals("v1.0.1", micoServiceOptional.get().getVersion());
     }
 
     @Commit

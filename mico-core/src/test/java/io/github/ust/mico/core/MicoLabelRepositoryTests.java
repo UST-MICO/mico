@@ -42,35 +42,51 @@ import static org.junit.Assert.*;
 @Transactional
 public class MicoLabelRepositoryTests {
     @Autowired
+    private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
+
+    @Autowired
     private MicoApplicationRepository applicationRepository;
 
     @Autowired
-    private MicoServiceRepository serviceRepository;
+    private MicoBackgroundJobRepository backgroundJobRepository;
 
     @Autowired
-    private MicoServiceInterfaceRepository serviceInterfaceRepository;
+    private MicoEnvironmentVariableRepository environmentVariableRepository;
 
     @Autowired
-    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
+    private MicoInterfaceConnectionRepository interfaceConnectionRepository;
+
+    @Autowired
+    private MicoLabelRepository labelRepository;
 
     @Autowired
     private MicoServiceDependencyRepository serviceDependencyRepository;
 
     @Autowired
+    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
+
+    @Autowired
+    private MicoServiceInterfaceRepository serviceInterfaceRepository;
+
+    @Autowired
     private MicoServicePortRepository servicePortRepository;
 
     @Autowired
-    private MicoLabelRepository labelRepository;
+    private MicoServiceRepository serviceRepository;
 
     @Before
     public void setUp() {
+        kubernetesDeploymentInfoRepository.deleteAll();
         applicationRepository.deleteAll();
-        serviceRepository.deleteAll();
-        serviceInterfaceRepository.deleteAll();
-        serviceDeploymentInfoRepository.deleteAll();
-        serviceDependencyRepository.deleteAll();
-        servicePortRepository.deleteAll();
+        backgroundJobRepository.deleteAll();
+        environmentVariableRepository.deleteAll();
+        interfaceConnectionRepository.deleteAll();
         labelRepository.deleteAll();
+        serviceDependencyRepository.deleteAll();
+        serviceDeploymentInfoRepository.deleteAll();
+        serviceInterfaceRepository.deleteAll();
+        servicePortRepository.deleteAll();
+        serviceRepository.deleteAll();
     }
 
     @After
@@ -90,6 +106,7 @@ public class MicoLabelRepositoryTests {
         MicoLabel l2 = new MicoLabel().setKey("key2").setValue("value2");
         MicoLabel l3 = new MicoLabel().setKey("key3").setValue("value3");
         MicoLabel l4 = new MicoLabel().setKey("key4").setValue("value4");
+        MicoLabel l5 = new MicoLabel().setKey("key5").setValue("value5");
 
         // Add some services to the applications
         a1.getServices().add(s1);
@@ -106,6 +123,7 @@ public class MicoLabelRepositoryTests {
         labelRepository.save(l2);
         labelRepository.save(l3);
         labelRepository.save(l4);
+        labelRepository.save(l5);
 
         // Remove all labels that do not have any relationship with another node
         labelRepository.cleanUp();

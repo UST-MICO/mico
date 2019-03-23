@@ -44,22 +44,57 @@ import static org.junit.Assert.*;
 @Transactional
 public class MicoServiceInterfaceRepositoryTests {
     @Autowired
+    private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
+
+    @Autowired
     private MicoApplicationRepository applicationRepository;
 
     @Autowired
-    private MicoServiceRepository serviceRepository;
+    private MicoBackgroundJobRepository backgroundJobRepository;
 
     @Autowired
-    private MicoServiceInterfaceRepository serviceInterfaceRepository;
+    private MicoEnvironmentVariableRepository environmentVariableRepository;
 
     @Autowired
-    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
+    private MicoInterfaceConnectionRepository interfaceConnectionRepository;
+
+    @Autowired
+    private MicoLabelRepository labelRepository;
 
     @Autowired
     private MicoServiceDependencyRepository serviceDependencyRepository;
 
     @Autowired
+    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
+
+    @Autowired
+    private MicoServiceInterfaceRepository serviceInterfaceRepository;
+
+    @Autowired
     private MicoServicePortRepository servicePortRepository;
+
+    @Autowired
+    private MicoServiceRepository serviceRepository;
+
+    @Before
+    public void setUp() {
+        kubernetesDeploymentInfoRepository.deleteAll();
+        applicationRepository.deleteAll();
+        backgroundJobRepository.deleteAll();
+        environmentVariableRepository.deleteAll();
+        interfaceConnectionRepository.deleteAll();
+        labelRepository.deleteAll();
+        serviceDependencyRepository.deleteAll();
+        serviceDeploymentInfoRepository.deleteAll();
+        serviceInterfaceRepository.deleteAll();
+        servicePortRepository.deleteAll();
+        serviceRepository.deleteAll();
+    }
+
+    @After
+    public void cleanUp() {
+
+    }
 
     private MicoService s1;
 
@@ -67,19 +102,29 @@ public class MicoServiceInterfaceRepositoryTests {
     private MicoServiceInterface i2;
     private MicoServiceInterface i3;
 
-    @Before
-    public void setUp() {
-        applicationRepository.deleteAll();
-        serviceRepository.deleteAll();
-        serviceInterfaceRepository.deleteAll();
-        serviceDeploymentInfoRepository.deleteAll();
-        serviceDependencyRepository.deleteAll();
-        servicePortRepository.deleteAll();
-    }
+    @Commit
+    @Test
+    public void findServiceInterfaceByService() {
+        createTestData();
 
-    @After
-    public void cleanUp() {
+        // Find serviceInterfaces
+        List<MicoServiceInterface> micoServiceInterfaceList = serviceInterfaceRepository.findByService("s1", "v1.0.0");
+        assertEquals(3, micoServiceInterfaceList.size());
 
+        // Check if every serviceInterface with its corresponding ports is returned
+        for (int i = 0; i < micoServiceInterfaceList.size(); i++) {
+            MicoServiceInterface serviceInterface = micoServiceInterfaceList.get(i);
+
+            if (serviceInterface.getServiceInterfaceName().equals("i1")) {
+                assertEquals(1, serviceInterface.getPorts().size());
+
+            } else if (serviceInterface.getServiceInterfaceName().equals("i2")) {
+                assertEquals(1, serviceInterface.getPorts().size());
+
+            } else {
+                assertEquals(2, serviceInterface.getPorts().size());
+            }
+        }
     }
 
     @Commit
@@ -100,13 +145,16 @@ public class MicoServiceInterfaceRepositoryTests {
 
         // Delete serviceInterface
         serviceInterfaceRepository.deleteByServiceAndName("s1", "v1.0.0", "i2");
+
+        // Check if the correct interface is deleted
         assertFalse(serviceInterfaceRepository.findByServiceAndName("s1", "v1.0.0", "i2").isPresent());
         assertTrue(serviceInterfaceRepository.findByServiceAndName("s1", "v1.0.0", "i1").isPresent());
         assertTrue(serviceInterfaceRepository.findByServiceAndName("s1", "v1.0.0", "i3").isPresent());
 
-        // Two ports should be left
+        // Three ports should be left
         Iterable<MicoServicePort> micoServicePortIterable = servicePortRepository.findAll();
         int size = 0;
+
         for (MicoServicePort micoServicePort : micoServicePortIterable) {
             size++;
         }

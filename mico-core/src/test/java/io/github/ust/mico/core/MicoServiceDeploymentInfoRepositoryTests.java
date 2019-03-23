@@ -64,43 +64,51 @@ public class MicoServiceDeploymentInfoRepositoryTests {
     RuleChain rules = RuleChain.outerRule(EmbeddedRedisServer.runningAt(6379).suppressExceptions());
 
     @Autowired
+    private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
+
+    @Autowired
     private MicoApplicationRepository applicationRepository;
 
     @Autowired
-    private MicoServiceRepository serviceRepository;
-
-    @Autowired
-    private MicoServiceInterfaceRepository serviceInterfaceRepository;
-
-    @Autowired
-    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
-
-    @Autowired
-    private MicoServiceDependencyRepository serviceDependencyRepository;
-
-    @Autowired
-    private MicoServicePortRepository servicePortRepository;
-
-    @Autowired
-    private MicoLabelRepository labelRepository;
+    private MicoBackgroundJobRepository backgroundJobRepository;
 
     @Autowired
     private MicoEnvironmentVariableRepository environmentVariableRepository;
 
     @Autowired
-    private MicoBackgroundTaskRepository backgroundTaskRepository;
+    private MicoInterfaceConnectionRepository interfaceConnectionRepository;
+
+    @Autowired
+    private MicoLabelRepository labelRepository;
+
+    @Autowired
+    private MicoServiceDependencyRepository serviceDependencyRepository;
+
+    @Autowired
+    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
+
+    @Autowired
+    private MicoServiceInterfaceRepository serviceInterfaceRepository;
+
+    @Autowired
+    private MicoServicePortRepository servicePortRepository;
+
+    @Autowired
+    private MicoServiceRepository serviceRepository;
 
     @Before
     public void setUp() {
+        kubernetesDeploymentInfoRepository.deleteAll();
         applicationRepository.deleteAll();
-        serviceRepository.deleteAll();
-        serviceInterfaceRepository.deleteAll();
-        serviceDeploymentInfoRepository.deleteAll();
-        serviceDependencyRepository.deleteAll();
-        servicePortRepository.deleteAll();
-        labelRepository.deleteAll();
+        backgroundJobRepository.deleteAll();
         environmentVariableRepository.deleteAll();
-        backgroundTaskRepository.deleteAll();
+        interfaceConnectionRepository.deleteAll();
+        labelRepository.deleteAll();
+        serviceDependencyRepository.deleteAll();
+        serviceDeploymentInfoRepository.deleteAll();
+        serviceInterfaceRepository.deleteAll();
+        servicePortRepository.deleteAll();
+        serviceRepository.deleteAll();
     }
 
     @After
@@ -325,23 +333,23 @@ public class MicoServiceDeploymentInfoRepositoryTests {
      * Creates several applications, services, labels, environment variables and deployment information
      */
     private void createTestData() {
-        MicoApplication a1 = new MicoApplication().setShortName("a1").setVersion("v1.0.0");
-        MicoApplication a2 = new MicoApplication().setShortName("a2").setVersion("v1.0.1");
+        a1 = new MicoApplication().setShortName("a1").setVersion("v1.0.0");
+        a2 = new MicoApplication().setShortName("a2").setVersion("v1.0.1");
 
-        MicoService s1 = new MicoService().setShortName("s1").setVersion("v1.0.2");
-        MicoService s2 = new MicoService().setShortName("s2").setVersion("v1.0.3");
-        MicoService s3 = new MicoService().setShortName("s3").setVersion("v1.0.4");
-        MicoService s4 = new MicoService().setShortName("s4").setVersion("v1.0.5");
+        s1 = new MicoService().setShortName("s1").setVersion("v1.0.2");
+        s2 = new MicoService().setShortName("s2").setVersion("v1.0.3");
+        s3 = new MicoService().setShortName("s3").setVersion("v1.0.4");
+        s4 = new MicoService().setShortName("s4").setVersion("v1.0.5");
 
-        MicoLabel l1 = new MicoLabel().setKey("key1").setValue("value1");
-        MicoLabel l2 = new MicoLabel().setKey("key2").setValue("value2");
-        MicoLabel l3 = new MicoLabel().setKey("key3").setValue("value3");
-        MicoLabel l4 = new MicoLabel().setKey("key4").setValue("value4");
+        l1 = new MicoLabel().setKey("key1").setValue("value1");
+        l2 = new MicoLabel().setKey("key2").setValue("value2");
+        l3 = new MicoLabel().setKey("key3").setValue("value3");
+        l4 = new MicoLabel().setKey("key4").setValue("value4");
 
-        MicoEnvironmentVariable v1 = new MicoEnvironmentVariable().setName("env1").setValue("val1");
-        MicoEnvironmentVariable v2 = new MicoEnvironmentVariable().setName("env2").setValue("val2");
-        MicoEnvironmentVariable v3 = new MicoEnvironmentVariable().setName("env3").setValue("val3");
-        MicoEnvironmentVariable v4 = new MicoEnvironmentVariable().setName("env4").setValue("val4");
+        v1 = new MicoEnvironmentVariable().setName("env1").setValue("val1");
+        v2 = new MicoEnvironmentVariable().setName("env2").setValue("val2");
+        v3 = new MicoEnvironmentVariable().setName("env3").setValue("val3");
+        v4 = new MicoEnvironmentVariable().setName("env4").setValue("val4");
 
         // Add some services and deployment informations to the applications
         a1.getServices().addAll(CollectionUtils.listOf(s1, s2, s3));

@@ -46,43 +46,51 @@ public class MicoEnvironmentVariableRepositoryTests {
     RuleChain rules = RuleChain.outerRule(EmbeddedRedisServer.runningAt(6379).suppressExceptions());
 
     @Autowired
+    private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
+
+    @Autowired
     private MicoApplicationRepository applicationRepository;
 
     @Autowired
-    private MicoServiceRepository serviceRepository;
-
-    @Autowired
-    private MicoServiceInterfaceRepository serviceInterfaceRepository;
-
-    @Autowired
-    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
-
-    @Autowired
-    private MicoServiceDependencyRepository serviceDependencyRepository;
-
-    @Autowired
-    private MicoServicePortRepository servicePortRepository;
-
-    @Autowired
-    private MicoLabelRepository labelRepository;
+    private MicoBackgroundJobRepository backgroundJobRepository;
 
     @Autowired
     private MicoEnvironmentVariableRepository environmentVariableRepository;
 
     @Autowired
-    private MicoBackgroundTaskRepository backgroundTaskRepository;
+    private MicoInterfaceConnectionRepository interfaceConnectionRepository;
+
+    @Autowired
+    private MicoLabelRepository labelRepository;
+
+    @Autowired
+    private MicoServiceDependencyRepository serviceDependencyRepository;
+
+    @Autowired
+    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
+
+    @Autowired
+    private MicoServiceInterfaceRepository serviceInterfaceRepository;
+
+    @Autowired
+    private MicoServicePortRepository servicePortRepository;
+
+    @Autowired
+    private MicoServiceRepository serviceRepository;
 
     @Before
     public void setUp() {
+        kubernetesDeploymentInfoRepository.deleteAll();
         applicationRepository.deleteAll();
-        serviceRepository.deleteAll();
-        serviceInterfaceRepository.deleteAll();
-        serviceDeploymentInfoRepository.deleteAll();
-        serviceDependencyRepository.deleteAll();
-        servicePortRepository.deleteAll();
-        labelRepository.deleteAll();
+        backgroundJobRepository.deleteAll();
         environmentVariableRepository.deleteAll();
-        backgroundTaskRepository.deleteAll();
+        interfaceConnectionRepository.deleteAll();
+        labelRepository.deleteAll();
+        serviceDependencyRepository.deleteAll();
+        serviceDeploymentInfoRepository.deleteAll();
+        serviceInterfaceRepository.deleteAll();
+        servicePortRepository.deleteAll();
+        serviceRepository.deleteAll();
     }
 
     @After
@@ -105,9 +113,11 @@ public class MicoEnvironmentVariableRepositoryTests {
 
         // Add some services to the applications
         a1.getServices().add(s1);
-        a1.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(s1).setReplicas(3).setEnvironmentVariables(CollectionUtils.listOf(v1, v2)));
+        a1.getServiceDeploymentInfos().add(
+            new MicoServiceDeploymentInfo().setService(s1).setReplicas(3).setEnvironmentVariables(CollectionUtils.listOf(v1, v2)));
         a2.getServices().add(s2);
-        a2.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(s2).setReplicas(4).setEnvironmentVariables(CollectionUtils.listOf(v3)));
+        a2.getServiceDeploymentInfos().add(
+            new MicoServiceDeploymentInfo().setService(s2).setReplicas(4).setEnvironmentVariables(CollectionUtils.listOf(v3)));
 
         // Save all created objects in their corresponding repositories
         applicationRepository.save(a1);

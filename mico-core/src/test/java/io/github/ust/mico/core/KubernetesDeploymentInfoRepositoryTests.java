@@ -19,9 +19,7 @@
 
 package io.github.ust.mico.core;
 
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.*;
 import io.github.ust.mico.core.util.CollectionUtils;
 import org.junit.After;
@@ -34,14 +32,12 @@ import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @Transactional
-public class MicoApplicationRepositoryTests {
+public class KubernetesDeploymentInfoRepositoryTests {
     @Autowired
     private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
 
@@ -97,43 +93,35 @@ public class MicoApplicationRepositoryTests {
 
     @Commit
     @Test
-    public void findAllApplicationsByUsedService() {
-        // Create some applications and services
+    public void removeUnnecessaryKubernetesDeploymentInfos() {
         MicoApplication a1 = new MicoApplication().setShortName("a1").setVersion("v1.0.0");
-        MicoApplication a2 = new MicoApplication().setShortName("a2").setVersion("v1.0.1");
-        MicoApplication a3 = new MicoApplication().setShortName("a3").setVersion("v1.0.2");
-        MicoApplication a4 = new MicoApplication().setShortName("a4").setVersion("v1.0.3");
-        MicoService s1 = new MicoService().setShortName("s1").setVersion("v1.0.4");
-        MicoService s2 = new MicoService().setShortName("s2").setVersion("v1.0.5");
+        MicoService s1 = new MicoService().setShortName("s1").setVersion("v1.0.1");
+        MicoServiceInterface i1 = new MicoServiceInterface().setServiceInterfaceName("i1").setPorts(
+            CollectionUtils.listOf(new MicoServicePort().setPort(80).setTargetPort(81)));
+        KubernetesDeploymentInfo d1 = new KubernetesDeploymentInfo().setNamespace("namespace1").setDeploymentName("deployment1")
+            .setServiceNames(CollectionUtils.listOf("service1"));
+        KubernetesDeploymentInfo d2 = new KubernetesDeploymentInfo().setNamespace("namespace2").setDeploymentName("deployment2")
+            .setServiceNames(CollectionUtils.listOf("service2"));
+        KubernetesDeploymentInfo d3 = new KubernetesDeploymentInfo().setNamespace("namespace3").setDeploymentName("deployment3")
+            .setServiceNames(CollectionUtils.listOf("service3"));
 
-        // Add some services to the applications
+        s1.getServiceInterfaces().add(i1);
         a1.getServices().add(s1);
-        a1.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(s1).setReplicas(3));
-        a2.getServices().add(s1);
-        a2.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(s1).setReplicas(4));
-        a3.getServices().addAll(CollectionUtils.listOf(s1, s2));
-        a3.getServiceDeploymentInfos().addAll(CollectionUtils.listOf(
-            new MicoServiceDeploymentInfo().setService(s1).setReplicas(5), new MicoServiceDeploymentInfo().setService(s2).setReplicas(6)
-        ));
-        a4.getServices().add(s2);
-        a4.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(s2).setReplicas(7));
+        a1.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(s1).setReplicas(3).setKubernetesDeploymentInfo(d1));
 
-        // Save all created objects in their corresponding repositories
         applicationRepository.save(a1);
-        applicationRepository.save(a2);
-        applicationRepository.save(a3);
-        applicationRepository.save(a4);
         serviceRepository.save(s1);
-        serviceRepository.save(s2);
+        kubernetesDeploymentInfoRepository.save(d1);
+        kubernetesDeploymentInfoRepository.save(d2);
+        kubernetesDeploymentInfoRepository.save(d3);
 
-        List<MicoApplication> micoApplicationList = applicationRepository.findAllByUsedService("s1", "v1.0.4");
+        // Delete all kubernetesDeploymentInfos without an edge to another node
+        kubernetesDeploymentInfoRepository.cleanUp();
 
-        // Only applications a1, a2 and a3 belong to the service s1, application a4 shall not
-        assertEquals(3, micoApplicationList.size());
-        assertTrue(micoApplicationList.contains(a1));
-        assertTrue(micoApplicationList.contains(a2));
-        assertTrue(micoApplicationList.contains(a3));
-        assertFalse(micoApplicationList.contains(a4));
+        // Only kubernetesDeploymentInfo d1 should be left
+        Iterable<KubernetesDeploymentInfo> kubernetesDeploymentInfoIterable = kubernetesDeploymentInfoRepository.findAll();
+        for (KubernetesDeploymentInfo kubernetesDeploymentInfo : kubernetesDeploymentInfoIterable) {
+            assertEquals("namespace1", kubernetesDeploymentInfo.getNamespace());
+        }
     }
-
 }
