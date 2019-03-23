@@ -84,6 +84,20 @@ public class MicoApplicationDeploymentStatus {
 			Arrays.asList(messages).stream().map(m -> new MicoMessage(m, Type.INFO))
 			.collect(Collectors.toList()));
 	}
+
+	/**
+	 * Creates a new {@code MicoApplicationDeploymentStatus} instance
+	 * with the value {@link Value#DEPLOYED} as well as a {@code MicoMessage}
+	 * with the given message content and type {@link Type#INFO}.
+	 * 
+	 * @param messages the {@link List} of messages as {@code String}.
+	 * @return a {@link MicoApplicationDeploymentStatus}.
+	 */
+	public static final MicoApplicationDeploymentStatus deployed(List<String> messages) {
+		return new MicoApplicationDeploymentStatus(Value.DEPLOYED).setMessages(
+			messages.stream().map(m -> new MicoMessage(m, Type.INFO))
+			.collect(Collectors.toList()));
+	}
 	
 	/**
 	 * Creates a new {@code MicoApplicationDeploymentStatus} instance
@@ -110,6 +124,20 @@ public class MicoApplicationDeploymentStatus {
 	public static final MicoApplicationDeploymentStatus undeployed(String... messages) {
 		return new MicoApplicationDeploymentStatus(Value.UNDEPLOYED).setMessages(
 			Arrays.asList(messages).stream().map(m -> new MicoMessage(m, Type.INFO))
+			.collect(Collectors.toList()));
+	}
+
+	/**
+	 * Creates a new {@code MicoApplicationDeploymentStatus} instance
+	 * with the value {@link Value#UNDEPLOYED} as well as a {@code MicoMessage}
+	 * with the given message content and type {@link Type#INFO}.
+	 * 
+	 * @param messages the {@link List} of messages as {@code String}.
+	 * @return a {@link MicoApplicationDeploymentStatus}.
+	 */
+	public static final MicoApplicationDeploymentStatus undeployed(List<String> messages) {
+		return new MicoApplicationDeploymentStatus(Value.UNDEPLOYED).setMessages(
+			messages.stream().map(m -> new MicoMessage(m, Type.INFO))
 			.collect(Collectors.toList()));
 	}
 	
@@ -140,6 +168,20 @@ public class MicoApplicationDeploymentStatus {
 			Arrays.asList(messages).stream().map(m -> new MicoMessage(m, Type.INFO))
 			.collect(Collectors.toList()));
 	}
+
+	/**
+	 * Creates a new {@code MicoApplicationDeploymentStatus} instance
+	 * with the value {@link Value#PENDING} as well as a {@code MicoMessage}
+	 * with the given message content and type {@link Type#INFO}.
+	 * 
+	 * @param messages the {@link List} of messages as {@code String}.
+	 * @return a {@link MicoApplicationDeploymentStatus}.
+	 */
+	public static final MicoApplicationDeploymentStatus pending(List<String> messages) {
+		return new MicoApplicationDeploymentStatus(Value.PENDING).setMessages(
+			messages.stream().map(m -> new MicoMessage(m, Type.INFO))
+			.collect(Collectors.toList()));
+	}
 	
 	/**
 	 * Creates a new {@code MicoApplicationDeploymentStatus} instance
@@ -168,6 +210,20 @@ public class MicoApplicationDeploymentStatus {
 			Arrays.asList(messages).stream().map(m -> new MicoMessage(m, Type.ERROR))
 			.collect(Collectors.toList()));
 	}
+
+	/**
+	 * Creates a new {@code MicoApplicationDeploymentStatus} instance
+	 * with the value {@link Value#INCOMPLETED} as well as a {@code MicoMessage}
+	 * with the given message content and type {@link Type#INFO}.
+	 * 
+	 * @param messages the {@link List} of messages as {@code String}.
+	 * @return a {@link MicoApplicationDeploymentStatus}.
+	 */
+	public static final MicoApplicationDeploymentStatus incompleted(List<String> messages) {
+		return new MicoApplicationDeploymentStatus(Value.INCOMPLETED).setMessages(
+			messages.stream().map(m -> new MicoMessage(m, Type.ERROR))
+			.collect(Collectors.toList()));
+	}
 	
 	/**
 	 * Creates a new {@code MicoApplicationDeploymentStatus} instance
@@ -194,6 +250,20 @@ public class MicoApplicationDeploymentStatus {
 	public static final MicoApplicationDeploymentStatus unknown(String... messages) {
 		return new MicoApplicationDeploymentStatus(Value.UNKNOWN).setMessages(
 			Arrays.asList(messages).stream().map(m -> new MicoMessage(m, Type.INFO))
+			.collect(Collectors.toList()));
+	}
+
+	/**
+	 * Creates a new {@code MicoApplicationDeploymentStatus} instance
+	 * with the value {@link Value#UNKNOWN} as well as a {@code MicoMessage}
+	 * with the given message content and type {@link Type#INFO}.
+	 * 
+	 * @param messages the {@link List} of messages as {@code String}.
+	 * @return a {@link MicoApplicationDeploymentStatus}.
+	 */
+	public static final MicoApplicationDeploymentStatus unknown(List<String> messages) {
+		return new MicoApplicationDeploymentStatus(Value.UNKNOWN).setMessages(
+			messages.stream().map(m -> new MicoMessage(m, Type.INFO))
 			.collect(Collectors.toList()));
 	}
 	
