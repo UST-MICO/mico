@@ -418,7 +418,7 @@ public class ApplicationResource {
     	// TODO: Write corresponding unit test!
     	MicoApplication application = getApplicationFromDatabase(shortName, version);
 		MicoApplicationDeploymentStatusResponseDTO applicationDeploymentStatus = new MicoApplicationDeploymentStatusResponseDTO(
-		    micoKubernetesClient.getDeploymentStatusOfApplication(application));
+		    micoKubernetesClient.getApplicationDeploymentStatus(application));
 		return ResponseEntity.ok(new Resource<>(applicationDeploymentStatus));
     }
 
@@ -470,7 +470,7 @@ public class ApplicationResource {
 
     private Resource<MicoApplicationWithServicesResponseDTO> getApplicationWithServicesResponseDTOResourceWithDeploymentStatus(MicoApplication application) {
         MicoApplicationWithServicesResponseDTO dto = new MicoApplicationWithServicesResponseDTO(application);
-        dto.setDeploymentStatus(micoKubernetesClient.getDeploymentStatusOfApplication(application));
+        dto.setDeploymentStatus(micoKubernetesClient.getApplicationDeploymentStatus(application));
         return new Resource<>(dto, getApplicationLinks(application));
     }
 

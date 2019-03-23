@@ -147,7 +147,7 @@ public class MicoStatusService {
             } else {
                 log.warn("There is no deployment of the MicoService '{}' '{}'. Continue with next one.",
                     micoService.getShortName(), micoService.getVersion());
-                MicoMessage errorMessage = MicoMessage.error("No deployment of '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' is available.");
+                MicoMessage errorMessage = MicoMessage.error("No deployment of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' is available.");
                 return serviceStatus.setErrorMessages(CollectionUtils.listOf(new MicoMessageResponseDTO(errorMessage)));
             }
         } catch (KubernetesResourceException e) {

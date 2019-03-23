@@ -23,11 +23,11 @@ import static io.github.ust.mico.core.TestConstants.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.BDDMockito.*;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 
 import java.util.*;
 
-import io.github.ust.mico.core.dto.response.internal.PrometheusResponseDTO;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -46,7 +46,8 @@ import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.github.ust.mico.core.configuration.PrometheusConfig;
-import io.github.ust.mico.core.dto.response.*;
+import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
+import io.github.ust.mico.core.dto.response.internal.PrometheusResponseDTO;
 import io.github.ust.mico.core.dto.response.status.*;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.MicoApplication;
@@ -412,8 +413,8 @@ public class MicoStatusServiceTest {
             .setTotalNumberOfMicoServices(1)
             .setServiceStatuses(CollectionUtils.listOf(new MicoServiceStatusResponseDTO()
 		        .setErrorMessages(CollectionUtils
-		            .listOf(new MicoMessageResponseDTO().setContent("No deployment of " + micoService.getShortName()
-		                + " " + micoService.getVersion() + " is available.").setType(Type.ERROR)))));
+		            .listOf(new MicoMessageResponseDTO().setContent("No deployment of MicoService '" + micoService.getShortName()
+		                + "' '" + micoService.getVersion() + "' is available.").setType(Type.ERROR)))));
         try {
             given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(Optional.empty());
             given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(kubernetesService);
@@ -421,6 +422,7 @@ public class MicoStatusServiceTest {
         } catch (KubernetesResourceException e) {
             e.printStackTrace();
         }
+        
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
         given(serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion())).willReturn(CollectionUtils.listOf(micoService));
         assertEquals(micoApplicationStatus, micoStatusService.getApplicationStatus(micoApplication));

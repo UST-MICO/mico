@@ -285,7 +285,7 @@ public class MicoKubernetesClient {
      * @param micoApplication the {@link MicoApplication}.
      * @return the {@link MicoApplicationDeploymentStatus}.
      */
-    public MicoApplicationDeploymentStatus getDeploymentStatusOfApplication(MicoApplication micoApplication) {
+    public MicoApplicationDeploymentStatus getApplicationDeploymentStatus(MicoApplication micoApplication) {
     	// TODO: Remove before merge, only used for testing by Heiko
 //   		return MicoApplicationDeploymentStatus.incompleted("Deployment of MicoApplication failed.",
 //   			"Service 1 could not be deployed.", "Service 2 could not be deployed");
@@ -346,6 +346,11 @@ public class MicoKubernetesClient {
 			break;
    		}
    		
+   		// Flag that will be used to determine whether all updated Kubernetes deployment information
+   		// (retrieved from the cluster) is null, i.e., there are no Kubernetes resources for the
+   		// given application.
+   		boolean allUpdatedKubernetesDeploymentInfoIsNull = true;
+   		
    		// Check deployment status for each MicoService (Kubernetes deployment)
    		for (MicoServiceDeploymentInfo micoServiceDeploymentInfo : micoServiceDeploymentInfos) {
    			MicoService micoService = micoServiceDeploymentInfo.getService();
@@ -369,6 +374,7 @@ public class MicoKubernetesClient {
    					messages.add(MicoMessage.error("The Kubernetes deployment information for MicoService '"
    					    + micoService.getShortName() + "' '" + micoService.getVersion() + "' is not available anymore."));
    				} else {
+   					allUpdatedKubernetesDeploymentInfoIsNull = false;
    					// Check deployment status for each MicoServiceInterface (Kubernetes service)
    					// TODO: Currently we only validate that the number of MicoServiceInterfaces of the current
    					//       MicoService matches the number of Kubernetes services, should we do a more fine grained
@@ -384,6 +390,12 @@ public class MicoKubernetesClient {
    					}
    				}
    			}
+   		}
+   		
+   		// If all updated Kubernetes deployment information is null,
+   		// the application cannot be deployed
+   		if (allUpdatedKubernetesDeploymentInfoIsNull) {
+   			return MicoApplicationDeploymentStatus.undeployed("The MicoApplication is currently not deployed.");
    		}
    		
    		// If the deployment status is not set to 'deployed' anymore,
@@ -404,7 +416,7 @@ public class MicoKubernetesClient {
      * 		   {@code false} otherwise.
      */
     public boolean isApplicationDeployed(MicoApplication micoApplication) {
-    	return getDeploymentStatusOfApplication(micoApplication).getValue() == Value.DEPLOYED;
+    	return getApplicationDeploymentStatus(micoApplication).getValue() == Value.DEPLOYED;
     }
 
     /**
