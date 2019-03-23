@@ -77,7 +77,17 @@ public class MicoServiceRepositoryTests {
 
     @Before
     public void setUp() {
-
+        kubernetesDeploymentInfoRepository.deleteAll();
+        applicationRepository.deleteAll();
+        backgroundJobRepository.deleteAll();
+        environmentVariableRepository.deleteAll();
+        interfaceConnectionRepository.deleteAll();
+        labelRepository.deleteAll();
+        serviceDependencyRepository.deleteAll();
+        serviceDeploymentInfoRepository.deleteAll();
+        serviceInterfaceRepository.deleteAll();
+        servicePortRepository.deleteAll();
+        serviceRepository.deleteAll();
     }
 
     @After
