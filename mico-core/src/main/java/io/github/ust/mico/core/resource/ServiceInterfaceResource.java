@@ -19,19 +19,17 @@
 
 package io.github.ust.mico.core.resource;
 
-import io.fabric8.kubernetes.api.model.Service;
 import io.github.ust.mico.core.broker.MicoServiceBroker;
 import io.github.ust.mico.core.broker.MicoServiceInterfaceBroker;
 import io.github.ust.mico.core.dto.request.MicoServiceInterfaceRequestDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceInterfaceResponseDTO;
-import io.github.ust.mico.core.exception.KubernetesResourceException;
+import io.github.ust.mico.core.dto.response.status.MicoServiceInterfaceStatusResponseDTO;
 import io.github.ust.mico.core.exception.MicoServiceInterfaceAlreadyExistsException;
 import io.github.ust.mico.core.exception.MicoServiceInterfaceNotFoundException;
 import io.github.ust.mico.core.exception.MicoServiceNotFoundException;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
-import lombok.extern.slf4j.Slf4j;
+import io.github.ust.mico.core.service.MicoStatusService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
@@ -43,10 +41,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static io.github.ust.mico.core.resource.ServiceResource.PATH_VARIABLE_SHORT_NAME;
@@ -54,7 +50,6 @@ import static io.github.ust.mico.core.resource.ServiceResource.PATH_VARIABLE_VER
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
-@Slf4j
 @RestController
 @RequestMapping(value = "/services", produces = MediaTypes.HAL_JSON_VALUE)
 public class ServiceInterfaceResource {
@@ -72,7 +67,7 @@ public class ServiceInterfaceResource {
     private MicoServiceBroker micoServiceBroker;
 
     @Autowired
-    private MicoKubernetesClient micoKubernetesClient;
+    private MicoStatusService micoStatusService;
 
     @GetMapping(SERVICE_INTERFACE_PATH)
     public ResponseEntity<Resources<Resource<MicoServiceInterfaceResponseDTO>>> getInterfacesOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
@@ -81,6 +76,7 @@ public class ServiceInterfaceResource {
 
         List<Resource<MicoServiceInterfaceResponseDTO>> serviceInterfaceResources =
                 getServiceInterfaceResponseDTOResourcesList(shortName, version, serviceInterfaces);
+
         return ResponseEntity.ok(new Resources<>(serviceInterfaceResources,
                 linkTo(methodOn(ServiceInterfaceResource.class).getInterfacesOfService(shortName, version)).withSelfRel()));
     }
@@ -95,35 +91,37 @@ public class ServiceInterfaceResource {
     }
 
     @GetMapping(SERVICE_INTERFACE_PUBLIC_IP_PATH)
-    public ResponseEntity<List<String>> getInterfacePublicIpByName(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+    public ResponseEntity<MicoServiceInterfaceStatusResponseDTO> getInterfacePublicIpByName(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                    @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                    @PathVariable(PATH_VARIABLE_SERVICE_INTERFACE_NAME) String serviceInterfaceName) {
         MicoService micoService = getServiceFromServiceBroker(shortName, version);
 
-        MicoServiceInterface micoServiceInterface = getServiceInterfaceFromServiceInterfaceBroker(shortName, version, serviceInterfaceName);
-
-        Optional<Service> kubernetesServiceOptional;
-        try {
-            kubernetesServiceOptional = micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, micoServiceInterface.getServiceInterfaceName());
-        } catch (KubernetesResourceException e) {
-            log.error("Error occur while retrieving Kubernetes service of MicoServiceInterface '{}' of MicoService '{}' in version '{}'. Caused by: {}",
-                    serviceInterfaceName, shortName, version, e.getMessage());
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Error occur while retrieving Kubernetes service of MicoServiceInterface '" + serviceInterfaceName +
-                            "' of MicoService '" + shortName + "' '" + version + "'!");
-        }
-        if (!kubernetesServiceOptional.isPresent()) {
-            log.warn("There is no MicoServiceInterface deployed with name '{}' of MicoService '{}' in version '{}'.",
-                    serviceInterfaceName, shortName, version);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "No deployed service interface '" + serviceInterfaceName + "' of MicoService '" + shortName + "' '" + version + "' was found!");
-        }
-
-        Service kubernetesService = kubernetesServiceOptional.get();
-
-        List<String> publicIps = micoServiceInterfaceBroker.getPublicIpsOfInterfaceByInterfaceName(shortName, version, serviceInterfaceName, kubernetesService);
-
-        return ResponseEntity.ok().body(new ArrayList<>(publicIps));
+//        MicoServiceInterface micoServiceInterface = getServiceInterfaceFromServiceInterfaceBroker(shortName, version, serviceInterfaceName);
+//
+//        Optional<Service> kubernetesServiceOptional;
+//        try {
+//            kubernetesServiceOptional = micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, micoServiceInterface.getServiceInterfaceName());
+//        } catch (KubernetesResourceException e) {
+//            log.error("Error occur while retrieving Kubernetes service of MicoServiceInterface '{}' of MicoService '{}' in version '{}'. Caused by: {}",
+//                    serviceInterfaceName, shortName, version, e.getMessage());
+//            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+//                    "Error occur while retrieving Kubernetes service of MicoServiceInterface '" + serviceInterfaceName +
+//                            "' of MicoService '" + shortName + "' '" + version + "'!");
+//        }
+//        if (!kubernetesServiceOptional.isPresent()) {
+//            log.warn("There is no MicoServiceInterface deployed with name '{}' of MicoService '{}' in version '{}'.",
+//                    serviceInterfaceName, shortName, version);
+//            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+//                    "No deployed service interface '" + serviceInterfaceName + "' of MicoService '" + shortName + "' '" + version + "' was found!");
+//        }
+//
+//        Service kubernetesService = kubernetesServiceOptional.get();
+//
+//        List<String> publicIps = micoServiceInterfaceBroker.getPublicIpsOfInterfaceByInterfaceName(shortName, version, serviceInterfaceName, kubernetesService);
+//
+//        return ResponseEntity.ok().body(new ArrayList<>(publicIps));
+        MicoServiceInterfaceStatusResponseDTO serviceInterfaceStatusResponseDTO = micoStatusService.getPublicIpOfKubernetesService(micoService, serviceInterfaceName);
+        return ResponseEntity.ok().body(serviceInterfaceStatusResponseDTO);
     }
 
     @DeleteMapping(SERVICE_INTERFACE_PATH + "/{" + PATH_VARIABLE_SERVICE_INTERFACE_NAME + "}")
@@ -136,8 +134,8 @@ public class ServiceInterfaceResource {
     }
 
     /**
-     * This is not transactional. At the moment we have only one user. If this changes transactional support
-     * is a must. FIXME Add transactional support
+     * This is not transactional. At the moment we have only one user. If this changes transactional support is a must.
+     * FIXME Add transactional support
      *
      * @param shortName                  the name of the MICO service
      * @param version                    the version of the MICO service
@@ -218,8 +216,8 @@ public class ServiceInterfaceResource {
     }
 
     /**
-     * Retrieves a {@code MicoServiceInterface} from the database for a
-     * given service short name and version and service interface name.
+     * Retrieves a {@code MicoServiceInterface} from the database for a given service short name and version and service
+     * interface name.
      *
      * @param shortName            the short name of the {@link MicoService}.
      * @param version              the version of the {@link MicoService}.
@@ -253,5 +251,4 @@ public class ServiceInterfaceResource {
         links.add(linkTo(methodOn(ServiceResource.class).getServiceByShortNameAndVersion(shortName, version)).withRel("service"));
         return links;
     }
-
 }

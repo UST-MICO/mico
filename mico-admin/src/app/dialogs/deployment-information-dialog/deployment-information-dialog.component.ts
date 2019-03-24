@@ -11,11 +11,14 @@ export class DeploymentInformationDialogComponent implements OnInit {
     deploymentInformation;
     changedDeploymentInformation;
 
+    serviceName;
+
     constructor(
         public dialogRef: MatDialogRef<DeploymentInformationDialogComponent>,
         @Inject(MAT_DIALOG_DATA) public data: any
     ) {
         this.deploymentInformation = data.deploymentInformation;
+        this.serviceName = data.serviceName;
     }
 
     confirm() {

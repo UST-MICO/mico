@@ -1,5 +1,16 @@
 package io.github.ust.mico.core.broker;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphEdgeResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceResponseDTO;
@@ -12,14 +23,6 @@ import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -150,6 +153,7 @@ public class MicoServiceBroker {
             throw new MicoServiceAlreadyExistsException(newService.getShortName(), newService.getVersion());
         }
         for (MicoServiceInterface serviceInterface : newService.getServiceInterfaces()) {
+        	serviceInterface.getDescription(); // Just to suppress the "unused" warning for serviceInterface ...
             //TODO: Verfiy how to put this into method into ServiceBroker
             //validateProvidedInterface(newService.getShortName(), newService.getVersion(), serviceInterface);
         }
@@ -188,8 +192,8 @@ public class MicoServiceBroker {
 
     public boolean checkIfDependencyAlreadyExists(MicoService service, MicoService serviceDependee) {
         boolean dependencyAlreadyExists = (service.getDependencies() != null) && service.getDependencies().stream().anyMatch(
-                dependency -> dependency.getDependedService().getShortName().equals(serviceDependee.getShortName())
-                        && dependency.getDependedService().getVersion().equals(serviceDependee.getVersion()));
+            dependency -> dependency.getDependedService().getShortName().equals(serviceDependee.getShortName())
+                && dependency.getDependedService().getVersion().equals(serviceDependee.getVersion()));
 
         log.debug("Check if the dependency already exists is '{}", dependencyAlreadyExists);
 
@@ -198,14 +202,14 @@ public class MicoServiceBroker {
 
     public MicoService persistNewDependencyBetweenServices(MicoService service, MicoService serviceDependee) {
         MicoServiceDependency processedServiceDependee = new MicoServiceDependency()
-                .setDependedService(serviceDependee)
-                .setService(service);
+            .setDependedService(serviceDependee)
+            .setService(service);
 
         log.info("New dependency for MicoService '{}' '{}' -[:DEPENDS_ON]-> '{}' '{}'",
-                service.getShortName(),
-                service.getVersion(),
-                processedServiceDependee.getDependedService().getShortName(),
-                processedServiceDependee.getDependedService().getVersion());
+            service.getShortName(),
+            service.getVersion(),
+            processedServiceDependee.getDependedService().getShortName(),
+            processedServiceDependee.getDependedService().getVersion());
 
         service.getDependencies().add(processedServiceDependee);
         serviceRepository.save(service);
@@ -250,7 +254,7 @@ public class MicoServiceBroker {
     //TODO: We shoud not use DTOs here, improve
     public MicoServiceDependencyGraphResponseDTO getDependencyGraph(MicoService micoServiceRoot) throws MicoServiceNotFoundException {
         List<MicoService> micoServices = serviceRepository.findDependeesIncludeDepender(micoServiceRoot.getShortName(),
-                micoServiceRoot.getVersion());
+            micoServiceRoot.getVersion());
 
         List<MicoServiceResponseDTO> micoServiceDTOS = micoServices.stream().map(MicoServiceResponseDTO::new).collect(Collectors.toList());
         MicoServiceDependencyGraphResponseDTO micoServiceDependencyGraph = new MicoServiceDependencyGraphResponseDTO().setMicoServices(micoServiceDTOS);
@@ -269,4 +273,14 @@ public class MicoServiceBroker {
         return micoServiceDependencyGraph;
     }
 
+    /**
+     * Return yaml for a {@link MicoService} for the give shortName and version.
+     *
+     * @param shortName the short name of the {@link MicoService}.
+     * @param version   version the version of the {@link MicoService}.
+     * @return the kubernetes YAML for the {@link MicoService}.
+     */
+    public String getServiceYamlByShortNameAndVersion(String shortName, String version) throws MicoServiceNotFoundException, JsonProcessingException, KubernetesResourceException {
+        return micoKubernetesClient.getYaml(getServiceFromDatabase(shortName, version));
+    }
 }

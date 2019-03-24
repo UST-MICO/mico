@@ -4,6 +4,8 @@
 @import '../node_modules/c3/c3.min.css';
 @import '~ng-pick-datetime/assets/style/picker.min.css';
 
+
+
 html,
 body {
     height: 100%;
@@ -11,6 +13,13 @@ body {
 body {
     margin: 0;
     font-family: Roboto, 'Helvetica Neue', sans-serif;
+}
+
+:root {
+    --primary: #673ab7;
+    --accent: #ffd740;
+    --primary-text-color: #fff;
+    --accent-text-color: rgba(0,0,0,.87);;
 }
 
 .relative {
@@ -495,4 +504,16 @@ Quick fix to avoid scroll bars
 */
 .mat-header-cell {
     min-width: 80px !important;
+}
+
+/*
+* Set toggle button colors
+*/
+.mat-button-toggle {
+    background-color: var(--accent);
+    color: var(--accent-text-color);
+}
+
+.mat-button-toggle-checked.mat-button-toggle-appearance-standard {
+    color: var(--accent-text-color);
 }

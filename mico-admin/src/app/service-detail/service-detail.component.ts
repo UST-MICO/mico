@@ -117,7 +117,6 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
                         this.setVersion(shortName, this.getLatestVersion());
                     }
                 }
-
             });
     }
 
@@ -171,7 +170,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
 
         const dialogRef = this.dialog.open(YesNoDialogComponent, {
             data: {
-                object: { shortName: this.shortName, version: this.selectedVersion },
+                object: { name: this.service.name, shortName: this.shortName, version: this.selectedVersion },
                 question: 'deleteService'
             }
         });

@@ -84,7 +84,7 @@ export class ServiceListComponent implements OnInit, OnDestroy {
     /**
      * deletes all versions of a service, if the user confirms a dialog and the service is not deployed.
      * uses: DELETE services/{shortName}
-     * @param service shortName of the services to be deleted
+     * @param service shortName object to be deleted
      */
     deleteService(service) {
         // open dialog

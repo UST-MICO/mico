@@ -52,6 +52,6 @@ else
 fi
 
 # Install external components
-kubectl apply -f /kube-state-metrics
+kubectl apply -f ./kube-state-metrics
 kubectl apply -f knative-build.yaml
 kubectl apply -f monitoring.yaml

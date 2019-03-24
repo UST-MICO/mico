@@ -27,6 +27,7 @@ import { versionComparator } from '../api/semantic-version';
 import { CreateNextVersionComponent } from '../dialogs/create-next-version/create-next-version.component';
 import { MatDialog, MatSnackBar } from '@angular/material';
 import { safeUnsubscribe } from '../util/utils';
+import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 
 @Component({
     selector: 'mico-app-detail',
@@ -57,7 +58,6 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     shortName: string;
     selectedVersion;
     allVersions;
-    publicIps: string[] = [];
 
     // modifiable application object
     applicationData;
@@ -119,33 +119,13 @@ export class AppDetailComponent implements OnInit, OnDestroy {
      */
     subscribeApplication(version: string) {
 
-        this.selectedVersion = version;
-
         safeUnsubscribe(this.subApplication);
         // get the application
-        this.subApplication = this.apiService.getApplication(this.shortName, version).subscribe(val => {
-            this.application = val;
-
-            // get the public ips
-            this.application.services.forEach(service => {
-
-                if (service.serviceInterfaces != null) {
-
-                    // assumption: one public ip per interface
-                    service.serviceInterfaces.forEach(micoInterface => {
-                        this.subPublicIps.push(this.apiService
-                            .getServiceInterfacePublicIp(service.shortName, service.version, micoInterface.serviceInterfaceName)
-                            .subscribe(listOfPublicIps => {
-                                const tempPublicIps = [];
-                                listOfPublicIps.forEach(publicIp => {
-                                    tempPublicIps.push(publicIp);
-                                });
-                                this.publicIps = tempPublicIps;
-                            }));
-                    });
-                }
+        this.subApplication = this.apiService.getApplication(this.shortName, version)
+            .subscribe(val => {
+                this.application = val;
+                this.selectedVersion = version;
             });
-        });
     }
 
     /**
@@ -261,15 +241,29 @@ export class AppDetailComponent implements OnInit, OnDestroy {
      * removes the current application version
      */
     deleteCurrentVersion() {
-        this.apiService.deleteApplication(this.application.shortName, this.selectedVersion)
-            .subscribe(val => {
 
-                // stay on the application page if there exists another version
-                if (this.allVersions.length > 0) {
-                    this.updateVersion(null);
-                } else {
-                    this.router.navigate(['../app-list']);
-                }
-            });
+        const dialogRef = this.dialog.open(YesNoDialogComponent, {
+            data: {
+                object: { name: this.application.name, shortName: this.shortName, version: this.selectedVersion },
+                question: 'deleteApplication'
+            }
+        });
+
+        const subDeleteDependency = dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+
+                this.apiService.deleteApplication(this.application.shortName, this.selectedVersion)
+                    .subscribe(val => {
+
+                        // stay on the application page if there exists another version
+                        if (this.allVersions.length > 0) {
+                            this.updateVersion(null);
+                        } else {
+                            this.router.navigate(['../app-list']);
+                        }
+                    });
+                safeUnsubscribe(subDeleteDependency);
+            }
+        });
     }
 }

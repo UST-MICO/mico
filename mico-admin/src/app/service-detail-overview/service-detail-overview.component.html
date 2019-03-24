@@ -96,10 +96,15 @@
                                         </div>
                                     </mat-list-item.large>
                                 </div>
-                                <div class="w-20">
-                                    <mat-list-item>
+                                <div class="w-20 flex-column">
+                                    <mat-list-item class="w-100">
                                         <mat-icon (click)="deleteServiceInterface(interface.serviceInterfaceName)">
                                             delete</mat-icon>
+                                    </mat-list-item>
+                                    <mat-list-item class="w-100">
+                                        <mat-icon (click)="editInterface(interface)">
+                                            settings
+                                        </mat-icon>
                                     </mat-list-item>
                                 </div>
                             </div>

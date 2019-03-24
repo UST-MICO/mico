@@ -17,54 +17,36 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto.response.status;
+package io.github.ust.mico.core.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
-import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.Accessors;
 
-/**
- * DTO for the status information of a {@link MicoServiceInterface}
- * that is mapped to a Kubernetes Service intended to use with responses only.
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonInclude(Include.NON_NULL)
-public class MicoServiceInterfaceStatusResponseDTO {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class MicoYamlResponseDTO {
 
     /**
-     * Name of the {@link MicoServiceInterface}.
+     * Yaml from Kubernetes resource
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Name"),
-            @ExtensionProperty(name = "x-order", value = "10"),
-            @ExtensionProperty(name = "description", value = "Name of the MicoServiceInterface.")
+            @ExtensionProperty(name = "title", value = "Kubernetes YAML"),
+            @ExtensionProperty(name = "readOnly", value = "true"),
+            @ExtensionProperty(name = "x-order", value = "100"),
+            @ExtensionProperty(name = "description", value = "YAML from Kubernetes resource")
         }
     )})
-    private String name;
-
-    /**
-     * The external IP address of this {@link MicoServiceInterface}.
-     */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "External IP"),
-            @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "The external IP address of this MicoServiceInterface.")
-        }
-    )})
-    private String externalIp;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    String yaml;
 }
