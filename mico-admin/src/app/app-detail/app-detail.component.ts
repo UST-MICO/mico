@@ -180,7 +180,10 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
                 safeUnsubscribe(this.subJobStatus);
                 this.subJobStatus = this.apiService.pollDeploymentJobStatus(this.shortName, this.selectedVersion).subscribe(depl => {
+                    // TODO call-back somohow does not work, ask Fabian for help
+                    // call-back is not needed, but would be awesome
                     console.log('deployment/polling done!', depl);
+                    safeUnsubscribe(this.subJobStatus);
                 });
 
             });

@@ -1010,14 +1010,12 @@ export class ApiService {
         // poll status, end polling after 3 minutes
         const subPolling = interval(500).pipe(takeUntil(timer(3 * 60 * 1000)))
             .subscribe(() => {
-                // TODO poll api service
                 this.getJobStatus(applicationShortName, applicationVersion);
             });
 
         // handle incomming status updates
         const subJobStatus = this.getJobStatus(applicationShortName, applicationVersion).subscribe(newStatus => {
 
-            console.log('Poll', newStatus);
             if (newStatus.status === 'DONE') {
 
                 this.snackBar.open('Application deployment finished: ' +
