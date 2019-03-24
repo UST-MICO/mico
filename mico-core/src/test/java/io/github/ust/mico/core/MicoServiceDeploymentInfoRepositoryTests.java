@@ -121,6 +121,9 @@ public class MicoServiceDeploymentInfoRepositoryTests {
     private MicoService s3;
     private MicoService s4;
 
+    private MicoServiceInterface i1;
+    private MicoServiceInterface i2;
+
     private MicoLabel l1;
     private MicoLabel l2;
     private MicoLabel l3;
@@ -150,17 +153,32 @@ public class MicoServiceDeploymentInfoRepositoryTests {
                 assertEquals(2, sdi.getEnvironmentVariables().size());
                 assertEquals("key1", sdi.getLabels().get(0).getKey());
 
+                // Check if serviceInterface is deployed correctly
+                assertEquals(1, sdi.getService().getServiceInterfaces().size());
+                MicoServiceInterface i1n = sdi.getService().getServiceInterfaces().get(0);
+                assertEquals("i1", i1n.getServiceInterfaceName());
+                assertEquals(1, i1n.getPorts().size());
+
                 if (sdi.getEnvironmentVariables().get(0).getName().equals("env1")) {
                     assertEquals("val1", sdi.getEnvironmentVariables().get(0).getValue());
+
                 } else {
                     assertEquals("val2", sdi.getEnvironmentVariables().get(0).getValue());
                 }
+
                 numOfSDIs++;
 
             } else if (sdi.getService().getShortName().equals("s2")) {
                 assertEquals(1, sdi.getEnvironmentVariables().size());
                 assertEquals(0, sdi.getLabels().size());
                 assertEquals("env3", sdi.getEnvironmentVariables().get(0).getName());
+
+                // Check if serviceInterface is deployed correctly
+                assertEquals(1, sdi.getService().getServiceInterfaces().size());
+                MicoServiceInterface i2n = sdi.getService().getServiceInterfaces().get(0);
+                assertEquals("i2", i2n.getServiceInterfaceName());
+                assertEquals(1, i2n.getPorts().size());
+
                 numOfSDIs++;
 
             } else if (sdi.getService().getShortName().equals("s3")) {
@@ -169,6 +187,7 @@ public class MicoServiceDeploymentInfoRepositoryTests {
 
                 if (sdi.getLabels().get(0).getKey().equals("key2")) {
                     assertEquals("value2", sdi.getLabels().get(0).getValue());
+
                 } else {
                     assertEquals("value3", sdi.getLabels().get(0).getValue());
                 }
@@ -192,7 +211,14 @@ public class MicoServiceDeploymentInfoRepositoryTests {
 
         assertEquals("v1.0.2", serviceDeploymentInfoOptional.get().getService().getVersion());
         assertEquals("key1", serviceDeploymentInfoOptional.get().getLabels().get(0).getKey());
-        assertEquals("val1", serviceDeploymentInfoOptional.get().getEnvironmentVariables().get(0).getValue());
+        assertEquals(2, serviceDeploymentInfoOptional.get().getEnvironmentVariables().size());
+
+        if (serviceDeploymentInfoOptional.get().getEnvironmentVariables().get(0).getName().equals("env1")) {
+            assertEquals("val1", serviceDeploymentInfoOptional.get().getEnvironmentVariables().get(0).getValue());
+
+        } else {
+            assertEquals("val2", serviceDeploymentInfoOptional.get().getEnvironmentVariables().get(1).getValue());
+        }
 
         serviceDeploymentInfoOptional = serviceDeploymentInfoRepository.findByApplicationAndService("a1", "v1.0.0", "s2", "v1.0.3");
         assertTrue(serviceDeploymentInfoOptional.isPresent());
@@ -360,6 +386,11 @@ public class MicoServiceDeploymentInfoRepositoryTests {
         s3 = new MicoService().setShortName("s3").setVersion("v1.0.4");
         s4 = new MicoService().setShortName("s4").setVersion("v1.0.5");
 
+        i1 = new MicoServiceInterface().setServiceInterfaceName("i1").setPorts(
+            CollectionUtils.listOf(new MicoServicePort().setPort(80).setTargetPort(81)));
+        i2 = new MicoServiceInterface().setServiceInterfaceName("i2").setPorts(
+            CollectionUtils.listOf(new MicoServicePort().setPort(82).setTargetPort(83)));
+
         l1 = new MicoLabel().setKey("key1").setValue("value1");
         l2 = new MicoLabel().setKey("key2").setValue("value2");
         l3 = new MicoLabel().setKey("key3").setValue("value3");
@@ -371,16 +402,16 @@ public class MicoServiceDeploymentInfoRepositoryTests {
         v4 = new MicoEnvironmentVariable().setName("env4").setValue("val4");
 
         // Add some services and deployment informations to the applications
+        s1.setServiceInterfaces(CollectionUtils.listOf(i1));
+        s2.setServiceInterfaces(CollectionUtils.listOf(i2));
         a1.getServices().addAll(CollectionUtils.listOf(s1, s2, s3));
         a1.getServiceDeploymentInfos().addAll(CollectionUtils.listOf(
             new MicoServiceDeploymentInfo().setService(s1).setReplicas(3).setLabels(CollectionUtils.listOf(l1)).setEnvironmentVariables(CollectionUtils.listOf(v1, v2)),
             new MicoServiceDeploymentInfo().setService(s2).setReplicas(4).setEnvironmentVariables(CollectionUtils.listOf(v3)),
-            new MicoServiceDeploymentInfo().setService(s3).setReplicas(5).setLabels(CollectionUtils.listOf(l2, l3))
-        ));
+            new MicoServiceDeploymentInfo().setService(s3).setReplicas(5).setLabels(CollectionUtils.listOf(l2, l3))));
         a2.getServices().add(s4);
         a2.getServiceDeploymentInfos().add(
-            new MicoServiceDeploymentInfo().setService(s4).setReplicas(4).setLabels(CollectionUtils.listOf(l4)).setEnvironmentVariables(CollectionUtils.listOf(v4)
-            ));
+            new MicoServiceDeploymentInfo().setService(s4).setReplicas(4).setLabels(CollectionUtils.listOf(l4)).setEnvironmentVariables(CollectionUtils.listOf(v4)));
 
         // Save all created objects in their corresponding repositories
         applicationRepository.save(a1);

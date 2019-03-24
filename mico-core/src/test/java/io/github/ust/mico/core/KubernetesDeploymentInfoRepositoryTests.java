@@ -97,7 +97,6 @@ public class KubernetesDeploymentInfoRepositoryTests {
 
     }
 
-    @Commit
     @Test
     public void removeUnnecessaryKubernetesDeploymentInfos() {
         MicoApplication a1 = new MicoApplication().setShortName("a1").setVersion("v1.0.0");
