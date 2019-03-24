@@ -1048,7 +1048,8 @@ export class ApiService {
                 // cleanup and return
                 safeUnsubscribe(subPolling);
                 safeUnsubscribe(subJobStatus);
-                stream.next(freezeObject(newStatus));
+                // object freeze results in undefined, hence deepcopy
+                stream.next(JSON.parse(JSON.stringify(newStatus)));
 
             } else if (newStatus.status === 'ERROR') {
                 this.snackBar.open('Application deployment failed: ' +
@@ -1059,7 +1060,7 @@ export class ApiService {
                 // cleanup and return
                 safeUnsubscribe(subPolling);
                 safeUnsubscribe(subJobStatus);
-                stream.next(freezeObject(newStatus));
+                stream.next(JSON.parse(JSON.stringify(newStatus)));
             }
 
         });
@@ -1091,8 +1092,8 @@ export class ApiService {
         // handle incomming status updates
         const subJobStatus = this.getApplicationDeploymentStatus(applicationShortName, applicationVersion).subscribe(newStatus => {
 
-            console.log(newStatus);
-            stream.next(freezeObject(newStatus));
+            // object freeze results in undefined, hence deepcopy
+            stream.next(JSON.parse(JSON.stringify(newStatus)));
 
         });
 

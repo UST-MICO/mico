@@ -21,11 +21,10 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
-import { Subscription, timer, interval } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { versionComparator } from '../api/semantic-version';
 import { CreateNextVersionComponent } from '../dialogs/create-next-version/create-next-version.component';
 import { MatDialog, MatSnackBar } from '@angular/material';
-import { takeUntil } from 'rxjs/operators';
 import { safeUnsubscribe } from '../util/utils';
 
 @Component({
@@ -59,6 +58,8 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     selectedVersion;
     allVersions;
     publicIps: string[] = [];
+    deploymentStatus;
+    deploymentStatusMessage: string;
 
     // modifiable application object
     applicationData;
@@ -149,10 +150,20 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         });
 
         // status polling
-        this.apiService.pollApplicationStatus(this.shortName, this.selectedVersion)
+        const subStatusPolling = this.apiService.pollApplicationStatus(this.shortName, this.selectedVersion)
             .subscribe(val => {
+
                 console.log('app-detail', val);
+                this.deploymentStatus = val;
+                let message = '';
+                val.messages.forEach(element => {
+                    message += element.content + ' ';
+                });
+
+                this.deploymentStatusMessage = message;
+
             });
+
     }
 
     /**
@@ -186,9 +197,8 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
                 safeUnsubscribe(this.subJobStatus);
                 this.subJobStatus = this.apiService.pollDeploymentJobStatus(this.shortName, this.selectedVersion).subscribe(depl => {
-                    // TODO call-back somohow does not work, ask Fabian for help
-                    // call-back is not needed, but would be awesome
-                    console.log('deployment/polling done!', depl);
+
+                    // call-back when deployment has finished
                     safeUnsubscribe(this.subJobStatus);
                 });
 
