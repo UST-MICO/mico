@@ -50,6 +50,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     subServiceDependency: Subscription;
     subCreateNextVersion: Subscription;
     subJobStatus: Subscription;
+    subStatusPolling: Subscription;
 
 
     // immutable application  object which is updated, when new data is pushed
@@ -150,7 +151,8 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         });
 
         // status polling
-        const subStatusPolling = this.apiService.pollApplicationStatus(this.shortName, this.selectedVersion)
+        safeUnsubscribe(this.subStatusPolling);
+        this.subStatusPolling = this.apiService.pollApplicationStatus(this.shortName, this.selectedVersion)
             .subscribe(val => {
 
                 console.log('app-detail', val);
@@ -180,6 +182,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         safeUnsubscribe(this.subServiceDependency);
         safeUnsubscribe(this.subCreateNextVersion);
         safeUnsubscribe(this.subJobStatus);
+        safeUnsubscribe(this.subStatusPolling);
     }
 
 

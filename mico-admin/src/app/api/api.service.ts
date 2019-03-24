@@ -1027,8 +1027,6 @@ export class ApiService {
         const resource = 'poll/jobs/' + applicationShortName + '/' + applicationVersion + '/status';
         const stream = this.getStreamSource<any>(resource);
 
-        // TODO cleanup after ngOnDestroy
-
         // poll status, end polling after 3 minutes
         const subPolling = interval(500).pipe(takeUntil(timer(3 * 60 * 1000)))
             .subscribe(() => {
