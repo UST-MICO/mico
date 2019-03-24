@@ -177,35 +177,12 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                     duration: 5000,
                 });
 
-                // poll status, end polling after 3 minutes
-                const subPolling = interval(500).pipe(takeUntil(timer(3 * 60 * 1000)))
-                    .subscribe(() => {
-                        this.apiService.getJobStatus(this.shortName, this.selectedVersion);
-                    });
 
                 safeUnsubscribe(this.subJobStatus);
-                this.subJobStatus = this.apiService.getJobStatus(this.shortName, this.selectedVersion)
-                    .subscribe(newStatus => {
-                        if (newStatus.status === 'DONE') {
+                this.subJobStatus = this.apiService.pollDeploymentJobStatus(this.shortName, this.selectedVersion).subscribe(depl => {
+                    console.log('deployment/polling done!', depl);
+                });
 
-                            this.snackBar.open('Application deployment finished: ' +
-                                this.shortName + ' ' + this.selectedVersion, 'Ok', {
-                                    duration: 4000,
-                                });
-
-                            safeUnsubscribe(subPolling);
-                            safeUnsubscribe(this.subJobStatus);
-
-                        } else if (newStatus.status === 'ERROR') {
-                            this.snackBar.open('Application deployment failed: ' +
-                                this.shortName + ' ' + this.selectedVersion, 'Ok', {
-                                    duration: 8000,
-                                });
-
-                            safeUnsubscribe(subPolling);
-                            safeUnsubscribe(this.subJobStatus);
-                        }
-                    });
             });
     }
 

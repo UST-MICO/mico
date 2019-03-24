@@ -18,11 +18,13 @@
  */
 
 import { Injectable } from '@angular/core';
-import { Observable, Subject, BehaviorSubject, AsyncSubject } from 'rxjs';
-import { filter, flatMap, map } from 'rxjs/operators';
+import { Observable, Subject, BehaviorSubject, AsyncSubject, interval, timer } from 'rxjs';
+import { filter, flatMap, map, takeUntil } from 'rxjs/operators';
 import { ApiObject } from './apiobject';
 import { ApiBaseFunctionService } from './api-base-function.service';
 import { ApiModel, ApiModelAllOf } from './apimodel';
+import { safeUnsubscribe } from '../util/utils';
+import { MatSnackBar } from '@angular/material';
 
 
 /**
@@ -59,7 +61,9 @@ type ApiModelMap = { [prop: string]: ApiModel | ApiModelAllOf };
 export class ApiService {
     private streams: Map<string, Subject<Readonly<any>>> = new Map();
 
-    constructor(private rest: ApiBaseFunctionService, ) { }
+    constructor(
+        private rest: ApiBaseFunctionService,
+        private snackBar: MatSnackBar) { }
 
     /**
      * Canonize a resource url.
@@ -985,5 +989,64 @@ export class ApiService {
         return stream.asObservable().pipe(
             filter(data => data !== undefined)
         );
+    }
+
+
+    // =======
+    // POLLING
+    // =======
+
+
+    /**
+     * Polls the deployment job of an given application and provides feedback if the deployment failed/ was successful.
+     * @param applicationShortName applicationShortname of the application to be polled
+     * @param applicationVersion applicationVersion of the application to be polled
+     */
+    pollDeploymentJobStatus(applicationShortName: string, applicationVersion: string) {
+        const resource = 'poll/jobs/' + applicationShortName + '/' + applicationVersion + '/status';
+        const stream = this.getStreamSource<any>(resource);
+
+
+        // poll status, end polling after 3 minutes
+        const subPolling = interval(500).pipe(takeUntil(timer(3 * 60 * 1000)))
+            .subscribe(() => {
+                // TODO poll api service
+                this.getJobStatus(applicationShortName, applicationVersion);
+            });
+
+        // handle incomming status updates
+        const subJobStatus = this.getJobStatus(applicationShortName, applicationVersion).subscribe(newStatus => {
+
+            console.log('Poll', newStatus);
+            if (newStatus.status === 'DONE') {
+
+                this.snackBar.open('Application deployment finished: ' +
+                    applicationShortName + ' ' + applicationVersion, 'Ok', {
+                        duration: 4000,
+                    });
+
+                // cleanup and return
+                safeUnsubscribe(subPolling);
+                safeUnsubscribe(subJobStatus);
+                stream.next(freezeObject(newStatus));
+
+            } else if (newStatus.status === 'ERROR') {
+                this.snackBar.open('Application deployment failed: ' +
+                    applicationShortName + ' ' + applicationVersion, 'Ok', {
+                        duration: 8000,
+                    });
+
+                // cleanup and return
+                safeUnsubscribe(subPolling);
+                safeUnsubscribe(subJobStatus);
+                stream.next(freezeObject(newStatus));
+            }
+
+        });
+
+        return stream.asObservable().pipe(
+            filter(data => data !== undefined)
+        );
+
     }
 }
