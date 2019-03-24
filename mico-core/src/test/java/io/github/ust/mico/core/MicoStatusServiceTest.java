@@ -375,7 +375,8 @@ public class MicoStatusServiceTest {
                             .setMemoryUsage(memoryUsagePod1)
                             .setCpuLoad(cpuLoadPod1)
                             .setAvailable(podAvailablePod1))))
-                .setErrorMessages(CollectionUtils.listOf(new MicoMessageResponseDTO().setContent("There is no Kubernetes service for the interface '" +
+                .setErrorMessages(CollectionUtils.listOf(
+                    new MicoMessageResponseDTO().setContent("There are no public IP addresses available yet for the interface '" +
                     SERVICE_INTERFACE_NAME + "' of MicoService '" +
                     micoService.getShortName() + "' '" + micoService.getVersion() + "'.").setType(Type.ERROR)))
                 .setInterfacesInformation(CollectionUtils.listOf(
