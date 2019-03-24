@@ -125,6 +125,7 @@ public class MicoStatusService {
      */
     public MicoServiceStatusResponseDTO getServiceStatus(MicoService micoService) {
         MicoServiceStatusResponseDTO serviceStatus = new MicoServiceStatusResponseDTO();
+        String msg;
         try {
             Optional<Deployment> deploymentOptional = micoKubernetesClient.getDeploymentOfMicoService(micoService);
             if (deploymentOptional.isPresent()) {
@@ -145,16 +146,16 @@ public class MicoStatusService {
                     serviceStatus.setAvailableReplicas(0);
                 }
             } else {
-                log.warn("There is no deployment of the MicoService '{}' '{}'. Continue with next one.",
-                    micoService.getShortName(), micoService.getVersion());
-                MicoMessage errorMessage = MicoMessage.error("No deployment of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' is available.");
+                msg = "No deployment of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' is available.";
+                log.warn(msg);
+                MicoMessage errorMessage = MicoMessage.error(msg);
                 return serviceStatus.setErrorMessages(CollectionUtils.listOf(new MicoMessageResponseDTO(errorMessage)));
             }
         } catch (KubernetesResourceException e) {
-            log.error("Error while retrieving Kubernetes deployment of MicoService '{}' '{}'. Continue with next one. Caused by: {}",
-                micoService.getShortName(), micoService.getVersion(), e.getMessage());
-            MicoMessage errorMessage = MicoMessage.error("Error while retrieving Kubernetes deployment of MicoService '" + micoService.getShortName() + "' '"
-                + micoService.getVersion() + "'. Caused by: " + e.getMessage());
+            msg = "Error while retrieving Kubernetes deployment of MicoService '" + micoService.getShortName() + "' '"
+                + micoService.getVersion() + "'. Caused by: " + e.getMessage();
+            log.error(msg);
+            MicoMessage errorMessage = MicoMessage.error(msg);
             return serviceStatus.setErrorMessages(CollectionUtils.listOf(new MicoMessageResponseDTO(errorMessage)));
         }
         serviceStatus
@@ -220,24 +221,26 @@ public class MicoStatusService {
         for (MicoServiceInterface serviceInterface : micoService.getServiceInterfaces()) {
             String interfaceName = serviceInterface.getServiceInterfaceName();
             List<String> publicIps = new ArrayList<>();
+            String msg;
             try {
                 Optional<Service> kubernetesServices = micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, interfaceName);
                 if (kubernetesServices.isPresent()) {
                     publicIps = getPublicIpsOfKubernetesService(kubernetesServices.get());
                     if (publicIps.isEmpty()) {
-                        errorMessages.add(new MicoMessageResponseDTO("There is no Kubernetes service for the interface '" +
-                            interfaceName + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "'.", Type.ERROR));
+                        msg = "There are no public IP addresses available yet for the interface '" + interfaceName
+                            + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "'.";
+                        log.debug(msg);
+                        errorMessages.add(new MicoMessageResponseDTO(msg, Type.ERROR));
                     }
                 } else {
-                    log.warn("There is no Kubernetes service for the interface '{}' of MicoService '{}' '{}'. Continue with next one.",
-                        interfaceName, micoService.getShortName(), micoService.getVersion());
-                    errorMessages.add(new MicoMessageResponseDTO("There is no Kubernetes service for the interface '" +
-                        interfaceName + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "'.", Type.ERROR));
+                    msg = "There is no Kubernetes service for the interface '" +
+                        interfaceName + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "'.";
+                    log.warn(msg);
+                    errorMessages.add(new MicoMessageResponseDTO(msg, Type.ERROR));
                 }
             } catch (Exception e) {
                 log.error("Error while retrieving the Kubernetes service for the interface '{}' of MicoService '{}' '{}'. "
-                        + "Continue with next one. Caused by: {}",
-                    interfaceName, micoService.getShortName(), micoService.getVersion(), e.getMessage());
+                        + "Caused by: {}", interfaceName, micoService.getShortName(), micoService.getVersion(), e.getMessage());
                 errorMessages.add(new MicoMessageResponseDTO(e.getMessage(), Type.ERROR));
             }
 
