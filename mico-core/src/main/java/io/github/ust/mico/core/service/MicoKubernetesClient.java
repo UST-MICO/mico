@@ -407,8 +407,8 @@ public class MicoKubernetesClient {
                             log.warn(msg);
                             messages.add(MicoMessage.error(msg));
                         } else if (found.size() > 1) {
-                            // There is more than one Kubernetes Service for the same interface. There should be only one.
-                            applicationDeploymentStatus = Value.INCOMPLETED;
+                            // There is more than one Kubernetes Service for the same interface. That's not allowed.
+                            applicationDeploymentStatus = Value.UNKNOWN;
                             msg = "There are " + found.size() + " Kubernetes services for the interface '"
                                 + serviceInterface.getServiceInterfaceName() + "' of MicoService '" + micoService.getShortName()
                                 + "' '" + micoService.getVersion() + "': " + found.toString() + ". Expected only one.";
@@ -505,9 +505,8 @@ public class MicoKubernetesClient {
         }
 
         KubernetesDeploymentInfo updatedKubernetesDeploymentInfo = null;
-        // Consider a deployment only as valid if there is a Kubernetes Deployment and at least one Kubernetes Service.
-        boolean isDeploymentValid = actualKubernetesDeployment != null && actualKubernetesServices.size() > 0;
-        if (isDeploymentValid) {
+        // Consider a deployment only as valid if there is a Kubernetes Deployment.
+        if (actualKubernetesDeployment != null) {
             updatedKubernetesDeploymentInfo = new KubernetesDeploymentInfo()
                 .setNamespace(namespace)
                 .setDeploymentName(actualKubernetesDeployment.getMetadata().getName())
