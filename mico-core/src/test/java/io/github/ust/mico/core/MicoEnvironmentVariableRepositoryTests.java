@@ -98,7 +98,6 @@ public class MicoEnvironmentVariableRepositoryTests {
 
     }
 
-    @Commit
     @Test
     public void removeUnnecessaryEnvVariables() {
         // Create some applications and services

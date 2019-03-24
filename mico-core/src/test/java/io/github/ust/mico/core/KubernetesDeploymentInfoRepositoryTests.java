@@ -22,9 +22,12 @@ package io.github.ust.mico.core;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.*;
 import io.github.ust.mico.core.util.CollectionUtils;
+import io.github.ust.mico.core.util.EmbeddedRedisServer;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -38,6 +41,9 @@ import static org.junit.Assert.assertEquals;
 @SpringBootTest
 @Transactional
 public class KubernetesDeploymentInfoRepositoryTests {
+    public static @ClassRule
+    RuleChain rules = RuleChain.outerRule(EmbeddedRedisServer.runningAt(6379).suppressExceptions());
+
     @Autowired
     private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
 

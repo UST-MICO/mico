@@ -23,10 +23,7 @@ import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.*;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.EmbeddedRedisServer;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -134,7 +131,6 @@ public class MicoServiceDeploymentInfoRepositoryTests {
     private MicoEnvironmentVariable v3;
     private MicoEnvironmentVariable v4;
 
-    @Commit
     @Test
     public void findServiceDeploymentInfoByApplication() {
         createTestData();
@@ -187,7 +183,6 @@ public class MicoServiceDeploymentInfoRepositoryTests {
         assertEquals(3, numOfSDIs);
     }
 
-    @Commit
     @Test
     public void findServiceDeploymentInfoByApplicationAndService() {
         createTestData();
@@ -207,60 +202,32 @@ public class MicoServiceDeploymentInfoRepositoryTests {
         assertEquals("val3", serviceDeploymentInfoOptional.get().getEnvironmentVariables().get(0).getValue());
     }
 
-    @Commit
     @Test
-    public void deleteServiceDeploymentInfoByApplication() {
+    public void findAllByService() {
         createTestData();
 
-        serviceDeploymentInfoRepository.deleteAllByApplication("a1");
+        // Use s1 in a1 and a2
+        MicoLabel l5 = new MicoLabel().setKey("key5").setValue("value5");
+        a2.getServices().add(s1);
+        a2.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(s1).setReplicas(6).setLabels(CollectionUtils.listOf(l5)));
+        applicationRepository.save(a2);
 
-        // Services should be still deployed and validate other repositories
-        assertEquals(3, serviceRepository.findAllByApplication("a1", "v1.0.0").size());
-        assertEquals(1, labelRepository.count());
-        assertEquals(1, environmentVariableRepository.count());
-        assertEquals(1, serviceDeploymentInfoRepository.count());
-    }
+        List<MicoServiceDeploymentInfo> serviceDeploymentInfoList = serviceDeploymentInfoRepository.findAllByService("s1", "v1.0.2");
+        assertEquals(2, serviceDeploymentInfoList.size());
 
-    @Commit
-    @Test
-    public void deleteServiceDeploymentInfoByApplicationWithVersion() {
-        createTestData();
+        for (int i = 0; i < serviceDeploymentInfoList.size(); i++) {
+            MicoServiceDeploymentInfo sdi = serviceDeploymentInfoList.get(i);
+            assertEquals("s1", sdi.getService().getShortName());
 
-        serviceDeploymentInfoRepository.deleteAllByApplication("a1", "v1.0.0");
+            if (sdi.getReplicas() == 3) {
+                // a1 provides sdi for s1
+                assertEquals("value1", sdi.getLabels().get(0).getValue());
 
-        // Services should be still deployed and validate other repositories
-        assertEquals(3, serviceRepository.findAllByApplication("a1", "v1.0.0").size());
-        assertEquals(1, labelRepository.count());
-        assertEquals(1, environmentVariableRepository.count());
-        assertEquals(1, serviceDeploymentInfoRepository.count());
-    }
-
-    @Commit
-    @Test
-    public void deleteServiceDeploymentInfoByApplicationAndService() {
-        createTestData();
-
-        serviceDeploymentInfoRepository.deleteByApplicationAndService("a1", "v1.0.0", "s1");
-
-        // Services should be still deployed and validate other repositories
-        assertEquals(3, serviceRepository.findAllByApplication("a1", "v1.0.0").size());
-        assertEquals(3, labelRepository.count());
-        assertEquals(2, environmentVariableRepository.count());
-        assertEquals(3, serviceDeploymentInfoRepository.count());
-    }
-
-    @Commit
-    @Test
-    public void deleteServiceDeploymentInfoByApplicationAndServiceWithVersion() {
-        createTestData();
-
-        serviceDeploymentInfoRepository.deleteByApplicationAndService("a1", "v1.0.0", "s2", "v1.0.3");
-
-        // Services should be still deployed and validate other repositories
-        assertEquals(3, serviceRepository.findAllByApplication("a1", "v1.0.0").size());
-        assertEquals(4, labelRepository.count());
-        assertEquals(3, environmentVariableRepository.count());
-        assertEquals(3, serviceDeploymentInfoRepository.count());
+            } else {
+                // a2 provides sdi for s1
+                assertEquals("value5", sdi.getLabels().get(0).getValue());
+            }
+        }
     }
 
     @Test
@@ -327,6 +294,58 @@ public class MicoServiceDeploymentInfoRepositoryTests {
         assertEquals(5, serviceDeploymentInfo.get().getReplicas());
         assertNotNull(serviceDeploymentInfo.get().getService());
         assertEquals("s1", serviceDeploymentInfo.get().getService().getShortName());
+    }
+
+    @Test
+    public void deleteServiceDeploymentInfoByApplication() {
+        createTestData();
+
+        serviceDeploymentInfoRepository.deleteAllByApplication("a1");
+
+        // Services should be still deployed and validate other repositories
+        assertEquals(3, serviceRepository.findAllByApplication("a1", "v1.0.0").size());
+        assertEquals(1, labelRepository.count());
+        assertEquals(1, environmentVariableRepository.count());
+        assertEquals(1, serviceDeploymentInfoRepository.count());
+    }
+
+    @Test
+    public void deleteServiceDeploymentInfoByApplicationWithVersion() {
+        createTestData();
+
+        serviceDeploymentInfoRepository.deleteAllByApplication("a1", "v1.0.0");
+
+        // Services should be still deployed and validate other repositories
+        assertEquals(3, serviceRepository.findAllByApplication("a1", "v1.0.0").size());
+        assertEquals(1, labelRepository.count());
+        assertEquals(1, environmentVariableRepository.count());
+        assertEquals(1, serviceDeploymentInfoRepository.count());
+    }
+
+    @Test
+    public void deleteServiceDeploymentInfoByApplicationAndService() {
+        createTestData();
+
+        serviceDeploymentInfoRepository.deleteByApplicationAndService("a1", "v1.0.0", "s1");
+
+        // Services should be still deployed and validate other repositories
+        assertEquals(3, serviceRepository.findAllByApplication("a1", "v1.0.0").size());
+        assertEquals(3, labelRepository.count());
+        assertEquals(2, environmentVariableRepository.count());
+        assertEquals(3, serviceDeploymentInfoRepository.count());
+    }
+
+    @Test
+    public void deleteServiceDeploymentInfoByApplicationAndServiceWithVersion() {
+        createTestData();
+
+        serviceDeploymentInfoRepository.deleteByApplicationAndService("a1", "v1.0.0", "s2", "v1.0.3");
+
+        // Services should be still deployed and validate other repositories
+        assertEquals(3, serviceRepository.findAllByApplication("a1", "v1.0.0").size());
+        assertEquals(4, labelRepository.count());
+        assertEquals(3, environmentVariableRepository.count());
+        assertEquals(3, serviceDeploymentInfoRepository.count());
     }
 
     /**

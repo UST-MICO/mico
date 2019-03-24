@@ -24,9 +24,12 @@ import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.persistence.*;
 import io.github.ust.mico.core.util.CollectionUtils;
+import io.github.ust.mico.core.util.EmbeddedRedisServer;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -42,6 +45,9 @@ import static org.junit.Assert.*;
 @SpringBootTest
 @Transactional
 public class MicoApplicationRepositoryTests {
+    public static @ClassRule
+    RuleChain rules = RuleChain.outerRule(EmbeddedRedisServer.runningAt(6379).suppressExceptions());
+
     @Autowired
     private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
 
@@ -95,7 +101,6 @@ public class MicoApplicationRepositoryTests {
 
     }
 
-    @Commit
     @Test
     public void findAllApplicationsByUsedService() {
         // Create some applications and services
