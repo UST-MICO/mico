@@ -34,15 +34,18 @@
                 <mat-icon>delete</mat-icon>
             </mat-button-toggle>
         </span>
-        <span class="mh2" [ngSwitch]="deploymentStatus">
+        <span class="mh2">
             <mat-chip-list>
-                <mat-chip color="green" *ngSwitchCase="deploymentStatus?.value === 'Deployed'">Deployed</mat-chip>
-                <mat-chip *ngSwitchCase="deploymentStatus?.value === 'Undeployed'">Undeployed</mat-chip>
-                <mat-chip color="yellow" *ngSwitchCase="deploymentStatus?.value === 'Pending'">Pending</mat-chip>
-                <mat-chip color="red" *ngSwitchCase="deploymentStatus?.value === 'Incompleted'">Incompleted</mat-chip>
-                <mat-chip color="white" *ngSwitchCase="deploymentStatus?.value === 'Unknown'">Unknown</mat-chip>
-                <mat-chip color="accent" *ngSwitchDefault selected matTooltip={{deploymentStatusMessage}}>
-                    {{deploymentStatus?.value}}</mat-chip>
+                <mat-chip color="primary" *ngIf="deploymentStatus?.value === 'Deployed'"
+                    matTooltip={{deploymentStatusMessage}} selected>Deployed</mat-chip>
+                <mat-chip *ngIf="deploymentStatus?.value === 'Undeployed'" matTooltip={{deploymentStatusMessage}}>
+                    Undeployed</mat-chip>
+                <mat-chip color="accent" *ngIf="deploymentStatus?.value === 'Pending'"
+                    matTooltip={{deploymentStatusMessage}} selected>Pending</mat-chip>
+                <mat-chip color="warn" *ngIf="deploymentStatus?.value === 'Incompleted'"
+                    matTooltip={{deploymentStatusMessage}} selected>Incompleted</mat-chip>
+                <mat-chip *ngIf="deploymentStatus == null || deploymentStatus?.value === 'Unknown'"
+                    matTooltip={{deploymentStatusMessage}}>Unknown</mat-chip>
             </mat-chip-list>
         </span>
     </div>
