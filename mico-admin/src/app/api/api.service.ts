@@ -405,6 +405,27 @@ export class ApiService {
         }));
     }
 
+    /**
+     * Returns the deployment status of a specified application
+     * uses: GET applications/{applicationShortName}/{applicationVersion}/deploymentStatus
+     *
+     * @param applicationShortName shortName of the application
+     * @param applicationVersion version of the application
+     */
+    getApplicationDeploymentStatus(applicationShortName: string, applicationVersion: string) {
+
+        const resource = 'applications/' + applicationShortName + '/' + applicationVersion + '/deploymentStatus/';
+        const stream = this.getStreamSource<ApiObject>(resource);
+
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+            stream.next(freezeObject(val));
+        });
+
+        return stream.asObservable().pipe(
+            filter(data => data !== undefined)
+        );
+    }
+
 
     // ==========
     // DEPLOYMENT
@@ -999,13 +1020,14 @@ export class ApiService {
 
     /**
      * Polls the deployment job of an given application and provides feedback if the deployment failed/ was successful.
-     * @param applicationShortName applicationShortname of the application to be polled
+     * @param applicationShortName applicationShortName of the application to be polled
      * @param applicationVersion applicationVersion of the application to be polled
      */
     pollDeploymentJobStatus(applicationShortName: string, applicationVersion: string) {
         const resource = 'poll/jobs/' + applicationShortName + '/' + applicationVersion + '/status';
         const stream = this.getStreamSource<any>(resource);
 
+        // TODO cleanup after ngOnDestroy
 
         // poll status, end polling after 3 minutes
         const subPolling = interval(500).pipe(takeUntil(timer(3 * 60 * 1000)))
@@ -1047,4 +1069,36 @@ export class ApiService {
         );
 
     }
+
+    /**
+     * Polls the getApplicationDeploymentStatus method for a specified application
+     *
+     * @param applicationShortName shortName of the application
+     * @param applicationVersion version of the application
+     */
+    pollApplicationStatus(applicationShortName: string, applicationVersion: string) {
+        const resource = 'poll/application/' + applicationShortName + '/' + applicationVersion + '/deploymentStatus';
+        const stream = this.getStreamSource<any>(resource);
+
+        // TODO cleanup after ngOnDestroy
+
+        // poll status
+        const subPolling = interval(2 * 1000)
+            .subscribe(() => {
+                this.getApplicationDeploymentStatus(applicationShortName, applicationVersion);
+            });
+
+        // handle incomming status updates
+        const subJobStatus = this.getApplicationDeploymentStatus(applicationShortName, applicationVersion).subscribe(newStatus => {
+
+            console.log(newStatus);
+            stream.next(freezeObject(newStatus));
+
+        });
+
+        return stream.asObservable().pipe(
+            filter(data => data !== undefined)
+        );
+    }
+
 }

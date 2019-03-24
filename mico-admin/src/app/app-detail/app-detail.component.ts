@@ -147,6 +147,12 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                 }
             });
         });
+
+        // status polling
+        this.apiService.pollApplicationStatus(this.shortName, this.selectedVersion)
+            .subscribe(val => {
+                console.log('app-detail', val);
+            });
     }
 
     /**
