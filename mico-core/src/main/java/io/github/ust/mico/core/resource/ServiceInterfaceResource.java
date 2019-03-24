@@ -19,8 +19,6 @@
 
 package io.github.ust.mico.core.resource;
 
-import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
-import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
 import io.fabric8.kubernetes.api.model.Service;
 import io.github.ust.mico.core.broker.MicoServiceBroker;
 import io.github.ust.mico.core.broker.MicoServiceInterfaceBroker;
@@ -32,8 +30,6 @@ import io.github.ust.mico.core.exception.MicoServiceInterfaceNotFoundException;
 import io.github.ust.mico.core.exception.MicoServiceNotFoundException;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.persistence.MicoServiceInterfaceRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,12 +64,6 @@ public class ServiceInterfaceResource {
     private static final String PATH_PART_PUBLIC_IP = "publicIP";
     private static final String SERVICE_INTERFACE_PATH = "/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_PART_INTERFACES;
     private static final String SERVICE_INTERFACE_PUBLIC_IP_PATH = SERVICE_INTERFACE_PATH + "/{" + PATH_VARIABLE_SERVICE_INTERFACE_NAME + "}/" + PATH_PART_PUBLIC_IP;
-
-    @Autowired
-    private MicoServiceRepository serviceRepository;
-
-    @Autowired
-    private MicoServiceInterfaceRepository serviceInterfaceRepository; //TODO: Remove
 
     @Autowired
     private MicoServiceInterfaceBroker micoServiceInterfaceBroker;
