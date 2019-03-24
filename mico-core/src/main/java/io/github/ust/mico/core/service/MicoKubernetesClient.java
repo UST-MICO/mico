@@ -277,7 +277,8 @@ public class MicoKubernetesClient {
      * 		running or finished with an error</li>
      * 	<li>the stored {@link MicoServiceDeploymentInfo} and {@link KubernetesDeploymentInfo}</li>
      * 	<li>the actual information retrieved from Kubernetes regarding deployments for
-     * 		{@link MicoServices} and services for {@link MicoServiceInterfaces}</li>
+     * 		{@link MicoService MicoServices} and Kubernetes Services for
+     * 		{@link MicoServiceInterface MicoServiceInterfaces}</li>
      * </ul>
      * Note that the returned {@code MicoApplicationDeploymentStatus} contains info messages with further
      * information in case the {@code MicoApplication} currently is <u>not</u> deployed.
@@ -331,7 +332,7 @@ public class MicoKubernetesClient {
    				+ "' '" + micoApplication.getVersion() + "' is currently in progress."));
    			return new MicoApplicationDeploymentStatus(applicationDeploymentStatus, messages);
    		case ERROR:
-   			// 'Error' indicates that erros occurred during the deployment
+   			// 'Error' indicates that errors occurred during the deployment
    			applicationDeploymentStatus = Value.INCOMPLETED;
    			log.debug("The deployment of MicoApplication '{}' '{}' failed.",
    	    		micoApplication.getShortName(), micoApplication.getVersion());
@@ -411,7 +412,7 @@ public class MicoKubernetesClient {
      * Checks whether a given {@code MicoApplication} is currently deployed.
      * 
      * @param micoApplication the {@link MicoApplication}.
-     * @return {@code true} if and only if {@link #getDeploymentStatusOfAppliation(MicoApplication)}
+     * @return {@code true} if and only if {@link #getApplicationDeploymentStatus(MicoApplication)}
      * 		   returns a {@link MicoApplicationDeploymentStatus} with {@link Value#DEPLOYED};
      * 		   {@code false} otherwise.
      */
@@ -435,16 +436,16 @@ public class MicoKubernetesClient {
         List<String> serviceNames = currentKubernetesDeploymentInfo.getServiceNames();
 
         if (namespace == null) {
-            throw new IllegalArgumentException("There is no namespace set for MicoService " +
-                "'" + micoService.getShortName() + "' '" + micoService.getVersion() + "'!");
+            throw new IllegalArgumentException("There is no namespace set for MicoService '"
+                + micoService.getShortName() + "' '" + micoService.getVersion() + "'!");
         }
         if (deploymentName == null) {
-            throw new IllegalArgumentException("There is no deployment name set for MicoService " +
-                "'" + micoService.getShortName() + "' '" + micoService.getVersion() + "'!");
+            throw new IllegalArgumentException("There is no deployment name set for MicoService '"
+                + micoService.getShortName() + "' '" + micoService.getVersion() + "'!");
         }
         if (serviceNames == null) {
-            throw new IllegalArgumentException("There are no Kubernetes Services set for MicoService " +
-                "'" + micoService.getShortName() + "' '" + micoService.getVersion() + "'!");
+            throw new IllegalArgumentException("There are no Kubernetes Services set for MicoService '"
+                + micoService.getShortName() + "' '" + micoService.getVersion() + "'!");
         }
 
         Deployment actualKubernetesDeployment = null;

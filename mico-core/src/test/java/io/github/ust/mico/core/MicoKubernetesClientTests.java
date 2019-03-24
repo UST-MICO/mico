@@ -266,7 +266,7 @@ public class MicoKubernetesClientTests {
         given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(
 		    micoApplication.getShortName(), micoApplication.getVersion())).willReturn(jobStatus);
         
-        assertEquals("Application is expteced to be deployed but actually is not.",
+        assertEquals("Application is expected to be deployed but actually is not.",
         	MicoApplicationDeploymentStatus.Value.DEPLOYED,
         	micoKubernetesClient.getApplicationDeploymentStatus(micoApplication).getValue());
     }
@@ -280,7 +280,7 @@ public class MicoKubernetesClientTests {
         given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(
 		    micoApplication.getShortName(), micoApplication.getVersion())).willReturn(jobStatus);
         
-        assertEquals("Application is expteced not to be deployed due to the deployment not having started yet.",
+        assertEquals("Application is expected not to be deployed due to the deployment not having started yet.",
         	MicoApplicationDeploymentStatus.Value.PENDING,
         	micoKubernetesClient.getApplicationDeploymentStatus(micoApplication).getValue());
     }
@@ -294,7 +294,7 @@ public class MicoKubernetesClientTests {
         given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(
 		    micoApplication.getShortName(), micoApplication.getVersion())).willReturn(jobStatus);
         
-        assertEquals("Application is expteced not to be deployed due to the deployment currently being in progress.",
+        assertEquals("Application is expected not to be deployed due to the deployment currently being in progress.",
         	MicoApplicationDeploymentStatus.Value.PENDING,
         	micoKubernetesClient.getApplicationDeploymentStatus(micoApplication).getValue());
     }
@@ -308,7 +308,7 @@ public class MicoKubernetesClientTests {
         given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(
 		    micoApplication.getShortName(), micoApplication.getVersion())).willReturn(jobStatus);
         
-        assertEquals("Application is expteced not to be deployed due to the deployment having failed.",
+        assertEquals("Application is expected not to be deployed due to the deployment having failed.",
         	MicoApplicationDeploymentStatus.Value.INCOMPLETED,
         	micoKubernetesClient.getApplicationDeploymentStatus(micoApplication).getValue());
     }
@@ -325,7 +325,7 @@ public class MicoKubernetesClientTests {
         given(serviceDeploymentInfoRepository.findAllByApplication(
    			micoApplication.getShortName(), micoApplication.getVersion())).willReturn(Collections.emptyList());
         
-        assertEquals("Application is expteced not to be deployed since it does not provide any service deployment information.",
+        assertEquals("Application is expected not to be deployed since it does not provide any service deployment information.",
         	MicoApplicationDeploymentStatus.Value.UNDEPLOYED,
         	micoKubernetesClient.getApplicationDeploymentStatus(micoApplication).getValue());
     }
@@ -343,7 +343,7 @@ public class MicoKubernetesClientTests {
    			micoApplication.getShortName(), micoApplication.getVersion())).willReturn(
    				micoApplication.getServiceDeploymentInfos().stream().map(sdi -> sdi.setKubernetesDeploymentInfo(null)).collect(Collectors.toList()));
         
-        assertEquals("Application is expteced not to be deployed since it does not have any Kubernetes deployment information.",
+        assertEquals("Application is expected not to be deployed since it does not have any Kubernetes deployment information.",
         	MicoApplicationDeploymentStatus.Value.UNDEPLOYED,
         	micoKubernetesClient.getApplicationDeploymentStatus(micoApplication).getValue());
     }
@@ -359,7 +359,7 @@ public class MicoKubernetesClientTests {
         
         mockServer.getClient().apps().deployments().inNamespace(testNamespace).delete();
         
-        assertEquals("Application is expteced not to be deployed since there are no Kubernetes resources deployed.",
+        assertEquals("Application is expected not to be deployed since there are no Kubernetes resources deployed.",
         	MicoApplicationDeploymentStatus.Value.UNDEPLOYED,
         	micoKubernetesClient.getApplicationDeploymentStatus(micoApplication).getValue());
     }
