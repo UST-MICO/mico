@@ -64,20 +64,20 @@ public class DeploymentResource {
     @Autowired
     private DeploymentBroker deploymentBroker;
 
-    @Autowired
-    private BackgroundJobBroker backgroundJobBroker; // TODO: remove
+//    @Autowired
+//    private BackgroundJobBroker backgroundJobBroker; // TODO: remove
 
     @Autowired
     private MicoApplicationRepository applicationRepository; // TODO: remove
 
-    @Autowired
-    private MicoServiceRepository serviceRepository; // TODO: remove
-
-    @Autowired
-    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository; // TODO: remove
-
-    @Autowired
-    private ImageBuilder imageBuilder;
+//    @Autowired
+//    private MicoServiceRepository serviceRepository; // TODO: remove
+//
+//    @Autowired
+//    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository; // TODO: remove
+//
+//    @Autowired
+//    private ImageBuilder imageBuilder;
 
     @Autowired
     private MicoKubernetesClient micoKubernetesClient;

@@ -12,6 +12,7 @@ import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Collections;
@@ -26,6 +27,11 @@ import static org.mockito.BDDMockito.given;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@ActiveProfiles("local")
+//@RunWith(SpringRunner.class)
+//@EnableAutoConfiguration
+//@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+//@AutoConfigureMockMvc
 public class MicoServiceBrokerTests {
 
     @MockBean
@@ -40,10 +46,10 @@ public class MicoServiceBrokerTests {
     @Test
     public void getAllServicesAsList() throws Exception {
         given(serviceRepository.findAll(ArgumentMatchers.anyInt())).willReturn(
-            CollectionUtils.listOf(
-                new MicoService().setShortName(SHORT_NAME_1).setVersion(VERSION_1_0_1).setName(NAME_1).setDescription(DESCRIPTION_1),
-                new MicoService().setShortName(SHORT_NAME_2).setVersion(VERSION_1_0_2).setName(NAME_2).setDescription(DESCRIPTION_2),
-                new MicoService().setShortName(SHORT_NAME_3).setVersion(VERSION_1_0_3).setName(NAME_3).setDescription(DESCRIPTION_3)));
+                CollectionUtils.listOf(
+                        new MicoService().setShortName(SHORT_NAME_1).setVersion(VERSION_1_0_1).setName(NAME_1).setDescription(DESCRIPTION_1),
+                        new MicoService().setShortName(SHORT_NAME_2).setVersion(VERSION_1_0_2).setName(NAME_2).setDescription(DESCRIPTION_2),
+                        new MicoService().setShortName(SHORT_NAME_3).setVersion(VERSION_1_0_3).setName(NAME_3).setDescription(DESCRIPTION_3)));
 
         List<MicoService> micoServiceList = micoServiceBroker.getAllServicesAsList();
 
@@ -55,10 +61,10 @@ public class MicoServiceBrokerTests {
     @Test
     public void getServiceFromDatabase() throws Exception {
         MicoService service = new MicoService()
-            .setShortName(SHORT_NAME_1)
-            .setVersion(VERSION_1_0_1)
-            .setName(NAME_2)
-            .setDescription(DESCRIPTION_2);
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_2)
+                .setDescription(DESCRIPTION_2);
 
         given(serviceRepository.findByShortNameAndVersion(service.getShortName(), service.getVersion())).willReturn(Optional.of(service));
 
@@ -70,16 +76,16 @@ public class MicoServiceBrokerTests {
     @Test
     public void updateExistingService() throws Exception {
         MicoService micoServiceTwo = new MicoService()
-            .setShortName(SHORT_NAME_2)
-            .setVersion(VERSION_1_0_2)
-            .setName(NAME_2)
-            .setDescription(DESCRIPTION_1);
+                .setShortName(SHORT_NAME_2)
+                .setVersion(VERSION_1_0_2)
+                .setName(NAME_2)
+                .setDescription(DESCRIPTION_1);
 
         MicoService resultUpdatedService = new MicoService()
-            .setShortName(SHORT_NAME_1)
-            .setVersion(VERSION_1_0_1)
-            .setName(NAME_2)
-            .setDescription(DESCRIPTION_2);
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_2)
+                .setDescription(DESCRIPTION_2);
 
         given(serviceRepository.findByShortNameAndVersion(resultUpdatedService.getShortName(), resultUpdatedService.getVersion())).willReturn(Optional.of(resultUpdatedService));
         given(serviceRepository.save(any(MicoService.class))).willReturn(resultUpdatedService);
@@ -95,10 +101,10 @@ public class MicoServiceBrokerTests {
     @Test
     public void getServiceById() throws Exception {
         MicoService micoServiceOne = new MicoService()
-            .setShortName(SHORT_NAME_1)
-            .setVersion(VERSION_1_0_1)
-            .setName(NAME_1)
-            .setDescription(DESCRIPTION_1);
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_1)
+                .setDescription(DESCRIPTION_1);
 
         Long id = 1L;
 
@@ -116,10 +122,10 @@ public class MicoServiceBrokerTests {
     public void deleteService() throws Exception {
         //TODO: Implementation haha
         MicoService micoServiceOne = new MicoService()
-            .setShortName(SHORT_NAME_1)
-            .setVersion(VERSION_1_0_1)
-            .setName(NAME_1)
-            .setDescription(DESCRIPTION_1);
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_1)
+                .setDescription(DESCRIPTION_1);
 
         micoServiceBroker.deleteService(micoServiceOne);
     }
@@ -127,10 +133,10 @@ public class MicoServiceBrokerTests {
     @Test
     public void persistService() throws Exception {
         MicoService service = new MicoService()
-            .setShortName(SHORT_NAME_1)
-            .setVersion(VERSION_1_0_1)
-            .setName(NAME_1)
-            .setDescription(DESCRIPTION_1);
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_1)
+                .setDescription(DESCRIPTION_1);
 
         given(serviceRepository.save(any(MicoService.class))).willReturn(service);
 
@@ -145,10 +151,10 @@ public class MicoServiceBrokerTests {
     @Test
     public void deleteAllVersionsOfService() throws Exception {
         MicoService micoServiceOne = new MicoService()
-            .setShortName(SHORT_NAME_1)
-            .setVersion(VERSION_1_0_1)
-            .setName(NAME_1)
-            .setDescription(DESCRIPTION_1);
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_1)
+                .setDescription(DESCRIPTION_1);
 
         given(serviceRepository.findByShortName(SHORT_NAME_1)).willReturn(CollectionUtils.listOf(micoServiceOne));
 
@@ -158,25 +164,25 @@ public class MicoServiceBrokerTests {
     @Test
     public void getAllDependersOfService() throws Exception {
         MicoService service = new MicoService()
-            .setShortName(SHORT_NAME)
-            .setVersion(VERSION)
-            .setName(NAME)
-            .setDescription(DESCRIPTION);
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION)
+                .setName(NAME)
+                .setDescription(DESCRIPTION);
 
         MicoService service1 = new MicoService()
-            .setShortName(SHORT_NAME_1)
-            .setVersion(VERSION_1_0_1)
-            .setName(NAME)
-            .setDescription(DESCRIPTION_1);
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME)
+                .setDescription(DESCRIPTION_1);
         MicoService service2 = new MicoService()
-            .setShortName(SHORT_NAME_2)
-            .setVersion(VERSION_1_0_2)
-            .setDescription(DESCRIPTION_2);
+                .setShortName(SHORT_NAME_2)
+                .setVersion(VERSION_1_0_2)
+                .setDescription(DESCRIPTION_2);
         MicoService service3 = new MicoService()
-            .setShortName(SHORT_NAME_3)
-            .setVersion(VERSION_1_0_3)
-            .setName(NAME)
-            .setDescription(DESCRIPTION_3);
+                .setShortName(SHORT_NAME_3)
+                .setVersion(VERSION_1_0_3)
+                .setName(NAME)
+                .setDescription(DESCRIPTION_3);
 
         MicoServiceDependency dependency1 = new MicoServiceDependency().setService(service1).setDependedService(service);
         MicoServiceDependency dependency2 = new MicoServiceDependency().setService(service2).setDependedService(service);
@@ -199,25 +205,25 @@ public class MicoServiceBrokerTests {
     @Test
     public void getAllDependersOfServiceByQuery() throws Exception {
         MicoService service = new MicoService()
-            .setShortName(SHORT_NAME)
-            .setVersion(VERSION)
-            .setName(NAME)
-            .setDescription(DESCRIPTION);
+                .setShortName(SHORT_NAME)
+                .setVersion(VERSION)
+                .setName(NAME)
+                .setDescription(DESCRIPTION);
 
         MicoService service1 = new MicoService()
-            .setShortName(SHORT_NAME_1)
-            .setVersion(VERSION_1_0_1)
-            .setName(NAME)
-            .setDescription(DESCRIPTION_1);
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME)
+                .setDescription(DESCRIPTION_1);
         MicoService service2 = new MicoService()
-            .setShortName(SHORT_NAME_2)
-            .setVersion(VERSION_1_0_2)
-            .setDescription(DESCRIPTION_2);
+                .setShortName(SHORT_NAME_2)
+                .setVersion(VERSION_1_0_2)
+                .setDescription(DESCRIPTION_2);
         MicoService service3 = new MicoService()
-            .setShortName(SHORT_NAME_3)
-            .setVersion(VERSION_1_0_3)
-            .setName(NAME)
-            .setDescription(DESCRIPTION_3);
+                .setShortName(SHORT_NAME_3)
+                .setVersion(VERSION_1_0_3)
+                .setName(NAME)
+                .setDescription(DESCRIPTION_3);
 
         MicoServiceDependency dependency1 = new MicoServiceDependency().setService(service1).setDependedService(service);
         MicoServiceDependency dependency2 = new MicoServiceDependency().setService(service2).setDependedService(service);
@@ -239,19 +245,19 @@ public class MicoServiceBrokerTests {
     @Test
     public void getDependentServicesOfService() {
         MicoService service1 = new MicoService()
-            .setShortName(SHORT_NAME_1)
-            .setVersion(VERSION_1_0_1)
-            .setName(NAME_1)
-            .setDescription(DESCRIPTION_1);
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_1)
+                .setDescription(DESCRIPTION_1);
         MicoService service2 = new MicoService()
-            .setShortName(SHORT_NAME_2)
-            .setVersion(VERSION_1_0_2)
-            .setName(NAME_2)
-            .setDescription(DESCRIPTION_2);
+                .setShortName(SHORT_NAME_2)
+                .setVersion(VERSION_1_0_2)
+                .setName(NAME_2)
+                .setDescription(DESCRIPTION_2);
         MicoService service = new MicoService()
-            .setShortName(SHORT_NAME)
-            .setName(NAME)
-            .setVersion(VERSION);
+                .setShortName(SHORT_NAME)
+                .setName(NAME)
+                .setVersion(VERSION);
         MicoServiceDependency dependency1 = new MicoServiceDependency().setService(service).setDependedService(service1);
         MicoServiceDependency dependency2 = new MicoServiceDependency().setService(service).setDependedService(service2);
         service.setDependencies(CollectionUtils.listOf(dependency1, dependency2));
@@ -269,19 +275,19 @@ public class MicoServiceBrokerTests {
     @Test
     public void getDependeesByQuery() {
         MicoService service1 = new MicoService()
-            .setShortName(SHORT_NAME_1)
-            .setVersion(VERSION_1_0_1)
-            .setName(NAME_1)
-            .setDescription(DESCRIPTION_1);
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_1)
+                .setDescription(DESCRIPTION_1);
         MicoService service2 = new MicoService()
-            .setShortName(SHORT_NAME_2)
-            .setVersion(VERSION_1_0_2)
-            .setName(NAME_2)
-            .setDescription(DESCRIPTION_2);
+                .setShortName(SHORT_NAME_2)
+                .setVersion(VERSION_1_0_2)
+                .setName(NAME_2)
+                .setDescription(DESCRIPTION_2);
         MicoService service = new MicoService()
-            .setShortName(SHORT_NAME)
-            .setName(NAME)
-            .setVersion(VERSION);
+                .setShortName(SHORT_NAME)
+                .setName(NAME)
+                .setVersion(VERSION);
         MicoServiceDependency dependency1 = new MicoServiceDependency().setService(service).setDependedService(service1);
         MicoServiceDependency dependency2 = new MicoServiceDependency().setService(service).setDependedService(service2);
         service.setDependencies(CollectionUtils.listOf(dependency1, dependency2));
@@ -297,15 +303,15 @@ public class MicoServiceBrokerTests {
     @Test
     public void checkIfDependencyAlreadyExistsAndCheckForTrue() {
         MicoService service = new MicoService()
-            .setShortName(SHORT_NAME)
-            .setName(NAME)
-            .setVersion(VERSION);
+                .setShortName(SHORT_NAME)
+                .setName(NAME)
+                .setVersion(VERSION);
 
         MicoService service1 = new MicoService()
-            .setShortName(SHORT_NAME_1)
-            .setVersion(VERSION_1_0_1)
-            .setName(NAME_1)
-            .setDescription(DESCRIPTION_1);
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_1)
+                .setDescription(DESCRIPTION_1);
 
         MicoServiceDependency dependency1 = new MicoServiceDependency().setService(service).setDependedService(service1);
 
@@ -319,15 +325,15 @@ public class MicoServiceBrokerTests {
     @Test
     public void checkIfDependencyAlreadyExistsAndCheckForFalse() {
         MicoService service = new MicoService()
-            .setShortName(SHORT_NAME)
-            .setName(NAME)
-            .setVersion(VERSION);
+                .setShortName(SHORT_NAME)
+                .setName(NAME)
+                .setVersion(VERSION);
 
         MicoService service1 = new MicoService()
-            .setShortName(SHORT_NAME_1)
-            .setVersion(VERSION_1_0_1)
-            .setName(NAME_1)
-            .setDescription(DESCRIPTION_1);
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_1)
+                .setDescription(DESCRIPTION_1);
 
         boolean result = micoServiceBroker.checkIfDependencyAlreadyExists(service, service1);
 
@@ -337,25 +343,25 @@ public class MicoServiceBrokerTests {
     @Test
     public void persistNewDependencyBetweenServices() {
         MicoService service1 = new MicoService()
-            .setShortName(SHORT_NAME_1)
-            .setVersion(VERSION_1_0_1)
-            .setName(NAME_1)
-            .setDescription(DESCRIPTION_1)
-            .setDependencies(new LinkedList<>());
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_1)
+                .setDescription(DESCRIPTION_1)
+                .setDependencies(new LinkedList<>());
         MicoService service2 = new MicoService()
-            .setShortName(SHORT_NAME_2)
-            .setVersion(VERSION_1_0_2)
-            .setName(NAME_2)
-            .setDescription(DESCRIPTION_2);
+                .setShortName(SHORT_NAME_2)
+                .setVersion(VERSION_1_0_2)
+                .setName(NAME_2)
+                .setDescription(DESCRIPTION_2);
 
         MicoServiceDependency dependency = new MicoServiceDependency().setService(service1).setDependedService(service2);
 
         MicoService expectedService = new MicoService()
-            .setShortName(SHORT_NAME_1)
-            .setVersion(VERSION_1_0_1)
-            .setName(NAME_1)
-            .setDescription(DESCRIPTION_1)
-            .setDependencies(Collections.singletonList(dependency));
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_1)
+                .setDescription(DESCRIPTION_1)
+                .setDependencies(Collections.singletonList(dependency));
 
         given(serviceRepository.save(service1)).willReturn(expectedService);
 
@@ -368,28 +374,28 @@ public class MicoServiceBrokerTests {
     @Test
     public void deleteDependencyBetweenServices() {
         MicoService service1 = new MicoService()
-            .setId(new Long(1))
-            .setShortName(SHORT_NAME_1)
-            .setVersion(VERSION_1_0_1)
-            .setName(NAME_1)
-            .setDescription(DESCRIPTION_1)
-            .setDependencies(new LinkedList<>());
+                .setId(new Long(1))
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_1)
+                .setDescription(DESCRIPTION_1)
+                .setDependencies(new LinkedList<>());
         MicoService service2 = new MicoService()
-            .setId(new Long(2))
-            .setShortName(SHORT_NAME_2)
-            .setVersion(VERSION_1_0_2)
-            .setName(NAME_2)
-            .setDescription(DESCRIPTION_2);
+                .setId(new Long(2))
+                .setShortName(SHORT_NAME_2)
+                .setVersion(VERSION_1_0_2)
+                .setName(NAME_2)
+                .setDescription(DESCRIPTION_2);
 
         MicoServiceDependency dependency = new MicoServiceDependency().setService(service1).setDependedService(service2);
 
         service1.getDependencies().add(dependency);
 
         MicoService expectedService = new MicoService()
-            .setShortName(SHORT_NAME_1)
-            .setVersion(VERSION_1_0_1)
-            .setName(NAME_1)
-            .setDescription(DESCRIPTION_1);
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_1)
+                .setDescription(DESCRIPTION_1);
 
         given(serviceRepository.save(service1)).willReturn(expectedService);
 
@@ -401,20 +407,20 @@ public class MicoServiceBrokerTests {
     @Test
     public void deleteAllDependees() {
         MicoService service1 = new MicoService()
-            .setShortName(SHORT_NAME_1)
-            .setVersion(VERSION_1_0_1)
-            .setName(NAME_1)
-            .setDescription(DESCRIPTION_1);
+                .setShortName(SHORT_NAME_1)
+                .setVersion(VERSION_1_0_1)
+                .setName(NAME_1)
+                .setDescription(DESCRIPTION_1);
         MicoService service2 = new MicoService()
-            .setShortName(SHORT_NAME_2)
-            .setVersion(VERSION_1_0_2)
-            .setName(NAME_2)
-            .setDescription(DESCRIPTION_2);
+                .setShortName(SHORT_NAME_2)
+                .setVersion(VERSION_1_0_2)
+                .setName(NAME_2)
+                .setDescription(DESCRIPTION_2);
         MicoService service = new MicoService()
-            .setShortName(SHORT_NAME)
-            .setName(NAME)
-            .setVersion(VERSION)
-            .setDescription(DESCRIPTION);
+                .setShortName(SHORT_NAME)
+                .setName(NAME)
+                .setVersion(VERSION)
+                .setDescription(DESCRIPTION);
 
         MicoServiceDependency dependency1 = new MicoServiceDependency().setService(service).setDependedService(service1);
         MicoServiceDependency dependency2 = new MicoServiceDependency().setService(service).setDependedService(service2);
@@ -426,10 +432,10 @@ public class MicoServiceBrokerTests {
         service.setDependencies(micoServiceDependencies);
 
         MicoService expectedService = new MicoService()
-            .setShortName(SHORT_NAME)
-            .setName(NAME)
-            .setVersion(VERSION)
-            .setDescription(DESCRIPTION);
+                .setShortName(SHORT_NAME)
+                .setName(NAME)
+                .setVersion(VERSION)
+                .setDescription(DESCRIPTION);
 
         given(serviceRepository.save(service)).willReturn(expectedService);
 
@@ -441,16 +447,16 @@ public class MicoServiceBrokerTests {
     @Test
     public void promoteService() {
         MicoService service = new MicoService()
-            .setShortName(SHORT_NAME)
-            .setName(NAME)
-            .setVersion(VERSION)
-            .setDescription(DESCRIPTION);
+                .setShortName(SHORT_NAME)
+                .setName(NAME)
+                .setVersion(VERSION)
+                .setDescription(DESCRIPTION);
 
         MicoService expectedService = new MicoService()
-            .setShortName(SHORT_NAME)
-            .setName(NAME)
-            .setVersion(VERSION_1_0_1)
-            .setDescription(DESCRIPTION);
+                .setShortName(SHORT_NAME)
+                .setName(NAME)
+                .setVersion(VERSION_1_0_1)
+                .setDescription(DESCRIPTION);
 
         given(serviceRepository.save(service)).willReturn(expectedService);
 

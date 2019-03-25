@@ -22,11 +22,13 @@ package io.github.ust.mico.core;
 import io.github.ust.mico.core.service.GitHubCrawler;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringRunner.class)
+@ActiveProfiles("local")
 public class GitHubCrawlerTests {
 
     private static final String REPO_URI_API = "https://api.github.com/repos/octokit/octokit.rb";
@@ -37,7 +39,7 @@ public class GitHubCrawlerTests {
     @Test
     public void testMakeUriToMatchGitHubApi() {
         GitHubCrawler crawler = new GitHubCrawler(null, null);
-        
+
         assertEquals(REPO_URI_API, crawler.adaptUriForGitHubApi(REPO_URI_HTML));
         assertEquals(REPO_URI_API, crawler.adaptUriForGitHubApi(REPO_URI_WITH_SLASH));
         assertEquals(REPO_URI_API, crawler.adaptUriForGitHubApi(REPO_URI_WITH_SPACES));
