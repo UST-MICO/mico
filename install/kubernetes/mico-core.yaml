@@ -5,6 +5,7 @@ metadata:
   name: mico-core
   namespace: mico-system
 data:
+  spring.profiles.active: prod
   application.properties: |-
     spring.data.neo4j.uri=bolt://neo4j.mico-system:7687
     kubernetes.prometheus.uri=http://prometheus.monitoring:9090/api/v1/query
@@ -47,3 +48,9 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
+        env:
+            - name: SPRING_PROFILES_ACTIVE
+              valueFrom:
+                  configMapKeyRef:
+                      name: mico-core
+                      key: spring.profiles.active

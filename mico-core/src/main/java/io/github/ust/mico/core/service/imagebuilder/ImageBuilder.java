@@ -92,7 +92,7 @@ public class ImageBuilder {
         log.info("Application context refreshed.");
 
         // Initialization must only be executed in an environment with a connection to Kubernetes.
-        // Skip the initialization if we are in the 'test' profile (e.g. Travis CI).
+        // Skip the initialization if we are in the 'local' profile (e.g. Travis CI).
         Environment environment = cre.getApplicationContext().getEnvironment();
         if (environment.acceptsProfiles(Profiles.of("local"))) {
             log.info("Local profile is active. Don't initialize image builder.");
