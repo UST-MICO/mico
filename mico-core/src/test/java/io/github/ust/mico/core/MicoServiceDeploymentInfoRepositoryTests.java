@@ -213,11 +213,14 @@ public class MicoServiceDeploymentInfoRepositoryTests {
         assertEquals("key1", serviceDeploymentInfoOptional.get().getLabels().get(0).getKey());
         assertEquals(2, serviceDeploymentInfoOptional.get().getEnvironmentVariables().size());
 
-        if (serviceDeploymentInfoOptional.get().getEnvironmentVariables().get(0).getName().equals("env1")) {
-            assertEquals("val1", serviceDeploymentInfoOptional.get().getEnvironmentVariables().get(0).getValue());
+        MicoEnvironmentVariable var1 = serviceDeploymentInfoOptional.get().getEnvironmentVariables().get(0);
+        MicoEnvironmentVariable var2 = serviceDeploymentInfoOptional.get().getEnvironmentVariables().get(1);
+
+        if (var1.getName().equals("env1")) {
+            assertEquals("val1", var1.getValue());
 
         } else {
-            assertEquals("val2", serviceDeploymentInfoOptional.get().getEnvironmentVariables().get(1).getValue());
+            assertEquals("val2", var2.getValue());
         }
 
         serviceDeploymentInfoOptional = serviceDeploymentInfoRepository.findByApplicationAndService("a1", "v1.0.0", "s2", "v1.0.3");
