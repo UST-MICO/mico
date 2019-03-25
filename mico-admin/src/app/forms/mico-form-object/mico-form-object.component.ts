@@ -49,7 +49,6 @@ export class MicoFormObjectComponent implements OnInit, AfterViewInit, AsyncVali
     currentValue: any = {};
 
     @Input() config: ApiModel;
-    nestedModel: ApiModel;
 
     onChange: any = () => { };
 
@@ -101,12 +100,7 @@ export class MicoFormObjectComponent implements OnInit, AfterViewInit, AsyncVali
     }
 
 
-    ngOnInit() {
-        const modelUrl = this.config.$ref;
-        this.models.getModel(modelUrl).subscribe(model => {
-            this.nestedModel = model;
-        });
-    }
+    ngOnInit() { }
 
     ngAfterViewInit() {
         this.micoForm.valid.subscribe((valid) => this.valid.next(valid));

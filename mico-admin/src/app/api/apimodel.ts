@@ -17,6 +17,9 @@
  * under the License.
  */
 
+export interface ApiModelProperties {
+    [propName: string]: ApiModel | ApiModelRef | ApiModelAllOf;
+}
 
 export interface ApiModelRef {
     $ref: string;
@@ -24,7 +27,7 @@ export interface ApiModelRef {
 
 export interface ApiModel {
     type: string;
-    properties?: {[propName: string]: ApiModel | ApiModelRef};
+    properties?: { [propName: string]: ApiModel | ApiModelRef };
     required?: string[];
     title?: string;
     description?: string;
@@ -37,5 +40,5 @@ export interface ApiModel {
 }
 
 export interface ApiModelAllOf {
-    allOf: (ApiModel|ApiModelRef)[];
+    allOf: (ApiModel | ApiModelRef)[];
 }
