@@ -199,43 +199,43 @@ public class MicoApplicationDeploymentStatus {
 
 	/**
 	 * Creates a new {@code MicoApplicationDeploymentStatus} instance
-	 * with the value {@link Value#INCOMPLETED} as well as a {@code MicoMessage}
+	 * with the value {@link Value#INCOMPLETE} as well as a {@code MicoMessage}
 	 * with the given message content and type {@link Type#ERROR}.
 	 * 
 	 * @param messages one or messages.
 	 * @return a {@link MicoApplicationDeploymentStatus}.
 	 */
-	public static final MicoApplicationDeploymentStatus incompleted(String... messages) {
-		return new MicoApplicationDeploymentStatus(Value.INCOMPLETED).setMessages(
+	public static final MicoApplicationDeploymentStatus incomplete(String... messages) {
+		return new MicoApplicationDeploymentStatus(Value.INCOMPLETE).setMessages(
 			Arrays.asList(messages).stream().map(m -> new MicoMessage(m, Type.ERROR))
 			.collect(Collectors.toList()));
 	}
 
 	/**
 	 * Creates a new {@code MicoApplicationDeploymentStatus} instance
-	 * with the value {@link Value#INCOMPLETED} as well as a {@code MicoMessage}
+	 * with the value {@link Value#INCOMPLETE} as well as a {@code MicoMessage}
 	 * with the given message content and type {@link Type#INFO}.
 	 * 
 	 * @param messages the {@link List} of messages as {@code String}.
 	 * @return a {@link MicoApplicationDeploymentStatus}.
 	 */
-	public static final MicoApplicationDeploymentStatus incompleted(List<String> messages) {
-		return new MicoApplicationDeploymentStatus(Value.INCOMPLETED).setMessages(
+	public static final MicoApplicationDeploymentStatus incomplete(List<String> messages) {
+		return new MicoApplicationDeploymentStatus(Value.INCOMPLETE).setMessages(
 			messages.stream().map(m -> new MicoMessage(m, Type.ERROR))
 			.collect(Collectors.toList()));
 	}
 	
 	/**
 	 * Creates a new {@code MicoApplicationDeploymentStatus} instance
-	 * with the value {@link Value#INCOMPLETED} as well as a {@code MicoMessage}
+	 * with the value {@link Value#INCOMPLETE} as well as a {@code MicoMessage}
 	 * with the given message content and type.
 	 * 
 	 * @param message the content of the message.
 	 * @param messageType the {@link Type} of the message.
 	 * @return a {@link MicoApplicationDeploymentStatus}.
 	 */
-	public static final MicoApplicationDeploymentStatus incompleted(String message, Type messageType) {
-		return new MicoApplicationDeploymentStatus(Value.INCOMPLETED).setMessages(
+	public static final MicoApplicationDeploymentStatus incomplete(String message, Type messageType) {
+		return new MicoApplicationDeploymentStatus(Value.INCOMPLETE).setMessages(
 			CollectionUtils.listOf(new MicoMessage(message, messageType)));
 	}
 
@@ -315,8 +315,8 @@ public class MicoApplicationDeploymentStatus {
 		 * did not complete due to at least one {@link MicoService} of the {@code MicoApplication}
 		 * that couldn't be deployed / undeployed successfully.
 		 */
-	    @JsonProperty("Incompleted")
-	    INCOMPLETED("Incompleted"),
+	    @JsonProperty("Incomplete")
+	    INCOMPLETE("Incomplete"),
 	    
 	    /**
 		 * Indicates that the current deployment status of a {@link MicoApplication}

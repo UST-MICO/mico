@@ -54,7 +54,7 @@ public class MicoMessageResponseDTO {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Content."),
+            @ExtensionProperty(name = "title", value = "Content"),
             @ExtensionProperty(name = "readOnly", value = "true"),
             @ExtensionProperty(name = "x-order", value = "10"),
             @ExtensionProperty(name = "description", value = "The actual message content.")
@@ -69,7 +69,7 @@ public class MicoMessageResponseDTO {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Type."),
+            @ExtensionProperty(name = "title", value = "Type"),
             @ExtensionProperty(name = "readOnly", value = "true"),
             @ExtensionProperty(name = "x-order", value = "20"),
             @ExtensionProperty(name = "description", value = "The type of the message.")

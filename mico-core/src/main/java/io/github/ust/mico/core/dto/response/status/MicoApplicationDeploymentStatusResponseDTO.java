@@ -58,7 +58,7 @@ public class MicoApplicationDeploymentStatusResponseDTO {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Value."),
+            @ExtensionProperty(name = "title", value = "Value"),
             @ExtensionProperty(name = "readOnly", value = "true"),
             @ExtensionProperty(name = "x-order", value = "10"),
             @ExtensionProperty(name = "description", value = "The actual status value.")
@@ -78,7 +78,7 @@ public class MicoApplicationDeploymentStatusResponseDTO {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Messages."),
+            @ExtensionProperty(name = "title", value = "Messages"),
             @ExtensionProperty(name = "readOnly", value = "true"),
             @ExtensionProperty(name = "x-order", value = "20"),
             @ExtensionProperty(name = "description", value = "Messages with more detailed information about the status.")

@@ -309,7 +309,7 @@ public class MicoKubernetesClientTests {
 		    micoApplication.getShortName(), micoApplication.getVersion())).willReturn(jobStatus);
         
         assertEquals("Application is expected not to be deployed due to the deployment having failed.",
-        	MicoApplicationDeploymentStatus.Value.INCOMPLETED,
+        	MicoApplicationDeploymentStatus.Value.INCOMPLETE,
         	micoKubernetesClient.getApplicationDeploymentStatus(micoApplication).getValue());
     }
     
@@ -380,7 +380,7 @@ public class MicoKubernetesClientTests {
         assertEquals("Expected 1 deployment after deletion of one", 1, deployments.size());
 
         assertEquals("Application deployment status is expected to be incomplete because a Kubernetes deployment is missing.",
-            MicoApplicationDeploymentStatus.Value.INCOMPLETED,
+            MicoApplicationDeploymentStatus.Value.INCOMPLETE,
             micoKubernetesClient.getApplicationDeploymentStatus(micoApplication).getValue());
     }
 
@@ -400,7 +400,7 @@ public class MicoKubernetesClientTests {
         assertEquals("Expected 1 Kubernetes Service after deletion of one", 1, kubernetesServices.size());
 
         assertEquals("Application deployment status is expected to be incomplete because a Kubernetes Service is missing.",
-            MicoApplicationDeploymentStatus.Value.INCOMPLETED,
+            MicoApplicationDeploymentStatus.Value.INCOMPLETE,
             micoKubernetesClient.getApplicationDeploymentStatus(micoApplication).getValue());
     }
 
