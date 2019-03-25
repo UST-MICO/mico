@@ -153,11 +153,9 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
         // status polling
         safeUnsubscribe(this.subApplicationStatus);
-        // TODO handle undefined return or similar
         this.subApplicationStatus = this.apiService.pollApplicationStatus(this.shortName, this.selectedVersion)
             .subscribe(val => {
 
-                console.log('app-detail', val);
                 this.deploymentStatus = val;
                 let message = '';
                 val.messages.forEach(element => {
