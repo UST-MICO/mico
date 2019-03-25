@@ -27,6 +27,7 @@ import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.com
 import { Router } from '@angular/router';
 import { safeUnsubscribe } from '../util/utils';
 import { UtilServiceService } from '../util/util-service.service';
+import { versionComparator } from '../api/semantic-version';
 
 @Component({
     selector: 'mico-app-list',
@@ -66,6 +67,7 @@ export class AppListComponent implements OnInit {
                     .pipe(
                         groupBy(application => application.shortName),
                         mergeMap(group => group.pipe(toArray())),
+                        map(group => group.sort((a, b) => versionComparator(a.version, b.version))),
                         map(group => group[group.length - 1]),
                         toArray()
                     ).subscribe(applicationList => {

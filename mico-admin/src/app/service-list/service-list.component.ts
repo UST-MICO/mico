@@ -27,6 +27,7 @@ import { MatDialog } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 import { safeUnsubscribe } from '../util/utils';
 import { UtilServiceService } from '../util/util-service.service';
+import { versionComparator } from '../api/semantic-version';
 
 
 @Component({
@@ -72,6 +73,7 @@ export class ServiceListComponent implements OnInit, OnDestroy {
                     .pipe(
                         groupBy(service => service.shortName),
                         mergeMap(group => group.pipe(toArray())),
+                        map(group => group.sort((a, b) => versionComparator(a.version, b.version))),
                         map(group => group[group.length - 1]),
                         toArray()
                     ).subscribe(serviceList => {
