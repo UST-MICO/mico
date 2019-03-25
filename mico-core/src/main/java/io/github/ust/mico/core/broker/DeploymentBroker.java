@@ -9,11 +9,8 @@ import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.util.FutureUtils;
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.asm.Advice;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,9 +41,6 @@ public class DeploymentBroker {
 
     @Autowired
     private MicoKubernetesClient micoKubernetesClient;
-
-    @Autowired
-    private MicoServiceBroker micoServiceBroker;
 
     @Autowired
     private MicoServiceRepository serviceRepository; //TODO: Remove
@@ -142,26 +136,38 @@ public class DeploymentBroker {
         return micoApplicationJobStatus;
     }
 
+    public void undeployApplication(String shortName, String version) throws MicoApplicationNotFoundException {
+
+        MicoApplication micoApplication = micoApplicationBroker.getMicoApplicationByShortNameAndVersion(shortName, version);
+
+        log.info("Undeploy MicoApplication '{}' in version '{}' with {} included MicoService(s).",
+                shortName, version, micoApplication.getServices().size());
+
+        if (!micoKubernetesClient.isApplicationDeployed(micoApplication)) {
+            // Currently we undeploy all MicoServices regardless whether the application is considered
+            // to be deployed or not.
+            // The reason is that there are possible some MicoServices deployed successfully and some not.
+            // This undeployment should delete/scale the actually existing deployments.
+            log.info("MicoApplication '{}' in version '{}' is considered to be not deployed. " +
+                            "Nevertheless check if there are any MicoServices that should be undeployed.",
+                    micoApplication.getShortName(), micoApplication.getVersion());
+        }
+        // TODO: Undeploy only if application is deployed or it is in a conflicted state. Covered by mico#535
+        micoKubernetesClient.undeployApplication(micoApplication);
+    }
+
     private void checkIfMicoApplicationIsDeployable(MicoApplication micoApplication) throws MicoApplicationDoesNotIncludeMicoServiceException, MicoServiceInterfaceNotFoundException, DeploymentException {
         if (micoApplication.getServices() == null || micoApplication.getServices().isEmpty()) {
             throw new MicoApplicationDoesNotIncludeMicoServiceException(micoApplication.getShortName(), micoApplication.getVersion());
-//            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-//                    "Application '" + micoApplication.getShortName() + "' '" + micoApplication.getVersion() + "' does not include any services!");
         }
         for (MicoService micoService : micoApplication.getServices()) {
             if (micoService.getServiceInterfaces() == null || micoService.getServiceInterfaces().isEmpty()) {
                 throw new MicoServiceInterfaceNotFoundException(micoService.getShortName(), micoService.getVersion());
-//                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-//                        "Application '" + micoApplication.getShortName() + "' '" + micoApplication.getVersion() + "' includes the service '"
-//                                + micoService.getShortName() + "' '" + micoService.getVersion() + "' that does not include any interfaces!");
             }
             if (!micoService.getDependencies().isEmpty()) {
                 // TODO: Check if dependencies are valid. Covered by mico#583
                 throw new DeploymentException("The deployment of service dependencies is currently not implemented. " +
                         "See https://github.com/UST-MICO/mico/issues/583");
-//                throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED,
-//                        "The deployment of service dependencies is currently not implemented. " +
-//                                "See https://github.com/UST-MICO/mico/issues/583");
             }
         }
     }
@@ -221,5 +227,4 @@ public class DeploymentBroker {
                 .setDeploymentName(createdDeployment.getMetadata().getName())
                 .setServiceNames(createdServices.stream().map(service -> service.getMetadata().getName()).collect(toList()));
     }
-
 }
