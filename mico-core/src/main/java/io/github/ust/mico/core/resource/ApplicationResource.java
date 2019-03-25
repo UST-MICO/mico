@@ -155,6 +155,8 @@ public class ApplicationResource {
             application = broker.copyAndUpgradeMicoApplicationByShortNameAndVersion(shortName, version, newVersionDto.getVersion());
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (MicoApplicationAlreadyExistsException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
 
         return ResponseEntity.ok(getApplicationWithServicesResponseDTOResourceWithDeploymentStatus(application));

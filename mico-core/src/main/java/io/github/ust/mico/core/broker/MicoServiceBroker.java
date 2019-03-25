@@ -232,7 +232,7 @@ public class MicoServiceBroker {
         return resultingService;
     }
 
-    public MicoService promoteService(MicoService service, String newVersion) {
+    public MicoService promoteService(MicoService service, String newVersion) throws MicoServiceAlreadyExistsException {
         // In order to copy the service along with all service interfaces nodes
         // and all port nodes of the service interface we need to set the id of
         // service interfaces and ports to null.
@@ -243,7 +243,7 @@ public class MicoServiceBroker {
 
         log.debug("Set new version in service: {}", service);
 
-        MicoService updatedService = serviceRepository.save(service);
+        MicoService updatedService = persistService(service);
 
         log.debug("Updated service: {}", updatedService);
 

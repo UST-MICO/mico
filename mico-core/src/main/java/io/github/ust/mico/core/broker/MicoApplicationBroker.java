@@ -142,7 +142,7 @@ public class MicoApplicationBroker {
         return applicationRepository.save(micoApplication);
     }
 
-    public MicoApplication copyAndUpgradeMicoApplicationByShortNameAndVersion(String shortName, String version, String newVersion) throws MicoApplicationNotFoundException {
+    public MicoApplication copyAndUpgradeMicoApplicationByShortNameAndVersion(String shortName, String version, String newVersion) throws MicoApplicationNotFoundException, MicoApplicationAlreadyExistsException {
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(shortName, version);
 
         // Update the version of the application
@@ -163,7 +163,7 @@ public class MicoApplicationBroker {
         // is considered to be not deployed yet.
         micoApplication.getServiceDeploymentInfos().forEach(sdi -> sdi.setKubernetesDeploymentInfo(null));
 
-        return applicationRepository.save(micoApplication);
+        return createMicoApplication(micoApplication);
     }
 
     public List<MicoService> getMicoServicesOfMicoApplicationByShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException {
