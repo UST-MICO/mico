@@ -73,12 +73,8 @@ public class MicoApplicationBroker {
         return micoApplicationList;
     }
 
-    public List<MicoApplication> getMicoApplications() throws MicoApplicationNotFoundException {
-        List<MicoApplication> micoApplicationList = applicationRepository.findAll(3);
-        if (micoApplicationList.isEmpty()) {
-            throw new MicoApplicationNotFoundException();
-        }
-        return micoApplicationList;
+    public List<MicoApplication> getMicoApplications() {
+        return applicationRepository.findAll(3);
     }
 
     public void deleteMicoApplicationByShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException, MicoApplicationIsDeployedException {
