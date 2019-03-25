@@ -17,11 +17,10 @@
  * under the License.
  */
 
-import { Component, forwardRef, OnInit, Input, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, forwardRef, Input, AfterViewInit, ViewChild } from '@angular/core';
 import { MatFormFieldControl } from '@angular/material';
 import { NG_VALUE_ACCESSOR, AsyncValidator, NG_ASYNC_VALIDATORS } from '@angular/forms';
 import { ApiModel } from 'src/app/api/apimodel';
-import { ModelsService } from 'src/app/api/models.service';
 import { MicoFormComponent } from '../mico-form/mico-form.component';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { map, take } from 'rxjs/operators';
@@ -38,9 +37,9 @@ import { map, take } from 'rxjs/operators';
     }, { provide: NG_ASYNC_VALIDATORS, useExisting: forwardRef(() => MicoFormObjectComponent), multi: true }
         , { provide: MatFormFieldControl, useExisting: Boolean }],
 })
-export class MicoFormObjectComponent implements OnInit, AfterViewInit, AsyncValidator {
+export class MicoFormObjectComponent implements AfterViewInit, AsyncValidator {
 
-    constructor(private models: ModelsService) { }
+    constructor() { }
 
     @ViewChild(MicoFormComponent) micoForm: MicoFormComponent;
 
@@ -98,9 +97,6 @@ export class MicoFormObjectComponent implements OnInit, AfterViewInit, AsyncVali
             take(1),
         );
     }
-
-
-    ngOnInit() { }
 
     ngAfterViewInit() {
         this.micoForm.valid.subscribe((valid) => this.valid.next(valid));

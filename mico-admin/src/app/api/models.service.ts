@@ -145,10 +145,10 @@ export class ModelsService {
     }
 
     /**
-         * Resolves all properties to actual ApiModels.
-         *
-         * @param model input model
-         */
+     * Resolves all properties to actual ApiModels.
+     *
+     * @param model input model
+     */
     private resolveProperties = (model: ApiModel): Observable<ApiModel> => {
         const props: PropertyRef[] = [];
         for (const key in model.properties) {
