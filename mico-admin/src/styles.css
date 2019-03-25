@@ -476,6 +476,14 @@ body {
     margin-right: 16rem;
 }
 
+/*
+* fix snackBar length and position
+*/
+.mat-snack-bar-handset .mat-snack-bar-container {
+    width: auto !important;
+    margin: auto !important;
+    margin-bottom: 10px !important;
+}
 
 /*
 * workaround for service detail overview
