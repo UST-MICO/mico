@@ -18,7 +18,7 @@
  */
 
 import { Injectable } from '@angular/core';
-import { Observable, Subject, BehaviorSubject, AsyncSubject, interval, timer } from 'rxjs';
+import { Observable, Subject, BehaviorSubject, AsyncSubject, interval, timer, Subscription } from 'rxjs';
 import { filter, flatMap, map, takeUntil } from 'rxjs/operators';
 import { ApiObject } from './apiobject';
 import { ApiBaseFunctionService } from './api-base-function.service';
@@ -1074,6 +1074,9 @@ export class ApiService {
      *
      * @param applicationShortName shortName of the application
      * @param applicationVersion version of the application
+     *
+     * @returns an object consisting of an observable, which can be subscribed to receive polling updates and a list of
+     * subscriptions used in this method, which should be unsubscribed if the polling is to be stopped.
      */
     pollApplicationStatus(applicationShortName: string, applicationVersion: string) {
         const resource = 'poll/application/' + applicationShortName + '/' + applicationVersion + '/deploymentStatus';
@@ -1095,9 +1098,11 @@ export class ApiService {
 
         });
 
-        return stream.asObservable().pipe(
-            filter(data => data !== undefined)
-        );
+        return {
+            observable: stream.asObservable().pipe(
+                filter(data => data !== undefined)
+            ), subscriptions: [subPolling, subJobStatus]
+        };
     }
 
 }

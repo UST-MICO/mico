@@ -50,7 +50,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     subServiceDependency: Subscription;
     subCreateNextVersion: Subscription;
     subJobStatus: Subscription;
-    subStatusPolling: Subscription;
+    subStatusPolling: Subscription[] = [];
 
 
     // immutable application  object which is updated, when new data is pushed
@@ -151,8 +151,11 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         });
 
         // status polling
-        safeUnsubscribe(this.subStatusPolling);
-        this.subStatusPolling = this.apiService.pollApplicationStatus(this.shortName, this.selectedVersion)
+        // TODO change to safeUnsubscribeList after master is merged in
+        // safeUnsubscribe(this.subStatusPolling);
+        const tempPollingObject = this.apiService.pollApplicationStatus(this.shortName, this.selectedVersion);
+        this.subStatusPolling = tempPollingObject.subscriptions;
+        this.subStatusPolling.push(tempPollingObject.observable
             .subscribe(val => {
 
                 console.log('app-detail', val);
@@ -164,7 +167,8 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
                 this.deploymentStatusMessage = message;
 
-            });
+            })
+        );
 
     }
 
@@ -182,7 +186,8 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         safeUnsubscribe(this.subServiceDependency);
         safeUnsubscribe(this.subCreateNextVersion);
         safeUnsubscribe(this.subJobStatus);
-        safeUnsubscribe(this.subStatusPolling);
+        // TODO change to safeUnsubscribeList after master is merged in
+        // safeUnsubscribe(this.subStatusPolling);
     }
 
 
