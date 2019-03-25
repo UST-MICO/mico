@@ -69,12 +69,7 @@ public class ApplicationResource {
 
     @GetMapping()
     public ResponseEntity<Resources<Resource<MicoApplicationWithServicesResponseDTO>>> getAllApplications() {
-        List<MicoApplication> applications;
-        try {
-            applications = broker.getMicoApplications();
-        } catch (MicoApplicationNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        }
+        List<MicoApplication> applications = broker.getMicoApplications();
 
         return ResponseEntity.ok(
                 new Resources<>(getApplicationWithServicesResponseDTOResourceList(applications),
