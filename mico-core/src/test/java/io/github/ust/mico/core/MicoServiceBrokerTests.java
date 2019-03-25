@@ -1,6 +1,7 @@
 package io.github.ust.mico.core;
 
 import io.github.ust.mico.core.broker.MicoServiceBroker;
+import io.github.ust.mico.core.exception.MicoServiceAlreadyExistsException;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
@@ -439,7 +440,7 @@ public class MicoServiceBrokerTests {
     }
 
     @Test
-    public void promoteService() {
+    public void promoteService() throws MicoServiceAlreadyExistsException {
         MicoService service = new MicoService()
             .setShortName(SHORT_NAME)
             .setName(NAME)

@@ -305,7 +305,12 @@ public class ServiceResource {
 
         MicoService service = getServiceFromMicoServiceBroker(shortName, version);
 
-        MicoService updatedService = micoServiceBroker.promoteService(service, newVersionDto.getVersion());
+        MicoService updatedService;
+        try {
+            updatedService = micoServiceBroker.promoteService(service, newVersionDto.getVersion());
+        } catch (MicoServiceAlreadyExistsException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        }
 
         return ResponseEntity.ok(getServiceResponseDTOResource(updatedService));
     }
