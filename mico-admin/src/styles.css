@@ -507,6 +507,13 @@ Quick fix to avoid scroll bars
 }
 
 /*
+* Enyble line breaks in tooltips
+*/
+.mat-tooltip-component > .mat-tooltip {
+    white-space: pre;
+}
+
+/*
 * Set toggle button colors
 */
 .mat-button-toggle {

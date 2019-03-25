@@ -19,7 +19,6 @@
 
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
 import { Subscription } from 'rxjs';
@@ -51,6 +50,9 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     subApplication: Subscription;
     subServiceDependency: Subscription;
     subCreateNextVersion: Subscription;
+    subJobStatus: Subscription;
+    subApplicationStatus: Subscription;
+    subApplicationStatusPolling: Subscription;
 
 
     // immutable application  object which is updated, when new data is pushed
@@ -58,6 +60,8 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     shortName: string;
     selectedVersion;
     allVersions;
+    deploymentStatus;
+    deploymentStatusMessage: string;
 
     // modifiable application object
     applicationData;
@@ -126,6 +130,25 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                 this.application = val;
                 this.selectedVersion = version;
             });
+
+        // status polling
+        safeUnsubscribe(this.subApplicationStatus);
+        this.subApplicationStatus = this.apiService.getApplicationDeploymentStatus(this.shortName, version)
+            .subscribe(val => {
+
+                this.deploymentStatus = val;
+                let message = '';
+                val.messages.forEach(element => {
+                    message += element.content + '\n';
+                });
+
+                this.deploymentStatusMessage = message;
+
+            });
+
+        safeUnsubscribe(this.subApplicationStatusPolling);
+        this.subApplicationStatusPolling = this.apiService.startApplicationStatusPolling(this.shortName, version);
+
     }
 
     /**
@@ -141,6 +164,9 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         safeUnsubscribe(this.subApplication);
         safeUnsubscribe(this.subServiceDependency);
         safeUnsubscribe(this.subCreateNextVersion);
+        safeUnsubscribe(this.subJobStatus);
+        safeUnsubscribe(this.subApplicationStatus);
+        safeUnsubscribe(this.subApplicationStatusPolling);
     }
 
 
@@ -151,12 +177,13 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     deployApplication() {
         this.subDeploy = this.apiService.postApplicationDeployCommand(this.application.shortName, this.application.version)
             .subscribe(val => {
-                // TODO wait for propper return value from deploy endpoint
-                // add some deployment monitoring (e.g. state)
-                console.log(val);
                 this.snackBar.open('Application deployment initialized.', 'Ok', {
                     duration: 5000,
                 });
+
+
+                safeUnsubscribe(this.subJobStatus);
+                this.subJobStatus = this.apiService.pollDeploymentJobStatus(this.shortName, this.selectedVersion);
 
             });
     }
@@ -168,13 +195,10 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     undeployApplication() {
         this.subDeploy = this.apiService.postApplicationUndeployCommand(this.application.shortName, this.application.version)
             .subscribe(val => {
-                // TODO wait for propper return value from deploy endpoint
-                // add some deployment monitoring (e.g. state)
-                console.log(val);
+
                 this.snackBar.open('Application undeployment initialized.', 'Ok', {
                     duration: 5000,
                 });
-
             });
     }
 

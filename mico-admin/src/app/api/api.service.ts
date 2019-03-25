@@ -18,11 +18,13 @@
  */
 
 import { Injectable } from '@angular/core';
-import { Observable, Subject, BehaviorSubject, AsyncSubject } from 'rxjs';
-import { filter, flatMap, map } from 'rxjs/operators';
+import { Observable, Subject, BehaviorSubject, AsyncSubject, interval, timer, Subscription } from 'rxjs';
+import { filter, flatMap, map, takeUntil } from 'rxjs/operators';
 import { ApiObject } from './apiobject';
 import { ApiBaseFunctionService } from './api-base-function.service';
 import { ApiModel, ApiModelAllOf } from './apimodel';
+import { safeUnsubscribe } from '../util/utils';
+import { MatSnackBar } from '@angular/material';
 
 
 /**
@@ -58,8 +60,11 @@ type ApiModelMap = { [prop: string]: ApiModel | ApiModelAllOf };
 })
 export class ApiService {
     private streams: Map<string, Subject<Readonly<any>>> = new Map();
+    private polling: Map<string, Subscription> = new Map();
 
-    constructor(private rest: ApiBaseFunctionService, ) { }
+    constructor(
+        private rest: ApiBaseFunctionService,
+        private snackBar: MatSnackBar) { }
 
     /**
      * Canonize a resource url.
@@ -401,6 +406,27 @@ export class ApiService {
         }));
     }
 
+    /**
+     * Returns the deployment status of a specified application
+     * uses: GET applications/{applicationShortName}/{applicationVersion}/deploymentStatus
+     *
+     * @param applicationShortName shortName of the application
+     * @param applicationVersion version of the application
+     */
+    getApplicationDeploymentStatus(applicationShortName: string, applicationVersion: string) {
+
+        const resource = 'applications/' + applicationShortName + '/' + applicationVersion + '/deploymentStatus/';
+        const stream = this.getStreamSource<ApiObject>(resource);
+
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+            stream.next(freezeObject(val));
+        });
+
+        return stream.asObservable().pipe(
+            filter(data => data !== undefined)
+        );
+    }
+
 
     // ==========
     // DEPLOYMENT
@@ -418,7 +444,6 @@ export class ApiService {
 
         return this.rest.post<any>(resource, null).pipe(map(val => {
 
-            // TODO handle job ressource as soon as the api call returns a job ressource
             return true;
         }));
     }
@@ -435,7 +460,6 @@ export class ApiService {
 
         return this.rest.post<any>(resource, null).pipe(map(val => {
 
-            // TODO handle job ressource as soon as the api call returns a job ressource
             return true;
         }));
     }
@@ -981,4 +1005,138 @@ export class ApiService {
                 return true;
             }));
     }
+
+    // ===============
+    // BACKGROUND JOBS
+    // ===============
+
+    /**
+     * retrieves the status of a deployment
+     * uses: GET jobs/{applicationShortName}/{applicationVersion}/status
+     *
+     * @param applicationShortName shortName of the application
+     * @param applicationVersion version of the application
+     */
+    getJobStatus(applicationShortName: string, applicationVersion: string) {
+        const resource = 'jobs/' + applicationShortName + '/' + applicationVersion + '/status';
+        const stream = this.getStreamSource<ApiObject>(resource);
+
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+
+            stream.next(freezeObject(val));
+        });
+
+        return stream.asObservable().pipe(
+            filter(data => data !== undefined)
+        );
+    }
+
+
+    // =======
+    // POLLING
+    // =======
+
+
+    /**
+     * Polls the deployment job of a given application and provides feedback if the deployment failed/ was successful.
+     * Also stops polling after 3 minutes
+     *
+     * @param applicationShortName applicationShortName of the application to be polled
+     * @param applicationVersion applicationVersion of the application to be polled
+     */
+    pollDeploymentJobStatus(applicationShortName: string, applicationVersion: string) {
+        const resource = 'poll/jobs/' + applicationShortName + '/' + applicationVersion + '/status';
+        const stream = this.getStreamSource<any>(resource);
+
+        /**
+         * Unsubscribes from polling
+         */
+        function cleanUp() {
+            safeUnsubscribe(subEndPolling);
+            safeUnsubscribe(subPolling);
+            safeUnsubscribe(subJobStatus);
+        }
+
+
+        // poll status
+        const subPolling = interval(500).subscribe(() => {
+            this.getJobStatus(applicationShortName, applicationVersion);
+
+            // early exit
+            if (subJobStatus.closed) {
+                cleanUp();
+            }
+        });
+
+        // end polling after 3 minutes
+        const subEndPolling = timer(3 * 60 * 1000)
+            .subscribe(() => {
+                cleanUp();
+            });
+
+        // handle incomming status updates
+        const subJobStatus = this.getJobStatus(applicationShortName, applicationVersion).subscribe(newStatus => {
+
+            if (newStatus.status === 'DONE') {
+
+                this.snackBar.open('Application deployment finished: ' +
+                    applicationShortName + ' ' + applicationVersion, 'Ok', {
+                        duration: 4000,
+                    });
+
+                cleanUp();
+                stream.next(newStatus);
+
+            } else if (newStatus.status === 'ERROR') {
+                this.snackBar.open('Application deployment failed: ' +
+                    applicationShortName + ' ' + applicationVersion, 'Ok', {
+                        duration: 8000,
+                    });
+
+                cleanUp();
+                stream.next(newStatus);
+            }
+
+        });
+
+        return subJobStatus;
+
+    }
+
+
+    /**
+     * Starts the polling for 'pollApplicationStatus'.
+     * Only one subscriptions is returned at a time, to avoid multiple polling of the same information.
+     * Otherwise 'undefined' is returned.
+     *
+     * @param applicationShortName shortName of the application
+     * @param applicationVersion version of the application
+     */
+    startApplicationStatusPolling(applicationShortName: string, applicationVersion: string) {
+
+        if (applicationShortName == null || applicationVersion == null) {
+            return;
+        }
+
+        const resource = 'poll/application/' + applicationShortName + '/' + applicationVersion + '/deploymentStatus';
+
+        // subscription is already in use
+        if (this.polling.has(resource) && !this.polling.get(resource).closed) {
+            return undefined;
+        } else {
+
+            // periodically call getApplicationDeploymentStatus
+            const subPolling = interval(2 * 1000)
+                .subscribe(() => {
+                    this.getApplicationDeploymentStatus(applicationShortName, applicationVersion);
+                });
+
+            if (subPolling != null) {
+                this.polling.set(resource, subPolling);
+            }
+
+            return subPolling;
+        }
+    }
+
 }
