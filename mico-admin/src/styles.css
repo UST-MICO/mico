@@ -496,3 +496,10 @@ Quick fix to avoid scroll bars
 .mat-header-cell {
     min-width: 80px !important;
 }
+
+/*
+* Enyble line breaks in tooltips
+*/
+mat-tooltip-component > .mat-tooltip {
+    white-space: pre;
+    }

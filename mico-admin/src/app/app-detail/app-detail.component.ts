@@ -153,13 +153,13 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
         // status polling
         safeUnsubscribe(this.subApplicationStatus);
-        this.subApplicationStatus = this.apiService.pollApplicationStatus(this.shortName, this.selectedVersion)
+        this.subApplicationStatus = this.apiService.getApplicationDeploymentStatus(this.shortName, this.selectedVersion)
             .subscribe(val => {
 
                 this.deploymentStatus = val;
                 let message = '';
                 val.messages.forEach(element => {
-                    message += element.content + ' ';
+                    message += element.content + '\n';
                 });
 
                 this.deploymentStatusMessage = message;
@@ -203,11 +203,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
 
                 safeUnsubscribe(this.subJobStatus);
-                this.subJobStatus = this.apiService.pollDeploymentJobStatus(this.shortName, this.selectedVersion).subscribe(depl => {
-
-                    // call-back when deployment has finished
-                    safeUnsubscribe(this.subJobStatus);
-                });
+                this.subJobStatus = this.apiService.pollDeploymentJobStatus(this.shortName, this.selectedVersion);
 
             });
     }

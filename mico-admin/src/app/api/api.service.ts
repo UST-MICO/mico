@@ -444,8 +444,7 @@ export class ApiService {
 
         return this.rest.post<any>(resource, null).pipe(map(val => {
 
-            // TODO handle job ressource as soon as the api call returns a job ressource
-            return val;
+            return true;
         }));
     }
 
@@ -461,8 +460,7 @@ export class ApiService {
 
         return this.rest.post<any>(resource, null).pipe(map(val => {
 
-            // TODO handle job ressource as soon as the api call returns a job ressource
-            return val;
+            return true;
         }));
     }
 
@@ -1020,7 +1018,9 @@ export class ApiService {
 
 
     /**
-     * Polls the deployment job of an given application and provides feedback if the deployment failed/ was successful.
+     * Polls the deployment job of a given application and provides feedback if the deployment failed/ was successful.
+     * Also stops polling after 3 minutes
+     *
      * @param applicationShortName applicationShortName of the application to be polled
      * @param applicationVersion applicationVersion of the application to be polled
      */
@@ -1028,10 +1028,30 @@ export class ApiService {
         const resource = 'poll/jobs/' + applicationShortName + '/' + applicationVersion + '/status';
         const stream = this.getStreamSource<any>(resource);
 
-        // poll status, end polling after 3 minutes
-        const subPolling = interval(500).pipe(takeUntil(timer(3 * 60 * 1000)))
+        /**
+         * Unsubscribes from polling
+         */
+        function cleanUp() {
+            safeUnsubscribe(subEndPolling);
+            safeUnsubscribe(subPolling);
+            safeUnsubscribe(subJobStatus);
+        }
+
+
+        // poll status
+        const subPolling = interval(500).subscribe(() => {
+            this.getJobStatus(applicationShortName, applicationVersion);
+
+            // early exit
+            if (subJobStatus.closed) {
+                cleanUp();
+            }
+        });
+
+        // end polling after 3 minutes
+        const subEndPolling = timer(3 * 60 * 1000)
             .subscribe(() => {
-                this.getJobStatus(applicationShortName, applicationVersion);
+                cleanUp();
             });
 
         // handle incomming status updates
@@ -1044,11 +1064,8 @@ export class ApiService {
                         duration: 4000,
                     });
 
-                // cleanup and return
-                safeUnsubscribe(subPolling);
-                safeUnsubscribe(subJobStatus);
-                // object freeze results in undefined, hence deepcopy
-                stream.next(JSON.parse(JSON.stringify(newStatus)));
+                cleanUp();
+                stream.next(newStatus);
 
             } else if (newStatus.status === 'ERROR') {
                 this.snackBar.open('Application deployment failed: ' +
@@ -1056,43 +1073,16 @@ export class ApiService {
                         duration: 8000,
                     });
 
-                // cleanup and return
-                safeUnsubscribe(subPolling);
-                safeUnsubscribe(subJobStatus);
-                stream.next(JSON.parse(JSON.stringify(newStatus)));
+                cleanUp();
+                stream.next(newStatus);
             }
 
         });
 
-        return stream.asObservable().pipe(
-            filter(data => data !== undefined)
-        );
+        return subJobStatus;
 
     }
 
-    /**
-     * Subscribes ,to the getApplicationDeploymentStatus for a specified application
-     * The polling is started via startApplicationStatusPolling
-     *
-     * @param applicationShortName shortName of the application
-     * @param applicationVersion version of the application
-     */
-    pollApplicationStatus(applicationShortName: string, applicationVersion: string) {
-        const resource = 'poll/application/' + applicationShortName + '/' + applicationVersion + '/deploymentStatus';
-        const stream = this.getStreamSource<any>(resource);
-
-        // handle incomming status updates
-        this.getApplicationDeploymentStatus(applicationShortName, applicationVersion).subscribe(newStatus => {
-
-            // object freeze results in undefined, hence deepcopy
-            stream.next(JSON.parse(JSON.stringify(newStatus)));
-
-        });
-
-        return stream.asObservable().pipe(
-            filter(data => data !== undefined)
-        );
-    }
 
     /**
      * Starts the polling for 'pollApplicationStatus'.
