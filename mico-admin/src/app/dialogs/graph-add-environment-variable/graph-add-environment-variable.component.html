@@ -3,17 +3,13 @@
     Connect <b>{{serviceShortName}}</b> with <b>{{interfaceName}}</b> via:
 
     <mat-form-field>
-        <mat-label>Environment Variable</mat-label>
-        <mat-select>
-            <mat-option *ngFor="let variable of deploymentInformation?.environmentVariables" [(value)]="chosenEnvVar">
-                {{variable|json}}
-            </mat-option>
-        </mat-select>
+        <input matInput placeholder="Environment Variable" [(ngModel)]="chosenEnvVar">
     </mat-form-field>
+
 
 </mat-dialog-content>
 <mat-dialog-actions>
     <button mat-button mat-dialog-close>Cancel</button>
     <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
-    <button mat-button [mat-dialog-close]="">Ok</button>
+    <button mat-button [mat-dialog-close]="response()">Ok</button>
 </mat-dialog-actions>
