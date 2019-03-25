@@ -19,13 +19,12 @@
 
 package io.github.ust.mico.core;
 
-import static org.junit.Assert.assertNotNull;
-
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
-
+import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
+import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
+import io.github.ust.mico.core.exception.NotInitializedException;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -34,14 +33,15 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
-import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
-import io.github.ust.mico.core.exception.NotInitializedException;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+
+import static org.junit.Assert.assertNotNull;
 
 // Is ignored because Travis can't execute integration tests
 // that requires a connection to Kubernetes.
@@ -51,6 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
+@ActiveProfiles("dev")
 public class ImageBuilderIntegrationTests {
 
     @Autowired
@@ -98,10 +99,10 @@ public class ImageBuilderIntegrationTests {
      * It uses the provided Git repository that contains a Dockerfile to build a Docker image.
      * Afterwards it pushes it to the provided Docker registry (e.g. DockerHub).
      *
-     * @throws NotInitializedException      if ImageBuilder was not initialized
-     * @throws InterruptedException         if the build process is interrupted unexpectedly
-     * @throws TimeoutException             if the build does not finish or fail in the expected time
-     * @throws ExecutionException           if the build process fails unexpectedly
+     * @throws NotInitializedException if ImageBuilder was not initialized
+     * @throws InterruptedException    if the build process is interrupted unexpectedly
+     * @throws TimeoutException        if the build does not finish or fail in the expected time
+     * @throws ExecutionException      if the build process fails unexpectedly
      */
     @Test
     public void buildAndPushImageWorks() throws NotInitializedException, InterruptedException, TimeoutException, ExecutionException {
@@ -110,12 +111,12 @@ public class ImageBuilderIntegrationTests {
         imageBuilder.init();
 
         MicoService micoService = new MicoService()
-            .setShortName(TestConstants.IntegrationTest.SERVICE_SHORT_NAME)
-            .setName(TestConstants.IntegrationTest.SERVICE_NAME)
-            .setVersion(TestConstants.IntegrationTest.RELEASE)
-            .setDescription(TestConstants.IntegrationTest.SERVICE_DESCRIPTION)
-            .setGitCloneUrl(TestConstants.IntegrationTest.GIT_CLONE_URL)
-            .setDockerfilePath(TestConstants.IntegrationTest.DOCKERFILE_PATH);
+                .setShortName(TestConstants.IntegrationTest.SERVICE_SHORT_NAME)
+                .setName(TestConstants.IntegrationTest.SERVICE_NAME)
+                .setVersion(TestConstants.IntegrationTest.RELEASE)
+                .setDescription(TestConstants.IntegrationTest.SERVICE_DESCRIPTION)
+                .setGitCloneUrl(TestConstants.IntegrationTest.GIT_CLONE_URL)
+                .setDockerfilePath(TestConstants.IntegrationTest.DOCKERFILE_PATH);
 
         CompletableFuture<String> buildJob = imageBuilder.build(micoService);
 

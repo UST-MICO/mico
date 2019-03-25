@@ -10,8 +10,8 @@ spec:
   loadBalancerIP: ${MICO_PUBLIC_IP}
   type: LoadBalancer
   ports:
-  - port: 80
-    targetPort: 80
+    - port: 80
+      targetPort: 80
   selector:
     run: mico-admin
 ---
@@ -32,11 +32,11 @@ spec:
         run: mico-admin
     spec:
       containers:
-      - name: mico-admin
-        image: ustmico/mico-admin
-        imagePullPolicy: Always
-        env:
-        - name: MICO_REST_API
-          value: 'mico-core.mico-system.svc.cluster.local:8080'
-        ports:
-        - containerPort: 80
+        - name: mico-admin
+          image: ustmico/mico-admin
+          imagePullPolicy: Always
+          env:
+            - name: MICO_REST_API
+              value: 'mico-core.mico-system.svc.cluster.local:8080'
+          ports:
+            - containerPort: 80

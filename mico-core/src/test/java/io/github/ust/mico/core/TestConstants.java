@@ -176,8 +176,8 @@ class TestConstants {
         static final String GIT_CLONE_URL = "https://github.com/UST-MICO/hello.git";
 
         /**
-         * Release tag of the release that should be used for testing.
-         * Must be in in supported version format (semantic versioning with a prefix that only consists of letters).
+         * Release tag of the release that should be used for testing. Must be in in supported version format (semantic
+         * versioning with a prefix that only consists of letters).
          */
         static final String RELEASE = "v1.0.0";
 

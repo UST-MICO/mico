@@ -19,12 +19,8 @@
 
 package io.github.ust.mico.core.dto.response.status;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.swagger.annotations.ApiModelProperty;
@@ -36,7 +32,8 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for the status information of a {@link MicoServiceInterface}, that is mapped to a Kubernetes Service.
+ * DTO for the status information of a {@link MicoServiceInterface}
+ * that is mapped to a Kubernetes Service intended to use with responses only.
  */
 @Data
 @NoArgsConstructor
@@ -59,15 +56,15 @@ public class MicoServiceInterfaceStatusResponseDTO {
     private String name;
 
     /**
-     * List of external IP addresses of this {@link MicoServiceInterface}.
+     * The external IP address of this {@link MicoServiceInterface}.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "External IPs"),
+            @ExtensionProperty(name = "title", value = "External IP"),
             @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "List of external IP addresses of this MicoServiceInterface.")
+            @ExtensionProperty(name = "description", value = "The external IP address of this MicoServiceInterface.")
         }
     )})
-    private List<String> externalIps = new ArrayList<>();
+    private String externalIp;
 }

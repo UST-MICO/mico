@@ -19,27 +19,28 @@
 
 package io.github.ust.mico.core;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
-
 import io.github.ust.mico.core.exception.VersionNotSupportedException;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.util.CollectionUtils;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@ActiveProfiles("local")
 public class MicoCoreApplicationTests extends Neo4jTestClass {
 
     private static final String TEST_SHORT_NAME = "Test";
@@ -124,21 +125,21 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
         String testInterface2Protocol = "TCP";
 
         MicoService service2 = new MicoService()
-        .setShortName(testServivce2ShortName)
-        .setName(testServivce2Name)
-        .setVersion(testService2Version)
-        .setDescription(testServivce2Description)
-        .setServiceInterfaces(CollectionUtils.listOf(new MicoServiceInterface()
-                .setServiceInterfaceName(testInterface2Name)
-                .setPorts(CollectionUtils.listOf(new MicoServicePort()
-                        .setPort(testInterface2Port)
-                        .setType(MicoPortType.TCP)
-                        .setTargetPort(testInterface2TargetPort)))
-                .setDescription(testInterface2Description)
-                .setProtocol(testInterface2Protocol)))
-        .setServiceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
-        .setGitCloneUrl(testServivce2GitCloneUrl)
-        .setContact(testServivce2Contact);
+                .setShortName(testServivce2ShortName)
+                .setName(testServivce2Name)
+                .setVersion(testService2Version)
+                .setDescription(testServivce2Description)
+                .setServiceInterfaces(CollectionUtils.listOf(new MicoServiceInterface()
+                        .setServiceInterfaceName(testInterface2Name)
+                        .setPorts(CollectionUtils.listOf(new MicoServicePort()
+                                .setPort(testInterface2Port)
+                                .setType(MicoPortType.TCP)
+                                .setTargetPort(testInterface2TargetPort)))
+                        .setDescription(testInterface2Description)
+                        .setProtocol(testInterface2Protocol)))
+                .setServiceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
+                .setGitCloneUrl(testServivce2GitCloneUrl)
+                .setContact(testServivce2Contact);
 
         service1.setDependencies(Collections.singletonList(new MicoServiceDependency()
                 .setService(service1)

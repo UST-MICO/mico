@@ -15,22 +15,22 @@
 
         <mat-table [dataSource]="services" class="mat-elevation-z2">
             <ng-container matColumnDef="name">
-                <mat-header-cell class="ph1" *matHeaderCellDef>Name</mat-header-cell>
+                <mat-header-cell class="ph1" *matHeaderCellDef><b>Name</b></mat-header-cell>
                 <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">
                     {{element.name}}</mat-cell>
             </ng-container>
             <ng-container matColumnDef="shortName">
-                <mat-header-cell class="ph1" *matHeaderCellDef>Short Name</mat-header-cell>
+                <mat-header-cell class="ph1" *matHeaderCellDef><b>Short Name</b></mat-header-cell>
                 <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">
                     {{element.shortName}}</mat-cell>
             </ng-container>
             <ng-container matColumnDef="version">
-                <mat-header-cell class="ph1" *matHeaderCellDef>Version</mat-header-cell>
+                <mat-header-cell class="ph1" *matHeaderCellDef><b>Version</b></mat-header-cell>
                 <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">
                     {{element.version}}</mat-cell>
             </ng-container>
             <ng-container matColumnDef="description">
-                <mat-header-cell class="ph1" *matHeaderCellDef>Description</mat-header-cell>
+                <mat-header-cell class="ph1" *matHeaderCellDef><b>Description</b></mat-header-cell>
                 <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/service-detail', element.shortName]">
                     <div class="descriptionStyle">
                         {{element.description}}
@@ -38,9 +38,9 @@
                 </mat-cell>
             </ng-container>
             <ng-container matColumnDef="controls">
-                <mat-header-cell class="ph1" *matHeaderCellDef>Controls</mat-header-cell>
+                <mat-header-cell class="ph1" *matHeaderCellDef><b>Controls</b></mat-header-cell>
                 <mat-cell *matCellDef="let element" class="ph1">
-                    <button mat-raised-button (click)="deleteService(element)">delete</button>
+                    <button mat-raised-button color="accent" (click)="deleteService(element)">delete</button>
                 </mat-cell>
             </ng-container>
             <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>

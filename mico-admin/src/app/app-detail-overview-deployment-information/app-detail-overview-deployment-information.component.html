@@ -1,6 +1,6 @@
 <mat-action-list dense>
     <div class="flex">
-        <div class="flex-grow-1">
+        <div class="flex-grow-1" (click)="openSettings()">
             <mat-list-item>
                 Replicas: {{deploymentInformation?.replicas}}
             </mat-list-item>
@@ -9,9 +9,9 @@
             </mat-list-item>
         </div>
 
-        <div class="w-20">
+        <div class="w-20" (click)="openSettings()">
             <mat-list-item>
-                <mat-icon (click)="openSettings()">settings</mat-icon>
+                <mat-icon>settings</mat-icon>
             </mat-list-item>
         </div>
     </div>

@@ -19,17 +19,6 @@
 
 package io.github.ust.mico.core;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
-
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -42,6 +31,16 @@ import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Component
@@ -117,21 +116,21 @@ public class IntegrationTestsUtils {
 
         // Set up connection to Docker Hub
         Secret dockerRegistrySecret = new SecretBuilder()
-            .withApiVersion("v1")
-            .withType("kubernetes.io/basic-auth")
-            .withNewMetadata().withName("dockerhub-secret").withNamespace(namespace)
-            .addToAnnotations("build.knative.dev/docker-0", "https://index.docker.io/v1/")
-            .endMetadata()
-            .addToData("username", usernameBase64Encoded)
-            .addToData("password", passwordBase64Encoded)
-            .build();
+                .withApiVersion("v1")
+                .withType("kubernetes.io/basic-auth")
+                .withNewMetadata().withName("dockerhub-secret").withNamespace(namespace)
+                .addToAnnotations("build.knative.dev/docker-0", "https://index.docker.io/v1/")
+                .endMetadata()
+                .addToData("username", usernameBase64Encoded)
+                .addToData("password", passwordBase64Encoded)
+                .build();
         kubernetesClient.secrets().inNamespace(namespace).createOrReplace(dockerRegistrySecret);
 
         ServiceAccount buildServiceAccount = new ServiceAccountBuilder()
-            .withApiVersion("v1")
-            .withNewMetadata().withName(serviceAccountName).withNamespace(namespace).endMetadata()
-            .withSecrets(new ObjectReferenceBuilder().withName(dockerRegistrySecret.getMetadata().getName()).build())
-            .build();
+                .withApiVersion("v1")
+                .withNewMetadata().withName(serviceAccountName).withNamespace(namespace).endMetadata()
+                .withSecrets(new ObjectReferenceBuilder().withName(dockerRegistrySecret.getMetadata().getName()).build())
+                .build();
         kubernetesClient.serviceAccounts().inNamespace(namespace).createOrReplace(buildServiceAccount);
 
         dockerRegistrySecretName = dockerRegistrySecret.getMetadata().getName();
@@ -173,7 +172,7 @@ public class IntegrationTestsUtils {
 
                         log.debug("Pod '{}' in namespace '{}' is now running", podName, namespace);
                         log.info("Currently {} out of {} pods in namespace '{}' are running",
-                            currentlyRunningPods, numberOfPodsInNamespace, namespace);
+                                currentlyRunningPods, numberOfPodsInNamespace, namespace);
                     }
                 } catch (DeploymentException e) {
                     completionFuture.cancel(true);

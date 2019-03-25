@@ -14,29 +14,29 @@ roleRef:
   kind: ClusterRole
   name: prometheus
 subjects:
-- kind: ServiceAccount
-  name: prometheus-k8s
-  namespace: monitoring
+  - kind: ServiceAccount
+    name: prometheus-k8s
+    namespace: monitoring
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
   name: prometheus
 rules:
-- apiGroups: [""]
-  resources:
-  - nodes
-  - nodes/proxy
-  - services
-  - endpoints
-  - pods
-  verbs: ["get", "list", "watch"]
-- apiGroups: [""]
-  resources:
-  - configmaps
-  verbs: ["get"]
-- nonResourceURLs: ["/metrics"]
-  verbs: ["get"]
+  - apiGroups: [""]
+    resources:
+      - nodes
+      - nodes/proxy
+      - services
+      - endpoints
+      - pods
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources:
+      - configmaps
+    verbs: ["get"]
+  - nonResourceURLs: ["/metrics"]
+    verbs: ["get"]
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -350,30 +350,30 @@ spec:
         app: alertmanager
     spec:
       containers:
-      - name: alertmanager
-        image: quay.io/prometheus/alertmanager:v0.7.1
-        args:
-          - '-config.file=/etc/alertmanager/config.yml'
-          - '-storage.path=/alertmanager'
-        ports:
         - name: alertmanager
-          containerPort: 9093
-        volumeMounts:
-        - name: config-volume
-          mountPath: /etc/alertmanager
-        - name: templates-volume
-          mountPath: /etc/alertmanager-templates
-        - name: alertmanager
-          mountPath: /alertmanager
+          image: quay.io/prometheus/alertmanager:v0.7.1
+          args:
+            - '-config.file=/etc/alertmanager/config.yml'
+            - '-storage.path=/alertmanager'
+          ports:
+            - name: alertmanager
+              containerPort: 9093
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/alertmanager
+            - name: templates-volume
+              mountPath: /etc/alertmanager-templates
+            - name: alertmanager
+              mountPath: /alertmanager
       volumes:
-      - name: config-volume
-        configMap:
-          name: alertmanager
-      - name: templates-volume
-        configMap:
-          name: alertmanager-templates
-      - name: alertmanager
-        emptyDir: {}
+        - name: config-volume
+          configMap:
+            name: alertmanager
+        - name: templates-volume
+          configMap:
+            name: alertmanager-templates
+        - name: alertmanager
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
@@ -390,10 +390,10 @@ spec:
     app: alertmanager
   type: NodePort
   ports:
-  - name: alertmanager
-    protocol: TCP
-    port: 9093
-    targetPort: 9093
+    - name: alertmanager
+      protocol: TCP
+      port: 9093
+      targetPort: 9093
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -412,51 +412,51 @@ spec:
         component: core
     spec:
       containers:
-      - image: grafana/grafana:4.2.0
-        name: grafana-core
-        imagePullPolicy: IfNotPresent
-        # env:
-        resources:
-          # keep request = limit to keep this container in guaranteed class
-          limits:
-            cpu: 100m
-            memory: 100Mi
-          requests:
-            cpu: 100m
-            memory: 100Mi
-        env:
-          # The following env variables set up basic auth twith the default admin user and admin password.
-          - name: GF_AUTH_BASIC_ENABLED
-            value: "true"
-          - name: GF_SECURITY_ADMIN_USER
-            valueFrom:
-              secretKeyRef:
-                name: grafana
-                key: admin-username
-          - name: GF_SECURITY_ADMIN_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: grafana
-                key: admin-password
-          - name: GF_AUTH_ANONYMOUS_ENABLED
-            value: "false"
-          # - name: GF_AUTH_ANONYMOUS_ORG_ROLE
-          #   value: Admin
-          # does not really work, because of template variables in exported dashboards:
-          # - name: GF_DASHBOARDS_JSON_ENABLED
-          #   value: "true"
-        readinessProbe:
-          httpGet:
-            path: /login
-            port: 3000
-          # initialDelaySeconds: 30
-          # timeoutSeconds: 1
-        volumeMounts:
-        - name: grafana-persistent-storage
-          mountPath: /var/lib/grafana
+        - image: grafana/grafana:4.2.0
+          name: grafana-core
+          imagePullPolicy: IfNotPresent
+          # env:
+          resources:
+            # keep request = limit to keep this container in guaranteed class
+            limits:
+              cpu: 100m
+              memory: 100Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+          env:
+            # The following env variables set up basic auth twith the default admin user and admin password.
+            - name: GF_AUTH_BASIC_ENABLED
+              value: "true"
+            - name: GF_SECURITY_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: grafana
+                  key: admin-username
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: grafana
+                  key: admin-password
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "false"
+            # - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+            #   value: Admin
+            # does not really work, because of template variables in exported dashboards:
+            # - name: GF_DASHBOARDS_JSON_ENABLED
+            #   value: "true"
+          readinessProbe:
+            httpGet:
+              path: /login
+              port: 3000
+            # initialDelaySeconds: 30
+            # timeoutSeconds: 1
+          volumeMounts:
+            - name: grafana-persistent-storage
+              mountPath: /var/lib/grafana
       volumes:
-      - name: grafana-persistent-storage
-        emptyDir: {}
+        - name: grafana-persistent-storage
+          emptyDir: {}
 ---
 apiVersion: v1
 data:
@@ -2317,68 +2317,68 @@ spec:
     spec:
       serviceAccountName: prometheus-k8s
       initContainers:
-      - name: wait-for-grafana
-        image: giantswarm/tiny-tools
-        args:
-        - /bin/sh
-        - -c
-        - >
-          set -x;
-          while [ $(curl -sw '%{http_code}' "http://grafana:3000" -o /dev/null) -ne 200]; do
-            echo '.'
-            sleep 15;
-          done
+        - name: wait-for-grafana
+          image: giantswarm/tiny-tools
+          args:
+            - /bin/sh
+            - -c
+            - >
+              set -x;
+              while [ $(curl -sw '%{http_code}' "http://grafana:3000" -o /dev/null) -ne 200]; do
+                echo '.'
+                sleep 15;
+              done
       containers:
-      - name: grafana-import-dashboards
-        image: giantswarm/tiny-tools
-        command: ["/bin/sh", "-c"]
-        workingDir: /opt/grafana-import-dashboards
-        args:
-          - >
-            for file in *-datasource.json ; do
-              if [ -e "$file" ] ; then
-                echo "importing $file" &&
-                curl --silent --fail --show-error \
-                  --request POST http://${GF_ADMIN_USER}:${GF_ADMIN_PASSWORD}@grafana:3000/api/datasources \
-                  --header "Content-Type: application/json" \
-                  --data-binary "@$file" ;
-                echo "" ;
-              fi
-            done ;
-            for file in *-dashboard.json ; do
-              if [ -e "$file" ] ; then
-                echo "importing $file" &&
-                ( echo '{"dashboard":'; \
-                  cat "$file"; \
-                  echo ',"overwrite":true,"inputs":[{"name":"DS_PROMETHEUS","type":"datasource","pluginId":"prometheus","value":"prometheus"}]}' ) \
-                | jq -c '.' \
-                | curl --silent --fail --show-error \
-                  --request POST http://${GF_ADMIN_USER}:${GF_ADMIN_PASSWORD}@grafana:3000/api/dashboards/import \
-                  --header "Content-Type: application/json" \
-                  --data-binary "@-" ;
-                echo "" ;
-              fi
-            done
+        - name: grafana-import-dashboards
+          image: giantswarm/tiny-tools
+          command: ["/bin/sh", "-c"]
+          workingDir: /opt/grafana-import-dashboards
+          args:
+            - >
+              for file in *-datasource.json ; do
+                if [ -e "$file" ] ; then
+                  echo "importing $file" &&
+                  curl --silent --fail --show-error \
+                    --request POST http://${GF_ADMIN_USER}:${GF_ADMIN_PASSWORD}@grafana:3000/api/datasources \
+                    --header "Content-Type: application/json" \
+                    --data-binary "@$file" ;
+                  echo "" ;
+                fi
+              done ;
+              for file in *-dashboard.json ; do
+                if [ -e "$file" ] ; then
+                  echo "importing $file" &&
+                  ( echo '{"dashboard":'; \
+                    cat "$file"; \
+                    echo ',"overwrite":true,"inputs":[{"name":"DS_PROMETHEUS","type":"datasource","pluginId":"prometheus","value":"prometheus"}]}' ) \
+                  | jq -c '.' \
+                  | curl --silent --fail --show-error \
+                    --request POST http://${GF_ADMIN_USER}:${GF_ADMIN_PASSWORD}@grafana:3000/api/dashboards/import \
+                    --header "Content-Type: application/json" \
+                    --data-binary "@-" ;
+                  echo "" ;
+                fi
+              done
 
-        env:
-        - name: GF_ADMIN_USER
-          valueFrom:
-            secretKeyRef:
-              name: grafana
-              key: admin-username
-        - name: GF_ADMIN_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: grafana
-              key: admin-password
-        volumeMounts:
-        - name: config-volume
-          mountPath: /opt/grafana-import-dashboards
+          env:
+            - name: GF_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: grafana
+                  key: admin-username
+            - name: GF_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: grafana
+                  key: admin-password
+          volumeMounts:
+            - name: config-volume
+              mountPath: /opt/grafana-import-dashboards
       restartPolicy: Never
       volumes:
-      - name: config-volume
-        configMap:
-          name: grafana-import-dashboards
+        - name: config-volume
+          configMap:
+            name: grafana-import-dashboards
 ---
 # apiVersion: extensions/v1beta1
 # kind: Ingress
@@ -2571,35 +2571,35 @@ spec:
     spec:
       serviceAccountName: prometheus-k8s
       containers:
-      - name: prometheus
-        image: prom/prometheus:v1.7.0
-        args:
-          - '-storage.local.retention=12h'
-          - '-storage.local.memory-chunks=500000'
-          - '-config.file=/etc/prometheus/prometheus.yaml'
-          - '-alertmanager.url=http://alertmanager:9093/'
-        ports:
-        - name: webui
-          containerPort: 9090
-        resources:
-          requests:
-            cpu: 500m
-            memory: 500M
-          limits:
-            cpu: 500m
-            memory: 500M
-        volumeMounts:
-        - name: config-volume
-          mountPath: /etc/prometheus
-        - name: rules-volume
-          mountPath: /etc/prometheus-rules
+        - name: prometheus
+          image: prom/prometheus:v1.7.0
+          args:
+            - '-storage.local.retention=12h'
+            - '-storage.local.memory-chunks=500000'
+            - '-config.file=/etc/prometheus/prometheus.yaml'
+            - '-alertmanager.url=http://alertmanager:9093/'
+          ports:
+            - name: webui
+              containerPort: 9090
+          resources:
+            requests:
+              cpu: 500m
+              memory: 500M
+            limits:
+              cpu: 500m
+              memory: 500M
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/prometheus
+            - name: rules-volume
+              mountPath: /etc/prometheus-rules
       volumes:
-      - name: config-volume
-        configMap:
-          name: prometheus-core
-      - name: rules-volume
-        configMap:
-          name: prometheus-rules
+        - name: config-volume
+          configMap:
+            name: prometheus-core
+        - name: rules-volume
+          configMap:
+            name: prometheus-rules
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -2615,10 +2615,10 @@ spec:
     spec:
       serviceAccountName: kube-state-metrics
       containers:
-      - name: kube-state-metrics
-        image: gcr.io/google_containers/kube-state-metrics:v0.5.0
-        ports:
-        - containerPort: 8080
+        - name: kube-state-metrics
+          image: gcr.io/google_containers/kube-state-metrics:v0.5.0
+          ports:
+            - containerPort: 8080
 ---
 # ---
 # apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -2672,9 +2672,9 @@ metadata:
     app: kube-state-metrics
 spec:
   ports:
-  - name: kube-state-metrics
-    port: 8080
-    protocol: TCP
+    - name: kube-state-metrics
+      port: 8080
+      protocol: TCP
   selector:
     app: kube-state-metrics
 
@@ -2707,49 +2707,49 @@ spec:
           To choose directories from the node to check just mount them on `read-du` below `/mnt`.
     spec:
       containers:
-      - name: read-du
-        image: giantswarm/tiny-tools
-        imagePullPolicy: Always
-        # FIXME threshold via env var
-        # The
-        command:
-        - fish
-        - --command
-        - |
-          touch /tmp/metrics-temp
-          while true
-            for directory in (du --bytes --separate-dirs --threshold=100M /mnt)
-              echo $directory | read size path
-              echo "node_directory_size_bytes{path=\"$path\"} $size" \
-                >> /tmp/metrics-temp
-            end
-            mv /tmp/metrics-temp /tmp/metrics
-            sleep 300
-          end
-        volumeMounts:
-        - name: host-fs-var
-          mountPath: /mnt/var
-          readOnly: true
-        - name: metrics
-          mountPath: /tmp
-      - name: caddy
-        image: dockermuenster/caddy:0.9.3
-        command:
-        - "caddy"
-        - "-port=9102"
-        - "-root=/var/www"
-        ports:
-        - containerPort: 9102
-        volumeMounts:
-        - name: metrics
-          mountPath: /var/www
+        - name: read-du
+          image: giantswarm/tiny-tools
+          imagePullPolicy: Always
+          # FIXME threshold via env var
+          # The
+          command:
+            - fish
+            - --command
+            - |
+              touch /tmp/metrics-temp
+              while true
+                for directory in (du --bytes --separate-dirs --threshold=100M /mnt)
+                  echo $directory | read size path
+                  echo "node_directory_size_bytes{path=\"$path\"} $size" \
+                    >> /tmp/metrics-temp
+                end
+                mv /tmp/metrics-temp /tmp/metrics
+                sleep 300
+              end
+          volumeMounts:
+            - name: host-fs-var
+              mountPath: /mnt/var
+              readOnly: true
+            - name: metrics
+              mountPath: /tmp
+        - name: caddy
+          image: dockermuenster/caddy:0.9.3
+          command:
+            - "caddy"
+            - "-port=9102"
+            - "-root=/var/www"
+          ports:
+            - containerPort: 9102
+          volumeMounts:
+            - name: metrics
+              mountPath: /var/www
       volumes:
-      - name: host-fs-var
-        hostPath:
-          path: /var
-      - name: metrics
-        emptyDir:
-          medium: Memory
+        - name: host-fs-var
+          hostPath:
+            path: /var
+        - name: metrics
+          emptyDir:
+            medium: Memory
 ---
 apiVersion: extensions/v1beta1
 kind: DaemonSet
@@ -2768,13 +2768,13 @@ spec:
         component: node-exporter
     spec:
       containers:
-      - image: prom/node-exporter:v0.14.0
-        name: prometheus-node-exporter
-        ports:
-        - name: prom-node-exp
-          #^ must be an IANA_SVC_NAME (at most 15 characters, ..)
-          containerPort: 9100
-          hostPort: 9100
+        - image: prom/node-exporter:v0.14.0
+          name: prometheus-node-exporter
+          ports:
+            - name: prom-node-exp
+              #^ must be an IANA_SVC_NAME (at most 15 characters, ..)
+              containerPort: 9100
+              hostPort: 9100
       hostNetwork: true
       hostPID: true
 ---

@@ -12,8 +12,8 @@ spec:
   allowPrivilegeEscalation: false
   fsGroup:
     ranges:
-    - max: 65535
-      min: 1
+      - max: 65535
+        min: 1
     rule: MustRunAs
   hostIPC: false
   hostNetwork: false
@@ -25,12 +25,12 @@ spec:
     rule: RunAsAny
   supplementalGroups:
     ranges:
-    - max: 65535
-      min: 1
+      - max: 65535
+        min: 1
     rule: MustRunAs
   volumes:
-  - configMap
-  - secret
+    - configMap
+    - secret
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -38,108 +38,108 @@ kind: ClusterRole
 metadata:
   name: knative-build-admin
 rules:
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  - namespaces
-  - secrets
-  - events
-  - serviceaccounts
-  - configmaps
-  verbs:
-  - get
-  - list
-  - create
-  - update
-  - delete
-  - patch
-  - watch
-- apiGroups:
-  - extensions
-  resources:
-  - deployments
-  verbs:
-  - get
-  - list
-  - create
-  - update
-  - delete
-  - patch
-  - watch
-- apiGroups:
-  - admissionregistration.k8s.io
-  resources:
-  - mutatingwebhookconfigurations
-  verbs:
-  - get
-  - list
-  - create
-  - update
-  - delete
-  - patch
-  - watch
-- apiGroups:
-  - apiextensions.k8s.io
-  resources:
-  - customresourcedefinitions
-  verbs:
-  - get
-  - list
-  - create
-  - update
-  - delete
-  - patch
-  - watch
-- apiGroups:
-  - build.knative.dev
-  resources:
-  - builds
-  - buildtemplates
-  - clusterbuildtemplates
-  verbs:
-  - get
-  - list
-  - create
-  - update
-  - delete
-  - patch
-  - watch
-- apiGroups:
-  - build.knative.dev
-  resources:
-  - builds/status
-  - buildtemplates/status
-  - clusterbuildtemplates/status
-  verbs:
-  - get
-  - list
-  - create
-  - update
-  - delete
-  - patch
-  - watch
-- apiGroups:
-  - caching.internal.knative.dev
-  resources:
-  - images
-  verbs:
-  - get
-  - list
-  - create
-  - update
-  - delete
-  - deletecollection
-  - patch
-  - watch
-- apiGroups:
-  - policy
-  resourceNames:
-  - knative-build
-  resources:
-  - podsecuritypolicies
-  verbs:
-  - use
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - namespaces
+      - secrets
+      - events
+      - serviceaccounts
+      - configmaps
+    verbs:
+      - get
+      - list
+      - create
+      - update
+      - delete
+      - patch
+      - watch
+  - apiGroups:
+      - extensions
+    resources:
+      - deployments
+    verbs:
+      - get
+      - list
+      - create
+      - update
+      - delete
+      - patch
+      - watch
+  - apiGroups:
+      - admissionregistration.k8s.io
+    resources:
+      - mutatingwebhookconfigurations
+    verbs:
+      - get
+      - list
+      - create
+      - update
+      - delete
+      - patch
+      - watch
+  - apiGroups:
+      - apiextensions.k8s.io
+    resources:
+      - customresourcedefinitions
+    verbs:
+      - get
+      - list
+      - create
+      - update
+      - delete
+      - patch
+      - watch
+  - apiGroups:
+      - build.knative.dev
+    resources:
+      - builds
+      - buildtemplates
+      - clusterbuildtemplates
+    verbs:
+      - get
+      - list
+      - create
+      - update
+      - delete
+      - patch
+      - watch
+  - apiGroups:
+      - build.knative.dev
+    resources:
+      - builds/status
+      - buildtemplates/status
+      - clusterbuildtemplates/status
+    verbs:
+      - get
+      - list
+      - create
+      - update
+      - delete
+      - patch
+      - watch
+  - apiGroups:
+      - caching.internal.knative.dev
+    resources:
+      - images
+    verbs:
+      - get
+      - list
+      - create
+      - update
+      - delete
+      - deletecollection
+      - patch
+      - watch
+  - apiGroups:
+      - policy
+    resourceNames:
+      - knative-build
+    resources:
+      - podsecuritypolicies
+    verbs:
+      - use
 
 ---
 apiVersion: v1
@@ -158,9 +158,9 @@ roleRef:
   kind: ClusterRole
   name: knative-build-admin
 subjects:
-- kind: ServiceAccount
-  name: build-controller
-  namespace: knative-build
+  - kind: ServiceAccount
+    name: build-controller
+    namespace: knative-build
 
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -169,23 +169,23 @@ metadata:
   name: builds.build.knative.dev
 spec:
   additionalPrinterColumns:
-  - JSONPath: .status.conditions[?(@.type=="Succeeded")].status
-    name: Succeeded
-    type: string
-  - JSONPath: .status.conditions[?(@.type=="Succeeded")].reason
-    name: Reason
-    type: string
-  - JSONPath: .status.startTime
-    name: StartTime
-    type: date
-  - JSONPath: .status.completionTime
-    name: CompletionTime
-    type: date
+    - JSONPath: .status.conditions[?(@.type=="Succeeded")].status
+      name: Succeeded
+      type: string
+    - JSONPath: .status.conditions[?(@.type=="Succeeded")].reason
+      name: Reason
+      type: string
+    - JSONPath: .status.startTime
+      name: StartTime
+      type: date
+    - JSONPath: .status.completionTime
+      name: CompletionTime
+      type: date
   group: build.knative.dev
   names:
     categories:
-    - all
-    - knative
+      - all
+      - knative
     kind: Build
     plural: builds
   scope: Namespaced
@@ -200,14 +200,14 @@ metadata:
   name: buildtemplates.build.knative.dev
 spec:
   additionalPrinterColumns:
-  - JSONPath: .metadata.creationTimestamp
-    name: Age
-    type: date
+    - JSONPath: .metadata.creationTimestamp
+      name: Age
+      type: date
   group: build.knative.dev
   names:
     categories:
-    - all
-    - knative
+      - all
+      - knative
     kind: BuildTemplate
     plural: buildtemplates
   scope: Namespaced
@@ -222,14 +222,14 @@ metadata:
   name: clusterbuildtemplates.build.knative.dev
 spec:
   additionalPrinterColumns:
-  - JSONPath: .metadata.creationTimestamp
-    name: Age
-    type: date
+    - JSONPath: .metadata.creationTimestamp
+      name: Age
+      type: date
   group: build.knative.dev
   names:
     categories:
-    - all
-    - knative
+      - all
+      - knative
     kind: ClusterBuildTemplate
     plural: clusterbuildtemplates
   scope: Cluster
@@ -246,13 +246,13 @@ spec:
   group: caching.internal.knative.dev
   names:
     categories:
-    - all
-    - knative-internal
-    - caching
+      - all
+      - knative-internal
+      - caching
     kind: Image
     plural: images
     shortNames:
-    - img
+      - img
     singular: image
   scope: Namespaced
   subresources:
@@ -269,10 +269,10 @@ metadata:
   namespace: knative-build
 spec:
   ports:
-  - name: metrics
-    port: 9090
-    protocol: TCP
-    targetPort: 9090
+    - name: metrics
+      port: 9090
+      protocol: TCP
+      targetPort: 9090
   selector:
     app: build-controller
 
@@ -286,8 +286,8 @@ metadata:
   namespace: knative-build
 spec:
   ports:
-  - port: 443
-    targetPort: 443
+    - port: 443
+      targetPort: 443
   selector:
     role: build-webhook
 
@@ -378,31 +378,31 @@ spec:
         app: build-controller
     spec:
       containers:
-      - args:
-        - -logtostderr
-        - -stderrthreshold
-        - INFO
-        - -creds-image
-        - gcr.io/knative-releases/github.com/knative/build/cmd/creds-init@sha256:9243ee302895cc3925b5c6670886b0051d18b97c356723287ba2292bf62641e3
-        - -git-image
-        - gcr.io/knative-releases/github.com/knative/build/cmd/git-init@sha256:bef1d2d1fbaa80a130fb322dbfe3895ae17ce8e74921762e5b16a24157896105
-        - -nop-image
-        - gcr.io/knative-releases/github.com/knative/build/cmd/nop@sha256:a0481df4fde8afe761c7a614c63b65069ef7c4c7b7715a29b03170eed8029c02
-        env:
-        - name: SYSTEM_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        image: gcr.io/knative-releases/github.com/knative/build/cmd/controller@sha256:c48663d589ac034d091dd95e746b6a2733950911e9959a012c5773e5b6a77ee3
-        name: build-controller
-        volumeMounts:
-        - mountPath: /etc/config-logging
-          name: config-logging
+        - args:
+            - -logtostderr
+            - -stderrthreshold
+            - INFO
+            - -creds-image
+            - gcr.io/knative-releases/github.com/knative/build/cmd/creds-init@sha256:9243ee302895cc3925b5c6670886b0051d18b97c356723287ba2292bf62641e3
+            - -git-image
+            - gcr.io/knative-releases/github.com/knative/build/cmd/git-init@sha256:bef1d2d1fbaa80a130fb322dbfe3895ae17ce8e74921762e5b16a24157896105
+            - -nop-image
+            - gcr.io/knative-releases/github.com/knative/build/cmd/nop@sha256:a0481df4fde8afe761c7a614c63b65069ef7c4c7b7715a29b03170eed8029c02
+          env:
+            - name: SYSTEM_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          image: gcr.io/knative-releases/github.com/knative/build/cmd/controller@sha256:c48663d589ac034d091dd95e746b6a2733950911e9959a012c5773e5b6a77ee3
+          name: build-controller
+          volumeMounts:
+            - mountPath: /etc/config-logging
+              name: config-logging
       serviceAccountName: build-controller
       volumes:
-      - configMap:
+        - configMap:
+            name: config-logging
           name: config-logging
-        name: config-logging
 
 ---
 apiVersion: apps/v1
@@ -422,24 +422,24 @@ spec:
         role: build-webhook
     spec:
       containers:
-      - args:
-        - -logtostderr
-        - -stderrthreshold
-        - INFO
-        env:
-        - name: SYSTEM_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        image: gcr.io/knative-releases/github.com/knative/build/cmd/webhook@sha256:bcbc9fd994b84d9fe84400e04e52628ccc2b12b001d6c35a263ed363e55d6a6b
-        name: build-webhook
-        volumeMounts:
-        - mountPath: /etc/config-logging
-          name: config-logging
+        - args:
+            - -logtostderr
+            - -stderrthreshold
+            - INFO
+          env:
+            - name: SYSTEM_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          image: gcr.io/knative-releases/github.com/knative/build/cmd/webhook@sha256:bcbc9fd994b84d9fe84400e04e52628ccc2b12b001d6c35a263ed363e55d6a6b
+          name: build-webhook
+          volumeMounts:
+            - mountPath: /etc/config-logging
+              name: config-logging
       serviceAccountName: build-controller
       volumes:
-      - configMap:
+        - configMap:
+            name: config-logging
           name: config-logging
-        name: config-logging
 
 ---

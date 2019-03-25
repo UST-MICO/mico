@@ -12,6 +12,10 @@ public class MicoApplicationDoesNotIncludeMicoServiceException extends Exception
         super("Application '" + applicationShortName + "' '" + applicationVersion + "' does not include service '" + serviceShortName + "'.");
     }
 
+    public MicoApplicationDoesNotIncludeMicoServiceException(String applicationShortName, String applicationVersion) {
+        super("Application '" + applicationShortName + "' '" + applicationVersion + "' does not include any services.");
+    }
+
     public MicoApplicationDoesNotIncludeMicoServiceException(Long applicationId, Long serviceId) {
         super("Application '" + applicationId + "' does not include service '" + serviceId + "'.");
     }
