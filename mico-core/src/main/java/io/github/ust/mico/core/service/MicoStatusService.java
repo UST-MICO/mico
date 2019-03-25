@@ -221,22 +221,23 @@ public class MicoStatusService {
         for (MicoServiceInterface serviceInterface : micoService.getServiceInterfaces()) {
             String interfaceName = serviceInterface.getServiceInterfaceName();
             List<String> publicIps = new ArrayList<>();
-            String msg;
+            String message;
             try {
                 Optional<Service> kubernetesServices = micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, interfaceName);
                 if (kubernetesServices.isPresent()) {
                     publicIps = getPublicIpsOfKubernetesService(kubernetesServices.get());
                     if (publicIps.isEmpty()) {
-                        msg = "There are no public IP addresses available yet for the interface '" + interfaceName
-                            + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "'.";
-                        log.debug(msg);
-                        errorMessages.add(new MicoMessageResponseDTO(msg, Type.ERROR));
+                        message = "There are no public IP addresses available yet for the interface '" + interfaceName
+                            + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "'."
+                            	+ "It may take some time until public IP addresses are available.";
+                        log.debug(message);
+                        errorMessages.add(new MicoMessageResponseDTO(message, Type.WARNING));
                     }
                 } else {
-                    msg = "There is no Kubernetes service for the interface '" +
+                    message = "There is no Kubernetes service for the interface '" +
                         interfaceName + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "'.";
-                    log.warn(msg);
-                    errorMessages.add(new MicoMessageResponseDTO(msg, Type.ERROR));
+                    log.warn(message);
+                    errorMessages.add(new MicoMessageResponseDTO(message, Type.ERROR));
                 }
             } catch (Exception e) {
                 log.error("Error while retrieving the Kubernetes service for the interface '{}' of MicoService '{}' '{}'. "
@@ -252,8 +253,8 @@ public class MicoStatusService {
     /**
      * Get the public IPs of a {@link MicoServiceInterface} by providing the corresponding Kubernetes {@link Service}.
      *
-     * @param kubernetesService the Kubernetes {@link Service}
-     * @return a list with public IPs of the provided Kubernetes Service
+     * @param kubernetesService the Kubernetes {@link Service}.
+     * @return a list with public IPs of the provided Kubernetes Service.
      */
     // TODO: Duplicate exists in ServiceInterfaceResource. Will be covered by mico#491
     private List<String> getPublicIpsOfKubernetesService(Service kubernetesService) {
