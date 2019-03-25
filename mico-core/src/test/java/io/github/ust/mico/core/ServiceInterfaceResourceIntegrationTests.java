@@ -23,30 +23,32 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.github.ust.mico.core.configuration.CorsConfig;
 import io.github.ust.mico.core.dto.request.MicoServiceInterfaceRequestDTO;
+import io.github.ust.mico.core.dto.response.status.MicoServiceInterfaceStatusResponseDTO;
 import io.github.ust.mico.core.model.MicoPortType;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.model.MicoServicePort;
 import io.github.ust.mico.core.persistence.MicoServiceInterfaceRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.resource.ServiceInterfaceResource;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.service.MicoStatusService;
+import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.util.CollectionUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
@@ -69,10 +71,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
-@WebMvcTest(ServiceInterfaceResource.class)
-@OverrideAutoConfiguration(enabled = true) // Needed to override our neo4j config
 @EnableAutoConfiguration
-@EnableConfigurationProperties(value = {CorsConfig.class})
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@AutoConfigureMockMvc
 public class ServiceInterfaceResourceIntegrationTests {
 
     private static final String JSON_PATH_LINKS_SECTION = buildPath(ROOT, LINKS);
@@ -102,16 +103,22 @@ public class ServiceInterfaceResourceIntegrationTests {
     @MockBean
     private MicoKubernetesClient micoKubernetesClient;
 
+    @MockBean
+    private MicoStatusService micoStatusService;
+
     @Autowired
     private ObjectMapper mapper;
 
+    @MockBean
+    private ImageBuilder imageBuilder;
+
     @Test
     public void postServiceInterface() throws Exception {
-    	MicoServiceInterface serviceInterface = getTestServiceInterface();
+        MicoServiceInterface serviceInterface = getTestServiceInterface();
 
-    	given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(new MicoService().setShortName(SHORT_NAME).setVersion(VERSION)));
-        
-    	mvc.perform(post(INTERFACES_URL)
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(new MicoService().setShortName(SHORT_NAME).setVersion(VERSION)));
+
+        mvc.perform(post(INTERFACES_URL)
             .content(mapper.writeValueAsBytes(new MicoServiceInterfaceRequestDTO(serviceInterface))).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isCreated())
@@ -124,7 +131,7 @@ public class ServiceInterfaceResourceIntegrationTests {
         MicoServiceInterface serviceInterface = getTestServiceInterface();
 
         given(serviceRepository.findByShortNameAndVersion(any(), any())).willReturn(Optional.empty());
-        
+
         mvc.perform(post(INTERFACES_URL)
             .content(mapper.writeValueAsBytes(new MicoServiceInterfaceRequestDTO(serviceInterface))).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -134,13 +141,13 @@ public class ServiceInterfaceResourceIntegrationTests {
 
     @Test
     public void postServiceInterfaceExists() throws Exception {
-    	MicoService service = new MicoService().setShortName(SHORT_NAME).setVersion(VERSION);
+        MicoService service = new MicoService().setShortName(SHORT_NAME).setVersion(VERSION);
         MicoServiceInterface serviceInterface = getTestServiceInterface();
         service.getServiceInterfaces().add(serviceInterface);
 
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
         given(serviceInterfaceRepository.findByServiceAndName(any(), any(), any())).willReturn(Optional.of(serviceInterface));
-        
+
         mvc.perform(post(INTERFACES_URL)
             .content(mapper.writeValueAsBytes(new MicoServiceInterfaceRequestDTO(serviceInterface))).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -151,9 +158,9 @@ public class ServiceInterfaceResourceIntegrationTests {
     @Test
     public void postInvalidServiceInterface() throws Exception {
         MicoServiceInterface serviceInterface = getInvalidTestServiceInterface();
-        
+
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(new MicoService().setShortName(SHORT_NAME).setVersion(VERSION)));
-        
+
         mvc.perform(post(INTERFACES_URL)
             .content(mapper.writeValueAsBytes(new MicoServiceInterfaceRequestDTO(serviceInterface))).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -164,9 +171,9 @@ public class ServiceInterfaceResourceIntegrationTests {
     @Test
     public void getSpecificServiceInterface() throws Exception {
         MicoServiceInterface serviceInterface = getTestServiceInterface();
-        
-		given(serviceInterfaceRepository.findByServiceAndName(SHORT_NAME, VERSION,
-		    serviceInterface.getServiceInterfaceName())).willReturn(Optional.of(serviceInterface));
+
+        given(serviceInterfaceRepository.findByServiceAndName(SHORT_NAME, VERSION,
+            serviceInterface.getServiceInterfaceName())).willReturn(Optional.of(serviceInterface));
 
         mvc.perform(get(INTERFACES_URL + "/" + serviceInterface.getServiceInterfaceName()).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
@@ -183,7 +190,6 @@ public class ServiceInterfaceResourceIntegrationTests {
             .andDo(print())
             .andExpect(status().isNotFound())
             .andReturn();
-
     }
 
     @Test
@@ -191,9 +197,9 @@ public class ServiceInterfaceResourceIntegrationTests {
         MicoServiceInterface serviceInterface0 = new MicoServiceInterface().setServiceInterfaceName("ServiceInterface0");
         MicoServiceInterface serviceInterface1 = new MicoServiceInterface().setServiceInterfaceName("ServiceInterface1");
         List<MicoServiceInterface> serviceInterfaces = Arrays.asList(serviceInterface0, serviceInterface1);
-        
+
         given(serviceInterfaceRepository.findByService(SHORT_NAME, VERSION)).willReturn(serviceInterfaces);
-        
+
         mvc.perform(get(INTERFACES_URL).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
@@ -205,60 +211,63 @@ public class ServiceInterfaceResourceIntegrationTests {
 
     @Test
     public void getInterfacePublicIpByName() throws Exception {
-        List<String> externalIPs = CollectionUtils.listOf("1.2.3.4");
-        MicoService service = new MicoService().setShortName(SHORT_NAME).setVersion(VERSION);
-        MicoServiceInterface serviceInterface = getTestServiceInterface();
-        String serviceInterfaceName = serviceInterface.getServiceInterfaceName();
+        String externalIP = "1.2.3.4";
+        MicoService micoService = new MicoService().setShortName(SHORT_NAME).setVersion(VERSION);
+        MicoServiceInterface micoServiceInterface = getTestServiceInterface();
+        String serviceInterfaceName = micoServiceInterface.getServiceInterfaceName();
 
-        Optional<Service> kubernetesService = Optional.of(getKubernetesService(serviceInterface.getServiceInterfaceName(), externalIPs));
+        Optional<Service> kubernetesService = Optional.of(getKubernetesService(micoServiceInterface.getServiceInterfaceName(), externalIP));
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
-        given(serviceInterfaceRepository.findByServiceAndName(SHORT_NAME, VERSION, serviceInterfaceName)).willReturn(Optional.of(serviceInterface));
-        given(micoKubernetesClient.getInterfaceByNameOfMicoService(eq(service), eq(serviceInterfaceName))).willReturn(kubernetesService);
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoService));
+        given(serviceInterfaceRepository.findByServiceAndName(SHORT_NAME, VERSION, serviceInterfaceName)).willReturn(Optional.of(micoServiceInterface));
+        given(micoKubernetesClient.getInterfaceByNameOfMicoService(eq(micoService), eq(serviceInterfaceName))).willReturn(kubernetesService);
+        given(micoStatusService.getPublicIpOfKubernetesService(micoService, serviceInterfaceName)).willReturn(new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName).setExternalIp(externalIP));
 
         mvc.perform(get(INTERFACES_URL + "/" + serviceInterfaceName + "/" + PATH_PART_PUBLIC_IP).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$", hasSize(1)))
-            .andExpect(jsonPath("$", is(externalIPs)))
+            .andExpect(jsonPath("$.name", is(serviceInterfaceName)))
+            .andExpect(jsonPath("$.externalIp", is(externalIP)))
             .andReturn();
     }
 
     @Test
     public void getInterfacePublicIpByNameWithPendingIP() throws Exception {
-        MicoService service = new MicoService().setShortName(SHORT_NAME).setVersion(VERSION);
-        MicoServiceInterface serviceInterface = getTestServiceInterface();
-        String serviceInterfaceName = serviceInterface.getServiceInterfaceName();
+        MicoService micoService = new MicoService().setShortName(SHORT_NAME).setVersion(VERSION);
+        MicoServiceInterface micoServiceInterface = getTestServiceInterface();
+        String serviceInterfaceName = micoServiceInterface.getServiceInterfaceName();
 
-        Optional<Service> kubernetesService = Optional.of(getKubernetesService(serviceInterface.getServiceInterfaceName(), new ArrayList<String>()));
+        Optional<Service> kubernetesService = Optional.of(getKubernetesService(micoServiceInterface.getServiceInterfaceName(), ""));
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
-        given(serviceInterfaceRepository.findByServiceAndName(SHORT_NAME, VERSION, serviceInterfaceName)).willReturn(Optional.of(serviceInterface));
-        given(micoKubernetesClient.getInterfaceByNameOfMicoService(eq(service), eq(serviceInterfaceName))).willReturn(kubernetesService);
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoService));
+        given(serviceInterfaceRepository.findByServiceAndName(SHORT_NAME, VERSION, serviceInterfaceName)).willReturn(Optional.of(micoServiceInterface));
+        given(micoKubernetesClient.getInterfaceByNameOfMicoService(eq(micoService), eq(serviceInterfaceName))).willReturn(kubernetesService);
+        given(micoStatusService.getPublicIpOfKubernetesService(micoService, serviceInterfaceName)).willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "There is no Load Balancer service for the Kubernetes service of the MicoServiceInterface '" +
+            serviceInterfaceName + "'."));
 
         mvc.perform(get(INTERFACES_URL + "/" + serviceInterfaceName + "/" + PATH_PART_PUBLIC_IP).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
-            .andExpect(status().isOk())
-            .andExpect(content().json("[]"))
+            .andExpect(status().isNotFound())
+            .andExpect(status().reason("There is no Load Balancer service for the Kubernetes service of the MicoServiceInterface '" +
+                serviceInterfaceName + "'."))
             .andReturn();
     }
 
     @Test
     public void putMicoServiceInterfaceNotFoundService() throws Exception {
         MicoServiceInterface serviceInterface = getTestServiceInterface();
-        
+
         mvc.perform(put(INTERFACES_URL + "/" + serviceInterface.getServiceInterfaceName())
             .content(mapper.writeValueAsBytes(new MicoServiceInterfaceRequestDTO(serviceInterface))).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isNotFound())
-            .andExpect(status().reason("Service '" + SHORT_NAME + "' '" + VERSION + "' could not be found!"))
             .andReturn();
     }
 
     @Test
     public void putMicoServiceInterfaceNameNotEqual() throws Exception {
         MicoServiceInterface serviceInterface = getTestServiceInterface();
-        
+
         mvc.perform(put(INTERFACES_URL + "/" + serviceInterface.getServiceInterfaceName() + "NotEqual")
             .content(mapper.writeValueAsBytes(new MicoServiceInterfaceRequestDTO(serviceInterface))).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -271,14 +280,13 @@ public class ServiceInterfaceResourceIntegrationTests {
     public void putMicoServiceInterfaceNotFound() throws Exception {
         MicoService service = new MicoService().setShortName(SHORT_NAME).setVersion(VERSION);
         MicoServiceInterface serviceInterface = getTestServiceInterface();
-        
+
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
-        
+
         mvc.perform(put(INTERFACES_URL + "/" + serviceInterface.getServiceInterfaceName())
             .content(mapper.writeValueAsBytes(new MicoServiceInterfaceRequestDTO(serviceInterface))).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isNotFound())
-            .andExpect(status().reason("MicoServiceInterface was not found!"))
             .andReturn();
     }
 
@@ -287,12 +295,14 @@ public class ServiceInterfaceResourceIntegrationTests {
         MicoService service = new MicoService().setShortName(SHORT_NAME).setVersion(VERSION);
         MicoServiceInterface serviceInterface = new MicoServiceInterface().setServiceInterfaceName(INTERFACE_NAME);
         service.getServiceInterfaces().add(serviceInterface);
-        
+
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
         given(serviceInterfaceRepository.findByServiceAndName(any(), any(), any())).willReturn(Optional.of(serviceInterface));
 
         MicoServiceInterface modifiedServiceInterface = getTestServiceInterface();
-        
+
+        given(serviceInterfaceRepository.save(modifiedServiceInterface)).willReturn(modifiedServiceInterface);
+
         mvc.perform(put(INTERFACES_URL + "/" + modifiedServiceInterface.getServiceInterfaceName())
             .content(mapper.writeValueAsBytes(new MicoServiceInterfaceRequestDTO(modifiedServiceInterface))).accept(MediaTypes.HAL_JSON_VALUE).contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -302,7 +312,7 @@ public class ServiceInterfaceResourceIntegrationTests {
     }
 
 
-    private Service getKubernetesService(String serviceInterfaceName, List<String> externalIPs) {
+    private Service getKubernetesService(String serviceInterfaceName, String externalIP) {
         Service service = new ServiceBuilder()
             .withNewMetadata()
             .withName(serviceInterfaceName)
@@ -313,13 +323,11 @@ public class ServiceInterfaceResourceIntegrationTests {
             .endStatus()
             .build();
 
-        if (externalIPs != null && !externalIPs.isEmpty()) {
+        if (externalIP != null && !externalIP.isEmpty()) {
             List<LoadBalancerIngress> ingressList = new ArrayList<>();
-            for (String externalIP : externalIPs) {
-                LoadBalancerIngress ingress = new LoadBalancerIngress();
-                ingress.setIp(externalIP);
-                ingressList.add(ingress);
-            }
+            LoadBalancerIngress ingress = new LoadBalancerIngress();
+            ingress.setIp(externalIP);
+            ingressList.add(ingress);
             service.getStatus().getLoadBalancer().setIngress(ingressList);
         }
         return service;

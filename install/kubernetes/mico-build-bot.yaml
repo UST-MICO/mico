@@ -17,4 +17,4 @@ metadata:
   name: build-bot-dockerhub
   namespace: mico-build-bot
 secrets:
-- name: build-bot-dockerhub-secret
+  - name: build-bot-dockerhub-secret

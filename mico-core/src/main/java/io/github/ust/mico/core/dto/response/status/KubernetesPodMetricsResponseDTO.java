@@ -33,7 +33,8 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * Contains information about CPU/memory load of a {@link Pod}.
+ * Contains information about CPU/memory load of a {@link Pod}
+ * intended to use with responses only..
  */
 @Data
 @AllArgsConstructor

@@ -1,5 +1,16 @@
 package io.github.ust.mico.core.broker;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphEdgeResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceResponseDTO;
@@ -12,14 +23,6 @@ import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -150,6 +153,7 @@ public class MicoServiceBroker {
             throw new MicoServiceAlreadyExistsException(newService.getShortName(), newService.getVersion());
         }
         for (MicoServiceInterface serviceInterface : newService.getServiceInterfaces()) {
+        	serviceInterface.getDescription(); // Just to suppress the "unused" warning for serviceInterface ...
             //TODO: Verfiy how to put this into method into ServiceBroker
             //validateProvidedInterface(newService.getShortName(), newService.getVersion(), serviceInterface);
         }
@@ -229,7 +233,13 @@ public class MicoServiceBroker {
     }
 
     public MicoService promoteService(MicoService service, String newVersion) {
+        // In order to copy the service along with all service interfaces nodes
+        // and all port nodes of the service interface we need to set the id of
+        // service interfaces and ports to null.
+        // That way, Neo4j will create new entities instead of updating the existing ones.
         service.setVersion(newVersion).setId(null);
+        service.getServiceInterfaces().forEach(serviceInterface -> serviceInterface.setId(null));
+        service.getServiceInterfaces().forEach(serviceInterface -> serviceInterface.getPorts().forEach(port -> port.setId(null)));
 
         log.debug("Set new version in service: {}", service);
 
@@ -263,4 +273,14 @@ public class MicoServiceBroker {
         return micoServiceDependencyGraph;
     }
 
+    /**
+     * Return yaml for a {@link MicoService} for the give shortName and version.
+     *
+     * @param shortName the short name of the {@link MicoService}.
+     * @param version   version the version of the {@link MicoService}.
+     * @return the kubernetes YAML for the {@link MicoService}.
+     */
+    public String getServiceYamlByShortNameAndVersion(String shortName, String version) throws MicoServiceNotFoundException, JsonProcessingException, KubernetesResourceException {
+        return micoKubernetesClient.getYaml(getServiceFromDatabase(shortName, version));
+    }
 }

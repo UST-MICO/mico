@@ -52,7 +52,7 @@ public interface MicoApplicationRepository extends Neo4jRepository<MicoApplicati
      */
     @Query("MATCH (a:MicoApplication)-[i:INCLUDES]-(s:MicoService) "
     	+ "WHERE s.shortName = {shortName} AND s.version = {version} "
-    	+ "RETURN COLLECT(a) AS applications")
+    	+ "RETURN COLLECT((a)-[:INCLUDES|:PROVIDES]->()) AS applications")
     List<MicoApplication> findAllByUsedService(
     	@Param("shortName") String shortName,
     	@Param("version") String version);

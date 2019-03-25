@@ -57,7 +57,7 @@ public class MicoInterfaceConnectionRequestDTO {
         properties = {
             @ExtensionProperty(name = "title", value = "Environment Variable Name"),
             @ExtensionProperty(name = "pattern", value = Patterns.KUBERNETES_ENV_VAR_NAME_REGEX),
-            @ExtensionProperty(name = "x-order", value = "10"),
+            @ExtensionProperty(name = "x-order", value = "30"),
             @ExtensionProperty(name = "description", value = "Name of the environment variable " +
                 "that is used to set the fully qualified name of an interface.")
         }
@@ -89,7 +89,7 @@ public class MicoInterfaceConnectionRequestDTO {
         properties = {
             @ExtensionProperty(name = "title", value = "Service Short Name"),
             @ExtensionProperty(name = "minLength", value = "1"),
-            @ExtensionProperty(name = "x-order", value = "30"),
+            @ExtensionProperty(name = "x-order", value = "10"),
             @ExtensionProperty(name = "description", value = "Name of the MicoService.")
         }
     )})
