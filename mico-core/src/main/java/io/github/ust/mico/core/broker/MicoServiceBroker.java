@@ -53,8 +53,7 @@ public class MicoServiceBroker {
         return existingService;
     }
 
-    public MicoService updateExistingService(MicoService service) throws MicoServiceNotFoundException {
-        log.debug("Got following service from the request body: {}", service);
+    public MicoService updateExistingService(MicoService service) {
         log.debug("Updated service, before saving to database: {}", service);
         MicoService updatedService = serviceRepository.save(service);
         log.debug("Updated service, after saving to database: {}", updatedService);
@@ -159,31 +158,6 @@ public class MicoServiceBroker {
         }
         MicoService savedService = serviceRepository.save(newService);
         return savedService;
-    }
-
-    public LinkedList<MicoService> getDependentServices(List<MicoServiceDependency> dependees) {
-        if (dependees == null) {
-            return null;
-        }
-
-        LinkedList<MicoService> services = new LinkedList<>();
-
-        dependees.forEach(dependee -> {
-            String shortName = dependee.getDependedService().getShortName();
-            String version = dependee.getDependedService().getVersion();
-
-            Optional<MicoService> dependeeServiceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
-            MicoService dependeeService = dependeeServiceOpt.orElse(null);
-            if (dependeeService == null) {
-                // TODO: MicoService name is mandatory! Will be covered by issue mico#490
-                MicoService newService = serviceRepository.save(new MicoService().setShortName(shortName).setVersion(version));
-                services.add(newService);
-            } else {
-                services.add(dependeeService);
-            }
-        });
-
-        return services;
     }
 
     public List<MicoService> getDependeesByMicoService(MicoService service) {
