@@ -204,6 +204,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         if (this.serviceNodeMap.has(edge.source.toString())) {
             edge.type = 'interface-connection';
             if (edge.createdFrom == null) {
+                // compute valid targets for new edge
                 this.serviceInterfaceNodeMap.forEach((node, key) => {
                     if (node.serviceId === edge.source) {
                         edge.validTargets.delete(key);
@@ -214,10 +215,13 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 });
                 edge.validTargets.delete('APPLICATION');
             } else {
+                // remove valid targets from edges that were created from an existing edge
+                // forcing the user to drop the edge in the void
                 edge.validTargets.clear();
                 const graph: GraphEditor = this.graph.nativeElement;
                 const sourceEdge = graph.getEdge(edge.createdFrom);
                 if (sourceEdge != null) {
+                    // allow user dropping the edge on original target
                     edge.validTargets.add(sourceEdge.target.toString());
                 }
             }
@@ -225,18 +229,24 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         return edge;
     }
 
+    /**
+     * Handle edgeadd events from the grapheditor.
+     */
     onEdgeAdd = (event: CustomEvent) => {
         const graph: GraphEditor = this.graph.nativeElement;
         const edge: Edge = event.detail.edge;
         if (edge.type === 'interface-connection') {
+            // fetch all involved nodes for an interface connection edge
             const sourceNode = graph.getNode(edge.source) as ServiceNode;
             const targetNode = graph.getNode(edge.target) as ServiceInterfaceNode;
-            console.log(targetNode);
             const targetService = graph.getNode(targetNode.serviceId) as ServiceNode;
             this.createInterfaceConnection(edge, sourceNode, targetService, targetNode);
         }
     }
 
+    /**
+     * Handle edgeremove events from the grapheditor.
+     */
     onEdgeRemove = (event: CustomEvent) => {
         const graph: GraphEditor = this.graph.nativeElement;
         const edge: Edge = event.detail.edge;
@@ -245,9 +255,9 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             return;
         }
         if (edge.type === 'interface-connection') {
+            // fetch all involved nodes for an interface connection edge
             const sourceNode = graph.getNode(edge.source) as ServiceNode;
             const targetNode = graph.getNode(edge.target) as ServiceInterfaceNode;
-            console.log(targetNode);
             const targetService = graph.getNode(targetNode.serviceId) as ServiceNode;
             this.removeInterfaceConnection(edge, sourceNode, targetService, targetNode);
         }
