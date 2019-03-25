@@ -60,6 +60,7 @@ type ApiModelMap = { [prop: string]: ApiModel | ApiModelAllOf };
 })
 export class ApiService {
     private streams: Map<string, Subject<Readonly<any>>> = new Map();
+    private polling: Map<string, Subscription> = new Map();
 
     constructor(
         private rest: ApiBaseFunctionService,
@@ -1070,39 +1071,57 @@ export class ApiService {
     }
 
     /**
-     * Polls the getApplicationDeploymentStatus method for a specified application
+     * Subscribes ,to the getApplicationDeploymentStatus for a specified application
+     * The polling is started via startApplicationStatusPolling
      *
      * @param applicationShortName shortName of the application
      * @param applicationVersion version of the application
-     *
-     * @returns an object consisting of an observable, which can be subscribed to receive polling updates and a list of
-     * subscriptions used in this method, which should be unsubscribed if the polling is to be stopped.
      */
     pollApplicationStatus(applicationShortName: string, applicationVersion: string) {
         const resource = 'poll/application/' + applicationShortName + '/' + applicationVersion + '/deploymentStatus';
         const stream = this.getStreamSource<any>(resource);
 
-        // TODO cleanup after ngOnDestroy
-
-        // poll status
-        const subPolling = interval(2 * 1000)
-            .subscribe(() => {
-                this.getApplicationDeploymentStatus(applicationShortName, applicationVersion);
-            });
-
         // handle incomming status updates
-        const subJobStatus = this.getApplicationDeploymentStatus(applicationShortName, applicationVersion).subscribe(newStatus => {
+        this.getApplicationDeploymentStatus(applicationShortName, applicationVersion).subscribe(newStatus => {
 
             // object freeze results in undefined, hence deepcopy
             stream.next(JSON.parse(JSON.stringify(newStatus)));
 
         });
 
-        return {
-            observable: stream.asObservable().pipe(
-                filter(data => data !== undefined)
-            ), subscriptions: [subPolling, subJobStatus]
-        };
+        return stream.asObservable().pipe(
+            filter(data => data !== undefined)
+        );
+    }
+
+    /**
+     * Starts the polling for 'pollApplicationStatus'.
+     * Only one subscriptions is returned at a time, to avoid multiple polling of the same information.
+     * Otherwise 'undefined' is returned.
+     *
+     * @param applicationShortName shortName of the application
+     * @param applicationVersion version of the application
+     */
+    startApplicationStatusPolling(applicationShortName: string, applicationVersion: string) {
+        const resource = 'poll/application/' + applicationShortName + '/' + applicationVersion + '/deploymentStatus';
+
+        // subscription is already in use
+        if (this.polling.has(resource) && !this.polling.get(resource).closed) {
+            return undefined;
+        } else {
+
+            // periodically call getApplicationDeploymentStatus
+            const subPolling = interval(2 * 1000)
+                .subscribe(() => {
+                    this.getApplicationDeploymentStatus(applicationShortName, applicationVersion);
+                });
+
+            if (subPolling != null) {
+                this.polling.set(resource, subPolling);
+            }
+
+            return subPolling;
+        }
     }
 
 }

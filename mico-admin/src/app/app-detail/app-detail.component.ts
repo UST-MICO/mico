@@ -50,7 +50,8 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     subServiceDependency: Subscription;
     subCreateNextVersion: Subscription;
     subJobStatus: Subscription;
-    subStatusPolling: Subscription[] = [];
+    subApplicationStatus: Subscription;
+    subApplicationStatusPolling: Subscription;
 
 
     // immutable application  object which is updated, when new data is pushed
@@ -151,11 +152,9 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         });
 
         // status polling
-        // TODO change to safeUnsubscribeList after master is merged in
-        // safeUnsubscribe(this.subStatusPolling);
-        const tempPollingObject = this.apiService.pollApplicationStatus(this.shortName, this.selectedVersion);
-        this.subStatusPolling = tempPollingObject.subscriptions;
-        this.subStatusPolling.push(tempPollingObject.observable
+        safeUnsubscribe(this.subApplicationStatus);
+        // TODO handle undefined return or similar
+        this.subApplicationStatus = this.apiService.pollApplicationStatus(this.shortName, this.selectedVersion)
             .subscribe(val => {
 
                 console.log('app-detail', val);
@@ -167,8 +166,10 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
                 this.deploymentStatusMessage = message;
 
-            })
-        );
+            });
+
+        safeUnsubscribe(this.subApplicationStatusPolling);
+        this.subApplicationStatusPolling = this.apiService.startApplicationStatusPolling(this.shortName, this.selectedVersion);
 
     }
 
@@ -186,8 +187,8 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         safeUnsubscribe(this.subServiceDependency);
         safeUnsubscribe(this.subCreateNextVersion);
         safeUnsubscribe(this.subJobStatus);
-        // TODO change to safeUnsubscribeList after master is merged in
-        // safeUnsubscribe(this.subStatusPolling);
+        safeUnsubscribe(this.subApplicationStatus);
+        safeUnsubscribe(this.subApplicationStatusPolling);
     }
 
 
