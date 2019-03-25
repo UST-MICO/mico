@@ -32,6 +32,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.concurrent.ExecutionException;
@@ -41,6 +42,7 @@ import static io.github.ust.mico.core.TestConstants.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@ActiveProfiles("local")
 public class ImageBuilderTests {
 
     @Rule
@@ -69,10 +71,10 @@ public class ImageBuilderTests {
     public void withoutInitializingAnErrorIsThrown() throws NotInitializedException, InterruptedException, ExecutionException, TimeoutException {
 
         MicoService micoService = new MicoService()
-            .setShortName(SERVICE_SHORT_NAME)
-            .setVersion(SERVICE_VERSION)
-            .setName(NAME)
-            .setGitCloneUrl(IntegrationTest.GIT_CLONE_URL);
+                .setShortName(SERVICE_SHORT_NAME)
+                .setVersion(SERVICE_VERSION)
+                .setName(NAME)
+                .setGitCloneUrl(IntegrationTest.GIT_CLONE_URL);
 
         imageBuilder.build(micoService);
     }

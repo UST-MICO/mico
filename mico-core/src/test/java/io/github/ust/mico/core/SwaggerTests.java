@@ -26,6 +26,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.hateoas.MediaTypes;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -40,6 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @EnableAutoConfiguration
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
+@ActiveProfiles("local")
 public class SwaggerTests {
 
     @Autowired
@@ -49,10 +51,10 @@ public class SwaggerTests {
     public void vendorExtensionsTest() throws Exception {
         // If this test breaks, there is either no x-order annotation anywhere or the CustomOpenApiExtentionsPlugin is missing.
         mvc.perform(get("/v2/api-docs").accept(MediaTypes.HAL_JSON_VALUE))
-            .andDo(print())
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.definitions.*.properties.*.x-order", not(empty())))
-            .andReturn();
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.definitions.*.properties.*.x-order", not(empty())))
+                .andReturn();
     }
 
 }

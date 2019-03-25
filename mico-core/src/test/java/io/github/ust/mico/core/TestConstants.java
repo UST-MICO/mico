@@ -19,9 +19,9 @@
 
 package io.github.ust.mico.core;
 
-import static io.github.ust.mico.core.JsonPathBuilder.*;
-
 import io.github.ust.mico.core.model.MicoVersion;
+
+import static io.github.ust.mico.core.JsonPathBuilder.*;
 
 class TestConstants {
 

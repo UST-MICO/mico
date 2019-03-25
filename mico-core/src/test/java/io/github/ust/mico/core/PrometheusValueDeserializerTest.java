@@ -19,51 +19,51 @@
 
 package io.github.ust.mico.core;
 
-import static org.junit.Assert.assertEquals;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.ust.mico.core.dto.response.internal.PrometheusResponseDTO;
+import org.junit.Test;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.io.IOException;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import io.github.ust.mico.core.dto.response.internal.PrometheusResponseDTO;
-
+@ActiveProfiles("local")
 public class PrometheusValueDeserializerTest {
 
     @Test
     public void testDeserialize() {
         String testJsonForMemoryUsageRequest = "{\n" +
-            "    \"status\": \"success\",\n" +
-            "    \"data\": {\n" +
-            "        \"resultType\": \"vector\",\n" +
-            "        \"result\": [\n" +
-            "            {\n" +
-            "                \"metric\": {},\n" +
-            "                \"value\": [\n" +
-            "                    1552041266.607,\n" +
-            "                    \"310083584\"\n" +
-            "                ]\n" +
-            "            }\n" +
-            "        ]\n" +
-            "    }\n" +
-            "}";
+                "    \"status\": \"success\",\n" +
+                "    \"data\": {\n" +
+                "        \"resultType\": \"vector\",\n" +
+                "        \"result\": [\n" +
+                "            {\n" +
+                "                \"metric\": {},\n" +
+                "                \"value\": [\n" +
+                "                    1552041266.607,\n" +
+                "                    \"310083584\"\n" +
+                "                ]\n" +
+                "            }\n" +
+                "        ]\n" +
+                "    }\n" +
+                "}";
 
         String testJsonForCpuLoadRequest = "{\n" +
-            "    \"status\": \"success\",\n" +
-            "    \"data\": {\n" +
-            "        \"resultType\": \"vector\",\n" +
-            "        \"result\": [\n" +
-            "            {\n" +
-            "                \"metric\": {},\n" +
-            "                \"value\": [\n" +
-            "                    1552042589.238,\n" +
-            "                    \"0\"\n" +
-            "                ]\n" +
-            "            }\n" +
-            "        ]\n" +
-            "    }\n" +
-            "}";
+                "    \"status\": \"success\",\n" +
+                "    \"data\": {\n" +
+                "        \"resultType\": \"vector\",\n" +
+                "        \"result\": [\n" +
+                "            {\n" +
+                "                \"metric\": {},\n" +
+                "                \"value\": [\n" +
+                "                    1552042589.238,\n" +
+                "                    \"0\"\n" +
+                "                ]\n" +
+                "            }\n" +
+                "        ]\n" +
+                "    }\n" +
+                "}";
 
         ObjectMapper objectMapper = new ObjectMapper();
         try {
