@@ -21,8 +21,8 @@ metadata:
     run: mico-core
 spec:
   ports:
-  - port: 8080
-    targetPort: 8080
+    - port: 8080
+      targetPort: 8080
   selector:
     run: mico-core
 ---
@@ -43,14 +43,14 @@ spec:
         run: mico-core
     spec:
       containers:
-      - name: mico-core
-        image: ustmico/mico-core
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 8080
-        env:
+        - name: mico-core
+          image: ustmico/mico-core
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
             - name: SPRING_PROFILES_ACTIVE
               valueFrom:
-                  configMapKeyRef:
-                      name: mico-core
-                      key: spring.profiles.active
+                configMapKeyRef:
+                  name: mico-core
+                  key: spring.profiles.active
