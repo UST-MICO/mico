@@ -82,12 +82,15 @@ public class ApplicationResourceIntegrationTests {
     private static final String DESCRIPTION_PATH = buildPath(ROOT, "description");
     private static final String OWNER_PATH = buildPath(ROOT, "owner");
     private static final String SERVICE_LIST_PATH = buildPath(ROOT, "services");
-    private static final String DEPLOYMENT_STATUS_VALUE_PATH = buildPath(ROOT, "deploymentStatus.value");
+    private static final String DEPLOYMENT_STATUS_PATH = buildPath(ROOT, "deploymentStatus");
+    private static final String VALUE_PATH = buildPath(ROOT, "value");
+    private static final String MESSAGES_PATH = buildPath(ROOT, "messages");
     private static final String JSON_PATH_LINKS_SECTION = "$._links.";
     private static final String BASE_PATH = "/applications";
     private static final String PATH_SERVICES = "services";
     private static final String PATH_DEPLOYMENT_INFORMATION = "deploymentInformation";
     private static final String PATH_PROMOTE = "promote";
+    private static final String PATH_DEPLOYMENT_STATUS = "deploymentStatus";
     private static final String PATH_STATUS = "status";
 
     @MockBean
@@ -241,7 +244,7 @@ public class ApplicationResourceIntegrationTests {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath(SHORT_NAME_PATH, is(application.getShortName())))
                 .andExpect(jsonPath(VERSION_PATH, is(application.getVersion())))
-                .andExpect(jsonPath(DEPLOYMENT_STATUS_VALUE_PATH, is(MicoApplicationDeploymentStatus.Value.UNDEPLOYED.toString())));
+                .andExpect(jsonPath(DEPLOYMENT_STATUS_PATH + ".value", is(MicoApplicationDeploymentStatus.Value.UNDEPLOYED.toString())));
     }
 
     @Test
@@ -597,6 +600,96 @@ public class ApplicationResourceIntegrationTests {
         verify(applicationRepository).delete(appCaptor.capture());
         assertEquals("Wrong short name.", application.getShortName(), appCaptor.getValue().getShortName());
         assertEquals("Wrong version.", application.getVersion(), appCaptor.getValue().getVersion());
+    }
+
+    @Test
+    public void getApplicationDeploymentStatusDeployed() throws Exception {
+        MicoApplication application = new MicoApplication()
+            .setId(ID)
+            .setShortName(SHORT_NAME).setVersion(VERSION)
+            .setName(NAME).setDescription(DESCRIPTION);
+
+        given(micoKubernetesClient.getApplicationDeploymentStatus(application.getShortName(), application.getVersion()))
+            .willReturn(new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.DEPLOYED, new ArrayList<>()));
+
+        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_DEPLOYMENT_STATUS).accept(MediaTypes.HAL_JSON_VALUE))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(VALUE_PATH, is(MicoApplicationDeploymentStatus.Value.DEPLOYED.toString())))
+            .andExpect(jsonPath(MESSAGES_PATH, hasSize(0)));
+    }
+
+    @Test
+    public void getApplicationDeploymentStatusUndeployed() throws Exception {
+        MicoApplication application = new MicoApplication()
+            .setId(ID)
+            .setShortName(SHORT_NAME).setVersion(VERSION)
+            .setName(NAME).setDescription(DESCRIPTION);
+
+        given(micoKubernetesClient.getApplicationDeploymentStatus(application.getShortName(), application.getVersion()))
+            .willReturn(new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.UNDEPLOYED, new ArrayList<>()));
+
+        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_DEPLOYMENT_STATUS).accept(MediaTypes.HAL_JSON_VALUE))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(VALUE_PATH, is(MicoApplicationDeploymentStatus.Value.UNDEPLOYED.toString())))
+            .andExpect(jsonPath(MESSAGES_PATH, hasSize(0)));
+    }
+
+    @Test
+    public void getApplicationDeploymentStatusPending() throws Exception {
+        MicoApplication application = new MicoApplication()
+            .setId(ID)
+            .setShortName(SHORT_NAME).setVersion(VERSION)
+            .setName(NAME).setDescription(DESCRIPTION);
+
+        given(micoKubernetesClient.getApplicationDeploymentStatus(application.getShortName(), application.getVersion()))
+            .willReturn(new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.PENDING,
+                CollectionUtils.listOf(MicoMessage.info("The deployment of MicoApplication is scheduled to be started."))));
+
+        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_DEPLOYMENT_STATUS).accept(MediaTypes.HAL_JSON_VALUE))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(VALUE_PATH, is(MicoApplicationDeploymentStatus.Value.PENDING.toString())))
+            .andExpect(jsonPath(MESSAGES_PATH, hasSize(1)));
+    }
+
+    @Test
+    public void getApplicationDeploymentStatusIncomplete() throws Exception {
+        MicoApplication application = new MicoApplication()
+            .setId(ID)
+            .setShortName(SHORT_NAME).setVersion(VERSION)
+            .setName(NAME).setDescription(DESCRIPTION);
+
+        given(micoKubernetesClient.getApplicationDeploymentStatus(application.getShortName(), application.getVersion()))
+            .willReturn(new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.INCOMPLETE,
+                CollectionUtils.listOf(
+                    MicoMessage.error("The deployment of MicoService 1 failed."),
+                    MicoMessage.error("The deployment of MicoService 2 failed."))));
+
+        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_DEPLOYMENT_STATUS).accept(MediaTypes.HAL_JSON_VALUE))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(VALUE_PATH, is(MicoApplicationDeploymentStatus.Value.INCOMPLETE.toString())))
+            .andExpect(jsonPath(MESSAGES_PATH, hasSize(2)));
+    }
+
+    @Test
+    public void getApplicationDeploymentStatusUnknown() throws Exception {
+        MicoApplication application = new MicoApplication()
+            .setId(ID)
+            .setShortName(SHORT_NAME).setVersion(VERSION)
+            .setName(NAME).setDescription(DESCRIPTION);
+
+        given(micoKubernetesClient.getApplicationDeploymentStatus(application.getShortName(), application.getVersion()))
+            .willReturn(new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.UNKNOWN,
+                CollectionUtils.listOf(MicoMessage.warning("Unexpected number of clowns appeared."))));
+
+        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_DEPLOYMENT_STATUS).accept(MediaTypes.HAL_JSON_VALUE))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(VALUE_PATH, is(MicoApplicationDeploymentStatus.Value.UNKNOWN.toString())))
+            .andExpect(jsonPath(MESSAGES_PATH, hasSize(1)));
     }
 
     @Test

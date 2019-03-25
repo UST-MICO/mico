@@ -54,15 +54,14 @@ import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.swagger.annotations.ApiOperation;
 
 @RestController
-@RequestMapping(value = "/" + ApplicationResource.PATH_APPLICATIONS, produces = MediaTypes.HAL_JSON_VALUE)
+@RequestMapping(value = "/applications", produces = MediaTypes.HAL_JSON_VALUE)
 public class ApplicationResource {
 
-    public static final String PATH_APPLICATIONS = "applications";
-    public static final String PATH_SERVICES = "services";
-    public static final String PATH_DEPLOYMENT_INFORMATION = "deploymentInformation";
-    public static final String PATH_PROMOTE = "promote";
-    public static final String PATH_DEPLOYMENT_STATUS = "deploymentStatus";
-    public static final String PATH_STATUS = "status";
+    private static final String PATH_SERVICES = "services";
+    private static final String PATH_DEPLOYMENT_INFORMATION = "deploymentInformation";
+    private static final String PATH_PROMOTE = "promote";
+    private static final String PATH_DEPLOYMENT_STATUS = "deploymentStatus";
+    private static final String PATH_STATUS = "status";
 
     private static final String PATH_VARIABLE_SHORT_NAME = "micoApplicationShortName";
     private static final String PATH_VARIABLE_VERSION = "micoApplicationVersion";
@@ -277,7 +276,6 @@ public class ApplicationResource {
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPLOYMENT_STATUS)
     public ResponseEntity<Resource<MicoApplicationDeploymentStatusResponseDTO>> getApplicationDeploymentStatus(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                      				@PathVariable(PATH_VARIABLE_VERSION) String version) {
-    	// TODO: Write corresponding unit test!
 		return ResponseEntity.ok(new Resource<>(new MicoApplicationDeploymentStatusResponseDTO(
 		    broker.getApplicationDeploymentStatus(shortName, version))));
     }
