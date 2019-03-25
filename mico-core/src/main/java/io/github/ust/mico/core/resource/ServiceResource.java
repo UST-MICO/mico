@@ -71,7 +71,9 @@ public class ServiceResource {
     private static final String PATH_DEPENDEES = "dependees";
     private static final String PATH_DEPENDERS = "dependers";
     private static final String PATH_PROMOTE = "promote";
+    private static final String PATH_STATUS = "status";
     private static final String PATH_DEPENDENCY_GRAPH = "dependencyGraph";
+    private static final String PATH_YAML = "yaml";
 
     @Autowired
     private MicoServiceBroker micoServiceBroker;
@@ -155,7 +157,7 @@ public class ServiceResource {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_STATUS)
     public ResponseEntity<Resource<MicoServiceStatusResponseDTO>> getStatusOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                      @PathVariable(PATH_VARIABLE_VERSION) String version) {
         MicoService micoService = getServiceFromMicoServiceBroker(shortName, version);
@@ -347,7 +349,7 @@ public class ServiceResource {
      * @param version   version the version of the {@link MicoService}.
      * @return the kubernetes YAML for the {@link MicoService}.
      */
-    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/yaml")
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_YAML)
     public ResponseEntity<Resource<MicoYamlResponseDTO>> getServiceYamlByShortNameAndVersion(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                              @PathVariable(PATH_VARIABLE_VERSION) String version) {
         String yaml;
