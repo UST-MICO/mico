@@ -27,11 +27,12 @@ import { Subscription } from 'rxjs';
 import { STYLE_TEMPLATE, APPLICATION_NODE_TEMPLATE, SERVICE_NODE_TEMPLATE, ARROW_TEMPLATE, ServiceNode, ApplicationNode, ServiceInterfaceNode, SERVICE_INTERFACE_NODE_TEMPLATE } from './app-dependency-graph-constants';
 import { MatDialog } from '@angular/material';
 import { ChangeServiceVersionComponent } from 'src/app/dialogs/change-service-version/change-service-version.component';
-import { debounceTime } from 'rxjs/operators';
+import { debounceTime, take, takeLast } from 'rxjs/operators';
 import { safeUnsubscribe, safeUnsubscribeList } from 'src/app/util/utils';
 import { nodeChildrenAsMap } from '@angular/router/src/utils/tree';
 import { stringify } from '@angular/compiler/src/util';
 import { YesNoDialogComponent } from 'src/app/dialogs/yes-no-dialog/yes-no-dialog.component';
+import { GraphAddEnvironmentVariableComponent } from 'src/app/dialogs/graph-add-environment-variable/graph-add-environment-variable.component';
 
 
 @Component({
@@ -86,7 +87,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         graph.addEventListener('edgeremove', this.onEdgeRemove);
         graph.onCreateDraggedEdge = this.onCreateDraggedEdge;
         graph.updateTemplates([SERVICE_NODE_TEMPLATE, SERVICE_INTERFACE_NODE_TEMPLATE, APPLICATION_NODE_TEMPLATE],
-                              [STYLE_TEMPLATE], [ARROW_TEMPLATE]);
+            [STYLE_TEMPLATE], [ARROW_TEMPLATE]);
         this.resetGraph();
     }
 
@@ -264,7 +265,42 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
      * @param targetInterface
      */
     createInterfaceConnection(edge: Edge, sourceNode: ServiceNode, targetService: ServiceNode, targetInterface: ServiceInterfaceNode) {
-        // TODO show dialog here
+
+        // show dialog
+        const dialogRef = this.dialog.open(GraphAddEnvironmentVariableComponent, {
+            data: {
+                applicationShortName: this.shortName,
+                applicationVersion: this.version,
+                serviceShortName: sourceNode.shortName,
+                interfaceName: targetInterface.name,
+            }
+        });
+        const subDialog = dialogRef.afterClosed().subscribe(result => {
+            if (!result) {
+                const graph: GraphEditor = this.graph.nativeElement;
+                edge.silentDelete = true;
+                graph.removeEdge(edge, false);
+                graph.completeRender();
+                return;
+            }
+
+            this.api.getServiceDeploymentInformation(this.shortName, this.version, sourceNode.shortName)
+                .pipe(take(2), takeLast(1))
+                .subscribe(deplInf => {
+
+                    const tempDeplInf = JSON.parse(JSON.stringify(deplInf));
+                    tempDeplInf.interfaceConnections.push(result);
+
+                    const subPutDeplInf = this.api.putServiceDeploymentInformation(this.shortName, this.version, sourceNode.shortName,
+                        tempDeplInf)
+                        .subscribe(() => {
+                            safeUnsubscribe(subPutDeplInf);
+                        });
+                    // post/put deploymentInfo
+
+                });
+            safeUnsubscribe(subDialog);
+        });
         // set edge.silentDelete to true before deleting edge!
     }
 

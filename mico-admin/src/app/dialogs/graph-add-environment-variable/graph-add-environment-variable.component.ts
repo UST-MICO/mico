@@ -26,7 +26,12 @@ export class GraphAddEnvironmentVariableComponent {
      * return method of the dialog
      */
     response() {
-        return this.chosenEnvVar;
+
+        return {
+            micoServiceInterfaceName: this.interfaceName,
+            micoServiceShortName: this.serviceShortName,
+            environmentVariableName: this.chosenEnvVar
+        };
     }
 
 }
