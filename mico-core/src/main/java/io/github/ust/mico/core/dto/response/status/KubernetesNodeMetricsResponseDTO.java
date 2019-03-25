@@ -35,8 +35,9 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for the average CPU load and the average memory usage of all {@link Pod Pods} running on a Kubernetes {@link
- * Node}.
+ * DTO for the average CPU load and the average memory usage
+ * of all {@link Pod Pods} running on a Kubernetes {@link Node}
+ * intended to use with responses only.
  */
 @Data
 @NoArgsConstructor

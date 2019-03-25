@@ -2,18 +2,29 @@ version: "3"
 services:
   neo4j:
     image: "neo4j:3.5.2"
+    container_name: neo4j
     ports:
      - "7474:7474"
      - "7687:7687"
     environment:
      - NEO4J_AUTH=none
-  mico-backend:
+  redis:
+    image: "redis:5.0-alpine"
+    container_name: redis
+    ports:
+     - "6379:6379"
+  backend:
     build:
         context: .
         dockerfile: Dockerfile.mico-core
+    container_name: mico-core
     ports:
      - "8080:8080"
     depends_on:
      - neo4j
+     - redis
     environment:
-     - spring.data.neo4j.uri=bolt://neo4j
+     - spring.profiles.active=local
+     - spring.data.neo4j.uri=bolt://neo4j:7687
+     - spring.redis.host=http://redis
+     - spring.redis.port=6379

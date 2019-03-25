@@ -1,7 +1,7 @@
 import { Component, OnChanges, Input, OnDestroy } from '@angular/core';
 import { ApiService } from '../api/api.service';
 import { Subscription } from 'rxjs';
-import { UtilsService } from '../util/utils.service';
+import { safeUnsubscribe } from '../util/utils';
 
 @Component({
     selector: 'mico-service-detail-status',
@@ -20,7 +20,6 @@ export class ServiceDetailStatusComponent implements OnChanges, OnDestroy {
 
     constructor(
         private apiService: ApiService,
-        private util: UtilsService,
     ) { }
 
     ngOnChanges() {
@@ -36,7 +35,7 @@ export class ServiceDetailStatusComponent implements OnChanges, OnDestroy {
 
     ngOnDestroy() {
         // unsubscribe from observables
-        this.util.safeUnsubscribe(this.subServiceStatus);
+        safeUnsubscribe(this.subServiceStatus);
     }
 
 }

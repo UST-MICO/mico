@@ -19,19 +19,11 @@
 
 package io.github.ust.mico.core;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClient;
+import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.exception.NotInitializedException;
-import io.github.ust.mico.core.exception.VersionNotSupportedException;
 import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoVersion;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
-import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
@@ -41,24 +33,25 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.io.IOException;
-import java.io.StringWriter;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
+// Is ignored because Travis can't execute integration tests
+// that requires a connection to Kubernetes.
 @Ignore
-// TODO Upgrade to JUnit5
+// TODO: Upgrade to JUnit5
 @Category(IntegrationTests.class)
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
+@ActiveProfiles("dev")
 public class ImageBuilderIntegrationTests {
 
     @Autowired
@@ -67,7 +60,8 @@ public class ImageBuilderIntegrationTests {
     @Autowired
     private IntegrationTestsUtils integrationTestsUtils;
 
-    private KubernetesClient kubernetesClient = new DefaultKubernetesClient();
+    @Autowired
+    private MicoKubernetesBuildBotConfig micoKubernetesBuildBotConfig;
 
     private String namespace;
 
@@ -78,6 +72,8 @@ public class ImageBuilderIntegrationTests {
     public void setUp() {
         namespace = integrationTestsUtils.setUpEnvironment(true);
         integrationTestsUtils.setUpDockerRegistryConnection(namespace);
+        micoKubernetesBuildBotConfig.setNamespaceBuildExecution(namespace);
+        micoKubernetesBuildBotConfig.setBuildTimeout(60);
     }
 
     /**
@@ -103,68 +99,29 @@ public class ImageBuilderIntegrationTests {
      * It uses the provided Git repository that contains a Dockerfile to build a Docker image.
      * Afterwards it pushes it to the provided Docker registry (e.g. DockerHub).
      *
-     * @throws NotInitializedException      if ImageBuilder was not initialized
-     * @throws InterruptedException         if the build process is interrupted unexpectedly
-     * @throws TimeoutException             if the build does not finish or fail in the expected time
-     * @throws ExecutionException           if the build process fails unexpectedly
-     * @throws VersionNotSupportedException if the provided Git release tag is not supported as a MICO version
+     * @throws NotInitializedException if ImageBuilder was not initialized
+     * @throws InterruptedException    if the build process is interrupted unexpectedly
+     * @throws TimeoutException        if the build does not finish or fail in the expected time
+     * @throws ExecutionException      if the build process fails unexpectedly
      */
     @Test
-    public void buildAndPushImageWorks() throws NotInitializedException, InterruptedException, TimeoutException, ExecutionException, VersionNotSupportedException {
+    public void buildAndPushImageWorks() throws NotInitializedException, InterruptedException, TimeoutException, ExecutionException {
 
+        // Manual initialization is necessary so it will use the provided namespace (see setup method).
         imageBuilder.init();
 
         MicoService micoService = new MicoService()
-            .setShortName(TestConstants.IntegrationTest.SERVICE_SHORT_NAME)
-            .setName(TestConstants.IntegrationTest.SERVICE_NAME)
-            .setVersion(TestConstants.IntegrationTest.RELEASE)
-            .setDescription(TestConstants.IntegrationTest.SERVICE_DESCRIPTION)
-            .setGitCloneUrl(TestConstants.IntegrationTest.GIT_CLONE_URL)
-            .setDockerfilePath(TestConstants.IntegrationTest.DOCKERFILE_PATH);
+                .setShortName(TestConstants.IntegrationTest.SERVICE_SHORT_NAME)
+                .setName(TestConstants.IntegrationTest.SERVICE_NAME)
+                .setVersion(TestConstants.IntegrationTest.RELEASE)
+                .setDescription(TestConstants.IntegrationTest.SERVICE_DESCRIPTION)
+                .setGitCloneUrl(TestConstants.IntegrationTest.GIT_CLONE_URL)
+                .setDockerfilePath(TestConstants.IntegrationTest.DOCKERFILE_PATH);
 
-        Build build = imageBuilder.build(micoService);
+        CompletableFuture<String> buildJob = imageBuilder.build(micoService);
 
-        try {
-            ObjectMapper mapper = new YAMLMapper();
-            mapper.enable(SerializationFeature.INDENT_OUTPUT);
-            StringWriter sw = new StringWriter();
-            mapper.writeValue(sw, build);
-            log.debug("Build: {}{}", System.lineSeparator(), sw.toString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        String buildName = build.getMetadata().getName();
-
-        CompletableFuture<Boolean> buildPodResult = integrationTestsUtils.waitUntilBuildIsFinished(imageBuilder, buildName, namespace, 10, 1, 60);
-        boolean success = buildPodResult.get();
-        assertTrue("Build failed!", success);
-    }
-
-    // Test if docker image exists is currently not required
-    @Ignore
-    @Test
-    public void dockerImageExists() throws ExecutionException, InterruptedException, TimeoutException, VersionNotSupportedException {
-        String imageName = imageBuilder.createImageName("hello-integration-test", MicoVersion.valueOf("v1.0").toString());
-        boolean result = checkIfDockerImageExists(imageName);
-        assertTrue("Pod creation failed!", result);
-    }
-
-    private boolean checkIfDockerImageExists(String imagePath) throws ExecutionException, InterruptedException, TimeoutException {
-        String dockerRegistrySecretName = integrationTestsUtils.getDockerRegistrySecretName();
-        Pod pod = new PodBuilder()
-            .withNewMetadata().withName("testpod").withNamespace(namespace).endMetadata()
-            .withSpec(new PodSpecBuilder()
-                .withContainers(new ContainerBuilder().withName("testpod-container").withImage(imagePath).build())
-                .withImagePullSecrets(
-                    new LocalObjectReferenceBuilder().withName(dockerRegistrySecretName).build()
-                ).build())
-            .build();
-        Pod createdPod = kubernetesClient.pods().inNamespace(namespace).createOrReplace(pod);
-        String podName = createdPod.getMetadata().getName();
-        CompletableFuture<Boolean> podCreationResult = integrationTestsUtils.waitUntilPodIsRunning(
-            podName, namespace, 1, 1, 20);
-        return podCreationResult.get();
+        String dockerImageURI = buildJob.get();
+        assertNotNull("Build failed!", dockerImageURI);
     }
 
 }

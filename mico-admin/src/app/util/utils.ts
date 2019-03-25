@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,30 +17,31 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.configuration;
-
-import javax.validation.constraints.NotNull;
-
-import io.github.ust.mico.core.service.MicoCoreBackgroundJobFactory;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
-
-import lombok.Getter;
-import lombok.Setter;
+import { Subscription } from 'rxjs';
 
 /**
- * Configuration for {@link MicoCoreBackgroundJobFactory}.
+ * unsubscribes the subscription if possible
+ * @param subscription subscription to be unsubscribed
  */
-@Component
-@ConfigurationProperties(prefix = "mico-core.concurrency")
-public class MicoCoreBackgroundJobFactoryConfig {
+export function safeUnsubscribe(subscription: Subscription) {
+    if (subscription != null) {
+        subscription.unsubscribe();
+    }
+}
 
-    /**
-     * The number of threads in the {@link MicoCoreBackgroundJobFactory}.
-     */
-    @Getter
-    @Setter
-    @NotNull
-    private int threadPoolSize;
+/**
+ * unsubsribes all subscriptions in the list if possible and clears the list
+ * @param subscriptionList list of subscriptions to be unsubscribed
+ */
+export function safeUnsubscribeList(subscriptionList: Subscription[]) {
 
+    if (subscriptionList == null) {
+        return;
+    }
+
+    subscriptionList.forEach(element => {
+        safeUnsubscribe(element);
+    });
+    // clear list (see https://stackoverflow.com/questions/1232040/how-do-i-empty-an-array-in-javascript)
+    subscriptionList.length = 0;
 }

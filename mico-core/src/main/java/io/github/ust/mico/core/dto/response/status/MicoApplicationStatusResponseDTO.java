@@ -37,7 +37,8 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for the status information of a {@link MicoApplication}.
+ * DTO for the status information of a {@link MicoApplication}
+ * intended to use with responses only.
  */
 @Data
 @NoArgsConstructor

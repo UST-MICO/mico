@@ -1,22 +1,29 @@
 #!/bin/bash
 
-# Read in DockerHub username
-echo "Please provide the user name for DockerHub:"
-read uname
-if [[ -z "$uname" ]]; then
-    echo "ERROR: No username provided"
-    exit 1
-fi
-export DOCKERHUB_USERNAME_BASE64=$(echo -n $uname | base64 | tr -d \\n)
+# This script creates a new namespace that includes the complete MICO setup.
 
-# Read in DockerHub password
-echo "Please provide the password for DockerHub:"
-read -s pw
-if [[ -z "$pw" ]]; then
-    echo "ERROR: No password provided"
-    exit 1
+# Check if DockerHub credentials are already provided
+if [[ -z "${DOCKERHUB_USERNAME_BASE64}" || -z "${DOCKERHUB_PASSWORD_BASE64}" ]]; then
+    # Read in DockerHub username
+    echo "Please provide the user name for DockerHub:"
+    read uname
+    if [[ -z "$uname" ]]; then
+        echo "ERROR: No username provided"
+        exit 1
+    fi
+    export DOCKERHUB_USERNAME_BASE64=$(echo -n $uname | base64 | tr -d \\n)
+
+    # Read in DockerHub password
+    echo "Please provide the password for DockerHub:"
+    read -s pw
+    if [[ -z "$pw" ]]; then
+        echo "ERROR: No password provided"
+        exit 1
+    fi
+    export DOCKERHUB_PASSWORD_BASE64=$(echo -n $pw | base64 | tr -d \\n)
+else
+    echo "Using DockerHub credentials provided by environment variables."
 fi
-export DOCKERHUB_PASSWORD_BASE64=$(echo -n $pw | base64 | tr -d \\n)
 
 # Read in name for test namespace
 echo "Please provide the name for the test namespace"
@@ -26,7 +33,7 @@ if [[ -z "$nspace" ]]; then
     exit 1
 fi
 export MICO_TEST_NAMESPACE=$nspace
-echo "Use test namespace '${MICO_TEST_NAMESPACE}''"
+echo "Use test namespace '${MICO_TEST_NAMESPACE}'"
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 echo "Change directory to '$DIR'"

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import { Component, forwardRef, OnInit, Input } from '@angular/core';
+import { Component, forwardRef, Input } from '@angular/core';
 import { MatFormFieldControl } from '@angular/material';
 import { NG_VALUE_ACCESSOR } from '@angular/forms';
 import { ApiModel } from 'src/app/api/apimodel';
@@ -33,15 +33,12 @@ import { ApiModel } from 'src/app/api/apimodel';
     }, { provide: MatFormFieldControl, useExisting: Number }],
 })
 
-export class MicoFormNumberComponent implements OnInit {
+export class MicoFormNumberComponent {
 
     constructor() { }
 
     content: number;
     @Input() config: ApiModel;
-
-    ngOnInit() {
-    }
 
     onChange: any = () => { };
 
@@ -63,6 +60,18 @@ export class MicoFormNumberComponent implements OnInit {
         if (input == null) {
             return;
         }
+
+        if (this.config.minimum != null && input < this.config.minimum) {
+            input = this.config.minimum;
+        }
+
+
+        if (this.config.maximum != null && input > this.config.maximum) {
+            input = this.config.maximum;
+            // TODO: ensure that input reflects current value even if the value
+            // does not change anymore because it is already the max value
+        }
+
         this.content = input;
         this.onChange(input);
         this.onTouched();

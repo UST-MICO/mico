@@ -8,4 +8,4 @@ RUN mvn -B -f mico-core/pom.xml dependency:go-offline
 
 COPY mico-core/src mico-core/src
 RUN mvn -B -f mico-core/pom.xml clean package -DskipTests=true
-ENTRYPOINT ["mvn","-B","-f","mico-core/pom.xml","failsafe:integration-test"]
+ENTRYPOINT ["mvn","-B","-f","mico-core/pom.xml","-Dspring.profiles.active=local","failsafe:integration-test"]

@@ -8,6 +8,15 @@
             <mat-icon>delete</mat-icon>
         </mat-button-toggle>
 
+        <span *ngIf="isLatestVersion()" class="mh2 mt1 mb2">
+            <mat-button-toggle mat-raised-button (click)="promoteNextVersion()">
+                <span>
+                    create next Version
+                </span>
+                <mat-icon>arrow_upward</mat-icon>
+            </mat-button-toggle>
+        </span>
+
     </div>
     <!-- Drop Down Menu for version selection-->
     <mat-form-field class="w25 ma2">
@@ -32,9 +41,10 @@
             <mico-service-dependency-graph [shortName]="shortName" [version]="selectedVersion">
             </mico-service-dependency-graph>
         </mat-tab>
-        <!-- DEPLOYMENT TAB-->
-        <mat-tab label="Deployment">
-            Service-Detail-Deployment...
+        <!-- KUBECONFIG TAB-->
+        <mat-tab label="Kubernetes Configuration">
+            <mico-service-detail-kubeconfig [shortName]="shortName" [version]="selectedVersion">
+            </mico-service-detail-kubeconfig>
         </mat-tab>
         <!-- STATUS TAB -->
         <mat-tab label="Status">

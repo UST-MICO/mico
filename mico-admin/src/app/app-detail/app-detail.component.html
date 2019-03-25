@@ -34,6 +34,22 @@
                 <mat-icon>delete</mat-icon>
             </mat-button-toggle>
         </span>
+        <span class="mh2">
+            <mat-chip color="primary" *ngIf="deploymentStatus?.value === 'Deployed'"
+                matTooltip={{deploymentStatusMessage}} selected>Deployed</mat-chip>
+            <mat-chip *ngIf="deploymentStatus?.value === 'Undeployed'" matTooltip={{deploymentStatusMessage}}>
+                Undeployed</mat-chip>
+            <mat-chip color="accent" *ngIf="deploymentStatus?.value === 'Pending'"
+                matTooltip={{deploymentStatusMessage}} selected>Pending</mat-chip>
+            <mat-chip color="warn" *ngIf="deploymentStatus?.value === 'Incompleted'"
+                matTooltip={{deploymentStatusMessage}} selected>Incompleted</mat-chip>
+            <mat-chip *ngIf="deploymentStatus == null || deploymentStatus?.value === 'Unknown'"
+                matTooltip={{deploymentStatusMessage}}>Unknown</mat-chip>
+
+            <!-- Needed to load the chips css styles-->
+            <mat-chip-list>
+            </mat-chip-list>
+        </span>
     </div>
 
     <!-- Drop Down Menu for version selection-->
@@ -69,8 +85,9 @@
             </div>
             <ng-container *ngIf="edit">
                 <!-- edit version (dynamic form) -->
-                <mico-form [modelUrl]="'remote/MicoApplicationRequestDTO'" [filter]="['deploymentInfo', 'services']"
-                    [isBlacklist]="true" (data)="applicationData = $event" [startData]="application"></mico-form>
+                <mico-form [modelUrl]="'remote/MicoApplicationRequestDTO'"
+                    [filter]="['deploymentStatus', 'deploymentInfo', 'services']" [isBlacklist]="true"
+                    (data)="applicationData = $event" [startData]="application"></mico-form>
 
                 <div class="ma1 pa1">
                     <span class="ma1">
@@ -94,16 +111,5 @@
 </mat-card>
 
 <!-- PUBLIC IPs-->
-<mat-card class="ma2">
-    <mat-card-title>
-        Public IPs:
-    </mat-card-title>
-    <mat-card-content>
-        <div *ngFor="let ip of publicIps">
-            <a target="_blank" rel="noopener" href="http://{{ip}}">
-                {{ip}}
-            </a><br />
-        </div>
-    </mat-card-content>
-
-</mat-card>
+<mico-app-detail-public-ip [applicationShortName]="shortName" [applicationVersion]="selectedVersion">
+</mico-app-detail-public-ip>

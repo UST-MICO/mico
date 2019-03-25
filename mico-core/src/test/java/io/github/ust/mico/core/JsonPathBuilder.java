@@ -31,16 +31,16 @@ public class JsonPathBuilder {
     public static final String SELF = "self";
 
     public static final String EQUALS = "==";
-    public static final String SELF_HREF = buildPath(SELF,HREF);
-    public static final String LINKS_SELF_HREF = buildPath(LINKS,SELF_HREF);
+    public static final String SELF_HREF = buildPath(SELF, HREF);
+    public static final String LINKS_SELF_HREF = buildPath(LINKS, SELF_HREF);
     public static final String FIRST_ELEMENT = "[0]";
     public static final String VERSION = "version";
     public static final String SHORT_NAME = "shortName";
-    public static final String ROOT_EMBEDDED = buildPath(ROOT,EMBEDDED);
+    public static final String ROOT_EMBEDDED = buildPath(ROOT, EMBEDDED);
 
-    public static String buildPath(String ...path) {
+    public static String buildPath(String... path) {
         StringBuilder resultPath = new StringBuilder(500);
-        for (String pathSegment: path) {
+        for (String pathSegment : path) {
             if (!pathSegment.startsWith(".") && !pathSegment.startsWith("[")) {
                 if (resultPath.length() > 0) {
                     resultPath.append(".");

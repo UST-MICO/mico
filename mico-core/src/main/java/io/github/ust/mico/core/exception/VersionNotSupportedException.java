@@ -27,7 +27,7 @@ public class VersionNotSupportedException extends Exception {
     private static final long serialVersionUID = 5361232117156933210L;
 
     public VersionNotSupportedException() {
-    
+        super();
     }
 
     public VersionNotSupportedException(String message) {
