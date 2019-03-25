@@ -31,6 +31,7 @@ import { debounceTime } from 'rxjs/operators';
 import { safeUnsubscribe, safeUnsubscribeList } from 'src/app/util/utils';
 import { nodeChildrenAsMap } from '@angular/router/src/utils/tree';
 import { stringify } from '@angular/compiler/src/util';
+import { YesNoDialogComponent } from 'src/app/dialogs/yes-no-dialog/yes-no-dialog.component';
 
 
 @Component({
@@ -81,6 +82,8 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         };
         graph.addEventListener('nodeclick', this.onNodeClick);
         graph.addEventListener('nodepositionchange', this.onNodeMove);
+        graph.addEventListener('edgeadd', this.onEdgeAdd);
+        graph.addEventListener('edgeremove', this.onEdgeRemove);
         graph.onCreateDraggedEdge = this.onCreateDraggedEdge;
         graph.updateTemplates([SERVICE_NODE_TEMPLATE, SERVICE_INTERFACE_NODE_TEMPLATE, APPLICATION_NODE_TEMPLATE],
                               [STYLE_TEMPLATE], [ARROW_TEMPLATE]);
@@ -200,17 +203,99 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         }
         if (this.serviceNodeMap.has(edge.source.toString())) {
             edge.type = 'interface-connection';
-            this.serviceInterfaceNodeMap.forEach((node, key) => {
-                if (node.serviceId === edge.source) {
+            if (edge.createdFrom == null) {
+                this.serviceInterfaceNodeMap.forEach((node, key) => {
+                    if (node.serviceId === edge.source) {
+                        edge.validTargets.delete(key);
+                    }
+                });
+                this.serviceNodeMap.forEach((node, key) => {
                     edge.validTargets.delete(key);
+                });
+                edge.validTargets.delete('APPLICATION');
+            } else {
+                edge.validTargets.clear();
+                const graph: GraphEditor = this.graph.nativeElement;
+                const sourceEdge = graph.getEdge(edge.createdFrom);
+                if (sourceEdge != null) {
+                    edge.validTargets.add(sourceEdge.target.toString());
                 }
-            });
-            this.serviceNodeMap.forEach((node, key) => {
-                edge.validTargets.delete(key);
-            });
-            edge.validTargets.delete('APPLICATION');
+            }
         }
         return edge;
+    }
+
+    onEdgeAdd = (event: CustomEvent) => {
+        const graph: GraphEditor = this.graph.nativeElement;
+        const edge: Edge = event.detail.edge;
+        if (edge.type === 'interface-connection') {
+            const sourceNode = graph.getNode(edge.source) as ServiceNode;
+            const targetNode = graph.getNode(edge.target) as ServiceInterfaceNode;
+            console.log(targetNode);
+            const targetService = graph.getNode(targetNode.serviceId) as ServiceNode;
+            this.createInterfaceConnection(edge, sourceNode, targetService, targetNode);
+        }
+    }
+
+    onEdgeRemove = (event: CustomEvent) => {
+        const graph: GraphEditor = this.graph.nativeElement;
+        const edge: Edge = event.detail.edge;
+        if (edge.silentDelete) {
+            // for deletes that do not require further user interaction
+            return;
+        }
+        if (edge.type === 'interface-connection') {
+            const sourceNode = graph.getNode(edge.source) as ServiceNode;
+            const targetNode = graph.getNode(edge.target) as ServiceInterfaceNode;
+            console.log(targetNode);
+            const targetService = graph.getNode(targetNode.serviceId) as ServiceNode;
+            this.removeInterfaceConnection(edge, sourceNode, targetService, targetNode);
+        }
+    }
+
+    /**
+     * Show dialog to create a new interface connection.
+     *
+     * Removes edge if user cancels.
+     *
+     * @param edge the removed edge
+     * @param sourceNode
+     * @param targetService
+     * @param targetInterface
+     */
+    createInterfaceConnection(edge: Edge, sourceNode: ServiceNode, targetService: ServiceNode, targetInterface: ServiceInterfaceNode) {
+        // TODO show dialog here
+        // set edge.silentDelete to true before deleting edge!
+    }
+
+    /**
+     * Show dialog to remove interface connection.
+     *
+     * Restores edge if user cancels.
+     *
+     * @param edge the removed edge
+     * @param sourceNode
+     * @param targetService
+     * @param targetInterface
+     */
+    removeInterfaceConnection(edge: Edge, sourceNode: ServiceNode, targetService: ServiceNode, targetInterface: ServiceInterfaceNode) {
+        const dialogRef = this.dialog.open(YesNoDialogComponent, {
+            data: {
+                object: { sourceServiceName: sourceNode.title, targetServiceName: targetService.title, interfaceName: targetInterface.title },
+                question: 'deleteServiceToInterfaceConnection'
+            }
+        });
+
+        const dialogSub = dialogRef.afterClosed().subscribe(result => {
+            if (!result) {
+                const graph: GraphEditor = this.graph.nativeElement;
+                graph.addEdge(edge, false);
+                graph.completeRender();
+            } else {
+                // TODO update deployment information here!
+            }
+            dialogSub.unsubscribe();
+        });
     }
 
     /**
