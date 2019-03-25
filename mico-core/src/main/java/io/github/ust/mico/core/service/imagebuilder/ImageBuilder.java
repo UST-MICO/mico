@@ -19,6 +19,18 @@
 
 package io.github.ust.mico.core.service.imagebuilder;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.*;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.ServiceAccount;
@@ -35,18 +47,6 @@ import io.github.ust.mico.core.service.imagebuilder.buildtypes.*;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.KubernetesNameNormalizer;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.core.env.Environment;
-import org.springframework.core.env.Profiles;
-import org.springframework.lang.Nullable;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.*;
 
 /**
  * Builds container images by using Knative Build and Kaniko.

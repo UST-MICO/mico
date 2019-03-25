@@ -22,15 +22,12 @@ package io.github.ust.mico.core.resource;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
@@ -51,29 +48,10 @@ import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponse
 import io.github.ust.mico.core.exception.*;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus;
+import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus.Value;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import io.github.ust.mico.core.persistence.*;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.MicoStatusService;
 import io.swagger.annotations.ApiOperation;
-import lombok.extern.slf4j.Slf4j;
-import io.swagger.annotations.ApiOperation;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.MediaTypes;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.Resources;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-
-import javax.validation.Valid;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping(value = "/" + ApplicationResource.PATH_APPLICATIONS, produces = MediaTypes.HAL_JSON_VALUE)
@@ -141,7 +119,7 @@ public class ApplicationResource {
         }
 
         MicoApplicationWithServicesResponseDTO dto = new MicoApplicationWithServicesResponseDTO(application);
-        dto.setDeploymentStatus(MicoApplicationDeploymentStatus.NOT_DEPLOYED); //TODO: necessary?
+        dto.setDeploymentStatus(new MicoApplicationDeploymentStatus(Value.UNDEPLOYED)); // TODO: necessary?
 
         return ResponseEntity
                 .created(linkTo(methodOn(ApplicationResource.class)
@@ -301,10 +279,8 @@ public class ApplicationResource {
     public ResponseEntity<Resource<MicoApplicationDeploymentStatusResponseDTO>> getApplicationDeploymentStatus(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                      				@PathVariable(PATH_VARIABLE_VERSION) String version) {
     	// TODO: Write corresponding unit test!
-    	MicoApplication application = getApplicationFromDatabase(shortName, version);
-		MicoApplicationDeploymentStatusResponseDTO applicationDeploymentStatus = new MicoApplicationDeploymentStatusResponseDTO(
-		    micoKubernetesClient.getApplicationDeploymentStatus(application));
-		return ResponseEntity.ok(new Resource<>(applicationDeploymentStatus));
+		return ResponseEntity.ok(new Resource<>(new MicoApplicationDeploymentStatusResponseDTO(
+		    broker.getApplicationDeploymentStatus(shortName, version))));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_STATUS)
@@ -325,7 +301,7 @@ public class ApplicationResource {
 
     private Resource<MicoApplicationWithServicesResponseDTO> getApplicationWithServicesResponseDTOResourceWithDeploymentStatus(MicoApplication application) {
         MicoApplicationWithServicesResponseDTO dto = new MicoApplicationWithServicesResponseDTO(application);
-        dto.setDeploymentStatus(broker.getMicoApplicationDeploymentStatusOfMicoApplication(application));
+        dto.setDeploymentStatus(broker.getApplicationDeploymentStatus(application.getShortName(), application.getVersion()));
         return new Resource<>(dto, broker.getLinksOfMicoApplication(application));
     }
 }

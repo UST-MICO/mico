@@ -36,6 +36,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
@@ -50,39 +51,14 @@ import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
 import io.github.ust.mico.core.dto.response.internal.PrometheusResponseDTO;
 import io.github.ust.mico.core.dto.response.status.*;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoMessage.Type;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.model.MicoMessage.Type;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceInterfaceRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
 import io.github.ust.mico.core.util.CollectionUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.util.*;
-
-import static io.github.ust.mico.core.TestConstants.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -374,45 +350,43 @@ public class MicoStatusServiceTest {
     public void getApplicationStatusWithMissingKubernetesService() {
         MicoApplicationStatusResponseDTO micoApplicationStatus = new MicoApplicationStatusResponseDTO();
         micoApplicationStatus
-            .setTotalNumberOfRequestedReplicas(1)
-            .setTotalNumberOfAvailableReplicas(1)
-            .setTotalNumberOfPods(1)
-            .setTotalNumberOfMicoServices(1)
-            .setServiceStatuses(CollectionUtils.listOf(new MicoServiceStatusResponseDTO()
-                .setName(NAME)
-                .setShortName(SHORT_NAME)
-                .setVersion(VERSION)
-                .setAvailableReplicas(1)
-                .setRequestedReplicas(1)
-                .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication)))
-                .setNodeMetrics(CollectionUtils.listOf(
-                    new KubernetesNodeMetricsResponseDTO()
-                        .setNodeName(nodeName1)
-                        .setAverageCpuLoad(30)
-                        .setAverageMemoryUsage(70)
-                ))
-                // Add four pods (on two different nodes)
-                .setPodsInformation(CollectionUtils.listOf(
-                    new KubernetesPodInformationResponseDTO()
-                        .setPodName(podName1)
-                        .setHostIp(hostIp)
-                        .setNodeName(nodeName1)
-                        .setPhase(podPhase)
-                        .setStartTime(startTimePod1)
-                        .setRestarts(restartsPod1)
-                        .setMetrics(new KubernetesPodMetricsResponseDTO()
-                            .setMemoryUsage(memoryUsagePod1)
-                            .setCpuLoad(cpuLoadPod1)
-                            .setAvailable(podAvailablePod1))))
-                .setErrorMessages(CollectionUtils.listOf(
-                    new MicoMessageResponseDTO().setContent("There are no public IP addresses available yet for the interface '" +
-                    SERVICE_INTERFACE_NAME + "' of MicoService '" +
-                    micoService.getShortName() + "' '" + micoService.getVersion() + "'.").setType(Type.ERROR)))
-                .setInterfacesInformation(CollectionUtils.listOf(
-                    new MicoServiceInterfaceStatusResponseDTO()
-                        .setName(SERVICE_INTERFACE_NAME)
-                        // Empty list of external IP addresses
-                        .setExternalIps(CollectionUtils.listOf())))));
+                .setTotalNumberOfRequestedReplicas(1)
+                .setTotalNumberOfAvailableReplicas(1)
+                .setTotalNumberOfPods(1)
+                .setTotalNumberOfMicoServices(1)
+                .setServiceStatuses(CollectionUtils.listOf(new MicoServiceStatusResponseDTO()
+                        .setName(NAME)
+                        .setShortName(SHORT_NAME)
+                        .setVersion(VERSION)
+                        .setAvailableReplicas(1)
+                        .setRequestedReplicas(1)
+                        .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication)))
+                        .setNodeMetrics(CollectionUtils.listOf(
+                                new KubernetesNodeMetricsResponseDTO()
+                                        .setNodeName(nodeName1)
+                                        .setAverageCpuLoad(30)
+                                        .setAverageMemoryUsage(70)
+                        ))
+                        // Add four pods (on two different nodes)
+                        .setPodsInformation(CollectionUtils.listOf(
+                                new KubernetesPodInformationResponseDTO()
+                                        .setPodName(podName1)
+                                        .setHostIp(hostIp)
+                                        .setNodeName(nodeName1)
+                                        .setPhase(podPhase)
+                                        .setStartTime(startTimePod1)
+                                        .setRestarts(restartsPod1)
+                                        .setMetrics(new KubernetesPodMetricsResponseDTO()
+                                                .setMemoryUsage(memoryUsagePod1)
+                                                .setCpuLoad(cpuLoadPod1)
+                                                .setAvailable(podAvailablePod1))))
+                        .setErrorMessages(CollectionUtils.listOf(
+                          new MicoMessageResponseDTO().setContent("404 NOT_FOUND \"No deployed service interface 'service-interface-name' of MicoService 'short-name' '1.0.0' was found!\"").setType(Type.ERROR)))
+//                        .setErrorMessages(CollectionUtils.listOf(new ResponseStatusException(HttpStatus.NOT_FOUND, "No deployed service interface '" + SERVICE_INTERFACE_NAME
+//                                + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' was found!").getMessage()))
+                        .setInterfacesInformation(CollectionUtils.listOf(
+                                new MicoServiceInterfaceStatusResponseDTO()
+                                        .setName(SERVICE_INTERFACE_NAME))))); // No IPs
         try {
             given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(deployment);
             given(serviceInterfaceRepository.findByServiceAndName(micoService.getShortName(), micoService.getVersion(), SERVICE_INTERFACE_NAME)).willReturn(Optional.of(micoServiceInterface));
@@ -433,7 +407,16 @@ public class MicoStatusServiceTest {
                 .willReturn(responseEntityCpuLoadPod1);
         assertEquals(micoApplicationStatus, micoStatusService.getApplicationStatus(micoApplication));
     }
-
+                
+                
+//                .setErrorMessages(CollectionUtils.listOf(
+//                    new MicoMessageResponseDTO().setContent("There are no public IP addresses available yet for the interface '" +
+//                    SERVICE_INTERFACE_NAME + "' of MicoService '" +
+//                    micoService.getShortName() + "' '" + micoService.getVersion() + "'.").setType(Type.ERROR)))
+//                .setInterfacesInformation(CollectionUtils.listOf(
+//                    new MicoServiceInterfaceStatusResponseDTO()
+//                        .setName(SERVICE_INTERFACE_NAME)))));
+        
     @Test
     public void getApplicationStatusWithMissingDeployment() {
         MicoApplicationStatusResponseDTO micoApplicationStatus = new MicoApplicationStatusResponseDTO();

@@ -20,19 +20,20 @@
 package io.github.ust.mico.core.service;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import javax.validation.constraints.NotNull;
 
-import io.fabric8.kubernetes.api.model.ContainerStatus;
-import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
-import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.github.ust.mico.core.configuration.PrometheusConfig;
 import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
@@ -44,20 +45,11 @@ import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoMessage;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.model.MicoMessage.Type;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceInterfaceRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.util.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * Provides functionality to retrieve status information for a {@link MicoApplication} or a particular {@link
@@ -132,7 +124,7 @@ public class MicoStatusService {
      */
     public MicoServiceStatusResponseDTO getServiceStatus(MicoService micoService) {
         MicoServiceStatusResponseDTO serviceStatus = new MicoServiceStatusResponseDTO();
-        String msg;
+        String message;
         try {
             Optional<Deployment> deploymentOptional = micoKubernetesClient.getDeploymentOfMicoService(micoService);
             if (deploymentOptional.isPresent()) {
@@ -153,16 +145,16 @@ public class MicoStatusService {
                     serviceStatus.setAvailableReplicas(0);
                 }
             } else {
-                msg = "No deployment of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' is available.";
-                log.warn(msg);
-                MicoMessage errorMessage = MicoMessage.error(msg);
+                message = "No deployment of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' is available.";
+                log.warn(message);
+                MicoMessage errorMessage = MicoMessage.error(message);
                 return serviceStatus.setErrorMessages(CollectionUtils.listOf(new MicoMessageResponseDTO(errorMessage)));
             }
         } catch (KubernetesResourceException e) {
-            msg = "Error while retrieving Kubernetes deployment of MicoService '" + micoService.getShortName() + "' '"
+            message = "Error while retrieving Kubernetes deployment of MicoService '" + micoService.getShortName() + "' '"
                 + micoService.getVersion() + "'. Caused by: " + e.getMessage();
-            log.error(msg);
-            MicoMessage errorMessage = MicoMessage.error(msg);
+            log.error(message);
+            MicoMessage errorMessage = MicoMessage.error(message);
             return serviceStatus.setErrorMessages(CollectionUtils.listOf(new MicoMessageResponseDTO(errorMessage)));
         }
         serviceStatus
@@ -235,35 +227,18 @@ public class MicoStatusService {
                                                                                  @NotNull List<MicoMessageResponseDTO> errorMessages) {
         List<MicoServiceInterfaceStatusResponseDTO> interfacesInformation = new ArrayList<>();
         for (MicoServiceInterface serviceInterface : micoService.getServiceInterfaces()) {
-            String interfaceName = serviceInterface.getServiceInterfaceName();
-            List<String> publicIps = new ArrayList<>();
-            String message;
+            String serviceInterfaceName = serviceInterface.getServiceInterfaceName();
             try {
-                Optional<Service> kubernetesServices = micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, interfaceName);
-                if (kubernetesServices.isPresent()) {
-                    publicIps = getPublicIpsOfKubernetesService(kubernetesServices.get());
-                    if (publicIps.isEmpty()) {
-                        message = "There are no public IP addresses available yet for the interface '" + interfaceName
-                            + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "'."
-                            	+ "It may take some time until public IP addresses are available.";
-                        log.debug(message);
-                        errorMessages.add(new MicoMessageResponseDTO(message, Type.WARNING));
-                    }
-                } else {
-                    message = "There is no Kubernetes service for the interface '" +
-                        interfaceName + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "'.";
-                    log.warn(message);
-                    errorMessages.add(new MicoMessageResponseDTO(message, Type.ERROR));
-                }
-            } catch (Exception e) {
-                log.error("Error while retrieving the Kubernetes service for the interface '{}' of MicoService '{}' '{}'. "
-                        + "Caused by: {}", interfaceName, micoService.getShortName(), micoService.getVersion(), e.getMessage());
-                errorMessages.add(new MicoMessageResponseDTO(e.getMessage(), Type.ERROR));
+                MicoServiceInterfaceStatusResponseDTO interfaceStatusResponseDTO = getPublicIpOfKubernetesService(micoService, serviceInterfaceName);
+                interfacesInformation.add(interfaceStatusResponseDTO);
+            } catch (ResponseStatusException e) {
+                interfacesInformation.add(new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName));
+                errorMessages.add(new MicoMessageResponseDTO(MicoMessage.error(e.getMessage())));
             }
         }
         return interfacesInformation;
     }
-
+    
     /**
      * Get the public IP of a {@link MicoServiceInterface} by providing the corresponding Kubernetes {@link Service}.
      *
