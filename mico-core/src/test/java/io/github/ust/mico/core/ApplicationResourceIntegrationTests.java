@@ -52,10 +52,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.github.ust.mico.core.JsonPathBuilder.*;
@@ -87,6 +84,7 @@ public class ApplicationResourceIntegrationTests {
     private static final String DESCRIPTION_PATH = buildPath(ROOT, "description");
     private static final String OWNER_PATH = buildPath(ROOT, "owner");
     private static final String SERVICE_LIST_PATH = buildPath(ROOT, "services");
+    private static final String DEPLOYMENT_STATUS_VALUE_PATH = buildPath(ROOT, "deploymentStatus.value");
     private static final String JSON_PATH_LINKS_SECTION = "$._links.";
     private static final String BASE_PATH = "/applications";
     private static final String PATH_SERVICES = "services";
@@ -218,7 +216,7 @@ public class ApplicationResourceIntegrationTests {
     }
 
     @Test
-    public void createApplicationWithoutServices() throws Exception {
+    public void createApplication() throws Exception {
         MicoApplication application = new MicoApplication()
                 .setId(ID)
                 .setShortName(SHORT_NAME).setVersion(VERSION)
@@ -232,7 +230,8 @@ public class ApplicationResourceIntegrationTests {
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath(SHORT_NAME_PATH, is(application.getShortName())))
-                .andExpect(jsonPath(VERSION_PATH, is(application.getVersion())));
+                .andExpect(jsonPath(VERSION_PATH, is(application.getVersion())))
+                .andExpect(jsonPath(DEPLOYMENT_STATUS_VALUE_PATH, is(MicoApplicationDeploymentStatus.Value.UNDEPLOYED.toString())));
     }
 
     @Test

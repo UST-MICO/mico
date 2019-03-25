@@ -119,7 +119,6 @@ public class ApplicationResource {
         }
 
         MicoApplicationWithServicesResponseDTO dto = new MicoApplicationWithServicesResponseDTO(application);
-        dto.setDeploymentStatus(new MicoApplicationDeploymentStatus(Value.UNDEPLOYED)); // TODO: necessary?
 
         return ResponseEntity
                 .created(linkTo(methodOn(ApplicationResource.class)

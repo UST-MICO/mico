@@ -592,9 +592,14 @@ public class MicoKubernetesClient {
      * 		   {@code false} otherwise.
      */
     public boolean isApplicationDeployed(MicoApplication micoApplication) {
-    	log.info("Check whether MicoApplication '{}' '{}' is currently deployed.",
+    	log.debug("Check whether MicoApplication '{}' '{}' is currently deployed.",
     		micoApplication.getShortName(),micoApplication.getVersion());
-    	return getApplicationDeploymentStatus(micoApplication).getValue() == Value.DEPLOYED;
+        boolean result = getApplicationDeploymentStatus(micoApplication).getValue() == Value.DEPLOYED;
+
+        String deploymentStatusSimplified = result ? "deployed" : "not deployed";
+        log.debug("MicoApplication '{}' in version '{}' is {}.",
+            micoApplication.getShortName(), micoApplication.getVersion(), deploymentStatusSimplified);
+        return result;
     }
 
     /**
