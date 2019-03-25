@@ -24,11 +24,12 @@ import { Node } from '@ustutt/grapheditor-webcomponent/lib/node';
 import { ApiObject } from 'src/app/api/apiobject';
 import { ApiService } from 'src/app/api/api.service';
 import { Subscription } from 'rxjs';
-import { STYLE_TEMPLATE, APPLICATION_NODE_TEMPLATE, SERVICE_NODE_TEMPLATE, ARROW_TEMPLATE } from './app-dependency-graph-constants';
+import { STYLE_TEMPLATE, APPLICATION_NODE_TEMPLATE, SERVICE_NODE_TEMPLATE, ARROW_TEMPLATE, ServiceNode, ApplicationNode, ServiceInterfaceNode, SERVICE_INTERFACE_NODE_TEMPLATE } from './app-dependency-graph-constants';
 import { MatDialog } from '@angular/material';
 import { ChangeServiceVersionComponent } from 'src/app/dialogs/change-service-version/change-service-version.component';
 import { debounceTime } from 'rxjs/operators';
-import { safeUnsubscribe } from 'src/app/util/utils';
+import { safeUnsubscribe, safeUnsubscribeList } from 'src/app/util/utils';
+import { nodeChildrenAsMap } from '@angular/router/src/utils/tree';
 
 
 @Component({
@@ -45,8 +46,11 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
 
     private lastX = 0;
 
-    private nodeMap: Map<string, Node>;
-    private edgeMap: Map<string, Edge>;
+    private serviceNodeMap: Map<string, ServiceNode>;
+
+    private serviceInterfaceNodeMap: Map<string, ServiceInterfaceNode>;
+
+    private serviceSubscriptions: Map<string, Subscription[]> = new Map<string, Subscription[]>();
 
     private versionChangedFor: { node: Node, newVersion: ApiObject };
 
@@ -72,8 +76,10 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
             return false;
         };
         graph.addEventListener('nodeclick', this.onNodeClick);
+        graph.addEventListener('nodepositionchange', this.onNodeMove);
         graph.onCreateDraggedEdge = this.onCreateDraggedEdge;
-        graph.updateTemplates([SERVICE_NODE_TEMPLATE, APPLICATION_NODE_TEMPLATE], [STYLE_TEMPLATE], [ARROW_TEMPLATE]);
+        graph.updateTemplates([SERVICE_NODE_TEMPLATE, SERVICE_INTERFACE_NODE_TEMPLATE, APPLICATION_NODE_TEMPLATE],
+                              [STYLE_TEMPLATE], [ARROW_TEMPLATE]);
         this.resetGraph();
     }
 
@@ -95,8 +101,8 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
      * Handle node click events.
      */
     onNodeClick = (event: CustomEvent) => {
-        if (event.detail.node.id === 'APPLICATION') {
-            event.preventDefault();  // prevent selecting application node
+        if (event.detail.node.id === 'APPLICATION' || event.detail.node.type === 'service-interface') {
+            event.preventDefault();  // prevent selecting application node and interface nodes
             return;
         }
         if (event.detail.key === 'version') {  // user clicked on service version
@@ -114,6 +120,39 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
                 }
                 this.changeServiceVersion(event.detail.node, selected);
             });
+            return;
+        }
+    }
+
+    /**
+     * Handle node move events.
+     */
+    onNodeMove = (event: CustomEvent) => {
+        if (event.detail.node.id === 'APPLICATION') {
+            return;
+        }
+        if (event.detail.node.type === 'service') {  // user moved a service node
+            const serviceNode: ServiceNode = event.detail.node;
+
+            serviceNode.interfaces.forEach(interfaceId => {
+                const node = this.serviceInterfaceNodeMap.get(interfaceId);
+                if (node != null) {
+                    node.x = serviceNode.x + node.dx;
+                    node.y = serviceNode.y + node.dy;
+                }
+            });
+
+            return;
+        }
+        if (event.detail.node.type === 'service-interface') {  // user moved a service interface node
+            const node: ServiceInterfaceNode = event.detail.node;
+
+            const serviceNode = this.serviceNodeMap.get(node.serviceId);
+            if (serviceNode != null) {
+                node.dx = node.x - serviceNode.x;
+                node.dy = node.y - serviceNode.y;
+            }
+
             return;
         }
     }
@@ -140,12 +179,27 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
      * Update markerEnd and type of newly created edges.
      */
     onCreateDraggedEdge = (edge: DraggedEdge) => {
+        if (this.serviceInterfaceNodeMap.has(edge.source.toString())) {
+            return;
+        }
         edge.markerEnd = { template: 'arrow', positionOnLine: 1, lineOffset: 4, scale: 0.5, rotate: { relativeAngle: 0 } };
-        edge.validTargets.clear();
         if (edge.source === 'APPLICATION') {
             edge.type = 'includes';
             edge.markerEnd.lineOffset = 8;
             edge.markerEnd.scale = 1;
+            edge.validTargets.clear();
+        }
+        if (this.serviceNodeMap.has(edge.source.toString())) {
+            edge.type = 'interface-connection';
+            this.serviceInterfaceNodeMap.forEach((node, key) => {
+                if (node.serviceId === edge.source) {
+                    edge.validTargets.delete(key);
+                }
+            });
+            this.serviceNodeMap.forEach((node, key) => {
+                edge.validTargets.delete(key);
+            });
+            edge.validTargets.delete('APPLICATION');
         }
         return edge;
     }
@@ -154,8 +208,8 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
      * Reset the graph (all edges and nodes) and clears cache/layout data.
      */
     resetGraph() {
-        this.nodeMap = new Map<string, Node>();
-        this.edgeMap = new Map<string, Edge>();
+        this.serviceNodeMap = new Map<string, ServiceNode>();
+        this.serviceInterfaceNodeMap = new Map<string, ServiceInterfaceNode>();
         this.lastX = 0;
         this.versionChangedFor = null;
         const graph: GraphEditor = this.graph.nativeElement;
@@ -174,21 +228,19 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
      */
     updateGraphFromApplicationData(application) {
         // keep local reference in case of resetGraph changes global variables.
-        const nodeMap = this.nodeMap;
-        const edgeMap = this.edgeMap;
+        const nodeMap = this.serviceNodeMap;
+        const interfaceNodeMap = this.serviceInterfaceNodeMap;
         const graph: GraphEditor = this.graph.nativeElement;
 
-        // mark all nodes (except root) as possible to delete
+        // mark all nodes as possible to delete
         const toDelete: Set<string> = new Set<string>();
         nodeMap.forEach(node => {
-            if (node.id !== 'APPLICATION') {
-                toDelete.add(node.id as string);
-            }
+            toDelete.add(node.id as string);
         });
 
-        if (!nodeMap.has('APPLICATION')) {
+        if (graph.getNode('APPLICATION') == null) {
             // create new application root node if node does not exist
-            const node: Node = {
+            const node: ApplicationNode = {
                 id: 'APPLICATION',
                 x: 0,
                 y: 0,
@@ -200,7 +252,6 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
                 description: application.description,
                 application: application,
             };
-            nodeMap.set('APPLICATION', node);
             graph.addNode(node, false);
         }
 
@@ -219,7 +270,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
                 node.service = service;
             } else {
                 // create new node
-                const node: Node = {
+                const node: ServiceNode = {
                     id: serviceId,
                     x: this.lastX,
                     y: 90,
@@ -229,6 +280,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
                     shortName: service.shortName,
                     name: service.name,
                     description: service.description,
+                    interfaces: new Set<string>(),
                 };
                 // super basic layout algorithm:
                 this.lastX += 110;
@@ -258,20 +310,91 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
                         },
                     },
                 };
-                edgeMap.set(`sAPPLICATION-t${serviceId}`, edge);
                 graph.addEdge(edge, false);
+                // handle service subscriptions
+                if (!this.serviceSubscriptions.has(serviceId)) {
+                    const subscriptions = [];
+                    subscriptions.push(this.api.getServiceInterfaces(service.shortName, service.version).subscribe((interfaces) => {
+                        this.updateServiceInterfaceData(serviceId, interfaces);
+                    }));
+                    this.serviceSubscriptions.set(serviceId, subscriptions);
+                }
             }
         });
 
         toDelete.forEach(nodeId => {
             // delete all nodes still marked as toDelete
             const node = nodeMap.get(nodeId);
+            node.interfaces.forEach((interfaceId) => {
+                const interfaceNode = interfaceNodeMap.get(interfaceId);
+                graph.removeNode(interfaceNode);
+                interfaceNodeMap.delete(interfaceId);
+            });
             graph.removeNode(node);
             nodeMap.delete(nodeId);
+            const subscriptions = this.serviceSubscriptions.get(nodeId);
+            safeUnsubscribeList(subscriptions);
+            // remove entry from map for easyer testing if service has subscriptions
+            this.serviceSubscriptions.delete(nodeId);
         });
 
         graph.completeRender();
         graph.zoomToBoundingBox(false);
+    }
+
+    private updateServiceInterfaceData(serviceId: string, interfaces: ApiObject[]) {
+        const graph: GraphEditor = this.graph.nativeElement;
+        const nodeMap = this.serviceInterfaceNodeMap;
+
+        const serviceNode = this.serviceNodeMap.get(serviceId);
+        if (serviceNode == null) {
+            return;
+        }
+        const toDelete = new Set(serviceNode.interfaces);
+        interfaces.forEach(serviceInterface => {
+            const interfaceId = `${serviceId}-${serviceInterface.serviceInterfaceName}`;
+            toDelete.delete(interfaceId); // remove toDelete mark from node
+            if (nodeMap.has(interfaceId)) {
+                // update interface
+                const node = nodeMap.get(interfaceId);
+                node.name = serviceInterface.serviceInterfaceName;
+                node.description = serviceInterface.description;
+                node.protocol = serviceInterface.protocol;
+            } else {
+                // create new interface
+                const node: ServiceInterfaceNode = {
+                    id: interfaceId,
+                    x: serviceNode.x,
+                    y: 150,
+                    dx: 0,
+                    dy: 60,
+                    type: 'service-interface',
+                    title: serviceInterface.serviceInterfaceName,
+                    name: serviceInterface.serviceInterfaceName,
+                    serviceId: serviceId,
+                    description: serviceInterface.description,
+                    protocol: serviceInterface.protocol,
+                };
+                serviceNode.interfaces.add(interfaceId);
+                nodeMap.set(interfaceId, node);
+                graph.addNode(node, false);
+                const edge: Edge = {
+                    source: serviceId,
+                    target: interfaceId,
+                    type: 'provides',
+                };
+                graph.addEdge(edge, false);
+            }
+        });
+
+        toDelete.forEach((interfaceId) => {
+            const node = nodeMap.get(interfaceId);
+            serviceNode.interfaces.delete(interfaceId);
+            graph.removeNode(node);
+            nodeMap.delete(interfaceId);
+        });
+
+        graph.completeRender();
     }
 
     autozoom() {

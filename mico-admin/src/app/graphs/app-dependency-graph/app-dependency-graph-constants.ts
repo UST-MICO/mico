@@ -17,6 +17,8 @@
  * under the License.
  */
 
+import { Node } from '@ustutt/grapheditor-webcomponent/lib/node';
+
 
 export const STYLE_TEMPLATE = {
     id: 'style',
@@ -39,7 +41,7 @@ export const STYLE_TEMPLATE = {
             opacity: 0.1;
             transition:r 0.25s ease-out;
         }
-        .edge-group:not(.includes) .link-handle {
+        .edge-group:not(.includes):not(.provides) .link-handle {
             display: initial
         }
         .link-handle:hover {
@@ -60,6 +62,16 @@ export const STYLE_TEMPLATE = {
             text-overflow: ellipsis;
             word-break: break-all;
         }
+        .text.interface-name {
+            text-overflow: ellipsis;
+            word-break: break-all;
+        }
+        .text.protocol {
+            opacity: 0.75;
+            font-size: 5pt;
+            text-overflow: ellipsis;
+            word-break: break-all;
+        }
         .text.version {
             word-break: break-all;
             cursor: pointer;
@@ -73,19 +85,27 @@ export const STYLE_TEMPLATE = {
         .node.application.hovered {
             fill: #0099ff;
         }
-        .hovered .link-handle {
+        .hovered:not(.service-interface) .link-handle {
             display: initial;
         }
         .node.selected {
             fill: #ccff99;
         }
+        .edge {
+            stroke-linecap: round;
+        }
         .includes .edge {
             stroke: #0099ff;
             stroke-width: 2;
-            stroke-linecap: round;
         }
         .includes .marker {
             fill: #0099ff;
+        }
+        .provides .edge {
+            stroke: #00ff33;
+        }
+        .interface-connection .edge {
+            strokedasharray: 3 1;
         }
         .highlight-outgoing .edge {
             stroke: red;
@@ -107,6 +127,13 @@ export const APPLICATION_NODE_TEMPLATE = {
         <text class="text title" data-content="title" data-click="title" width="90" x="-45" y="-3"></text>`
 };
 
+export const SERVICE_INTERFACE_NODE_TEMPLATE = {
+    id: 'service-interface',
+    innerHTML: `<circle r=20></circle>
+        <text class="text interface-name" data-content="title" data-click="title" width="34" text-anchor="middle" x="0" y="0"></text>
+        <text class="text protocol" data-content="protocol" data-click="title" width="30" text-anchor="middle" x="0" y="10">PPP</text>`
+};
+
 export const SERVICE_NODE_TEMPLATE = {
     id: 'default',
     innerHTML: `<rect width="100" height="60" x="-50" y="-30"></rect>
@@ -119,3 +146,28 @@ export const ARROW_TEMPLATE = {
     id: 'arrow',
     innerHTML: `<path d="M -9 -5 L 1 0 L -9 5 z" />`
 };
+
+export interface ServiceNode extends Node {
+    name: string;
+    version: string;
+    shortName: string;
+    description: string;
+    interfaces: Set<string>;
+}
+
+export interface ServiceInterfaceNode extends Node {
+    dx: number;
+    dy: number;
+    name: string;
+    serviceId: string;
+    description: string;
+    protocol: string;
+}
+
+export interface ApplicationNode extends Node {
+    name: string;
+    version: string;
+    shortName: string;
+    description: string;
+}
+
