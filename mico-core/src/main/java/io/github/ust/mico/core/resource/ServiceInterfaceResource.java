@@ -96,30 +96,6 @@ public class ServiceInterfaceResource {
                                                                    @PathVariable(PATH_VARIABLE_SERVICE_INTERFACE_NAME) String serviceInterfaceName) {
         MicoService micoService = getServiceFromServiceBroker(shortName, version);
 
-//        MicoServiceInterface micoServiceInterface = getServiceInterfaceFromServiceInterfaceBroker(shortName, version, serviceInterfaceName);
-//
-//        Optional<Service> kubernetesServiceOptional;
-//        try {
-//            kubernetesServiceOptional = micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, micoServiceInterface.getServiceInterfaceName());
-//        } catch (KubernetesResourceException e) {
-//            log.error("Error occur while retrieving Kubernetes service of MicoServiceInterface '{}' of MicoService '{}' in version '{}'. Caused by: {}",
-//                    serviceInterfaceName, shortName, version, e.getMessage());
-//            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-//                    "Error occur while retrieving Kubernetes service of MicoServiceInterface '" + serviceInterfaceName +
-//                            "' of MicoService '" + shortName + "' '" + version + "'!");
-//        }
-//        if (!kubernetesServiceOptional.isPresent()) {
-//            log.warn("There is no MicoServiceInterface deployed with name '{}' of MicoService '{}' in version '{}'.",
-//                    serviceInterfaceName, shortName, version);
-//            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-//                    "No deployed service interface '" + serviceInterfaceName + "' of MicoService '" + shortName + "' '" + version + "' was found!");
-//        }
-//
-//        Service kubernetesService = kubernetesServiceOptional.get();
-//
-//        List<String> publicIps = micoServiceInterfaceBroker.getPublicIpsOfInterfaceByInterfaceName(shortName, version, serviceInterfaceName, kubernetesService);
-//
-//        return ResponseEntity.ok().body(new ArrayList<>(publicIps));
         MicoServiceInterfaceStatusResponseDTO serviceInterfaceStatusResponseDTO = micoStatusService.getPublicIpOfKubernetesService(micoService, serviceInterfaceName);
         return ResponseEntity.ok().body(serviceInterfaceStatusResponseDTO);
     }
@@ -183,7 +159,7 @@ public class ServiceInterfaceResource {
         }
 
         // Used to check whether the corresponding service exists
-        MicoService service = getServiceFromServiceBroker(shortName, version);
+        checkIfServiceExists(shortName, version);
 
         MicoServiceInterface updatedServiceInterface;
         try {
@@ -194,6 +170,10 @@ public class ServiceInterfaceResource {
 
         return ResponseEntity.ok(new Resource<>(new MicoServiceInterfaceResponseDTO(updatedServiceInterface),
                 getServiceInterfaceLinks(shortName, version, updatedServiceInterface)));
+    }
+
+    private void checkIfServiceExists(String shortName, String version) {
+        getServiceFromServiceBroker(shortName, version);
     }
 
     /**
