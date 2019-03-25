@@ -43,7 +43,7 @@ public class DeploymentBroker {
     private MicoKubernetesClient micoKubernetesClient;
 
     @Autowired
-    private MicoServiceRepository serviceRepository; //TODO: Remove
+    private MicoServiceRepository serviceRepository;
 
     public MicoApplicationJobStatus deployApplication(String shortName, String version) throws MicoApplicationNotFoundException, MicoServiceInterfaceNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException, DeploymentException {
 
@@ -185,7 +185,6 @@ public class DeploymentBroker {
                         micoService.getShortName(), micoService.getVersion(), dockerImageUri);
                 micoService.setDockerImageUri(dockerImageUri);
                 serviceRepository.save(micoService);
-                //micoServiceBroker.updateExistingService(micoService);
             } else {
                 String errorMessage = "Build of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' didn't return a Docker image URI.";
                 throw new CompletionException(new RuntimeException(errorMessage));

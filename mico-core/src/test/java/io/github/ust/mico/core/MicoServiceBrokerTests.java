@@ -28,10 +28,6 @@ import static org.mockito.BDDMockito.given;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles("local")
-//@RunWith(SpringRunner.class)
-//@EnableAutoConfiguration
-//@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-//@AutoConfigureMockMvc
 public class MicoServiceBrokerTests {
 
     @MockBean

@@ -38,7 +38,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-@Slf4j
 @RestController
 @RequestMapping(value = "/applications/{shortName}/{version}", produces = MediaTypes.HAL_JSON_VALUE)
 public class DeploymentResource {
