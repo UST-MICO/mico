@@ -1,7 +1,7 @@
 <div class="mv2">
     <div class="mb1 flex">
         <span class="flex-grow-1" matTooltip={{config?.description}}>
-            {{nestedModel?.title}}
+            {{config?.title}}
         </span>
         <span style="align-content: flex-end">
             <i>
@@ -12,7 +12,7 @@
     <div class="flex mb2 hide-child" *ngFor="let entry of currentValue; let index=index;trackBy:trackBy">
         <mat-card class="w-100">
             <mat-card-header class="flex items-center justify-between">
-                <mat-card-title>{{nestedModel?.title}} {{index + 1}}</mat-card-title>
+                <mat-card-title>{{config?.title}} {{index + 1}}</mat-card-title>
                 <button class="justify-end" (click)="removeElement(index)" mat-stroked-button>
                     <mat-icon>remove</mat-icon>
                 </button>
