@@ -406,6 +406,14 @@ public class MicoKubernetesClientTests {
         kubernetesServices = mockServer.getClient().services().inNamespace(testNamespace).list().getItems();
         assertEquals("Expected 1 Kubernetes Service after deletion of one", 1, kubernetesServices.size());
 
+        KubernetesDeploymentInfo updatedKubernetesDeploymentInfoAfterDeletion = new KubernetesDeploymentInfo()
+            .setId(micoApplication.getServiceDeploymentInfos().get(0).getKubernetesDeploymentInfo().getId())
+            .setNamespace(micoApplication.getServiceDeploymentInfos().get(0).getKubernetesDeploymentInfo().getNamespace())
+            .setDeploymentName(micoApplication.getServiceDeploymentInfos().get(0).getKubernetesDeploymentInfo().getDeploymentName())
+            .setServiceNames(new ArrayList<>());// There are no Kubernetes service anymore
+        given(kubernetesDeploymentInfoRepository.save(updatedKubernetesDeploymentInfoAfterDeletion))
+            .willReturn(updatedKubernetesDeploymentInfoAfterDeletion);
+
         assertEquals("Application deployment status is expected to be incomplete because a Kubernetes Service is missing.",
             MicoApplicationDeploymentStatus.Value.INCOMPLETE,
             micoKubernetesClient.getApplicationDeploymentStatus(micoApplication).getValue());
@@ -500,12 +508,114 @@ public class MicoKubernetesClientTests {
         assertTrue("Expected there is no Kubernetes Build pod", actualPods.isEmpty());
     }
 
+    @Test
+    public void undeployApplicationIfServiceIsUsedByMultipleApplications() {
+        // Create a setup with 3 applications that all uses the same service:
+        // Two of them are already deployed, the third wants to use the same service want is not deployed yet.
+
+        // Create first application (already deployed)
+        MicoApplication micoApplication1 = setUpApplicationDeployment();
+        MicoService micoService = micoApplication1.getServices().get(0);
+        MicoServiceDeploymentInfo serviceDeploymentInfo1 = micoApplication1.getServiceDeploymentInfos().get(0);
+        KubernetesDeploymentInfo kubernetesDeploymentInfo1 = serviceDeploymentInfo1.getKubernetesDeploymentInfo();
+
+        // Create second application (already deployed)
+        KubernetesDeploymentInfo kubernetesDeploymentInfo2 = new KubernetesDeploymentInfo()
+            .setId(4001L)
+            .setNamespace(kubernetesDeploymentInfo1.getNamespace())
+            .setDeploymentName(kubernetesDeploymentInfo1.getDeploymentName())
+            .setServiceNames(kubernetesDeploymentInfo1.getServiceNames());
+        MicoServiceDeploymentInfo serviceDeploymentInfo2 = new MicoServiceDeploymentInfo()
+            .setId(3001L)
+            .setService(micoService)
+            .setKubernetesDeploymentInfo(kubernetesDeploymentInfo2);
+        MicoApplication micoApplication2 = new MicoApplication()
+            .setShortName(SHORT_NAME_1)
+            .setVersion(VERSION)
+            .setName(NAME_1)
+            .setServices(CollectionUtils.listOf(micoService))
+            .setServiceDeploymentInfos(CollectionUtils.listOf(serviceDeploymentInfo2));
+
+        // Create third application (not deployed)
+        MicoServiceDeploymentInfo serviceDeploymentInfo3 = new MicoServiceDeploymentInfo()
+            .setId(3002L)
+            .setService(micoService)
+            .setKubernetesDeploymentInfo(null);
+        MicoApplication micoApplication3 = new MicoApplication()
+            .setShortName(SHORT_NAME_2)
+            .setVersion(VERSION)
+            .setName(NAME_2)
+            .setServices(CollectionUtils.listOf(micoService))
+            .setServiceDeploymentInfos(CollectionUtils.listOf(serviceDeploymentInfo3));
+
+        given(serviceDeploymentInfoRepository.findAllByService(micoService.getShortName(), micoService.getVersion()))
+            .willReturn(CollectionUtils.listOf(serviceDeploymentInfo1, serviceDeploymentInfo2, serviceDeploymentInfo3));
+        given(serviceDeploymentInfoRepository.findByApplicationAndService(
+            micoApplication1.getShortName(), micoApplication1.getVersion(), micoService.getShortName(), micoService.getVersion()))
+            .willReturn(Optional.of(serviceDeploymentInfo1));
+        given(serviceDeploymentInfoRepository.findByApplicationAndService(
+            micoApplication2.getShortName(), micoApplication2.getVersion(), micoService.getShortName(), micoService.getVersion()))
+            .willReturn(Optional.of(serviceDeploymentInfo2));
+        given(serviceDeploymentInfoRepository.findByApplicationAndService(
+            micoApplication3.getShortName(), micoApplication3.getVersion(), micoService.getShortName(), micoService.getVersion()))
+            .willReturn(Optional.of(serviceDeploymentInfo3));
+        given(serviceDeploymentInfoRepository.findAllByApplication(micoApplication1.getShortName(), micoApplication1.getVersion()))
+            .willReturn(CollectionUtils.listOf(serviceDeploymentInfo1));
+        given(serviceDeploymentInfoRepository.findAllByApplication(micoApplication2.getShortName(), micoApplication2.getVersion()))
+            .willReturn(CollectionUtils.listOf(serviceDeploymentInfo2));
+        given(serviceDeploymentInfoRepository.findAllByApplication(micoApplication3.getShortName(), micoApplication3.getVersion()))
+            .willReturn(CollectionUtils.listOf(serviceDeploymentInfo3));
+        given(applicationRepository.findAllByUsedService(micoService.getShortName(), micoService.getVersion()))
+            .willReturn(CollectionUtils.listOf(micoApplication1, micoApplication2, micoApplication3));
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(micoApplication1.getShortName(), micoApplication1.getVersion()))
+            .willReturn(new MicoApplicationJobStatus(micoApplication1.getShortName(), micoApplication1.getVersion(), Status.DONE, new ArrayList<>()));
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(micoApplication2.getShortName(), micoApplication2.getVersion()))
+            .willReturn(new MicoApplicationJobStatus(micoApplication2.getShortName(), micoApplication2.getVersion(), Status.DONE, new ArrayList<>()));
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(micoApplication3.getShortName(), micoApplication3.getVersion()))
+            .willReturn(new MicoApplicationJobStatus(micoApplication3.getShortName(), micoApplication3.getVersion(), Status.UNDEFINED, new ArrayList<>()));
+
+        // Prepare build
+        mockServer.getClient()
+            .pods()
+            .inNamespace(testNamespace)
+            .create(new PodBuilder()
+                .withNewMetadata()
+                .withLabels(CollectionUtils.mapOf(
+                    ImageBuilder.BUILD_CRD_GROUP + "/buildName",
+                    imageBuilder.createBuildName(micoService)))
+                .endMetadata()
+                .build());
+
+        micoKubernetesClient.undeployApplication(micoApplication2);
+
+        Deployment actualDeployment = mockServer.getClient()
+            .apps()
+            .deployments()
+            .inNamespace(kubernetesDeploymentInfo2.getNamespace())
+            .withName(kubernetesDeploymentInfo2.getDeploymentName()).get();
+        Service actualService = mockServer.getClient()
+            .services()
+            .inNamespace(kubernetesDeploymentInfo2.getNamespace())
+            .withName(kubernetesDeploymentInfo2.getServiceNames().get(0)).get();
+        List<Pod> actualPods = mockServer.getClient()
+            .pods()
+            .inAnyNamespace()
+            .withLabel(ImageBuilder.BUILD_CRD_GROUP + "/buildName", imageBuilder.createBuildName(micoService))
+            .list().getItems();
+        // It's not possible to check if the actual replicas are valid, because they are not applied immediately.
+        // Therefore just test if the Kubernetes resources still exist and there are no error during the scale in.
+        assertNotNull("Expected Kubernetes deployment is still there (with less replicas)", actualDeployment);
+        assertNotNull("Expected Kubernetes service is still there", actualService);
+        assertFalse("Expected there are still Kubernetes Build pods", actualPods.isEmpty());
+    }
+
     public MicoApplication setUpApplicationDeployment() {
         return setUpApplicationDeployment(getMicoService());
     }
 
     public MicoApplication setUpApplicationDeployment(MicoService... micoServices) {
         MicoApplication micoApplication = new MicoApplication()
+            .setId(1000L)
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setName(NAME)
@@ -537,8 +647,10 @@ public class MicoKubernetesClientTests {
             }
 
             MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
+                .setId(3000L)
                 .setService(micoService)
                 .setKubernetesDeploymentInfo(new KubernetesDeploymentInfo()
+                    .setId(4000L)
                     .setNamespace(testNamespace)
                     .setDeploymentName(existingKubernetesDeployment.getMetadata().getName())
                     .setServiceNames(existingKubernetesServices.stream().map(service -> service.getMetadata().getName()).collect(Collectors.toList()))
@@ -550,6 +662,8 @@ public class MicoKubernetesClientTests {
             given(serviceDeploymentInfoRepository.findByApplicationAndService(
                 micoApplication.getShortName(), micoApplication.getVersion(), micoService.getShortName(), micoService.getVersion()))
                 .willReturn(Optional.of(serviceDeploymentInfo));
+            given(applicationRepository.findAllByUsedService(micoService.getShortName(), micoService.getVersion()))
+                .willReturn(CollectionUtils.listOf(micoApplication));
         }
         given(serviceDeploymentInfoRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion()))
             .willReturn(micoApplication.getServiceDeploymentInfos());
@@ -654,11 +768,11 @@ public class MicoKubernetesClientTests {
 
     private MicoService getMicoServiceWithoutInterface() {
         return new MicoService()
-                .setId(ID)
-                .setShortName(SERVICE_SHORT_NAME)
-                .setVersion(SERVICE_VERSION)
-                .setName(NAME)
-                .setDockerImageUri(IntegrationTest.DOCKER_IMAGE_URI);
+            .setId(2000L)
+            .setShortName(SERVICE_SHORT_NAME)
+            .setVersion(SERVICE_VERSION)
+            .setName(NAME)
+            .setDockerImageUri(IntegrationTest.DOCKER_IMAGE_URI);
     }
 
     private MicoServiceInterface getMicoServiceInterface() {
