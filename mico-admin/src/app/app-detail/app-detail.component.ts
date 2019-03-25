@@ -89,6 +89,13 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                     this.allVersions = JSON.parse(JSON.stringify(versions)).sort((n1, n2) => versionComparator(n1.version, n2.version));
                     const latestVersion = this.getLatestVersion();
 
+                    // adapt url path
+                    if (givenVersion == null) {
+                        this.router.navigate(['app-detail', this.shortName, latestVersion]);
+                        // prevent further api calls (navigate will cause a reload anyway)
+                        return;
+                    }
+
                     // call the selected version, latest if no version is specified
                     if (givenVersion == null) {
                         this.subscribeApplication(latestVersion);
