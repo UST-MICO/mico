@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -112,6 +113,9 @@ public class ApplicationResourceIntegrationTests {
 
     @MockBean
     private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
+
+    @MockBean
+    private ImageBuilder imageBuilder;
 
     @MockBean
     private MicoKubernetesClient micoKubernetesClient;

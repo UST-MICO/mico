@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import io.github.ust.mico.core.broker.DeploymentBroker;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -114,6 +115,9 @@ public class DeploymentResourceTests {
 
     @MockBean
     private MicoKubernetesClient micoKubernetesClient;
+
+    @Autowired
+    private DeploymentBroker deploymentBroker;
 
     @Before
     public void setUp() throws KubernetesResourceException {

@@ -8,4 +8,8 @@ public class MicoServiceInterfaceNotFoundException extends Exception {
         super("MicoServiceInterface" + interfaceName + "of MicoService '" + shortName + "' '" + version + "' was not found!");
     }
 
+    public MicoServiceInterfaceNotFoundException(String shortName, String version) {
+        super("MicoService '" + shortName + "' '" + version + "' does not include any interfaces.");
+    }
+
 }
