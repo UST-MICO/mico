@@ -17,9 +17,9 @@
  * under the License.
  */
 
-import { Component, OnInit, ViewChild, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnInit, ViewChild, Input, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import GraphEditor from '@ustutt/grapheditor-webcomponent/lib/grapheditor';
-import { Edge, DraggedEdge } from '@ustutt/grapheditor-webcomponent/lib/edge';
+import { Edge, DraggedEdge, edgeId } from '@ustutt/grapheditor-webcomponent/lib/edge';
 import { Node } from '@ustutt/grapheditor-webcomponent/lib/node';
 import { ApiObject } from 'src/app/api/apiobject';
 import { ApiService } from 'src/app/api/api.service';
@@ -30,6 +30,7 @@ import { ChangeServiceVersionComponent } from 'src/app/dialogs/change-service-ve
 import { debounceTime } from 'rxjs/operators';
 import { safeUnsubscribe, safeUnsubscribeList } from 'src/app/util/utils';
 import { nodeChildrenAsMap } from '@angular/router/src/utils/tree';
+import { stringify } from '@angular/compiler/src/util';
 
 
 @Component({
@@ -37,7 +38,7 @@ import { nodeChildrenAsMap } from '@angular/router/src/utils/tree';
     templateUrl: './app-dependency-graph.component.html',
     styleUrls: ['./app-dependency-graph.component.css']
 })
-export class AppDependencyGraphComponent implements OnInit, OnChanges {
+export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy {
     @ViewChild('graph') graph;
     @Input() shortName: string;
     @Input() version: string;
@@ -47,6 +48,9 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
     private lastX = 0;
 
     private serviceNodeMap: Map<string, ServiceNode>;
+
+    // map all included service shortNames to their graph ids
+    private includedServicesMap: Map<string, string> = new Map();
 
     private serviceInterfaceNodeMap: Map<string, ServiceInterfaceNode>;
 
@@ -95,6 +99,11 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
                 });
             }
         }
+    }
+
+    ngOnDestroy() {
+        safeUnsubscribe(this.appSubscription);
+        this.serviceSubscriptions.forEach(safeUnsubscribeList);
     }
 
     /**
@@ -230,6 +239,9 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
         // keep local reference in case of resetGraph changes global variables.
         const nodeMap = this.serviceNodeMap;
         const interfaceNodeMap = this.serviceInterfaceNodeMap;
+        const includedServicesMap = new Map();
+        this.includedServicesMap = includedServicesMap;
+
         const graph: GraphEditor = this.graph.nativeElement;
 
         // mark all nodes as possible to delete
@@ -255,10 +267,12 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
             graph.addNode(node, false);
         }
 
+
         // map services to graph nodes
         application.services.forEach((service) => {
             const serviceId = `${service.shortName}-${service.version}`;
             toDelete.delete(serviceId); // remove toDelete mark from node
+            includedServicesMap.set(service.shortName, serviceId);
             if (nodeMap.has(serviceId)) {
                 // update existing node
                 const node = nodeMap.get(serviceId);
@@ -317,6 +331,11 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
                     subscriptions.push(this.api.getServiceInterfaces(service.shortName, service.version).subscribe((interfaces) => {
                         this.updateServiceInterfaceData(serviceId, interfaces);
                     }));
+                    subscriptions.push(this.api.getServiceDeploymentInformation(this.shortName, this.version, service.shortName)
+                        .subscribe((deploymentInformation) => {
+                            this.updateInterfaceConnectionEdgesFromDeploymentInformation(serviceId, deploymentInformation);
+                        })
+                    );
                     this.serviceSubscriptions.set(serviceId, subscriptions);
                 }
             }
@@ -342,6 +361,12 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
         graph.zoomToBoundingBox(false);
     }
 
+    /**
+     * Update the interfaces of a service
+     *
+     * @param serviceId the graph id of the service the interface corresponds to
+     * @param interfaces the interface list of the service
+     */
     private updateServiceInterfaceData(serviceId: string, interfaces: ApiObject[]) {
         const graph: GraphEditor = this.graph.nativeElement;
         const nodeMap = this.serviceInterfaceNodeMap;
@@ -393,6 +418,48 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges {
             graph.removeNode(node);
             nodeMap.delete(interfaceId);
         });
+
+        graph.completeRender();
+    }
+
+    updateInterfaceConnectionEdgesFromDeploymentInformation(serviceId, deployInfo) {
+        const graph: GraphEditor = this.graph.nativeElement;
+        const nodeMap = this.serviceNodeMap;
+        const interfaceNodeMap = this.serviceInterfaceNodeMap;
+
+        const existingEdges = graph.getEdgesBySource(serviceId);
+        const toRemove = new Map<string, Edge>();
+
+        existingEdges.forEach(edge => {
+            if (edge.type === 'interface-connection') {
+                toRemove.set(edgeId(edge), edge);
+            }
+        });
+
+        deployInfo.interfaceConnections.forEach(connection => {
+            const targetServiceId = this.includedServicesMap.get(connection.micoServiceShortName);
+            const interfaceId = `${targetServiceId}-${connection.micoServiceInterfaceName}`;
+            const edge: Edge = {
+                source: serviceId,
+                target: interfaceId,
+                type: 'interface-connection',
+                markerEnd: {
+                    template: 'arrow',
+                    positionOnLine: 1,
+                    lineOffset: 4,
+                    scale: 0.5,
+                    rotate: { relativeAngle: 0 }
+                },
+            };
+            console.log(graph.getEdge(edgeId(edge)), edgeId(edge))
+            if (graph.getEdge(edgeId(edge)) == null) {
+                console.log(edge)
+                graph.addEdge(edge, false);
+            }
+            toRemove.delete(edgeId(edge));
+        });
+
+        toRemove.forEach((edge) => graph.removeEdge(edge, false));
 
         graph.completeRender();
     }

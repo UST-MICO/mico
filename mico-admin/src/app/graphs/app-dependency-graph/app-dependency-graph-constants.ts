@@ -105,7 +105,7 @@ export const STYLE_TEMPLATE = {
             stroke: #00ff33;
         }
         .interface-connection .edge {
-            strokedasharray: 3 1;
+            stroke-dasharray: 3 2;
         }
         .highlight-outgoing .edge {
             stroke: red;
