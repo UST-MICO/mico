@@ -21,18 +21,19 @@ package io.github.ust.mico.core.service.imagebuilder.buildtypes;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.fabric8.kubernetes.api.model.EnvVar;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 /**
  * TemplateInstantiationSpec specifies how a BuildTemplate is instantiated into a Build.
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@Getter
-@Builder
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
-@EqualsAndHashCode
+@Accessors(chain = true)
 public class TemplateInstantiationSpec {
 
     /**

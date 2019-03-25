@@ -19,36 +19,36 @@
 
 package io.github.ust.mico.core;
 
-import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
-import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
-import io.github.ust.mico.core.exception.DeploymentException;
-import io.github.ust.mico.core.exception.KubernetesResourceException;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
-import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
+import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
+import io.github.ust.mico.core.exception.DeploymentException;
+import io.github.ust.mico.core.exception.KubernetesResourceException;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
 public class IntegrationTestsUtils {
 
     @Autowired
-    private ClusterAwarenessFabric8 cluster;
+    private KubernetesClient kubernetesClient;
 
     @Autowired
     private MicoKubernetesClient micoKubernetesClient;
@@ -65,8 +65,7 @@ public class IntegrationTestsUtils {
     @Getter
     private String dockerRegistrySecretName;
 
-    private ScheduledExecutorService podStatusChecker = Executors.newSingleThreadScheduledExecutor();
-    private ScheduledExecutorService buildPodStatusChecker = Executors.newSingleThreadScheduledExecutor();
+    private ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
     /**
      * Set up the Kubernetes environment.
@@ -81,7 +80,7 @@ public class IntegrationTestsUtils {
             String shortId = RandomStringUtils.randomAlphanumeric(8).toLowerCase();
             namespace = namespace + "-" + shortId;
         }
-        cluster.createNamespace(namespace);
+        kubernetesClient.namespaces().createOrReplace(new NamespaceBuilder().withNewMetadata().withName(namespace).endMetadata().build());
         // Override config so all the Kubernetes objects will be created in the integration test namespace
         buildBotConfig.setNamespaceBuildExecution(namespace);
         kubernetesConfig.setNamespaceMicoWorkspace(namespace);
@@ -89,7 +88,7 @@ public class IntegrationTestsUtils {
     }
 
     void cleanUpEnvironment(String namespace) {
-        cluster.deleteNamespace(namespace);
+        kubernetesClient.namespaces().withName(namespace).delete();
     }
 
     /**
@@ -126,14 +125,14 @@ public class IntegrationTestsUtils {
             .addToData("username", usernameBase64Encoded)
             .addToData("password", passwordBase64Encoded)
             .build();
-        cluster.createSecret(dockerRegistrySecret, namespace);
+        kubernetesClient.secrets().inNamespace(namespace).createOrReplace(dockerRegistrySecret);
 
         ServiceAccount buildServiceAccount = new ServiceAccountBuilder()
             .withApiVersion("v1")
             .withNewMetadata().withName(serviceAccountName).withNamespace(namespace).endMetadata()
             .withSecrets(new ObjectReferenceBuilder().withName(dockerRegistrySecret.getMetadata().getName()).build())
             .build();
-        cluster.createServiceAccount(buildServiceAccount, namespace);
+        kubernetesClient.serviceAccounts().inNamespace(namespace).createOrReplace(buildServiceAccount);
 
         dockerRegistrySecretName = dockerRegistrySecret.getMetadata().getName();
     }
@@ -153,9 +152,9 @@ public class IntegrationTestsUtils {
     CompletableFuture<Boolean> waitUntilAllPodsInNamespaceAreRunning(String namespace, int initialDelay, int period, int timeout) throws InterruptedException, ExecutionException, TimeoutException {
         CompletableFuture<Boolean> completionFuture = new CompletableFuture<>();
 
-        final ScheduledFuture<?> checkFuture = podStatusChecker.scheduleAtFixedRate(() -> {
+        executorService.scheduleAtFixedRate(() -> {
 
-            PodList podList = cluster.getAllPods(namespace);
+            PodList podList = kubernetesClient.pods().inNamespace(namespace).list();
             List<Pod> pods = podList.getItems();
             int numberOfPodsInNamespace = pods.size();
             log.debug("Number of pods in namespace '{}': {}", namespace, numberOfPodsInNamespace);
@@ -190,8 +189,7 @@ public class IntegrationTestsUtils {
         // Waits until timeout is reached or the future completes.
         completionFuture.get(timeout, TimeUnit.SECONDS);
 
-        // When completed cancel future
-        completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
+        log.info("Finished with build.");
 
         return completionFuture;
     }
@@ -212,7 +210,8 @@ public class IntegrationTestsUtils {
     CompletableFuture<Boolean> waitUntilPodIsRunning(String podName, String namespace, int initialDelay, int period, int timeout) throws InterruptedException, ExecutionException, TimeoutException {
         CompletableFuture<Boolean> completionFuture = new CompletableFuture<>();
 
-        final ScheduledFuture<?> checkFuture = podStatusChecker.scheduleAtFixedRate(() -> {
+        log.info("Wait until pod '{}' is running", podName);
+        executorService.scheduleAtFixedRate(() -> {
             try {
                 Boolean running = checkIfPodIsRunning(podName, namespace);
                 if (running) {
@@ -226,9 +225,6 @@ public class IntegrationTestsUtils {
 
         // Waits until timeout is reached or the future completes.
         completionFuture.get(timeout, TimeUnit.SECONDS);
-
-        // When completed cancel future
-        completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
 
         return completionFuture;
     }
@@ -248,7 +244,8 @@ public class IntegrationTestsUtils {
     CompletableFuture<Deployment> waitUntilDeploymentIsCreated(MicoService micoService, int initialDelay, int period, int timeout) throws InterruptedException, ExecutionException, TimeoutException {
         CompletableFuture<Deployment> completionFuture = new CompletableFuture<>();
 
-        final ScheduledFuture<?> checkFuture = podStatusChecker.scheduleAtFixedRate(() -> {
+        log.info("Wait until deployment of MicoService '{}' '{}' is created", micoService.getShortName(), micoService.getVersion());
+        executorService.scheduleAtFixedRate(() -> {
 
             Optional<Deployment> deployment = Optional.empty();
             try {
@@ -262,9 +259,6 @@ public class IntegrationTestsUtils {
 
         // Waits until timeout is reached or the future completes.
         completionFuture.get(timeout, TimeUnit.SECONDS);
-
-        // When completed cancel future
-        completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
 
         return completionFuture;
     }
@@ -284,7 +278,8 @@ public class IntegrationTestsUtils {
     CompletableFuture<Service> waitUntilServiceIsCreated(MicoService micoService, int initialDelay, int period, int timeout) throws InterruptedException, ExecutionException, TimeoutException {
         CompletableFuture<Service> completionFuture = new CompletableFuture<>();
 
-        final ScheduledFuture<?> checkFuture = podStatusChecker.scheduleAtFixedRate(() -> {
+        log.info("Wait until Kubernetes Service for MicoService '{}' '{}' is created", micoService.getShortName(), micoService.getVersion());
+        executorService.scheduleAtFixedRate(() -> {
             List<Service> services = micoKubernetesClient.getInterfacesOfMicoService(micoService);
             if (!services.isEmpty()) {
                 completionFuture.complete(services.get(0));
@@ -293,51 +288,6 @@ public class IntegrationTestsUtils {
 
         // Waits until timeout is reached or the future completes.
         completionFuture.get(timeout, TimeUnit.SECONDS);
-
-        // When completed cancel future
-        completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
-
-        return completionFuture;
-    }
-
-    /**
-     * Create a future that polls the build pod until the build is finished.
-     *
-     * @param imageBuilder the {@link ImageBuilder} object
-     * @param buildName    the build name
-     * @param namespace    the Kubernetes namespace
-     * @param initialDelay the initial delay in seconds
-     * @param period       the period in seconds
-     * @param timeout      the timeout in seconds
-     * @return CompletableFuture with a boolean. True indicates that it finished successful.
-     * @throws InterruptedException if the build process is interrupted unexpectedly
-     * @throws TimeoutException     if the build does not finish or fail in the expected time
-     * @throws ExecutionException   if the build process fails unexpectedly
-     */
-    CompletableFuture<Boolean> waitUntilBuildIsFinished(ImageBuilder imageBuilder, String buildName, String namespace, int initialDelay, int period, int timeout) throws InterruptedException, ExecutionException, TimeoutException {
-        CompletableFuture<Boolean> completionFuture = new CompletableFuture<>();
-
-        // Create a future that polls every second with a delay of 10 seconds.
-        final ScheduledFuture<?> checkFuture = buildPodStatusChecker.scheduleAtFixedRate(() -> {
-
-            Build build = imageBuilder.getBuild(buildName);
-            if (build.getStatus() != null && build.getStatus().getCluster() != null) {
-                String buildPodName = build.getStatus().getCluster().getPodName();
-                Pod buildPod = cluster.getPod(buildPodName, namespace);
-
-                log.debug("Current build phase: {}", buildPod.getStatus().getPhase());
-                if (buildPod.getStatus().getPhase().equals("Succeeded")) {
-                    completionFuture.complete(true);
-                } else if (buildPod.getStatus().getPhase().equals("Failed")) {
-                    completionFuture.complete(false);
-                }
-            }
-        }, initialDelay, period, TimeUnit.SECONDS);
-
-        completionFuture.get(timeout, TimeUnit.SECONDS);
-
-        // When completed cancel future
-        completionFuture.whenComplete((result, thrown) -> checkFuture.cancel(true));
 
         return completionFuture;
     }
@@ -351,7 +301,7 @@ public class IntegrationTestsUtils {
      * @throws DeploymentException if error occurs during deployment of pod
      */
     private Boolean checkIfPodIsRunning(String podName, String namespace) throws DeploymentException {
-        Pod pod = cluster.getPod(podName, namespace);
+        Pod pod = kubernetesClient.pods().inNamespace(namespace).withName(podName).get();
         String phase = pod.getStatus().getPhase();
         log.debug("Pod '{}' is currently in phase: {}", podName, phase);
 

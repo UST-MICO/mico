@@ -26,20 +26,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import io.github.ust.mico.core.exception.VersionNotSupportedException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoPortType;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceCrawlingOrigin;
-import io.github.ust.mico.core.model.MicoServiceDependency;
-import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.model.MicoServicePort;
+import io.github.ust.mico.core.exception.VersionNotSupportedException;
+import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.util.CollectionUtils;
@@ -51,15 +45,13 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
     private static final String TEST_SHORT_NAME = "Test";
     private static final String TEST_SERVICE_DESCRIPTION = "Test Service";
     private static final String TEST_GIT_CLONE_URL = "http://github.com/org/repo.git";
-    private static final String TEST_GIT_RELEASE_INFO_URL = "http://api.github.com/repos/org/repo/releases/1337";
     private static final String TEST_CONTACT = "Test Person";
     private static final int TEST_PORT = 8080;
     private static final int TEST_TARGET_PORT = 8081;
     private static final String TEST_SERVICE_INTERFACE_DESCRIPTION = "This is an interface of an service";
     private static final String TEST_PROTOCOL = "http";
-    private static final String TEST_DNS = "DNS";
     private static final String TEST_SERVICE_INTERFACE_NAME = "Service interface name";
-    private static final String TEST_LONGER_NAME = "TEST LONGER NAME";
+    private static final String TEST_LONGER_NAME = "TEST LONGER APPLICATION_NAME";
     private static final String TEST_VERSION = "1.0";
 
     @Autowired
@@ -84,7 +76,6 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
         assertEquals(TEST_LONGER_NAME, serviceTest.getName());
         assertEquals(TEST_SERVICE_DESCRIPTION, serviceTest.getDescription());
         assertEquals(TEST_GIT_CLONE_URL, serviceTest.getGitCloneUrl());
-        assertEquals(TEST_GIT_RELEASE_INFO_URL, serviceTest.getGitReleaseInfoUrl());
         assertEquals(TEST_CONTACT, serviceTest.getContact());
 
         assertEquals(1, serviceInterfacesTest.size());
@@ -93,7 +84,6 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
         assertEquals(TEST_TARGET_PORT, serviceInterfaceTest.getPorts().get(0).getTargetPort());
         assertEquals(TEST_SERVICE_INTERFACE_DESCRIPTION, serviceInterfaceTest.getDescription());
         assertEquals(TEST_PROTOCOL, serviceInterfaceTest.getProtocol());
-        assertEquals(TEST_DNS, serviceInterfaceTest.getPublicDns());
         assertEquals(TEST_SERVICE_INTERFACE_NAME, serviceInterfaceTest.getServiceInterfaceName());
     }
 
@@ -109,12 +99,10 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
                                 .setPort(8080)
                                 .setType(MicoPortType.TCP)
                                 .setTargetPort(8081)))
-                        .setPublicDns(TEST_DNS)
                         .setDescription(TEST_SERVICE_INTERFACE_DESCRIPTION)
                         .setProtocol(TEST_PROTOCOL)))
                 .setServiceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
                 .setGitCloneUrl(TEST_GIT_CLONE_URL)
-                .setGitReleaseInfoUrl(TEST_GIT_RELEASE_INFO_URL)
                 .setContact(TEST_CONTACT);
     }
 
@@ -126,14 +114,12 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
         String testServivce2Name = "Service 2";
         String testService2Version = "1.2.3";
         String testServivce2Description = "This is service 2.";
-        String testServivce2GitReleaseInfoUrl = "Some GitHub root.";
         String testServivce2GitCloneUrl = "Some GitHub clone url.";
         String testServivce2Contact = "Me";
 
         String testInterface2Name = "Service Interface 2";
         int testInterface2Port = 9000;
         int testInterface2TargetPort = 9001;
-        String testInterface2PublicDns = "DNS 2";
         String testInterface2Description = "This is service interface 2";
         String testInterface2Protocol = "TCP";
 
@@ -148,19 +134,15 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
                         .setPort(testInterface2Port)
                         .setType(MicoPortType.TCP)
                         .setTargetPort(testInterface2TargetPort)))
-                .setPublicDns(testInterface2PublicDns)
                 .setDescription(testInterface2Description)
                 .setProtocol(testInterface2Protocol)))
         .setServiceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB)
         .setGitCloneUrl(testServivce2GitCloneUrl)
-        .setGitReleaseInfoUrl(testServivce2GitReleaseInfoUrl)
         .setContact(testServivce2Contact);
 
         service1.setDependencies(Collections.singletonList(new MicoServiceDependency()
                 .setService(service1)
-                .setDependedService(service2)
-                .setMinVersion("1.0.0")
-                .setMaxVersion("2.0.0")));
+                .setDependedService(service2)));
 
         serviceRepository.save(service1);
 
@@ -170,14 +152,11 @@ public class MicoCoreApplicationTests extends Neo4jTestClass {
         List<MicoServiceDependency> dependsOnList = serviceTest.getDependencies();
         assertEquals(1, dependsOnList.size());
         MicoServiceDependency dependency1 = dependsOnList.get(0);
-        assertEquals("1.0.0", dependency1.getMinVersion());
-        assertEquals("2.0.0", dependency1.getMaxVersion());
 
         MicoService testService2 = dependency1.getDependedService();
         assertNotNull(testService2);
         assertEquals(testService2Version, testService2.getVersion());
         assertEquals(testServivce2Description, testService2.getDescription());
-        assertEquals(testServivce2GitReleaseInfoUrl, testService2.getGitReleaseInfoUrl());
         assertEquals(testServivce2GitCloneUrl, testService2.getGitCloneUrl());
         assertEquals(testServivce2Contact, testService2.getContact());
     }

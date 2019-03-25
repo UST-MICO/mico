@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import { Component, OnInit, OnDestroy, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ApiService } from '../api/api.service';
 import { Subscription } from 'rxjs';
 import { from } from 'rxjs';
@@ -25,6 +25,8 @@ import { groupBy, mergeMap, toArray, map } from 'rxjs/operators';
 import { ApiObject } from '../api/apiobject';
 import { MatDialog } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
+import { safeUnsubscribe } from '../util/utils';
+import { UtilServiceService } from '../util/util-service.service';
 
 
 @Component({
@@ -39,21 +41,21 @@ export class ServiceListComponent implements OnInit, OnDestroy {
     constructor(
         private apiService: ApiService,
         private dialog: MatDialog,
+        private utilService: UtilServiceService,
     ) {
         this.getServices();
     }
 
     services;
 
-    displayedColumns: string[] = ['id', 'name', 'shortName', 'description', 'controls'];
+    displayedColumns: string[] = ['name', 'shortName', 'version', 'description', 'controls'];
 
     ngOnInit() {
     }
 
     ngOnDestroy() {
-        if (this.subServices != null) {
-            this.subServices.unsubscribe();
-        }
+        // unsubscribe observables
+        safeUnsubscribe(this.subServices);
     }
 
     /**
@@ -70,12 +72,11 @@ export class ServiceListComponent implements OnInit, OnDestroy {
                     .pipe(
                         groupBy(service => service.shortName),
                         mergeMap(group => group.pipe(toArray())),
-                        map(group => group[0]),
+                        map(group => group[group.length - 1]),
                         toArray()
                     ).subscribe(serviceList => {
                         this.services = serviceList;
                     });
-
             });
 
     }
@@ -83,9 +84,10 @@ export class ServiceListComponent implements OnInit, OnDestroy {
     /**
      * deletes all versions of a service, if the user confirms a dialog and the service is not deployed.
      * uses: DELETE services/{shortName}
-     * @param service shortName of the services to be deleted
+     * @param service shortName object to be deleted
      */
     deleteService(service) {
+        // open dialog
         const dialogRef = this.dialog.open(YesNoDialogComponent, {
             data: {
                 object: service,
@@ -93,12 +95,20 @@ export class ServiceListComponent implements OnInit, OnDestroy {
             }
         });
 
+        // handle dialog result
         const subDeleteServiceVersions = dialogRef.afterClosed().subscribe(shouldDelete => {
             if (shouldDelete) {
                 this.apiService.deleteAllServiceVersions(service.shortName).subscribe();
-                subDeleteServiceVersions.unsubscribe();
+                safeUnsubscribe(subDeleteServiceVersions);
             }
         });
     }
 
+
+    /**
+     * opens a dialog to create a new service.
+     */
+    newService(): void {
+        this.utilService.createNewService();
+    }
 }

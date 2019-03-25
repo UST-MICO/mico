@@ -29,6 +29,8 @@ interface PropertyRef {
     prop: ApiModel | ApiModelRef;
 }
 
+const numericPropertyKeys = new Set(['minLength', 'maxLength', 'minimum', 'maximum', 'minItems', 'maxItems', 'x-order']);
+
 @Injectable({
     providedIn: 'root'
 })
@@ -67,25 +69,28 @@ export class ModelsService {
      */
     private resolveModel = (modelUrl: string): Observable<ApiModelAllOf | ApiModel> => {
         modelUrl = this.canonizeModelUri(modelUrl);
+
         if (modelUrl.startsWith('local/')) {
+            // remove 'local/'
             const modelID = modelUrl.substring(6);
             // deep clone model because they will be frozen later...
             const model = JSON.parse(JSON.stringify(this.localModels[modelID]));
             return of(model);
+
         } else if (modelUrl.startsWith('remote/')) {
 
+            // remove 'remote/'
             const modelID = modelUrl.substring(7);
 
+            // retrieve models from swagger api
             return this.apiService.getModelDefinitions().pipe(
                 map(remoteModels => {
-                    // TODO remove in the end of the project
-                    // print all current remote models
-                    // console.log(remoteModels);
                     return JSON.parse(JSON.stringify(remoteModels[modelID]));
                 })
             );
         } else if (modelUrl.startsWith('nested/')) {
 
+            // remove 'nested/'
             const modelID = modelUrl.substring(7);
 
             const model = JSON.parse(JSON.stringify(this.nestedModelCache.get(modelID)));
@@ -230,6 +235,29 @@ export class ModelsService {
     }
 
     /**
+     * Convert all property keys that should have numeric values (like 'minimum').
+     *
+     * @param property input PropertyRef
+     */
+    private handleNumericPropertyKeys = (property: PropertyRef): Observable<PropertyRef> => {
+        const propCopy = JSON.parse(JSON.stringify(property.prop));
+
+        for (const key in propCopy) {
+            if (propCopy.hasOwnProperty(key)) {
+                if (numericPropertyKeys.has(key)) {
+                    propCopy[key] = parseFloat(propCopy[key]);
+                }
+            }
+        }
+
+        return of({
+            key: property.key,
+            parent: property.parent,
+            prop: propCopy,
+        });
+    }
+
+    /**
      * Check all properties of model for complex properties like arrays or objects.
      *
      * Replaces all nested models with ApiModelRefs to nestedModelCache
@@ -245,6 +273,7 @@ export class ModelsService {
             }
         }
         return of(...props).pipe(
+            flatMap(this.handleNumericPropertyKeys),
             flatMap(this.handleObjectProperties),
             flatMap(this.handleArrayProperties),
             reduce((properties, prop: PropertyRef) => {
@@ -368,5 +397,19 @@ export class ModelsService {
             }
             return freezeObject(newModel);
         };
+    }
+
+    /**
+     * Stream filter that filters out all not required properties of the model.
+     *
+     * @param model input api model
+     */
+    onlyRequired: (ApiModel) => Readonly<ApiModel> = (model: ApiModel) => {
+        model = JSON.parse(JSON.stringify(model));
+        if (model.required != null && model.required.length > 0) {
+            const filterFunction = this.filterModel(model.required);
+            return filterFunction(model);
+        }
+        return freezeObject(model);
     }
 }

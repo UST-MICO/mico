@@ -7,19 +7,15 @@ io.github.ust.mico.core.model
    :maxdepth: 1
 
    MicoApplication
-   MicoApplicationDeploymentInfo
-   MicoDeploymentStrategy
-   MicoDeploymentStrategy-Type
-   MicoImageContainer
-   MicoPort
+   MicoLabel
    MicoPortType
-   MicoResourceConstraint
    MicoService
    MicoServiceCrawlingOrigin
    MicoServiceDependency
    MicoServiceDeploymentInfo
    MicoServiceDeploymentInfo-ImagePullPolicy
    MicoServiceDeploymentInfo-RestartPolicy
+   MicoServiceDeploymentInfoQueryResult
    MicoServiceInterface
    MicoServicePort
    MicoVersion

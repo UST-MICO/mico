@@ -11,16 +11,16 @@ if [[ -z "$uname" ]]; then
     echo "ERROR: No username provided"
     exit 1
 fi
-export DOCKERHUB_USERNAME_BASE64=$(echo -n $uname | base64 -w 0)
+export DOCKERHUB_USERNAME_BASE64=$(echo -n $uname | base64 | tr -d \\n)
 
 # Read in DockerHub password
 echo "Please provide the password for DockerHub:"
-read pw
+read -s pw
 if [[ -z "$pw" ]]; then
     echo "ERROR: No password provided"
     exit 1
 fi
-export DOCKERHUB_PASSWORD_BASE64=$(echo -n $pw | base64 -w 0)
+export DOCKERHUB_PASSWORD_BASE64=$(echo -n $pw | base64 | tr -d \\n)
 
 # Change directory so Kubernetes configurations can be applied with relative path
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
@@ -42,6 +42,7 @@ envsubst < mico-build-bot.yaml | kubectl apply -f -
 
 # Install MICO components
 kubectl apply -f neo4j.yaml
+kubectl apply -f redis.yaml
 kubectl apply -f mico-core.yaml
 if [[ -z "$ip" ]]; then
     sed '/${MICO_PUBLIC_IP}/d' mico-admin.yaml | kubectl apply -f -
@@ -51,6 +52,6 @@ else
 fi
 
 # Install external components
-kubectl apply -f /kube-state-metrics
+kubectl apply -f ./kube-state-metrics
 kubectl apply -f knative-build.yaml
 kubectl apply -f monitoring.yaml

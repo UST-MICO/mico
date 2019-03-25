@@ -4,7 +4,7 @@
     <mat-tab-group (selectedTabChange)="tabChange($event)">
         <!-- TAB: MANUAL SERVICE INPUT-->
         <mat-tab label="Manual">
-            <mico-form [modelUrl]="'remote/MicoService'" [filter]="filterListManual" (data)="serviceData = $event">
+            <mico-form [modelUrl]="'remote/MicoServiceRequestDTO'" [onlyRequired]="true" (data)="serviceData = $event">
             </mico-form>
         </mat-tab>
 
@@ -15,11 +15,11 @@
 
                 <!-- 1. STEP: CHOOSE REPOSITORY -->
                 <mat-step label="Choose The Repository">
-                    <mico-form [modelUrl]="'remote/CrawlingInfoDTO'" [filter]="filterListGithub"
+                    <mico-form [modelUrl]="'remote/CrawlingInfoRequestDTO'" [onlyRequired]="true"
                         (data)="githubData = $event"></mico-form>
 
                     <div>
-                        <button mat-button matStepperNext>Next</button>
+                        <button mat-raised-button matStepperNext color="accent">Next</button>
                     </div>
                 </mat-step>
 

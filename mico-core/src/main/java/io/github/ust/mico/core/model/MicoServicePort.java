@@ -19,17 +19,11 @@
 
 package io.github.ust.mico.core.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
-import io.swagger.annotations.Extension;
-import io.swagger.annotations.ExtensionProperty;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import io.swagger.annotations.ApiModelProperty;
+import io.github.ust.mico.core.dto.request.MicoServicePortRequestDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -50,9 +44,9 @@ public class MicoServicePort {
      */
     @Id
     @GeneratedValue
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
+    
     // ----------------------
     // -> Required fields ---
     // ----------------------
@@ -60,38 +54,36 @@ public class MicoServicePort {
     /**
      * The port number of the externally exposed port.
      */
-    @ApiModelProperty(required = true, extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Exposed Port Number"),
-            @ExtensionProperty(name = "x-order", value = "10"),
-            @ExtensionProperty(name = "description", value = "The port number of the externally exposed port.")
-        })})
     private int port;
 
     /**
-     * The type (protocol) of the port
-     * (Pivio -> transport_protocol).
+     * The type (protocol) of the port (Pivio -> transport_protocol).
+     * Default port type is {@link MicoPortType#TCP}.
      */
-    @ApiModelProperty(required = true, extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Type"),
-            @ExtensionProperty(name = "x-order", value = "30"),
-            @ExtensionProperty(name = "description", value = "The type (protocol) of the port. TCP or UDP.")
-        })})
-    private MicoPortType type = MicoPortType.DEFAULT;
+    private MicoPortType type = MicoPortType.TCP;
 
     /**
      * The port inside the container.
      */
-    @ApiModelProperty(required = true, extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Target Port Number"),
-            @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "The port inside the container.")
-        })})
     private int targetPort;
-
+ 
+    
+    // ----------------------
+    // -> Static Creators ---
+    // ----------------------
+    
+    /**
+     * Creates a new {@code MicoServicePort} based on a {@code MicoServicePortRequestDTO}.
+     * Note that the id will be set to {@code null}.
+     * 
+     * @param servicePortDto the {@link MicoServicePortRequestDTO}.
+     * @return a {@link MicoServicePort}.
+     */
+    public static MicoServicePort valueOf(MicoServicePortRequestDTO servicePortDto) {
+        return new MicoServicePort()
+        	.setPort(servicePortDto.getPort())
+        	.setType(servicePortDto.getType())
+        	.setTargetPort(servicePortDto.getTargetPort());
+    }
+    
 }

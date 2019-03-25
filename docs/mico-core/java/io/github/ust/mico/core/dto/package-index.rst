@@ -6,9 +6,19 @@ io.github.ust.mico.core.dto
 .. toctree::
    :maxdepth: 1
 
+   CrawlingInfoDTO
+   KubernetesNodeMetricsDTO
+   KubernetesPodInformationDTO
+   KubernetesPodMetricsDTO
+   MicoApplicationDTO
+   MicoApplicationDTO-MicoApplicationDeploymentStatus
+   MicoApplicationStatusDTO
+   MicoApplicationWithServicesDTO
+   MicoServiceDependencyGraphDTO
+   MicoServiceDependencyGraphEdgeDTO
+   MicoServiceDeploymentInfoDTO
+   MicoServiceInterfaceStatusDTO
+   MicoServiceStatusDTO
    PrometheusResponse
-   UiDeploymentInformation
-   UiExternalMicoInterfaceInformation
-   UiPodInfo
-   UiPodMetrics
+   ValidationErrorDTO
 

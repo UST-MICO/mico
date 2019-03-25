@@ -1,6 +1,18 @@
-.. java:import:: java.util ArrayList
+.. java:import:: com.fasterxml.jackson.annotation JsonIgnore
 
-.. java:import:: java.util List
+.. java:import:: com.fasterxml.jackson.annotation JsonProperty
+
+.. java:import:: io.github.ust.mico.core.dto MicoApplicationDTO
+
+.. java:import:: io.github.ust.mico.core.exception VersionNotSupportedException
+
+.. java:import:: lombok AllArgsConstructor
+
+.. java:import:: lombok Data
+
+.. java:import:: lombok NoArgsConstructor
+
+.. java:import:: lombok.experimental Accessors
 
 .. java:import:: org.neo4j.ogm.annotation GeneratedValue
 
@@ -10,21 +22,9 @@
 
 .. java:import:: org.neo4j.ogm.annotation Relationship
 
-.. java:import:: com.fasterxml.jackson.annotation JsonIgnore
+.. java:import:: java.util ArrayList
 
-.. java:import:: io.github.ust.mico.core.exception VersionNotSupportedException
-
-.. java:import:: io.swagger.annotations ApiModelProperty
-
-.. java:import:: lombok AllArgsConstructor
-
-.. java:import:: lombok Data
-
-.. java:import:: lombok NoArgsConstructor
-
-.. java:import:: lombok Singular
-
-.. java:import:: lombok.experimental Accessors
+.. java:import:: java.util List
 
 MicoApplication
 ===============
@@ -42,5 +42,11 @@ getMicoVersion
 ^^^^^^^^^^^^^^
 
 .. java:method:: @JsonIgnore public MicoVersion getMicoVersion() throws VersionNotSupportedException
+   :outertype: MicoApplication
+
+valueOf
+^^^^^^^
+
+.. java:method:: public static MicoApplication valueOf(MicoApplicationDTO applicationDto)
    :outertype: MicoApplication
 

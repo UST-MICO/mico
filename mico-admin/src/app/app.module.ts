@@ -60,8 +60,6 @@ import { AppComponent } from './app.component';
 // page components
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { AppDetailOverviewComponent } from './app-detail-overview/app-detail-overview.component';
-import { AppDetailDeploystatusComponent } from './app-detail-deploystatus/app-detail-deploystatus.component';
-import { AppDetailDeploysettingsComponent } from './app-detail-deploysettings/app-detail-deploysettings.component';
 import { ServiceDetailDeploystatusComponent } from './service-detail-deploystatus/service-detail-deploystatus.component';
 import { ServiceDetailOverviewComponent } from './service-detail-overview/service-detail-overview.component';
 import { ToolbarComponent } from './toolbar/toolbar.component';
@@ -96,14 +94,16 @@ import { MicoDataArrayComponent } from './data-view/mico-data-array/mico-data-ar
 import { MicoDataObjectComponent } from './data-view/mico-data-object/mico-data-object.component';
 import { AppDetailStatusComponent } from './app-detail-status/app-detail-status.component';
 import { ServiceDetailStatusComponent } from './service-detail-status/service-detail-status.component';
+import { AppDetailOverviewDeploymentInformationComponent } from './app-detail-overview-deployment-information/app-detail-overview-deployment-information.component';
+import { DeploymentInformationDialogComponent } from './dialogs/deployment-information-dialog/deployment-information-dialog.component';
+import { AppDetailPublicIpComponent } from './app-detail-public-ip/app-detail-public-ip.component';
+import { ServiceDetailKubeconfigComponent } from './service-detail-kubeconfig/service-detail-kubeconfig.component';
 
 @NgModule({
     declarations: [
         AppComponent,
         DashboardComponent,
         AppDetailOverviewComponent,
-        AppDetailDeploystatusComponent,
-        AppDetailDeploysettingsComponent,
         ServiceDetailDeploystatusComponent,
         ServiceDetailOverviewComponent,
         ToolbarComponent,
@@ -135,6 +135,10 @@ import { ServiceDetailStatusComponent } from './service-detail-status/service-de
         MicoDataObjectComponent,
         AppDetailStatusComponent,
         ServiceDetailStatusComponent,
+        AppDetailOverviewDeploymentInformationComponent,
+        DeploymentInformationDialogComponent,
+        AppDetailPublicIpComponent,
+        ServiceDetailKubeconfigComponent
     ],
     entryComponents: [
         // dialogs
@@ -146,6 +150,7 @@ import { ServiceDetailStatusComponent } from './service-detail-status/service-de
         UpdateServiceInterfaceComponent,
         CreateApplicationComponent,
         CreateNextVersionComponent,
+        DeploymentInformationDialogComponent,
     ],
     imports: [
         BrowserModule,

@@ -30,7 +30,8 @@ export class CreateServiceInterfaceComponent implements OnInit {
 
     // form elements are stored in here
     serviceData;
-    portData: any[];
+
+    isValid;
 
     ngOnInit() {
     }
@@ -39,13 +40,10 @@ export class CreateServiceInterfaceComponent implements OnInit {
      * return method of the dialog
      */
     confirmButton() {
-        if (this.serviceData == null || this.portData == null || this.portData.length <= 0) {
+        if (this.serviceData == null || !this.isValid) {
             return null;
         }
 
-        const tempReturn = this.serviceData;
-        tempReturn.ports = this.portData;
-        return tempReturn;
+        return this.serviceData;
     }
-
 }

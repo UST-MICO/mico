@@ -69,7 +69,15 @@ public class MicoKubernetesBuildBotConfig {
      * Minimum is set to 30 seconds because that is the minimum time for a build.
      * Defaults to 10 minutes (600 seconds).
      */
-    @Min(value = 30, message = "should be at least set to 30 seconds")
     @NotNull
+    @Min(value = 30, message = "must be at least set to 30 seconds")
     private int buildTimeout = 600;
+
+    /**
+     * Boolean value to set whether an undeployment of a MicoApplication
+     * should also clean up all build resources associated with the MicoServices
+     * included by the MicoApplication.
+     */
+    @NotNull
+    private boolean buildCleanUpByUndeploy = false;
 }

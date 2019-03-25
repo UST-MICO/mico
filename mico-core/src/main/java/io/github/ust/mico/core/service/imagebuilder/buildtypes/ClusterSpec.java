@@ -20,18 +20,19 @@
 package io.github.ust.mico.core.service.imagebuilder.buildtypes;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 /**
  * ClusterSpec provides information about the on-cluster build, if applicable.
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@Getter
-@Builder
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
-@EqualsAndHashCode
+@Accessors(chain = true)
 public class ClusterSpec {
 
     /**

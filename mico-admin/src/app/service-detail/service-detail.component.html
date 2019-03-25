@@ -2,8 +2,22 @@
 
     <div class="ma3 flex-grow-1">
         <h3>{{service?.name}}</h3>
-    </div>
 
+        <mat-button-toggle class="mt1 mb2 mr2 inline-flex items-center" (click)="deleteService()">
+            <span class="mr2">delete version</span>
+            <mat-icon>delete</mat-icon>
+        </mat-button-toggle>
+
+        <span *ngIf="isLatestVersion()" class="mh2 mt1 mb2">
+            <mat-button-toggle mat-raised-button (click)="promoteNextVersion()">
+                <span>
+                    create next Version
+                </span>
+                <mat-icon>arrow_upward</mat-icon>
+            </mat-button-toggle>
+        </span>
+
+    </div>
     <!-- Drop Down Menu for version selection-->
     <mat-form-field class="w25 ma2">
         <mat-select placeholder="Service Version" (ngModelChange)="updateVersion($event)" [ngModel]="selectedVersion">
@@ -14,10 +28,7 @@
     </mat-form-field>
 </div>
 
-
-
 <mat-divider></mat-divider>
-
 
 <mat-card class="ma2">
     <mat-tab-group>
@@ -26,9 +37,14 @@
             <mico-service-detail-overview [shortName]="shortName" [version]="selectedVersion">
             </mico-service-detail-overview>
         </mat-tab>
-        <!-- DEPLOYMENT TAB-->
-        <mat-tab label="Deployment">
-            Service-Detail-Deployment...
+        <mat-tab label="Dependency Graph">
+            <mico-service-dependency-graph [shortName]="shortName" [version]="selectedVersion">
+            </mico-service-dependency-graph>
+        </mat-tab>
+        <!-- KUBECONFIG TAB-->
+        <mat-tab label="Kubernetes Configuration">
+            <mico-service-detail-kubeconfig [shortName]="shortName" [version]="selectedVersion">
+            </mico-service-detail-kubeconfig>
         </mat-tab>
         <!-- STATUS TAB -->
         <mat-tab label="Status">
@@ -37,5 +53,3 @@
         </mat-tab>
     </mat-tab-group>
 </mat-card>
-
-<mat-card class="ma2">Endpoint: </mat-card>

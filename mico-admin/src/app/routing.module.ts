@@ -24,9 +24,6 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 
 import { AppListComponent } from './app-list/app-list.component';
 import { AppDetailComponent } from './app-detail/app-detail.component';
-import { AppDetailOverviewComponent } from './app-detail-overview/app-detail-overview.component';
-import { AppDetailDeploystatusComponent } from './app-detail-deploystatus/app-detail-deploystatus.component';
-import { AppDetailDeploysettingsComponent } from './app-detail-deploysettings/app-detail-deploysettings.component';
 
 import { ServiceListComponent } from './service-list/service-list.component';
 import { ServiceDetailComponent } from './service-detail/service-detail.component';
@@ -38,11 +35,8 @@ const routes: Routes = [
     { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
 
     { path: 'app-detail/app-list', component: AppListComponent },
-    { path: 'app-detail/overview', component: AppDetailOverviewComponent },
     { path: 'app-detail/:shortName', component: AppDetailComponent },
     { path: 'app-detail/:shortName/:version', component: AppDetailComponent },
-    { path: 'app-detail/deploystatus', component: AppDetailDeploystatusComponent },
-    { path: 'app-detail/deploysettings', component: AppDetailDeploysettingsComponent },
     { path: 'service-detail/service-list', component: ServiceListComponent },
     { path: 'service-detail/:shortName', component: ServiceDetailComponent },
     { path: 'service-detail/:shortName/:version', component: ServiceDetailComponent },

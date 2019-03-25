@@ -19,19 +19,13 @@
 
 package io.github.ust.mico.core;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
-import io.github.ust.mico.core.exception.NotInitializedException;
-import io.github.ust.mico.core.exception.VersionNotSupportedException;
-import io.github.ust.mico.core.service.ClusterAwarenessFabric8;
-import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
-import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoVersion;
-import lombok.extern.slf4j.Slf4j;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -42,19 +36,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
+import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
+import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
+import io.github.ust.mico.core.exception.NotInitializedException;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
+import lombok.extern.slf4j.Slf4j;
 
-import static io.github.ust.mico.core.TestConstants.*;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
+// Is ignored because Travis can't execute integration tests
+// that requires a connection to Kubernetes.
 @Ignore
-// TODO Upgrade to JUnit5
+// TODO: Upgrade to JUnit5
 @Category(IntegrationTests.class)
 @Slf4j
 @SpringBootTest
@@ -62,13 +54,13 @@ import static org.junit.Assert.assertTrue;
 public class ImageBuilderIntegrationTests {
 
     @Autowired
-    private ClusterAwarenessFabric8 cluster;
-
-    @Autowired
     private ImageBuilder imageBuilder;
 
     @Autowired
     private IntegrationTestsUtils integrationTestsUtils;
+
+    @Autowired
+    private MicoKubernetesBuildBotConfig micoKubernetesBuildBotConfig;
 
     private String namespace;
 
@@ -77,9 +69,10 @@ public class ImageBuilderIntegrationTests {
      */
     @Before
     public void setUp() {
-
         namespace = integrationTestsUtils.setUpEnvironment(true);
         integrationTestsUtils.setUpDockerRegistryConnection(namespace);
+        micoKubernetesBuildBotConfig.setNamespaceBuildExecution(namespace);
+        micoKubernetesBuildBotConfig.setBuildTimeout(60);
     }
 
     /**
@@ -87,7 +80,6 @@ public class ImageBuilderIntegrationTests {
      */
     @After
     public void tearDown() {
-
         integrationTestsUtils.cleanUpEnvironment(namespace);
     }
 
@@ -110,62 +102,25 @@ public class ImageBuilderIntegrationTests {
      * @throws InterruptedException         if the build process is interrupted unexpectedly
      * @throws TimeoutException             if the build does not finish or fail in the expected time
      * @throws ExecutionException           if the build process fails unexpectedly
-     * @throws VersionNotSupportedException if the provided Git release tag is not supported as a MICO version
      */
     @Test
-    public void buildAndPushImageWorks() throws NotInitializedException, InterruptedException, TimeoutException, ExecutionException, VersionNotSupportedException {
+    public void buildAndPushImageWorks() throws NotInitializedException, InterruptedException, TimeoutException, ExecutionException {
 
+        // Manual initialization is necessary so it will use the provided namespace (see setup method).
         imageBuilder.init();
 
         MicoService micoService = new MicoService()
-            .setShortName("hello-integration-test")
-            .setVersion(MicoVersion.valueOf(RELEASE).toString())
-            .setGitCloneUrl(GIT_TEST_REPO_URL)
-            .setDockerfilePath(DOCKERFILE);
+            .setShortName(TestConstants.IntegrationTest.SERVICE_SHORT_NAME)
+            .setName(TestConstants.IntegrationTest.SERVICE_NAME)
+            .setVersion(TestConstants.IntegrationTest.RELEASE)
+            .setDescription(TestConstants.IntegrationTest.SERVICE_DESCRIPTION)
+            .setGitCloneUrl(TestConstants.IntegrationTest.GIT_CLONE_URL)
+            .setDockerfilePath(TestConstants.IntegrationTest.DOCKERFILE_PATH);
 
-        Build build = imageBuilder.build(micoService);
+        CompletableFuture<String> buildJob = imageBuilder.build(micoService);
 
-        try {
-            ObjectMapper mapper = new YAMLMapper();
-            mapper.enable(SerializationFeature.INDENT_OUTPUT);
-            StringWriter sw = new StringWriter();
-            mapper.writeValue(sw, build);
-            log.debug("Build: {}{}", System.lineSeparator(), sw.toString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        String buildName = build.getMetadata().getName();
-
-        CompletableFuture<Boolean> buildPodResult = integrationTestsUtils.waitUntilBuildIsFinished(imageBuilder, buildName, namespace, 10, 1, 60);
-        boolean success = buildPodResult.get();
-        assertTrue("Build failed!", success);
-    }
-
-    // Test if docker image exists is currently not required
-    @Ignore
-    @Test
-    public void dockerImageExists() throws ExecutionException, InterruptedException, TimeoutException, VersionNotSupportedException {
-        String imageName = imageBuilder.createImageName("hello-integration-test", MicoVersion.valueOf("v1.0").toString());
-        boolean result = checkIfDockerImageExists(imageName);
-        assertTrue("Pod creation failed!", result);
-    }
-
-    private boolean checkIfDockerImageExists(String imagePath) throws ExecutionException, InterruptedException, TimeoutException {
-        String dockerRegistrySecretName = integrationTestsUtils.getDockerRegistrySecretName();
-        Pod pod = new PodBuilder()
-            .withNewMetadata().withName("testpod").withNamespace(namespace).endMetadata()
-            .withSpec(new PodSpecBuilder()
-                .withContainers(new ContainerBuilder().withName("testpod-container").withImage(imagePath).build())
-                .withImagePullSecrets(
-                    new LocalObjectReferenceBuilder().withName(dockerRegistrySecretName).build()
-                ).build())
-            .build();
-        Pod createdPod = cluster.createPod(pod, namespace);
-        String podName = createdPod.getMetadata().getName();
-        CompletableFuture<Boolean> podCreationResult = integrationTestsUtils.waitUntilPodIsRunning(
-            podName, namespace, 1, 1, 20);
-        return podCreationResult.get();
+        String dockerImageURI = buildJob.get();
+        assertNotNull("Build failed!", dockerImageURI);
     }
 
 }

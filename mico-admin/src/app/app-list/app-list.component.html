@@ -6,27 +6,46 @@
 <mat-card class="ma2">
     <mat-card-title>Applications</mat-card-title>
     <mat-card-content>
+        <mat-button-toggle mat-raised-button (click)="newApplication()" class="mv2">
+            <span>
+                new Application
+            </span>
+            <mat-icon>add</mat-icon>
+        </mat-button-toggle>
+
         <mat-table [dataSource]="applications" class="mat-elevation-z2">
             <ng-container matColumnDef="id">
-                <mat-header-cell *matHeaderCellDef>ID</mat-header-cell>
-                <mat-cell *matCellDef="let element" [routerLink]="['/app-detail', element.shortName]">{{element.id}}</mat-cell>
+                <mat-header-cell class="ph1" *matHeaderCellDef>ID</mat-header-cell>
+                <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/app-detail', element.shortName]">
+                    {{element.id}}</mat-cell>
             </ng-container>
             <ng-container matColumnDef="name">
-                <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
-                <mat-cell *matCellDef="let element" [routerLink]="['/app-detail', element.shortName]">{{element.name}}</mat-cell>
+                <mat-header-cell class="ph1" *matHeaderCellDef><b>Name</b></mat-header-cell>
+                <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/app-detail', element.shortName]">
+                    {{element.name}}</mat-cell>
             </ng-container>
             <ng-container matColumnDef="shortName">
-                <mat-header-cell *matHeaderCellDef>Short Name</mat-header-cell>
-                <mat-cell *matCellDef="let element" [routerLink]="['/app-detail', element.shortName]">{{element.shortName}}</mat-cell>
+                <mat-header-cell class="ph1" *matHeaderCellDef><b>Short Name</b></mat-header-cell>
+                <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/app-detail', element.shortName]">
+                    {{element.shortName}}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="version">
+                <mat-header-cell class="ph1" *matHeaderCellDef><b>Version</b></mat-header-cell>
+                <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/app-detail', element.shortName]">
+                    {{element.version}}</mat-cell>
             </ng-container>
             <ng-container matColumnDef="description">
-                <mat-header-cell *matHeaderCellDef>Description</mat-header-cell>
-                <mat-cell *matCellDef="let element" [routerLink]="['/app-detail', element.shortName]">{{element.description}}</mat-cell>
+                <mat-header-cell class="ph1" *matHeaderCellDef><b>Description</b></mat-header-cell>
+                <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/app-detail', element.shortName]">
+                    <div class="descriptionStyle">
+                        {{element.description}}
+                    </div>
+                </mat-cell>
             </ng-container>
             <ng-container matColumnDef="controls">
-                <mat-header-cell *matHeaderCellDef>Controls</mat-header-cell>
-                <mat-cell *matCellDef="let element">
-                    <button mat-raised-button (click)="deleteApplication(element)">delete</button>
+                <mat-header-cell class="ph1" *matHeaderCellDef><b>Controls</b></mat-header-cell>
+                <mat-cell class="ph1" *matCellDef="let element">
+                    <button mat-raised-button color="accent" (click)="deleteApplication(element)">delete</button>
                 </mat-cell>
             </ng-container>
             <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>

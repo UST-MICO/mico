@@ -17,8 +17,8 @@
  * under the License.
  */
 
-export const VERSION_REGEX = /(^\w+)?(\d+)\.(\d+)\.(\d+)(-(?:\w+\.)*\w+)?/;
-
+export const VERSION_REGEX = /^([a-zA-Z]+)?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(((0|[1-9]\d*|\d*[A-Z-a-z-][\dA-Za-z-]*))(\.(0|[1-9]\d*|\d*[A-Za-z-][\dA-Za-z-]*))*))?(\+([\dA-Za-z-]+(\.[\dA-Za-z-]*)*))?$/;
+// /(^\w+)?(\d+)\.(\d+)\.(\d+)(-(?:\w+\.)*\w+)?/;
 /**
  * Comparator for semantic version strings. Can be used in the array.sort method.
  *
@@ -40,18 +40,22 @@ export function versionComparator(versionA: string, versionB: string): number {
     }
 
     let result = 0;
+    // compare major
     result = parseInt(mA[2], 10) - parseInt(mB[2], 10);
     if (result !== 0) {
         return (result > 0) ? 1 : -1;
     }
+    // compare minor
     result = parseInt(mA[3], 10) - parseInt(mB[3], 10);
     if (result !== 0) {
         return (result > 0) ? 1 : -1;
     }
+    // compare fix
     result = parseInt(mA[4], 10) - parseInt(mB[4], 10);
     if (result !== 0) {
         return (result > 0) ? 1 : -1;
     }
+    // compare suffix if both versions have one
     if (mA[5] != null && mB[5] != null) {
         if (mA[5] > mB[5]) {
             return 1;

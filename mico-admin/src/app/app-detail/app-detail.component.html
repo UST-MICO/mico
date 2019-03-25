@@ -3,11 +3,18 @@
         <h3>Application {{application?.name}}</h3>
 
         <!-- BUTTONS -->
-        <mat-button-toggle mat-raised-button (click)="deployApplication()">
+        <mat-button-toggle mat-raised-button (click)="deployApplication()" class="mr2">
             <span>
                 deploy
             </span>
             <mat-icon>cloud_upload</mat-icon>
+        </mat-button-toggle>
+
+        <mat-button-toggle mat-raised-button (click)="undeployApplication()" class="mh2">
+            <span>
+                undeploy
+            </span>
+            <mat-icon>cloud_off</mat-icon>
         </mat-button-toggle>
 
         <span *ngIf="isLatestVersion()" class="mh2">
@@ -62,8 +69,9 @@
             </div>
             <ng-container *ngIf="edit">
                 <!-- edit version (dynamic form) -->
-                <mico-form [modelUrl]="'remote/MicoApplication'" [filter]="['deploymentInfo', 'services']"
-                    [isBlacklist]="true" (data)="applicationData = $event" [startData]="application"></mico-form>
+                <mico-form [modelUrl]="'remote/MicoApplicationRequestDTO'"
+                    [filter]="['deploymentStatus', 'deploymentInfo', 'services']" [isBlacklist]="true"
+                    (data)="applicationData = $event" [startData]="application"></mico-form>
 
                 <div class="ma1 pa1">
                     <span class="ma1">
@@ -76,7 +84,7 @@
             </ng-container>
             <ng-container *ngIf="!edit">
                 <!-- display version (data-view) -->
-                <mico-data [modelUrl]="'remote/MicoApplication'" [startData]="application"></mico-data>
+                <mico-data [modelUrl]="'remote/MicoApplicationResponseDTO'" [startData]="application"></mico-data>
             </ng-container>
         </mat-tab>
         <!-- STATUS TAB -->
@@ -87,16 +95,5 @@
 </mat-card>
 
 <!-- PUBLIC IPs-->
-<mat-card class="ma2">
-    <mat-card-title>
-        Public IPs:
-    </mat-card-title>
-    <mat-card-content>
-        <div *ngFor="let ip of publicIps">
-            <a target="_blank" rel="noopener" href="http://{{ip}}">
-                {{ip}}
-            </a><br />
-        </div>
-    </mat-card-content>
-
-</mat-card>
+<mico-app-detail-public-ip [applicationShortName]="shortName" [applicationVersion]="selectedVersion">
+</mico-app-detail-public-ip>

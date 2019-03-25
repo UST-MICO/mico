@@ -40,6 +40,6 @@ public enum MicoServiceCrawlingOrigin {
     /**
      * Undefined.
      */
-    NOT_DEFINED;
+    NOT_DEFINED
 
 }

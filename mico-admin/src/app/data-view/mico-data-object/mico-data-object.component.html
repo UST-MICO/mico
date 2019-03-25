@@ -3,7 +3,9 @@
     <mat-expansion-panel [disabled]="dataValue == null">
         <mat-expansion-panel-header>
             <mat-panel-title>
-                {{config?.title}}
+                <span matTooltip={{config?.description}}>
+                    {{config?.title}}
+                </span>
             </mat-panel-title>
             <mat-panel-description>
                 <div *ngIf="dataValue == null; else showDescription">

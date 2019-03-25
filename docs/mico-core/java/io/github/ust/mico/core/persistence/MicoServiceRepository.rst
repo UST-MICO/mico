@@ -48,6 +48,12 @@ findAll
 .. java:method:: @Override  List<MicoService> findAll(int depth)
    :outertype: MicoServiceRepository
 
+findAllByApplication
+^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: @Query  List<MicoService> findAllByApplication(String applicationShortName, String applicationVersion)
+   :outertype: MicoServiceRepository
+
 findByShortName
 ^^^^^^^^^^^^^^^
 
@@ -71,4 +77,10 @@ findInterfaceOfServiceByName
    :param serviceInterfaceName:
    :param shortName:
    :param version:
+
+getAllDependeesOfMicoService
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: @Query  List<MicoService> getAllDependeesOfMicoService(String shortName, String version)
+   :outertype: MicoServiceRepository
 

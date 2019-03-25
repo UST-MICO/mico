@@ -22,8 +22,11 @@ import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
 import { Subscription, from } from 'rxjs';
 import { groupBy, mergeMap, toArray, map } from 'rxjs/operators';
-import { MatDialog } from '@angular/material';
+import { MatDialog, MatSnackBar } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
+import { Router } from '@angular/router';
+import { safeUnsubscribe } from '../util/utils';
+import { UtilServiceService } from '../util/util-service.service';
 
 @Component({
     selector: 'mico-app-list',
@@ -36,12 +39,15 @@ export class AppListComponent implements OnInit {
 
     constructor(
         private apiService: ApiService,
-        private dialog: MatDialog
+        private dialog: MatDialog,
+        private snackBar: MatSnackBar,
+        private router: Router,
+        private utilService: UtilServiceService,
     ) { }
 
     applications: Readonly<ApiObject[]>;
 
-    displayedColumns: string[] = ['id', 'name', 'shortName', 'description', 'controls'];
+    displayedColumns: string[] = ['name', 'shortName', 'version', 'description', 'controls'];
 
     ngOnInit() {
         this.getApplications();
@@ -60,7 +66,7 @@ export class AppListComponent implements OnInit {
                     .pipe(
                         groupBy(application => application.shortName),
                         mergeMap(group => group.pipe(toArray())),
-                        map(group => group[0]),
+                        map(group => group[group.length - 1]),
                         toArray()
                     ).subscribe(applicationList => {
                         this.applications = applicationList;
@@ -86,8 +92,15 @@ export class AppListComponent implements OnInit {
         const subDeleteServiceVersions = dialogRef.afterClosed().subscribe(shouldDelete => {
             if (shouldDelete) {
                 this.apiService.deleteAllApplicationVersions(application.shortName).subscribe();
-                subDeleteServiceVersions.unsubscribe();
+                safeUnsubscribe(subDeleteServiceVersions);
             }
         });
+    }
+
+    /**
+     * opens a dialog to create a new application
+     */
+    newApplication() {
+        this.utilService.createNewApplication();
     }
 }

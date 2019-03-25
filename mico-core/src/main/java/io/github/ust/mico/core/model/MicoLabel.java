@@ -19,31 +19,57 @@
 
 package io.github.ust.mico.core.model;
 
-import java.util.Map;
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
+import io.github.ust.mico.core.dto.request.MicoLabelRequestDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * Represents a simple key-value pair label.
+ * A label represented as a simple key-value pair.
  * Necessary since Neo4j does not allow to persist
- * {@link Map} implementations.
+ * properties of composite types.
  *
- * @param <K> the type of the key.
- * @param <V> the type of the value.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class MicoLabel<K, V> {
-    
-    private K key;
-    private V value;
+public class MicoLabel {
+	
+	@Id
+	@GeneratedValue
+	private Long id;
 
+    /**
+     * Key of the label.
+     */
+    private String key;
+
+    /**
+     * Value of the label.
+     */
+    private String value;
+
+
+    // ----------------------
+    // -> Static Creators ---
+    // ----------------------
+    
+    /**
+     * Creates a new {@code MicoLabel} based on a {@code MicoLabelRequestDTO}.
+     * Note that the id will be set to {@code null}.
+     * 
+     * @param labelDto the {@link MicoLabelRequestDTO}.
+     * @return a {@link MicoLabel}.
+     */
+    public static MicoLabel valueOf(MicoLabelRequestDTO labelDto) {
+        return new MicoLabel()
+                .setKey(labelDto.getKey())
+                .setValue(labelDto.getValue());
+    }
+    
 }

@@ -19,25 +19,36 @@
 
 package io.github.ust.mico.core.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import io.github.ust.mico.core.dto.MicoServiceDeploymentInfoDTO;
-import lombok.*;
-import lombok.experimental.Accessors;
-import org.neo4j.ogm.annotation.*;
-
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Relationship;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
+import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import lombok.experimental.Accessors;
 
 /**
- * Represents the information necessary for deploying
- * a {@link MicoApplication}.
+ * Represents the information necessary for deploying a {@link MicoApplication}.
+ * DTO is {@link MicoServiceDeploymentInfoResponseDTO}.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@RelationshipEntity(type = "INCLUDES_SERVICE")
+@NodeEntity
 public class MicoServiceDeploymentInfo {
 
     /**
@@ -45,7 +56,6 @@ public class MicoServiceDeploymentInfo {
      */
     @Id
     @GeneratedValue
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
 
@@ -53,22 +63,12 @@ public class MicoServiceDeploymentInfo {
     // -> Required fields ---
     // ----------------------
 
-    /**
-     * The {@link MicoApplication} that uses a {@link MicoService}
-     * this deployment information refers to.
-     */
-    @JsonBackReference
-    @StartNode
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    private MicoApplication application;
 
     /**
      * The {@link MicoService} this deployment information refers to.
      */
-    @EndNode
+    @Relationship(type = "FOR")
     @ToString.Exclude
-    @EqualsAndHashCode.Exclude
     private MicoService service;
 
 
@@ -82,86 +82,117 @@ public class MicoServiceDeploymentInfo {
     private int replicas = 1;
 
     /**
-     * Minimum number of seconds for which this service should be ready
-     * without any of its containers crashing, for it to be considered available.
-     * Defaults to 0 (considered available as soon as it is ready).
-     */
-    private int minReadySecondsBeforeMarkedAvailable = 0;
-
-    /**
      * Those labels are key-value pairs that are attached to the deployment
-     * of this service. Intended to be used to specify identifying attributes
+     * of this {@link MicoService}. Intended to be used to specify identifying attributes
      * that are meaningful and relevant to users, but do not directly imply
      * semantics to the core system. Labels can be used to organize and to select
      * subsets of objects. Labels can be attached to objects at creation time and
      * subsequently added and modified at any time.
      * Each key must be unique for a given object.
      */
-    private List<MicoLabel<String, String>> labels = new ArrayList<>();
+    @Relationship(type = "HAS")
+    private List<MicoLabel> labels = new ArrayList<>();
+
+    /**
+     * Environment variables as key-value pairs that are attached to the deployment
+     * of this {@link MicoService}. These environment values can be used by the deployed
+     * {@link MicoService} during runtime. This could be useful to pass information to the
+     * {@link MicoService} that is not known during design time or is likely to change.
+     * Example could be an URL to another {@link MicoService} or an external service.
+     */
+    @Relationship(type = "HAS")
+    private List<MicoEnvironmentVariable> environmentVariables = new ArrayList<>();
+
+    /**
+     * Interface connections includes all required information to be able to connect a {@link MicoService}
+     * with {@link MicoServiceInterface MicoServiceInterfaces} of other {@link MicoService MicoServices}.
+     * The backend uses the information to set environment variables so that e.g. the frontend knows
+     * how to connect to the backend.
+     */
+    @Relationship(type = "HAS")
+    private List<MicoInterfaceConnection> interfaceConnections = new ArrayList<>();
 
     /**
      * Indicates whether and when to pull the image.
-     * Defaults to ImagePullPolicy#DEFAULT.
+     * Default image pull policy is {@link ImagePullPolicy#ALWAYS}.
      */
-    private ImagePullPolicy imagePullPolicy = ImagePullPolicy.DEFAULT;
+    private ImagePullPolicy imagePullPolicy = ImagePullPolicy.ALWAYS;
 
     /**
-     * Restart policy for all containers.
-     * Defaults to RestartPolicy#ALWAYS.
+     * Information about the actual Kubernetes resources created by a deployment.
+     * Contains details about the used Kubernetes {@link Deployment} and {@link Service Services}.
      */
-    private RestartPolicy restartPolicy = RestartPolicy.DEFAULT;
-
-
-    /**
-     * Applies the values of all properties of a
-     * {@link MicoServiceDeploymentInfoDTO} to this
-     * {@code MicoServiceDeploymentInfo}.
-     *
-     * @param serviceDeploymentInfoDTO the {@link MicoServiceDeploymentInfoDTO}.
-     * @return this {@link MicoServiceDeploymentInfo} with the values
-     * of the properties of the given {@link MicoServiceDeploymentInfoDTO}.
-     */
-    public MicoServiceDeploymentInfo applyValuesFrom(MicoServiceDeploymentInfoDTO serviceDeploymentInfoDTO) {
-        return setReplicas(serviceDeploymentInfoDTO.getReplicas())
-            .setMinReadySecondsBeforeMarkedAvailable(serviceDeploymentInfoDTO.getMinReadySecondsBeforeMarkedAvailable())
-            .setLabels(serviceDeploymentInfoDTO.getLabels())
-            .setImagePullPolicy(serviceDeploymentInfoDTO.getImagePullPolicy())
-            .setRestartPolicy(serviceDeploymentInfoDTO.getRestartPolicy());
-    }
+    @Relationship(type = "HAS")
+    private KubernetesDeploymentInfo kubernetesDeploymentInfo;
 
 
     /**
      * Enumeration for the different policies specifying
      * when to pull an image.
      */
+    @AllArgsConstructor
     public enum ImagePullPolicy {
 
-        ALWAYS,
-        NEVER,
-        IF_NOT_PRESENT;
+        @JsonProperty("Always")
+        ALWAYS("Always"),
+        @JsonProperty("Never")
+        NEVER("Never"),
+        @JsonProperty("IfNotPresent")
+        IF_NOT_PRESENT("IfNotPresent");
 
-        /**
-         * Default image pull policy is {@link ImagePullPolicy#ALWAYS}.
+        private final String value;
+
+        /* (non-Javadoc)
+         * @see java.lang.Enum#toString()
          */
-        public static ImagePullPolicy DEFAULT = ImagePullPolicy.ALWAYS;
+        @Override
+        public String toString() {
+            return value;
+        }
+    }
 
+    /**
+     * Applies the values of all properties of a
+     * {@code MicoServiceDeploymentInfoRequestDTO} to this
+     * {@code MicoServiceDeploymentInfo}. Note that the id
+     * will not be affected.
+     *
+     * @param serviceDeploymentInfoDto the {@link MicoServiceDeploymentInfoRequestDTO}.
+     * @return this {@link MicoServiceDeploymentInfo} with the values
+     * of the properties of the given {@link MicoServiceDeploymentInfoRequestDTO}.
+     */
+    public MicoServiceDeploymentInfo applyValuesFrom(MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDto) {
+        return setReplicas(serviceDeploymentInfoDto.getReplicas())
+            .setLabels(serviceDeploymentInfoDto.getLabels().stream().map(MicoLabel::valueOf).collect(Collectors.toList()))
+            .setEnvironmentVariables(serviceDeploymentInfoDto.getEnvironmentVariables().stream().map(MicoEnvironmentVariable::valueOf).collect(Collectors.toList()))
+            .setInterfaceConnections(serviceDeploymentInfoDto.getInterfaceConnections().stream().map(MicoInterfaceConnection::valueOf).collect(Collectors.toList()))
+            .setImagePullPolicy(serviceDeploymentInfoDto.getImagePullPolicy());
     }
 
 
+    // ----------------------
+    // -> Static creators ---
+    // ----------------------
+
     /**
-     * Enumeration for all supported restart policies.
+     * Applies the values of all properties of a
+     * {@code MicoServiceDeploymentInfoResponseDTO} to this
+     * {@code MicoServiceDeploymentInfo}. Note that the id
+     * will not be affected.
+     *
+     * @param serviceDeploymentInfoDto the {@link MicoServiceDeploymentInfoResponseDTO}.
+     * @return this {@link MicoServiceDeploymentInfo} with the values
+     * of the properties of the given {@link MicoServiceDeploymentInfoResponseDTO}.
      */
-    public enum RestartPolicy {
-
-        ALWAYS,
-        ON_FAILURE,
-        NEVER;
-
-        /**
-         * Default restart policy is {@link RestartPolicy#ALWAYS}.
-         */
-        public static RestartPolicy DEFAULT = RestartPolicy.ALWAYS;
-
+    public MicoServiceDeploymentInfo applyValuesFrom(MicoServiceDeploymentInfoResponseDTO serviceDeploymentInfoDto) {
+    	MicoServiceDeploymentInfo result = applyValuesFrom((MicoServiceDeploymentInfoRequestDTO) serviceDeploymentInfoDto);
+    	
+    	// Kubernetes deployment info may be null (not initialized)
+    	if (serviceDeploymentInfoDto.getKubernetesDeploymentInfo() != null) {
+    		result.setKubernetesDeploymentInfo(KubernetesDeploymentInfo.valueOf(serviceDeploymentInfoDto.getKubernetesDeploymentInfo()));
+    	}
+        
+        return result;
     }
 
 }

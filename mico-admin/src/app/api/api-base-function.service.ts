@@ -34,6 +34,11 @@ export class ApiBaseFunctionService {
 
     constructor(private http: Http, private snackBar: MatSnackBar) { }
 
+    /**
+     * extracts the url from a given object.
+     *
+     * @param url url to be extracted
+     */
     private extractUrl(url: string | LinkObject | ApiLinksObject | ApiObject): string {
         if (typeof url === 'string' || url instanceof String) {
             return this.prepareRelativeUrl(url as string);
@@ -50,20 +55,33 @@ export class ApiBaseFunctionService {
         return this.prepareRelativeUrl(url as string);
     }
 
+    /**
+     * takes an url and transforms a relative url to an absolute url.
+     *
+     * @param url url to be prepared
+     */
     private prepareRelativeUrl(url: string): string {
         if (url.startsWith('http')) {
             return url;
         }
+
+        // absolute url prefix
         let url_string: string = environment.settings.api;
+
+        // remove tailing '/'
         if (url_string.endsWith('/')) {
             url_string = url_string.slice(0, url_string.length - 1);
         }
-        // specific exception for swagger json (does not work with tailing /)
+
+        // relative part of the url
+        // append tailing '/', specific exception for swagger json (does not work with tailing /)
         if (!url.endsWith('/') && !url.endsWith('api-docs')) {
             if ((url.lastIndexOf('.') < 0) || (url.lastIndexOf('/') > url.lastIndexOf('.'))) {
                 url = url + '/';
             }
         }
+
+        // combine absolute and relative parts
         if (url.startsWith('/')) {
             return url_string + url;
         } else {
@@ -71,6 +89,12 @@ export class ApiBaseFunctionService {
         }
     }
 
+    /**
+     * Creates a request header
+     *
+     * @param token authorization token
+     * @param mimetypeJSON application/json, default: true
+     */
     private headers(token?: string, mimetypeJSON: boolean = true): RequestOptions {
         const headers = new Headers();
         if (mimetypeJSON) {
@@ -112,6 +136,13 @@ export class ApiBaseFunctionService {
         return throwError(error);
     }
 
+    /**
+     * generic get method
+     *
+     * @param url url of the requested endpoint
+     * @param token authorization token (optional)
+     * @param params option parameters (optional)
+     */
     get<T>(url: string | LinkObject | ApiLinksObject | ApiObject, token?: string, params?): Observable<T> {
         url = this.extractUrl(url);
 
@@ -129,7 +160,14 @@ export class ApiBaseFunctionService {
         return request;
     }
 
-
+    /**
+     * generic post method
+     *
+     * @param url url of the requestes endpoint
+     * @param data payload for the body
+     * @param token authorization token (optional)
+     * @param isJson specifiy if the payload is json, default: true
+     */
     post<T>(url: string | LinkObject | ApiLinksObject | ApiObject, data, token?: string, isJson = true): Observable<T> {
         url = this.extractUrl(url);
         let tempData = data;
@@ -153,6 +191,14 @@ export class ApiBaseFunctionService {
                 }));
     }
 
+    /**
+     * generic put method
+     *
+     * @param url url of the requested endpoint
+     * @param data payload for the body
+     * @param token authorization token (optional)
+     * @param isJson specifiy if the payload is json, default: true
+     */
     put<T>(url: string | LinkObject | ApiLinksObject | ApiObject, data, token?: string, isJson = true): Observable<T> {
         url = this.extractUrl(url);
         let tempData = data;
@@ -167,6 +213,12 @@ export class ApiBaseFunctionService {
                 }));
     }
 
+    /**
+     * generic delete method
+     *
+     * @param url url of the requested endpoint
+     * @param token authorization token (optional)
+     */
     delete<T>(url: string | LinkObject | ApiLinksObject | ApiObject, token?: string): Observable<T> {
         url = this.extractUrl(url);
 
@@ -175,8 +227,9 @@ export class ApiBaseFunctionService {
                 catchError((error) => this.showError(error, 'DELETE')),
                 map((res: Response) => {
 
+                    // provide user feed back
                     this.snackBar.open('Element deleted successfully.', 'Ok', {
-                        duration: 5,
+                        duration: 5000,
                     });
 
                     if (res.hasOwnProperty('_body')) {

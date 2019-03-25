@@ -25,7 +25,9 @@ import { ApiObject } from '../api/apiobject';
 import { Subscription } from 'rxjs';
 import { versionComparator } from '../api/semantic-version';
 import { CreateNextVersionComponent } from '../dialogs/create-next-version/create-next-version.component';
-import { MatDialog } from '@angular/material';
+import { MatDialog, MatSnackBar } from '@angular/material';
+import { safeUnsubscribe } from '../util/utils';
+import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 
 @Component({
     selector: 'mico-app-detail',
@@ -39,6 +41,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         private route: ActivatedRoute,
         private router: Router,
         private dialog: MatDialog,
+        private snackBar: MatSnackBar,
     ) { }
 
     subRouteParams: Subscription;
@@ -55,7 +58,6 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     shortName: string;
     selectedVersion;
     allVersions;
-    publicIps: string[] = [];
 
     // modifiable application object
     applicationData;
@@ -117,61 +119,30 @@ export class AppDetailComponent implements OnInit, OnDestroy {
      */
     subscribeApplication(version: string) {
 
-        this.selectedVersion = version;
-
-        if (this.subApplication != null) {
-            this.subApplication.unsubscribe();
-        }
-
+        safeUnsubscribe(this.subApplication);
         // get the application
-        this.subApplication = this.apiService.getApplication(this.shortName, version).subscribe(val => {
-            this.application = val;
-
-            // get the public ips
-            this.application.services.forEach(service => {
-
-                if (service.serviceInterfaces != null) {
-
-                    // assumption: one public ip per interface
-                    service.serviceInterfaces.forEach(micoInterface => {
-                        this.subPublicIps.push(this.apiService
-                            .getServiceInterfacePublicIp(service.shortName, service.version, micoInterface.serviceInterfaceName)
-                            .subscribe(listOfPublicIps => {
-                                const tempPublicIps = [];
-                                listOfPublicIps.forEach(publicIp => {
-                                    tempPublicIps.push(publicIp);
-                                });
-                                this.publicIps = tempPublicIps;
-                            }));
-                    });
-                }
+        this.subApplication = this.apiService.getApplication(this.shortName, version)
+            .subscribe(val => {
+                this.application = val;
+                this.selectedVersion = version;
             });
-        });
     }
 
     /**
      * unsubscribe from all subscriptions
      */
     ngOnDestroy() {
-        this.unsubscribe(this.subRouteParams);
-        this.unsubscribe(this.subApplicationVersions);
-        this.unsubscribe(this.subDeploy);
+        safeUnsubscribe(this.subRouteParams);
+        safeUnsubscribe(this.subApplicationVersions);
+        safeUnsubscribe(this.subDeploy);
         this.subPublicIps.forEach(subscription => {
-            this.unsubscribe(subscription);
+            safeUnsubscribe(subscription);
         });
-        this.unsubscribe(this.subApplication);
-        this.unsubscribe(this.subServiceDependency);
-        this.unsubscribe(this.subCreateNextVersion);
+        safeUnsubscribe(this.subApplication);
+        safeUnsubscribe(this.subServiceDependency);
+        safeUnsubscribe(this.subCreateNextVersion);
     }
 
-    /**
-     * abstract unsubscribe routine wiht null check
-     */
-    unsubscribe(subscription: Subscription) {
-        if (subscription != null) {
-            subscription.unsubscribe();
-        }
-    }
 
     /**
      * calls the deploy endpoint
@@ -183,6 +154,27 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                 // TODO wait for propper return value from deploy endpoint
                 // add some deployment monitoring (e.g. state)
                 console.log(val);
+                this.snackBar.open('Application deployment initialized.', 'Ok', {
+                    duration: 5000,
+                });
+
+            });
+    }
+
+    /**
+     * calls the undeploy endpoint
+     * uses: POST application/{shortName}/{version}/undeploy
+     */
+    undeployApplication() {
+        this.subDeploy = this.apiService.postApplicationUndeployCommand(this.application.shortName, this.application.version)
+            .subscribe(val => {
+                // TODO wait for propper return value from deploy endpoint
+                // add some deployment monitoring (e.g. state)
+                console.log(val);
+                this.snackBar.open('Application undeployment initialized.', 'Ok', {
+                    duration: 5000,
+                });
+
             });
     }
 
@@ -231,24 +223,16 @@ export class AppDetailComponent implements OnInit, OnDestroy {
             }
         });
 
-        if (this.subCreateNextVersion != null) {
-            this.unsubscribe(this.subCreateNextVersion);
-        }
+        safeUnsubscribe(this.subCreateNextVersion);
+
 
         // handle dialog result
         this.subCreateNextVersion = dialogRef.afterClosed().subscribe(nextVersion => {
 
             if (nextVersion) {
-
-                // deep copy of the application (will be done in the backend soon)
-                const nextApplication = JSON.parse(JSON.stringify(this.application));
-                nextApplication.version = nextVersion;
-                nextApplication.id = null;
-
-                this.apiService.postApplication(nextApplication).subscribe(val => {
+                this.apiService.promoteApplication(this.application.shortName, this.application.version, nextVersion).subscribe(val => {
                     this.updateVersion(null);
                 });
-
             }
         });
     }
@@ -257,15 +241,29 @@ export class AppDetailComponent implements OnInit, OnDestroy {
      * removes the current application version
      */
     deleteCurrentVersion() {
-        this.apiService.deleteApplication(this.application.shortName, this.selectedVersion)
-            .subscribe(val => {
 
-                // stay on the application page if there exists another version
-                if (this.allVersions.length > 0) {
-                    this.updateVersion(null);
-                } else {
-                    this.router.navigate(['../app-list']);
-                }
-            });
+        const dialogRef = this.dialog.open(YesNoDialogComponent, {
+            data: {
+                object: { name: this.application.name, shortName: this.shortName, version: this.selectedVersion },
+                question: 'deleteApplication'
+            }
+        });
+
+        const subDeleteDependency = dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+
+                this.apiService.deleteApplication(this.application.shortName, this.selectedVersion)
+                    .subscribe(val => {
+
+                        // stay on the application page if there exists another version
+                        if (this.allVersions.length > 0) {
+                            this.updateVersion(null);
+                        } else {
+                            this.router.navigate(['../app-list']);
+                        }
+                    });
+                safeUnsubscribe(subDeleteDependency);
+            }
+        });
     }
 }

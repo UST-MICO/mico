@@ -3,38 +3,21 @@
     <div class="flex-grow-1 ma2 ml0 flex flex-column">
 
         <div class="relative w-100">
+            <!-- display view -->
             <ng-container *ngIf="!edit">
-                <!-- display version -->
-                <mico-data [modelUrl]="'remote/MicoService'" [startData]="serviceData" [isBlacklist]="true"
+                <mico-data [modelUrl]="'remote/MicoServiceResponseDTO'" [startData]="serviceData" [isBlacklist]="true"
                     [filter]="serviceOverviewFilter"></mico-data>
-
-                <!-- TODO hard coded information - not yet part of the domain model-->
-                <!-- TODO some elements (like) tags are in the domain model now. Check as soon as the modelURLs are loaded dynamically-->
-                <mat-list dense>
-                    <mat-list-item class="mt2">
-                        <b>Info</b>
-                    </mat-list-item>
-                    <mat-divider></mat-divider>
-                    <mat-list-item>
-                        Type: service
-                    </mat-list-item>
-                    <mat-list-item>
-                        Tags:
-                        <mat-chip-list class="ma1">
-                            <mat-chip>awesome</mat-chip>
-                            <mat-chip>myService</mat-chip>
-                        </mat-chip-list>
-                    </mat-list-item>
-                </mat-list>
+                <!-- EndOf display view-->
             </ng-container>
-            <!-- EndOf display version-->
 
-            <!-- editable version -->
-
+            <!-- edit view (dynamic form for mico service) -->
             <ng-container *ngIf="edit">
-                <mico-form [modelUrl]="'remote/MicoService'"
+                <mico-form [modelUrl]="'remote/MicoServiceRequestDTO'"
                     [filter]="['predecessor', 'dependencies', 'serviceInterfaces']" [isBlacklist]="true"
-                    (data)="serviceData = $event" [startData]="serviceData"></mico-form>
+                    (data)="serviceData = $event" [startData]="serviceData">
+                </mico-form>
+
+                <!-- Buttons (save/cancel)-->
                 <div class="ma1 pa1">
                     <span class="ma1">
                         <button mat-raised-button (click)="save()">Save</button>
@@ -44,20 +27,17 @@
                     </span>
                 </div>
             </ng-container>
-            <!-- EndOf editable version-->
+            <!-- EndOf edit view-->
         </div>
 
 
     </div>
 
-    <!-- Controling Grid-->
-    <div class="w-30 ma2 flex-column">
+    <!-- Right Hand Side Control Grid-->
+    <div class="w-30 ma1 flex-column">
 
+        <!-- Buttons -->
         <div class="w-100" style="display: flex; justify-content: flex-end">
-            <mat-button-toggle class="mt1 mb2 mr2 inline-flex items-center" (click)="deleteService()">
-                <span class="mr2">Delete</span>
-                <mat-icon>delete</mat-icon>
-            </mat-button-toggle>
             <mat-button-toggle class="mt1 mb2 inline-flex items-center" value="edit" [checked]="edit"
                 (change)="edit = !edit">
                 <span class="mr2">Edit</span>
@@ -70,6 +50,8 @@
             <mat-card>
                 <mat-card-content>
                     <mat-action-list>
+
+                        <!-- SERVICE INTERFACES (Provides) -->
                         <mat-divider></mat-divider>
                         <div class="flex" (click)="addProvides()">
                             <div class="flex-grow-1">
@@ -84,7 +66,7 @@
                             </div>
                         </div>
                         <mat-divider></mat-divider>
-                        <!-- Service Interfaces -->
+                        <!-- list of service interfaces -->
                         <div *ngFor="let interface of serviceInterfaces">
                             <div class="flex">
                                 <div class="flex-grow-1 pointer" (click)="editInterface(interface)">
@@ -94,9 +76,11 @@
                                                 <span class="mr2"><b>Name:</b> {{interface.serviceInterfaceName}}</span>
                                                 <span class="mr2"><b>DNS:</b> {{interface.publicDns}}</span>
                                                 <span class="mr2"><b>Protocol:</b> {{interface.protocol}}</span>
-                                                <span class="mr2"><b>Transport Protocol:</b> {{interface.transportProtocol}}</span>
+                                                <span class="mr2"><b>Transport Protocol:</b>
+                                                    {{interface.transportProtocol}}</span>
                                             </div>
-                                            <p class="mt0 mb1" [hidden]="interface.description == null || interface.description == ''">
+                                            <p class="mt0 mb1"
+                                                [hidden]="interface.description == null || interface.description == ''">
                                                 {{interface.description}}
                                             </p>
                                             <div class="flex">
@@ -104,18 +88,23 @@
                                                 <div class="ml2">
                                                     <p class="mt0 mb1" *ngFor="let port of interface.ports">
                                                         <b>{{port.type}}</b>
-                                                        <span class="ml1">{{port.targetPort}}</span>
-                                                        <span class="ml1">(internal: {{port.port}})</span>
+                                                        <span class="ml1">{{port.port}}</span>
+                                                        <span class="ml1">(internal: {{port.targetPort}})</span>
                                                     </p>
                                                 </div>
                                             </div>
                                         </div>
                                     </mat-list-item.large>
                                 </div>
-                                <div class="w-20">
-                                    <mat-list-item>
+                                <div class="w-20 flex-column">
+                                    <mat-list-item class="w-100">
                                         <mat-icon (click)="deleteServiceInterface(interface.serviceInterfaceName)">
                                             delete</mat-icon>
+                                    </mat-list-item>
+                                    <mat-list-item class="w-100">
+                                        <mat-icon (click)="editInterface(interface)">
+                                            settings
+                                        </mat-icon>
                                     </mat-list-item>
                                 </div>
                             </div>
@@ -142,8 +131,7 @@
                                 <div class="flex-grow-1">
                                     <mat-list-item
                                         [routerLink]="['/service-detail/', dependee.shortName, dependee.version]">
-                                        <span mat-line
-                                            [routerLink]="['/service-detail/', dependee.shortName, dependee.version]">{{dependee?.name}}</span>
+                                        <span mat-line>{{dependee?.name}}</span>
                                     </mat-list-item>
                                 </div>
                                 <div class="w-20">
@@ -171,9 +159,7 @@
                                 <div class="flex-grow-1">
                                     <mat-list-item
                                         [routerLink]="['/service-detail/', depender.shortName, depender.version]">
-                                        <span mat-line
-                                            [routerLink]="['/service-detail/', depender.shortName, depender.version]">
-                                            {{depender.name}}</span>
+                                        <span mat-line>{{depender.name}}</span>
                                     </mat-list-item>
                                 </div>
                             </div>
