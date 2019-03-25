@@ -29,10 +29,10 @@ import lombok.experimental.Accessors;
  * Represents the source of a volume to mount.
  * Only one of its members may be specified.
  */
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @Data
 @NoArgsConstructor
 @Accessors(chain = true)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class VolumeSource {
 
     // Not implemented yet.
