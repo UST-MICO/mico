@@ -22,9 +22,6 @@ package io.github.ust.mico.core.dto.response.status;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
@@ -37,14 +34,12 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for the status information of a {@link MicoApplication}
- * intended to use with responses only.
+ * DTO for the status information of a {@link MicoApplication} intended to use with responses only.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonInclude(Include.NON_NULL)
 public class MicoApplicationStatusResponseDTO {
 
     /**
@@ -111,5 +106,4 @@ public class MicoApplicationStatusResponseDTO {
         }
     )})
     private int totalNumberOfPods;
-    
 }

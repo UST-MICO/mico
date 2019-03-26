@@ -19,8 +19,6 @@
 
 package io.github.ust.mico.core.dto.response.status;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.swagger.annotations.ApiModelProperty;
@@ -32,14 +30,13 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for the status information of a {@link MicoServiceInterface}
- * that is mapped to a Kubernetes Service intended to use with responses only.
+ * DTO for the status information of a {@link MicoServiceInterface} that is mapped to a Kubernetes Service intended to
+ * use with responses only.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonInclude(Include.NON_NULL)
 public class MicoServiceInterfaceStatusResponseDTO {
 
     /**

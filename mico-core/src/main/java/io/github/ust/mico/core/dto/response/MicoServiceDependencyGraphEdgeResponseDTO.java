@@ -19,8 +19,6 @@
 
 package io.github.ust.mico.core.dto.response;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoService;
 import io.swagger.annotations.ApiModelProperty;
@@ -38,7 +36,6 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonInclude(Include.NON_NULL)
 public class MicoServiceDependencyGraphEdgeResponseDTO {
 
     /**
@@ -94,8 +91,8 @@ public class MicoServiceDependencyGraphEdgeResponseDTO {
     private String targetVersion;
 
     /**
-     * Creates an instance of {@code MicoServiceDependencyGraphEdgeResponseDTO} based on a
-     * source {@code MicoService} and a target {@code MicoService}.
+     * Creates an instance of {@code MicoServiceDependencyGraphEdgeResponseDTO} based on a source {@code MicoService}
+     * and a target {@code MicoService}.
      *
      * @param source the source {@link MicoService}.
      * @param target the target {@link MicoService}.
@@ -106,5 +103,4 @@ public class MicoServiceDependencyGraphEdgeResponseDTO {
         this.targetShortName = target.getShortName();
         this.targetVersion = target.getVersion();
     }
-
 }
