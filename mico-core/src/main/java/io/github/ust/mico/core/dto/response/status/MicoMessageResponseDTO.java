@@ -17,70 +17,81 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.dto.response;
+package io.github.ust.mico.core.dto.response.status;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
-import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceCrawlingOrigin;
-import io.github.ust.mico.core.model.MicoServiceDependency;
-import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.model.MicoMessage;
+import io.github.ust.mico.core.model.MicoMessage.Type;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for a {@link MicoService} intended for use with responses only. Note that the {@link MicoServiceDependency
- * MicoServiceDependencies} and {@link MicoServiceInterface MicoServiceInterfaces} are not included.
+ * DTO for a {@link MicoMessage} intended to use with responses only.
  */
 @Data
-@ToString(callSuper = true)
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-public class MicoServiceResponseDTO extends MicoServiceRequestDTO {
-
+@JsonInclude(Include.NON_NULL)
+public class MicoMessageResponseDTO {
+	
     // ----------------------
     // -> Required Fields ---
     // ----------------------
-
+	
     /**
-     * Indicates where this service originates from, e.g., GitHub (downloaded and built by MICO) or DockerHub
-     * (ready-to-use image). {@code null} is ignored.
+     * The actual message content.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Service Crawling Origin"),
-            @ExtensionProperty(name = "default", value = "NOT_DEFINED"),
+            @ExtensionProperty(name = "title", value = "Content"),
             @ExtensionProperty(name = "readOnly", value = "true"),
-            @ExtensionProperty(name = "x-order", value = "100"),
-            @ExtensionProperty(name = "description", value = "Indicates where this service originates from.")
+            @ExtensionProperty(name = "x-order", value = "10"),
+            @ExtensionProperty(name = "description", value = "The actual message content.")
         }
     )})
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private MicoServiceCrawlingOrigin serviceCrawlingOrigin = MicoServiceCrawlingOrigin.NOT_DEFINED;
-
-
+    private String content;
+    
+    /**
+     * The {@link Type} of the message.
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Type"),
+            @ExtensionProperty(name = "readOnly", value = "true"),
+            @ExtensionProperty(name = "x-order", value = "20"),
+            @ExtensionProperty(name = "description", value = "The type of the message.")
+        }
+    )})
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private Type type;
+    
+    
     // -------------------
     // -> Constructors ---
     // -------------------
-
+   
     /**
-     * Creates an instance of {@code MicoServiceResponseDTO} based on a {@code MicoService}.
-     *
-     * @param service the {@link MicoService}.
+     * Creates an instance of {@code MicoMessageResponseDTO} based on a
+     * {@code MicoMessage}.
+     *  
+     * @param message the {@link MicoMessage message}.
      */
-    public MicoServiceResponseDTO(MicoService service) {
-        super(service);
-        this.serviceCrawlingOrigin = service.getServiceCrawlingOrigin();
-    }
+	public MicoMessageResponseDTO(MicoMessage message) {
+		this.content = message.getContent();
+		this.type = message.getType();
+	}
+    
 }

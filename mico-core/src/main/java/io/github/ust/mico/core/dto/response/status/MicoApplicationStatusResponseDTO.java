@@ -106,4 +106,17 @@ public class MicoApplicationStatusResponseDTO {
         }
     )})
     private int totalNumberOfPods;
+
+    /**
+     * The application deployment status with some optional messages.
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "The Application Deployment Status"),
+            @ExtensionProperty(name = "x-order", value = "60"),
+            @ExtensionProperty(name = "description", value = "The application deployment status with some optional messages.")
+        }
+    )})
+    private MicoApplicationDeploymentStatusResponseDTO applicationDeploymentStatusResponseDTO;
 }
