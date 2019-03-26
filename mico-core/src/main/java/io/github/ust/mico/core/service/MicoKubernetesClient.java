@@ -774,6 +774,46 @@ public class MicoKubernetesClient {
     }
     
     /**
+     * Performs a scale out of a Kubernetes deployment based on some service
+     * deployment information by a given number of replicas to add.
+     * 
+     * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.
+     * @param numberOfReplicas the number of replicas to add.
+     * @return the Kubernetes {@link Deployment}.
+     * @throws KubernetesResourceException 
+     */
+    public Optional<Deployment> scaleOut(MicoServiceDeploymentInfo serviceDeploymentInfo, int numberOfReplicas) throws KubernetesResourceException {
+    	int currentNumberOfReplicas = getSpecifiedReplicas(serviceDeploymentInfo);
+    	scale(serviceDeploymentInfo, currentNumberOfReplicas + numberOfReplicas);
+    	return getDeploymentOfMicoService(serviceDeploymentInfo.getService());
+    }
+    
+    /**
+     * Performs a scale in of a Kubernetes deployment based on some service
+     * deployment information by a given number of replicas to remove.
+     * <p>
+     * Note that the Kubernetes deployment will be undeployed if and only if
+     * the given number of replicas is less than or equal to 0.
+     * 
+     * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.
+     * @param numberOfReplicas the number of replicas to remove.
+     * @param the Kubernetes {@link Deployment} or an empty {@link Optional}
+     * 		  if the Kubernetes deployment has been undeployed.
+     * @throws KubernetesResourceException 
+     */
+    public Optional<Deployment> scaleIn(MicoServiceDeploymentInfo serviceDeploymentInfo, int numberOfReplicas) throws KubernetesResourceException {
+    	int currentNumberOfReplicas = getSpecifiedReplicas(serviceDeploymentInfo);
+    	int updatedNumberOfReplicas = currentNumberOfReplicas - Math.abs(numberOfReplicas);
+    	if (updatedNumberOfReplicas <= 0) {
+    		undeploy(serviceDeploymentInfo);
+    		return Optional.empty();
+    	} else {
+    		scale(serviceDeploymentInfo, updatedNumberOfReplicas);
+    		return getDeploymentOfMicoService(serviceDeploymentInfo.getService());    		
+    	}
+    }
+    
+    /**
      * Scales a Kubernetes deployment for a {@code MicoService} to
      * a given number of replicas. If the specified number of replicas
      * is {@code 0}, the {@code MicoService} will be undeployed.
@@ -782,7 +822,7 @@ public class MicoKubernetesClient {
      * @param scaleToNumberOfReplicas the updated number of requested replicas
      * 		  for the Kubernetes deployment for the {@link MicoService}.
      */
-    private void scale(MicoServiceDeploymentInfo serviceDeploymentInfo, int scaleToNumberOfReplicas) {
+    public void scale(MicoServiceDeploymentInfo serviceDeploymentInfo, int scaleToNumberOfReplicas) {
     	if (scaleToNumberOfReplicas < 0) {
     		log.warn("Illegal number of requested replicas, no scaling action will be performed.");
     		throw new IllegalArgumentException("Number of replicas must never be negative!");
@@ -802,6 +842,22 @@ public class MicoKubernetesClient {
                 .withName(serviceDeploymentInfo.getKubernetesDeploymentInfo().getDeploymentName())
                 .scale(scaleToNumberOfReplicas);
         }
+    }
+    
+    /**
+     * Retrieves the specified number of replicas for a Kubernetes deployment
+     * based on some service deployment information.
+     * 
+     * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.
+     * @return the number of replicas as {@code int}.
+     */
+    private int getSpecifiedReplicas(MicoServiceDeploymentInfo serviceDeploymentInfo) {
+    	return kubernetesClient
+    		.apps()
+    		.deployments()
+    		.inNamespace(serviceDeploymentInfo.getKubernetesDeploymentInfo().getNamespace())
+    		.withName(serviceDeploymentInfo.getKubernetesDeploymentInfo().getDeploymentName())
+    		.get().getSpec().getReplicas();
     }
     
     /**
