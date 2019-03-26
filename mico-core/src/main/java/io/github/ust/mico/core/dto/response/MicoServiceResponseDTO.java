@@ -19,24 +19,26 @@
 
 package io.github.ust.mico.core.dto.response;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
-import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceCrawlingOrigin;
+import io.github.ust.mico.core.model.MicoServiceDependency;
+import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for a {@link MicoService} intended for use with responses only.
- * Note that the {@link MicoServiceDependency MicoServiceDependencies}
- * and {@link MicoServiceInterface MicoServiceInterfaces}
- * are not included.
+ * DTO for a {@link MicoService} intended for use with responses only. Note that the {@link MicoServiceDependency
+ * MicoServiceDependencies} and {@link MicoServiceInterface MicoServiceInterfaces} are not included.
  */
 @Data
 @ToString(callSuper = true)
@@ -44,18 +46,15 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonInclude(Include.NON_NULL)
 public class MicoServiceResponseDTO extends MicoServiceRequestDTO {
-	
+
     // ----------------------
     // -> Required Fields ---
     // ----------------------
 
     /**
-     * Indicates where this service originates from, e.g.,
-     * GitHub (downloaded and built by MICO) or DockerHub
-     * (ready-to-use image).
-     * {@code null} is ignored.
+     * Indicates where this service originates from, e.g., GitHub (downloaded and built by MICO) or DockerHub
+     * (ready-to-use image). {@code null} is ignored.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -69,21 +68,19 @@ public class MicoServiceResponseDTO extends MicoServiceRequestDTO {
     )})
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private MicoServiceCrawlingOrigin serviceCrawlingOrigin = MicoServiceCrawlingOrigin.NOT_DEFINED;
-    
-    
+
+
     // -------------------
     // -> Constructors ---
     // -------------------
-    
-    /**
-   	 * Creates an instance of {@code MicoServiceResponseDTO} based on a
-   	 * {@code MicoService}.
-   	 * 
-   	 * @param service the {@link MicoService}.
-   	 */
-	public MicoServiceResponseDTO(MicoService service) {
-		super(service);
-		this.serviceCrawlingOrigin = service.getServiceCrawlingOrigin();
-	}
 
+    /**
+     * Creates an instance of {@code MicoServiceResponseDTO} based on a {@code MicoService}.
+     *
+     * @param service the {@link MicoService}.
+     */
+    public MicoServiceResponseDTO(MicoService service) {
+        super(service);
+        this.serviceCrawlingOrigin = service.getServiceCrawlingOrigin();
+    }
 }

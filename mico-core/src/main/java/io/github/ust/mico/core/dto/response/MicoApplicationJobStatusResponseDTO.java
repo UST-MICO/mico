@@ -18,10 +18,11 @@
  */
 package io.github.ust.mico.core.dto.response;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoApplicationJobStatus;
@@ -34,10 +35,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
 /**
  * DTO for a {@link MicoApplicationJobStatus} intended to use with responses only.
  */
@@ -45,48 +42,46 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonInclude(Include.NON_NULL)
 public class MicoApplicationJobStatusResponseDTO {
 
-	/**
-	 * The aggregated status of jobs for a {@link MicoApplication} (read-only).
-	 */
-	@ApiModelProperty(extensions = {
-	    @Extension(name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION, properties = {
-	        @ExtensionProperty(name = "title", value = "Status"), @ExtensionProperty(name = "x-order", value = "10"),
-	        @ExtensionProperty(name = "readOnly", value = "true"),
-	        @ExtensionProperty(name = "description", value = "The aggregated status of jobs for an application.")
-	    })
-	})
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	private MicoServiceBackgroundJob.Status status;
+    /**
+     * The aggregated status of jobs for a {@link MicoApplication} (read-only).
+     */
+    @ApiModelProperty(extensions = {
+        @Extension(name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION, properties = {
+            @ExtensionProperty(name = "title", value = "Status"), @ExtensionProperty(name = "x-order", value = "10"),
+            @ExtensionProperty(name = "readOnly", value = "true"),
+            @ExtensionProperty(name = "description", value = "The aggregated status of jobs for an application.")
+        })
+    })
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private MicoServiceBackgroundJob.Status status;
 
-	/**
-	 * The list of jobs for a {@link MicoApplication} (read-only).
-	 */
-	@ApiModelProperty(extensions = {
-	    @Extension(name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION, properties = {
-	        @ExtensionProperty(name = "title", value = "List of Jobs"),
-	        @ExtensionProperty(name = "x-order", value = "20"), @ExtensionProperty(name = "readOnly", value = "true"),
-	        @ExtensionProperty(name = "description", value = "The list of jobs for an application.")
-	    })
-	})
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	private List<MicoServiceBackgroundJobResponseDTO> jobs = new ArrayList<>();
-    
-    
+    /**
+     * The list of jobs for a {@link MicoApplication} (read-only).
+     */
+    @ApiModelProperty(extensions = {
+        @Extension(name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION, properties = {
+            @ExtensionProperty(name = "title", value = "List of Jobs"),
+            @ExtensionProperty(name = "x-order", value = "20"), @ExtensionProperty(name = "readOnly", value = "true"),
+            @ExtensionProperty(name = "description", value = "The list of jobs for an application.")
+        })
+    })
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private List<MicoServiceBackgroundJobResponseDTO> jobs = new ArrayList<>();
+
+
     // -------------------
     // -> Constructors ---
     // -------------------
-   
-	/**
-	 * Creates a {@code MicoApplicationJobStatusDTO} based on a
-	 * {@link MicoApplicationJobStatus}.
-	 *
-	 * @param applicationJobStatus the {@link MicoApplicationJobStatus}.
-	 */
-	public MicoApplicationJobStatusResponseDTO(MicoApplicationJobStatus applicationJobStatus) {
-		this.status = applicationJobStatus.getStatus();
-		this.jobs = applicationJobStatus.getJobs().stream().map(MicoServiceBackgroundJobResponseDTO::new).collect(Collectors.toList());
-	}
+
+    /**
+     * Creates a {@code MicoApplicationJobStatusDTO} based on a {@link MicoApplicationJobStatus}.
+     *
+     * @param applicationJobStatus the {@link MicoApplicationJobStatus}.
+     */
+    public MicoApplicationJobStatusResponseDTO(MicoApplicationJobStatus applicationJobStatus) {
+        this.status = applicationJobStatus.getStatus();
+        this.jobs = applicationJobStatus.getJobs().stream().map(MicoServiceBackgroundJobResponseDTO::new).collect(Collectors.toList());
+    }
 }

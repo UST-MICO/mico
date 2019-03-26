@@ -21,10 +21,7 @@ package io.github.ust.mico.core.dto.response;
 
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
@@ -33,7 +30,11 @@ import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 
 /**
@@ -45,13 +46,11 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonInclude(Include.NON_NULL)
 public class MicoServiceDeploymentInfoResponseDTO extends MicoServiceDeploymentInfoRequestDTO {
-	
+
     /**
-     * Information about the actual Kubernetes resources created by a deployment.
-     * Contains details about the used Kubernetes {@link Deployment} and {@link Service Services}.
-     * Is read only.
+     * Information about the actual Kubernetes resources created by a deployment. Contains details about the used
+     * Kubernetes {@link Deployment} and {@link Service Services}. Is read only.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -66,29 +65,29 @@ public class MicoServiceDeploymentInfoResponseDTO extends MicoServiceDeploymentI
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private KubernetesDeploymentInfoResponseDTO kubernetesDeploymentInfo;
 
-	
+
     // -------------------
     // -> Constructors ---
     // -------------------
-	
-	/**
-     * Creates an instance of {@code MicoServiceDeploymentInfoResponseDTO} based on a
-     * {@code MicoServiceDeploymentInfo}.
-     * 
+
+    /**
+     * Creates an instance of {@code MicoServiceDeploymentInfoResponseDTO} based on a {@code
+     * MicoServiceDeploymentInfo}.
+     *
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.
      */
-	public MicoServiceDeploymentInfoResponseDTO(MicoServiceDeploymentInfo serviceDeploymentInfo) {
-		super(serviceDeploymentInfo);
-		
-		// Labels need to be set explicitly to have a list of MicoLabelResponseDTOs
-		// and not a list of MicoLabelRequestDTOs, since the list is declared
-		// in MicoServiceDeploymentInfoRequestDTO and typed to MicoLabelRequestDTO.
-		setLabels(serviceDeploymentInfo.getLabels().stream().map(MicoLabelResponseDTO::new).collect(Collectors.toList()));
-		
-		// Environment variables need to be set explicitly to have a list of MicoEnvironmentVariableResponseDTOs
-		// and not a list of MicoEnvironmentVariableRequestDTOs, since the list is declared
-		// in MicoServiceDeploymentInfoRequestDTO and typed to MicoEnvironmentVariableRequestDTO.
-		setEnvironmentVariables(serviceDeploymentInfo.getEnvironmentVariables().stream().map(MicoEnvironmentVariableResponseDTO::new).collect(Collectors.toList()));
+    public MicoServiceDeploymentInfoResponseDTO(MicoServiceDeploymentInfo serviceDeploymentInfo) {
+        super(serviceDeploymentInfo);
+
+        // Labels need to be set explicitly to have a list of MicoLabelResponseDTOs
+        // and not a list of MicoLabelRequestDTOs, since the list is declared
+        // in MicoServiceDeploymentInfoRequestDTO and typed to MicoLabelRequestDTO.
+        setLabels(serviceDeploymentInfo.getLabels().stream().map(MicoLabelResponseDTO::new).collect(Collectors.toList()));
+
+        // Environment variables need to be set explicitly to have a list of MicoEnvironmentVariableResponseDTOs
+        // and not a list of MicoEnvironmentVariableRequestDTOs, since the list is declared
+        // in MicoServiceDeploymentInfoRequestDTO and typed to MicoEnvironmentVariableRequestDTO.
+        setEnvironmentVariables(serviceDeploymentInfo.getEnvironmentVariables().stream().map(MicoEnvironmentVariableResponseDTO::new).collect(Collectors.toList()));
 
         // Interface connections need to be set explicitly to have a list of MicoInterfaceConnectionResponseDTOs
         // and not a list of MicoInterfaceConnectionRequestDTO, since the list is declared
@@ -96,9 +95,8 @@ public class MicoServiceDeploymentInfoResponseDTO extends MicoServiceDeploymentI
         setInterfaceConnections(serviceDeploymentInfo.getInterfaceConnections().stream().map(MicoInterfaceConnectionResponseDTO::new).collect(Collectors.toList()));
 
         // Kubernetes deployment info maybe null if not available
-		if (serviceDeploymentInfo.getKubernetesDeploymentInfo() != null) {
-			setKubernetesDeploymentInfo(new KubernetesDeploymentInfoResponseDTO(serviceDeploymentInfo.getKubernetesDeploymentInfo()));
-		}
-	}
-
+        if (serviceDeploymentInfo.getKubernetesDeploymentInfo() != null) {
+            setKubernetesDeploymentInfo(new KubernetesDeploymentInfoResponseDTO(serviceDeploymentInfo.getKubernetesDeploymentInfo()));
+        }
+    }
 }

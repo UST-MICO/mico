@@ -19,9 +19,6 @@
 
 package io.github.ust.mico.core.dto.response.status;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
 import io.fabric8.kubernetes.api.model.Pod;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.swagger.annotations.ApiModelProperty;
@@ -33,14 +30,12 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * Contains information about CPU/memory load of a {@link Pod}
- * intended to use with responses only..
+ * Contains information about CPU/memory load of a {@link Pod} intended to use with responses only..
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Accessors(chain = true)
-@JsonInclude(Include.NON_NULL)
 public class KubernetesPodMetricsResponseDTO {
 
     /**
