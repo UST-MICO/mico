@@ -27,6 +27,7 @@ import { CreateNextVersionComponent } from '../dialogs/create-next-version/creat
 import { MatDialog, MatSnackBar } from '@angular/material';
 import { safeUnsubscribe } from '../util/utils';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
+import { take, takeLast } from 'rxjs/operators';
 
 @Component({
     selector: 'mico-app-detail',
@@ -261,9 +262,11 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         this.subCreateNextVersion = dialogRef.afterClosed().subscribe(nextVersion => {
 
             if (nextVersion) {
-                this.apiService.promoteApplication(this.application.shortName, this.application.version, nextVersion).subscribe(val => {
-                    this.updateVersion(null);
-                });
+                this.apiService.promoteApplication(this.application.shortName, this.application.version, nextVersion)
+                    .pipe(take(1))
+                    .subscribe(val => {
+                        this.updateVersion(val.version);
+                    });
             }
         });
     }
