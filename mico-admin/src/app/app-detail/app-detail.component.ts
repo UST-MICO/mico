@@ -60,7 +60,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     application: ApiObject;
     shortName: string;
     selectedVersion;
-    allVersions;
+    allVersions: any[];
     deploymentStatus;
     deploymentStatusMessage: string;
 
@@ -84,9 +84,10 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
         this.subRouteParams = this.route.params.subscribe(params => {
             this.shortName = params['shortName'];
-            const givenVersion = params['version'];
+            this.selectedVersion = params['version'];
 
             // get all application versions
+            safeUnsubscribe(this.subApplicationVersions);
             this.subApplicationVersions = this.apiService.getApplicationVersions(this.shortName)
                 .subscribe(versions => {
 
@@ -95,20 +96,21 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                     const latestVersion = this.getLatestVersion();
 
                     // adapt url path
-                    if (givenVersion == null) {
+                    console.log(this.selectedVersion, this.allVersions, !this.allVersions.some(v => v.version === this.selectedVersion));
+                    if (this.selectedVersion == null || !this.allVersions.some(v => v.version === this.selectedVersion)) {
                         this.router.navigate(['app-detail', this.shortName, latestVersion]);
                         // prevent further api calls (navigate will cause a reload anyway)
                         return;
                     }
 
                     // call the selected version, latest if no version is specified
-                    if (givenVersion == null) {
+                    if (this.selectedVersion == null) {
                         this.subscribeApplication(latestVersion);
                     } else {
                         let found = false;
                         found = versions.some(element => {
 
-                            if (element.version === givenVersion) {
+                            if (element.version === this.selectedVersion) {
                                 this.subscribeApplication(element.version);
                                 return true;
                             }
