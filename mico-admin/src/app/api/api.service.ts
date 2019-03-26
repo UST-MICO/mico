@@ -1059,7 +1059,7 @@ export class ApiService {
 
 
         // poll status
-        const subPolling = interval(500).subscribe(() => {
+        const subPolling = interval(5 * 1000).subscribe(() => {
             this.getJobStatus(applicationShortName, applicationVersion);
 
             // early exit
@@ -1126,7 +1126,7 @@ export class ApiService {
         } else {
 
             // periodically call getApplicationDeploymentStatus
-            const subPolling = interval(2 * 1000)
+            const subPolling = interval(20 * 1000)
                 .subscribe(() => {
                     this.getApplicationDeploymentStatus(applicationShortName, applicationVersion);
                 });
