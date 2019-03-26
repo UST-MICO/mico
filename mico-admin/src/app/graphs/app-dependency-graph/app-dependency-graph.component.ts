@@ -23,14 +23,12 @@ import { Edge, DraggedEdge, edgeId } from '@ustutt/grapheditor-webcomponent/lib/
 import { Node } from '@ustutt/grapheditor-webcomponent/lib/node';
 import { ApiObject } from 'src/app/api/apiobject';
 import { ApiService } from 'src/app/api/api.service';
-import { Subscription } from 'rxjs';
+import { Subscription, Subject } from 'rxjs';
 import { STYLE_TEMPLATE, APPLICATION_NODE_TEMPLATE, SERVICE_NODE_TEMPLATE, ARROW_TEMPLATE, ServiceNode, ApplicationNode, ServiceInterfaceNode, SERVICE_INTERFACE_NODE_TEMPLATE } from './app-dependency-graph-constants';
 import { MatDialog } from '@angular/material';
 import { ChangeServiceVersionComponent } from 'src/app/dialogs/change-service-version/change-service-version.component';
 import { debounceTime, take, takeLast } from 'rxjs/operators';
 import { safeUnsubscribe, safeUnsubscribeList } from 'src/app/util/utils';
-import { nodeChildrenAsMap } from '@angular/router/src/utils/tree';
-import { stringify } from '@angular/compiler/src/util';
 import { YesNoDialogComponent } from 'src/app/dialogs/yes-no-dialog/yes-no-dialog.component';
 import { GraphAddEnvironmentVariableComponent } from 'src/app/dialogs/graph-add-environment-variable/graph-add-environment-variable.component';
 
@@ -45,18 +43,27 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
     @Input() shortName: string;
     @Input() version: string;
 
-    appSubscription: Subscription;
+    // subscriptions
+    private appSubscription: Subscription;
+    private serviceSubscriptions: Map<string, Subscription[]> = new Map<string, Subscription[]>();
+
+    // data cache
+    private application: ApiObject;
+    // map all included service shortNames to their graph ids
+    private includedServicesMap: Map<string, string> = new Map();
+    private serviceInterfaces: Map<string, ApiObject[]> = new Map();
+    private deploymentInformations: Map<string, ApiObject> = new Map();
+
+    // subject to batch all update requests when anything changes
+    private updateSubject: Subject<boolean> = new Subject<boolean>();
+
+    // graph data
+    private firstRender: boolean = true;
 
     private lastX = 0;
 
     private serviceNodeMap: Map<string, ServiceNode>;
-
-    // map all included service shortNames to their graph ids
-    private includedServicesMap: Map<string, string> = new Map();
-
     private serviceInterfaceNodeMap: Map<string, ServiceInterfaceNode>;
-
-    private serviceSubscriptions: Map<string, Subscription[]> = new Map<string, Subscription[]>();
 
     private versionChangedFor: { node: Node, newVersion: ApiObject };
 
@@ -65,6 +72,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
     ) { }
 
     ngOnInit() {
+        this.updateSubject.pipe(debounceTime(300)).subscribe(this.updateGraph);
         if (this.graph == null) {
             console.warn('Graph not in dom!');
         }
@@ -99,7 +107,32 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
 
             if (this.shortName != null && this.version != null) {
                 this.appSubscription = this.api.getApplication(this.shortName, this.version).subscribe(application => {
-                    this.updateGraphFromApplicationData(application);
+                    this.application = application;
+
+                    const includedServicesMap = new Map();
+                    this.includedServicesMap = includedServicesMap;
+
+                    application.services.forEach(service => {
+                        const serviceId = `${service.shortName}-${service.version}`;
+                        includedServicesMap.set(service.shortName, serviceId);
+                        // handle service subscriptions
+                        if (!this.serviceSubscriptions.has(serviceId)) {
+                            const subscriptions = [];
+                            subscriptions.push(this.api.getServiceInterfaces(service.shortName, service.version).subscribe((interfaces) => {
+                                this.serviceInterfaces.set(serviceId, interfaces);
+                                this.updateSubject.next(true);
+                            }));
+                            subscriptions.push(this.api.getServiceDeploymentInformation(this.shortName, this.version, service.shortName)
+                                .subscribe((deploymentInformation) => {
+                                    this.deploymentInformations.set(serviceId, deploymentInformation);
+                                    this.updateSubject.next(false);
+                                })
+                            );
+                            this.serviceSubscriptions.set(serviceId, subscriptions);
+                        }
+                    });
+                    this.firstRender = true;
+                    this.updateSubject.next(true);
                 });
             }
         }
@@ -282,6 +315,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 applicationShortName: this.shortName,
                 applicationVersion: this.version,
                 serviceShortName: sourceNode.shortName,
+                targetServiceShortName: targetService.shortName,
                 interfaceName: targetInterface.name,
             }
         });
@@ -297,7 +331,6 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             this.api.getServiceDeploymentInformation(this.shortName, this.version, sourceNode.shortName)
                 .pipe(take(2), takeLast(1))
                 .subscribe(deplInf => {
-
                     const tempDeplInf = JSON.parse(JSON.stringify(deplInf));
                     tempDeplInf.interfaceConnections.push(result);
 
@@ -306,8 +339,6 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                         .subscribe(() => {
                             safeUnsubscribe(subPutDeplInf);
                         });
-                    // post/put deploymentInfo
-
                 });
             safeUnsubscribe(subDialog);
         });
@@ -327,7 +358,11 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
     removeInterfaceConnection(edge: Edge, sourceNode: ServiceNode, targetService: ServiceNode, targetInterface: ServiceInterfaceNode) {
         const dialogRef = this.dialog.open(YesNoDialogComponent, {
             data: {
-                object: { sourceServiceName: sourceNode.title, targetServiceName: targetService.title, interfaceName: targetInterface.title },
+                object: {
+                    sourceServiceName: sourceNode.title,
+                    targetServiceName: targetService.title,
+                    interfaceName: targetInterface.title,
+                },
                 question: 'deleteServiceToInterfaceConnection'
             }
         });
@@ -338,7 +373,22 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 graph.addEdge(edge, false);
                 graph.completeRender();
             } else {
-                // TODO update deployment information here!
+                // delete all matching interface connections
+                this.api.getServiceDeploymentInformation(this.shortName, this.version, sourceNode.shortName)
+                .pipe(take(2), takeLast(1))
+                .subscribe(deplInf => {
+                    const tempDeplInf = JSON.parse(JSON.stringify(deplInf));
+                    tempDeplInf.interfaceConnections = tempDeplInf.interfaceConnections.filter(conn => {
+                        return (conn.micoServiceInterfaceName !== targetInterface.name) ||
+                               (conn.micoServiceShortName !== targetService.shortName);
+                    });
+
+                    const subPutDeplInf = this.api.putServiceDeploymentInformation(this.shortName, this.version, sourceNode.shortName,
+                        tempDeplInf)
+                        .subscribe(() => {
+                            safeUnsubscribe(subPutDeplInf);
+                        });
+                });
             }
             dialogSub.unsubscribe();
         });
@@ -350,6 +400,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
     resetGraph() {
         this.serviceNodeMap = new Map<string, ServiceNode>();
         this.serviceInterfaceNodeMap = new Map<string, ServiceInterfaceNode>();
+        this.firstRender = true;
         this.lastX = 0;
         this.versionChangedFor = null;
         const graph: GraphEditor = this.graph.nativeElement;
@@ -362,6 +413,43 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
     }
 
     /**
+     * Update the graph based on all currently available data in the cache.
+     */
+    updateGraph = (withZoom: boolean = false) => {
+        const graph: GraphEditor = this.graph.nativeElement;
+        // local cache that is not affected by subsequent updates from observables
+        const application = this.application;
+        const serviceInterfaces = new Map<string, ApiObject[]>();
+        const deployInfo = new Map<string, ApiObject>();
+
+        application.services.forEach(service => {
+            // fill local cache
+            const serviceId = `${service.shortName}-${service.version}`;
+            const interfaces = this.serviceInterfaces.get(serviceId);
+            const deplInfo = this.deploymentInformations.get(serviceId);
+            if (interfaces != null) {
+                serviceInterfaces.set(serviceId, interfaces);
+            }
+            if (deplInfo != null) {
+                deployInfo.set(serviceId, deplInfo);
+            }
+        });
+
+        // update graph
+
+        this.updateGraphFromApplicationData(application);
+        serviceInterfaces.forEach((interfaces, serviceId) => this.updateServiceInterfaceData(serviceId, interfaces));
+        deployInfo.forEach((deplInfo, serviceId) => this.updateInterfaceConnectionEdgesFromDeploymentInformation(serviceId, deplInfo));
+
+        // render changes
+        graph.completeRender();
+        if (withZoom || this.firstRender) {
+            this.firstRender = false;
+            graph.zoomToBoundingBox(false);
+        }
+    }
+
+    /**
      * Update the existing graph to match the new Application data.
      *
      * @param application mico application
@@ -370,8 +458,6 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         // keep local reference in case of resetGraph changes global variables.
         const nodeMap = this.serviceNodeMap;
         const interfaceNodeMap = this.serviceInterfaceNodeMap;
-        const includedServicesMap = new Map();
-        this.includedServicesMap = includedServicesMap;
 
         const graph: GraphEditor = this.graph.nativeElement;
 
@@ -403,7 +489,6 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         application.services.forEach((service) => {
             const serviceId = `${service.shortName}-${service.version}`;
             toDelete.delete(serviceId); // remove toDelete mark from node
-            includedServicesMap.set(service.shortName, serviceId);
             if (nodeMap.has(serviceId)) {
                 // update existing node
                 const node = nodeMap.get(serviceId);
@@ -456,19 +541,6 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                     },
                 };
                 graph.addEdge(edge, false);
-                // handle service subscriptions
-                if (!this.serviceSubscriptions.has(serviceId)) {
-                    const subscriptions = [];
-                    subscriptions.push(this.api.getServiceInterfaces(service.shortName, service.version).subscribe((interfaces) => {
-                        this.updateServiceInterfaceData(serviceId, interfaces);
-                    }));
-                    subscriptions.push(this.api.getServiceDeploymentInformation(this.shortName, this.version, service.shortName)
-                        .subscribe((deploymentInformation) => {
-                            this.updateInterfaceConnectionEdgesFromDeploymentInformation(serviceId, deploymentInformation);
-                        })
-                    );
-                    this.serviceSubscriptions.set(serviceId, subscriptions);
-                }
             }
         });
 
@@ -477,19 +549,14 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             const node = nodeMap.get(nodeId);
             node.interfaces.forEach((interfaceId) => {
                 const interfaceNode = interfaceNodeMap.get(interfaceId);
+                graph.getEdgesBySource(interfaceId).forEach((edge) => edge.silentDelete = true);
+                graph.getEdgesByTarget(interfaceId).forEach((edge) => edge.silentDelete = true);
                 graph.removeNode(interfaceNode);
                 interfaceNodeMap.delete(interfaceId);
             });
             graph.removeNode(node);
             nodeMap.delete(nodeId);
-            const subscriptions = this.serviceSubscriptions.get(nodeId);
-            safeUnsubscribeList(subscriptions);
-            // remove entry from map for easyer testing if service has subscriptions
-            this.serviceSubscriptions.delete(nodeId);
         });
-
-        graph.completeRender();
-        graph.zoomToBoundingBox(false);
     }
 
     /**
@@ -546,14 +613,20 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         toDelete.forEach((interfaceId) => {
             const node = nodeMap.get(interfaceId);
             serviceNode.interfaces.delete(interfaceId);
+            graph.getEdgesBySource(interfaceId).forEach((edge) => edge.silentDelete = true);
+            graph.getEdgesByTarget(interfaceId).forEach((edge) => edge.silentDelete = true);
             graph.removeNode(node);
             nodeMap.delete(interfaceId);
         });
-
-        graph.completeRender();
     }
 
-    updateInterfaceConnectionEdgesFromDeploymentInformation(serviceId, deployInfo) {
+    /**
+     * Update the interface connection edges based on the deployment info of a service.
+     *
+     * @param serviceId the graph id of the service the interface corresponds to
+     * @param deployInfo the deployment info of the service
+     */
+    updateInterfaceConnectionEdgesFromDeploymentInformation(serviceId: string, deployInfo: ApiObject) {
         const graph: GraphEditor = this.graph.nativeElement;
         const nodeMap = this.serviceNodeMap;
         const interfaceNodeMap = this.serviceInterfaceNodeMap;
@@ -582,17 +655,22 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                     rotate: { relativeAngle: 0 }
                 },
             };
-            console.log(graph.getEdge(edgeId(edge)), edgeId(edge))
             if (graph.getEdge(edgeId(edge)) == null) {
-                console.log(edge)
-                graph.addEdge(edge, false);
+                if (graph.getNode(edge.target) != null && graph.getNode(edge.source) != null) {
+                    // only add edge if both nodes are part of graph
+                    // this can happen because of observable timings...
+                    graph.addEdge(edge, false);
+                } else {
+                    console.log('BAAAAD', edge)
+                }
             }
             toRemove.delete(edgeId(edge));
         });
 
-        toRemove.forEach((edge) => graph.removeEdge(edge, false));
-
-        graph.completeRender();
+        toRemove.forEach((edge) => {
+            edge.silentDelete = true;
+            graph.removeEdge(edge, false);
+        });
     }
 
     autozoom() {

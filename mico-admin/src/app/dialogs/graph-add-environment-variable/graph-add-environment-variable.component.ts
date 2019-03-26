@@ -14,10 +14,12 @@ export class GraphAddEnvironmentVariableComponent {
     ) {
 
         this.serviceShortName = data.serviceShortName;
+        this.targetServiceShortName = data.targetServiceShortName;
         this.interfaceName = data.interfaceName;
     }
 
     serviceShortName;
+    targetServiceShortName;
     interfaceName;
 
     chosenEnvVar;
@@ -29,7 +31,7 @@ export class GraphAddEnvironmentVariableComponent {
 
         return {
             micoServiceInterfaceName: this.interfaceName,
-            micoServiceShortName: this.serviceShortName,
+            micoServiceShortName: this.targetServiceShortName,
             environmentVariableName: this.chosenEnvVar
         };
     }
