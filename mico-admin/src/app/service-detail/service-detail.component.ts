@@ -28,7 +28,7 @@ import { MatDialog } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 import { safeUnsubscribe } from '../util/utils';
 import { CreateNextVersionComponent } from '../dialogs/create-next-version/create-next-version.component';
-import { take } from 'rxjs/operators';
+import { take, takeUntil, takeLast } from 'rxjs/operators';
 
 export interface Service extends ApiObject {
     name: string;
@@ -41,7 +41,7 @@ export interface Service extends ApiObject {
 })
 export class ServiceDetailComponent implements OnInit, OnDestroy {
 
-    private subService: Subscription;
+    private subServiceVersions: Subscription;
     private subParam: Subscription;
     private subCreateNextVersion: Subscription;
 
@@ -68,7 +68,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
 
     ngOnDestroy() {
         // unsubscribe if observable is not null
-        safeUnsubscribe(this.subService);
+        safeUnsubscribe(this.subServiceVersions);
         safeUnsubscribe(this.subParam);
         safeUnsubscribe(this.subCreateNextVersion);
     }
@@ -82,8 +82,8 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
     update() {
 
         // get latest version
-        safeUnsubscribe(this.subService);
-        this.subService = this.apiService.getServiceVersions(this.shortName)
+        safeUnsubscribe(this.subServiceVersions);
+        this.subServiceVersions = this.apiService.getServiceVersions(this.shortName)
             .subscribe(serviceVersions => {
 
                 // sort by version
@@ -192,7 +192,6 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
 
         safeUnsubscribe(this.subCreateNextVersion);
 
-
         // handle dialog result
         this.subCreateNextVersion = dialogRef.afterClosed().subscribe(nextVersion => {
 
@@ -201,7 +200,14 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
                     .pipe(take(1))
                     .subscribe(val => {
 
-                        this.updateVersion(val.version);
+                        const subVersions = this.apiService.getServiceVersions(this.shortName)
+                            .subscribe(element => {
+                                // wait until the latest version is updated
+                                if (element.some(v => v.version === val.version)) {
+                                    safeUnsubscribe(subVersions);
+                                    this.updateVersion(val.version);
+                                }
+                            });
                     });
             }
         });
