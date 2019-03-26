@@ -28,6 +28,7 @@ import { MatDialog } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 import { safeUnsubscribe } from '../util/utils';
 import { CreateNextVersionComponent } from '../dialogs/create-next-version/create-next-version.component';
+import { take } from 'rxjs/operators';
 
 export interface Service extends ApiObject {
     name: string;
@@ -54,14 +55,14 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
     service: Service;
     shortName: string;
     selectedVersion;
-    versions: any = [];
+    allVersions: any = [];
 
     ngOnInit() {
         this.subParam = this.route.params.subscribe(params => {
 
-            const shortName = params['shortName'];
-            const version = params['version'];
-            this.update(shortName, version);
+            this.shortName = params['shortName'];
+            this.selectedVersion = params['version'];
+            this.update();
         });
     }
 
@@ -77,44 +78,42 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
      * loads a defined service and displays the service
      * Is to be called during initialization/when the url changes
      * uses: GET services/{shortName}
-     *
-     * @param shortName shortName of the service to be loaded
-     * @param givenVersion version of the service to be loaded
      */
-    update(shortName, givenVersion) {
-
-        if (this.selectedVersion === givenVersion && givenVersion != null) {
-            // no version change
-            return;
-        }
-
-        safeUnsubscribe(this.subService);
+    update() {
 
         // get latest version
-        this.subService = this.apiService.getServiceVersions(shortName)
+        safeUnsubscribe(this.subService);
+        this.subService = this.apiService.getServiceVersions(this.shortName)
             .subscribe(serviceVersions => {
 
-
                 // sort by version
-                this.versions = JSON.parse(JSON.stringify(serviceVersions)).sort((n1, n2) => versionComparator(n1.version, n2.version));
+                this.allVersions = JSON.parse(JSON.stringify(serviceVersions)).sort((n1, n2) => versionComparator(n1.version, n2.version));
 
-                if (givenVersion == null) {
-                    this.setVersion(shortName, this.getLatestVersion());
+                if (this.allVersions.length === 0) {
+                    // back to service list, if there is no version of this service left
+                    this.router.navigate(['../service-detail/service-list']);
+                }
+
+                const latestVersion = this.getLatestVersion();
+
+                // adapt url path
+                if (this.selectedVersion == null || !this.allVersions.some(v => v.version === this.selectedVersion)) {
+                    this.router.navigate(['service-detail', this.shortName, latestVersion]);
+                    // prevent further api calls (navigate will cause a reload anyway)
+                    return;
                 } else {
                     let found = false;
-                    found = serviceVersions.some(element => {
+                    found = this.allVersions.some(element => {
 
-                        if (element.version === givenVersion) {
-                            this.selectedVersion = givenVersion;
+                        if (element.version === this.selectedVersion) {
                             this.service = element as Service;
-                            this.setVersion(shortName, givenVersion);
                             return true;
                         }
                     });
 
                     if (!found) {
                         // given version was not found in the versions list, take latest instead
-                        this.setVersion(shortName, this.getLatestVersion());
+                        this.router.navigate(['service-detail', this.shortName, latestVersion]);
                     }
                 }
             });
@@ -124,30 +123,21 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
      * returns the latest version
      */
     getLatestVersion() {
-        if (this.versions != null && this.versions.length > 0) {
-            return this.versions[this.versions.length - 1].version;
+        if (this.allVersions != null && this.allVersions.length > 0) {
+            return this.allVersions[this.allVersions.length - 1].version;
         }
     }
-
-    /**
-     * checks if the selected version is the latest service version
-     */
-    isLatestVersion = () => {
-        if (this.versions != null) {
-            if (this.selectedVersion === this.getLatestVersion()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
 
     /**
      * call-back from the version picker to open the selected version
      */
     updateVersion(version) {
-        this.selectedVersion = version;
-        this.router.navigate(['service-detail', this.shortName, version]);
+        if (version != null) {
+            this.selectedVersion = version;
+            this.router.navigate(['service-detail', this.shortName, version]);
+        } else {
+            this.router.navigate(['service-detail', this.shortName]);
+        }
     }
 
     /**
@@ -180,14 +170,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
 
                 this.apiService.deleteService(this.shortName, this.selectedVersion)
                     .subscribe(val => {
-                        if (this.versions.length > 0) {
-                            // move to latest version if one exists
-                            this.setVersion(this.shortName, this.getLatestVersion());
-
-                        } else {
-                            // back to service list if there is no version of this service left
-                            this.router.navigate(['../service-detail/service-list']);
-                        }
+                        this.updateVersion(this.shortName);
                     });
                 safeUnsubscribe(subDeleteDependency);
             }
@@ -214,9 +197,12 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
         this.subCreateNextVersion = dialogRef.afterClosed().subscribe(nextVersion => {
 
             if (nextVersion) {
-                this.apiService.promoteService(this.shortName, this.selectedVersion, nextVersion).subscribe(val => {
-                    this.setVersion(val.shortName, val.version);
-                });
+                this.apiService.promoteService(this.shortName, this.selectedVersion, nextVersion)
+                    .pipe(take(1))
+                    .subscribe(val => {
+
+                        this.updateVersion(val.version);
+                    });
             }
         });
     }
