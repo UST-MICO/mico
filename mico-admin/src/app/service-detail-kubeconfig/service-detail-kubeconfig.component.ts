@@ -48,7 +48,6 @@ export class ServiceDetailKubeconfigComponent implements OnChanges, OnDestroy {
             safeUnsubscribe(this.subYaml);
             this.subYaml = this.apiService.getServiceYamlConfig(this.shortName, this.version)
                 .subscribe(val => {
-                    console.log(val);
                     this.kubeConfigYaml = val.yaml;
                 });
         }

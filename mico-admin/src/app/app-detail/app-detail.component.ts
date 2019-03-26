@@ -96,7 +96,6 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                     const latestVersion = this.getLatestVersion();
 
                     // adapt url path
-                    console.log(this.selectedVersion, this.allVersions, !this.allVersions.some(v => v.version === this.selectedVersion));
                     if (this.selectedVersion == null || !this.allVersions.some(v => v.version === this.selectedVersion)) {
                         this.router.navigate(['app-detail', this.shortName, latestVersion]);
                         // prevent further api calls (navigate will cause a reload anyway)

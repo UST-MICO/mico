@@ -8,7 +8,7 @@
             <mat-icon>delete</mat-icon>
         </mat-button-toggle>
 
-        <span *ngIf="isLatestVersion()" class="mh2 mt1 mb2">
+        <span *ngIf="selectedVersion === getLatestVersion()" class="mh2 mt1 mb2">
             <mat-button-toggle mat-raised-button (click)="promoteNextVersion()">
                 <span>
                     create next Version
@@ -21,7 +21,7 @@
     <!-- Drop Down Menu for version selection-->
     <mat-form-field class="w25 ma2">
         <mat-select placeholder="Service Version" (ngModelChange)="updateVersion($event)" [ngModel]="selectedVersion">
-            <mat-option *ngFor="let version of versions" [value]="version.version">
+            <mat-option *ngFor="let version of allVersions" [value]="version.version">
                 {{version?.version}}
             </mat-option>
         </mat-select>
