@@ -266,7 +266,14 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                 this.apiService.promoteApplication(this.application.shortName, this.application.version, nextVersion)
                     .pipe(take(1))
                     .subscribe(val => {
-                        this.updateVersion(val.version);
+                        const subVersions = this.apiService.getApplicationVersions(this.shortName)
+                            .subscribe(element => {
+                                // wait until the latest version is updated
+                                if (element.some(v => v.version === val.version)) {
+                                    safeUnsubscribe(subVersions);
+                                    this.updateVersion(val.version);
+                                }
+                            });
                     });
             }
         });

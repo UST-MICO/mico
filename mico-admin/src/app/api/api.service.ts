@@ -19,7 +19,7 @@
 
 import { Injectable } from '@angular/core';
 import { Observable, Subject, BehaviorSubject, AsyncSubject, interval, timer, Subscription } from 'rxjs';
-import { filter, flatMap, map, takeUntil } from 'rxjs/operators';
+import { filter, flatMap, map } from 'rxjs/operators';
 import { ApiObject } from './apiobject';
 import { ApiBaseFunctionService } from './api-base-function.service';
 import { ApiModel, ApiModelAllOf } from './apimodel';
