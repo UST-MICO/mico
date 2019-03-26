@@ -780,7 +780,7 @@ public class MicoKubernetesClient {
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.
      * @param numberOfReplicas the number of replicas to add.
      * @return the Kubernetes {@link Deployment}.
-     * @throws KubernetesResourceException 
+     * @throws KubernetesResourceException if the Kubernetes deployment can't be found
      */
     public Optional<Deployment> scaleOut(MicoServiceDeploymentInfo serviceDeploymentInfo, int numberOfReplicas) throws KubernetesResourceException {
     	int currentNumberOfReplicas = getSpecifiedReplicas(serviceDeploymentInfo);
@@ -797,9 +797,7 @@ public class MicoKubernetesClient {
      * 
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.
      * @param numberOfReplicas the number of replicas to remove.
-     * @param the Kubernetes {@link Deployment} or an empty {@link Optional}
-     * 		  if the Kubernetes deployment has been undeployed.
-     * @throws KubernetesResourceException 
+     * @throws KubernetesResourceException if the Kubernetes deployment can't be found
      */
     public Optional<Deployment> scaleIn(MicoServiceDeploymentInfo serviceDeploymentInfo, int numberOfReplicas) throws KubernetesResourceException {
     	int currentNumberOfReplicas = getSpecifiedReplicas(serviceDeploymentInfo);

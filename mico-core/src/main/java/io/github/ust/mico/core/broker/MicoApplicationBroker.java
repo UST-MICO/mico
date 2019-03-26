@@ -251,7 +251,6 @@ public class MicoApplicationBroker {
         return micoApplication;
     }
 
-    //TODO: Change input value to not use a DTO (see issue mico#629)
 	public MicoServiceDeploymentInfo updateMicoServiceDeploymentInformation(String applicationShortName,
 	    String applicationVersion, String serviceShortName,
 	    MicoServiceDeploymentInfo serviceDeploymentInfo) throws MicoApplicationNotFoundException,
