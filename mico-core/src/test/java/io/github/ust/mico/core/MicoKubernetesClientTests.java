@@ -21,7 +21,7 @@ package io.github.ust.mico.core;
 
 import static io.github.ust.mico.core.TestConstants.*;
 import static org.junit.Assert.*;
-import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -410,8 +410,8 @@ public class MicoKubernetesClientTests {
             .setId(micoApplication.getServiceDeploymentInfos().get(0).getKubernetesDeploymentInfo().getId())
             .setNamespace(micoApplication.getServiceDeploymentInfos().get(0).getKubernetesDeploymentInfo().getNamespace())
             .setDeploymentName(micoApplication.getServiceDeploymentInfos().get(0).getKubernetesDeploymentInfo().getDeploymentName())
-            .setServiceNames(new ArrayList<>());// There are no Kubernetes service anymore
-        given(kubernetesDeploymentInfoRepository.save(updatedKubernetesDeploymentInfoAfterDeletion))
+            .setServiceNames(new ArrayList<>()); // There are no Kubernetes services anymore
+        given(kubernetesDeploymentInfoRepository.save(any(KubernetesDeploymentInfo.class)))
             .willReturn(updatedKubernetesDeploymentInfoAfterDeletion);
 
         assertEquals("Application deployment status is expected to be incomplete because a Kubernetes Service is missing.",
