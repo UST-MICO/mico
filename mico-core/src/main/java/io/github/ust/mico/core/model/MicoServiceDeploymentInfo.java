@@ -60,7 +60,7 @@ public class MicoServiceDeploymentInfo {
 
 
     // ----------------------
-    // -> Required fields ---
+    // -> Required Fields ---
     // ----------------------
 
 
@@ -73,7 +73,7 @@ public class MicoServiceDeploymentInfo {
 
 
     // ----------------------
-    // -> Optional fields ---
+    // -> Optional Fields ---
     // ----------------------
 
     /**

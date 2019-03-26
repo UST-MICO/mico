@@ -13,10 +13,10 @@ import org.springframework.hateoas.Link;
 import org.springframework.stereotype.Service;
 
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
-import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
 import io.github.ust.mico.core.exception.*;
 import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.persistence.*;
@@ -280,11 +280,8 @@ public class MicoApplicationBroker {
         return micoStatusService.getApplicationStatus(micoApplication);
     }
 
-    //TODO: Change return value to not use a DTO (see issue mico#631)
-    public MicoApplicationResponseDTO.MicoApplicationDeploymentStatus getMicoApplicationDeploymentStatusOfMicoApplication(MicoApplication application) {
-        return micoKubernetesClient.isApplicationDeployed(application)
-            ? MicoApplicationResponseDTO.MicoApplicationDeploymentStatus.DEPLOYED
-            : MicoApplicationResponseDTO.MicoApplicationDeploymentStatus.NOT_DEPLOYED;
+    public MicoApplicationDeploymentStatus getApplicationDeploymentStatus(String shortName, String version) {
+        return micoKubernetesClient.getApplicationDeploymentStatus(shortName, version);
     }
 
     //TODO: Move to Resource or keep in Broker? (see issue mico#632)

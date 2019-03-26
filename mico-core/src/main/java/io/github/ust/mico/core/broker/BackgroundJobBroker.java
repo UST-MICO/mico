@@ -112,6 +112,7 @@ public class BackgroundJobBroker {
 
         List<MicoServiceBackgroundJob.Status> statusList = jobList.stream().map(MicoServiceBackgroundJob::getStatus).distinct().collect(Collectors.toList());
 
+        // TODO: What should be the response if there are no jobs? (see issue mico#634)
         return new MicoApplicationJobStatus(shortName, version, checkStatus(statusList), jobList);
     }
 
