@@ -47,8 +47,6 @@ import io.github.ust.mico.core.dto.response.status.MicoApplicationDeploymentStat
 import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
 import io.github.ust.mico.core.exception.*;
 import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus;
-import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus.Value;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.swagger.annotations.ApiOperation;
