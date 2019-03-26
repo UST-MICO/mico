@@ -230,7 +230,7 @@ public class DeploymentBroker {
         	deployment = micoKubernetesClient.createMicoService(serviceDeploymentInfo);
 
         }
-        
+
         List<io.fabric8.kubernetes.api.model.Service> createdServices = new ArrayList<>();
         for (MicoServiceInterface serviceInterface : micoService.getServiceInterfaces()) {
             io.fabric8.kubernetes.api.model.Service createdService = micoKubernetesClient.createMicoServiceInterface(serviceInterface, micoService);

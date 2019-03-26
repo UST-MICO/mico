@@ -51,7 +51,7 @@ import lombok.experimental.Accessors;
 public class MicoServiceInterfaceRequestDTO {
 	
     // ----------------------
-    // -> Required fields ---
+    // -> Required Fields ---
     // ----------------------
 	
 	/**
@@ -94,7 +94,7 @@ public class MicoServiceInterfaceRequestDTO {
 
 
     // ----------------------
-    // -> Optional fields ---
+    // -> Optional Fields ---
     // ----------------------
 
     /**
