@@ -259,7 +259,7 @@ public class MicoApplicationBroker {
         MicoServiceDeploymentInfo storedServiceDeploymentInfo = getMicoServiceDeploymentInformation(applicationShortName, applicationVersion, serviceShortName);
 
         // Update the service deployment information in the database
-        MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(serviceDeploymentInfo.setId(storedServiceDeploymentInfo.getId()));
+        MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(serviceDeploymentInfo.setId(storedServiceDeploymentInfo.getId()), 0);
 
         // In case addition properties (stored as separate node entity) such as labels, environment variables
         // have been removed from this service deployment information,
