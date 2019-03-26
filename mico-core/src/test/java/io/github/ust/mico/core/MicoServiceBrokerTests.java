@@ -16,10 +16,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static io.github.ust.mico.core.TestConstants.*;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
@@ -344,7 +341,7 @@ public class MicoServiceBrokerTests {
                 .setVersion(VERSION_1_0_1)
                 .setName(NAME_1)
                 .setDescription(DESCRIPTION_1)
-                .setDependencies(new LinkedList<>());
+                .setDependencies(new ArrayList<>());
         MicoService service2 = new MicoService()
                 .setShortName(SHORT_NAME_2)
                 .setVersion(VERSION_1_0_2)
@@ -376,7 +373,7 @@ public class MicoServiceBrokerTests {
                 .setVersion(VERSION_1_0_1)
                 .setName(NAME_1)
                 .setDescription(DESCRIPTION_1)
-                .setDependencies(new LinkedList<>());
+                .setDependencies(new ArrayList<>());
         MicoService service2 = new MicoService()
                 .setId(new Long(2))
                 .setShortName(SHORT_NAME_2)
@@ -422,7 +419,7 @@ public class MicoServiceBrokerTests {
         MicoServiceDependency dependency1 = new MicoServiceDependency().setService(service).setDependedService(service1);
         MicoServiceDependency dependency2 = new MicoServiceDependency().setService(service).setDependedService(service2);
 
-        LinkedList<MicoServiceDependency> micoServiceDependencies = new LinkedList<>();
+        ArrayList<MicoServiceDependency> micoServiceDependencies = new ArrayList<>();
         micoServiceDependencies.add(dependency1);
         micoServiceDependencies.add(dependency2);
 

@@ -1,6 +1,6 @@
 package io.github.ust.mico.core.broker;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -118,7 +118,7 @@ public class MicoServiceBroker {
     public List<MicoService> getDependers(MicoService serviceToLookFor) {
         List<MicoService> serviceList = serviceRepository.findAll(2);
         log.debug("Got following services as list from the database: {}", serviceList);
-        List<MicoService> dependers = new LinkedList<>();
+        List<MicoService> dependers = new ArrayList<>();
 
         serviceList.forEach(service -> {
             List<MicoServiceDependency> dependees = service.getDependencies();
@@ -161,12 +161,12 @@ public class MicoServiceBroker {
         return savedService;
     }
 
-    public LinkedList<MicoService> getDependentServices(List<MicoServiceDependency> dependees) {
+    public ArrayList<MicoService> getDependentServices(List<MicoServiceDependency> dependees) {
         if (dependees == null) {
             return null;
         }
 
-        LinkedList<MicoService> services = new LinkedList<>();
+        ArrayList<MicoService> services = new ArrayList<>();
 
         dependees.forEach(dependee -> {
             String shortName = dependee.getDependedService().getShortName();
@@ -258,7 +258,7 @@ public class MicoServiceBroker {
 
         List<MicoServiceResponseDTO> micoServiceDTOS = micoServices.stream().map(MicoServiceResponseDTO::new).collect(Collectors.toList());
         MicoServiceDependencyGraphResponseDTO micoServiceDependencyGraph = new MicoServiceDependencyGraphResponseDTO().setMicoServices(micoServiceDTOS);
-        LinkedList<MicoServiceDependencyGraphEdgeResponseDTO> micoServiceDependencyGraphEdgeList = new LinkedList<>();
+        ArrayList<MicoServiceDependencyGraphEdgeResponseDTO> micoServiceDependencyGraphEdgeList = new ArrayList<>();
         for (MicoService micoService : micoServices) {
             //Request each mico service again from the db, because the dependencies are not included
             //in the result of the custom query. TODO improve query to also include the dependencies (Depth parameter)

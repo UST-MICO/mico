@@ -36,10 +36,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
 import static io.github.ust.mico.core.TestConstants.*;
@@ -88,7 +85,7 @@ public class ServiceResourceEndToEndTests extends Neo4jTestClass {
         MicoService micoService1 = new MicoService().setShortName(SHORT_NAME_1).setVersion(VERSION_1_0_1);
         MicoService micoService2 = new MicoService().setShortName(SHORT_NAME_2).setVersion(VERSION_1_0_1);
         MicoService micoService3 = new MicoService().setShortName(SHORT_NAME_3).setVersion(VERSION_1_0_1);
-        List<MicoService> fullDependencyList = new LinkedList<>();
+        List<MicoService> fullDependencyList = new ArrayList<>();
         fullDependencyList.add(micoService0);
         fullDependencyList.add(micoService1);
         fullDependencyList.add(micoService2);
@@ -99,7 +96,7 @@ public class ServiceResourceEndToEndTests extends Neo4jTestClass {
         //Set dependencies
         MicoServiceDependency micoServiceDependency0To1 = new MicoServiceDependency().setService(micoService0).setDependedService(micoService1);
         MicoServiceDependency micoServiceDependency0To2 = new MicoServiceDependency().setService(micoService0).setDependedService(micoService2);
-        List<MicoServiceDependency> micoServiceDependenciesOfService0 = new LinkedList<>();
+        List<MicoServiceDependency> micoServiceDependenciesOfService0 = new ArrayList<>();
         micoServiceDependenciesOfService0.add(micoServiceDependency0To1);
         micoServiceDependenciesOfService0.add(micoServiceDependency0To2);
         micoService0.setDependencies(micoServiceDependenciesOfService0);
@@ -136,7 +133,7 @@ public class ServiceResourceEndToEndTests extends Neo4jTestClass {
         MicoService micoServiceA = new MicoService().setShortName("a").setVersion(VERSION_1_0_1);
         MicoService micoServiceB = new MicoService().setShortName("b").setVersion(VERSION_1_0_1);
         MicoService micoServiceC = new MicoService().setShortName("c").setVersion(VERSION_1_0_1);
-        List<MicoService> fullDependencyList = new LinkedList<>();
+        List<MicoService> fullDependencyList = new ArrayList<>();
         fullDependencyList.add(micoServiceA);
         fullDependencyList.add(micoServiceB);
         fullDependencyList.add(micoServiceC);

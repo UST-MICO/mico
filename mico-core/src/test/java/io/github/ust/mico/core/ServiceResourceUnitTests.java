@@ -52,10 +52,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 import static io.github.ust.mico.core.JsonPathBuilder.*;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
@@ -736,7 +733,7 @@ public class ServiceResourceUnitTests {
                 .setDescription(DESCRIPTION);
 
         given(micoServiceBroker.getServiceFromDatabase(service.getShortName(), service.getVersion())).willReturn(service);
-        given(micoServiceBroker.findDependers(service)).willReturn(new LinkedList<>());
+        given(micoServiceBroker.findDependers(service)).willReturn(new ArrayList<>());
 
         doThrow(MicoServiceIsDeployedException.class).when(micoServiceBroker).deleteService(service);
 
@@ -777,7 +774,7 @@ public class ServiceResourceUnitTests {
         MicoServiceInterface micoServiceInterfaceTwo = new MicoServiceInterface()
                 .setServiceInterfaceName(SERVICE_INTERFACE_NAME_1);
 
-        List<MicoServiceInterface> micoServiceInterfaces = new LinkedList<>();
+        List<MicoServiceInterface> micoServiceInterfaces = new ArrayList<>();
         micoServiceInterfaces.add(micoServiceInterface);
         micoServiceInterfaces.add(micoServiceInterfaceTwo);
 
