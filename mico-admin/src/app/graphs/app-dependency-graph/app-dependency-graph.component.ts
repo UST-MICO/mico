@@ -180,6 +180,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         if (event.detail.node.type === 'service') {  // user moved a service node
             const serviceNode: ServiceNode = event.detail.node;
 
+            // update service interfaces to move with service node
             serviceNode.interfaces.forEach(interfaceId => {
                 const node = this.serviceInterfaceNodeMap.get(interfaceId);
                 if (node != null) {
@@ -193,6 +194,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         if (event.detail.node.type === 'service-interface') {  // user moved a service interface node
             const node: ServiceInterfaceNode = event.detail.node;
 
+            // update service interface deltas (the relative position to the service node)
             const serviceNode = this.serviceNodeMap.get(node.serviceId);
             if (serviceNode != null) {
                 node.dx = node.x - serviceNode.x;
@@ -236,15 +238,18 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             edge.validTargets.clear();
         }
         if (this.serviceNodeMap.has(edge.source.toString())) {
+            // if the source of the edge was a service node
             edge.type = 'interface-connection';
             if (edge.createdFrom == null) {
                 // compute valid targets for new edge
                 this.serviceInterfaceNodeMap.forEach((node, key) => {
                     if (node.serviceId === edge.source) {
+                        // remove all interfaces from the source service
                         edge.validTargets.delete(key);
                     }
                 });
                 this.serviceNodeMap.forEach((node, key) => {
+                    // remove all service nodes from valid targets
                     edge.validTargets.delete(key);
                 });
                 edge.validTargets.delete('APPLICATION');
@@ -303,9 +308,9 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
      * Removes edge if user cancels.
      *
      * @param edge the removed edge
-     * @param sourceNode
-     * @param targetService
-     * @param targetInterface
+     * @param sourceNode source service
+     * @param targetService target service
+     * @param targetInterface target interface
      */
     createInterfaceConnection(edge: Edge, sourceNode: ServiceNode, targetService: ServiceNode, targetInterface: ServiceInterfaceNode) {
 
@@ -322,6 +327,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         const subDialog = dialogRef.afterClosed().subscribe(result => {
             if (!result) {
                 const graph: GraphEditor = this.graph.nativeElement;
+                // prevent dialog popup on edge delete
                 edge.silentDelete = true;
                 graph.removeEdge(edge, false);
                 graph.completeRender();
@@ -342,7 +348,6 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 });
             safeUnsubscribe(subDialog);
         });
-        // set edge.silentDelete to true before deleting edge!
     }
 
     /**
@@ -351,9 +356,9 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
      * Restores edge if user cancels.
      *
      * @param edge the removed edge
-     * @param sourceNode
-     * @param targetService
-     * @param targetInterface
+     * @param sourceNode source service
+     * @param targetService target service
+     * @param targetInterface target interface
      */
     removeInterfaceConnection(edge: Edge, sourceNode: ServiceNode, targetService: ServiceNode, targetInterface: ServiceInterfaceNode) {
         const dialogRef = this.dialog.open(YesNoDialogComponent, {
@@ -549,6 +554,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             const node = nodeMap.get(nodeId);
             node.interfaces.forEach((interfaceId) => {
                 const interfaceNode = interfaceNodeMap.get(interfaceId);
+                // mark interface connection edges as silent delete to prevent dialog popups
                 graph.getEdgesBySource(interfaceId).forEach((edge) => edge.silentDelete = true);
                 graph.getEdgesByTarget(interfaceId).forEach((edge) => edge.silentDelete = true);
                 graph.removeNode(interfaceNode);
@@ -613,6 +619,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         toDelete.forEach((interfaceId) => {
             const node = nodeMap.get(interfaceId);
             serviceNode.interfaces.delete(interfaceId);
+            // mark interface connection edges as silent delete to prevent dialog popups
             graph.getEdgesBySource(interfaceId).forEach((edge) => edge.silentDelete = true);
             graph.getEdgesByTarget(interfaceId).forEach((edge) => edge.silentDelete = true);
             graph.removeNode(node);
@@ -666,6 +673,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         });
 
         toRemove.forEach((edge) => {
+            // prevent dialog popup on edge delete
             edge.silentDelete = true;
             graph.removeEdge(edge, false);
         });
