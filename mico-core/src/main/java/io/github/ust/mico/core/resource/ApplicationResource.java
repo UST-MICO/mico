@@ -256,17 +256,21 @@ public class ApplicationResource {
     public ResponseEntity<Resource<MicoServiceDeploymentInfoResponseDTO>> updateServiceDeploymentInformation(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                                              @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                                                              @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName,
-                                                                                                             @Valid @RequestBody MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) {
-        MicoServiceDeploymentInfo micoServiceDeploymentInfo;
+                                                                                                             @Valid @RequestBody MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoRequestDto) {
+        MicoServiceDeploymentInfoResponseDTO serviceDeploymentInfoDto;
+        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo().applyValuesFrom(serviceDeploymentInfoRequestDto);
         try {
-            micoServiceDeploymentInfo = broker.updateMicoServiceDeploymentInformation(shortName, version, serviceShortName, serviceDeploymentInfoDTO);
-        } catch (MicoApplicationNotFoundException | MicoServiceDeploymentInformationNotFoundException e) {
+        	
+			serviceDeploymentInfoDto = new MicoServiceDeploymentInfoResponseDTO(broker
+			    .updateMicoServiceDeploymentInformation(shortName, version, serviceShortName, serviceDeploymentInfo));
+        } catch (MicoApplicationNotFoundException | MicoServiceDeploymentInformationNotFoundException
+        	| KubernetesResourceException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoApplicationDoesNotIncludeMicoServiceException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
 
-        return ResponseEntity.ok(new Resource<>(new MicoServiceDeploymentInfoResponseDTO(micoServiceDeploymentInfo),
+        return ResponseEntity.ok(new Resource<>(serviceDeploymentInfoDto,
                 linkTo(methodOn(ApplicationResource.class).getServiceDeploymentInformation(shortName, version, serviceShortName))
                         .withSelfRel()));
     }
