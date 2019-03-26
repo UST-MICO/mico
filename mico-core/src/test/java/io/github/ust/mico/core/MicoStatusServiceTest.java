@@ -382,8 +382,6 @@ public class MicoStatusServiceTest {
                                                 .setAvailable(podAvailablePod1))))
                         .setErrorMessages(CollectionUtils.listOf(
                           new MicoMessageResponseDTO().setContent("404 NOT_FOUND \"No deployed service interface 'service-interface-name' of MicoService 'short-name' '1.0.0' was found!\"").setType(Type.ERROR)))
-//                        .setErrorMessages(CollectionUtils.listOf(new ResponseStatusException(HttpStatus.NOT_FOUND, "No deployed service interface '" + SERVICE_INTERFACE_NAME
-//                                + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' was found!").getMessage()))
                         .setInterfacesInformation(CollectionUtils.listOf(
                                 new MicoServiceInterfaceStatusResponseDTO()
                                         .setName(SERVICE_INTERFACE_NAME))))); // No IPs
@@ -407,15 +405,6 @@ public class MicoStatusServiceTest {
                 .willReturn(responseEntityCpuLoadPod1);
         assertEquals(micoApplicationStatus, micoStatusService.getApplicationStatus(micoApplication));
     }
-                
-                
-//                .setErrorMessages(CollectionUtils.listOf(
-//                    new MicoMessageResponseDTO().setContent("There are no public IP addresses available yet for the interface '" +
-//                    SERVICE_INTERFACE_NAME + "' of MicoService '" +
-//                    micoService.getShortName() + "' '" + micoService.getVersion() + "'.").setType(Type.ERROR)))
-//                .setInterfacesInformation(CollectionUtils.listOf(
-//                    new MicoServiceInterfaceStatusResponseDTO()
-//                        .setName(SERVICE_INTERFACE_NAME)))));
         
     @Test
     public void getApplicationStatusWithMissingDeployment() {
