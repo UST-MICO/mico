@@ -37,6 +37,7 @@ import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
 import io.github.ust.mico.core.util.CollectionUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -59,6 +60,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
+@Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles("local")
@@ -317,7 +319,7 @@ public class MicoStatusServiceTest {
             given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(any(MicoService.class))).willReturn(podList.getItems());
             given(micoKubernetesClient.isApplicationDeployed(otherMicoApplication)).willReturn(true);
         } catch (KubernetesResourceException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
         given(applicationRepository.findAllByUsedService(any(), any())).willReturn(CollectionUtils.listOf(otherMicoApplication, micoApplication));
@@ -391,7 +393,7 @@ public class MicoStatusServiceTest {
             given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(any(MicoService.class))).willReturn(podListWithOnePod.getItems());
             given(micoKubernetesClient.isApplicationDeployed(otherMicoApplication)).willReturn(true);
         } catch (KubernetesResourceException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
         given(applicationRepository.findAllByUsedService(any(), any())).willReturn(CollectionUtils.listOf(otherMicoApplication, micoApplication));
@@ -419,7 +421,7 @@ public class MicoStatusServiceTest {
             given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(kubernetesService);
             given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(any(MicoService.class))).willReturn(podList.getItems());
         } catch (KubernetesResourceException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
         given(serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion())).willReturn(CollectionUtils.listOf(micoService));
@@ -515,7 +517,7 @@ public class MicoStatusServiceTest {
             given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(any(MicoService.class))).willReturn(podList.getItems());
             given(micoKubernetesClient.isApplicationDeployed(otherMicoApplication)).willReturn(true);
         } catch (KubernetesResourceException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
         given(applicationRepository.findAllByUsedService(any(), any())).willReturn(CollectionUtils.listOf(otherMicoApplication));

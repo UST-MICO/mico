@@ -21,6 +21,7 @@ package io.github.ust.mico.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ust.mico.core.dto.response.internal.PrometheusResponseDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -28,6 +29,7 @@ import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 
+@Slf4j
 @ActiveProfiles("local")
 public class PrometheusValueDeserializerTest {
 
@@ -75,7 +77,7 @@ public class PrometheusValueDeserializerTest {
             assertEquals(true, responseMemoryUsage.isSuccess());
             assertEquals(310083584, responseMemoryUsage.getValue());
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
     }
 }

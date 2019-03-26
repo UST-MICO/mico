@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.GitHubCrawler;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -37,6 +38,7 @@ import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 
+@Slf4j
 @Category(IntegrationTests.class)
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -126,7 +128,7 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
             String json = mapper.writeValueAsString(object);
             System.out.println(json);
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
     }
 }

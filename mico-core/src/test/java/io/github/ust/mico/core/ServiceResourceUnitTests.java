@@ -35,6 +35,7 @@ import io.github.ust.mico.core.service.GitHubCrawler;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
 import io.github.ust.mico.core.util.CollectionUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -70,6 +71,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@Slf4j
 @RunWith(SpringRunner.class)
 @EnableAutoConfiguration
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
@@ -669,7 +671,7 @@ public class ServiceResourceUnitTests {
             String json = mapper.writeValueAsString(object);
             System.out.println(json);
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
     }
 
