@@ -42,7 +42,7 @@ import lombok.experimental.Accessors;
 public class MicoVersionRequestDTO {
 
     // ----------------------
-    // -> Required fields ---
+    // -> Required Fields ---
     // ----------------------
 
 	/**

@@ -48,7 +48,7 @@ import javax.validation.constraints.Size;
 public class MicoApplicationRequestDTO {
 	
     // ----------------------
-    // -> Required fields ---
+    // -> Required Fields ---
     // ----------------------
 
     /**
@@ -120,7 +120,7 @@ public class MicoApplicationRequestDTO {
 
 
     // ----------------------
-    // -> Optional fields ---
+    // -> Optional Fields ---
     // ----------------------
 
     /**

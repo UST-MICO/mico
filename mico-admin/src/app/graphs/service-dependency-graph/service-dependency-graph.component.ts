@@ -82,7 +82,7 @@ export class ServiceDependencyGraphComponent implements OnInit, OnChanges {
             return false;
         };
         graph.addEventListener('nodeclick', this.onNodeClick);
-        graph.addEventListener('nodemove', (event: CustomEvent) => {
+        graph.addEventListener('nodepositionchange', (event: CustomEvent) => {
             event.detail.node.wasMovedByUser = true;
         });
         graph.onCreateDraggedEdge = this.onCreateDraggedEdge;

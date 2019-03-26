@@ -54,7 +54,7 @@ public class MicoApplication {
 
 
     // ----------------------
-    // -> Required fields ---
+    // -> Required Fields ---
     // ----------------------
 
     /**
@@ -84,7 +84,7 @@ public class MicoApplication {
 
 
     // ----------------------
-    // -> Optional fields ---
+    // -> Optional Fields ---
     // ----------------------
     
     /**
