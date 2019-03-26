@@ -660,8 +660,6 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                     // only add edge if both nodes are part of graph
                     // this can happen because of observable timings...
                     graph.addEdge(edge, false);
-                } else {
-                    console.log('BAAAAD', edge)
                 }
             }
             toRemove.delete(edgeId(edge));
