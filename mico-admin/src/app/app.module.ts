@@ -98,6 +98,7 @@ import { AppDetailOverviewDeploymentInformationComponent } from './app-detail-ov
 import { DeploymentInformationDialogComponent } from './dialogs/deployment-information-dialog/deployment-information-dialog.component';
 import { AppDetailPublicIpComponent } from './app-detail-public-ip/app-detail-public-ip.component';
 import { ServiceDetailKubeconfigComponent } from './service-detail-kubeconfig/service-detail-kubeconfig.component';
+import { GraphAddEnvironmentVariableComponent } from './dialogs/graph-add-environment-variable/graph-add-environment-variable.component';
 
 @NgModule({
     declarations: [
@@ -138,7 +139,8 @@ import { ServiceDetailKubeconfigComponent } from './service-detail-kubeconfig/se
         AppDetailOverviewDeploymentInformationComponent,
         DeploymentInformationDialogComponent,
         AppDetailPublicIpComponent,
-        ServiceDetailKubeconfigComponent
+        ServiceDetailKubeconfigComponent,
+        GraphAddEnvironmentVariableComponent
     ],
     entryComponents: [
         // dialogs
@@ -151,6 +153,7 @@ import { ServiceDetailKubeconfigComponent } from './service-detail-kubeconfig/se
         CreateApplicationComponent,
         CreateNextVersionComponent,
         DeploymentInformationDialogComponent,
+        GraphAddEnvironmentVariableComponent,
     ],
     imports: [
         BrowserModule,
