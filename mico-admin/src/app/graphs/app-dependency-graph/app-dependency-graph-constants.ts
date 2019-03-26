@@ -18,6 +18,7 @@
  */
 
 import { Node } from '@ustutt/grapheditor-webcomponent/lib/node';
+import { ApiObject } from 'src/app/api/apiobject';
 
 
 export const STYLE_TEMPLATE = {
@@ -153,6 +154,7 @@ export interface ServiceNode extends Node {
     shortName: string;
     description: string;
     interfaces: Set<string>;
+    service: ApiObject;
 }
 
 export interface ServiceInterfaceNode extends Node {

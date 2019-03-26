@@ -213,14 +213,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
      */
     changeServiceVersion(node: Node, newVersion: ApiObject) {
         this.versionChangedFor = { node: node, newVersion: newVersion };
-        this.api.deleteApplicationServices(this.shortName, this.version, node.service.shortName).pipe(
-            debounceTime(300),
-        ).subscribe((success) => {
-            if (!success) {
-                return;
-            }
-            this.api.postApplicationServices(this.shortName, this.version, newVersion.shortName, newVersion.version).subscribe();
-        });
+        this.api.postApplicationServices(this.shortName, this.version, newVersion.shortName, newVersion.version).subscribe();
     }
 
     /**
@@ -515,6 +508,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                     shortName: service.shortName,
                     name: service.name,
                     description: service.description,
+                    service: service,
                     interfaces: new Set<string>(),
                 };
                 // super basic layout algorithm:
