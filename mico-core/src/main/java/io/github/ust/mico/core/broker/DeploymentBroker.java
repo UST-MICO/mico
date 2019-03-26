@@ -213,8 +213,21 @@ public class DeploymentBroker {
         log.debug("Using deployment information for MicoService '{}' in version '{}': {}",
                 micoService.getShortName(), micoService.getVersion(), serviceDeploymentInfo.toString());
 
-        // TODO: Scale in/out existing Kubernetes resources instead of replacing existing resources (issue mico#416)
-        Deployment createdDeployment = micoKubernetesClient.createMicoService(serviceDeploymentInfo);
+        // If the Kubernetes deployment already exists and is deployed, scale in,
+        // otherwise create the Kubernetes deployment
+        Deployment deployment;
+        if (micoKubernetesClient.isMicoServiceDeployed(micoService)) {
+        	Optional<Deployment> deploymentOptional = micoKubernetesClient.scaleOut(serviceDeploymentInfo, serviceDeploymentInfo.getReplicas());
+        	if (deploymentOptional.isPresent()) {
+				throw new KubernetesResourceException(
+				    "Deployment for MicoService '" + micoService.getShortName() + "' in version '"
+				        + micoService.getVersion() + "' is not available.");
+        	} else {
+        		deployment = deploymentOptional.get();
+        	}
+        } else {
+        	deployment = micoKubernetesClient.createMicoService(serviceDeploymentInfo);
+        }
 
         List<io.fabric8.kubernetes.api.model.Service> createdServices = new ArrayList<>();
         for (MicoServiceInterface serviceInterface : micoService.getServiceInterfaces()) {
@@ -226,8 +239,8 @@ public class DeploymentBroker {
 
         // Store the names of the created Kubernetes resources in the database
         return new KubernetesDeploymentInfo()
-                .setNamespace(createdDeployment.getMetadata().getNamespace())
-                .setDeploymentName(createdDeployment.getMetadata().getName())
+                .setNamespace(deployment.getMetadata().getNamespace())
+                .setDeploymentName(deployment.getMetadata().getName())
                 .setServiceNames(createdServices.stream().map(service -> service.getMetadata().getName()).collect(toList()));
     }
 }
