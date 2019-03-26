@@ -257,12 +257,11 @@ public class ApplicationResource {
                                                                                                              @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                                                              @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName,
                                                                                                              @Valid @RequestBody MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoRequestDto) {
-        MicoServiceDeploymentInfoResponseDTO serviceDeploymentInfoDto;
-        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo().applyValuesFrom(serviceDeploymentInfoRequestDto);
+        MicoServiceDeploymentInfoResponseDTO updatedServiceDeploymentInfoDto;
         try {
-        	
-			serviceDeploymentInfoDto = new MicoServiceDeploymentInfoResponseDTO(broker
-			    .updateMicoServiceDeploymentInformation(shortName, version, serviceShortName, serviceDeploymentInfo));
+            MicoServiceDeploymentInfo updatedServiceDeploymentInfo = broker.updateMicoServiceDeploymentInformation(
+                shortName, version, serviceShortName, serviceDeploymentInfoRequestDto);
+            updatedServiceDeploymentInfoDto = new MicoServiceDeploymentInfoResponseDTO(updatedServiceDeploymentInfo);
         } catch (MicoApplicationNotFoundException | MicoServiceDeploymentInformationNotFoundException
         	| KubernetesResourceException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
@@ -270,7 +269,7 @@ public class ApplicationResource {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
 
-        return ResponseEntity.ok(new Resource<>(serviceDeploymentInfoDto,
+        return ResponseEntity.ok(new Resource<>(updatedServiceDeploymentInfoDto,
                 linkTo(methodOn(ApplicationResource.class).getServiceDeploymentInformation(shortName, version, serviceShortName))
                         .withSelfRel()));
     }

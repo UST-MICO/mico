@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
 import org.springframework.stereotype.Service;
@@ -251,15 +252,16 @@ public class MicoApplicationBroker {
         return micoApplication;
     }
 
-	public MicoServiceDeploymentInfo updateMicoServiceDeploymentInformation(String applicationShortName,
-	    String applicationVersion, String serviceShortName,
-	    MicoServiceDeploymentInfo serviceDeploymentInfo) throws MicoApplicationNotFoundException,
-	    MicoApplicationDoesNotIncludeMicoServiceException, MicoServiceDeploymentInformationNotFoundException,
-	    KubernetesResourceException {
+    public MicoServiceDeploymentInfo updateMicoServiceDeploymentInformation(String applicationShortName, String applicationVersion,
+                                                                            String serviceShortName, MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) throws
+        MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException,
+        MicoServiceDeploymentInformationNotFoundException, KubernetesResourceException {
+
         MicoServiceDeploymentInfo storedServiceDeploymentInfo = getMicoServiceDeploymentInformation(applicationShortName, applicationVersion, serviceShortName);
 
-        // Update the service deployment information in the database
-        MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(serviceDeploymentInfo.setId(storedServiceDeploymentInfo.getId()), 0);
+        // Update existing service deployment information and save it in the database.
+        storedServiceDeploymentInfo.applyValuesFrom(serviceDeploymentInfoDTO);
+        MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(storedServiceDeploymentInfo);
 
         // In case addition properties (stored as separate node entity) such as labels, environment variables
         // have been removed from this service deployment information,
@@ -272,7 +274,7 @@ public class MicoApplicationBroker {
 
         // FIXME: Currently we only supported scale in / scale out.
         // 		  Every information except the replicas is ignored!
-        int replicasDiff = serviceDeploymentInfo.getReplicas() - storedServiceDeploymentInfo.getReplicas();
+        int replicasDiff = serviceDeploymentInfoDTO.getReplicas() - storedServiceDeploymentInfo.getReplicas();
         if (replicasDiff > 0) {
         	micoKubernetesClient.scaleOut(updatedServiceDeploymentInfo, replicasDiff);
         } else if (replicasDiff < 0) {
