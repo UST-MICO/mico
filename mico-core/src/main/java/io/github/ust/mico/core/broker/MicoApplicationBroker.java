@@ -12,11 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
 import org.springframework.stereotype.Service;
 
-import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
-import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
 import io.github.ust.mico.core.exception.*;
 import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.persistence.*;
@@ -252,13 +251,15 @@ public class MicoApplicationBroker {
         return micoApplication;
     }
 
-    //TODO: Change input value to not use a DTO (see issue mico#629)
-    public MicoServiceDeploymentInfo updateMicoServiceDeploymentInformation(String applicationShortName, String applicationVersion, String serviceShortName, MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException, MicoServiceDeploymentInformationNotFoundException {
-        MicoServiceDeploymentInfo micoServiceDeploymentInfo = getMicoServiceDeploymentInformation(applicationShortName, applicationVersion, serviceShortName);
-        micoServiceDeploymentInfo.applyValuesFrom(serviceDeploymentInfoDTO);
+	public MicoServiceDeploymentInfo updateMicoServiceDeploymentInformation(String applicationShortName,
+	    String applicationVersion, String serviceShortName,
+	    MicoServiceDeploymentInfo serviceDeploymentInfo) throws MicoApplicationNotFoundException,
+	    MicoApplicationDoesNotIncludeMicoServiceException, MicoServiceDeploymentInformationNotFoundException,
+	    KubernetesResourceException {
+        MicoServiceDeploymentInfo storedServiceDeploymentInfo = getMicoServiceDeploymentInformation(applicationShortName, applicationVersion, serviceShortName);
 
         // Update the service deployment information in the database
-        MicoServiceDeploymentInfo updatedMicoServiceDeploymentInfo = serviceDeploymentInfoRepository.save(micoServiceDeploymentInfo);
+        MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(serviceDeploymentInfo.setId(storedServiceDeploymentInfo.getId()));
 
         // In case addition properties (stored as separate node entity) such as labels, environment variables
         // have been removed from this service deployment information,
@@ -269,9 +270,19 @@ public class MicoApplicationBroker {
         kubernetesDeploymentInfoRepository.cleanUp();
         micoInterfaceConnectionRepository.cleanUp();
 
-        // TODO: Update actual Kubernetes deployment (see issue mico#628)
+        // FIXME: Currently we only supported scale in / scale out.
+        // 		  Every information except the replicas is ignored!
+        int replicasDiff = serviceDeploymentInfo.getReplicas() - storedServiceDeploymentInfo.getReplicas();
+        if (replicasDiff > 0) {
+        	micoKubernetesClient.scaleOut(updatedServiceDeploymentInfo, replicasDiff);
+        } else if (replicasDiff < 0) {
+        	micoKubernetesClient.scaleIn(updatedServiceDeploymentInfo, Math.abs(replicasDiff));
+        } else {
+        	// TODO: If no scale operation is required, maybe some other
+        	// 		 information still needs to be updated.
+        }
 
-        return updatedMicoServiceDeploymentInfo;
+        return updatedServiceDeploymentInfo;
     }
 
     //TODO: Change return value to not use a DTO (see issue mico#630)
@@ -280,11 +291,8 @@ public class MicoApplicationBroker {
         return micoStatusService.getApplicationStatus(micoApplication);
     }
 
-    //TODO: Change return value to not use a DTO (see issue mico#631)
-    public MicoApplicationResponseDTO.MicoApplicationDeploymentStatus getMicoApplicationDeploymentStatusOfMicoApplication(MicoApplication application) {
-        return micoKubernetesClient.isApplicationDeployed(application)
-            ? MicoApplicationResponseDTO.MicoApplicationDeploymentStatus.DEPLOYED
-            : MicoApplicationResponseDTO.MicoApplicationDeploymentStatus.NOT_DEPLOYED;
+    public MicoApplicationDeploymentStatus getApplicationDeploymentStatus(String shortName, String version) {
+        return micoKubernetesClient.getApplicationDeploymentStatus(shortName, version);
     }
 
     //TODO: Move to Resource or keep in Broker? (see issue mico#632)

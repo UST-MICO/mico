@@ -48,7 +48,7 @@ public class MicoServicePort {
 
     
     // ----------------------
-    // -> Required fields ---
+    // -> Required Fields ---
     // ----------------------
 
     /**
