@@ -83,7 +83,7 @@ public interface MicoServiceRepository extends Neo4jRepository<MicoService, Long
      * @param shortName the short name of the {@link MicoService} (depender). 
      * @param version the version of the {@link MicoService} (depender).
      * @return a list of {@link MicoService MicoServices} including all dependees
-     * 		   as well as the depender..
+     * 		   as well as the depender.
      */
     @Query("MATCH (s:MicoService)-[:DEPENDS_ON*0..]->(d:MicoService) "
     	+ "WHERE s.shortName = {shortName} AND s.version = {version} "

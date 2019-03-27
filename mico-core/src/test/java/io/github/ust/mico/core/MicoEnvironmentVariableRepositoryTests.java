@@ -19,10 +19,8 @@
 
 package io.github.ust.mico.core;
 
-import io.github.ust.mico.core.model.*;
-import io.github.ust.mico.core.persistence.*;
-import io.github.ust.mico.core.util.CollectionUtils;
-import io.github.ust.mico.core.util.EmbeddedRedisServer;
+import static org.junit.Assert.*;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -31,12 +29,16 @@ import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoEnvironmentVariable;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.persistence.*;
+import io.github.ust.mico.core.util.CollectionUtils;
+import io.github.ust.mico.core.util.EmbeddedRedisServer;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
