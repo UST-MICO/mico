@@ -233,21 +233,22 @@ public class MicoServiceBroker {
     }
 
     public MicoService promoteService(MicoService service, String newVersion) throws MicoServiceAlreadyExistsException {
+
+        // Update the version of the application
+        service.setVersion(newVersion);
+
+        // Remove docker image URI
+        service.setDockerImageUri(null);
+
         // In order to copy the service along with all service interfaces nodes
         // and all port nodes of the service interface we need to set the id of
         // service interfaces and ports to null.
         // That way, Neo4j will create new entities instead of updating the existing ones.
-        service.setVersion(newVersion).setId(null);
+        service.setId(null);
         service.getServiceInterfaces().forEach(serviceInterface -> serviceInterface.setId(null));
         service.getServiceInterfaces().forEach(serviceInterface -> serviceInterface.getPorts().forEach(port -> port.setId(null)));
 
-        log.debug("Set new version in service: {}", service);
-
-        MicoService updatedService = persistService(service);
-
-        log.debug("Updated service: {}", updatedService);
-
-        return updatedService;
+        return persistService(service);
     }
 
     //TODO: Create test
