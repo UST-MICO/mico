@@ -103,6 +103,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
                     // adapt url path
                     if (this.selectedVersion == null || !this.allVersions.some(v => v.version === this.selectedVersion)) {
+                        // check if no version is selected or an unknown version is selected -> take latest version instead
                         this.router.navigate(['app-detail', this.shortName, latestVersion]);
                         // prevent further api calls (navigate will cause a reload anyway)
                         return;
@@ -271,11 +272,10 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                 this.apiService.promoteApplication(this.application.shortName, this.application.version, nextVersion)
                     .pipe(take(1))
                     .subscribe(val => {
-                        const subVersions = this.apiService.getApplicationVersions(this.shortName)
+                        this.apiService.getApplicationVersions(this.shortName)
                             .subscribe(element => {
                                 // wait until the latest version is updated
                                 if (element.some(v => v.version === val.version)) {
-                                    safeUnsubscribe(subVersions);
                                     this.updateVersion(val.version);
                                 }
                             });
