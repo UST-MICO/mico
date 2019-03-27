@@ -328,29 +328,30 @@ public class MicoStatusService {
             restarts += containerStatus.getRestartCount();
         }
         String age = pod.getStatus().getStartTime();
-        int memoryUsage = 0;
-        int cpuLoad = 0;
-        KubernetesPodMetricsResponseDTO podMetrics = new KubernetesPodMetricsResponseDTO();
+
+        KubernetesPodInformationResponseDTO kubernetesPodInformationResponseDTO = new KubernetesPodInformationResponseDTO()
+            .setNodeName(nodeName)
+            .setPodName(podName)
+            .setPhase(phase)
+            .setHostIp(hostIp)
+            .setRestarts(restarts)
+            .setStartTime(age);
+
         // Request values from Prometheus only if the pod phase is "Running"
         if (phase.equals(POD_PHASE_RUNNING)) {
+            int memoryUsage = 0;
+            int cpuLoad = 0;
             try {
                 memoryUsage = getMemoryUsageForPod(podName);
                 cpuLoad = getCpuLoadForPod(podName);
             } catch (PrometheusRequestFailedException | ResourceAccessException e) {
                 log.error(e.getMessage(), e);
             }
-            podMetrics.setMemoryUsage(memoryUsage);
-            podMetrics.setCpuLoad(cpuLoad);
-            return new KubernetesPodInformationResponseDTO(podName, phase, hostIp, nodeName, restarts, age, podMetrics);
-        } else {
-            return new KubernetesPodInformationResponseDTO()
-                .setNodeName(nodeName)
-                .setPodName(podName)
-                .setPhase(phase)
-                .setHostIp(hostIp)
-                .setRestarts(restarts)
-                .setStartTime(age);
+            kubernetesPodInformationResponseDTO.setMetrics(new KubernetesPodMetricsResponseDTO()
+                .setMemoryUsage(memoryUsage)
+                .setCpuLoad(cpuLoad));
         }
+        return kubernetesPodInformationResponseDTO;
     }
 
     private int getMemoryUsageForPod(String podName) throws PrometheusRequestFailedException {
