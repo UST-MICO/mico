@@ -86,24 +86,20 @@ import static org.mockito.Mockito.mock;
 @ActiveProfiles("local")
 public class MicoStatusServiceTest {
 
+    private static final String POD_PHASE_RUNNING = "Running";
+    private static final String POD_PHASE_PENDING = "Pending";
     @MockBean
     private MicoKubernetesClient micoKubernetesClient;
-
     @MockBean
     private PrometheusConfig prometheusConfig;
-
     @MockBean
     private RestTemplate restTemplate;
-
     @MockBean
     private MicoApplicationRepository applicationRepository;
-
     @MockBean
     private MicoServiceRepository serviceRepository;
-
     @MockBean
     private MicoServiceInterfaceRepository serviceInterfaceRepository;
-
     @Autowired
     private MicoStatusService micoStatusService;
 
@@ -115,20 +111,16 @@ public class MicoStatusServiceTest {
     private Optional<Service> kubernetesService;
     private PodList podList;
     private PodList podListWithOnePod;
-
     private String nodeName1 = "testNode";
     private String nodeName2 = "testNode2";
-    private String podPhase = "Running";
     private String hostIp = "192.168.0.0";
     private String deploymentName = "deployment1";
-
     // Metrics for pod 1
     private String podName1 = "pod1";
     private int memoryUsagePod1 = 70;
     private int cpuLoadPod1 = 30;
     private String startTimePod1 = new Date().toString();
     private int restartsPod1 = 0;
-    private boolean podAvailablePod1 = true;
 
     // Metrics for pod 2
     private String podName2 = "pod2";
@@ -136,7 +128,6 @@ public class MicoStatusServiceTest {
     private int cpuLoadPod2 = 10;
     private String startTimePod2 = new Date().toString();
     private int restartsPod2 = 0;
-    private boolean podAvailablePod2 = true;
 
     // Metrics for pod 3
     private String podName3 = "pod3";
@@ -144,7 +135,6 @@ public class MicoStatusServiceTest {
     private int cpuLoadPod3 = 10;
     private String startTimePod3 = new Date().toString();
     private int restartsPod3 = 0;
-    private boolean podAvailablePod3 = true;
 
     // Metrics for pod 4
     private String podName4 = "pod4";
@@ -152,7 +142,6 @@ public class MicoStatusServiceTest {
     private int cpuLoadPod4 = 5;
     private String startTimePod4 = new Date().toString();
     private int restartsPod4 = 0;
-    private boolean podAvailablePod4 = true;
 
 
     @Before
@@ -211,10 +200,10 @@ public class MicoStatusServiceTest {
             .addNewItem()
             .withNewMetadata().withName(podName1).endMetadata()
             .withNewSpec().withNodeName(nodeName1).endSpec()
-            .withNewStatus().withStartTime(startTimePod1).
-                addNewContainerStatus().withRestartCount(restartsPod1).endContainerStatus().
-                withPhase(podPhase).
-                withHostIP(hostIp)
+            .withNewStatus().withStartTime(startTimePod1)
+            .addNewContainerStatus().withRestartCount(restartsPod1).endContainerStatus()
+            .withPhase(POD_PHASE_RUNNING)
+            .withHostIP(hostIp)
             .endStatus()
             .endItem()
             .addNewItem()
@@ -222,7 +211,7 @@ public class MicoStatusServiceTest {
             .withNewSpec().withNodeName(nodeName1).endSpec()
             .withNewStatus().withStartTime(startTimePod2)
             .addNewContainerStatus().withRestartCount(restartsPod2).endContainerStatus()
-            .withPhase(podPhase)
+            .withPhase(POD_PHASE_RUNNING)
             .withHostIP(hostIp)
             .endStatus()
             .endItem()
@@ -231,7 +220,7 @@ public class MicoStatusServiceTest {
             .withNewSpec().withNodeName(nodeName2).endSpec()
             .withNewStatus().withStartTime(startTimePod3)
             .addNewContainerStatus().withRestartCount(restartsPod3).endContainerStatus()
-            .withPhase(podPhase)
+            .withPhase(POD_PHASE_RUNNING)
             .withHostIP(hostIp)
             .endStatus()
             .endItem()
@@ -240,7 +229,7 @@ public class MicoStatusServiceTest {
             .withNewSpec().withNodeName(nodeName2).endSpec()
             .withNewStatus().withStartTime(startTimePod4)
             .addNewContainerStatus().withRestartCount(restartsPod4).endContainerStatus()
-            .withPhase(podPhase)
+            .withPhase(POD_PHASE_PENDING)
             .withHostIP(hostIp)
             .endStatus()
             .endItem()
@@ -250,7 +239,7 @@ public class MicoStatusServiceTest {
             .addNewItem()
             .withNewMetadata().withName(podName1).endMetadata()
             .withNewSpec().withNodeName(nodeName1).endSpec()
-            .withNewStatus().withStartTime(startTimePod1).addNewContainerStatus().withRestartCount(restartsPod1).endContainerStatus().withPhase(podPhase).withHostIP(hostIp).endStatus()
+            .withNewStatus().withStartTime(startTimePod1).addNewContainerStatus().withRestartCount(restartsPod1).endContainerStatus().withPhase(POD_PHASE_RUNNING).withHostIP(hostIp).endStatus()
             .endItem()
             .build();
     }
@@ -278,8 +267,8 @@ public class MicoStatusServiceTest {
                         .setAverageMemoryUsage(60),
                     new KubernetesNodeMetricsResponseDTO()
                         .setNodeName(nodeName2)
-                        .setAverageCpuLoad(7)
-                        .setAverageMemoryUsage(57)
+                        .setAverageCpuLoad(10)
+                        .setAverageMemoryUsage(50)
                 ))
                 // Add four pods (on two different nodes)
                 .setPodsInformation(Arrays.asList(
@@ -287,7 +276,7 @@ public class MicoStatusServiceTest {
                         .setPodName(podName1)
                         .setHostIp(hostIp)
                         .setNodeName(nodeName1)
-                        .setPhase(podPhase)
+                        .setPhase(POD_PHASE_RUNNING)
                         .setStartTime(startTimePod1)
                         .setRestarts(restartsPod1)
                         .setMetrics(new KubernetesPodMetricsResponseDTO()
@@ -297,7 +286,7 @@ public class MicoStatusServiceTest {
                         .setPodName(podName2)
                         .setHostIp(hostIp)
                         .setNodeName(nodeName1)
-                        .setPhase(podPhase)
+                        .setPhase(POD_PHASE_RUNNING)
                         .setStartTime(startTimePod2)
                         .setRestarts(restartsPod2)
                         .setMetrics(new KubernetesPodMetricsResponseDTO()
@@ -307,7 +296,7 @@ public class MicoStatusServiceTest {
                         .setPodName(podName3)
                         .setHostIp(hostIp)
                         .setNodeName(nodeName2)
-                        .setPhase(podPhase)
+                        .setPhase(POD_PHASE_RUNNING)
                         .setStartTime(startTimePod3)
                         .setRestarts(restartsPod3)
                         .setMetrics(new KubernetesPodMetricsResponseDTO()
@@ -317,18 +306,14 @@ public class MicoStatusServiceTest {
                         .setPodName(podName4)
                         .setHostIp(hostIp)
                         .setNodeName(nodeName2)
-                        .setPhase(podPhase)
+                        .setPhase(POD_PHASE_PENDING)
                         .setStartTime(startTimePod4)
-                        .setRestarts(restartsPod4)
-                        .setMetrics(new KubernetesPodMetricsResponseDTO()
-                            .setMemoryUsage(memoryUsagePod4)
-                            .setCpuLoad(cpuLoadPod4))))
+                        .setRestarts(restartsPod4)))
                 .setErrorMessages(CollectionUtils.listOf())
                 .setInterfacesInformation(CollectionUtils.listOf(
                     new MicoServiceInterfaceStatusResponseDTO()
                         .setName(SERVICE_INTERFACE_NAME)
-                        .setExternalIp("192.168.2.112")))))
-        ;
+                        .setExternalIp("192.168.2.112")))));
         try {
             given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(deployment);
             given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(kubernetesService);
@@ -390,7 +375,7 @@ public class MicoStatusServiceTest {
                         .setPodName(podName1)
                         .setHostIp(hostIp)
                         .setNodeName(nodeName1)
-                        .setPhase(podPhase)
+                        .setPhase(POD_PHASE_RUNNING)
                         .setStartTime(startTimePod1)
                         .setRestarts(restartsPod1)
                         .setMetrics(new KubernetesPodMetricsResponseDTO()
@@ -477,8 +462,8 @@ public class MicoStatusServiceTest {
                     .setAverageMemoryUsage(60),
                 new KubernetesNodeMetricsResponseDTO()
                     .setNodeName(nodeName2)
-                    .setAverageCpuLoad(7)
-                    .setAverageMemoryUsage(57)
+                    .setAverageCpuLoad(10)
+                    .setAverageMemoryUsage(50)
             ))
             // Add four pods (on two different nodes)
             .setPodsInformation(Arrays.asList(
@@ -486,7 +471,7 @@ public class MicoStatusServiceTest {
                     .setPodName(podName1)
                     .setHostIp(hostIp)
                     .setNodeName(nodeName1)
-                    .setPhase(podPhase)
+                    .setPhase(POD_PHASE_RUNNING)
                     .setStartTime(startTimePod1)
                     .setRestarts(restartsPod1)
                     .setMetrics(new KubernetesPodMetricsResponseDTO()
@@ -496,7 +481,7 @@ public class MicoStatusServiceTest {
                     .setPodName(podName2)
                     .setHostIp(hostIp)
                     .setNodeName(nodeName1)
-                    .setPhase(podPhase)
+                    .setPhase(POD_PHASE_RUNNING)
                     .setStartTime(startTimePod2)
                     .setRestarts(restartsPod2)
                     .setMetrics(new KubernetesPodMetricsResponseDTO()
@@ -506,7 +491,7 @@ public class MicoStatusServiceTest {
                     .setPodName(podName3)
                     .setHostIp(hostIp)
                     .setNodeName(nodeName2)
-                    .setPhase(podPhase)
+                    .setPhase(POD_PHASE_RUNNING)
                     .setStartTime(startTimePod3)
                     .setRestarts(restartsPod3)
                     .setMetrics(new KubernetesPodMetricsResponseDTO()
@@ -516,12 +501,9 @@ public class MicoStatusServiceTest {
                     .setPodName(podName4)
                     .setHostIp(hostIp)
                     .setNodeName(nodeName2)
-                    .setPhase(podPhase)
+                    .setPhase(POD_PHASE_PENDING)
                     .setStartTime(startTimePod4)
-                    .setRestarts(restartsPod4)
-                    .setMetrics(new KubernetesPodMetricsResponseDTO()
-                        .setMemoryUsage(memoryUsagePod4)
-                        .setCpuLoad(cpuLoadPod4))))
+                    .setRestarts(restartsPod4)))
             .setErrorMessages(CollectionUtils.listOf())
             .setInterfacesInformation(CollectionUtils.listOf(new MicoServiceInterfaceStatusResponseDTO()
                 .setName(SERVICE_INTERFACE_NAME)

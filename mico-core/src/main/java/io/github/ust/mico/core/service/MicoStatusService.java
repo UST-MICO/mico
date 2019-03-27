@@ -72,6 +72,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Component
 public class MicoStatusService {
 
+    private static final String POD_PHASE_RUNNING = "Running";
     private static final String PROMETHEUS_QUERY_FOR_MEMORY_USAGE = "sum(container_memory_working_set_bytes{pod_name=\"%s\",container_name=\"\"})";
     private static final String PROMETHEUS_QUERY_FOR_CPU_USAGE = "sum(container_cpu_load_average_10s{pod_name=\"%s\"})";
     private static final String PROMETHEUS_QUERY_PARAMETER_NAME = "query";
@@ -208,18 +209,22 @@ public class MicoStatusService {
         List<KubernetesNodeMetricsResponseDTO> nodeMetrics = new ArrayList<>();
         // Calculate for each node the average values for all pods running on this node
         for (String nodeName : podsPerNode.keySet()) {
+            int sumRunningPods = 0;
             int sumCpuLoadOnNode = 0;
             int sumMemoryUsageOnNode = 0;
             for (Pod pod : podsPerNode.get(nodeName)) {
                 KubernetesPodInformationResponseDTO podInformation = getPodInformation(pod);
-                sumCpuLoadOnNode += podInformation.getMetrics().getCpuLoad();
-                sumMemoryUsageOnNode += podInformation.getMetrics().getMemoryUsage();
                 podInfos.add(podInformation);
+                if (pod.getStatus().getPhase().equals(POD_PHASE_RUNNING)) {
+                    sumCpuLoadOnNode += podInformation.getMetrics().getCpuLoad();
+                    sumMemoryUsageOnNode += podInformation.getMetrics().getMemoryUsage();
+                    sumRunningPods++;
+                }
             }
             nodeMetrics.add(new KubernetesNodeMetricsResponseDTO()
                 .setNodeName(nodeName)
-                .setAverageCpuLoad(sumCpuLoadOnNode / podsPerNode.get(nodeName).size())
-                .setAverageMemoryUsage(sumMemoryUsageOnNode / podsPerNode.get(nodeName).size()));
+                .setAverageCpuLoad(sumCpuLoadOnNode / sumRunningPods)
+                .setAverageMemoryUsage(sumMemoryUsageOnNode / sumRunningPods));
         }
         serviceStatus
             .setNodeMetrics(nodeMetrics)
@@ -327,7 +332,7 @@ public class MicoStatusService {
         int cpuLoad = 0;
         KubernetesPodMetricsResponseDTO podMetrics = new KubernetesPodMetricsResponseDTO();
         // Request values from Prometheus only if the pod phase is "Running"
-        if (phase.equals("Running")) {
+        if (phase.equals(POD_PHASE_RUNNING)) {
             try {
                 memoryUsage = getMemoryUsageForPod(podName);
                 cpuLoad = getCpuLoadForPod(podName);
