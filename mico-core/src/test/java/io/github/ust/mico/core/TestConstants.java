@@ -21,7 +21,9 @@ package io.github.ust.mico.core;
 
 import io.github.ust.mico.core.model.MicoVersion;
 
-import static io.github.ust.mico.core.JsonPathBuilder.*;
+import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
+import static io.github.ust.mico.core.JsonPathBuilder.buildAttributePath;
+import static io.github.ust.mico.core.JsonPathBuilder.buildPath;
 
 class TestConstants {
 
@@ -108,13 +110,11 @@ class TestConstants {
     static final String POD_INFO_NODE_NAME_1 = buildPath(SERVICE_STATUS_PATH, "podsInformation[0].nodeName");
     static final String POD_INFO_METRICS_MEMORY_USAGE_1 = buildPath(SERVICE_STATUS_PATH, "podsInformation[0].metrics.memoryUsage");
     static final String POD_INFO_METRICS_CPU_LOAD_1 = buildPath(SERVICE_STATUS_PATH, "podsInformation[0].metrics.cpuLoad");
-    static final String POD_INFO_METRICS_AVAILABLE_1 = buildPath(SERVICE_STATUS_PATH, "podsInformation[0].metrics.available");
     static final String POD_INFO_POD_NAME_2 = buildPath(SERVICE_STATUS_PATH, "podsInformation[1].podName");
     static final String POD_INFO_PHASE_2 = buildPath(SERVICE_STATUS_PATH, "podsInformation[1].phase");
     static final String POD_INFO_NODE_NAME_2 = buildPath(SERVICE_STATUS_PATH, "podsInformation[1].nodeName");
     static final String POD_INFO_METRICS_MEMORY_USAGE_2 = buildPath(SERVICE_STATUS_PATH, "podsInformation[1].metrics.memoryUsage");
     static final String POD_INFO_METRICS_CPU_LOAD_2 = buildPath(SERVICE_STATUS_PATH, "podsInformation[1].metrics.cpuLoad");
-    static final String POD_INFO_METRICS_AVAILABLE_2 = buildPath(SERVICE_STATUS_PATH, "podsInformation[1].metrics.available");
     static final String TOTAL_NUMBER_OF_MICO_SERVICES = buildPath(ROOT, "totalNumberOfMicoServices");
     static final String TOTAL_NUMBER_OF_AVAILABLE_REPLICAS = buildPath(ROOT, "totalNumberOfAvailableReplicas");
     static final String TOTAL_NUMBER_OF_REQUESTED_REPLICAS = buildPath(ROOT, "totalNumberOfRequestedReplicas");
@@ -141,13 +141,11 @@ class TestConstants {
     static final String SERVICE_DTO_POD_INFO_NODE_NAME_1 = buildPath(ROOT, "podsInformation[0].nodeName");
     static final String SERVICE_DTO_POD_INFO_METRICS_MEMORY_USAGE_1 = buildPath(ROOT, "podsInformation[0].metrics.memoryUsage");
     static final String SERVICE_DTO_POD_INFO_METRICS_CPU_LOAD_1 = buildPath(ROOT, "podsInformation[0].metrics.cpuLoad");
-    static final String SERVICE_DTO_POD_INFO_METRICS_AVAILABLE_1 = buildPath(ROOT, "podsInformation[0].metrics.available");
     static final String SERVICE_DTO_POD_INFO_POD_NAME_2 = buildPath(ROOT, "podsInformation[1].podName");
     static final String SERVICE_DTO_POD_INFO_PHASE_2 = buildPath(ROOT, "podsInformation[1].phase");
     static final String SERVICE_DTO_POD_INFO_NODE_NAME_2 = buildPath(ROOT, "podsInformation[1].nodeName");
     static final String SERVICE_DTO_POD_INFO_METRICS_MEMORY_USAGE_2 = buildPath(ROOT, "podsInformation[1].metrics.memoryUsage");
     static final String SERVICE_DTO_POD_INFO_METRICS_CPU_LOAD_2 = buildPath(ROOT, "podsInformation[1].metrics.cpuLoad");
-    static final String SERVICE_DTO_POD_INFO_METRICS_AVAILABLE_2 = buildPath(ROOT, "podsInformation[1].metrics.available");
 
     static final String SDI_REPLICAS_PATH = buildPath(ROOT, "replicas");
     static final String SDI_LABELS_PATH = buildPath(ROOT, "labels");

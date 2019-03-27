@@ -97,8 +97,6 @@ import static io.github.ust.mico.core.TestConstants.SERVICE_DTO_NODE_METRICS_AVE
 import static io.github.ust.mico.core.TestConstants.SERVICE_DTO_NODE_METRICS_AVERAGE_MEMORY_USAGE;
 import static io.github.ust.mico.core.TestConstants.SERVICE_DTO_NODE_NAME;
 import static io.github.ust.mico.core.TestConstants.SERVICE_DTO_POD_INFO;
-import static io.github.ust.mico.core.TestConstants.SERVICE_DTO_POD_INFO_METRICS_AVAILABLE_1;
-import static io.github.ust.mico.core.TestConstants.SERVICE_DTO_POD_INFO_METRICS_AVAILABLE_2;
 import static io.github.ust.mico.core.TestConstants.SERVICE_DTO_POD_INFO_METRICS_CPU_LOAD_1;
 import static io.github.ust.mico.core.TestConstants.SERVICE_DTO_POD_INFO_METRICS_CPU_LOAD_2;
 import static io.github.ust.mico.core.TestConstants.SERVICE_DTO_POD_INFO_METRICS_MEMORY_USAGE_1;
@@ -269,13 +267,11 @@ public class ServiceResourceIntegrationTests {
             .andExpect(jsonPath(SERVICE_DTO_POD_INFO_NODE_NAME_1, is(nodeName)))
             .andExpect(jsonPath(SERVICE_DTO_POD_INFO_METRICS_MEMORY_USAGE_1, is(memoryUsagePod1)))
             .andExpect(jsonPath(SERVICE_DTO_POD_INFO_METRICS_CPU_LOAD_1, is(cpuLoadPod1)))
-            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_METRICS_AVAILABLE_1, is(false)))
             .andExpect(jsonPath(SERVICE_DTO_POD_INFO_POD_NAME_2, is(podName2)))
             .andExpect(jsonPath(SERVICE_DTO_POD_INFO_PHASE_2, is(podPhase)))
             .andExpect(jsonPath(SERVICE_DTO_POD_INFO_NODE_NAME_2, is(nodeName)))
             .andExpect(jsonPath(SERVICE_DTO_POD_INFO_METRICS_MEMORY_USAGE_2, is(memoryUsagePod2)))
             .andExpect(jsonPath(SERVICE_DTO_POD_INFO_METRICS_CPU_LOAD_2, is(cpuLoadPod2)))
-            .andExpect(jsonPath(SERVICE_DTO_POD_INFO_METRICS_AVAILABLE_2, is(true)))
             .andExpect(jsonPath(SERVICE_DTO_ERROR_MESSAGES, is(CollectionUtils.listOf())));
     }
 
