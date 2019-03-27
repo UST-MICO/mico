@@ -63,17 +63,4 @@ public class KubernetesPodMetricsResponseDTO {
         }
     )})
     private int cpuLoad;
-
-    /**
-     * Indicates if a pod is available or not.
-     */
-    @ApiModelProperty(extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Available"),
-            @ExtensionProperty(name = "x-order", value = "30"),
-            @ExtensionProperty(name = "description", value = "Indicates if a pod is available.")
-        }
-    )})
-    private boolean available;
 }
