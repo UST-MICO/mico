@@ -27,7 +27,7 @@ import { CreateNextVersionComponent } from '../dialogs/create-next-version/creat
 import { MatDialog, MatSnackBar } from '@angular/material';
 import { safeUnsubscribe } from '../util/utils';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
-import { take, takeLast } from 'rxjs/operators';
+import { take } from 'rxjs/operators';
 
 @Component({
     selector: 'mico-app-detail',
@@ -93,6 +93,12 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
                     // sort by version
                     this.allVersions = JSON.parse(JSON.stringify(versions)).sort((n1, n2) => versionComparator(n1.version, n2.version));
+
+                    if (this.allVersions.length === 0) {
+                        // back to application list, if there is no version of the application left
+                        this.router.navigate(['../app-detail/app-list']);
+                    }
+
                     const latestVersion = this.getLatestVersion();
 
                     // adapt url path
@@ -258,7 +264,6 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
         safeUnsubscribe(this.subCreateNextVersion);
 
-
         // handle dialog result
         this.subCreateNextVersion = dialogRef.afterClosed().subscribe(nextVersion => {
 
@@ -294,16 +299,12 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         const subDeleteDependency = dialogRef.afterClosed().subscribe(result => {
             if (result) {
 
+                // go to latest version
                 this.apiService.deleteApplication(this.application.shortName, this.selectedVersion)
                     .subscribe(val => {
-
-                        // stay on the application page if there exists another version
-                        if (this.allVersions.length > 0) {
-                            this.updateVersion(null);
-                        } else {
-                            this.router.navigate(['../app-list']);
-                        }
+                        this.updateVersion(null);
                     });
+
                 safeUnsubscribe(subDeleteDependency);
             }
         });
