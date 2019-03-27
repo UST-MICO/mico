@@ -107,7 +107,7 @@ public class DeploymentBroker {
             for (MicoServiceDeploymentInfo serviceDeploymentInfo : serviceDeploymentInfos) {
                 MicoService micoService = serviceDeploymentInfo.getService();
                 try {
-                    KubernetesDeploymentInfo kubernetesDeploymentInfo = createKubernetesResources(serviceDeploymentInfo);
+                    KubernetesDeploymentInfo kubernetesDeploymentInfo = createOrUpdateKubernetesResources(serviceDeploymentInfo);
                     serviceDeploymentInfo.setKubernetesDeploymentInfo(kubernetesDeploymentInfo);
                     backgroundJobBroker.saveNewStatus(micoService.getShortName(), micoService.getVersion(),
                         MicoServiceBackgroundJob.Type.BUILD, MicoServiceBackgroundJob.Status.DONE);
@@ -181,8 +181,6 @@ public class DeploymentBroker {
         try {
             // Blocks this thread until build is finished, failed or TimeoutException is thrown
             CompletableFuture<String> buildFuture = imageBuilder.build(micoService);
-            log.debug("Build of MicoService '{}' in version '{}' finished.", micoService.getShortName(), micoService.getVersion());
-
             if (buildFuture.get() != null) {
                 String dockerImageUri = buildFuture.get();
                 log.info("Build of MicoService '{}' in version '{}' finished with image '{}'.",
@@ -202,13 +200,13 @@ public class DeploymentBroker {
     }
 
     /**
-     * Creates the Kubernetes resources based on the {@code MicoServiceDeploymentInfo}.
+     * Creates or updates the Kubernetes resources based on the {@code MicoServiceDeploymentInfo}.
      *
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}
      * @return the {@link KubernetesDeploymentInfo}
      * @throws KubernetesResourceException if there is an error during the creation of Kubernetes resources
      */
-    private KubernetesDeploymentInfo createKubernetesResources(MicoServiceDeploymentInfo serviceDeploymentInfo) throws KubernetesResourceException {
+    private KubernetesDeploymentInfo createOrUpdateKubernetesResources(MicoServiceDeploymentInfo serviceDeploymentInfo) throws KubernetesResourceException {
         MicoService micoService = serviceDeploymentInfo.getService();
         log.info("Creating Kubernetes resources for MicoService '{}' in version '{}'", micoService.getShortName(), micoService.getVersion());
         log.debug("Using deployment information for MicoService '{}' in version '{}': {}",
@@ -218,17 +216,42 @@ public class DeploymentBroker {
         // otherwise create the Kubernetes deployment
         Deployment deployment;
         if (micoKubernetesClient.isMicoServiceDeployed(micoService)) {
-        	Optional<Deployment> deploymentOptional = micoKubernetesClient.scaleOut(serviceDeploymentInfo, serviceDeploymentInfo.getReplicas());
-        	if (deploymentOptional.isPresent()) {
+
+            Optional<Deployment> deploymentOptional;
+            if(serviceDeploymentInfo.getKubernetesDeploymentInfo() == null) {
+                // MICO service was deployed by another MICO application.
+                // Get information about the actual deployment to be able to perform the scaling.
+                log.info("MicoService '{}' '{}' was already deployed by another MicoApplication. " +
+                        "Scale out by increasing the replicas by {}.",
+                    micoService.getShortName(), micoService.getVersion(), serviceDeploymentInfo.getReplicas());
+
+                deploymentOptional = micoKubernetesClient.getDeploymentOfMicoService(micoService);
+                if (deploymentOptional.isPresent()) {
+                    deployment = deploymentOptional.get();
+                } else {
+                    throw new KubernetesResourceException(
+                        "Deployment for MicoService '" + micoService.getShortName() + "' in version '"
+                            + micoService.getVersion() + "' is not available.");
+                }
+                KubernetesDeploymentInfo temporaryKubernetesDeploymentInfo = new KubernetesDeploymentInfo()
+                    .setNamespace(deployment.getMetadata().getNamespace())
+                    .setDeploymentName(deployment.getMetadata().getName())
+                    .setServiceNames(new ArrayList<>());
+                log.debug("MicoService '{}' '{}' is already deployed. Use the Kubernetes deployment information for scaling out: {}",
+                    micoService.getShortName(), micoService.getVersion(), temporaryKubernetesDeploymentInfo);
+                serviceDeploymentInfo.setKubernetesDeploymentInfo(temporaryKubernetesDeploymentInfo);
+            }
+
+            deploymentOptional = micoKubernetesClient.scaleOut(serviceDeploymentInfo, serviceDeploymentInfo.getReplicas());
+            if (deploymentOptional.isPresent()) {
                 deployment = deploymentOptional.get();
-        	} else {
+            } else {
                 throw new KubernetesResourceException(
                     "Deployment for MicoService '" + micoService.getShortName() + "' in version '"
                         + micoService.getVersion() + "' is not available.");
-        	}
+            }
         } else {
         	deployment = micoKubernetesClient.createMicoService(serviceDeploymentInfo);
-
         }
 
         List<io.fabric8.kubernetes.api.model.Service> createdServices = new ArrayList<>();
@@ -243,6 +266,8 @@ public class DeploymentBroker {
         // Create or update the Kubernetes deployment information, that will be stored in the database later
         KubernetesDeploymentInfo kubernetesDeploymentInfo = new KubernetesDeploymentInfo();
         if(serviceDeploymentInfo.getKubernetesDeploymentInfo() != null) {
+            // If the ID ist set, the Kubernetes deployment information will be updated in the database.
+            // Otherwise a new node will be created in the database.
             kubernetesDeploymentInfo.setId(serviceDeploymentInfo.getKubernetesDeploymentInfo().getId());
         }
         kubernetesDeploymentInfo.setNamespace(deployment.getMetadata().getNamespace())

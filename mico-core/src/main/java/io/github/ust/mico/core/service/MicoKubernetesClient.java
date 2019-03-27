@@ -961,9 +961,13 @@ public class MicoKubernetesClient {
      * @throws KubernetesResourceException if the Kubernetes deployment can't be found
      */
     public Optional<Deployment> scaleOut(MicoServiceDeploymentInfo serviceDeploymentInfo, int numberOfReplicas) throws KubernetesResourceException {
-    	int currentNumberOfReplicas = getSpecifiedReplicas(serviceDeploymentInfo);
-    	scale(serviceDeploymentInfo, currentNumberOfReplicas + numberOfReplicas);
-    	return getDeploymentOfMicoService(serviceDeploymentInfo.getService());
+        if(serviceDeploymentInfo.getKubernetesDeploymentInfo() == null) {
+            throw new IllegalArgumentException("The Kubernetes deployment information of the MicoService '"
+                + serviceDeploymentInfo.getService().getShortName() + "' '" + serviceDeploymentInfo.getService().getVersion()
+                + "' for this MicoApplication are not known. Scale out not possible!");
+        }
+        int currentNumberOfReplicas = getSpecifiedReplicas(serviceDeploymentInfo);
+        return scale(serviceDeploymentInfo, currentNumberOfReplicas + numberOfReplicas);
     }
     
     /**
@@ -978,14 +982,18 @@ public class MicoKubernetesClient {
      * @throws KubernetesResourceException if the Kubernetes deployment can't be found
      */
     public Optional<Deployment> scaleIn(MicoServiceDeploymentInfo serviceDeploymentInfo, int numberOfReplicas) throws KubernetesResourceException {
-    	int currentNumberOfReplicas = getSpecifiedReplicas(serviceDeploymentInfo);
+        if(serviceDeploymentInfo.getKubernetesDeploymentInfo() == null) {
+            throw new IllegalArgumentException("The Kubernetes deployment information of the MicoService '"
+                + serviceDeploymentInfo.getService().getShortName() + "' '" + serviceDeploymentInfo.getService().getVersion()
+                + "' for this MicoApplication are not known. Scale out not possible!");
+        }
+        int currentNumberOfReplicas = getSpecifiedReplicas(serviceDeploymentInfo);
     	int updatedNumberOfReplicas = currentNumberOfReplicas - Math.abs(numberOfReplicas);
     	if (updatedNumberOfReplicas <= 0) {
     		undeploy(serviceDeploymentInfo);
     		return Optional.empty();
     	} else {
-    		scale(serviceDeploymentInfo, updatedNumberOfReplicas);
-    		return getDeploymentOfMicoService(serviceDeploymentInfo.getService());    		
+    		return scale(serviceDeploymentInfo, updatedNumberOfReplicas);
     	}
     }
     
@@ -993,30 +1001,31 @@ public class MicoKubernetesClient {
      * Scales a Kubernetes deployment for a {@code MicoService} to
      * a given number of replicas. If the specified number of replicas
      * is {@code 0}, the {@code MicoService} will be undeployed.
-     * 
-     * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.
+     *  @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.
      * @param scaleToNumberOfReplicas the updated number of requested replicas
      * 		  for the Kubernetes deployment for the {@link MicoService}.
      */
-    public void scale(MicoServiceDeploymentInfo serviceDeploymentInfo, int scaleToNumberOfReplicas) {
+    private Optional<Deployment> scale(MicoServiceDeploymentInfo serviceDeploymentInfo, int scaleToNumberOfReplicas) {
     	if (scaleToNumberOfReplicas < 0) {
     		log.warn("Illegal number of requested replicas, no scaling action will be performed.");
     		throw new IllegalArgumentException("Number of replicas must never be negative!");
     	} else if (scaleToNumberOfReplicas == 0) {
     		log.debug("Number of requested replicas is 0, service will be undeployed.");
     		undeploy(serviceDeploymentInfo);
+    		return Optional.empty();
     	} else {
     		log.debug("Scale in/out deployment of MicoService '{}' in version '{}' to {} replica(s) (namespace: '{}', deployment: '{}').",
 				serviceDeploymentInfo.getService().getShortName(), serviceDeploymentInfo.getService().getVersion(),
 				scaleToNumberOfReplicas,
                 serviceDeploymentInfo.getKubernetesDeploymentInfo().getNamespace(),
                 serviceDeploymentInfo.getKubernetesDeploymentInfo().getDeploymentName());
-            kubernetesClient
+            Deployment deployment = kubernetesClient
                 .apps()
                 .deployments()
                 .inNamespace(serviceDeploymentInfo.getKubernetesDeploymentInfo().getNamespace())
                 .withName(serviceDeploymentInfo.getKubernetesDeploymentInfo().getDeploymentName())
                 .scale(scaleToNumberOfReplicas);
+            return Optional.of(deployment);
         }
     }
     
