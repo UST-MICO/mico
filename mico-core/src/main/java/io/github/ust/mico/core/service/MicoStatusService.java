@@ -294,15 +294,13 @@ public class MicoStatusService {
             if (ingressList != null && ingressList.size() == 1) {
                 log.info("Service interface with name '{}' of MicoService '{}' in version '{}' has external IP: {}",
                     serviceInterfaceName, micoService.getShortName(), micoService.getVersion(), ingressList.get(0).getIp());
-                return new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName).setExternalIp(ingressList.get(0).getIp());
+                return new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName).setExternalIp(ingressList.get(0).getIp()).setExternalIpIsAvailable(true);
             } else if (ingressList != null && ingressList.size() > 1) {
                 log.warn("There are " + ingressList.size() + " IP addresses for the MicoServiceInterface " + serviceInterfaceName + ". Only one IP address is returned.");
-                return new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName).setExternalIp(ingressList.get(0).getIp());
+                return new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName).setExternalIp(ingressList.get(0).getIp()).setExternalIpIsAvailable(true);
             } else {
-                log.error("There is no Kubernetes service for the interface '{}' of MicoService '{}' in version '{}'.",
-                    serviceInterfaceName, micoService.getShortName(), micoService.getVersion());
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "There is no Kubernetes service for the interface '" +
-                    serviceInterfaceName + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "'.");
+                log.info("The IP address for the Kubernetes service of the MicoServiceInterface '{}' is in a pending state.", serviceInterfaceName);
+                return new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName);
             }
         } else {
             log.error("There is no Load Balancer service for the Kubernetes service of the MicoServiceInterface '{}'.", serviceInterfaceName);
