@@ -556,7 +556,7 @@ public class MicoStatusServiceTest {
         MicoServiceInterfaceStatusResponseDTO expectedServiceInterface = new MicoServiceInterfaceStatusResponseDTO()
                 .setName(SERVICE_INTERFACE_NAME)
                 .setExternalIp("192.168.2.112");
-        List<MicoServiceInterfaceStatusResponseDTO> expectedInterfaceStatusDTO = new LinkedList<>();
+        List<MicoServiceInterfaceStatusResponseDTO> expectedInterfaceStatusDTO = new ArrayList<>();
         expectedInterfaceStatusDTO.add(expectedServiceInterface);
         List<MicoMessageResponseDTO> errorMessages = new ArrayList<>();
 
@@ -575,7 +575,7 @@ public class MicoStatusServiceTest {
 
         MicoServiceInterfaceStatusResponseDTO expectedServiceInterface = new MicoServiceInterfaceStatusResponseDTO()
                 .setName(SERVICE_INTERFACE_NAME); // Expect that there are no IPs
-        List<MicoServiceInterfaceStatusResponseDTO> expectedInterfaceStatusDTO = new LinkedList<>();
+        List<MicoServiceInterfaceStatusResponseDTO> expectedInterfaceStatusDTO = new ArrayList<>();
         expectedInterfaceStatusDTO.add(expectedServiceInterface);
 
         List<MicoMessageResponseDTO> errorMessages = new ArrayList<>();
