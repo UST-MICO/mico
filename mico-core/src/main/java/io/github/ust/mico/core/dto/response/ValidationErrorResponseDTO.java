@@ -19,27 +19,29 @@
 
 package io.github.ust.mico.core.dto.response;
 
-import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 
+import lombok.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
-import lombok.Value;
+import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 
 @Value
-@JsonInclude(Include.NON_NULL)
 public class ValidationErrorResponseDTO {
 
+    /**
+     * HTTP status code that is used for validation errors.
+     * <p>
+     * "422 Unprocessable Entity" is used instead of "400 Bad Request" because the request was syntactically correct,
+     * but semantically incorrect.
+     */
+    public final static HttpStatus HTTP_STATUS = UNPROCESSABLE_ENTITY;
     /**
      * The {@link HttpStatus#value()}
      */
@@ -60,14 +62,6 @@ public class ValidationErrorResponseDTO {
      * The path of the endpoint
      */
     private final String path;
-
-    /**
-     * HTTP status code that is used for validation errors.
-     * <p>
-     * "422 Unprocessable Entity" is used instead of "400 Bad Request"
-     * because the request was syntactically correct, but semantically incorrect.
-     */
-    public final static HttpStatus HTTP_STATUS = UNPROCESSABLE_ENTITY;
 
     public ValidationErrorResponseDTO(List<FieldError> fieldErrorList) {
         this.fieldErrors = fieldErrorList.stream()
