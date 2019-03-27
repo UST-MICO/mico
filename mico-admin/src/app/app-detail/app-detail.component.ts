@@ -27,6 +27,7 @@ import { CreateNextVersionComponent } from '../dialogs/create-next-version/creat
 import { MatDialog, MatSnackBar } from '@angular/material';
 import { safeUnsubscribe } from '../util/utils';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
+import { take } from 'rxjs/operators';
 
 @Component({
     selector: 'mico-app-detail',
@@ -59,7 +60,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     application: ApiObject;
     shortName: string;
     selectedVersion;
-    allVersions;
+    allVersions: any[];
     deploymentStatus;
     deploymentStatusMessage: string;
 
@@ -83,31 +84,39 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
         this.subRouteParams = this.route.params.subscribe(params => {
             this.shortName = params['shortName'];
-            const givenVersion = params['version'];
+            this.selectedVersion = params['version'];
 
             // get all application versions
+            safeUnsubscribe(this.subApplicationVersions);
             this.subApplicationVersions = this.apiService.getApplicationVersions(this.shortName)
                 .subscribe(versions => {
 
                     // sort by version
                     this.allVersions = JSON.parse(JSON.stringify(versions)).sort((n1, n2) => versionComparator(n1.version, n2.version));
+
+                    if (this.allVersions.length === 0) {
+                        // back to application list, if there is no version of the application left
+                        this.router.navigate(['../app-detail/app-list']);
+                    }
+
                     const latestVersion = this.getLatestVersion();
 
                     // adapt url path
-                    if (givenVersion == null) {
+                    if (this.selectedVersion == null || !this.allVersions.some(v => v.version === this.selectedVersion)) {
+                        // check if no version is selected or an unknown version is selected -> take latest version instead
                         this.router.navigate(['app-detail', this.shortName, latestVersion]);
                         // prevent further api calls (navigate will cause a reload anyway)
                         return;
                     }
 
                     // call the selected version, latest if no version is specified
-                    if (givenVersion == null) {
+                    if (this.selectedVersion == null) {
                         this.subscribeApplication(latestVersion);
                     } else {
                         let found = false;
                         found = versions.some(element => {
 
-                            if (element.version === givenVersion) {
+                            if (element.version === this.selectedVersion) {
                                 this.subscribeApplication(element.version);
                                 return true;
                             }
@@ -256,14 +265,21 @@ export class AppDetailComponent implements OnInit, OnDestroy {
 
         safeUnsubscribe(this.subCreateNextVersion);
 
-
         // handle dialog result
         this.subCreateNextVersion = dialogRef.afterClosed().subscribe(nextVersion => {
 
             if (nextVersion) {
-                this.apiService.promoteApplication(this.application.shortName, this.application.version, nextVersion).subscribe(val => {
-                    this.updateVersion(null);
-                });
+                this.apiService.promoteApplication(this.application.shortName, this.application.version, nextVersion)
+                    .pipe(take(1))
+                    .subscribe(val => {
+                        this.apiService.getApplicationVersions(this.shortName)
+                            .subscribe(element => {
+                                // wait until the latest version is updated
+                                if (element.some(v => v.version === val.version)) {
+                                    this.updateVersion(val.version);
+                                }
+                            });
+                    });
             }
         });
     }
@@ -283,16 +299,12 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         const subDeleteDependency = dialogRef.afterClosed().subscribe(result => {
             if (result) {
 
+                // go to latest version
                 this.apiService.deleteApplication(this.application.shortName, this.selectedVersion)
                     .subscribe(val => {
-
-                        // stay on the application page if there exists another version
-                        if (this.allVersions.length > 0) {
-                            this.updateVersion(null);
-                        } else {
-                            this.router.navigate(['../app-list']);
-                        }
+                        this.updateVersion(null);
                     });
+
                 safeUnsubscribe(subDeleteDependency);
             }
         });
