@@ -257,21 +257,22 @@ public class ApplicationResource {
                                                                                                              @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                                                              @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName,
                                                                                                              @Valid @RequestBody MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoRequestDto) {
-        MicoServiceDeploymentInfoResponseDTO updatedServiceDeploymentInfoDto;
+        MicoServiceDeploymentInfo updatedServiceDeploymentInfo;
         try {
-            MicoServiceDeploymentInfo updatedServiceDeploymentInfo = broker.updateMicoServiceDeploymentInformation(
+            updatedServiceDeploymentInfo = broker.updateMicoServiceDeploymentInformation(
                 shortName, version, serviceShortName, serviceDeploymentInfoRequestDto);
-            updatedServiceDeploymentInfoDto = new MicoServiceDeploymentInfoResponseDTO(updatedServiceDeploymentInfo);
         } catch (MicoApplicationNotFoundException | MicoServiceDeploymentInformationNotFoundException
-        	| KubernetesResourceException e) {
+            | KubernetesResourceException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoApplicationDoesNotIncludeMicoServiceException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
 
+        // Convert to service deployment info DTO and return it
+        MicoServiceDeploymentInfoResponseDTO updatedServiceDeploymentInfoDto = new MicoServiceDeploymentInfoResponseDTO(updatedServiceDeploymentInfo);
         return ResponseEntity.ok(new Resource<>(updatedServiceDeploymentInfoDto,
-                linkTo(methodOn(ApplicationResource.class).getServiceDeploymentInformation(shortName, version, serviceShortName))
-                        .withSelfRel()));
+            linkTo(methodOn(ApplicationResource.class).getServiceDeploymentInformation(shortName, version, serviceShortName))
+                .withSelfRel()));
     }
     
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPLOYMENT_STATUS)
