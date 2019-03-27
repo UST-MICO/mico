@@ -20,25 +20,30 @@
 package io.github.ust.mico.core.service;
 
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import javax.validation.constraints.NotNull;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.util.UriComponentsBuilder;
-
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.ContainerStatus;
+import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
+import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.github.ust.mico.core.configuration.PrometheusConfig;
 import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
 import io.github.ust.mico.core.dto.response.internal.PrometheusResponseDTO;
-import io.github.ust.mico.core.dto.response.status.*;
+import io.github.ust.mico.core.dto.response.status.KubernetesNodeMetricsResponseDTO;
+import io.github.ust.mico.core.dto.response.status.KubernetesPodInformationResponseDTO;
+import io.github.ust.mico.core.dto.response.status.KubernetesPodMetricsResponseDTO;
+import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
+import io.github.ust.mico.core.dto.response.status.MicoMessageResponseDTO;
+import io.github.ust.mico.core.dto.response.status.MicoServiceInterfaceStatusResponseDTO;
+import io.github.ust.mico.core.dto.response.status.MicoServiceStatusResponseDTO;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.PrometheusRequestFailedException;
 import io.github.ust.mico.core.model.MicoApplication;
@@ -50,6 +55,14 @@ import io.github.ust.mico.core.persistence.MicoServiceInterfaceRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.util.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * Provides functionality to retrieve status information for a {@link MicoApplication} or a particular {@link
@@ -198,7 +211,7 @@ public class MicoStatusService {
             int sumCpuLoadOnNode = 0;
             int sumMemoryUsageOnNode = 0;
             for (Pod pod : podsPerNode.get(nodeName)) {
-                KubernetesPodInformationResponseDTO podInformation = getUiPodInfo(pod);
+                KubernetesPodInformationResponseDTO podInformation = getPodInformation(pod);
                 sumCpuLoadOnNode += podInformation.getMetrics().getCpuLoad();
                 sumMemoryUsageOnNode += podInformation.getMetrics().getMemoryUsage();
                 podInfos.add(podInformation);
@@ -238,7 +251,7 @@ public class MicoStatusService {
         }
         return interfacesInformation;
     }
-    
+
     /**
      * Get the public IP of a {@link MicoServiceInterface} by providing the corresponding Kubernetes {@link Service}.
      *
@@ -300,7 +313,7 @@ public class MicoStatusService {
      * @return a {@link KubernetesPodInformationResponseDTO} which has node name, pod name, phase, host ip, memory
      * usage, and CPU load as status information.
      */
-    private KubernetesPodInformationResponseDTO getUiPodInfo(Pod pod) {
+    private KubernetesPodInformationResponseDTO getPodInformation(Pod pod) {
         String nodeName = pod.getSpec().getNodeName();
         String podName = pod.getMetadata().getName();
         String phase = pod.getStatus().getPhase();
@@ -310,20 +323,28 @@ public class MicoStatusService {
             restarts += containerStatus.getRestartCount();
         }
         String age = pod.getStatus().getStartTime();
-        int memoryUsage = -1;
-        int cpuLoad = -1;
+        int memoryUsage = 0;
+        int cpuLoad = 0;
         KubernetesPodMetricsResponseDTO podMetrics = new KubernetesPodMetricsResponseDTO();
-        try {
-            memoryUsage = getMemoryUsageForPod(podName);
-            cpuLoad = getCpuLoadForPod(podName);
-            podMetrics.setAvailable(true);
-        } catch (PrometheusRequestFailedException | ResourceAccessException e) {
-            podMetrics.setAvailable(false);
-            log.error(e.getMessage(), e);
+        // Request values from Prometheus only if the pod phase is "Running"
+        if (phase.equals("Running")) {
+            try {
+                memoryUsage = getMemoryUsageForPod(podName);
+                cpuLoad = getCpuLoadForPod(podName);
+            } catch (PrometheusRequestFailedException | ResourceAccessException e) {
+                log.error(e.getMessage(), e);
+            }
+            podMetrics.setMemoryUsage(memoryUsage);
+            podMetrics.setCpuLoad(cpuLoad);
+            return new KubernetesPodInformationResponseDTO(podName, phase, hostIp, nodeName, restarts, age, podMetrics);
         }
-        podMetrics.setMemoryUsage(memoryUsage);
-        podMetrics.setCpuLoad(cpuLoad);
-        return new KubernetesPodInformationResponseDTO(podName, phase, hostIp, nodeName, restarts, age, podMetrics);
+        return new KubernetesPodInformationResponseDTO()
+            .setNodeName(nodeName)
+            .setPodName(podName)
+            .setPhase(phase)
+            .setHostIp(hostIp)
+            .setRestarts(restarts)
+            .setStartTime(age);
     }
 
     private int getMemoryUsageForPod(String podName) throws PrometheusRequestFailedException {
