@@ -98,6 +98,7 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
 
                 // adapt url path
                 if (this.selectedVersion == null || !this.allVersions.some(v => v.version === this.selectedVersion)) {
+                    // check if no version is selected or an unknown version is selected -> take latest version instead
                     this.router.navigate(['service-detail', this.shortName, latestVersion]);
                     // prevent further api calls (navigate will cause a reload anyway)
                     return;
