@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import { Component, OnInit, OnDestroy, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { ApiService } from '../api/api.service';
@@ -28,7 +28,7 @@ import { MatDialog } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 import { safeUnsubscribe } from '../util/utils';
 import { CreateNextVersionComponent } from '../dialogs/create-next-version/create-next-version.component';
-import { take, takeUntil, takeLast } from 'rxjs/operators';
+import { take } from 'rxjs/operators';
 
 export interface Service extends ApiObject {
     name: string;
@@ -153,29 +153,6 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
         this.router.navigate(['service-detail', this.shortName, version]);
     }
 
-    /**
-     * action triggered in the ui to delete the current service version
-     */
-    deleteService() {
-
-        const dialogRef = this.dialog.open(YesNoDialogComponent, {
-            data: {
-                object: { name: this.service.name, shortName: this.shortName, version: this.selectedVersion },
-                question: 'deleteService'
-            }
-        });
-
-        const subDeleteDependency = dialogRef.afterClosed().subscribe(result => {
-            if (result) {
-
-                this.apiService.deleteService(this.shortName, this.selectedVersion)
-                    .subscribe(val => {
-                        this.updateVersion(this.shortName);
-                    });
-                safeUnsubscribe(subDeleteDependency);
-            }
-        });
-    }
 
     /**
      * opens a dialog to choose the version part to be increased.
@@ -213,4 +190,29 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
         });
     }
 
+
+    /**
+     * action triggered in the ui to delete the current service version
+     */
+    deleteService() {
+
+        const dialogRef = this.dialog.open(YesNoDialogComponent, {
+            data: {
+                object: { name: this.service.name, shortName: this.shortName, version: this.selectedVersion },
+                question: 'deleteService'
+            }
+        });
+
+        const subDeleteDependency = dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+
+                // go to latest version
+                this.apiService.deleteService(this.shortName, this.selectedVersion)
+                    .subscribe(val => {
+                        this.updateVersion(null);
+                    });
+                safeUnsubscribe(subDeleteDependency);
+            }
+        });
+    }
 }
