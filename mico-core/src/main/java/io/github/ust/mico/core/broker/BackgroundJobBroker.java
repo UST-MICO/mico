@@ -84,11 +84,21 @@ public class BackgroundJobBroker {
 
     /**
      * Deletes a job in the database.
+     * If the future is still running, cancel it.
      *
      * @param id the id of the job.
      */
     public void deleteJob(String id) {
-        jobRepository.deleteById(id);
+        Optional<MicoServiceBackgroundJob> jobOptional = getJobById(id);
+        if(jobOptional.isPresent()) {
+            MicoServiceBackgroundJob job = jobOptional.get();
+            if(job.getFuture() != null && !job.getFuture().isCancelled()
+                && !job.getFuture().isCompletedExceptionally() && job.getFuture().isDone()) {
+                log.warn("Job '{}' is going to be deleted, but it's future is still running -> Cancel it.");
+                job.getFuture().cancel(true);
+            }
+            jobRepository.delete(job);
+        }
     }
 
     /**
@@ -143,7 +153,8 @@ public class BackgroundJobBroker {
             MicoServiceBackgroundJob job = jobOptional.get();
             job.setFuture(future);
             saveJob(job);
-            log.debug("Saved new future of job with type '{}' for '{}' '{}'.", type, micoServiceShortName, micoServiceVersion);
+            log.debug("Saved new future of job '{}' with type '{}' for MicoService '{}' '{}'.",
+                job.getId(), type, micoServiceShortName, micoServiceVersion);
         } else {
             log.warn("No job of type '{}' exists for '{}' '{}'.", type, micoServiceShortName, micoServiceVersion);
         }
