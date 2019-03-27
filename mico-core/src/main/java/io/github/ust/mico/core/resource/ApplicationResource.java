@@ -257,22 +257,22 @@ public class ApplicationResource {
                                                                                                              @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                                                              @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName,
                                                                                                              @Valid @RequestBody MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoRequestDto) {
-        MicoServiceDeploymentInfoResponseDTO serviceDeploymentInfoDto;
-        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo().applyValuesFrom(serviceDeploymentInfoRequestDto);
+        MicoServiceDeploymentInfo updatedServiceDeploymentInfo;
         try {
-        	
-			serviceDeploymentInfoDto = new MicoServiceDeploymentInfoResponseDTO(broker
-			    .updateMicoServiceDeploymentInformation(shortName, version, serviceShortName, serviceDeploymentInfo));
+            updatedServiceDeploymentInfo = broker.updateMicoServiceDeploymentInformation(
+                shortName, version, serviceShortName, serviceDeploymentInfoRequestDto);
         } catch (MicoApplicationNotFoundException | MicoServiceDeploymentInformationNotFoundException
-        	| KubernetesResourceException e) {
+            | KubernetesResourceException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoApplicationDoesNotIncludeMicoServiceException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
 
-        return ResponseEntity.ok(new Resource<>(serviceDeploymentInfoDto,
-                linkTo(methodOn(ApplicationResource.class).getServiceDeploymentInformation(shortName, version, serviceShortName))
-                        .withSelfRel()));
+        // Convert to service deployment info DTO and return it
+        MicoServiceDeploymentInfoResponseDTO updatedServiceDeploymentInfoDto = new MicoServiceDeploymentInfoResponseDTO(updatedServiceDeploymentInfo);
+        return ResponseEntity.ok(new Resource<>(updatedServiceDeploymentInfoDto,
+            linkTo(methodOn(ApplicationResource.class).getServiceDeploymentInformation(shortName, version, serviceShortName))
+                .withSelfRel()));
     }
     
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPLOYMENT_STATUS)
