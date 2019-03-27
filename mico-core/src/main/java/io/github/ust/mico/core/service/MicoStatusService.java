@@ -342,14 +342,15 @@ public class MicoStatusService {
             podMetrics.setMemoryUsage(memoryUsage);
             podMetrics.setCpuLoad(cpuLoad);
             return new KubernetesPodInformationResponseDTO(podName, phase, hostIp, nodeName, restarts, age, podMetrics);
+        } else {
+            return new KubernetesPodInformationResponseDTO()
+                .setNodeName(nodeName)
+                .setPodName(podName)
+                .setPhase(phase)
+                .setHostIp(hostIp)
+                .setRestarts(restarts)
+                .setStartTime(age);
         }
-        return new KubernetesPodInformationResponseDTO()
-            .setNodeName(nodeName)
-            .setPodName(podName)
-            .setPhase(phase)
-            .setHostIp(hostIp)
-            .setRestarts(restarts)
-            .setStartTime(age);
     }
 
     private int getMemoryUsageForPod(String podName) throws PrometheusRequestFailedException {
