@@ -27,9 +27,7 @@ public class MicoServiceInterfaceBroker {
     private MicoServiceBroker micoServiceBroker;
 
     public List<MicoServiceInterface> getInterfacesOfService(String shortName, String version) {
-        List<MicoServiceInterface> serviceInterfaces = serviceInterfaceRepository.findByService(shortName, version);
-
-        return serviceInterfaces;
+        return serviceInterfaceRepository.findByService(shortName, version);
     }
 
     public MicoServiceInterface getInterfaceOfServiceByName(String shortName, String version, String interfaceName) throws MicoServiceInterfaceNotFoundException {

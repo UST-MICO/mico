@@ -63,12 +63,8 @@ public class MicoServiceBroker {
         return serviceOptional.get();
     }
 
-    public List<MicoService> getAllVersionsOfServiceFromDatabase(String shortName) throws ResponseStatusException, MicoServiceNotFoundException {
-        List<MicoService> micoServiceList = serviceRepository.findByShortName(shortName);
-        if (micoServiceList.isEmpty()) {
-            throw new MicoServiceNotFoundException(shortName);
-        }
-        return micoServiceList;
+    public List<MicoService> getAllVersionsOfServiceFromDatabase(String shortName) throws ResponseStatusException {
+        return serviceRepository.findByShortName(shortName);
     }
 
     public void deleteService(MicoService service) throws KubernetesResourceException, MicoServiceHasDependersException, MicoServiceIsDeployedException {
