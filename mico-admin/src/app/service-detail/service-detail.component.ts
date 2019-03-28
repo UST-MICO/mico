@@ -216,6 +216,11 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
                                 // wait until the latest version is updated
                                 if (!element.some(v => v.version === this.selectedVersion)) {
                                     safeUnsubscribe(subVersions);
+
+                                    if (element.length === 0) {
+                                        // no version of the service left
+                                        this.router.navigate(['../app-detail/app-list']);
+                                    }
                                     this.updateVersion(null);
                                 }
                             });
