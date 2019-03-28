@@ -120,18 +120,18 @@ public class DeploymentBroker {
 
             // After the Kubernetes deployments are created, save the actual deployment information to the database.
             for (MicoServiceDeploymentInfo serviceDeploymentInfo : serviceDeploymentInfos) {
-                log.debug("Saved new Kubernetes deployment information of MicoService '{}' '{}' for MicoApplication '{}' '{} to database: {}",
-                    serviceDeploymentInfo.getService().getShortName(), serviceDeploymentInfo.getService().getVersion(),
-                    micoApplication.getShortName(), micoApplication.getVersion(),
-                    serviceDeploymentInfo.getKubernetesDeploymentInfo());
-
                 // Save the ServiceDeploymentInfo entity with a depth of 1 to the database.
                 // A new node for the KubernetesDeploymentInfo
                 // and a relation to the existing ServiceDeploymentInfo node will be created.
-                serviceDeploymentInfoRepository.save(serviceDeploymentInfo, 1);
+                MicoServiceDeploymentInfo savedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(serviceDeploymentInfo, 1);
+                log.debug("Saved new Kubernetes deployment information of MicoService '{}' '{}' for MicoApplication '{}' '{} to database: {}",
+                    savedServiceDeploymentInfo.getService().getShortName(),
+                    savedServiceDeploymentInfo.getService().getVersion(),
+                    micoApplication.getShortName(), micoApplication.getVersion(),
+                    savedServiceDeploymentInfo.getKubernetesDeploymentInfo());
             }
-            log.info("Finished creating or updating Kubernetes resources for deployment of MicoApplication '{}' '{}'. " +
-                "Start creating or updating interface connections.", micoApplication.getShortName(), micoApplication.getVersion());
+            log.info("Finished creating or updating Kubernetes resources for deployment of MicoApplication '{}' '{}'.",
+                micoApplication.getShortName(), micoApplication.getVersion());
 
             // At last set up the connections between the deployed MicoServices
             micoKubernetesClient.createOrUpdateInterfaceConnections(micoApplication);

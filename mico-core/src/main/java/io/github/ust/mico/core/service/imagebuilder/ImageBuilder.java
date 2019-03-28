@@ -123,7 +123,7 @@ public class ImageBuilder {
         }
         ServiceAccount buildServiceAccount = kubernetesClient.serviceAccounts().inNamespace(namespace).withName(serviceAccountName).get();
         if (buildServiceAccount == null) {
-            log.error("Service account `{}` is not available!", serviceAccountName);
+            log.error("Service account `{}` in namespace '{}' is not available!", serviceAccountName, namespace);
             throw new NotInitializedException("Service account not available!");
         }
 

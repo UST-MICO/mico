@@ -581,7 +581,6 @@ public class MicoKubernetesClient {
    			return new MicoApplicationDeploymentStatus(applicationDeploymentStatus, messages);
    		}
 
-        log.debug("MicoApplication '{}' '{}' is deployed.", applicationShortName, applicationVersion);
    		return MicoApplicationDeploymentStatus.deployed("The MicoApplication is currently deployed.");
     }
     
