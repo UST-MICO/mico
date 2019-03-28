@@ -402,13 +402,7 @@ public class ServiceResource {
 
     private MicoService updateServiceViaMicoServiceBroker(String shortName, String version, MicoServiceRequestDTO serviceDto) throws ResponseStatusException {
         MicoService existingService = getServiceFromMicoServiceBroker(shortName, version);
-        MicoService updatedService;
-        try {
-            updatedService = micoServiceBroker.updateExistingService(MicoService.valueOf(serviceDto).setId(existingService.getId()));
-        } catch (MicoServiceNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        }
-        return updatedService;
+        return micoServiceBroker.updateExistingService(MicoService.valueOf(serviceDto).setId(existingService.getId()));
     }
 
     private List<MicoService> getAllVersionsOfServiceFromMicoServiceBroker(String shortName) throws ResponseStatusException {
