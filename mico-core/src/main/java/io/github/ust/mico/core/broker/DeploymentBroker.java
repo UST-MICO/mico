@@ -208,39 +208,46 @@ public class DeploymentBroker {
      */
     private KubernetesDeploymentInfo createOrUpdateKubernetesResources(MicoServiceDeploymentInfo serviceDeploymentInfo) throws KubernetesResourceException {
         MicoService micoService = serviceDeploymentInfo.getService();
-        log.info("Creating Kubernetes resources for MicoService '{}' in version '{}'", micoService.getShortName(), micoService.getVersion());
+        log.info("Creating / updating Kubernetes resources for MicoService '{}' in version '{}'.",
+            micoService.getShortName(), micoService.getVersion());
         log.debug("Using deployment information for MicoService '{}' in version '{}': {}",
                 micoService.getShortName(), micoService.getVersion(), serviceDeploymentInfo.toString());
 
         // If the Kubernetes deployment already exists and is deployed, scale out,
         // otherwise create the Kubernetes deployment
+        boolean micoServiceIsDeployed = micoKubernetesClient.isMicoServiceDeployed(micoService);
+        if(micoServiceIsDeployed && serviceDeploymentInfo.getKubernetesDeploymentInfo() != null) {
+            log.info("MicoService '{}' '{}' is already deployed by this MicoApplication. Do nothing.",
+                micoService.getShortName(), micoService.getVersion());
+            return serviceDeploymentInfo.getKubernetesDeploymentInfo();
+        }
+
         Deployment deployment;
-        if (micoKubernetesClient.isMicoServiceDeployed(micoService)) {
+        if (!micoServiceIsDeployed) {
+            log.info("MicoService '{}' '{}' is not deployed yet. Create the required Kubernetes resources.",
+                micoService.getShortName(), micoService.getVersion());
+            deployment = micoKubernetesClient.createMicoService(serviceDeploymentInfo);
+        } else {
+            // MICO service was deployed by another MICO application.
+            // Get information about the actual deployment to be able to perform the scaling.
+            log.info("MicoService '{}' '{}' was already deployed by another MicoApplication. Scale out by increasing the replicas by {}.",
+                micoService.getShortName(), micoService.getVersion(), serviceDeploymentInfo.getReplicas());
 
-            Optional<Deployment> deploymentOptional;
-            if(serviceDeploymentInfo.getKubernetesDeploymentInfo() == null) {
-                // MICO service was deployed by another MICO application.
-                // Get information about the actual deployment to be able to perform the scaling.
-                log.info("MicoService '{}' '{}' was already deployed by another MicoApplication. " +
-                        "Scale out by increasing the replicas by {}.",
-                    micoService.getShortName(), micoService.getVersion(), serviceDeploymentInfo.getReplicas());
-
-                deploymentOptional = micoKubernetesClient.getDeploymentOfMicoService(micoService);
-                if (deploymentOptional.isPresent()) {
-                    deployment = deploymentOptional.get();
-                } else {
-                    throw new KubernetesResourceException(
-                        "Deployment for MicoService '" + micoService.getShortName() + "' in version '"
-                            + micoService.getVersion() + "' is not available.");
-                }
-                KubernetesDeploymentInfo temporaryKubernetesDeploymentInfo = new KubernetesDeploymentInfo()
-                    .setNamespace(deployment.getMetadata().getNamespace())
-                    .setDeploymentName(deployment.getMetadata().getName())
-                    .setServiceNames(new ArrayList<>());
-                log.debug("MicoService '{}' '{}' is already deployed. Use the Kubernetes deployment information for scaling out: {}",
-                    micoService.getShortName(), micoService.getVersion(), temporaryKubernetesDeploymentInfo);
-                serviceDeploymentInfo.setKubernetesDeploymentInfo(temporaryKubernetesDeploymentInfo);
+            Optional<Deployment> deploymentOptional = micoKubernetesClient.getDeploymentOfMicoService(micoService);
+            if (deploymentOptional.isPresent()) {
+                deployment = deploymentOptional.get();
+            } else {
+                throw new KubernetesResourceException(
+                    "Deployment for MicoService '" + micoService.getShortName() + "' in version '"
+                        + micoService.getVersion() + "' is not available.");
             }
+            KubernetesDeploymentInfo temporaryKubernetesDeploymentInfo = new KubernetesDeploymentInfo()
+                .setNamespace(deployment.getMetadata().getNamespace())
+                .setDeploymentName(deployment.getMetadata().getName())
+                .setServiceNames(new ArrayList<>());
+            log.debug("MicoService '{}' '{}' is already deployed. Use the Kubernetes deployment information for scaling out: {}",
+                micoService.getShortName(), micoService.getVersion(), temporaryKubernetesDeploymentInfo);
+            serviceDeploymentInfo.setKubernetesDeploymentInfo(temporaryKubernetesDeploymentInfo);
 
             deploymentOptional = micoKubernetesClient.scaleOut(serviceDeploymentInfo, serviceDeploymentInfo.getReplicas());
             if (deploymentOptional.isPresent()) {
@@ -250,10 +257,9 @@ public class DeploymentBroker {
                     "Deployment for MicoService '" + micoService.getShortName() + "' in version '"
                         + micoService.getVersion() + "' is not available.");
             }
-        } else {
-        	deployment = micoKubernetesClient.createMicoService(serviceDeploymentInfo);
         }
 
+        // Create / update the Kubernetes services that corresponds to the interfaces of the MICO services.
         List<io.fabric8.kubernetes.api.model.Service> createdServices = new ArrayList<>();
         for (MicoServiceInterface serviceInterface : micoService.getServiceInterfaces()) {
             io.fabric8.kubernetes.api.model.Service createdService = micoKubernetesClient.createMicoServiceInterface(serviceInterface, micoService);
@@ -266,7 +272,7 @@ public class DeploymentBroker {
         // Create or update the Kubernetes deployment information, that will be stored in the database later
         KubernetesDeploymentInfo kubernetesDeploymentInfo = new KubernetesDeploymentInfo();
         if(serviceDeploymentInfo.getKubernetesDeploymentInfo() != null) {
-            // If the ID ist set, the Kubernetes deployment information will be updated in the database.
+            // If the ID is set, the Kubernetes deployment information will be updated in the database.
             // Otherwise a new node will be created in the database.
             kubernetesDeploymentInfo.setId(serviceDeploymentInfo.getKubernetesDeploymentInfo().getId());
         }
