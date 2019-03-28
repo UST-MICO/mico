@@ -10,9 +10,9 @@
 
 .. java:import:: org.springframework.data.repository.query Param
 
-.. java:import:: io.github.ust.mico.core.model MicoService
+.. java:import:: io.github.ust.mico.core.model MicoApplication
 
-.. java:import:: io.github.ust.mico.core.model MicoServiceInterface
+.. java:import:: io.github.ust.mico.core.model MicoService
 
 MicoServiceRepository
 =====================
@@ -24,12 +24,6 @@ MicoServiceRepository
 
 Methods
 -------
-deleteInterfaceOfServiceByName
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. java:method:: @Query  void deleteInterfaceOfServiceByName(String serviceInterfaceName, String shortName, String version)
-   :outertype: MicoServiceRepository
-
 deleteServiceByShortNameAndVersion
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -54,6 +48,25 @@ findAllByApplication
 .. java:method:: @Query  List<MicoService> findAllByApplication(String applicationShortName, String applicationVersion)
    :outertype: MicoServiceRepository
 
+   Finds all services that are included by a given application.
+
+   :param applicationShortName: the short name of the \ :java:ref:`MicoApplication`\ .
+   :param applicationVersion: the version of the \ :java:ref:`MicoApplication`\ .
+   :return: a list of \ :java:ref:`MicoServices <MicoService>`\ .
+
+findAllByApplicationAndShortName
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: @Query  List<MicoService> findAllByApplicationAndShortName(String applicationShortName, String applicationVersion, String serviceShortName)
+   :outertype: MicoServiceRepository
+
+   Finds all services that are included by a given application for a given service short name.
+
+   :param applicationShortName: the short name of the \ :java:ref:`MicoApplication`\ .
+   :param applicationVersion: the version of the \ :java:ref:`MicoApplication`\ .
+   :param serviceShortName: the short name of the \ :java:ref:`MicoService`\ .
+   :return: a list of \ :java:ref:`MicoServices <MicoService>`\ .
+
 findByShortName
 ^^^^^^^^^^^^^^^
 
@@ -66,21 +79,39 @@ findByShortNameAndVersion
 .. java:method:: @Depth  Optional<MicoService> findByShortNameAndVersion(String shortName, String version)
    :outertype: MicoServiceRepository
 
-findInterfaceOfServiceByName
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+findDependees
+^^^^^^^^^^^^^
 
-.. java:method:: @Query  Optional<MicoServiceInterface> findInterfaceOfServiceByName(String serviceInterfaceName, String shortName, String version)
+.. java:method:: @Query  List<MicoService> findDependees(String shortName, String version)
    :outertype: MicoServiceRepository
 
-   Find a specific service interface. The returned interface will NOT have ports mapped by the ogm. If you want to have a interface with mapped ports use the serviceInterface list in the corresponding MicoService object returned by findByShortNameAndVersion!
+   Finds all services (dependees) the given service (depender) depends on.
 
-   :param serviceInterfaceName:
-   :param shortName:
-   :param version:
+   :param shortName: the short name of the \ :java:ref:`MicoService`\  (depender).
+   :param version: the version of the \ :java:ref:`MicoService`\  (depender).
+   :return: a list of \ :java:ref:`MicoServices <MicoService>`\ .
 
-getAllDependeesOfMicoService
+findDependeesIncludeDepender
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: @Query  List<MicoService> getAllDependeesOfMicoService(String shortName, String version)
+.. java:method:: @Query  List<MicoService> findDependeesIncludeDepender(String shortName, String version)
    :outertype: MicoServiceRepository
+
+   Finds all services (dependees) the given service (depender) depends on as well as the service (depender) itself.
+
+   :param shortName: the short name of the \ :java:ref:`MicoService`\  (depender).
+   :param version: the version of the \ :java:ref:`MicoService`\  (depender).
+   :return: a list of \ :java:ref:`MicoServices <MicoService>`\  including all dependees as well as the depender..
+
+findDependers
+^^^^^^^^^^^^^
+
+.. java:method:: @Query  List<MicoService> findDependers(String shortName, String version)
+   :outertype: MicoServiceRepository
+
+   Finds all services (dependers) that depend on the given service (dependee).
+
+   :param shortName: the short name of the \ :java:ref:`MicoService`\  (dependee).
+   :param version: the version of the \ :java:ref:`MicoService`\  (dependee).
+   :return: a list of \ :java:ref:`MicoServices <MicoService>`\ .
 

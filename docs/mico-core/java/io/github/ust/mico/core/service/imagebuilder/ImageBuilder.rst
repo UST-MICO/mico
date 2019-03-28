@@ -1,3 +1,23 @@
+.. java:import:: java.util List
+
+.. java:import:: java.util Optional
+
+.. java:import:: io.fabric8.kubernetes.api.model ContainerStatus
+
+.. java:import:: org.springframework.beans.factory.annotation Autowired
+
+.. java:import:: org.springframework.context.event ContextRefreshedEvent
+
+.. java:import:: org.springframework.context.event EventListener
+
+.. java:import:: org.springframework.core.env Environment
+
+.. java:import:: org.springframework.core.env Profiles
+
+.. java:import:: org.springframework.stereotype Service
+
+.. java:import:: org.springframework.util StringUtils
+
 .. java:import:: io.fabric8.kubernetes.api.model ObjectMeta
 
 .. java:import:: io.fabric8.kubernetes.api.model Pod
@@ -5,8 +25,6 @@
 .. java:import:: io.fabric8.kubernetes.api.model ServiceAccount
 
 .. java:import:: io.fabric8.kubernetes.api.model.apiextensions CustomResourceDefinition
-
-.. java:import:: io.fabric8.kubernetes.api.model.apiextensions CustomResourceDefinitionList
 
 .. java:import:: io.fabric8.kubernetes.client KubernetesClient
 
@@ -18,21 +36,17 @@
 
 .. java:import:: io.github.ust.mico.core.configuration MicoKubernetesBuildBotConfig
 
+.. java:import:: io.github.ust.mico.core.exception ImageBuildException
+
 .. java:import:: io.github.ust.mico.core.exception NotInitializedException
 
 .. java:import:: io.github.ust.mico.core.model MicoService
 
+.. java:import:: io.github.ust.mico.core.util CollectionUtils
+
+.. java:import:: io.github.ust.mico.core.util KubernetesNameNormalizer
+
 .. java:import:: lombok.extern.slf4j Slf4j
-
-.. java:import:: org.springframework.beans.factory.annotation Autowired
-
-.. java:import:: org.springframework.stereotype Service
-
-.. java:import:: org.springframework.util StringUtils
-
-.. java:import:: java.util List
-
-.. java:import:: java.util Optional
 
 ImageBuilder
 ============
@@ -42,42 +56,89 @@ ImageBuilder
 
 .. java:type:: @Slf4j @Service public class ImageBuilder
 
-   Builds container images by using Knative Build and Kaniko
+   Builds container images by using Knative Build and Kaniko.
+
+Fields
+------
+BUILD_CRD_GROUP
+^^^^^^^^^^^^^^^
+
+.. java:field:: public static final String BUILD_CRD_GROUP
+   :outertype: ImageBuilder
 
 Constructors
 ------------
 ImageBuilder
 ^^^^^^^^^^^^
 
-.. java:constructor:: @Autowired public ImageBuilder(KubernetesClient kubernetesClient, MicoKubernetesBuildBotConfig buildBotConfig)
+.. java:constructor:: @Autowired public ImageBuilder(KubernetesClient kubernetesClient, MicoKubernetesBuildBotConfig buildBotConfig, KubernetesNameNormalizer kubernetesNameNormalizer)
    :outertype: ImageBuilder
 
-   :param kubernetesClient: The Kubernetes client object
-   :param buildBotConfig: The build bot configuration for the image builder
+   Create a \ ``ImageBuilder``\  to be able to build Docker images in the cluster.
+
+   :param kubernetesClient: the \ :java:ref:`KubernetesClient`\
+   :param buildBotConfig: the build bot configuration for the image builder
+   :param kubernetesNameNormalizer: the \ :java:ref:`KubernetesNameNormalizer`\
 
 Methods
 -------
 build
 ^^^^^
 
-.. java:method:: public Build build(MicoService micoService) throws NotInitializedException, IllegalArgumentException
+.. java:method:: public CompletableFuture<String> build(MicoService micoService) throws NotInitializedException, InterruptedException, ExecutionException, TimeoutException
    :outertype: ImageBuilder
+
+   Builds an OCI image based on a Git repository provided by a \ ``MicoService``\ . The result of the returned \ ``CompletableFuture``\  is the Docker image URI.
 
    :param micoService: the MICO service for which the image should be build
    :throws NotInitializedException: if the image builder was not initialized
-   :return: the resulting build
+   :return: the \ :java:ref:`CompletableFuture`\  that executes the build. The result is the Docker image URI.
+
+createBuildName
+^^^^^^^^^^^^^^^
+
+.. java:method:: public String createBuildName(String serviceName, String serviceVersion)
+   :outertype: ImageBuilder
+
+   Creates a build name based on the service name and version that is used for the build pod.
+
+   :param serviceName: the name of the MICO service
+   :param serviceVersion: the version of the MICO service
+   :return: the name of the build pod
+
+createBuildName
+^^^^^^^^^^^^^^^
+
+.. java:method:: public String createBuildName(MicoService service)
+   :outertype: ImageBuilder
+
+   Creates a build name based on the service name and version that is used for the build pod.
+
+   :param service: the \ :java:ref:`MicoService`\ .
+   :return: the image name.
 
 createImageName
 ^^^^^^^^^^^^^^^
 
-.. java:method:: public String createImageName(String serviceName, String serviceVersion)
+.. java:method:: public String createImageName(String serviceShortName, String serviceVersion)
    :outertype: ImageBuilder
 
-   Creates a image name based on the service name and the service version (used as image tag).
+   Creates an image name based on the short name and version of a service (used as image tag).
 
-   :param serviceName: the name of the MICO service
-   :param serviceVersion: the version of the MICO service
-   :return: the image name
+   :param serviceShortName: the short name of the \ :java:ref:`MicoService`\ .
+   :param serviceVersion: the version of the \ :java:ref:`MicoService`\ .
+   :return: the image name.
+
+createImageName
+^^^^^^^^^^^^^^^
+
+.. java:method:: public String createImageName(MicoService service)
+   :outertype: ImageBuilder
+
+   Creates an image name based on a service (used as image tag).
+
+   :param service: the \ :java:ref:`MicoService`\ .
+   :return: the image name.
 
 deleteBuild
 ^^^^^^^^^^^
@@ -85,9 +146,9 @@ deleteBuild
 .. java:method:: public void deleteBuild(String buildName)
    :outertype: ImageBuilder
 
-   Delete the build
+   Deletes the build for a given build name.
 
-   :param buildName: the name of the build
+   :param buildName: the name of the build.
 
 deleteBuild
 ^^^^^^^^^^^
@@ -95,20 +156,19 @@ deleteBuild
 .. java:method:: public void deleteBuild(Build build)
    :outertype: ImageBuilder
 
-   Delete the build
+   Deletes a given \ ``Build``\ .
 
-   :param build: the build object
+   :param build: the \ :java:ref:`Build`\ .
 
-getBuild
-^^^^^^^^
+deleteBuild
+^^^^^^^^^^^
 
-.. java:method:: public Build getBuild(String buildName)
+.. java:method:: public void deleteBuild(MicoService service)
    :outertype: ImageBuilder
 
-   Returns the build object
+   Deletes the \ :java:ref:`Build`\  for a given service.
 
-   :param buildName: the name of the build
-   :return: the build object
+   :param service: the \ :java:ref:`MicoService`\ .
 
 getBuildCRD
 ^^^^^^^^^^^
@@ -123,16 +183,21 @@ getBuildCRD
 init
 ^^^^
 
+.. java:method:: @EventListener public void init(ContextRefreshedEvent cre) throws NotInitializedException
+   :outertype: ImageBuilder
+
+   Initialize the image builder every time the application context is refreshed.
+
+   :param cre: the \ :java:ref:`ContextRefreshedEvent`\
+   :throws NotInitializedException: if there are errors during initialization
+
+init
+^^^^
+
 .. java:method:: public void init() throws NotInitializedException
    :outertype: ImageBuilder
 
-   Initialize the image builder.
+   Initialize the image builder. This is required to be able to use the image builder. It's not required to trigger the initialization manually, because at every application context refresh the method is called by the \ ``@EventListener init``\  method.
 
-   :throws NotInitializedException: if the image builder was not initialized
-
-waitUntilBuildIsFinished
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. java:method:: public CompletableFuture<Boolean> waitUntilBuildIsFinished(String buildName) throws InterruptedException, ExecutionException, TimeoutException
-   :outertype: ImageBuilder
+   :throws NotInitializedException: if there are errors during initialization
 

@@ -1,3 +1,5 @@
+.. java:import:: io.github.ust.mico.core.persistence MicoBackgroundJobRepository
+
 .. java:import:: org.springframework.boot SpringApplication
 
 .. java:import:: org.springframework.boot.autoconfigure SpringBootApplication
@@ -6,7 +8,13 @@
 
 .. java:import:: org.springframework.context.annotation Bean
 
+.. java:import:: org.springframework.context.annotation ComponentScan
+
+.. java:import:: org.springframework.context.annotation FilterType
+
 .. java:import:: org.springframework.data.neo4j.repository.config EnableNeo4jRepositories
+
+.. java:import:: org.springframework.data.redis.repository.configuration EnableRedisRepositories
 
 .. java:import:: org.springframework.scheduling.annotation EnableScheduling
 
@@ -18,7 +26,7 @@ MicoCoreApplication
 .. java:package:: io.github.ust.mico.core
    :noindex:
 
-.. java:type:: @SpringBootApplication @EnableNeo4jRepositories @EnableScheduling public class MicoCoreApplication
+.. java:type:: @SpringBootApplication @EnableNeo4jRepositories @EnableRedisRepositories @EnableScheduling public class MicoCoreApplication
 
    Entry point for the MICO core application.
 

@@ -7,6 +7,7 @@ io.github.ust.mico.core.resource
    :maxdepth: 1
 
    ApplicationResource
+   BackgroundJobResource
    DeploymentResource
    ServiceInterfaceResource
    ServiceResource

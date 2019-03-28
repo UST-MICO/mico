@@ -6,8 +6,9 @@ io.github.ust.mico.core.broker
 .. toctree::
    :maxdepth: 1
 
-   ApplicationBroker
+   BackgroundJobBroker
    DeploymentBroker
-   ServiceBroker
-   ServiceInterfaceBroker
+   MicoApplicationBroker
+   MicoServiceBroker
+   MicoServiceInterfaceBroker
 

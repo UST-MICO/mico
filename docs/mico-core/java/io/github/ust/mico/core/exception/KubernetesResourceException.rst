@@ -26,3 +26,15 @@ KubernetesResourceException
 .. java:constructor:: public KubernetesResourceException(String message)
    :outertype: KubernetesResourceException
 
+KubernetesResourceException
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:constructor:: public KubernetesResourceException(Throwable cause)
+   :outertype: KubernetesResourceException
+
+KubernetesResourceException
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:constructor:: public KubernetesResourceException(String message, Throwable cause)
+   :outertype: KubernetesResourceException
+

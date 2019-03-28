@@ -7,9 +7,9 @@ io.github.ust.mico.core.configuration
    :maxdepth: 1
 
    CorsConfig
-   MicoCoreBackgroundTaskFactoryConfig
    MicoKubernetesBuildBotConfig
    MicoKubernetesConfig
+   MicoRedisConfiguration
    PrometheusConfig
    RequestLoggingFilterConfig
    SwaggerConfig

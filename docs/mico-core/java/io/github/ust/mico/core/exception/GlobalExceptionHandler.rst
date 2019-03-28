@@ -1,4 +1,4 @@
-.. java:import:: io.github.ust.mico.core.dto ValidationErrorDTO
+.. java:import:: io.github.ust.mico.core.dto.response ValidationErrorResponseDTO
 
 .. java:import:: org.springframework.core Ordered
 
@@ -11,6 +11,14 @@
 .. java:import:: org.springframework.validation FieldError
 
 .. java:import:: org.springframework.web.bind MethodArgumentNotValidException
+
+.. java:import:: org.springframework.web.bind.annotation ControllerAdvice
+
+.. java:import:: org.springframework.web.bind.annotation ExceptionHandler
+
+.. java:import:: org.springframework.web.bind.annotation ResponseBody
+
+.. java:import:: org.springframework.web.bind.annotation ResponseStatus
 
 .. java:import:: java.util List
 
@@ -31,6 +39,6 @@ Methods
 methodArgumentNotValidException
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: @ResponseStatus @ResponseBody @ExceptionHandler public ValidationErrorDTO methodArgumentNotValidException(MethodArgumentNotValidException ex)
+.. java:method:: @ResponseStatus @ResponseBody @ExceptionHandler public ValidationErrorResponseDTO methodArgumentNotValidException(MethodArgumentNotValidException ex)
    :outertype: GlobalExceptionHandler
 
