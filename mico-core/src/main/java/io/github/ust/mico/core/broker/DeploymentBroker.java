@@ -55,6 +55,7 @@ public class DeploymentBroker {
             shortName, version, micoApplication.getServices().size());
         List<CompletableFuture<MicoServiceDeploymentInfo>> buildJobs = new ArrayList<>();
         for (MicoService micoService : micoApplication.getServices()) {
+            log.debug("Checking MicoService '{}' '{}' ...", micoService.getShortName(), micoService.getVersion());
             // Check if a build for this MicoService is already running.
             // If yes no build is required, lock changes to running jobs.
             // If the current job status is done, error or cancel delete it and create a new job to get a new id.
