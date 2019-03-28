@@ -39,7 +39,13 @@ public class KubernetesResourceException extends Exception {
     
     public KubernetesResourceException(String message) {
         super(message);
-        
     }
 
+    public KubernetesResourceException (Throwable cause) {
+        super (cause);
+    }
+
+    public KubernetesResourceException (String message, Throwable cause) {
+        super (message, cause);
+    }
 }
