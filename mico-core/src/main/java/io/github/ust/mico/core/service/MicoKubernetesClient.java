@@ -275,7 +275,12 @@ public class MicoKubernetesClient {
      * @param micoApplication the {@link MicoApplication}
      */
     public void createOrUpdateInterfaceConnections(MicoApplication micoApplication) {
-        for (MicoServiceDeploymentInfo serviceDeploymentInfo : micoApplication.getServiceDeploymentInfos()) {
+        List<MicoServiceDeploymentInfo> serviceDeploymentInfos = serviceDeploymentInfoRepository.findAllByApplication(
+            micoApplication.getShortName(), micoApplication.getVersion());
+        log.debug("Creating or updating interface connections for MicoServices of MicoApplication '{}' '{}' with {} service deployment information.",
+            micoApplication.getShortName(), micoApplication.getVersion(), serviceDeploymentInfos.size());
+
+        for (MicoServiceDeploymentInfo serviceDeploymentInfo : serviceDeploymentInfos) {
             MicoService micoService = serviceDeploymentInfo.getService();
             log.debug("MicoService '{}' '{}' of MicoApplication '{}' '{}' has {} interface connection(s).",
                 micoService.getShortName(), micoService.getVersion(), micoApplication.getShortName(), micoApplication.getVersion(), serviceDeploymentInfo.getInterfaceConnections().size());
@@ -965,9 +970,8 @@ public class MicoKubernetesClient {
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.
      * @param numberOfReplicas the number of replicas to add.
      * @return the Kubernetes {@link Deployment}.
-     * @throws KubernetesResourceException if the Kubernetes deployment can't be found
      */
-    public Optional<Deployment> scaleOut(MicoServiceDeploymentInfo serviceDeploymentInfo, int numberOfReplicas) throws KubernetesResourceException {
+    public Optional<Deployment> scaleOut(MicoServiceDeploymentInfo serviceDeploymentInfo, int numberOfReplicas) {
         if(serviceDeploymentInfo.getKubernetesDeploymentInfo() == null) {
             throw new IllegalArgumentException("The Kubernetes deployment information of the MicoService '"
                 + serviceDeploymentInfo.getService().getShortName() + "' '" + serviceDeploymentInfo.getService().getVersion()
