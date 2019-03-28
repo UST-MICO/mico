@@ -97,7 +97,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 if (className === 'pending' && (node.status != null && node.status.value === 'Pending')) {
                     return true;
                 }
-                if (className === 'error' && (node.status != null && node.status.value === 'Incompleted')) {
+                if (className === 'error' && (node.status != null && node.status.value === 'Incomplete')) {
                     return true;
                 }
             }
