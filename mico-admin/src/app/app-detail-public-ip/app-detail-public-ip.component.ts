@@ -76,11 +76,10 @@ export class AppDetailPublicIpComponent implements OnInit, OnChanges, OnDestroy 
 
                     safeUnsubscribeList(this.subServiceInterfaces);
                     this.subServiceInterfaces = [];
+                    safeUnsubscribeList(this.subPublicIps);
+                    this.subPublicIps = [];
 
                     application.services.forEach(service => {
-
-                        safeUnsubscribeList(this.subPublicIps);
-                        this.subPublicIps = [];
 
                         // assumption: one public ip per interface
                         this.subServiceInterfaces.push(this.apiService.getServiceInterfaces(service.shortName, service.version)
