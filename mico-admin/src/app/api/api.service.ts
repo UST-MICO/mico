@@ -1039,7 +1039,7 @@ export class ApiService {
 
     /**
      * Polls the deployment job of a given application and provides feedback if the deployment failed/ was successful.
-     * Also stops polling after 3 minutes
+     * Also stops polling after 10 minutes
      *
      * @param applicationShortName applicationShortName of the application to be polled
      * @param applicationVersion applicationVersion of the application to be polled
@@ -1069,7 +1069,7 @@ export class ApiService {
         });
 
         // end polling after 3 minutes
-        const subEndPolling = timer(3 * 60 * 1000)
+        const subEndPolling = timer(10 * 60 * 1000)
             .subscribe(() => {
                 cleanUp();
             });
