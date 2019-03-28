@@ -48,6 +48,8 @@ export class UtilServiceService {
 
         const subDialog = dialogRef.afterClosed().subscribe(result => {
 
+            safeUnsubscribe(subDialog);
+
             // filter empty results (when dialog is aborted)
             if (!result) {
                 return;
@@ -77,8 +79,6 @@ export class UtilServiceService {
                     this.router.navigate(['service-detail', val.shortName, val.version]);
                 });
             }
-
-            safeUnsubscribe(subDialog);
         });
     }
 
@@ -90,6 +90,8 @@ export class UtilServiceService {
         const dialogRef = this.dialog.open(CreateApplicationComponent);
 
         const subDialog = dialogRef.afterClosed().subscribe(result => {
+
+            safeUnsubscribe(subDialog);
 
             // filter empty results (when dialog is aborted)
             if (!result) {
@@ -121,8 +123,6 @@ export class UtilServiceService {
                 });
                 this.router.navigate(['app-detail', val.shortName, val.version]);
             });
-
-            safeUnsubscribe(subDialog);
         });
     }
 

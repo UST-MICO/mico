@@ -1125,7 +1125,7 @@ export class ApiService {
 
 
         // poll status
-        const subPolling = interval(1 * 1000).subscribe(() => {
+        const subPolling = interval(5 * 1000).subscribe(() => {
             this.getServiceInterfacePublicIp(serviceShortName, serviceVersion, interfaceName);
 
             // early exit
