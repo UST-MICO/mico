@@ -80,12 +80,7 @@ public class ApplicationResource {
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
     public ResponseEntity<Resources<Resource<MicoApplicationWithServicesResponseDTO>>> getApplicationsByShortName(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
-        List<MicoApplication> applications;
-        try {
-            applications = broker.getMicoApplicationsByShortName(shortName);
-        } catch (MicoApplicationNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        }
+        List<MicoApplication> applications = broker.getMicoApplicationsByShortName(shortName);
 
         return ResponseEntity.ok(
                 new Resources<>(getApplicationWithServicesResponseDTOResourceList(applications),

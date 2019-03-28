@@ -67,12 +67,8 @@ public class MicoApplicationBroker {
         return micoApplicationOptional.get();
     }
 
-    public List<MicoApplication> getMicoApplicationsByShortName(String shortName) throws MicoApplicationNotFoundException {
-        List<MicoApplication> micoApplicationList = applicationRepository.findByShortName(shortName);
-        if (micoApplicationList.isEmpty()) {
-            throw new MicoApplicationNotFoundException(shortName);
-        }
-        return micoApplicationList;
+    public List<MicoApplication> getMicoApplicationsByShortName(String shortName) {
+        return applicationRepository.findByShortName(shortName);
     }
 
     public List<MicoApplication> getMicoApplications() {
