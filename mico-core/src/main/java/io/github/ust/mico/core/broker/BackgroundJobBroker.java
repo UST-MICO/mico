@@ -79,7 +79,9 @@ public class BackgroundJobBroker {
      * @return the saved {@link MicoServiceBackgroundJob}
      */
     public MicoServiceBackgroundJob saveJob(MicoServiceBackgroundJob job) {
-        return jobRepository.save(job);
+        MicoServiceBackgroundJob savedJob = jobRepository.save(job);
+        log.debug("Saved job: {}", savedJob);
+        return savedJob;
     }
 
     /**
