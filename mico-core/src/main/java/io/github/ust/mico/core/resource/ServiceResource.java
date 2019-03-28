@@ -405,7 +405,11 @@ public class ServiceResource {
      */
     private MicoService updateServiceViaMicoServiceBroker(String shortName, String version, MicoServiceRequestDTO serviceDto) throws ResponseStatusException {
         MicoService existingService = getServiceFromMicoServiceBroker(shortName, version);
-        return micoServiceBroker.updateExistingService(MicoService.valueOf(serviceDto).setId(existingService.getId()));
+        MicoService newService = MicoService.valueOf(serviceDto)
+            .setId(existingService.getId())
+            .setServiceInterfaces(existingService.getServiceInterfaces())
+            .setDependencies(existingService.getDependencies());
+        return micoServiceBroker.updateExistingService(newService);
     }
 
     private List<MicoService> getAllVersionsOfServiceFromMicoServiceBroker(String shortName) throws ResponseStatusException {
