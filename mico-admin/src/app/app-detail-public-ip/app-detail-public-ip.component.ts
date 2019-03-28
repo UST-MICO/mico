@@ -88,10 +88,21 @@ export class AppDetailPublicIpComponent implements OnInit, OnChanges, OnDestroy 
                                         .getServiceInterfacePublicIp(service.shortName, service.version, micoInterface.serviceInterfaceName)
                                         .subscribe(publicIpDTO => {
 
-                                            this.publicIps.set(service.shortName + '#' + publicIpDTO.name, publicIpDTO);
-                                            this.changeDedection.markForCheck();
+                                            if (publicIpDTO.externalIpIsAvailable) {
+                                                // public ip is already present
+
+                                                this.publicIps.set(service.shortName + '#' + publicIpDTO.name, publicIpDTO);
+                                                this.changeDedection.markForCheck();
+
+                                                // end polling;
+                                                subPolling.unsubscribe();
+                                            }
 
                                         }));
+
+                                    // start polling
+                                    const subPolling = this.apiService.pollServiceInterfacePublicIp(service.shortName,
+                                        service.version, micoInterface.serviceInterfaceName);
                                 });
                             }));
 

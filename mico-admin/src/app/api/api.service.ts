@@ -1100,7 +1100,57 @@ export class ApiService {
         });
 
         return subJobStatus;
+    }
 
+    /**
+     * Polls the public ip of a services interface until a public ip is available.
+     * Also ends the polling after 3 minutes.
+     *
+     * @param serviceShortName serviceShortName of the interface to be polled
+     * @param serviceVersion serviceVersion of the interface to be polled
+     * @param interfaceName interfaceName of the interface to be polled
+     */
+    pollServiceInterfacePublicIp(serviceShortName: string, serviceVersion: string, interfaceName: string) {
+        const resource = 'poll/services/' + serviceShortName + '/' + serviceVersion + '/interfaces/' + interfaceName + '/publicIp';
+        const stream = this.getStreamSource<any>(resource);
+
+        /**
+         * Unsubscribes from polling
+         */
+        function cleanUp() {
+            safeUnsubscribe(subEndPolling);
+            safeUnsubscribe(subPolling);
+            safeUnsubscribe(subPublicIp);
+        }
+
+
+        // poll status
+        const subPolling = interval(1 * 1000).subscribe(() => {
+            this.getServiceInterfacePublicIp(serviceShortName, serviceVersion, interfaceName);
+
+            // early exit
+            if (subPublicIp.closed) {
+                cleanUp();
+            }
+        });
+
+        // end polling after 3 minutes
+        const subEndPolling = timer(3 * 60 * 1000)
+            .subscribe(() => {
+                cleanUp();
+            });
+
+        // handle incomming publicIpDTOs
+        const subPublicIp = this.getServiceInterfacePublicIp(serviceShortName, serviceVersion, interfaceName)
+            .subscribe(publicIpDTO => {
+
+                if (publicIpDTO.externalIpIsAvailable) {
+                    cleanUp();
+                    stream.next(publicIpDTO);
+                }
+            });
+
+        return subPublicIp;
     }
 
 
