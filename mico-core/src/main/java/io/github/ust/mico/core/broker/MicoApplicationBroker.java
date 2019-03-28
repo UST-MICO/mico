@@ -262,6 +262,7 @@ public class MicoApplicationBroker {
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
         MicoServiceDeploymentInfo storedServiceDeploymentInfo = getMicoServiceDeploymentInformation(applicationShortName, applicationVersion, serviceShortName);
 
+        int oldReplicas = storedServiceDeploymentInfo.getReplicas();
         // Update existing service deployment information and save it in the database.
         storedServiceDeploymentInfo.applyValuesFrom(serviceDeploymentInfoDTO);
         MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(storedServiceDeploymentInfo);
@@ -279,14 +280,17 @@ public class MicoApplicationBroker {
         // 		  If the MICO service is already deployed, we only update the replicas.
         // 	      The other properties are ignored!
         if(micoKubernetesClient.isApplicationDeployed(micoApplication)) {
+            MicoService micoService = updatedServiceDeploymentInfo.getService();
             log.info("MicoApplication '{}' {}' is already deployed. Update the deployment of the included MicoService '{} '{}'.",
-                micoApplication.getShortName(), micoApplication.getVersion(),
-                updatedServiceDeploymentInfo.getService().getShortName(), updatedServiceDeploymentInfo.getService().getVersion());
+                micoApplication.getShortName(), micoApplication.getVersion(), micoService.getShortName(), micoService.getVersion());
+
             // MICO service is already deployed. Update the replicas.
-            int replicasDiff = serviceDeploymentInfoDTO.getReplicas() - storedServiceDeploymentInfo.getReplicas();
+            int replicasDiff = serviceDeploymentInfoDTO.getReplicas() - oldReplicas;
             if (replicasDiff > 0) {
+                log.debug("Increase replicas of MicoService '{}' '{}' by {}.", micoService.getShortName(), micoService.getVersion(), replicasDiff);
                 micoKubernetesClient.scaleOut(updatedServiceDeploymentInfo, replicasDiff);
             } else if (replicasDiff < 0) {
+                log.debug("Decrease replicas of MicoService '{}' '{}' by {}.", micoService.getShortName(), micoService.getVersion(), replicasDiff);
                 micoKubernetesClient.scaleIn(updatedServiceDeploymentInfo, Math.abs(replicasDiff));
             } else {
                 // TODO: If no scale operation is required, maybe some other
