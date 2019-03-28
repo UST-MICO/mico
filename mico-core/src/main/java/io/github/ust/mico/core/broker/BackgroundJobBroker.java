@@ -116,8 +116,8 @@ public class BackgroundJobBroker {
         MicoApplication micoApplication = existingApplicationOptional.get();
 
         List<MicoServiceBackgroundJob> jobList = new ArrayList<>();
-        for (MicoServiceDeploymentInfo deploymentInfo : micoApplication.getServiceDeploymentInfos()) {
-            jobList.addAll(jobRepository.findByServiceShortNameAndServiceVersion(deploymentInfo.getService().getShortName(), deploymentInfo.getService().getVersion()));
+        for (MicoService micoService : micoApplication.getServices()) {
+            jobList.addAll(jobRepository.findByServiceShortNameAndServiceVersion(micoService.getShortName(), micoService.getVersion()));
         }
 
         List<MicoServiceBackgroundJob.Status> statusList = jobList.stream().map(MicoServiceBackgroundJob::getStatus).distinct().collect(Collectors.toList());
