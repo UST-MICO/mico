@@ -24,6 +24,7 @@ import { Router } from '@angular/router';
 import { safeUnsubscribe } from './utils';
 import { CreateServiceDialogComponent } from '../dialogs/create-service/create-service.component';
 import { CreateApplicationComponent } from '../dialogs/create-application/create-application.component';
+import { take } from 'rxjs/operators';
 
 @Injectable({
     providedIn: 'root'
@@ -113,16 +114,21 @@ export class UtilServiceService {
             const data = result.applicationProperties;
             data.services = result.services;
 
-            this.apiService.postApplication(data).subscribe(val => {
-                result.services.forEach(service => {
-                    const tempSubscription = this.apiService
-                        .postApplicationServices(val.shortName, val.version, service.shortName, service.version)
-                        .subscribe(element => {
-                            safeUnsubscribe(tempSubscription);
-                        });
+            this.apiService.postApplication(data)
+                .pipe(take(1))
+                .subscribe(val => {
+
+                    result.services.forEach(service => {
+
+                        const tempSubscription = this.apiService
+                            .postApplicationServices(val.shortName, val.version, service.shortName, service.version)
+                            .subscribe(element => {
+                                safeUnsubscribe(tempSubscription);
+                            });
+                    });
+
+                    this.router.navigate(['app-detail', val.shortName, val.version]);
                 });
-                this.router.navigate(['app-detail', val.shortName, val.version]);
-            });
         });
     }
 
