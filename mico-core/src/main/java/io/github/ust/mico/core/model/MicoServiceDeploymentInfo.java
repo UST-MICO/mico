@@ -114,7 +114,7 @@ public class MicoServiceDeploymentInfo {
 
     /**
      * Indicates whether and when to pull the image.
-     * Default image pull policy is {@link ImagePullPolicy#ALWAYS}.
+     * Default image pull policy is {@link ImagePullPolicy#ALWAYS Always}.
      */
     private ImagePullPolicy imagePullPolicy = ImagePullPolicy.ALWAYS;
 

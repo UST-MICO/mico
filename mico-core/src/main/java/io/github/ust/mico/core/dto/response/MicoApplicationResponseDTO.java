@@ -52,8 +52,8 @@ public class MicoApplicationResponseDTO extends MicoApplicationRequestDTO {
     // ----------------------
 
     /**
-     * Indicates whether the {@link MicoApplication} is currently deployed. Default is {@link Value#UNDEPLOYED}. Is read
-     * only and will be updated by the backend at every request.
+     * Indicates whether the {@link MicoApplication} is currently deployed. Default is {@link Value#UNDEPLOYED Undeployed}.
+     * Is read only and will be updated by the backend at every request.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
