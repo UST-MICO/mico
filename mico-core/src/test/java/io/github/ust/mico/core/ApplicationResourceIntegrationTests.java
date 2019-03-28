@@ -1117,6 +1117,7 @@ public class ApplicationResourceIntegrationTests {
             .willReturn(Optional.of(application));
         given(serviceRepository.findByShortNameAndVersion(serviceNew.getShortName(), serviceNew.getVersion()))
             .willReturn(Optional.of(serviceNew));
+        given(micoKubernetesClient.isApplicationDeployed(application)).willReturn(false);
 
         mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + VERSION_1_0_2)
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))

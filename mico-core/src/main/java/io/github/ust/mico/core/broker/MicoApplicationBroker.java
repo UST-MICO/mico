@@ -93,7 +93,7 @@ public class MicoApplicationBroker {
         applicationRepository.delete(micoApplication);
     }
 
-    public void deleteMicoApplicationsByShortName(String shortName) throws MicoApplicationNotFoundException, MicoApplicationIsDeployedException {
+    public void deleteMicoApplicationsByShortName(String shortName) throws MicoApplicationIsDeployedException {
         List<MicoApplication> micoApplicationList = getMicoApplicationsByShortName(shortName);
 
         // If at least one version of the application is currently deployed,
@@ -122,17 +122,22 @@ public class MicoApplicationBroker {
         throw new MicoApplicationAlreadyExistsException(micoApplication.getShortName(), micoApplication.getVersion());
     }
 
-    public MicoApplication updateMicoApplication(String shortName, String version, MicoApplication micoApplication) throws MicoApplicationNotFoundException, ShortNameOfMicoApplicationDoesNotMatchException, VersionOfMicoApplicationDoesNotMatchException {
+    public MicoApplication updateMicoApplication(String shortName, String version, MicoApplication micoApplication) throws MicoApplicationNotFoundException, ShortNameOfMicoApplicationDoesNotMatchException, VersionOfMicoApplicationDoesNotMatchException, MicoApplicationIsDeployedException {
         if (!micoApplication.getShortName().equals(shortName)) {
             throw new ShortNameOfMicoApplicationDoesNotMatchException();
         }
         if (!micoApplication.getVersion().equals(version)) {
             throw new VersionOfMicoApplicationDoesNotMatchException();
         }
-        MicoApplication existingMicoApplication = getMicoApplicationByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion());
+        MicoApplication existingMicoApplication = getMicoApplicationByShortNameAndVersion(shortName, version);
+        // Check whether application is currently deployed, i.e., it cannot be updated
+        if(micoKubernetesClient.isApplicationDeployed(existingMicoApplication)) {
+            throw new MicoApplicationIsDeployedException(shortName, version);
+        }
+        // TODO: Ensure consistent strategy to update existing entities (covered by mico#690)
         micoApplication.setId(existingMicoApplication.getId())
-            .setServices(existingMicoApplication.getServices());
-        micoApplication.setServiceDeploymentInfos(serviceDeploymentInfoRepository.findAllByApplication(shortName, version));
+            .setServices(existingMicoApplication.getServices())
+            .setServiceDeploymentInfos(serviceDeploymentInfoRepository.findAllByApplication(shortName, version));
         return applicationRepository.save(micoApplication);
     }
 
@@ -165,9 +170,15 @@ public class MicoApplicationBroker {
         return serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion());
     }
 
-    public MicoApplication addMicoServiceToMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion) throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAlreadyAddedToMicoApplicationException, MicoServiceAddedMoreThanOnceToMicoApplicationException {
+    public MicoApplication addMicoServiceToMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion) throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAlreadyAddedToMicoApplicationException, MicoServiceAddedMoreThanOnceToMicoApplicationException, MicoApplicationIsDeployedException {
         // Retrieve application and service from database (checks whether they exist)
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
+
+        // Check whether application is currently deployed, i.e., it is not allowed to add services
+        if(micoKubernetesClient.isApplicationDeployed(micoApplication)) {
+            throw new MicoApplicationIsDeployedException(applicationShortName, applicationVersion);
+        }
+
         MicoService micoService = micoServiceBroker.getServiceFromDatabase(serviceShortName, serviceVersion);
 
         // Find all services with identical short name within this application
@@ -210,9 +221,14 @@ public class MicoApplicationBroker {
         }
     }
 
-    public MicoApplication removeMicoServiceFromMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException {
+    public MicoApplication removeMicoServiceFromMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException, MicoApplicationIsDeployedException {
         // Retrieve application from database (checks whether it exists)
         MicoApplication micoApplication = checkForMicoServiceInMicoApplication(applicationShortName, applicationVersion, serviceShortName);
+
+        // Check whether application is currently deployed, i.e., it is not allowed to remove services
+        if(micoKubernetesClient.isApplicationDeployed(micoApplication)) {
+            throw new MicoApplicationIsDeployedException(applicationShortName, applicationVersion);
+        }
 
         // Check whether the application contains the service
         if (micoApplication.getServices().stream().noneMatch(s -> s.getShortName().equals(serviceShortName))) {

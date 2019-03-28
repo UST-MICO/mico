@@ -26,6 +26,7 @@ import io.github.ust.mico.core.dto.response.MicoServiceInterfaceResponseDTO;
 import io.github.ust.mico.core.dto.response.status.MicoServiceInterfaceStatusResponseDTO;
 import io.github.ust.mico.core.exception.MicoServiceInterfaceAlreadyExistsException;
 import io.github.ust.mico.core.exception.MicoServiceInterfaceNotFoundException;
+import io.github.ust.mico.core.exception.MicoServiceIsDeployedException;
 import io.github.ust.mico.core.exception.MicoServiceNotFoundException;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
@@ -104,7 +105,12 @@ public class ServiceInterfaceResource {
     public ResponseEntity<Void> deleteServiceInterface(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                        @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                        @PathVariable(PATH_VARIABLE_SERVICE_INTERFACE_NAME) String serviceInterfaceName) {
-        micoServiceInterfaceBroker.deleteMicoServiceInterface(shortName, version, serviceInterfaceName);
+        MicoService micoService = getServiceFromServiceBroker(shortName, version);
+        try {
+            micoServiceInterfaceBroker.deleteMicoServiceInterface(micoService, serviceInterfaceName);
+        } catch (MicoServiceIsDeployedException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        }
 
         return ResponseEntity.noContent().build();
     }
@@ -127,10 +133,8 @@ public class ServiceInterfaceResource {
         MicoServiceInterface serviceInterface;
         try {
             serviceInterface = micoServiceInterfaceBroker.persistMicoServiceInterface(service, MicoServiceInterface.valueOf(serviceInterfaceRequestDto));
-        } catch (MicoServiceInterfaceAlreadyExistsException e) {
+        } catch (MicoServiceInterfaceAlreadyExistsException | MicoServiceIsDeployedException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
-        } catch (MicoServiceNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
 
         return ResponseEntity
@@ -158,22 +162,19 @@ public class ServiceInterfaceResource {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "The variable '" + PATH_VARIABLE_SERVICE_INTERFACE_NAME + "' must be equal to the name specified in the request body");
         }
 
-        // Used to check whether the corresponding service exists
-        checkIfServiceExists(shortName, version);
+        MicoService micoService = getServiceFromServiceBroker(shortName, version);
 
         MicoServiceInterface updatedServiceInterface;
         try {
-            updatedServiceInterface = micoServiceInterfaceBroker.updateMicoServiceInterface(shortName, version, serviceInterfaceName, MicoServiceInterface.valueOf(updatedServiceInterfaceRequestDto));
+            updatedServiceInterface = micoServiceInterfaceBroker.updateMicoServiceInterface(micoService, serviceInterfaceName, MicoServiceInterface.valueOf(updatedServiceInterfaceRequestDto));
         } catch (MicoServiceInterfaceNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (MicoServiceIsDeployedException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
 
         return ResponseEntity.ok(new Resource<>(new MicoServiceInterfaceResponseDTO(updatedServiceInterface),
                 getServiceInterfaceLinks(shortName, version, updatedServiceInterface)));
-    }
-
-    private void checkIfServiceExists(String shortName, String version) {
-        getServiceFromServiceBroker(shortName, version);
     }
 
     /**
@@ -216,11 +217,11 @@ public class ServiceInterfaceResource {
         return serviceInterface;
     }
 
-    protected Resource<MicoServiceInterfaceResponseDTO> getServiceInterfaceResponseDTOResource(String serviceShortName, String serviceVersion, MicoServiceInterface serviceInterface) {
+    private Resource<MicoServiceInterfaceResponseDTO> getServiceInterfaceResponseDTOResource(String serviceShortName, String serviceVersion, MicoServiceInterface serviceInterface) {
         return new Resource<>(new MicoServiceInterfaceResponseDTO(serviceInterface), getServiceInterfaceLinks(serviceShortName, serviceVersion, serviceInterface));
     }
 
-    protected List<Resource<MicoServiceInterfaceResponseDTO>> getServiceInterfaceResponseDTOResourcesList(String serviceShortName, String serviceVersion, List<MicoServiceInterface> serviceInterfaces) {
+    private List<Resource<MicoServiceInterfaceResponseDTO>> getServiceInterfaceResponseDTOResourcesList(String serviceShortName, String serviceVersion, List<MicoServiceInterface> serviceInterfaces) {
         return serviceInterfaces.stream().map(serviceInterface -> getServiceInterfaceResponseDTOResource(serviceShortName, serviceVersion, serviceInterface)).collect(Collectors.toList());
     }
 

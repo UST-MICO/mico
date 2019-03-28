@@ -41,7 +41,7 @@ public class MicoServiceBrokerTests {
     private MicoKubernetesClient micoKubernetesClient;
 
     @Test
-    public void getAllServicesAsList() throws Exception {
+    public void getAllServicesAsList() {
         given(serviceRepository.findAll(ArgumentMatchers.anyInt())).willReturn(
                 CollectionUtils.listOf(
                         new MicoService().setShortName(SHORT_NAME_1).setVersion(VERSION_1_0_1).setName(NAME_1).setDescription(DESCRIPTION_1),
@@ -71,7 +71,7 @@ public class MicoServiceBrokerTests {
     }
 
     @Test
-    public void updateExistingService() throws Exception {
+    public void updateExistingService() {
         MicoService micoServiceTwo = new MicoService()
                 .setShortName(SHORT_NAME_2)
                 .setVersion(VERSION_1_0_2)
@@ -159,7 +159,7 @@ public class MicoServiceBrokerTests {
     }
 
     @Test
-    public void getAllDependersOfService() throws Exception {
+    public void getAllDependersOfService() {
         MicoService service = new MicoService()
                 .setShortName(SHORT_NAME)
                 .setVersion(VERSION)
@@ -200,7 +200,7 @@ public class MicoServiceBrokerTests {
     }
 
     @Test
-    public void getAllDependersOfServiceByQuery() throws Exception {
+    public void getAllDependersOfServiceByQuery() {
         MicoService service = new MicoService()
                 .setShortName(SHORT_NAME)
                 .setVersion(VERSION)
@@ -371,14 +371,14 @@ public class MicoServiceBrokerTests {
     @Test
     public void deleteDependencyBetweenServices() {
         MicoService service1 = new MicoService()
-                .setId(new Long(1))
+                .setId(1L)
                 .setShortName(SHORT_NAME_1)
                 .setVersion(VERSION_1_0_1)
                 .setName(NAME_1)
                 .setDescription(DESCRIPTION_1)
                 .setDependencies(new LinkedList<>());
         MicoService service2 = new MicoService()
-                .setId(new Long(2))
+                .setId(2L)
                 .setShortName(SHORT_NAME_2)
                 .setVersion(VERSION_1_0_2)
                 .setName(NAME_2)

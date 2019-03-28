@@ -25,7 +25,6 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.exception.DeploymentException;
-import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
@@ -246,13 +245,7 @@ public class IntegrationTestsUtils {
         log.info("Wait until deployment of MicoService '{}' '{}' is created", micoService.getShortName(), micoService.getVersion());
         executorService.scheduleAtFixedRate(() -> {
 
-            Optional<Deployment> deployment = Optional.empty();
-            try {
-                deployment = micoKubernetesClient.getDeploymentOfMicoService(micoService);
-            } catch (KubernetesResourceException e) {
-                log.error(e.getMessage(), e);
-                completionFuture.cancel(true);
-            }
+            Optional<Deployment> deployment = micoKubernetesClient.getDeploymentOfMicoService(micoService);
             deployment.ifPresent(completionFuture::complete);
         }, initialDelay, period, TimeUnit.SECONDS);
 

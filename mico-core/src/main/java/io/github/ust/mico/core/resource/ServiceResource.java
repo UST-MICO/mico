@@ -127,8 +127,6 @@ public class ServiceResource {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
         } catch (MicoServiceIsDeployedException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
-        } catch (KubernetesResourceException e) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
 
         return ResponseEntity.noContent().build();
@@ -141,8 +139,6 @@ public class ServiceResource {
         micoServiceList.forEach(service -> {
             try {
                 micoServiceBroker.deleteService(service);
-            } catch (KubernetesResourceException e) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Service is currently deployed!");
             } catch (MicoServiceHasDependersException e) {
                 throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
             } catch (MicoServiceIsDeployedException e) {
@@ -350,8 +346,6 @@ public class ServiceResource {
         String yaml;
         try {
             yaml = micoServiceBroker.getServiceYamlByShortNameAndVersion(shortName, version);
-        } catch (KubernetesResourceException e) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Deployment of service '" + shortName + "' '" + version + "' has a conflict: " + e.getMessage());
         } catch (JsonProcessingException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         } catch (MicoServiceNotFoundException e) {
@@ -360,16 +354,15 @@ public class ServiceResource {
         return ResponseEntity.ok(new Resource<>(new MicoYamlResponseDTO(yaml)));
     }
 
-
-    protected static Resource<MicoServiceResponseDTO> getServiceResponseDTOResource(MicoService service) {
+    static Resource<MicoServiceResponseDTO> getServiceResponseDTOResource(MicoService service) {
         return new Resource<>(new MicoServiceResponseDTO(service), getServiceLinks(service));
     }
 
-    protected static List<Resource<MicoServiceResponseDTO>> getServiceResponseDTOResourcesList(List<MicoService> services) {
+    static List<Resource<MicoServiceResponseDTO>> getServiceResponseDTOResourcesList(List<MicoService> services) {
         return services.stream().map(ServiceResource::getServiceResponseDTOResource).collect(Collectors.toList());
     }
 
-    private static Iterable<Link> getServiceLinks(MicoService service) {
+    static Iterable<Link> getServiceLinks(MicoService service) {
         LinkedList<Link> links = new LinkedList<>();
         links.add(linkTo(methodOn(ServiceResource.class).getServiceByShortNameAndVersion(service.getShortName(), service.getVersion())).withSelfRel());
         links.add(linkTo(methodOn(ServiceResource.class).getServiceList()).withRel("services"));
