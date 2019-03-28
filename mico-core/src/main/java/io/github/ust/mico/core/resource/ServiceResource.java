@@ -400,6 +400,15 @@ public class ServiceResource {
         return service;
     }
 
+    /**
+     * Replaces the {@link MicoService} defined by {@code shortName} and {@code version} with the {@link MicoService} given
+     * via the {@code serviceDto} parameter.
+     * @param shortName the shortName of the old {@link MicoService}.
+     * @param version the version of the old {@link MicoService}.
+     * @param serviceDto the replacement {@link MicoService}.
+     * @return the updated {@link MicoService}.
+     * @throws ResponseStatusException if the old {@link MicoService} does not exist.
+     */
     private MicoService updateServiceViaMicoServiceBroker(String shortName, String version, MicoServiceRequestDTO serviceDto) throws ResponseStatusException {
         MicoService existingService = getServiceFromMicoServiceBroker(shortName, version);
         return micoServiceBroker.updateExistingService(MicoService.valueOf(serviceDto).setId(existingService.getId()));
