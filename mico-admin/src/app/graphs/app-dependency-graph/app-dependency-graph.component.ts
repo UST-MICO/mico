@@ -45,10 +45,12 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
 
     // subscriptions
     private appSubscription: Subscription;
+    private appStatusSubscription: Subscription;
     private serviceSubscriptions: Map<string, Subscription[]> = new Map<string, Subscription[]>();
 
     // data cache
     private application: ApiObject;
+    private applicationStatus: ApiObject;
     // map all included service shortNames to their graph ids
     private includedServicesMap: Map<string, string> = new Map();
     private serviceInterfaces: Map<string, ApiObject[]> = new Map();
@@ -81,6 +83,21 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             if (className === node.type) { // set node class according to node type
                 return true;
             }
+            if (node.type === 'application') {
+                // deployed status for application node
+                if (className === 'undeployed' && (node.status == null || node.status.value === 'Unknown' || node.status.value === 'Undeployed')) {
+                    return true;
+                }
+                if (className === 'deployed' && (node.status != null && node.status.value === 'Deployed')) {
+                    return true;
+                }
+                if (className === 'pending' && (node.status != null && node.status.value === 'Pending')) {
+                    return true;
+                }
+                if (className === 'error' && (node.status != null && node.status.value === 'Incompleted')) {
+                    return true;
+                }
+            }
             return false;
         };
         graph.setEdgeClass = (className, edge) => {
@@ -104,6 +121,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             this.resetGraph();
 
             safeUnsubscribe(this.appSubscription);
+            safeUnsubscribe(this.appStatusSubscription);
 
             if (this.shortName != null && this.version != null) {
                 this.appSubscription = this.api.getApplication(this.shortName, this.version).subscribe(application => {
@@ -133,6 +151,10 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                     });
                     this.firstRender = true;
                     this.updateSubject.next(true);
+                });
+                this.appStatusSubscription = this.api.getApplicationDeploymentStatus(this.shortName, this.version).subscribe(status => {
+                    this.applicationStatus = status;
+                    this.updateSubject.next(false);
                 });
             }
         }
@@ -417,6 +439,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         const graph: GraphEditor = this.graph.nativeElement;
         // local cache that is not affected by subsequent updates from observables
         const application = this.application;
+        const applicationStatus = this.applicationStatus;
         const serviceInterfaces = new Map<string, ApiObject[]>();
         const deployInfo = new Map<string, ApiObject>();
 
@@ -435,7 +458,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
 
         // update graph
 
-        this.updateGraphFromApplicationData(application);
+        this.updateGraphFromApplicationData(application, applicationStatus);
         serviceInterfaces.forEach((interfaces, serviceId) => this.updateServiceInterfaceData(serviceId, interfaces));
         deployInfo.forEach((deplInfo, serviceId) => this.updateInterfaceConnectionEdgesFromDeploymentInformation(serviceId, deplInfo));
 
@@ -451,8 +474,9 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
      * Update the existing graph to match the new Application data.
      *
      * @param application mico application
+     * @param applicationStatus mico application deployment status
      */
-    updateGraphFromApplicationData(application) {
+    updateGraphFromApplicationData(application, applicationStatus) {
         // keep local reference in case of resetGraph changes global variables.
         const nodeMap = this.serviceNodeMap;
         const interfaceNodeMap = this.serviceInterfaceNodeMap;
@@ -477,9 +501,13 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 shortName: application.shortName,
                 name: application.name,
                 description: application.description,
+                status: applicationStatus,
                 application: application,
             };
             graph.addNode(node, false);
+        } else {
+            const node: ApplicationNode = graph.getNode('APPLICATION') as ApplicationNode;
+            node.status = applicationStatus;
         }
 
 
