@@ -165,13 +165,7 @@ public class ServiceResource {
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
     public ResponseEntity<Resources<Resource<MicoServiceResponseDTO>>> getVersionsOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
-        List<MicoService> services;
-        try {
-            services = micoServiceBroker.getAllVersionsOfServiceFromDatabase(shortName);
-        } catch (MicoServiceNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        }
-
+        List<MicoService> services = micoServiceBroker.getAllVersionsOfServiceFromDatabase(shortName);
         List<Resource<MicoServiceResponseDTO>> serviceResources = getServiceResponseDTOResourcesList(services);
 
         return ResponseEntity.ok(
@@ -406,13 +400,7 @@ public class ServiceResource {
     }
 
     private List<MicoService> getAllVersionsOfServiceFromMicoServiceBroker(String shortName) throws ResponseStatusException {
-        List<MicoService> micoServiceList;
-        try {
-            micoServiceList = micoServiceBroker.getAllVersionsOfServiceFromDatabase(shortName);
-        } catch (MicoServiceNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        }
-        return micoServiceList;
+        return micoServiceBroker.getAllVersionsOfServiceFromDatabase(shortName);
     }
 
 }
