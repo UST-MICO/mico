@@ -598,13 +598,30 @@ public class MicoKubernetesClient {
      * 
      * @param micoApplication the {@link MicoApplication}.
      * @return {@code true} if and only if {@link #getApplicationDeploymentStatus(MicoApplication)}
-     * 		   returns a {@link MicoApplicationDeploymentStatus} with {@link Value#DEPLOYED};
+     * 		   returns a {@link MicoApplicationDeploymentStatus} with {@link Value#DEPLOYED Deployed};
      * 		   {@code false} otherwise.
      */
     public boolean isApplicationDeployed(MicoApplication micoApplication) {
         boolean result = getApplicationDeploymentStatus(micoApplication).getValue() == Value.DEPLOYED;
 
         String deploymentStatusSimplified = result ? "deployed" : "not deployed";
+        log.debug("MicoApplication '{}' in version '{}' is {}.",
+            micoApplication.getShortName(), micoApplication.getVersion(), deploymentStatusSimplified);
+        return result;
+    }
+
+    /**
+     * Checks whether a given {@code MicoApplication} is currently undeployed.
+     *
+     * @param micoApplication the {@link MicoApplication}.
+     * @return {@code true} if and only if {@link #getApplicationDeploymentStatus(MicoApplication)}
+     * 		   returns a {@link MicoApplicationDeploymentStatus} with {@link Value#UNDEPLOYED Undeployed};
+     * 		   {@code false} otherwise.
+     */
+    public boolean isApplicationUndeployed(MicoApplication micoApplication) {
+        boolean result = getApplicationDeploymentStatus(micoApplication).getValue() == Value.UNDEPLOYED;
+
+        String deploymentStatusSimplified = result ? "undeployed" : "not undeployed";
         log.debug("MicoApplication '{}' in version '{}' is {}.",
             micoApplication.getShortName(), micoApplication.getVersion(), deploymentStatusSimplified);
         return result;
