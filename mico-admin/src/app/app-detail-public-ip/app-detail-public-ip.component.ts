@@ -77,11 +77,13 @@ export class AppDetailPublicIpComponent implements OnInit, OnChanges, OnDestroy 
                     application.services.forEach(service => {
 
                         safeUnsubscribeList(this.subServiceInterfaces);
+                        this.subServiceInterfaces = [];
                         // assumption: one public ip per interface
                         this.subServiceInterfaces.push(this.apiService.getServiceInterfaces(service.shortName, service.version)
                             .subscribe(serviceInterfaces => {
 
                                 safeUnsubscribeList(this.subPublicIps);
+                                this.subPublicIps = [];
 
                                 serviceInterfaces.forEach(micoInterface => {
                                     this.subPublicIps.push(this.apiService
@@ -95,7 +97,7 @@ export class AppDetailPublicIpComponent implements OnInit, OnChanges, OnDestroy 
                                                 this.changeDedection.markForCheck();
 
                                                 // end polling;
-                                                subPolling.unsubscribe();
+                                                safeUnsubscribe(subPolling);
                                             }
 
                                         }));
