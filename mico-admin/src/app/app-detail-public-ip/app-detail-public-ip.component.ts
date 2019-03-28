@@ -74,24 +74,37 @@ export class AppDetailPublicIpComponent implements OnInit, OnChanges, OnDestroy 
             this.subApplication = this.apiService.getApplication(this.applicationShortName, this.applicationVersion)
                 .subscribe(application => {
 
+                    safeUnsubscribeList(this.subServiceInterfaces);
+                    this.subServiceInterfaces = [];
+                    safeUnsubscribeList(this.subPublicIps);
+                    this.subPublicIps = [];
+
                     application.services.forEach(service => {
 
-                        safeUnsubscribeList(this.subServiceInterfaces);
                         // assumption: one public ip per interface
                         this.subServiceInterfaces.push(this.apiService.getServiceInterfaces(service.shortName, service.version)
                             .subscribe(serviceInterfaces => {
-
-                                safeUnsubscribeList(this.subPublicIps);
 
                                 serviceInterfaces.forEach(micoInterface => {
                                     this.subPublicIps.push(this.apiService
                                         .getServiceInterfacePublicIp(service.shortName, service.version, micoInterface.serviceInterfaceName)
                                         .subscribe(publicIpDTO => {
 
-                                            this.publicIps.set(service.shortName + '#' + publicIpDTO.name, publicIpDTO);
-                                            this.changeDedection.markForCheck();
+                                            if (publicIpDTO.externalIpIsAvailable) {
+                                                // public ip is already present
+
+                                                this.publicIps.set(service.shortName + '#' + publicIpDTO.name, publicIpDTO);
+                                                this.changeDedection.markForCheck();
+
+                                                // end polling;
+                                                safeUnsubscribe(subPolling);
+                                            }
 
                                         }));
+
+                                    // start polling
+                                    const subPolling = this.apiService.pollServiceInterfacePublicIp(service.shortName,
+                                        service.version, micoInterface.serviceInterfaceName);
                                 });
                             }));
 

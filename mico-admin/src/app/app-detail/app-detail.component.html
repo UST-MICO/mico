@@ -111,5 +111,6 @@
 </mat-card>
 
 <!-- PUBLIC IPs-->
-<mico-app-detail-public-ip [applicationShortName]="shortName" [applicationVersion]="selectedVersion">
+<mico-app-detail-public-ip *ngIf="deploymentStatus?.value === 'Deployed'" [applicationShortName]="shortName"
+    [applicationVersion]="selectedVersion">
 </mico-app-detail-public-ip>

@@ -210,7 +210,15 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
                 // go to latest version
                 this.apiService.deleteService(this.shortName, this.selectedVersion)
                     .subscribe(val => {
-                        this.updateVersion(null);
+
+                        const subVersions = this.apiService.getServiceVersions(this.shortName)
+                            .subscribe(element => {
+                                // wait until the latest version is updated
+                                if (!element.some(v => v.version === this.selectedVersion)) {
+                                    safeUnsubscribe(subVersions);
+                                    this.updateVersion(null);
+                                }
+                            });
                     });
                 safeUnsubscribe(subDeleteDependency);
             }

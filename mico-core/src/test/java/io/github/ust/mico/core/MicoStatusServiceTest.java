@@ -313,6 +313,7 @@ public class MicoStatusServiceTest {
                 .setInterfacesInformation(CollectionUtils.listOf(
                     new MicoServiceInterfaceStatusResponseDTO()
                         .setName(SERVICE_INTERFACE_NAME)
+                        .setExternalIpIsAvailable(true)
                         .setExternalIp("192.168.2.112")))));
         try {
             given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(deployment);
@@ -507,6 +508,7 @@ public class MicoStatusServiceTest {
             .setErrorMessages(CollectionUtils.listOf())
             .setInterfacesInformation(CollectionUtils.listOf(new MicoServiceInterfaceStatusResponseDTO()
                 .setName(SERVICE_INTERFACE_NAME)
+                .setExternalIpIsAvailable(true)
                 .setExternalIp("192.168.2.112")));
         try {
             given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(deployment);
@@ -549,6 +551,7 @@ public class MicoStatusServiceTest {
 
         MicoServiceInterfaceStatusResponseDTO expectedServiceInterface = new MicoServiceInterfaceStatusResponseDTO()
             .setName(SERVICE_INTERFACE_NAME)
+            .setExternalIpIsAvailable(true)
             .setExternalIp("192.168.2.112");
         List<MicoServiceInterfaceStatusResponseDTO> expectedInterfaceStatusDTO = new LinkedList<>();
         expectedInterfaceStatusDTO.add(expectedServiceInterface);
