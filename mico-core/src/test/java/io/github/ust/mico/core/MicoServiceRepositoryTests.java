@@ -30,6 +30,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -86,38 +87,6 @@ public class MicoServiceRepositoryTests extends MicoRepositoryTests {
     	assertEquals(s2, matchMicoService(servicesIncludedByA2, s2));
     	assertEquals(s3, matchMicoService(servicesIncludedByA2, s3));
     }
-
-//    @Test
-//    public void findAllServicesByApplicationOld() {
-//        // Create some applications and services
-//        MicoApplication a1 = new MicoApplication().setShortName("a1").setVersion("v1.0.0");
-//        MicoApplication a2 = new MicoApplication().setShortName("a2").setVersion("v1.0.1");
-//        MicoService s1 = new MicoService().setShortName("s1").setVersion("v1.0.2");
-//        MicoService s2 = new MicoService().setShortName("s2").setVersion("v1.0.3");
-//        MicoService s3 = new MicoService().setShortName("s3").setVersion("v1.0.4");
-//
-//        // Add some services to the applications
-//        a1.getServices().add(s1);
-//        a1.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(s1).setReplicas(3));
-//        a1.getServices().add(s2);
-//        a1.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(s2).setReplicas(4));
-//        a2.getServices().add(s3);
-//        a2.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(s3).setReplicas(5));
-//
-//        // Save all created objects in their corresponding repositories
-//        applicationRepository.save(a1);
-//        applicationRepository.save(a2);
-//        serviceRepository.save(s1);
-//        serviceRepository.save(s2);
-//        serviceRepository.save(s3);
-//
-//        // Only services s1 and s2 belong to the application a1, service s3 shall not
-//        List<MicoService> micoServiceList = serviceRepository.findAllByApplication("a1", "v1.0.0");
-//        assertEquals(2, micoServiceList.size());
-//        assertTrue(micoServiceList.contains(s1));
-//        assertTrue(micoServiceList.contains(s2));
-//        assertFalse(micoServiceList.contains(s3));
-//    }
     
     @Test
     public void findAllServicesByApplicationAndShortName() {
@@ -160,178 +129,171 @@ public class MicoServiceRepositoryTests extends MicoRepositoryTests {
     	assertEquals(s2, a2s2Optional.get());
     }
 
-//    @Test
-//    public void findAllServicesByApplicationAndShortNameOld() {
-//        // Create some applications and services
-//        MicoApplication a1 = new MicoApplication().setShortName("a1").setVersion("v1.0.0");
-//        MicoService s1 = new MicoService().setShortName("s1").setVersion("v1.0.1");
-//        MicoService s2 = new MicoService().setShortName("s2").setVersion("v1.0.2");
-//        MicoService s3 = new MicoService().setShortName("s3").setVersion("v1.0.3");
-//
-//        // Add some services to the applications
-//        a1.getServices().addAll(CollectionUtils.listOf(s1, s2, s3));
-//        a1.getServiceDeploymentInfos().addAll(CollectionUtils.listOf(
-//            new MicoServiceDeploymentInfo().setService(s1).setReplicas(3),
-//            new MicoServiceDeploymentInfo().setService(s2).setReplicas(4),
-//            new MicoServiceDeploymentInfo().setService(s2).setReplicas(5)));
-//
-//        // Save all created objects in their corresponding repositories
-//        applicationRepository.save(a1);
-//        serviceRepository.save(s1);
-//        serviceRepository.save(s2);
-//        serviceRepository.save(s3);
-//
-//        Optional<MicoService> micoServiceOptional = serviceRepository.findAllByApplicationAndShortName("a1", "v1.0.0", "s1");
-//        assertTrue(micoServiceOptional.isPresent());
-//        assertEquals("s1", micoServiceOptional.get().getShortName());
-//        assertEquals("v1.0.1", micoServiceOptional.get().getVersion());
-//    }
-
     @Test
     public void findDependeesWithAndWithoutDepender() {
-    	
-    }
+        // Setup some applications
+        MicoApplication a0 = getPureMicoApplication(0);
+        MicoApplication a1 = getPureMicoApplication(1);
+        MicoApplication a2 = getPureMicoApplication(2);
 
-    @Test
-    public void findDependeesWithAndWithoutDependerOld() {
-        // Create some services
-        MicoService s1 = new MicoService().setShortName("s1").setVersion("v1.0.0");
-        MicoService s2 = new MicoService().setShortName("s2").setVersion("v1.0.1");
-        MicoService s3 = new MicoService().setShortName("s3").setVersion("v1.0.2");
-        MicoService s4 = new MicoService().setShortName("s4").setVersion("v1.0.3");
-        MicoService s5 = new MicoService().setShortName("s5").setVersion("v1.0.4");
-        MicoService s6 = new MicoService().setShortName("s6").setVersion("v1.0.5");
+        // Setup some services
+        MicoService s0 = getMicoService(0);
+        MicoService s1 = getMicoService(1);
+        MicoService s2 = getMicoService(2);
+        MicoService s3 = getMicoService(3);
+        MicoService s4 = getMicoService(4);
+        MicoService s5 = getMicoService(5);
 
-        // Add some dependencies between the created services
-        MicoServiceDependency dp_s1_s2 = new MicoServiceDependency().setService(s1).setDependedService(s2);
-        MicoServiceDependency dp_s1_s3 = new MicoServiceDependency().setService(s1).setDependedService(s3);
-        MicoServiceDependency dp_s2_s5 = new MicoServiceDependency().setService(s2).setDependedService(s5);
-        MicoServiceDependency dp_s4_s1 = new MicoServiceDependency().setService(s4).setDependedService(s1);
+        // Services #1 and #2 are dependees of service #0
+        // Service #4 is dependee of service #1
+        // Service #0 is dependee of service #3
+        s0.setDependencies(CollectionUtils.listOf(getMicoServiceDependency(s0, s1), getMicoServiceDependency(s0, s2)));
+        s1.setDependencies(CollectionUtils.listOf(getMicoServiceDependency(s1, s4)));
+        s3.setDependencies(CollectionUtils.listOf(getMicoServiceDependency(s3, s0)));
 
-        s1.setDependencies(CollectionUtils.listOf(dp_s1_s2, dp_s1_s3));
-        s2.setDependencies(CollectionUtils.listOf(dp_s2_s5));
-        s4.setDependencies(CollectionUtils.listOf(dp_s4_s1));
+        // Application #0 includes service #0 and #1
+        // Application #1 includes service #1, #2 and #3
+        // Application #2 only includes services #4
+        addMicoServicesWithServiceDeploymentInfo(a0, s0, s1);
+        addMicoServicesWithServiceDeploymentInfo(a1, s1, s2, s3);
+        addMicoServicesWithServiceDeploymentInfo(a2, s4);
 
-        // Save all created objects in their corresponding repositories
-        serviceRepository.save(s1);
-        serviceRepository.save(s2);
-        serviceRepository.save(s3);
-        serviceRepository.save(s4);
+        // Save
+        applicationRepository.save(a0);
+        applicationRepository.save(a1);
+        applicationRepository.save(a2);
+        // Service #5 needs to be saved separately since not included by any application
         serviceRepository.save(s5);
-        serviceRepository.save(s6);
 
         // Find dependees including depender
-        List<MicoService> micoServiceList = serviceRepository.findDependeesIncludeDepender("s1", "v1.0.0");
-        assertEquals(4, micoServiceList.size());
-        assertTrue(micoServiceList.contains(s1)); // the service itself
-        assertTrue(micoServiceList.contains(s2)); // direct dependee
-        assertTrue(micoServiceList.contains(s3)); // direct dependee
-        assertTrue(micoServiceList.contains(s5)); // dependee of s2
-        assertFalse(micoServiceList.contains(s4));
-        assertFalse(micoServiceList.contains(s6));
+        List<MicoService> dependeesIncludingS0 = serviceRepository.findDependeesIncludeDepender(s0.getShortName(), s0.getVersion());
+        assertEquals(4, dependeesIncludingS0.size());
+        // Service #0 is the service itself
+        assertTrue(dependeesIncludingS0.contains(s0));
+        // Service #1 and #2 are direct dependees of service #0
+        assertTrue(dependeesIncludingS0.contains(s1));
+        assertTrue(dependeesIncludingS0.contains(s2));
+        // Service #4 is direct dependee of service #1
+        assertTrue(dependeesIncludingS0.contains(s4));
+        // Services #3 and #5 are no dependees of service #0
+        assertFalse(dependeesIncludingS0.contains(s3));
+        assertFalse(dependeesIncludingS0.contains(s5));
 
         // Find dependees excluding depender
-        micoServiceList = serviceRepository.findDependees("s1", "v1.0.0");
-        assertEquals(3, micoServiceList.size());
-        assertTrue(micoServiceList.contains(s2)); // direct dependee
-        assertTrue(micoServiceList.contains(s3)); // direct dependee
-        assertTrue(micoServiceList.contains(s5)); // dependee of s2
-        assertFalse(micoServiceList.contains(s1));
-        assertFalse(micoServiceList.contains(s4));
-        assertFalse(micoServiceList.contains(s6));
+        List<MicoService> dependeesExcludingS0 = serviceRepository.findDependees(s0.getShortName(), s0.getVersion());
+        assertEquals(3, dependeesExcludingS0.size());
+        // Service #0 is the service itself
+        assertFalse(dependeesExcludingS0.contains(s0));
+        // Service #1 and #2 are direct dependees of service #0
+        assertTrue(dependeesExcludingS0.contains(s1));
+        assertTrue(dependeesExcludingS0.contains(s2));
+        // Service #4 is direct dependee of service #1
+        assertTrue(dependeesExcludingS0.contains(s4));
+        // Services #3 and #5 are no dependees of service #0
+        assertFalse(dependeesExcludingS0.contains(s3));
+        assertFalse(dependeesExcludingS0.contains(s5));
     }
 
+    @Commit
     @Test
     public void findDependers() {
-        // Create some services
-        MicoService s1 = new MicoService().setShortName("s1").setVersion("v1.0.0");
-        MicoService s2 = new MicoService().setShortName("s2").setVersion("v1.0.1");
-        MicoService s3 = new MicoService().setShortName("s3").setVersion("v1.0.2");
-        MicoService s4 = new MicoService().setShortName("s4").setVersion("v1.0.3");
-        MicoService s5 = new MicoService().setShortName("s5").setVersion("v1.0.4");
-        MicoService s6 = new MicoService().setShortName("s6").setVersion("v1.0.5");
-        MicoService s7 = new MicoService().setShortName("s7").setVersion("v1.0.6");
+        // Setup some applications
+        MicoApplication a0 = getPureMicoApplication(0);
+        MicoApplication a1 = getPureMicoApplication(1);
+        MicoApplication a2 = getPureMicoApplication(2);
 
-        // Add some dependencies between the created services
-        MicoServiceDependency dp_s1_s2 = new MicoServiceDependency().setService(s1).setDependedService(s2);
-        MicoServiceDependency dp_s3_s1 = new MicoServiceDependency().setService(s3).setDependedService(s1);
-        MicoServiceDependency dp_s4_s1 = new MicoServiceDependency().setService(s4).setDependedService(s1);
-        MicoServiceDependency dp_s5_s1 = new MicoServiceDependency().setService(s5).setDependedService(s1);
-        MicoServiceDependency dp_s6_s3 = new MicoServiceDependency().setService(s6).setDependedService(s3);
+        // Setup some services
+        MicoService s0 = getMicoService(0);
+        MicoService s1 = getMicoService(1);
+        MicoService s2 = getMicoService(2);
+        MicoService s3 = getMicoService(3);
+        MicoService s4 = getMicoService(4);
+        MicoService s5 = getMicoService(5);
+        MicoService s6 = getMicoService(6);
 
-        s1.setDependencies(CollectionUtils.listOf(dp_s1_s2));
-        s3.setDependencies(CollectionUtils.listOf(dp_s3_s1));
-        s4.setDependencies(CollectionUtils.listOf(dp_s4_s1));
-        s5.setDependencies(CollectionUtils.listOf(dp_s5_s1));
-        s6.setDependencies(CollectionUtils.listOf(dp_s6_s3));
+        // Service #0 is depender of service #1
+        // Services #2, #3 and #4 are depender of service #0
+        // Service #5 is depender of service #3
+        s0.setDependencies(CollectionUtils.listOf(getMicoServiceDependency(s0, s1)));
+        s2.setDependencies(CollectionUtils.listOf(getMicoServiceDependency(s2, s0)));
+        s3.setDependencies(CollectionUtils.listOf(getMicoServiceDependency(s3, s0)));
+        s4.setDependencies(CollectionUtils.listOf(getMicoServiceDependency(s4, s0)));
+        s5.setDependencies(CollectionUtils.listOf(getMicoServiceDependency(s5, s3)));
 
-        // Save all created objects in their corresponding repositories
-        serviceRepository.save(s1);
-        serviceRepository.save(s2);
-        serviceRepository.save(s3);
-        serviceRepository.save(s4);
+        // Application #0 includes service #0 and #1
+        // Application #1 includes service #1, #2 and #3
+        // Application #2 only includes services #4
+        addMicoServicesWithServiceDeploymentInfo(a0, s0, s1);
+        addMicoServicesWithServiceDeploymentInfo(a1, s1, s2, s3);
+        addMicoServicesWithServiceDeploymentInfo(a2, s4);
+
+        // Save
+        applicationRepository.save(a0);
+        applicationRepository.save(a1);
+        applicationRepository.save(a2);
+        // Services #5 and #6 need to be saved separately since not included by any application
         serviceRepository.save(s5);
         serviceRepository.save(s6);
-        serviceRepository.save(s7);
 
         // Find only direct dependers
-        List<MicoService> micoServiceList = serviceRepository.findDependers("s1", "v1.0.0");
-        assertEquals(3, micoServiceList.size());
-        assertTrue(micoServiceList.contains(s3)); // direct depender
-        assertTrue(micoServiceList.contains(s4)); // direct depender
-        assertTrue(micoServiceList.contains(s5)); // direct depender
-        assertFalse(micoServiceList.contains(s2));
-        assertFalse(micoServiceList.contains(s6)); // indirect depender
-        assertFalse(micoServiceList.contains(s7));
+        List<MicoService> dependersOfS0 = serviceRepository.findDependers(s0.getShortName(), s0.getVersion());
+        assertEquals(3, dependersOfS0.size());
+        // Service #0 is the service itself
+        assertFalse(dependersOfS0.contains(s0));
+        // Services #2, #3 and #4 are depender of service #0
+        assertTrue(dependersOfS0.contains(s2));
+        assertTrue(dependersOfS0.contains(s3));
+        assertTrue(dependersOfS0.contains(s4));
+        // Service #5 is indirect depender of service #0
+        assertFalse(dependersOfS0.contains(s5));
+        // Services #1 is dependee of service #0
+        assertFalse(dependersOfS0.contains(s1));
+        // Service #6 has no connection to service #0
+        assertFalse(dependersOfS0.contains(s6));
     }
 
+    @Commit
     @Test
     public void deleteServiceByShortNameAndVersion() {
-        // Create some services and interfaces
-        MicoService s1 = new MicoService().setShortName("s1").setVersion("v1.0.0");
-        MicoService s2 = new MicoService().setShortName("s2").setVersion("v1.0.1");
+        // Setup some applications
+        MicoApplication a0 = getPureMicoApplication(0);
+        MicoApplication a1 = getPureMicoApplication(1);
+        MicoApplication a2 = getPureMicoApplication(2);
 
-        MicoServiceInterface i1 = new MicoServiceInterface().setServiceInterfaceName("i1");
-        MicoServiceInterface i2 = new MicoServiceInterface().setServiceInterfaceName("i2").setPorts(
-            CollectionUtils.listOf(new MicoServicePort().setPort(80).setTargetPort(81)));
-        MicoServiceInterface i3 = new MicoServiceInterface().setServiceInterfaceName("i3").setPorts(
-            CollectionUtils.listOf(new MicoServicePort().setPort(82).setTargetPort(83), new MicoServicePort().setPort(84).setTargetPort(85)));
-        MicoServiceInterface i4 = new MicoServiceInterface().setServiceInterfaceName("i4");
+        // Setup some services
+        MicoService s0 = getMicoService(0);
+        MicoService s1 = getMicoService(1);
+        MicoService s2 = getMicoService(2);
+        MicoService s3 = getMicoService(3);
 
-        s1.setServiceInterfaces(CollectionUtils.listOf(i1, i2, i3));
+        // Application #0 includes no service
+        // Application #1 only includes the service #1
+        // Application #2 includes services #1, #2 and #3
+        addMicoServicesWithServiceDeploymentInfo(a1, s1);
+        addMicoServicesWithServiceDeploymentInfo(a2, s1, s2, s3);
 
-        // Create a dependency between s1 and s2
-        MicoServiceDependency dp_s1_s2 = new MicoServiceDependency().setService(s1).setDependedService(s2);
-        s1.setDependencies(CollectionUtils.listOf(dp_s1_s2));
+        // Save
+        applicationRepository.save(a0);
+        applicationRepository.save(a1);
+        applicationRepository.save(a2);
+        // Service #0 needs to be saved separately since not included by any application
+        serviceRepository.save(s0);
 
-        // Save created objects in their corresponding repositories
-        serviceRepository.save(s1);
-        serviceRepository.save(s2);
-        serviceInterfaceRepository.save(i4);
+        // Number of total mico services should be 4
+        assertEquals(4, serviceRepository.count());
 
-        serviceRepository.deleteServiceByShortNameAndVersion("s1", "v1.0.0");
-
-        // Only service s1 should be left
-        List<MicoService> micoServiceList = serviceRepository.findAll();
-        assertTrue(micoServiceList.contains(s2));
-        assertFalse(micoServiceList.contains(s1));
-
-        // There should be only serviceInterface i4 left
-        Iterable<MicoServiceInterface> micoServiceInterfaceIterable = serviceInterfaceRepository.findAll();
-        int size = 0;
-        for (MicoServiceInterface micoServiceInterface : micoServiceInterfaceIterable) {
-            assertEquals("i4", micoServiceInterface.getServiceInterfaceName());
-            size++;
-        }
-        assertEquals(1, size);
-
-        // There should be no servicePorts left
-        Iterable<MicoServicePort> micoServicePortIterable = servicePortRepository.findAll();
-        size = 0;
-        for (MicoServicePort micoServicePort : micoServicePortIterable) {
-            System.out.println("ServicePortRepository should not contain port " + micoServicePort.getPort() + " -> " + micoServicePort.getTargetPort());
-            size++;
-        }
-        assertEquals(0, size);
+        // Delete service #1
+        serviceRepository.deleteServiceByShortNameAndVersion(s1.getShortName(), s1.getVersion());
+        // Number of total mico services should be 3 now
+        assertEquals(3, serviceRepository.count());
+        // Check if service #1 was removed regarding applications #1 and #2
+        MicoApplication a1n = applicationRepository.findByShortNameAndVersion(a1.getShortName(), a1.getVersion()).get();
+        assertEquals(0, a1n.getServices().size());
+        assertFalse(a1n.getServices().contains(s1));
+        MicoApplication a2n = applicationRepository.findByShortNameAndVersion(a2.getShortName(), a2.getVersion()).get();
+        assertEquals(2, a2n.getServices().size());
+        assertFalse(a2n.getServices().contains(s1));
+        // Application #0 should remain the same
+        assertEquals(a0, applicationRepository.findByShortNameAndVersion(a0.getShortName(), a0.getVersion()).get());
     }
 }

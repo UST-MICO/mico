@@ -19,8 +19,11 @@
 
 package io.github.ust.mico.core;
 
+import static io.github.ust.mico.core.util.MicoRepositoryTestUtils.*;
+import static io.github.ust.mico.core.util.MicoRepositoryTestUtils.getMicoServiceDeploymentInfoInterfaceConection;
 import static org.junit.Assert.*;
 
+import io.github.ust.mico.core.model.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -29,13 +32,10 @@ import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoLabel;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.persistence.*;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.EmbeddedRedisServer;
@@ -43,104 +43,55 @@ import io.github.ust.mico.core.util.EmbeddedRedisServer;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @Transactional
-public class MicoLabelRepositoryTests {
-    public static @ClassRule
-    RuleChain rules = RuleChain.outerRule(EmbeddedRedisServer.runningAt(6379).suppressExceptions());
-
-    @Autowired
-    private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
-
-    @Autowired
-    private MicoApplicationRepository applicationRepository;
-
-    @Autowired
-    private MicoBackgroundJobRepository backgroundJobRepository;
-
-    @Autowired
-    private MicoEnvironmentVariableRepository environmentVariableRepository;
-
-    @Autowired
-    private MicoInterfaceConnectionRepository interfaceConnectionRepository;
-
-    @Autowired
-    private MicoLabelRepository labelRepository;
-
-    @Autowired
-    private MicoServiceDependencyRepository serviceDependencyRepository;
-
-    @Autowired
-    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
-
-    @Autowired
-    private MicoServiceInterfaceRepository serviceInterfaceRepository;
-
-    @Autowired
-    private MicoServicePortRepository servicePortRepository;
-
-    @Autowired
-    private MicoServiceRepository serviceRepository;
+public class MicoLabelRepositoryTests extends MicoRepositoryTests {
 
     @Before
     public void setUp() {
-        kubernetesDeploymentInfoRepository.deleteAll();
-        applicationRepository.deleteAll();
-        backgroundJobRepository.deleteAll();
-        environmentVariableRepository.deleteAll();
-        interfaceConnectionRepository.deleteAll();
-        labelRepository.deleteAll();
-        serviceDependencyRepository.deleteAll();
-        serviceDeploymentInfoRepository.deleteAll();
-        serviceInterfaceRepository.deleteAll();
-        servicePortRepository.deleteAll();
-        serviceRepository.deleteAll();
+        deleteAllData();
     }
 
-    @After
-    public void cleanUp() {
-
-    }
-
+    @Commit
     @Test
-    public void removeUnnecessaryLabel() {
-        // Create some applications and services
-        MicoApplication a1 = new MicoApplication().setShortName("a1").setVersion("v1.0.0");
-        MicoApplication a2 = new MicoApplication().setShortName("a4").setVersion("v1.0.3");
-        MicoService s1 = new MicoService().setShortName("s1").setVersion("v1.0.4");
-        MicoService s2 = new MicoService().setShortName("s2").setVersion("v1.0.5");
-        MicoLabel l1 = new MicoLabel().setKey("key1").setValue("value1");
-        MicoLabel l2 = new MicoLabel().setKey("key2").setValue("value2");
-        MicoLabel l3 = new MicoLabel().setKey("key3").setValue("value3");
-        MicoLabel l4 = new MicoLabel().setKey("key4").setValue("value4");
-        MicoLabel l5 = new MicoLabel().setKey("key5").setValue("value5");
+    public void removeUnnecessaryLabels() {
+        // Setup some applications
+        MicoApplication a0 = getPureMicoApplication(0);
+        MicoApplication a1 = getPureMicoApplication(1);
+        MicoApplication a2 = getPureMicoApplication(2);
 
-        // Add some services to the applications
-        a1.getServices().add(s1);
-        a1.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(s1).setReplicas(3).setLabels(CollectionUtils.listOf(l1, l2)));
-        a2.getServices().add(s2);
-        a2.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(s2).setReplicas(4).setLabels(CollectionUtils.listOf(l3)));
+        // Setup some services
+        MicoService s0 = getMicoService(0);
+        MicoService s1 = getMicoService(1);
+        MicoService s2 = getMicoService(2);
 
-        // Save all created objects in their corresponding repositories
+        // Application #0 includes services #0 and #1
+        // Application #1 only includes the service #1
+        // Application #2 only includes the service #2
+        addMicoServicesWithServiceDeploymentInfo(a0, s0, s1);
+        addMicoServicesWithServiceDeploymentInfo(a1, s1);
+        addMicoServicesWithServiceDeploymentInfo(a2, s2);
+
+        // Setup some labels
+        MicoLabel l0 = getMicoServiceDeploymentInfoLabel(5);
+        MicoLabel l1 = getMicoServiceDeploymentInfoLabel(6);
+        MicoLabel l2 = getMicoServiceDeploymentInfoLabel(7);
+
+        // Save
+        applicationRepository.save(a0);
         applicationRepository.save(a1);
         applicationRepository.save(a2);
-        serviceRepository.save(s1);
-        serviceRepository.save(s2);
+        labelRepository.save(l0);
         labelRepository.save(l1);
         labelRepository.save(l2);
-        labelRepository.save(l3);
-        labelRepository.save(l4);
-        labelRepository.save(l5);
+
+        // 4 (because of service deployment info) + 3 (created labels) = 7
+        assertEquals(7, labelRepository.count());
 
         // Remove all labels that do not have any relationship with another node
         labelRepository.cleanUp();
-
-        // Only label l4 shall be removed
-        Iterable<MicoLabel> micoLabelIterable = labelRepository.findAll();
-        int size = 0;
-        for (MicoLabel micoLabel : micoLabelIterable) {
-            assertNotEquals("key4", micoLabel.getKey());
-            size++;
-        }
-        assertEquals(3, size);
-
+        assertEquals(4, labelRepository.count());
+        // Check if all applications did not change
+        assertEquals(a0, applicationRepository.findByShortNameAndVersion(a0.getShortName(), a0.getVersion()).get());
+        assertEquals(a1, applicationRepository.findByShortNameAndVersion(a1.getShortName(), a1.getVersion()).get());
+        assertEquals(a2, applicationRepository.findByShortNameAndVersion(a2.getShortName(), a2.getVersion()).get());
     }
 }

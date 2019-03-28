@@ -19,11 +19,14 @@
 
 package io.github.ust.mico.core;
 
+import static io.github.ust.mico.core.util.MicoRepositoryTestUtils.*;
+import static io.github.ust.mico.core.util.MicoRepositoryTestUtils.addMicoServicesWithDefaultServiceDeploymentInfo;
 import static org.junit.Assert.*;
 
 import java.util.List;
 import java.util.Optional;
 
+import io.github.ust.mico.core.model.MicoApplication;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -32,6 +35,7 @@ import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,142 +49,102 @@ import io.github.ust.mico.core.util.EmbeddedRedisServer;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @Transactional
-public class MicoServiceInterfaceRepositoryTests {
-    public static @ClassRule
-    RuleChain rules = RuleChain.outerRule(EmbeddedRedisServer.runningAt(6379).suppressExceptions());
-
-    @Autowired
-    private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
-
-    @Autowired
-    private MicoApplicationRepository applicationRepository;
-
-    @Autowired
-    private MicoBackgroundJobRepository backgroundJobRepository;
-
-    @Autowired
-    private MicoEnvironmentVariableRepository environmentVariableRepository;
-
-    @Autowired
-    private MicoInterfaceConnectionRepository interfaceConnectionRepository;
-
-    @Autowired
-    private MicoLabelRepository labelRepository;
-
-    @Autowired
-    private MicoServiceDependencyRepository serviceDependencyRepository;
-
-    @Autowired
-    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
-
-    @Autowired
-    private MicoServiceInterfaceRepository serviceInterfaceRepository;
-
-    @Autowired
-    private MicoServicePortRepository servicePortRepository;
-
-    @Autowired
-    private MicoServiceRepository serviceRepository;
+public class MicoServiceInterfaceRepositoryTests extends MicoRepositoryTests {
 
     @Before
     public void setUp() {
-        kubernetesDeploymentInfoRepository.deleteAll();
-        applicationRepository.deleteAll();
-        backgroundJobRepository.deleteAll();
-        environmentVariableRepository.deleteAll();
-        interfaceConnectionRepository.deleteAll();
-        labelRepository.deleteAll();
-        serviceDependencyRepository.deleteAll();
-        serviceDeploymentInfoRepository.deleteAll();
-        serviceInterfaceRepository.deleteAll();
-        servicePortRepository.deleteAll();
-        serviceRepository.deleteAll();
+        deleteAllData();
     }
 
-    @After
-    public void cleanUp() {
-
-    }
-
-    private MicoService s1;
-
-    private MicoServiceInterface i1;
-    private MicoServiceInterface i2;
-    private MicoServiceInterface i3;
-
+    @Commit
     @Test
-    public void findServiceInterfaceByService() {
-        createTestData();
+    public void findInterfaceByService() {
+        // Setup some applications
+        MicoApplication a0 = getPureMicoApplication(0);
+        MicoApplication a1 = getPureMicoApplication(1);
 
-        // Find serviceInterfaces
-        List<MicoServiceInterface> micoServiceInterfaceList = serviceInterfaceRepository.findByService("s1", "v1.0.0");
-        assertEquals(3, micoServiceInterfaceList.size());
+        // Setup some services
+        MicoService s0 = getMicoService(0);
+        MicoService s1 = getMicoService(1);
 
-        // Check if every serviceInterface with its corresponding ports is returned
-        for (int i = 0; i < micoServiceInterfaceList.size(); i++) {
-            MicoServiceInterface serviceInterface = micoServiceInterfaceList.get(i);
+        // Application #0 only includes the service #0
+        // Application #1 only includes the service #0 and #1
+        addMicoServicesWithServiceDeploymentInfo(a0, s0);
+        addMicoServicesWithServiceDeploymentInfo(a1, s0, s1);
 
-            if (serviceInterface.getServiceInterfaceName().equals("i1")) {
-                assertEquals(1, serviceInterface.getPorts().size());
+        // Save
+        applicationRepository.save(a0);
+        applicationRepository.save(a1);
 
-            } else if (serviceInterface.getServiceInterfaceName().equals("i2")) {
-                assertEquals(1, serviceInterface.getPorts().size());
-
-            } else {
-                assertEquals(2, serviceInterface.getPorts().size());
-            }
-        }
+        // Get all service interfaces that include service #0
+        List<MicoServiceInterface> interfacesUsingS0 = serviceInterfaceRepository.findByService(s0.getShortName(), s0.getVersion());
+        assertEquals(2, interfacesUsingS0.size());
+        // Check if the services interfaces are the correct ones
+        assertTrue(s0.getServiceInterfaces().containsAll(interfacesUsingS0) && interfacesUsingS0.containsAll(s0.getServiceInterfaces()));
     }
 
+    @Commit
     @Test
-    public void findServiceInterfaceByServiceAndName() {
-        createTestData();
+    public void findInterfaceByServiceAndName() {
+        // Setup some applications
+        MicoApplication a0 = getPureMicoApplication(0);
+        MicoApplication a1 = getPureMicoApplication(1);
 
-        // Find serviceInterface
-        Optional<MicoServiceInterface> micoServiceInterfaceOptional = serviceInterfaceRepository.findByServiceAndName("s1", "v1.0.0", "i2");
-        assertTrue(micoServiceInterfaceOptional.isPresent());
-        assertEquals("i2", micoServiceInterfaceOptional.get().getServiceInterfaceName());
+        // Setup some services
+        MicoService s0 = getMicoService(0);
+        MicoService s1 = getMicoService(1);
+
+        // Application #0 only includes the service #0
+        // Application #1 only includes the service #0 and #1
+        addMicoServicesWithServiceDeploymentInfo(a0, s0);
+        addMicoServicesWithServiceDeploymentInfo(a1, s0, s1);
+
+        // Save
+        applicationRepository.save(a0);
+        applicationRepository.save(a1);
+
+        // Get service interface by name and used by service #0
+        Optional<MicoServiceInterface> interfaceUsingS0 = serviceInterfaceRepository.findByServiceAndName(
+            s0.getShortName(), s0.getVersion(), s0.getServiceInterfaces().get(0).getServiceInterfaceName());
+        assertTrue(interfaceUsingS0.isPresent());
+        // Check if both service interfaces are the same
+        assertEquals(s0.getServiceInterfaces().get(0), interfaceUsingS0.get());
     }
 
+    @Commit
     @Test
-    public void deleteServiceInterfaceByServiceAndName () {
-        createTestData();
+    public void deleteInterfaceByServiceAndName() {
+        // Setup some applications
+        MicoApplication a0 = getPureMicoApplication(0);
+        MicoApplication a1 = getPureMicoApplication(1);
 
-        // Delete serviceInterface
-        serviceInterfaceRepository.deleteByServiceAndName("s1", "v1.0.0", "i2");
+        // Setup some services
+        MicoService s0 = getMicoService(0);
+        MicoService s1 = getMicoService(1);
 
-        // Check if the correct interface is deleted
-        assertFalse(serviceInterfaceRepository.findByServiceAndName("s1", "v1.0.0", "i2").isPresent());
-        assertTrue(serviceInterfaceRepository.findByServiceAndName("s1", "v1.0.0", "i1").isPresent());
-        assertTrue(serviceInterfaceRepository.findByServiceAndName("s1", "v1.0.0", "i3").isPresent());
+        // Application #0 only includes the service #0
+        // Application #1 only includes the service #0 and #1
+        addMicoServicesWithServiceDeploymentInfo(a0, s0);
+        addMicoServicesWithDefaultServiceDeploymentInfo(a1, s0, s1);
 
-        // Three ports should be left
-        Iterable<MicoServicePort> micoServicePortIterable = servicePortRepository.findAll();
-        int size = 0;
+        // Save
+        applicationRepository.save(a0);
+        applicationRepository.save(a1);
 
-        for (MicoServicePort micoServicePort : micoServicePortIterable) {
-            size++;
-        }
-        assertEquals(3, size);
+        // Number of total mico service interfaces should be 4
+        assertEquals(4, serviceInterfaceRepository.count());
+
+        // Delete service interface of service #0
+        serviceInterfaceRepository.deleteByServiceAndName(s0.getShortName(), s0.getVersion(), s0.getServiceInterfaces().get(0).getServiceInterfaceName());
+        assertEquals(3, serviceInterfaceRepository.count());
+        // Verify that service interface of service #0 is deleted
+        Optional<MicoServiceInterface> interfaceUsingS0 = serviceInterfaceRepository.findByServiceAndName(
+            s0.getShortName(), s0.getVersion(), s0.getServiceInterfaces().get(0).getServiceInterfaceName());
+        assertFalse(interfaceUsingS0.isPresent());
+        // Verify that service interface of service #1 is still available
+        interfaceUsingS0 = serviceInterfaceRepository.findByServiceAndName(
+            s0.getShortName(), s0.getVersion(), s0.getServiceInterfaces().get(1).getServiceInterfaceName());
+        assertTrue(interfaceUsingS0.isPresent());
     }
-
-    /**
-     * Create some services and interfaces
-     */
-    private void createTestData() {
-        s1 = new MicoService().setShortName("s1").setVersion("v1.0.0");
-
-        i1 = new MicoServiceInterface().setServiceInterfaceName("i1").setPorts(
-            CollectionUtils.listOf(new MicoServicePort().setPort(80).setTargetPort(81)));
-        i2 = new MicoServiceInterface().setServiceInterfaceName("i2").setPorts(
-            CollectionUtils.listOf(new MicoServicePort().setPort(82).setTargetPort(83)));
-        i3 = new MicoServiceInterface().setServiceInterfaceName("i3").setPorts(
-            CollectionUtils.listOf(new MicoServicePort().setPort(84).setTargetPort(85), new MicoServicePort().setPort(86).setTargetPort(87)));
-
-        s1.setServiceInterfaces(CollectionUtils.listOf(i1, i2, i3));
-
-        serviceRepository.save(s1);
-    }
-
 
 }

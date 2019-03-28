@@ -84,6 +84,15 @@ public class MicoRepositoryTestUtils {
 			.collect(Collectors.toList())
 			.get(0);
 	}
+
+	public static final MicoServiceDeploymentInfo matchMicoServiceDeploymentInfoByService(List<MicoServiceDeploymentInfo> deploymentInfos, MicoService micoService) {
+	    return deploymentInfos
+            .stream()
+            .filter(d -> d.getService().getShortName().equals(micoService.getShortName())
+                && d.getService().getVersion().equals(micoService.getVersion()))
+            .collect(Collectors.toList())
+            .get(0);
+    }
 	
 	// ===============================================================================
 	
@@ -153,23 +162,29 @@ public class MicoRepositoryTestUtils {
 				CollectionUtils.listOf(getMicoServiceInterface(number),
 					getMicoServiceInterface(number + 1)));
 	}
+
+    public static final MicoServiceDependency getMicoServiceDependency(MicoService micoService, MicoService dependendMicoService) {
+        return new MicoServiceDependency()
+            .setService(micoService)
+            .setDependedService(dependendMicoService);
+    }
 	
-	private static final MicoLabel getMicoServiceDeploymentInfoLabel(int number) {
+	public static final MicoLabel getMicoServiceDeploymentInfoLabel(int number) {
 		return new MicoLabel().setKey("key-sdi-label-" + number).setValue("value-sdi-label-" + number);
 	}
 	
-	private static final MicoEnvironmentVariable getMicoServiceDeploymentInfoEnvironmentVariable(int number) {
+	public static final MicoEnvironmentVariable getMicoServiceDeploymentInfoEnvironmentVariable(int number) {
 		return new MicoEnvironmentVariable().setName("key-env-label-" + number).setValue("value-env-label-" + number);
 	}
 	
-	private static final KubernetesDeploymentInfo getMicoServiceDeploymentInfoKubernetesDeploymentInfo(int number) {
+	public static final KubernetesDeploymentInfo getMicoServiceDeploymentInfoKubernetesDeploymentInfo(int number) {
 		return new KubernetesDeploymentInfo()
 			.setDeploymentName("kdi-deployment-name-" + number)
 			.setNamespace("kdi-namespace-" + number)
 			.setServiceNames(CollectionUtils.listOf("kdi-service-name-" + number + ".a", "kdi-service-name-" + number + ".b"));
 	}
 	
-	private static final MicoInterfaceConnection getMicoServiceDeploymentInfoInterfaceConection(int number) {
+	public static final MicoInterfaceConnection getMicoServiceDeploymentInfoInterfaceConection(int number) {
 		return new MicoInterfaceConnection()
 			.setEnvironmentVariableName("ic-env-name-" + number)
 			.setMicoServiceInterfaceName("ic-service-interface-name-" + number)

@@ -19,6 +19,8 @@
 
 package io.github.ust.mico.core;
 
+import static io.github.ust.mico.core.util.MicoRepositoryTestUtils.*;
+import static io.github.ust.mico.core.util.MicoRepositoryTestUtils.getMicoServiceDeploymentInfoEnvironmentVariable;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.After;
@@ -29,6 +31,7 @@ import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,94 +43,55 @@ import io.github.ust.mico.core.util.EmbeddedRedisServer;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @Transactional
-public class MicoInterfaceConnectionRepositoryTests {
-    public static @ClassRule
-    RuleChain rules = RuleChain.outerRule(EmbeddedRedisServer.runningAt(6379).suppressExceptions());
-
-    @Autowired
-    private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
-
-    @Autowired
-    private MicoApplicationRepository applicationRepository;
-
-    @Autowired
-    private MicoBackgroundJobRepository backgroundJobRepository;
-
-    @Autowired
-    private MicoEnvironmentVariableRepository environmentVariableRepository;
-
-    @Autowired
-    private MicoInterfaceConnectionRepository interfaceConnectionRepository;
-
-    @Autowired
-    private MicoLabelRepository labelRepository;
-
-    @Autowired
-    private MicoServiceDependencyRepository serviceDependencyRepository;
-
-    @Autowired
-    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
-
-    @Autowired
-    private MicoServiceInterfaceRepository serviceInterfaceRepository;
-
-    @Autowired
-    private MicoServicePortRepository servicePortRepository;
-
-    @Autowired
-    private MicoServiceRepository serviceRepository;
+public class MicoInterfaceConnectionRepositoryTests extends MicoRepositoryTests {
 
     @Before
     public void setUp() {
-        kubernetesDeploymentInfoRepository.deleteAll();
-        applicationRepository.deleteAll();
-        backgroundJobRepository.deleteAll();
-        environmentVariableRepository.deleteAll();
-        interfaceConnectionRepository.deleteAll();
-        labelRepository.deleteAll();
-        serviceDependencyRepository.deleteAll();
-        serviceDeploymentInfoRepository.deleteAll();
-        serviceInterfaceRepository.deleteAll();
-        servicePortRepository.deleteAll();
-        serviceRepository.deleteAll();
+        deleteAllData();
     }
 
-    @After
-    public void cleanUp() {
-
-    }
-
+    @Commit
     @Test
-    public void removeUnnecessaryMicoInterfaceConnections() {
-        // Create some applications and services
-        MicoApplication a1 = new MicoApplication().setShortName("a1").setVersion("v1.0.0");
-        MicoService s1 = new MicoService().setShortName("s1").setVersion("v1.0.1");
-        MicoServiceInterface i1 = new MicoServiceInterface().setServiceInterfaceName("i1").setPorts(
-            CollectionUtils.listOf(new MicoServicePort().setPort(80).setTargetPort(81)));
-        MicoEnvironmentVariable v1 = new MicoEnvironmentVariable().setName("env1").setValue("val1");
-        MicoInterfaceConnection c1 = new MicoInterfaceConnection().setEnvironmentVariableName("v1").setMicoServiceInterfaceName("i1").setMicoServiceShortName("s1");
-        MicoInterfaceConnection c2 = new MicoInterfaceConnection().setEnvironmentVariableName("v2").setMicoServiceInterfaceName("i2").setMicoServiceShortName("s2");
-        MicoInterfaceConnection c3 = new MicoInterfaceConnection().setEnvironmentVariableName("v3").setMicoServiceInterfaceName("i3").setMicoServiceShortName("s3");
+    public void removeUnnecessaryInterfaceConnections() {
+        // Setup some applications
+        MicoApplication a0 = getPureMicoApplication(0);
+        MicoApplication a1 = getPureMicoApplication(1);
+        MicoApplication a2 = getPureMicoApplication(2);
 
-        s1.getServiceInterfaces().add(i1);
-        a1.getServices().add(s1);
-        a1.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(s1).setReplicas(3).setEnvironmentVariables(
-            CollectionUtils.listOf(v1)).setInterfaceConnections(CollectionUtils.listOf(c1)));
+        // Setup some services
+        MicoService s0 = getMicoService(0);
+        MicoService s1 = getMicoService(1);
+        MicoService s2 = getMicoService(2);
 
+        // Application #0 includes services #0 and #1
+        // Application #1 only includes the service #1
+        // Application #2 only includes the service #2
+        addMicoServicesWithServiceDeploymentInfo(a0, s0, s1);
+        addMicoServicesWithServiceDeploymentInfo(a1, s1);
+        addMicoServicesWithServiceDeploymentInfo(a2, s2);
+
+        // Setup some interface connections
+        MicoInterfaceConnection c0 = getMicoServiceDeploymentInfoInterfaceConection(5);
+        MicoInterfaceConnection c1 = getMicoServiceDeploymentInfoInterfaceConection(6);
+        MicoInterfaceConnection c2 = getMicoServiceDeploymentInfoInterfaceConection(7);
+
+        // Save
+        applicationRepository.save(a0);
         applicationRepository.save(a1);
-        serviceRepository.save(s1);
-        environmentVariableRepository.save(v1);
+        applicationRepository.save(a2);
+        interfaceConnectionRepository.save(c0);
         interfaceConnectionRepository.save(c1);
         interfaceConnectionRepository.save(c2);
-        interfaceConnectionRepository.save(c3);
 
-        // Delete all interface connections without an edge to another node
+        // 4 (because of service deployment info) + 3 (created interface connections) = 7
+        assertEquals(7, interfaceConnectionRepository.count());
+
+        // Remove all interface connections that do not have any relationship with another node
         interfaceConnectionRepository.cleanUp();
-
-        // Only interfaceConnection c1 should be left
-        Iterable<MicoInterfaceConnection> micoInterfaceConnectionIterable = interfaceConnectionRepository.findAll();
-        for (MicoInterfaceConnection interfaceConnection : micoInterfaceConnectionIterable) {
-            assertEquals("s1", interfaceConnection.getMicoServiceShortName());
-        }
+        assertEquals(4, interfaceConnectionRepository.count());
+        // Check if all applications did not change
+        assertEquals(a0, applicationRepository.findByShortNameAndVersion(a0.getShortName(), a0.getVersion()).get());
+        assertEquals(a1, applicationRepository.findByShortNameAndVersion(a1.getShortName(), a1.getVersion()).get());
+        assertEquals(a2, applicationRepository.findByShortNameAndVersion(a2.getShortName(), a2.getVersion()).get());
     }
 }
