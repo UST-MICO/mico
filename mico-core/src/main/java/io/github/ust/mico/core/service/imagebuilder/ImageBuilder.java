@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
 
+import io.fabric8.kubernetes.api.model.ContainerStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
@@ -122,7 +123,7 @@ public class ImageBuilder {
         }
         ServiceAccount buildServiceAccount = kubernetesClient.serviceAccounts().inNamespace(namespace).withName(serviceAccountName).get();
         if (buildServiceAccount == null) {
-            log.error("Service account `{}` is not available!", serviceAccountName);
+            log.error("Service account `{}` in namespace '{}' is not available!", serviceAccountName, namespace);
             throw new NotInitializedException("Service account not available!");
         }
 
@@ -235,7 +236,7 @@ public class ImageBuilder {
 
         Build createdBuild = buildClient.createOrReplace(build);
         log.info("Started build with name '{}'", buildName);
-        log.debug("Created build: {} ", createdBuild);
+        log.debug("Build resource: {} ", createdBuild);
 
         return createdBuild;
     }
@@ -247,31 +248,50 @@ public class ImageBuilder {
         final ScheduledFuture<?> pollingFuture = scheduledBuildStatusCheckService.scheduleAtFixedRate(() -> {
             // Retrieve the build to get the current status of the build.
             Build build = getBuild(buildName);
+            String message;
             if (build.getStatus() != null && build.getStatus().getCluster() != null) {
                 String buildPodName = build.getStatus().getCluster().getPodName();
                 String buildNamespace = build.getStatus().getCluster().getNamespace();
-                Pod buildPod = this.kubernetesClient.pods().inNamespace(buildNamespace).withName(buildPodName).get();
+                Pod buildPod = kubernetesClient.pods().inNamespace(buildNamespace).withName(buildPodName).get();
+                if (buildPod != null) {
+                    String currentBuildPhase = buildPod.getStatus().getPhase();
+                    // During build the phase is 'Pending'.
+                    // We wait until the phase is either 'Succeeded' or 'Failed'.
+                    log.debug("Current phase of build of MicoService '{}' '{}' is '{}'.", micoService.getShortName(),
+                        micoService.getVersion(), currentBuildPhase);
+                    if (currentBuildPhase.equals("Succeeded")) {
+                        String dockerImageUri = createImageName(micoService.getShortName(), micoService.getVersion());
+                        completionFuture.complete(dockerImageUri);
+                    } else if (currentBuildPhase.equals("Failed")) {
+                        log.info("Build pod failed with message '{}' and reason '{}'.", buildPod.getStatus().getMessage(),
+                            buildPod.getStatus().getReason());
+                        for (ContainerStatus initContainerStatus : buildPod.getStatus().getInitContainerStatuses()) {
+                            log.debug("Build step '{}' finished with termination state: '{}'",
+                            initContainerStatus.getName(), initContainerStatus.getState().getTerminated());
+                        }
+                        message = "Build of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' failed!";
+                        log.warn(message);
 
-                String currentBuildPhase = buildPod.getStatus().getPhase();
-                log.debug("Current phase of build of MicoService '{}' '{}' is '{}'.", micoService.getShortName(),
-                    micoService.getVersion(), currentBuildPhase);
-                if (currentBuildPhase.equals("Succeeded")) {
-                    String dockerImageUri = createImageName(micoService.getShortName(), micoService.getVersion());
-                    completionFuture.complete(dockerImageUri);
-                } else if (currentBuildPhase.equals("Failed")) {
-                    completionFuture.completeExceptionally(new ImageBuildException("Build of MicoService '"
-                        + micoService.getShortName() + "' '" + micoService.getVersion() + "' failed!"));
+                        completionFuture.completeExceptionally(new ImageBuildException(message));
+                    }
+                } else {
+                    message = "Build Pod for build of MicoService '" + micoService.getShortName() + "' '"
+                        + micoService.getVersion() + "' was not created!";
+                    log.warn(message);
+                    completionFuture.completeExceptionally(new ImageBuildException(message));
                 }
             } else {
-                completionFuture.completeExceptionally(new ImageBuildException("Build of MicoService '"
-                    + micoService.getShortName() + "' '" + micoService.getVersion() + "' was not started!"));
+                message = "Build resource for the build of MicoService '" + micoService.getShortName() + "' '"
+                    + micoService.getVersion() + "' was not created!";
+                log.warn(message);
+                completionFuture.completeExceptionally(new ImageBuildException(message));
             }
         }, 10, 5, TimeUnit.SECONDS);
 
-        // Add a timeout. This is synchronous and blocks the execution.
-        log.debug("Set timeout of {}s for build of MicoService '{}' '{}'.", buildBotConfig.getBuildTimeout(),
-            micoService.getShortName(), micoService.getVersion());
+        // Wait until build is considered to be finished (or the given timeout is reached).
+        log.debug("Wait until Build of MicoService '{}' '{}' is finished.", micoService.getShortName(), micoService.getVersion());
         try {
+            // This is synchronous and blocks the execution.
             completionFuture.get(buildBotConfig.getBuildTimeout(), TimeUnit.SECONDS);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             pollingFuture.cancel(true);
@@ -307,7 +327,7 @@ public class ImageBuilder {
      * Creates an image name based on the short name and version of a service (used as image tag).
      *
      * @param serviceShortName the short name of the {@link MicoService}.
-     * @param serviceVersion the version of the {@link MicoService}.
+     * @param serviceVersion   the version of the {@link MicoService}.
      * @return the image name.
      */
     public String createImageName(String serviceShortName, String serviceVersion) {

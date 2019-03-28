@@ -18,6 +18,7 @@
  */
 package io.github.ust.mico.core.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoService;
@@ -123,6 +124,7 @@ public class MicoServiceBackgroundJobResponseDTO {
         })
     })
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String errorMessage;
 
 
