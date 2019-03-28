@@ -517,8 +517,14 @@ public class MicoKubernetesClient {
 				messages.add(MicoMessage.error(message));
    			} else {
    				// Retrieve Kubernetes deployment information
-   				Optional<KubernetesDeploymentInfo> kubernetesDeploymentInfoOptional = updateKubernetesDeploymentInfo(micoServiceDeploymentInfo);
-   				if (!kubernetesDeploymentInfoOptional.isPresent()) {
+                Optional<KubernetesDeploymentInfo> kubernetesDeploymentInfoOptional;
+                try {
+                    kubernetesDeploymentInfoOptional = updateKubernetesDeploymentInfo(micoServiceDeploymentInfo);
+                } catch (KubernetesResourceException e) {
+                    messages.add(MicoMessage.error(e.getMessage()));
+                    return new MicoApplicationDeploymentStatus(Value.UNKNOWN, messages);
+                }
+                if (!kubernetesDeploymentInfoOptional.isPresent()) {
    					// MicoService had been deployed, but is longer deployed in Kubernetes
    					applicationDeploymentStatus = Value.INCOMPLETE;
    					message = "The Kubernetes deployment information for MicoService '"
@@ -614,8 +620,9 @@ public class MicoKubernetesClient {
      *
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}
      * @return the updated {@link KubernetesDeploymentInfo}. Is {@code empty} if there is no deployment anymore.
+     * @throws KubernetesResourceException if there is an error while retrieving Kubernetes resources
      */
-    private Optional<KubernetesDeploymentInfo> updateKubernetesDeploymentInfo(MicoServiceDeploymentInfo serviceDeploymentInfo) {
+    private Optional<KubernetesDeploymentInfo> updateKubernetesDeploymentInfo(MicoServiceDeploymentInfo serviceDeploymentInfo) throws KubernetesResourceException {
         MicoService micoService = serviceDeploymentInfo.getService();
         KubernetesDeploymentInfo currentKubernetesDeploymentInfo = serviceDeploymentInfo.getKubernetesDeploymentInfo();
 
@@ -638,25 +645,30 @@ public class MicoKubernetesClient {
 
         Deployment actualKubernetesDeployment = null;
         List<Service> actualKubernetesServices = new ArrayList<>();
-        if (kubernetesClient.namespaces().withName(namespace).get() != null) {
-            actualKubernetesDeployment = kubernetesClient.apps().deployments().inNamespace(namespace).withName(deploymentName).get();
-            if (actualKubernetesDeployment == null) {
-                log.warn("Deployment '{}' of MicoService '{}' '{}' doesn't exist anymore!",
-                    deploymentName, micoService.getShortName(), micoService.getVersion());
-            }
-
-            for (String serviceName : serviceNames) {
-                Service actualKubernetesService = kubernetesClient.services().inNamespace(namespace).withName(serviceName).get();
-                if (actualKubernetesService != null) {
-                    actualKubernetesServices.add(actualKubernetesService);
-                } else {
-                    log.warn("Kubernetes service '{}' of MicoService '{}' '{}' doesn't exist anymore",
-                        serviceName, micoService.getShortName(), micoService.getVersion());
+        try {
+            if (kubernetesClient.namespaces().withName(namespace).get() != null) {
+                actualKubernetesDeployment = kubernetesClient.apps().deployments().inNamespace(namespace).withName(deploymentName).get();
+                if (actualKubernetesDeployment == null) {
+                    log.warn("Deployment '{}' of MicoService '{}' '{}' doesn't exist anymore!",
+                        deploymentName, micoService.getShortName(), micoService.getVersion());
                 }
+
+                for (String serviceName : serviceNames) {
+                    Service actualKubernetesService = kubernetesClient.services().inNamespace(namespace).withName(serviceName).get();
+                    if (actualKubernetesService != null) {
+                        actualKubernetesServices.add(actualKubernetesService);
+                    } else {
+                        log.warn("Kubernetes service '{}' of MicoService '{}' '{}' doesn't exist anymore",
+                            serviceName, micoService.getShortName(), micoService.getVersion());
+                    }
+                }
+            } else {
+                log.warn("Namespace '{}' of deployment of MicoService '{}' '{}' doesn't exist anymore!",
+                    namespace, micoService.getShortName(), micoService.getVersion());
             }
-        } else {
-            log.warn("Namespace '{}' of deployment of MicoService '{}' '{}' doesn't exist anymore!",
-                namespace, micoService.getShortName(), micoService.getVersion());
+        } catch(Exception e) {
+            log.warn(e.getMessage());
+            throw new KubernetesResourceException(e);
         }
 
         // Consider a deployment only as valid if there is a Kubernetes Deployment.
