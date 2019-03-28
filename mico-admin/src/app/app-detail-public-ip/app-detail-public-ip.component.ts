@@ -21,6 +21,7 @@ import { Component, Input, OnChanges, OnInit, OnDestroy, ChangeDetectionStrategy
 import { ApiService } from '../api/api.service';
 import { Subscription } from 'rxjs';
 import { safeUnsubscribeList, safeUnsubscribe } from '../util/utils';
+import { take } from 'rxjs/operators';
 
 @Component({
     selector: 'mico-app-detail-public-ip',
@@ -76,6 +77,7 @@ export class AppDetailPublicIpComponent implements OnInit, OnChanges, OnDestroy 
             // get the public ips
             safeUnsubscribe(this.subApplication);
             this.subApplication = this.apiService.getApplication(this.applicationShortName, this.applicationVersion)
+                .pipe(take(1))
                 .subscribe(application => {
 
                     safeUnsubscribeList(this.subServiceInterfaces);
@@ -89,6 +91,7 @@ export class AppDetailPublicIpComponent implements OnInit, OnChanges, OnDestroy 
 
                         // assumption: one public ip per interface
                         this.subServiceInterfaces.push(this.apiService.getServiceInterfaces(service.shortName, service.version)
+                            .pipe(take(1))
                             .subscribe(serviceInterfaces => {
 
                                 serviceInterfaces.forEach(micoInterface => {
