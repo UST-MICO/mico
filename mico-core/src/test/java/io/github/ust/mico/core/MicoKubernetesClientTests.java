@@ -451,6 +451,8 @@ public class MicoKubernetesClientTests {
 
         given(serviceDeploymentInfoRepository.findAllByApplication(SHORT_NAME_2, VERSION))
                 .willReturn(CollectionUtils.listOf(serviceDeploymentInfo));
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(SHORT_NAME_2, VERSION))
+            .willReturn(new MicoApplicationJobStatus(SHORT_NAME_2, VERSION, Status.UNDEFINED, Collections.emptyList()));
 
         boolean result = micoKubernetesClient.isApplicationDeployed(micoApplication);
         assertFalse("Application is not deployed, because MicoService was deployed by other application", result);

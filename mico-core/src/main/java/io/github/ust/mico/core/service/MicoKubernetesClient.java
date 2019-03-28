@@ -438,13 +438,11 @@ public class MicoKubernetesClient {
    		// Check deployment status based on stored Kubernetes deployment information
    		List<MicoServiceDeploymentInfo> micoServiceDeploymentInfos = serviceDeploymentInfoRepository.findAllByApplication(
    			applicationShortName, applicationVersion);
-   		if (micoServiceDeploymentInfos.isEmpty()
-   			|| micoServiceDeploymentInfos.stream().allMatch(sdi -> sdi.getKubernetesDeploymentInfo() == null)) {
+   		if (micoServiceDeploymentInfos.isEmpty()) {
    			// If the MicoApplication does not provide service deployment information, or
    			// all Kubernetes deployment information is null -> application is currently (intentionally) not deployed
-            log.debug("There are no service deployment information with Kubernetes deployment information " +
-                    "for the MicoApplication '{}' '{}' stored in the database. MicoApplication is considered to be not deployed.",
-                    applicationShortName, applicationVersion);
+            log.debug("There are no service deployment information for the MicoApplication '{}' '{}' stored in the database. " +
+                    "MicoApplication is considered to be not deployed.", applicationShortName, applicationVersion);
    			return MicoApplicationDeploymentStatus.undeployed("MicoApplication is currently not deployed.");
    		}
    		
