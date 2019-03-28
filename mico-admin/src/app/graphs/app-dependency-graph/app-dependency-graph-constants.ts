@@ -84,6 +84,9 @@ export const STYLE_TEMPLATE = {
             text-overflow: ellipsis;
             word-break: break-all;
         }
+        .service .title {
+            cursor: pointer;
+        }
         .text.interface-name {
             text-overflow: ellipsis;
             word-break: break-all;

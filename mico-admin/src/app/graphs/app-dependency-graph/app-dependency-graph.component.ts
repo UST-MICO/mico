@@ -31,6 +31,7 @@ import { debounceTime, take, takeLast } from 'rxjs/operators';
 import { safeUnsubscribe, safeUnsubscribeList } from 'src/app/util/utils';
 import { YesNoDialogComponent } from 'src/app/dialogs/yes-no-dialog/yes-no-dialog.component';
 import { GraphAddEnvironmentVariableComponent } from 'src/app/dialogs/graph-add-environment-variable/graph-add-environment-variable.component';
+import { Router } from '@angular/router';
 
 
 @Component({
@@ -69,8 +70,10 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
 
     private versionChangedFor: { node: Node, newVersion: ApiObject };
 
-    constructor(private api: ApiService,
+    constructor(
+        private api: ApiService,
         private dialog: MatDialog,
+        private router: Router,
     ) { }
 
     ngOnInit() {
@@ -189,6 +192,9 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 this.changeServiceVersion(event.detail.node, selected);
             });
             return;
+        }
+        if (event.detail.key === 'title') {
+            this.router.navigate(['service-detail', event.detail.node.shortName, event.detail.node.version]);
         }
     }
 
