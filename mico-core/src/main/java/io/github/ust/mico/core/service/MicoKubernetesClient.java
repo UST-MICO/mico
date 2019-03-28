@@ -880,6 +880,9 @@ public class MicoKubernetesClient {
             application.getShortName(), application.getVersion());
 
     	for (MicoService service : application.getServices()) {
+    	    log.debug("Check MicoService '{}' '{}' whether it should be scaled in or completely undeployed...",
+                service.getShortName(), service.getVersion());
+
     		// Get all service deployment infos for this service,
     		// if there are multiple service deployment infos
             // with known Kubernetes deployment information,
@@ -946,6 +949,11 @@ public class MicoKubernetesClient {
 
 					// Actual scaling
 					scale(serviceDeploymentInfo, updatedTotalRequestedReplicas);
+
+                    // Delete Kubernetes deployment info in database
+                    log.debug("Delete Kubernetes deployment info in database for MicoService '{}' in version '{}'.",
+                        serviceDeploymentInfo.getService().getShortName(), serviceDeploymentInfo.getService().getVersion());
+                    kubernetesDeploymentInfoRepository.delete(serviceDeploymentInfo.getKubernetesDeploymentInfo());
 				}
 			}
     	}
@@ -1093,6 +1101,9 @@ public class MicoKubernetesClient {
 		log.debug("Delete Kubernetes deployment info in database for MicoService '{}' in version '{}'.",
 			serviceDeploymentInfo.getService().getShortName(), serviceDeploymentInfo.getService().getVersion());
 		kubernetesDeploymentInfoRepository.delete(serviceDeploymentInfo.getKubernetesDeploymentInfo());
+
+		log.info("MicoService '{}' in version '{}' was undeployed successfully.",
+            serviceDeploymentInfo.getService().getShortName(), serviceDeploymentInfo.getService().getVersion());
     }
     
     /**
