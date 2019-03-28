@@ -103,7 +103,7 @@ public class ServiceResource {
                                                                           @Valid @RequestBody MicoServiceRequestDTO serviceDto) {
         if (!serviceDto.getShortName().equals(shortName)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "ShortName of the provided service does not match the request parameter");
+                "An update of the short name is not allowed");
         }
         if (!serviceDto.getVersion().equals(version)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
