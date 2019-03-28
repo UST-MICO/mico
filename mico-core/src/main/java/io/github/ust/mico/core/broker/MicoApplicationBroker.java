@@ -135,8 +135,8 @@ public class MicoApplicationBroker {
         }
         MicoApplication existingMicoApplication = getMicoApplicationByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion());
         micoApplication.setId(existingMicoApplication.getId())
-            .setServices(existingMicoApplication.getServices())
-            .setServiceDeploymentInfos(existingMicoApplication.getServiceDeploymentInfos());
+            .setServices(existingMicoApplication.getServices());
+        micoApplication.setServiceDeploymentInfos(serviceDeploymentInfoRepository.findAllByApplication(shortName, version));
         return applicationRepository.save(micoApplication);
     }
 
