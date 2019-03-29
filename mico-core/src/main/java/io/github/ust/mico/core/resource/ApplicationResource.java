@@ -295,7 +295,8 @@ public class ApplicationResource {
 
     private Resource<MicoApplicationWithServicesResponseDTO> getApplicationWithServicesResponseDTOResourceWithDeploymentStatus(MicoApplication application) {
         MicoApplicationWithServicesResponseDTO dto = new MicoApplicationWithServicesResponseDTO(application);
-        dto.setDeploymentStatus(broker.getApplicationDeploymentStatus(application.getShortName(), application.getVersion()));
+		dto.setDeploymentStatus(new MicoApplicationDeploymentStatusResponseDTO(
+		    broker.getApplicationDeploymentStatus(application.getShortName(), application.getVersion())));
         return new Resource<>(dto, broker.getLinksOfMicoApplication(application));
     }
 }

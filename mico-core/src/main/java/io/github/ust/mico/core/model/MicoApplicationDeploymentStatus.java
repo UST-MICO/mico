@@ -24,8 +24,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.neo4j.ogm.annotation.NodeEntity;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.github.ust.mico.core.model.MicoMessage.Type;
@@ -38,12 +36,14 @@ import lombok.experimental.Accessors;
 /**
  * Wraps the deployment status of a {@link MicoApplication}
  * and some messages (optional) with more detailed information.
+ * <p>
+ * Note that this class is only used for business logic purposes
+ * and instances are not persisted.
  */
 @Data
 @RequiredArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@NodeEntity
 public class MicoApplicationDeploymentStatus {
 
     // ----------------------

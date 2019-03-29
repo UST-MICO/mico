@@ -21,6 +21,7 @@ package io.github.ust.mico.core.model;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -34,12 +35,15 @@ import lombok.experimental.Accessors;
  * An environment variable represented as a simple key-value pair.
  * Necessary since Neo4j does not allow to persist
  * properties of composite types.
+ * <p>
+ * Instances of this class are persisted as nodes in the Neo4j database.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@NodeEntity
 public class MicoEnvironmentVariable {
 	
 	@Id

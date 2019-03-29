@@ -30,11 +30,13 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * Background job for a {@link MicoService}.
+ * <p>
+ * Instances of this class are persisted in the Redis database.
  */
 @Data
 @NoArgsConstructor
-@RedisHash("BackgroundJob")
 @Accessors(chain = true)
+@RedisHash("BackgroundJob")
 public class MicoServiceBackgroundJob implements Serializable {
 
     private static final long serialVersionUID = -8247189361567566737L;
