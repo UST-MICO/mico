@@ -22,6 +22,14 @@ Then open http://localhost:4200 in your browser.
     You can use :program:`kubectl` to forward traffic to a backend running in a cluster.
 
 
+configuration
+-------------
+
+The backend api url can be set in the :file:`/mico-admin/src/environments/environment.ts`.
+
+The docker container uses the environment variable :envvar:`MICO_REST_API` to setup a forwarding proxy in nginx.
+
+
 Documentation of Core Components
 --------------------------------
 
