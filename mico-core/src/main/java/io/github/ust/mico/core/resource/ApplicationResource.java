@@ -280,7 +280,7 @@ public class ApplicationResource {
                                                                                              @PathVariable(PATH_VARIABLE_VERSION) String version) {
         MicoApplicationStatusResponseDTO applicationStatus;
         try {
-            applicationStatus = broker.getMicoApplicationStatusOfMicoApplicationByShortNameAndVersion(shortName, version);
+            applicationStatus = broker.getApplicationStatus(shortName, version);
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
