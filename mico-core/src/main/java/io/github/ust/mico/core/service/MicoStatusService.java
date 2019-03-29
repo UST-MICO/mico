@@ -215,16 +215,32 @@ public class MicoStatusService {
             for (Pod pod : podsPerNode.get(nodeName)) {
                 KubernetesPodInformationResponseDTO podInformation = getPodInformation(pod);
                 podInfos.add(podInformation);
-                if (pod.getStatus().getPhase().equals(POD_PHASE_RUNNING)) {
+                String phase = pod.getStatus().getPhase();
+                if (phase.equals(POD_PHASE_RUNNING)) {
                     sumCpuLoadOnNode += podInformation.getMetrics().getCpuLoad();
                     sumMemoryUsageOnNode += podInformation.getMetrics().getMemoryUsage();
                     sumRunningPods++;
+                } else {
+                    log.debug("Pod '{}' on node '{}' is not running. It is in phase '{}'.",
+                        pod.getMetadata().getName(), nodeName, phase);
                 }
+            }
+            int averageCpuLoad = 0;
+            int averageMemoryUsage = 0;
+            if (sumRunningPods > 0) {
+                averageCpuLoad = sumCpuLoadOnNode / sumRunningPods;
+                averageMemoryUsage = sumMemoryUsageOnNode / sumRunningPods;
+            } else {
+                message = "There are no Pods running on node '" + nodeName + "' for MICO service '"
+                    + micoService.getShortName() + "' '" + micoService.getVersion() + "'.";
+                log.warn(message);
+                MicoMessage warning = MicoMessage.warning(message);
+                serviceStatus.getErrorMessages().add(new MicoMessageResponseDTO(warning));
             }
             nodeMetrics.add(new KubernetesNodeMetricsResponseDTO()
                 .setNodeName(nodeName)
-                .setAverageCpuLoad(sumCpuLoadOnNode / sumRunningPods)
-                .setAverageMemoryUsage(sumMemoryUsageOnNode / sumRunningPods));
+                .setAverageCpuLoad(averageCpuLoad)
+                .setAverageMemoryUsage(averageMemoryUsage));
         }
         serviceStatus
             .setNodeMetrics(nodeMetrics)
