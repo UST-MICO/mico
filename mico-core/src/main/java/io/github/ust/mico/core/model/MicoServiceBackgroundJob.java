@@ -83,7 +83,7 @@ public class MicoServiceBackgroundJob implements Serializable {
 
     // Build contains currently build and deploy.
     public enum Type {
-        BUILD, UNDEPLOY
+        BUILD
     }
 
     public enum Status {
