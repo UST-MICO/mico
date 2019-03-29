@@ -2,6 +2,7 @@ package io.github.ust.mico.core;
 
 import io.github.ust.mico.core.broker.MicoServiceBroker;
 import io.github.ust.mico.core.exception.MicoServiceAlreadyExistsException;
+import io.github.ust.mico.core.exception.MicoServiceIsDeployedException;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
@@ -71,7 +72,7 @@ public class MicoServiceBrokerTests {
     }
 
     @Test
-    public void updateExistingService() {
+    public void updateExistingService() throws MicoServiceIsDeployedException {
         MicoService micoServiceTwo = new MicoService()
                 .setShortName(SHORT_NAME_2)
                 .setVersion(VERSION_1_0_2)
@@ -336,7 +337,7 @@ public class MicoServiceBrokerTests {
     }
 
     @Test
-    public void persistNewDependencyBetweenServices() {
+    public void persistNewDependencyBetweenServices() throws MicoServiceIsDeployedException {
         MicoService service1 = new MicoService()
                 .setShortName(SHORT_NAME_1)
                 .setVersion(VERSION_1_0_1)
@@ -367,7 +368,7 @@ public class MicoServiceBrokerTests {
     }
 
     @Test
-    public void deleteDependencyBetweenServices() {
+    public void deleteDependencyBetweenServices() throws MicoServiceIsDeployedException {
         MicoService service1 = new MicoService()
                 .setId(1L)
                 .setShortName(SHORT_NAME_1)
@@ -400,7 +401,7 @@ public class MicoServiceBrokerTests {
     }
 
     @Test
-    public void deleteAllDependees() {
+    public void deleteAllDependees() throws MicoServiceIsDeployedException {
         MicoService service1 = new MicoService()
                 .setShortName(SHORT_NAME_1)
                 .setVersion(VERSION_1_0_1)

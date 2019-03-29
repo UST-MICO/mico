@@ -19,16 +19,16 @@
 
 package io.github.ust.mico.core.exception;
 
-public class MicoApplicationIsNotUndeployedException extends Exception {
+public class MicoApplicationIsUndeployedException extends Exception {
 
-    private static final long serialVersionUID = 719555004144985622L;
+    private static final long serialVersionUID = 8761185481421223977L;
 
-    public MicoApplicationIsNotUndeployedException(String shortName, String version) {
-        super("Application '" + shortName + "' '" + version + "' is currently not undeployed!");
+    public MicoApplicationIsUndeployedException(String shortName, String version) {
+        super("Application '" + shortName + "' '" + version + "' is currently undeployed!");
     }
 
-    public MicoApplicationIsNotUndeployedException() {
-        super("Application is currently not undeployed!");
+    public MicoApplicationIsUndeployedException() {
+        super("Application is currently undeployed!");
     }
 
 }

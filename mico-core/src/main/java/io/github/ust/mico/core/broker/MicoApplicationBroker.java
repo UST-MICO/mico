@@ -314,8 +314,11 @@ public class MicoApplicationBroker {
     }
 
     //TODO: Change return value to not use a DTO (see issue mico#630)
-    public MicoApplicationStatusResponseDTO getApplicationStatus(String shortName, String version) throws MicoApplicationNotFoundException {
+    public MicoApplicationStatusResponseDTO getApplicationStatus(String shortName, String version) throws MicoApplicationNotFoundException, MicoApplicationIsUndeployedException {
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(shortName, version);
+        if(micoKubernetesClient.isApplicationUndeployed(micoApplication)) {
+            throw new MicoApplicationIsUndeployedException(shortName, version);
+        }
         return micoStatusService.getApplicationStatus(micoApplication);
     }
 

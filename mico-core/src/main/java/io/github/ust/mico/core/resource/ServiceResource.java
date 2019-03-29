@@ -110,7 +110,12 @@ public class ServiceResource {
                 "Version of the provided service does not match the request parameter");
         }
 
-        MicoService updatedService = updateServiceViaMicoServiceBroker(shortName, version, serviceDto);
+        MicoService updatedService;
+        try {
+            updatedService = updateServiceViaMicoServiceBroker(shortName, version, serviceDto);
+        } catch (MicoServiceIsDeployedException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        }
 
         return ResponseEntity.ok(getServiceResponseDTOResource(updatedService));
     }
@@ -219,7 +224,11 @@ public class ServiceResource {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "The dependency between the given services already exists.");
         }
 
-        micoServiceBroker.persistNewDependencyBetweenServices(service, serviceDependee);
+        try {
+            micoServiceBroker.persistNewDependencyBetweenServices(service, serviceDependee);
+        } catch (MicoServiceIsDeployedException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        }
 
         //TODO: Shoudn't we return 201 created and the new service (processedServiceDependee) with dependency?
         return ResponseEntity.noContent().build();
@@ -230,7 +239,11 @@ public class ServiceResource {
                                                    @PathVariable(PATH_VARIABLE_VERSION) String version) {
         MicoService service = getServiceFromMicoServiceBroker(shortName, version);
 
-        micoServiceBroker.deleteAllDependees(service);
+        try {
+            micoServiceBroker.deleteAllDependees(service);
+        } catch (MicoServiceIsDeployedException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        }
 
         return ResponseEntity.noContent().build();
     }
@@ -244,7 +257,11 @@ public class ServiceResource {
         MicoService service = getServiceFromMicoServiceBroker(shortName, version);
         MicoService serviceToDelete = getServiceFromMicoServiceBroker(dependeeShortName, dependeeVersion);
 
-        micoServiceBroker.deleteDependencyBetweenServices(service, serviceToDelete);
+        try {
+            micoServiceBroker.deleteDependencyBetweenServices(service, serviceToDelete);
+        } catch (MicoServiceIsDeployedException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        }
 
         return ResponseEntity.noContent().build();
     }
@@ -396,7 +413,7 @@ public class ServiceResource {
      * @return the updated {@link MicoService}.
      * @throws ResponseStatusException if the old {@link MicoService} does not exist.
      */
-    private MicoService updateServiceViaMicoServiceBroker(String shortName, String version, MicoServiceRequestDTO serviceDto) throws ResponseStatusException {
+    private MicoService updateServiceViaMicoServiceBroker(String shortName, String version, MicoServiceRequestDTO serviceDto) throws ResponseStatusException, MicoServiceIsDeployedException {
         MicoService existingService = getServiceFromMicoServiceBroker(shortName, version);
         MicoService newService = MicoService.valueOf(serviceDto)
             .setId(existingService.getId())
