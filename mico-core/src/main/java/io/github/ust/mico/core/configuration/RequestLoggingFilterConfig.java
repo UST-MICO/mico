@@ -21,19 +21,36 @@ package io.github.ust.mico.core.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
+
+import javax.servlet.Filter;
+import javax.servlet.http.HttpServletRequest;
+import java.util.Collections;
+import java.util.List;
 
 @Configuration
 public class RequestLoggingFilterConfig {
 
+    private final static List<String> excludedEndpoints = Collections.singletonList("/actuator/**");
+
     @Bean
-    public CommonsRequestLoggingFilter logFilter() {
-        CommonsRequestLoggingFilter filter = new CommonsRequestLoggingFilter();
+    public Filter logFilter() {
+        MicoRequestLoggingFilter filter = new MicoRequestLoggingFilter();
         filter.setIncludeQueryString(true);
-        filter.setIncludePayload(true);
-        filter.setMaxPayloadLength(10000);
+        filter.setIncludePayload(false);
+        filter.setMaxPayloadLength(1000);
         filter.setIncludeHeaders(false);
-        filter.setAfterMessagePrefix("Request data: ");
+        filter.setBeforeMessagePrefix("BEFORE REQUEST [");
+        filter.setAfterMessagePrefix("AFTER REQUEST [");
         return filter;
+    }
+
+    public static class MicoRequestLoggingFilter extends CommonsRequestLoggingFilter {
+
+        @Override
+        protected boolean shouldNotFilter(HttpServletRequest request) {
+            return excludedEndpoints.stream().anyMatch(e -> new AntPathMatcher().match(e, request.getServletPath()));
+        }
     }
 }
