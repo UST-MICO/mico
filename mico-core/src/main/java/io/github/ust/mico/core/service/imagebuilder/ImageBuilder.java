@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.concurrent.*;
 
 import io.fabric8.kubernetes.api.model.ContainerStatus;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -103,7 +104,11 @@ public class ImageBuilder {
             log.info("Local profile is active. Don't initialize image builder.");
             return;
         }
-        init();
+        try {
+            init();
+        } catch(Exception e) {
+            log.error("Failed to initialize image builder. Caused by: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -157,8 +162,9 @@ public class ImageBuilder {
      * Returns the build CRD if exists
      *
      * @return the build CRD
+     * @throws KubernetesClientException if operation fails
      */
-    public Optional<CustomResourceDefinition> getBuildCRD() {
+    public Optional<CustomResourceDefinition> getBuildCRD() throws KubernetesClientException {
         List<CustomResourceDefinition> crdsItems = getCustomResourceDefinitions();
 
         for (CustomResourceDefinition crd : crdsItems) {
@@ -216,7 +222,7 @@ public class ImageBuilder {
      * @throws NotInitializedException if the image builder was not initialized
      */
     private Build createBuild(String buildName, String destination, String dockerfile, String gitUrl, String gitRevision, String namespace) throws NotInitializedException {
-        if (buildClient == null) {
+        if (!isInitialized) {
             throw new NotInitializedException("ImageBuilder is not initialized.");
         }
 
