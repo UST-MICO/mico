@@ -32,10 +32,15 @@ metadata:
   name: mico-core
   namespace: mico-system
 spec:
+  replicas: 1
   selector:
     matchLabels:
       run: mico-core
-  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   template:
     metadata:
       namespace: mico-system
@@ -54,3 +59,10 @@ spec:
                 configMapKeyRef:
                   name: mico-core
                   key: spring.profiles.active
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 3
+            failureThreshold: 3
