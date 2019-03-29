@@ -22,6 +22,7 @@ package io.github.ust.mico.core.dto.response;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
+import io.github.ust.mico.core.dto.response.status.MicoApplicationDeploymentStatusResponseDTO;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus;
 import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus.Value;
@@ -65,6 +66,7 @@ public class MicoApplicationResponseDTO extends MicoApplicationRequestDTO {
         }
     )})
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    // TODO: Use DTO
     private MicoApplicationDeploymentStatus deploymentStatus = new MicoApplicationDeploymentStatus(Value.UNDEPLOYED);
 
 

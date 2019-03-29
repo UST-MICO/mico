@@ -19,8 +19,6 @@
 
 package io.github.ust.mico.core.model;
 
-import org.neo4j.ogm.annotation.NodeEntity;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.AllArgsConstructor;
@@ -30,12 +28,14 @@ import lombok.experimental.Accessors;
 
 /**
  * A simple message associated with a {@link Type}.
+ * <p>
+ * Note that this class is only used for business logic purposes
+ * and is not persisted.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@NodeEntity
 public class MicoMessage {
 
     // ----------------------

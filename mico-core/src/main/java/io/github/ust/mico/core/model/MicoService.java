@@ -36,6 +36,8 @@ import lombok.experimental.Accessors;
 
 /**
  * Represents a service in the context of MICO.
+ * <p>
+ * Instances of this class are persisted as node in the Neo4j database.
  */
 @Data
 @NoArgsConstructor

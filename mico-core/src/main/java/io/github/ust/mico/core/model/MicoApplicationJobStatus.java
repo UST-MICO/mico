@@ -30,6 +30,9 @@ import lombok.experimental.Accessors;
 /**
  * Represents the job status for a {@link MicoApplication}.
  * Contains a list of jobs.
+ * <p>
+ * Note that this class is only used for business logic purposes
+ * and is not persisted.
  */
 @Data
 @NoArgsConstructor

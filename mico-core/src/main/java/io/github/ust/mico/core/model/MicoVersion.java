@@ -32,6 +32,9 @@ import lombok.Getter;
  * Wrapper for a {@link Version} that adds
  * the functionality for a version prefix, so
  * that versions like, e.g., 'v1.2.3' are possible.
+ * <p>
+ * Note that this class is only used for business logic purposes
+ * and is not persisted.
  */
 public class MicoVersion implements Comparable<MicoVersion> {
 
