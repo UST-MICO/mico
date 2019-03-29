@@ -21,7 +21,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
-import { Subscription } from 'rxjs';
+import { Subscription, timer } from 'rxjs';
 import { versionComparator } from '../api/semantic-version';
 import { CreateNextVersionComponent } from '../dialogs/create-next-version/create-next-version.component';
 import { MatDialog, MatSnackBar } from '@angular/material';
@@ -175,10 +175,12 @@ export class AppDetailComponent implements OnInit, OnDestroy {
                     duration: 5000,
                 });
 
-
+                // delay polling by 3 seconds
                 safeUnsubscribe(this.subJobStatus);
-                this.subJobStatus = this.apiService.pollDeploymentJobStatus(this.shortName, this.selectedVersion);
-
+                const subTimer = timer(3 * 1000).subscribe(() => {
+                    this.subJobStatus = this.apiService.pollDeploymentJobStatus(this.shortName, this.selectedVersion);
+                    safeUnsubscribe(subTimer);
+                });
             });
     }
 
