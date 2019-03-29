@@ -38,7 +38,7 @@ import lombok.experimental.Accessors;
  * and some messages (optional) with more detailed information.
  * <p>
  * Note that this class is only used for business logic purposes
- * and is not persisted.
+ * and instances are not persisted.
  */
 @Data
 @RequiredArgsConstructor

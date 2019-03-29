@@ -32,7 +32,7 @@ import lombok.experimental.Accessors;
  * Contains a list of jobs.
  * <p>
  * Note that this class is only used for business logic purposes
- * and is not persisted.
+ * and instances are not persisted.
  */
 @Data
 @NoArgsConstructor

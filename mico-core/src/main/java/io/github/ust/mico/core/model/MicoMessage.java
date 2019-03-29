@@ -30,7 +30,7 @@ import lombok.experimental.Accessors;
  * A simple message associated with a {@link Type}.
  * <p>
  * Note that this class is only used for business logic purposes
- * and is not persisted.
+ * and instances are not persisted.
  */
 @Data
 @NoArgsConstructor

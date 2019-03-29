@@ -34,7 +34,7 @@ import lombok.Getter;
  * that versions like, e.g., 'v1.2.3' are possible.
  * <p>
  * Note that this class is only used for business logic purposes
- * and is not persisted.
+ * and instances are not persisted.
  */
 public class MicoVersion implements Comparable<MicoVersion> {
 

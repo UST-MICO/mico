@@ -34,7 +34,7 @@ import lombok.experimental.Accessors;
  * Necessary since Neo4j does not allow to persist
  * properties of composite types.
  * <p>
- * Instances of this class are persisted as node in the Neo4j database.
+ * Instances of this class are persisted as nodes in the Neo4j database.
  */
 @Data
 @NoArgsConstructor

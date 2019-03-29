@@ -36,7 +36,7 @@ import lombok.experimental.Accessors;
  * An interface connection contains the the information needed to connect a {@link MicoService}
  * to an {@link MicoServiceInterface} of another {@link MicoService}.
  * <p>
- * Instances of this class are persisted as node in the Neo4j database.
+ * Instances of this class are persisted as nodes in the Neo4j database.
  */
 @Data
 @NoArgsConstructor

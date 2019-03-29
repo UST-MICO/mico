@@ -37,7 +37,7 @@ import lombok.experimental.Accessors;
 /**
  * Represents a interface, e.g., REST API, of a {@link MicoService}.
  * <p>
- * Instances of this class are persisted as node in the Neo4j database.
+ * Instances of this class are persisted as nodes in the Neo4j database.
  */
 @Data
 @NoArgsConstructor
