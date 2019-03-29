@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.concurrent.*;
 
 import io.fabric8.kubernetes.api.model.ContainerStatus;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
@@ -66,6 +67,9 @@ public class ImageBuilder {
 
     private NonNamespaceOperation<Build, BuildList, DoneableBuild, Resource<Build, DoneableBuild>> buildClient;
     private ScheduledExecutorService scheduledBuildStatusCheckService;
+
+    @Getter
+    private boolean isInitialized = false;
 
 
     /**
@@ -113,6 +117,8 @@ public class ImageBuilder {
      */
     public void init() throws NotInitializedException {
         log.info("Initializing image builder...");
+        isInitialized = false;
+
         String namespace = buildBotConfig.getNamespaceBuildExecution();
         String serviceAccountName = buildBotConfig.getDockerRegistryServiceAccountName();
 
@@ -143,6 +149,7 @@ public class ImageBuilder {
         }
 
         scheduledBuildStatusCheckService = Executors.newSingleThreadScheduledExecutor();
+        isInitialized = true;
         log.info("Finished initializing image builder.");
     }
 
