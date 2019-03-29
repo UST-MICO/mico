@@ -29,6 +29,9 @@ import lombok.experimental.Accessors;
 
 /**
  * Represents a dependency of a {@link MicoService}.
+ * <p>
+ * Instances of this class are persisted as relationships between nodes
+ * of the type {@link MicoService} in the Neo4j database.
  */
 @Data
 @NoArgsConstructor

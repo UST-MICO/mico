@@ -43,6 +43,8 @@ import lombok.experimental.Accessors;
 /**
  * Represents the information necessary for deploying a {@link MicoApplication}.
  * DTO is {@link MicoServiceDeploymentInfoResponseDTO}.
+ * <p>
+ * Instances of this class are persisted as nodes in the Neo4j database.
  */
 @Data
 @NoArgsConstructor

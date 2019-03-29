@@ -21,6 +21,7 @@ package io.github.ust.mico.core.model;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
 
 import io.github.ust.mico.core.dto.request.MicoLabelRequestDTO;
 import lombok.AllArgsConstructor;
@@ -32,12 +33,14 @@ import lombok.experimental.Accessors;
  * A label represented as a simple key-value pair.
  * Necessary since Neo4j does not allow to persist
  * properties of composite types.
- *
+ * <p>
+ * Instances of this class are persisted as nodes in the Neo4j database.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
+@NodeEntity
 public class MicoLabel {
 	
 	@Id

@@ -147,31 +147,6 @@ public class MicoServiceBroker {
         return savedService;
     }
 
-    public LinkedList<MicoService> getDependentServices(List<MicoServiceDependency> dependees) {
-        if (dependees == null) {
-            return null;
-        }
-
-        LinkedList<MicoService> services = new LinkedList<>();
-
-        dependees.forEach(dependee -> {
-            String shortName = dependee.getDependedService().getShortName();
-            String version = dependee.getDependedService().getVersion();
-
-            Optional<MicoService> dependeeServiceOpt = serviceRepository.findByShortNameAndVersion(shortName, version);
-            MicoService dependeeService = dependeeServiceOpt.orElse(null);
-            if (dependeeService == null) {
-                // TODO: MicoService name is mandatory! Will be covered by issue mico#490
-                MicoService newService = serviceRepository.save(new MicoService().setShortName(shortName).setVersion(version));
-                services.add(newService);
-            } else {
-                services.add(dependeeService);
-            }
-        });
-
-        return services;
-    }
-
     public List<MicoService> getDependeesByMicoService(MicoService service) {
         return serviceRepository.findDependees(service.getShortName(), service.getVersion());
     }
