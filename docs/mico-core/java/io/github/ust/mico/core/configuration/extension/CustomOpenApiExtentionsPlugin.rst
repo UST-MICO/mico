@@ -1,3 +1,13 @@
+.. java:import:: java.util Arrays
+
+.. java:import:: java.util LinkedList
+
+.. java:import:: java.util List
+
+.. java:import:: org.springframework.core.annotation Order
+
+.. java:import:: org.springframework.stereotype Component
+
 .. java:import:: com.google.common.base Optional
 
 .. java:import:: io.swagger.annotations ApiModelProperty
@@ -7,10 +17,6 @@
 .. java:import:: io.swagger.annotations ExtensionProperty
 
 .. java:import:: lombok.extern.slf4j Slf4j
-
-.. java:import:: org.springframework.core.annotation Order
-
-.. java:import:: org.springframework.stereotype Component
 
 .. java:import:: springfox.documentation.service StringVendorExtension
 
@@ -23,12 +29,6 @@
 .. java:import:: springfox.documentation.spi.schema.contexts ModelPropertyContext
 
 .. java:import:: springfox.documentation.swagger.common SwaggerPluginSupport
-
-.. java:import:: java.util Arrays
-
-.. java:import:: java.util LinkedList
-
-.. java:import:: java.util List
 
 CustomOpenApiExtentionsPlugin
 =============================

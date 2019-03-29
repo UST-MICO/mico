@@ -103,7 +103,7 @@ public class ServiceResource {
                                                                           @Valid @RequestBody MicoServiceRequestDTO serviceDto) {
         if (!serviceDto.getShortName().equals(shortName)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "ShortName of the provided service does not match the request parameter");
+                "An update of the short name is not allowed");
         }
         if (!serviceDto.getVersion().equals(version)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
@@ -165,13 +165,7 @@ public class ServiceResource {
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
     public ResponseEntity<Resources<Resource<MicoServiceResponseDTO>>> getVersionsOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
-        List<MicoService> services;
-        try {
-            services = micoServiceBroker.getAllVersionsOfServiceFromDatabase(shortName);
-        } catch (MicoServiceNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        }
-
+        List<MicoService> services = micoServiceBroker.getAllVersionsOfServiceFromDatabase(shortName);
         List<Resource<MicoServiceResponseDTO>> serviceResources = getServiceResponseDTOResourcesList(services);
 
         return ResponseEntity.ok(
@@ -400,21 +394,26 @@ public class ServiceResource {
         return service;
     }
 
+    /**
+     * Replaces the {@link MicoService} defined by {@code shortName} and {@code version} with the {@link MicoService} given
+     * via the {@code serviceDto} parameter.
+     * @param shortName the shortName of the old {@link MicoService}.
+     * @param version the version of the old {@link MicoService}.
+     * @param serviceDto the replacement {@link MicoService}.
+     * @return the updated {@link MicoService}.
+     * @throws ResponseStatusException if the old {@link MicoService} does not exist.
+     */
     private MicoService updateServiceViaMicoServiceBroker(String shortName, String version, MicoServiceRequestDTO serviceDto) throws ResponseStatusException {
         MicoService existingService = getServiceFromMicoServiceBroker(shortName, version);
-        MicoService updatedService;
-        updatedService = micoServiceBroker.updateExistingService(MicoService.valueOf(serviceDto).setId(existingService.getId()));
-        return updatedService;
+        MicoService newService = MicoService.valueOf(serviceDto)
+            .setId(existingService.getId())
+            .setServiceInterfaces(existingService.getServiceInterfaces())
+            .setDependencies(existingService.getDependencies());
+        return micoServiceBroker.updateExistingService(newService);
     }
 
     private List<MicoService> getAllVersionsOfServiceFromMicoServiceBroker(String shortName) throws ResponseStatusException {
-        List<MicoService> micoServiceList;
-        try {
-            micoServiceList = micoServiceBroker.getAllVersionsOfServiceFromDatabase(shortName);
-        } catch (MicoServiceNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        }
-        return micoServiceList;
+        return micoServiceBroker.getAllVersionsOfServiceFromDatabase(shortName);
     }
 
 }

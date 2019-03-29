@@ -7,8 +7,10 @@ io.github.ust.mico.core.util
    :maxdepth: 1
 
    CollectionUtils
+   FutureUtils
    KubernetesNameNormalizer
    Patterns
+   PrometheusValueDeserializer
    RandomStringFactory
    UIDUtils
 

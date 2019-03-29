@@ -19,7 +19,7 @@
 
 import { Injectable } from '@angular/core';
 import { Observable, Subject, BehaviorSubject, AsyncSubject, interval, timer, Subscription } from 'rxjs';
-import { filter, flatMap, map, takeUntil } from 'rxjs/operators';
+import { filter, flatMap, map } from 'rxjs/operators';
 import { ApiObject } from './apiobject';
 import { ApiBaseFunctionService } from './api-base-function.service';
 import { ApiModel, ApiModelAllOf } from './apimodel';
@@ -1039,7 +1039,7 @@ export class ApiService {
 
     /**
      * Polls the deployment job of a given application and provides feedback if the deployment failed/ was successful.
-     * Also stops polling after 3 minutes
+     * Also stops polling after 10 minutes
      *
      * @param applicationShortName applicationShortName of the application to be polled
      * @param applicationVersion applicationVersion of the application to be polled
@@ -1059,7 +1059,7 @@ export class ApiService {
 
 
         // poll status
-        const subPolling = interval(500).subscribe(() => {
+        const subPolling = interval(5 * 1000).subscribe(() => {
             this.getJobStatus(applicationShortName, applicationVersion);
 
             // early exit
@@ -1069,7 +1069,7 @@ export class ApiService {
         });
 
         // end polling after 3 minutes
-        const subEndPolling = timer(3 * 60 * 1000)
+        const subEndPolling = timer(10 * 60 * 1000)
             .subscribe(() => {
                 cleanUp();
             });
@@ -1100,7 +1100,57 @@ export class ApiService {
         });
 
         return subJobStatus;
+    }
 
+    /**
+     * Polls the public ip of a services interface until a public ip is available.
+     * Also ends the polling after 3 minutes.
+     *
+     * @param serviceShortName serviceShortName of the interface to be polled
+     * @param serviceVersion serviceVersion of the interface to be polled
+     * @param interfaceName interfaceName of the interface to be polled
+     */
+    pollServiceInterfacePublicIp(serviceShortName: string, serviceVersion: string, interfaceName: string) {
+        const resource = 'poll/services/' + serviceShortName + '/' + serviceVersion + '/interfaces/' + interfaceName + '/publicIp';
+        const stream = this.getStreamSource<any>(resource);
+
+        /**
+         * Unsubscribes from polling
+         */
+        function cleanUp() {
+            safeUnsubscribe(subEndPolling);
+            safeUnsubscribe(subPolling);
+            safeUnsubscribe(subPublicIp);
+        }
+
+
+        // poll status
+        const subPolling = interval(5 * 1000).subscribe(() => {
+            this.getServiceInterfacePublicIp(serviceShortName, serviceVersion, interfaceName);
+
+            // early exit
+            if (subPublicIp.closed) {
+                cleanUp();
+            }
+        });
+
+        // end polling after 3 minutes
+        const subEndPolling = timer(3 * 60 * 1000)
+            .subscribe(() => {
+                cleanUp();
+            });
+
+        // handle incomming publicIpDTOs
+        const subPublicIp = this.getServiceInterfacePublicIp(serviceShortName, serviceVersion, interfaceName)
+            .subscribe(publicIpDTO => {
+
+                if (publicIpDTO.externalIpIsAvailable) {
+                    cleanUp();
+                    stream.next(publicIpDTO);
+                }
+            });
+
+        return subPublicIp;
     }
 
 
@@ -1126,7 +1176,7 @@ export class ApiService {
         } else {
 
             // periodically call getApplicationDeploymentStatus
-            const subPolling = interval(2 * 1000)
+            const subPolling = interval(20 * 1000)
                 .subscribe(() => {
                     this.getApplicationDeploymentStatus(applicationShortName, applicationVersion);
                 });

@@ -19,8 +19,9 @@
 
 package io.github.ust.mico.core.dto.response;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import java.util.ArrayList;
+import java.util.List;
+
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoService;
 import io.swagger.annotations.ApiModelProperty;
@@ -31,9 +32,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * DTO for the dependency graph of a {@link MicoService}.
  */
@@ -41,7 +39,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonInclude(Include.NON_NULL)
 public class MicoServiceDependencyGraphResponseDTO {
 
     /**
@@ -70,5 +67,4 @@ public class MicoServiceDependencyGraphResponseDTO {
         }
     )})
     private List<MicoServiceDependencyGraphEdgeResponseDTO> micoServiceDependencyGraphEdgeList = new ArrayList<>();
-
 }

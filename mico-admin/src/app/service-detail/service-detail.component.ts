@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import { Component, OnInit, OnDestroy, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { ApiService } from '../api/api.service';
@@ -28,6 +28,7 @@ import { MatDialog } from '@angular/material';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 import { safeUnsubscribe } from '../util/utils';
 import { CreateNextVersionComponent } from '../dialogs/create-next-version/create-next-version.component';
+import { take } from 'rxjs/operators';
 
 export interface Service extends ApiObject {
     name: string;
@@ -40,7 +41,7 @@ export interface Service extends ApiObject {
 })
 export class ServiceDetailComponent implements OnInit, OnDestroy {
 
-    private subService: Subscription;
+    private subServiceVersions: Subscription;
     private subParam: Subscription;
     private subCreateNextVersion: Subscription;
 
@@ -54,20 +55,20 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
     service: Service;
     shortName: string;
     selectedVersion;
-    versions: any = [];
+    allVersions: any = [];
 
     ngOnInit() {
         this.subParam = this.route.params.subscribe(params => {
 
-            const shortName = params['shortName'];
-            const version = params['version'];
-            this.update(shortName, version);
+            this.shortName = params['shortName'];
+            this.selectedVersion = params['version'];
+            this.update();
         });
     }
 
     ngOnDestroy() {
         // unsubscribe if observable is not null
-        safeUnsubscribe(this.subService);
+        safeUnsubscribe(this.subServiceVersions);
         safeUnsubscribe(this.subParam);
         safeUnsubscribe(this.subCreateNextVersion);
     }
@@ -77,44 +78,43 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
      * loads a defined service and displays the service
      * Is to be called during initialization/when the url changes
      * uses: GET services/{shortName}
-     *
-     * @param shortName shortName of the service to be loaded
-     * @param givenVersion version of the service to be loaded
      */
-    update(shortName, givenVersion) {
-
-        if (this.selectedVersion === givenVersion && givenVersion != null) {
-            // no version change
-            return;
-        }
-
-        safeUnsubscribe(this.subService);
+    update() {
 
         // get latest version
-        this.subService = this.apiService.getServiceVersions(shortName)
+        safeUnsubscribe(this.subServiceVersions);
+        this.subServiceVersions = this.apiService.getServiceVersions(this.shortName)
             .subscribe(serviceVersions => {
 
-
                 // sort by version
-                this.versions = JSON.parse(JSON.stringify(serviceVersions)).sort((n1, n2) => versionComparator(n1.version, n2.version));
+                this.allVersions = JSON.parse(JSON.stringify(serviceVersions)).sort((n1, n2) => versionComparator(n1.version, n2.version));
 
-                if (givenVersion == null) {
-                    this.setVersion(shortName, this.getLatestVersion());
+                if (this.allVersions.length === 0) {
+                    // back to service list, if there is no version of this service left
+                    this.router.navigate(['../service-detail/service-list']);
+                }
+
+                const latestVersion = this.getLatestVersion();
+
+                // adapt url path
+                if (this.selectedVersion == null || !this.allVersions.some(v => v.version === this.selectedVersion)) {
+                    // check if no version is selected or an unknown version is selected -> take latest version instead
+                    this.router.navigate(['service-detail', this.shortName, latestVersion]);
+                    // prevent further api calls (navigate will cause a reload anyway)
+                    return;
                 } else {
                     let found = false;
-                    found = serviceVersions.some(element => {
+                    found = this.allVersions.some(element => {
 
-                        if (element.version === givenVersion) {
-                            this.selectedVersion = givenVersion;
+                        if (element.version === this.selectedVersion) {
                             this.service = element as Service;
-                            this.setVersion(shortName, givenVersion);
                             return true;
                         }
                     });
 
                     if (!found) {
                         // given version was not found in the versions list, take latest instead
-                        this.setVersion(shortName, this.getLatestVersion());
+                        this.router.navigate(['service-detail', this.shortName, latestVersion]);
                     }
                 }
             });
@@ -124,30 +124,21 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
      * returns the latest version
      */
     getLatestVersion() {
-        if (this.versions != null && this.versions.length > 0) {
-            return this.versions[this.versions.length - 1].version;
+        if (this.allVersions != null && this.allVersions.length > 0) {
+            return this.allVersions[this.allVersions.length - 1].version;
         }
     }
-
-    /**
-     * checks if the selected version is the latest service version
-     */
-    isLatestVersion = () => {
-        if (this.versions != null) {
-            if (this.selectedVersion === this.getLatestVersion()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
 
     /**
      * call-back from the version picker to open the selected version
      */
     updateVersion(version) {
-        this.selectedVersion = version;
-        this.router.navigate(['service-detail', this.shortName, version]);
+        if (version != null) {
+            this.selectedVersion = version;
+            this.router.navigate(['service-detail', this.shortName, version]);
+        } else {
+            this.router.navigate(['service-detail', this.shortName]);
+        }
     }
 
     /**
@@ -163,36 +154,6 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
         this.router.navigate(['service-detail', this.shortName, version]);
     }
 
-    /**
-     * action triggered in the ui to delete the current service version
-     */
-    deleteService() {
-
-        const dialogRef = this.dialog.open(YesNoDialogComponent, {
-            data: {
-                object: { name: this.service.name, shortName: this.shortName, version: this.selectedVersion },
-                question: 'deleteService'
-            }
-        });
-
-        const subDeleteDependency = dialogRef.afterClosed().subscribe(result => {
-            if (result) {
-
-                this.apiService.deleteService(this.shortName, this.selectedVersion)
-                    .subscribe(val => {
-                        if (this.versions.length > 0) {
-                            // move to latest version if one exists
-                            this.setVersion(this.shortName, this.getLatestVersion());
-
-                        } else {
-                            // back to service list if there is no version of this service left
-                            this.router.navigate(['../service-detail/service-list']);
-                        }
-                    });
-                safeUnsubscribe(subDeleteDependency);
-            }
-        });
-    }
 
     /**
      * opens a dialog to choose the version part to be increased.
@@ -209,16 +170,63 @@ export class ServiceDetailComponent implements OnInit, OnDestroy {
 
         safeUnsubscribe(this.subCreateNextVersion);
 
-
         // handle dialog result
         this.subCreateNextVersion = dialogRef.afterClosed().subscribe(nextVersion => {
 
             if (nextVersion) {
-                this.apiService.promoteService(this.shortName, this.selectedVersion, nextVersion).subscribe(val => {
-                    this.setVersion(val.shortName, val.version);
-                });
+                this.apiService.promoteService(this.shortName, this.selectedVersion, nextVersion)
+                    .pipe(take(1))
+                    .subscribe(val => {
+
+                        const subVersions = this.apiService.getServiceVersions(this.shortName)
+                            .subscribe(element => {
+                                // wait until the latest version is updated
+                                if (element.some(v => v.version === val.version)) {
+                                    safeUnsubscribe(subVersions);
+                                    this.updateVersion(val.version);
+                                }
+                            });
+                    });
             }
         });
     }
 
+
+    /**
+     * action triggered in the ui to delete the current service version
+     */
+    deleteService() {
+
+        const dialogRef = this.dialog.open(YesNoDialogComponent, {
+            data: {
+                object: { name: this.service.name, shortName: this.shortName, version: this.selectedVersion },
+                question: 'deleteService'
+            }
+        });
+
+        const subDeleteDependency = dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+
+                // go to latest version
+                this.apiService.deleteService(this.shortName, this.selectedVersion)
+                    .subscribe(val => {
+
+                        const subVersions = this.apiService.getServiceVersions(this.shortName)
+                            .subscribe(element => {
+                                // wait until the latest version is updated
+                                if (!element.some(v => v.version === this.selectedVersion)) {
+                                    safeUnsubscribe(subVersions);
+
+                                    if (element.length === 0) {
+                                        // no version of the service left
+                                        this.router.navigate(['../app-detail/app-list']);
+                                    }
+                                    this.updateVersion(null);
+                                }
+                            });
+                    });
+                safeUnsubscribe(subDeleteDependency);
+            }
+        });
+    }
 }

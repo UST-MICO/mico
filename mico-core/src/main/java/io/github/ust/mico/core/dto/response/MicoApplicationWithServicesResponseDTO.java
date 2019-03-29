@@ -23,20 +23,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for a {@link MicoApplication} intended to use with responses only.
- * Additionally includes all of services of the application.
+ * DTO for a {@link MicoApplication} intended to use with responses only. Additionally includes all of services of the
+ * application.
  */
 @Data
 @ToString(callSuper = true)
@@ -44,52 +46,48 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonInclude(Include.NON_NULL)
 public class MicoApplicationWithServicesResponseDTO extends MicoApplicationResponseDTO {
 
     /**
      * All services of the application as {@link MicoServiceResponseDTO}.
      */
     @ApiModelProperty(extensions = {@Extension(
-            name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-            properties = {
-                @ExtensionProperty(name = "title", value = "Services"),
-                @ExtensionProperty(name = "x-order", value = "100"),
-                @ExtensionProperty(name = "description", value = "All services of the application.")
-            }
-        )})
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Services"),
+            @ExtensionProperty(name = "x-order", value = "100"),
+            @ExtensionProperty(name = "description", value = "All services of the application.")
+        }
+    )})
     private List<MicoServiceResponseDTO> services = new ArrayList<>();
-    
-    
+
+
     // -------------------
     // -> Constructors ---
     // -------------------
-    
-    /**
-     * Creates an instance of {@code MicoApplicationWithServicesResponseDTO} based on a
-     * {@code MicoApplication}. Note that the
-     * deployment status is not set since it cannot be
-     * inferred from the {@code MicoApplication} itself
-     *  
-     * @param application the {@link MicoApplication}.
-     */
-	public MicoApplicationWithServicesResponseDTO(MicoApplication application) {
-		super(application);
-		services = application.getServices().stream()
-        	.map(MicoServiceResponseDTO::new)
-        	.collect(Collectors.toList());
-	}
-    
-	/**
-     * Creates an instance of {@code MicoApplicationWithServicesResponseDTO} based on a
-     * {@code MicoApplication} and a {@code MicoApplicationDeploymentStatus}.
-     *  
-     * @param application the {@link MicoApplication}.
-     * @param deploymentStatus the {@link MicoApplicationDeploymentStatus}. 
-     */
-	public MicoApplicationWithServicesResponseDTO(MicoApplication application, MicoApplicationDeploymentStatus deploymentStatus) {
-		this(application);
-		setDeploymentStatus(deploymentStatus);
-	}
 
+    /**
+     * Creates an instance of {@code MicoApplicationWithServicesResponseDTO} based on a {@code MicoApplication}. Note
+     * that the deployment status is not set since it cannot be inferred from the {@code MicoApplication} itself
+     *
+     * @param application the {@link MicoApplication}.
+     */
+    public MicoApplicationWithServicesResponseDTO(MicoApplication application) {
+        super(application);
+        services = application.getServices().stream()
+            .map(MicoServiceResponseDTO::new)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Creates an instance of {@code MicoApplicationWithServicesResponseDTO} based on a {@code MicoApplication} and a
+     * {@code MicoApplicationDeploymentStatus}.
+     *
+     * @param application      the {@link MicoApplication}.
+     * @param deploymentStatus the {@link MicoApplicationDeploymentStatus}.
+     */
+    public MicoApplicationWithServicesResponseDTO(MicoApplication application, MicoApplicationDeploymentStatus deploymentStatus) {
+        this(application);
+        setDeploymentStatus(deploymentStatus);
+    }
 }

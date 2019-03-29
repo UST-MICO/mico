@@ -43,43 +43,28 @@ public class MicoServiceBroker {
 
     public MicoService getServiceFromDatabase(String shortName, String version) throws MicoServiceNotFoundException {
         Optional<MicoService> serviceOptional = serviceRepository.findByShortNameAndVersion(shortName, version);
-        log.debug("Got following serviceOptional: {}", serviceOptional);
         if (!serviceOptional.isPresent()) {
-            log.debug("Service not found.");
             throw new MicoServiceNotFoundException(shortName, version);
         }
-        MicoService existingService = serviceOptional.get();
-        log.debug("Got following service from serviceOptional: {} ", existingService);
-        return existingService;
+        return serviceOptional.get();
     }
 
     public MicoService updateExistingService(MicoService service) {
-        log.debug("Updated service, before saving to database: {}", service);
         MicoService updatedService = serviceRepository.save(service);
-        log.debug("Updated service, after saving to database: {}", updatedService);
+        log.debug("Updated service: {}", updatedService);
         return updatedService;
     }
 
     public MicoService getServiceById(Long id) throws MicoServiceNotFoundException {
         Optional<MicoService> serviceOptional = serviceRepository.findById(id);
-        log.debug("Got following serviceOptional: {}", serviceOptional);
         if (!serviceOptional.isPresent()) {
-            log.debug("Service not found.");
             throw new MicoServiceNotFoundException(id);
         }
-        MicoService existingService = serviceOptional.get();
-        log.debug("Got following service from serviceOptional: {} ", existingService);
-        return existingService;
+        return serviceOptional.get();
     }
 
-    public List<MicoService> getAllVersionsOfServiceFromDatabase(String shortName) throws ResponseStatusException, MicoServiceNotFoundException {
-        List<MicoService> micoServiceList = serviceRepository.findByShortName(shortName);
-        log.debug("Retrieve service list from database: {}", micoServiceList);
-        if (micoServiceList.isEmpty()) {
-            log.debug("Service not found.");
-            throw new MicoServiceNotFoundException(shortName);
-        }
-        return micoServiceList;
+    public List<MicoService> getAllVersionsOfServiceFromDatabase(String shortName) throws ResponseStatusException {
+        return serviceRepository.findByShortName(shortName);
     }
 
     public void deleteService(MicoService service) throws KubernetesResourceException, MicoServiceHasDependersException, MicoServiceIsDeployedException {
@@ -88,15 +73,18 @@ public class MicoServiceBroker {
             throw new MicoServiceHasDependersException(service.getShortName(), service.getVersion());
         }
         serviceRepository.deleteServiceByShortNameAndVersion(service.getShortName(), service.getVersion());
+        log.debug("Deleted MicoService '{}' '{}'.", service.getShortName(), service.getVersion());
     }
 
     public void deleteAllVersionsOfService(String shortName) throws MicoServiceNotFoundException, KubernetesResourceException, MicoServiceIsDeployedException {
-        List<MicoService> micoServiceList = getAllVersionsOfServiceFromDatabase(shortName);
-        log.debug("Got following services from database: {}", micoServiceList);
-        for (MicoService micoService : micoServiceList) {
-            throwConflictIfServiceIsDeployed(micoService);
+        List<MicoService> serviceList = getAllVersionsOfServiceFromDatabase(shortName);
+        for (MicoService service : serviceList) {
+            throwConflictIfServiceIsDeployed(service);
         }
-        micoServiceList.forEach(service -> serviceRepository.delete(service));
+        for (MicoService service : serviceList) {
+            serviceRepository.delete(service);
+            log.debug("Deleted MicoService '{}' '{}'.", service.getShortName(), service.getVersion());
+        }
     }
 
     /**
@@ -108,7 +96,7 @@ public class MicoServiceBroker {
      */
     private void throwConflictIfServiceIsDeployed(MicoService service) throws KubernetesResourceException, MicoServiceIsDeployedException {
         if (micoKubernetesClient.isMicoServiceDeployed(service)) {
-            log.info("Micoservice '{}' in version '{}' is deployed. It is not possible to delete a deployed service.", service.getShortName(), service.getVersion());
+            log.info("MicoService '{}' in version '{}' is deployed. It is not possible to delete a deployed service.", service.getShortName(), service.getVersion());
             throw new MicoServiceIsDeployedException(service.getShortName(), service.getVersion());
         }
     }
@@ -207,21 +195,22 @@ public class MicoServiceBroker {
     }
 
     public MicoService promoteService(MicoService service, String newVersion) throws MicoServiceAlreadyExistsException {
+
+        // Update the version of the application
+        service.setVersion(newVersion);
+
+        // Remove docker image URI
+        service.setDockerImageUri(null);
+
         // In order to copy the service along with all service interfaces nodes
         // and all port nodes of the service interface we need to set the id of
         // service interfaces and ports to null.
         // That way, Neo4j will create new entities instead of updating the existing ones.
-        service.setVersion(newVersion).setId(null);
+        service.setId(null);
         service.getServiceInterfaces().forEach(serviceInterface -> serviceInterface.setId(null));
         service.getServiceInterfaces().forEach(serviceInterface -> serviceInterface.getPorts().forEach(port -> port.setId(null)));
 
-        log.debug("Set new version in service: {}", service);
-
-        MicoService updatedService = persistService(service);
-
-        log.debug("Updated service: {}", updatedService);
-
-        return updatedService;
+        return persistService(service);
     }
 
     //TODO: Create test

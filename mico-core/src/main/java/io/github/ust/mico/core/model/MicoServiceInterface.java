@@ -53,7 +53,7 @@ public class MicoServiceInterface {
 
 
     // ----------------------
-    // -> Required fields ---
+    // -> Required Fields ---
     // ----------------------
 
     /**
@@ -71,7 +71,7 @@ public class MicoServiceInterface {
 
 
     // ----------------------
-    // -> Optional fields ---
+    // -> Optional Fields ---
     // ----------------------
 
     /**

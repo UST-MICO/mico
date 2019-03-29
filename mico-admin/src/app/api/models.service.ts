@@ -19,7 +19,7 @@
 
 import { Injectable } from '@angular/core';
 import { AsyncSubject, Observable, of, from } from 'rxjs';
-import { ApiModel, ApiModelAllOf, ApiModelRef } from './apimodel';
+import { ApiModel, ApiModelAllOf, ApiModelRef, ApiModelProperties } from './apimodel';
 import { concatMap, reduce, first, timeout, map, flatMap } from 'rxjs/operators';
 import { ApiService, freezeObject } from './api.service';
 
@@ -27,6 +27,12 @@ interface PropertyRef {
     key: string;
     parent?: ApiModel;
     prop: ApiModel | ApiModelRef;
+}
+
+interface PropertyMergeRef {
+    key: string;
+    targetProperty: ApiModel | ApiModelRef;
+    sourceProperty?: ApiModel | ApiModelRef;
 }
 
 const numericPropertyKeys = new Set(['minLength', 'maxLength', 'minimum', 'maximum', 'minItems', 'maxItems', 'x-order']);
@@ -110,12 +116,82 @@ export class ModelsService {
     private resolveModelLinks = (model: ApiModelAllOf | ApiModelRef | ApiModel): Observable<ApiModel> => {
         if ((model as ApiModelAllOf).allOf != null) {
             const models = (model as ApiModelAllOf).allOf;
-            return from(models).pipe(concatMap(this.resolveModelLinks));
+            return from(models).pipe(
+                concatMap(this.resolveModelLinks),
+                map(resolvedModel => {
+                    for (const key in model) {
+                        // inject known attributes into resolved models
+                        if (key !== 'allOf' && model.hasOwnProperty(key)) {
+                            resolvedModel[key] = model[key];
+                        }
+                    }
+                    return resolvedModel;
+                }));
         } else if ((model as ApiModelRef).$ref != null) {
-            return this.resolveModel((model as ApiModelRef).$ref).pipe(concatMap(this.resolveModelLinks));
+            return this.resolveModel((model as ApiModelRef).$ref).pipe(
+                concatMap(this.resolveModelLinks),
+                map(resolvedModel => {
+                    for (const key in model) {
+                        // inject known attributes into resolved models
+                        if (key !== '$ref' && model.hasOwnProperty(key)) {
+                            resolvedModel[key] = model[key];
+                        }
+                    }
+                    return resolvedModel;
+                }));
         } else {
             return of(model as ApiModel);
         }
+    }
+
+    /**
+     * Resolves all properties to actual ApiModels.
+     *
+     * @param model input model
+     */
+    private resolveProperties = (model: ApiModel): Observable<ApiModel> => {
+        const props: PropertyRef[] = [];
+        for (const key in model.properties) {
+            if (model.properties.hasOwnProperty(key)) {
+                const prop = model.properties[key];
+                props.push({ key: key, prop: (prop as ApiModel | ApiModelRef) });
+            }
+        }
+        return of(...props).pipe(
+            flatMap(propRef => {
+                const oldProp: any = {};
+                for (const key in propRef.prop) {
+                    if (propRef.prop.hasOwnProperty(key)) {
+                        if (key === '$ref' || key === 'allOf') {
+                            continue;
+                        }
+                        oldProp[key] = propRef.prop[key];
+                    }
+                }
+                return this
+                    .resolveModelLinks(propRef.prop)
+                    .pipe(
+                        reduce(this.mergeModels, null),
+                        map(property => {
+                            // merge attributes of top level last
+                            this.mergeModels(property, oldProp);
+                            propRef.prop = property;
+                            return propRef;
+                        }));
+            }),
+            map(propRef => {
+                propRef.prop['x-key'] = propRef.key;
+                return propRef;
+            }),
+            reduce((properties: ApiModelProperties, propRef: PropertyRef) => {
+                properties[propRef.key] = propRef.prop;
+                return properties;
+            }, {}),
+            map((properties) => {
+                model.properties = properties;
+                return model;
+            })
+        );
     }
 
     /**
@@ -129,44 +205,79 @@ export class ModelsService {
             // return next in line
             return sourceModel;
         }
-        if (sourceModel != null) {
-            // merge models
-            for (const key in sourceModel) {
-                if (!sourceModel.hasOwnProperty(key)) {
-                    continue;
+        if (sourceModel == null) {
+            return targetModel;
+        }
+
+        // merge models
+        for (const key in sourceModel) {
+            if (!sourceModel.hasOwnProperty(key)) {
+                continue;
+            }
+            if (key === 'required') {
+                // merge reqired attributes list
+                if (targetModel[key] != null) {
+                    const required = new Set<string>(targetModel[key]);
+                    sourceModel[key].forEach(required.add.bind(required));
+                    targetModel[key] = Array.from(required);
                 }
-                if (key === 'required') {
-                    // merge reqired attributes list
-                    if (targetModel[key] != null) {
-                        const required = new Set<string>(targetModel[key]);
-                        sourceModel[key].forEach(required.add.bind(required));
-                        targetModel[key] = Array.from(required);
-                    }
-                } else if (key === 'properties') {
-                    // merge nested models in properties
-                    if (targetModel[key] != null) {
-                        const targetProperties = targetModel[key];
-                        const sourceProperties = sourceModel[key];
-                        for (const attrKey in sourceProperties) {
-                            if (targetProperties[attrKey] != null) {
-                                const target = targetProperties[attrKey];
-                                const source = sourceProperties[attrKey];
-                                if (target.$ref != null && source.$ref != null) {
-                                    target.$ref = source.$ref;
-                                } else if (target.$ref === undefined && source.$ref === undefined) {
-                                    targetProperties[attrKey] = this.mergeModels(target as ApiModel, source as ApiModel);
-                                }
-                            } else {
-                                targetProperties[attrKey] = sourceProperties[attrKey];
-                            }
-                        }
-                    }
+            } else if (key === 'properties') {
+                // skip properties in this step
+            } else {
+                targetModel[key] = sourceModel[key];
+            }
+        }
+
+        // merge properties
+        targetModel.properties = this.mergeProperties(targetModel, sourceModel);
+
+        return targetModel;
+    }
+
+    /**
+     * Merge properties of two ApiModels into one merged properties object.
+     *
+     * @param targetModel the model to be merged into
+     * @param sourceModel the model to be merged
+     */
+    private mergeProperties(targetModel: ApiModel, sourceModel: ApiModel): { [prop: string]: ApiModel } {
+        const propMap: Map<string, PropertyMergeRef> = new Map();
+
+        let highestOrder = 0;
+
+        for (const propKey in targetModel.properties) {
+            if (targetModel.properties.hasOwnProperty(propKey)) {
+                const prop = targetModel.properties[propKey];
+                if (prop['x-order'] != null && prop['x-order'] > highestOrder) {
+                    highestOrder = prop['x-order'];
+                }
+                propMap.set(propKey, { key: propKey, targetProperty: prop });
+            }
+        }
+
+        for (const propKey in sourceModel.properties) {
+            if (sourceModel.properties.hasOwnProperty(propKey)) {
+                if (propMap.has(propKey)) {
+                    propMap.get(propKey).sourceProperty = sourceModel.properties[propKey];
                 } else {
-                    targetModel[key] = sourceModel[key];
+                    const prop = sourceModel.properties[propKey];
+                    if (prop['x-order'] != null) {
+                        prop['x-order'] += highestOrder;
+                    }
+                    propMap.set(propKey, { key: propKey, targetProperty: prop });
                 }
             }
         }
-        return targetModel;
+
+
+        const mergedProps: { [prop: string]: ApiModel } = {};
+
+        Array.from(propMap.values()).forEach(propMergeRef => {
+            mergedProps[propMergeRef.key] = this.mergeModels((propMergeRef.targetProperty as ApiModel),
+                (propMergeRef.sourceProperty as ApiModel));
+        });
+
+        return mergedProps;
     }
 
     /**
@@ -174,27 +285,44 @@ export class ModelsService {
      *
      * Replaces prop with ApiModelRef to nestedModelCache if needed
      *
-     * @param property input PropertyRef
+     * @param propRef input PropertyRef
      */
-    private handleObjectProperties = (property: PropertyRef): Observable<PropertyRef> => {
-        if (!property.prop.hasOwnProperty('type') || (property.prop as ApiModel).type !== 'object') {
-            return of(property);
+    private handleObjectProperties = (propRef: PropertyRef): Observable<PropertyRef> => {
+        if (!propRef.prop.hasOwnProperty('type') || (propRef.prop as ApiModel).type !== 'object') {
+            return of(propRef);
         }
 
         let key: string;
-        if (property.parent != null && property.parent.title != null) {
-            key = `${property.parent.title}.${property.key}`;
+        if (propRef.parent != null && propRef.parent.title != null) {
+            key = `${propRef.parent.title}.${propRef.key}`;
         } else {
-            key = `${property.key}-${Date.now()}`;
+            key = `${propRef.key}-${Date.now()}`;
         }
-        this.nestedModelCache.set(key, (property.prop as ApiModel));
+        this.nestedModelCache.set(key, (propRef.prop as ApiModel));
+
+        const property: ApiModelRef = {
+            $ref: `nested/${key}`,
+        };
+
+        for (const propKey in propRef.prop) {
+            if (propRef.prop.hasOwnProperty(propKey)) {
+                if (propKey.startsWith('x-')) {
+                    property[propKey] = propRef.prop[propKey];
+                }
+                if (propKey === 'title') {
+                    property[propKey] = propRef.prop[propKey];
+                }
+                if (propKey === 'description') {
+                    property[propKey] = propRef.prop[propKey];
+                }
+            }
+        }
+
 
         return of({
-            key: property.key,
-            parent: property.parent,
-            prop: {
-                $ref: `nested/${key}`,
-            },
+            key: propRef.key,
+            parent: propRef.parent,
+            prop: property,
         });
     }
 
@@ -204,32 +332,32 @@ export class ModelsService {
      *
      * Replaces items with ApiModelRef to nestedModelCache if needed
      *
-     * @param property input PropertyRef
+     * @param propRef input PropertyRef
      */
-    private handleArrayProperties = (property: PropertyRef): Observable<PropertyRef> => {
-        if (!property.prop.hasOwnProperty('type') || (property.prop as ApiModel).type !== 'array') {
-            return of(property);
+    private handleArrayProperties = (propRef: PropertyRef): Observable<PropertyRef> => {
+        if (!propRef.prop.hasOwnProperty('type') || (propRef.prop as ApiModel).type !== 'array') {
+            return of(propRef);
         }
 
-        const items = (property.prop as ApiModel).items;
+        const items = (propRef.prop as ApiModel).items;
         if (items.$ref != null) {
-            return of(property);
+            return of(propRef);
         }
         let key: string;
-        if (property.parent != null && property.parent.title != null) {
-            key = `${property.parent.title}.${property.key}`;
+        if (propRef.parent != null && propRef.parent.title != null) {
+            key = `${propRef.parent.title}.${propRef.key}`;
         } else {
-            key = `${property.key}-${Date.now()}`;
+            key = `${propRef.key}-${Date.now()}`;
         }
         this.nestedModelCache.set(key, (items as ApiModel));
-        const propCopy = JSON.parse(JSON.stringify(property.prop));
+        const propCopy = JSON.parse(JSON.stringify(propRef.prop));
         propCopy.items = {
             $ref: `nested/${key}`,
         };
 
         return of({
-            key: property.key,
-            parent: property.parent,
+            key: propRef.key,
+            parent: propRef.parent,
             prop: propCopy,
         });
     }
@@ -317,6 +445,7 @@ export class ModelsService {
         if (!stream.closed) {
             this.resolveModel(modelUrl).pipe(
                 concatMap(this.resolveModelLinks),
+                flatMap(this.resolveProperties),
                 reduce(this.mergeModels, null),
                 flatMap(this.handleComplexProperties),
                 map(model => {

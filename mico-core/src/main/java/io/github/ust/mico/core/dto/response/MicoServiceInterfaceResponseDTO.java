@@ -21,9 +21,6 @@ package io.github.ust.mico.core.dto.response;
 
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
 import io.github.ust.mico.core.dto.request.MicoServiceInterfaceRequestDTO;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import lombok.AllArgsConstructor;
@@ -40,29 +37,26 @@ import lombok.experimental.Accessors;
 @EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonInclude(Include.NON_NULL)
 public class MicoServiceInterfaceResponseDTO extends MicoServiceInterfaceRequestDTO {
-	
-	// Note: as soon as someone adds fields to this class, please check
-	// whether Jackson requires this class to have a NoArgsConstructor,
-	// if so, add the @NoArgsConstructor to this class.
-	
+
+    // Note: as soon as someone adds fields to this class, please check
+    // whether Jackson requires this class to have a NoArgsConstructor,
+    // if so, add the @NoArgsConstructor to this class.
+
     // -------------------
     // -> Constructors ---
     // -------------------
-    
+
     /**
-     * Creates an instance of {@code MicoServiceInterfaceResponseDTO} based on a
-     * {@code MicoServiceInterface}.
-     * 
+     * Creates an instance of {@code MicoServiceInterfaceResponseDTO} based on a {@code MicoServiceInterface}.
+     *
      * @param serviceInterface the {@link MicoServiceInterface}.
      */
-	public MicoServiceInterfaceResponseDTO(MicoServiceInterface serviceInterface) {
-		super(serviceInterface);
-		// Ports need to be set explicitly to have a list of MicoServicePortResponseDTOs
-		// and not a list of MicoServicePortRequestDTOs, since the list is declared
-		// in MicoServiceInterfaceRequestDTO and typed to MicoServicePortRequestDTO.
-		setPorts(serviceInterface.getPorts().stream().map(MicoServicePortResponseDTO::new).collect(Collectors.toList()));
-	}
-
+    public MicoServiceInterfaceResponseDTO(MicoServiceInterface serviceInterface) {
+        super(serviceInterface);
+        // Ports need to be set explicitly to have a list of MicoServicePortResponseDTOs
+        // and not a list of MicoServicePortRequestDTOs, since the list is declared
+        // in MicoServiceInterfaceRequestDTO and typed to MicoServicePortRequestDTO.
+        setPorts(serviceInterface.getPorts().stream().map(MicoServicePortResponseDTO::new).collect(Collectors.toList()));
+    }
 }

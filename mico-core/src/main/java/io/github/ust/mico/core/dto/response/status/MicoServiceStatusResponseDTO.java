@@ -22,9 +22,6 @@ package io.github.ust.mico.core.dto.response.status;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
 import io.fabric8.kubernetes.api.model.Pod;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
@@ -38,14 +35,12 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * DTO for the status information of a {@link MicoService}
- * intended to use with responses only..
+ * DTO for the status information of a {@link MicoService} intended to use with responses only..
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonInclude(Include.NON_NULL)
 public class MicoServiceStatusResponseDTO {
 
     /**
@@ -116,7 +111,8 @@ public class MicoServiceStatusResponseDTO {
     private int availableReplicas;
 
     /**
-     * Contains information about the Kubernetes services deployed for each MicoServiceInterface of the corresponding MicoService.
+     * Contains information about the Kubernetes services deployed for each MicoServiceInterface of the corresponding
+     * MicoService.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -124,13 +120,14 @@ public class MicoServiceStatusResponseDTO {
             @ExtensionProperty(name = "title", value = "Interfaces Information"),
             @ExtensionProperty(name = "x-order", value = "60"),
             @ExtensionProperty(name = "description", value = "Contains information about the Kubernetes services deployed "
-            	+ "for each MicoServiceInterface of the corresponding MicoService.")
+                + "for each MicoServiceInterface of the corresponding MicoService.")
         }
     )})
     private List<MicoServiceInterfaceStatusResponseDTO> interfacesInformation = new ArrayList<>();
 
     /**
-     * List of {@link MicoApplicationResponseDTO MicoApplicationResponseDTOs} representing all applications that share the MicoService.
+     * List of {@link MicoApplicationResponseDTO MicoApplicationResponseDTOs} representing all applications that share
+     * the MicoService.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -158,8 +155,8 @@ public class MicoServiceStatusResponseDTO {
     private List<KubernetesPodInformationResponseDTO> podsInformation = new ArrayList<>();
 
     /**
-     * List of {@link KubernetesNodeMetricsResponseDTO KubernetesNodeMetricsDTOs} with metrics for each node used by the {@link
-     * MicoService}.
+     * List of {@link KubernetesNodeMetricsResponseDTO KubernetesNodeMetricsDTOs} with metrics for each node used by the
+     * {@link MicoService}.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -172,8 +169,7 @@ public class MicoServiceStatusResponseDTO {
     private List<KubernetesNodeMetricsResponseDTO> nodeMetrics = new ArrayList<>();
 
     /**
-     * Contains error messages for Kubernetes services that
-     * are not deployed or not available due to other reasons.
+     * Contains error messages for Kubernetes services that are not deployed or not available due to other reasons.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -181,8 +177,8 @@ public class MicoServiceStatusResponseDTO {
             @ExtensionProperty(name = "title", value = "Error Messages"),
             @ExtensionProperty(name = "x-order", value = "100"),
             @ExtensionProperty(name = "description", value = "Contains error messages for Kubernetes services that "
-            		+ "are not deployed or not available due to other reasons.")
+                + "are not deployed or not available due to other reasons.")
         }
     )})
-    private List<String> errorMessages = new ArrayList<>();
+    private List<MicoMessageResponseDTO> errorMessages = new ArrayList<>();
 }

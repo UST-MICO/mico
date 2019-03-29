@@ -17,6 +17,6 @@ Constructors
 DoneableBuild
 ^^^^^^^^^^^^^
 
-.. java:constructor:: public DoneableBuild(Build resource, Function function)
+.. java:constructor:: @SuppressWarnings public DoneableBuild(Build resource, Function function)
    :outertype: DoneableBuild
 

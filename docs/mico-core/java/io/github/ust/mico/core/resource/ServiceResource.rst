@@ -1,28 +1,12 @@
-.. java:import:: io.github.ust.mico.core.dto CrawlingInfoDTO
+.. java:import:: java.io IOException
 
-.. java:import:: io.github.ust.mico.core.dto MicoServiceDependencyGraphDTO
+.. java:import:: java.util LinkedList
 
-.. java:import:: io.github.ust.mico.core.dto MicoServiceDependencyGraphEdgeDTO
+.. java:import:: java.util List
 
-.. java:import:: io.github.ust.mico.core.dto MicoServiceStatusDTO
+.. java:import:: java.util.stream Collectors
 
-.. java:import:: io.github.ust.mico.core.exception KubernetesResourceException
-
-.. java:import:: io.github.ust.mico.core.model MicoService
-
-.. java:import:: io.github.ust.mico.core.model MicoServiceDependency
-
-.. java:import:: io.github.ust.mico.core.model MicoServiceInterface
-
-.. java:import:: io.github.ust.mico.core.persistence MicoServiceRepository
-
-.. java:import:: io.github.ust.mico.core.service GitHubCrawler
-
-.. java:import:: io.github.ust.mico.core.service MicoKubernetesClient
-
-.. java:import:: io.github.ust.mico.core.service MicoStatusService
-
-.. java:import:: lombok.extern.slf4j Slf4j
+.. java:import:: javax.validation Valid
 
 .. java:import:: org.springframework.beans.factory.annotation Autowired
 
@@ -40,19 +24,33 @@
 
 .. java:import:: org.springframework.web.server ResponseStatusException
 
-.. java:import:: javax.validation Valid
+.. java:import:: com.fasterxml.jackson.core JsonProcessingException
 
-.. java:import:: javax.validation.constraints NotEmpty
+.. java:import:: io.github.ust.mico.core.broker MicoServiceBroker
 
-.. java:import:: java.io IOException
+.. java:import:: io.github.ust.mico.core.dto.request CrawlingInfoRequestDTO
 
-.. java:import:: java.util LinkedList
+.. java:import:: io.github.ust.mico.core.dto.request MicoServiceRequestDTO
 
-.. java:import:: java.util List
+.. java:import:: io.github.ust.mico.core.dto.request MicoVersionRequestDTO
 
-.. java:import:: java.util Optional
+.. java:import:: io.github.ust.mico.core.dto.response MicoServiceDependencyGraphResponseDTO
 
-.. java:import:: java.util.stream Collectors
+.. java:import:: io.github.ust.mico.core.dto.response MicoServiceResponseDTO
+
+.. java:import:: io.github.ust.mico.core.dto.response MicoYamlResponseDTO
+
+.. java:import:: io.github.ust.mico.core.dto.response.status MicoServiceStatusResponseDTO
+
+.. java:import:: io.github.ust.mico.core.model MicoService
+
+.. java:import:: io.github.ust.mico.core.model MicoServiceDependency
+
+.. java:import:: io.github.ust.mico.core.service GitHubCrawler
+
+.. java:import:: io.github.ust.mico.core.service MicoStatusService
+
+.. java:import:: lombok.extern.slf4j Slf4j
 
 ServiceResource
 ===============
@@ -64,58 +62,16 @@ ServiceResource
 
 Fields
 ------
-PATH_DELETE_SHORT_NAME
-^^^^^^^^^^^^^^^^^^^^^^
-
-.. java:field:: public static final String PATH_DELETE_SHORT_NAME
-   :outertype: ServiceResource
-
-PATH_DELETE_VERSION
-^^^^^^^^^^^^^^^^^^^
-
-.. java:field:: public static final String PATH_DELETE_VERSION
-   :outertype: ServiceResource
-
-PATH_GITHUB_ENDPOINT
-^^^^^^^^^^^^^^^^^^^^
-
-.. java:field:: public static final String PATH_GITHUB_ENDPOINT
-   :outertype: ServiceResource
-
-PATH_PROMOTE
-^^^^^^^^^^^^
-
-.. java:field:: public static final String PATH_PROMOTE
-   :outertype: ServiceResource
-
-PATH_VARIABLE_GITHUB
-^^^^^^^^^^^^^^^^^^^^
-
-.. java:field:: public static final String PATH_VARIABLE_GITHUB
-   :outertype: ServiceResource
-
-PATH_VARIABLE_ID
-^^^^^^^^^^^^^^^^
-
-.. java:field:: public static final String PATH_VARIABLE_ID
-   :outertype: ServiceResource
-
-PATH_VARIABLE_IMPORT
-^^^^^^^^^^^^^^^^^^^^
-
-.. java:field:: public static final String PATH_VARIABLE_IMPORT
-   :outertype: ServiceResource
-
 PATH_VARIABLE_SHORT_NAME
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:field:: public static final String PATH_VARIABLE_SHORT_NAME
+.. java:field:: static final String PATH_VARIABLE_SHORT_NAME
    :outertype: ServiceResource
 
 PATH_VARIABLE_VERSION
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. java:field:: public static final String PATH_VARIABLE_VERSION
+.. java:field:: static final String PATH_VARIABLE_VERSION
    :outertype: ServiceResource
 
 Methods
@@ -123,128 +79,128 @@ Methods
 createNewDependee
 ^^^^^^^^^^^^^^^^^
 
-.. java:method:: @PostMapping public ResponseEntity<Resource<MicoService>> createNewDependee(String shortName, String version, MicoServiceDependency newServiceDependee)
+.. java:method:: @PostMapping public ResponseEntity<Void> createNewDependee(String shortName, String version, String dependeeShortName, String dependeeVersion)
    :outertype: ServiceResource
 
-   Create a new dependency edge between the Service and the dependee service.
+   Creates a new dependency edge between the Service and the depended service.
 
 createService
 ^^^^^^^^^^^^^
 
-.. java:method:: @PostMapping public ResponseEntity<?> createService(MicoService newService)
+.. java:method:: @PostMapping public ResponseEntity<Resource<MicoServiceResponseDTO>> createService(MicoServiceRequestDTO serviceDto)
    :outertype: ServiceResource
 
 deleteAllDependees
 ^^^^^^^^^^^^^^^^^^
 
-.. java:method:: @DeleteMapping public ResponseEntity<Resource<MicoService>> deleteAllDependees(String shortName, String version)
+.. java:method:: @DeleteMapping public ResponseEntity<Void> deleteAllDependees(String shortName, String version)
    :outertype: ServiceResource
 
 deleteAllVersionsOfService
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: @DeleteMapping public ResponseEntity<Void> deleteAllVersionsOfService(String shortName) throws KubernetesResourceException
+.. java:method:: @DeleteMapping public ResponseEntity<Void> deleteAllVersionsOfService(String shortName)
    :outertype: ServiceResource
 
 deleteDependee
 ^^^^^^^^^^^^^^
 
-.. java:method:: @DeleteMapping public ResponseEntity<Resource<MicoService>> deleteDependee(String shortName, String version, String shortNameToDelete, String versionToDelete)
+.. java:method:: @DeleteMapping public ResponseEntity<Void> deleteDependee(String shortName, String version, String dependeeShortName, String dependeeVersion)
    :outertype: ServiceResource
 
 deleteService
 ^^^^^^^^^^^^^
 
-.. java:method:: @DeleteMapping public ResponseEntity<Void> deleteService(String shortName, String version) throws KubernetesResourceException
+.. java:method:: @DeleteMapping public ResponseEntity<Void> deleteService(String shortName, String version)
    :outertype: ServiceResource
 
 getDependees
 ^^^^^^^^^^^^
 
-.. java:method:: @GetMapping public ResponseEntity<Resources<Resource<MicoService>>> getDependees(String shortName, String version)
+.. java:method:: @GetMapping public ResponseEntity<Resources<Resource<MicoServiceResponseDTO>>> getDependees(String shortName, String version)
    :outertype: ServiceResource
 
 getDependencyGraph
 ^^^^^^^^^^^^^^^^^^
 
-.. java:method:: @GetMapping public ResponseEntity<Resource<MicoServiceDependencyGraphDTO>> getDependencyGraph(String shortName, String version)
+.. java:method:: @GetMapping public ResponseEntity<Resource<MicoServiceDependencyGraphResponseDTO>> getDependencyGraph(String shortName, String version)
    :outertype: ServiceResource
 
 getDependers
 ^^^^^^^^^^^^
 
-.. java:method:: @GetMapping public ResponseEntity<Resources<Resource<MicoService>>> getDependers(String shortName, String version)
-   :outertype: ServiceResource
-
-getDependers
-^^^^^^^^^^^^
-
-.. java:method:: public List<MicoService> getDependers(MicoService serviceToLookFor)
-   :outertype: ServiceResource
-
-getServiceById
-^^^^^^^^^^^^^^
-
-.. java:method:: public ResponseEntity<Resource<MicoService>> getServiceById(Long id)
+.. java:method:: @GetMapping public ResponseEntity<Resources<Resource<MicoServiceResponseDTO>>> getDependers(String shortName, String version)
    :outertype: ServiceResource
 
 getServiceByShortNameAndVersion
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: @GetMapping public ResponseEntity<Resource<MicoService>> getServiceByShortNameAndVersion(String shortName, String version)
+.. java:method:: @GetMapping public ResponseEntity<Resource<MicoServiceResponseDTO>> getServiceByShortNameAndVersion(String shortName, String version)
    :outertype: ServiceResource
 
 getServiceList
 ^^^^^^^^^^^^^^
 
-.. java:method:: @GetMapping public ResponseEntity<Resources<Resource<MicoService>>> getServiceList()
+.. java:method:: @GetMapping public ResponseEntity<Resources<Resource<MicoServiceResponseDTO>>> getServiceList()
    :outertype: ServiceResource
 
-getServiceResourcesList
-^^^^^^^^^^^^^^^^^^^^^^^
+getServiceResponseDTOResource
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: static List<Resource<MicoService>> getServiceResourcesList(List<MicoService> services)
+.. java:method:: protected static Resource<MicoServiceResponseDTO> getServiceResponseDTOResource(MicoService service)
    :outertype: ServiceResource
+
+getServiceResponseDTOResourcesList
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: protected static List<Resource<MicoServiceResponseDTO>> getServiceResponseDTOResourcesList(List<MicoService> services)
+   :outertype: ServiceResource
+
+getServiceYamlByShortNameAndVersion
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: @GetMapping public ResponseEntity<Resource<MicoYamlResponseDTO>> getServiceYamlByShortNameAndVersion(String shortName, String version)
+   :outertype: ServiceResource
+
+   Return yaml for a \ :java:ref:`MicoService`\  for the give shortName and version.
+
+   :param shortName: the short name of the \ :java:ref:`MicoService`\ .
+   :param version: version the version of the \ :java:ref:`MicoService`\ .
+   :return: the kubernetes YAML for the \ :java:ref:`MicoService`\ .
 
 getStatusOfService
 ^^^^^^^^^^^^^^^^^^
 
-.. java:method:: @GetMapping public ResponseEntity<Resource<MicoServiceStatusDTO>> getStatusOfService(String shortName, String version)
+.. java:method:: @GetMapping public ResponseEntity<Resource<MicoServiceStatusResponseDTO>> getStatusOfService(String shortName, String version)
    :outertype: ServiceResource
 
 getVersionsFromGitHub
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: @GetMapping @ResponseBody public LinkedList<String> getVersionsFromGitHub(String url)
+.. java:method:: @GetMapping public ResponseEntity<Resources<Resource<MicoVersionRequestDTO>>> getVersionsFromGitHub(String url)
    :outertype: ServiceResource
 
 getVersionsOfService
 ^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: @GetMapping public ResponseEntity<Resources<Resource<MicoService>>> getVersionsOfService(String shortName)
+.. java:method:: @GetMapping public ResponseEntity<Resources<Resource<MicoServiceResponseDTO>>> getVersionsOfService(String shortName)
    :outertype: ServiceResource
 
 importMicoServiceFromGitHub
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: @PostMapping public ResponseEntity<?> importMicoServiceFromGitHub(CrawlingInfoDTO crawlingInfo)
+.. java:method:: @PostMapping public ResponseEntity<Resource<MicoServiceResponseDTO>> importMicoServiceFromGitHub(CrawlingInfoRequestDTO crawlingInfo)
    :outertype: ServiceResource
 
 promoteService
 ^^^^^^^^^^^^^^
 
-.. java:method:: @PostMapping public ResponseEntity<Resource<MicoService>> promoteService(String shortName, String version, String newVersion)
-   :outertype: ServiceResource
-
-setServiceDependees
-^^^^^^^^^^^^^^^^^^^
-
-.. java:method:: public MicoService setServiceDependees(MicoService newService)
+.. java:method:: @PostMapping public ResponseEntity<Resource<MicoServiceResponseDTO>> promoteService(String shortName, String version, MicoVersionRequestDTO newVersionDto)
    :outertype: ServiceResource
 
 updateService
 ^^^^^^^^^^^^^
 
-.. java:method:: @PutMapping public ResponseEntity<?> updateService(String shortName, String version, MicoService service)
+.. java:method:: @PutMapping public ResponseEntity<Resource<MicoServiceResponseDTO>> updateService(String shortName, String version, MicoServiceRequestDTO serviceDto)
    :outertype: ServiceResource
 

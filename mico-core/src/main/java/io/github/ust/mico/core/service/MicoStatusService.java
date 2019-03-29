@@ -41,11 +41,13 @@ import io.github.ust.mico.core.dto.response.status.KubernetesNodeMetricsResponse
 import io.github.ust.mico.core.dto.response.status.KubernetesPodInformationResponseDTO;
 import io.github.ust.mico.core.dto.response.status.KubernetesPodMetricsResponseDTO;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
+import io.github.ust.mico.core.dto.response.status.MicoMessageResponseDTO;
 import io.github.ust.mico.core.dto.response.status.MicoServiceInterfaceStatusResponseDTO;
 import io.github.ust.mico.core.dto.response.status.MicoServiceStatusResponseDTO;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.PrometheusRequestFailedException;
 import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoMessage;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
@@ -70,6 +72,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Component
 public class MicoStatusService {
 
+    private static final String POD_PHASE_RUNNING = "Running";
     private static final String PROMETHEUS_QUERY_FOR_MEMORY_USAGE = "sum(container_memory_working_set_bytes{pod_name=\"%s\",container_name=\"\"})";
     private static final String PROMETHEUS_QUERY_FOR_CPU_USAGE = "sum(container_cpu_load_average_10s{pod_name=\"%s\"})";
     private static final String PROMETHEUS_QUERY_PARAMETER_NAME = "query";
@@ -135,6 +138,7 @@ public class MicoStatusService {
      */
     public MicoServiceStatusResponseDTO getServiceStatus(MicoService micoService) {
         MicoServiceStatusResponseDTO serviceStatus = new MicoServiceStatusResponseDTO();
+        String message;
         try {
             Optional<Deployment> deploymentOptional = micoKubernetesClient.getDeploymentOfMicoService(micoService);
             if (deploymentOptional.isPresent()) {
@@ -155,15 +159,17 @@ public class MicoStatusService {
                     serviceStatus.setAvailableReplicas(0);
                 }
             } else {
-                log.warn("There is no deployment of the MicoService '{}' '{}'. Continue with next one.",
-                    micoService.getShortName(), micoService.getVersion());
-                return serviceStatus.setErrorMessages(CollectionUtils.listOf("No deployment of " + micoService.getShortName() + " " + micoService.getVersion() + " is available."));
+                message = "No deployment of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' is available.";
+                log.warn(message);
+                MicoMessage errorMessage = MicoMessage.error(message);
+                return serviceStatus.setErrorMessages(CollectionUtils.listOf(new MicoMessageResponseDTO(errorMessage)));
             }
         } catch (KubernetesResourceException e) {
-            log.error("Error while retrieving Kubernetes deployment of MicoService '{}' '{}'. Continue with next one. Caused by: {}",
-                micoService.getShortName(), micoService.getVersion(), e.getMessage());
-            return serviceStatus.setErrorMessages(CollectionUtils.listOf("Error while retrieving Kubernetes deployment of MicoService " + micoService.getShortName() + " "
-                + micoService.getVersion() + " .  Caused by: " + e.getMessage()));
+            message = "Error while retrieving Kubernetes deployment of MicoService '" + micoService.getShortName() + "' '"
+                + micoService.getVersion() + "'. Caused by: " + e.getMessage();
+            log.error(message);
+            MicoMessage errorMessage = MicoMessage.error(message);
+            return serviceStatus.setErrorMessages(CollectionUtils.listOf(new MicoMessageResponseDTO(errorMessage)));
         }
         serviceStatus
             .setName(micoService.getName())
@@ -172,7 +178,7 @@ public class MicoStatusService {
 
         // Get status information for the service interfaces of this service,
         // if there are any errors, add them to the service status
-        List<String> errorMessages = new ArrayList<>();
+        List<MicoMessageResponseDTO> errorMessages = new ArrayList<>();
         List<MicoServiceInterfaceStatusResponseDTO> interfacesInformation = getServiceInterfaceStatus(micoService, errorMessages);
         serviceStatus.setInterfacesInformation(interfacesInformation);
         if (!errorMessages.isEmpty()) {
@@ -203,18 +209,22 @@ public class MicoStatusService {
         List<KubernetesNodeMetricsResponseDTO> nodeMetrics = new ArrayList<>();
         // Calculate for each node the average values for all pods running on this node
         for (String nodeName : podsPerNode.keySet()) {
+            int sumRunningPods = 0;
             int sumCpuLoadOnNode = 0;
             int sumMemoryUsageOnNode = 0;
             for (Pod pod : podsPerNode.get(nodeName)) {
-                KubernetesPodInformationResponseDTO podInformation = getUiPodInfo(pod);
-                sumCpuLoadOnNode += podInformation.getMetrics().getCpuLoad();
-                sumMemoryUsageOnNode += podInformation.getMetrics().getMemoryUsage();
+                KubernetesPodInformationResponseDTO podInformation = getPodInformation(pod);
                 podInfos.add(podInformation);
+                if (pod.getStatus().getPhase().equals(POD_PHASE_RUNNING)) {
+                    sumCpuLoadOnNode += podInformation.getMetrics().getCpuLoad();
+                    sumMemoryUsageOnNode += podInformation.getMetrics().getMemoryUsage();
+                    sumRunningPods++;
+                }
             }
             nodeMetrics.add(new KubernetesNodeMetricsResponseDTO()
                 .setNodeName(nodeName)
-                .setAverageCpuLoad(sumCpuLoadOnNode / podsPerNode.get(nodeName).size())
-                .setAverageMemoryUsage(sumMemoryUsageOnNode / podsPerNode.get(nodeName).size()));
+                .setAverageCpuLoad(sumCpuLoadOnNode / sumRunningPods)
+                .setAverageMemoryUsage(sumMemoryUsageOnNode / sumRunningPods));
         }
         serviceStatus
             .setNodeMetrics(nodeMetrics)
@@ -232,7 +242,7 @@ public class MicoStatusService {
      * @return a list of {@link MicoServiceInterfaceStatusResponseDTO}, one DTO per MicoServiceInterface.
      */
     public List<MicoServiceInterfaceStatusResponseDTO> getServiceInterfaceStatus(@NotNull MicoService micoService,
-                                                                                 @NotNull List<String> errorMessages) {
+                                                                                 @NotNull List<MicoMessageResponseDTO> errorMessages) {
         List<MicoServiceInterfaceStatusResponseDTO> interfacesInformation = new ArrayList<>();
         for (MicoServiceInterface serviceInterface : micoService.getServiceInterfaces()) {
             String serviceInterfaceName = serviceInterface.getServiceInterfaceName();
@@ -241,7 +251,7 @@ public class MicoStatusService {
                 interfacesInformation.add(interfaceStatusResponseDTO);
             } catch (ResponseStatusException e) {
                 interfacesInformation.add(new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName));
-                errorMessages.add(e.getMessage());
+                errorMessages.add(new MicoMessageResponseDTO(MicoMessage.error(e.getMessage())));
             }
         }
         return interfacesInformation;
@@ -284,15 +294,13 @@ public class MicoStatusService {
             if (ingressList != null && ingressList.size() == 1) {
                 log.info("Service interface with name '{}' of MicoService '{}' in version '{}' has external IP: {}",
                     serviceInterfaceName, micoService.getShortName(), micoService.getVersion(), ingressList.get(0).getIp());
-                return new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName).setExternalIp(ingressList.get(0).getIp());
+                return new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName).setExternalIp(ingressList.get(0).getIp()).setExternalIpIsAvailable(true);
             } else if (ingressList != null && ingressList.size() > 1) {
                 log.warn("There are " + ingressList.size() + " IP addresses for the MicoServiceInterface " + serviceInterfaceName + ". Only one IP address is returned.");
-                return new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName).setExternalIp(ingressList.get(0).getIp());
+                return new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName).setExternalIp(ingressList.get(0).getIp()).setExternalIpIsAvailable(true);
             } else {
-                log.error("There is no Kubernetes service for the interface '{}' of MicoService '{}' in version '{}'.",
-                    serviceInterfaceName, micoService.getShortName(), micoService.getVersion());
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "There is no Kubernetes service for the interface '" +
-                    serviceInterfaceName + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "'.");
+                log.info("The IP address for the Kubernetes service of the MicoServiceInterface '{}' is in a pending state.", serviceInterfaceName);
+                return new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName);
             }
         } else {
             log.error("There is no Load Balancer service for the Kubernetes service of the MicoServiceInterface '{}'.", serviceInterfaceName);
@@ -308,7 +316,7 @@ public class MicoStatusService {
      * @return a {@link KubernetesPodInformationResponseDTO} which has node name, pod name, phase, host ip, memory
      * usage, and CPU load as status information.
      */
-    private KubernetesPodInformationResponseDTO getUiPodInfo(Pod pod) {
+    private KubernetesPodInformationResponseDTO getPodInformation(Pod pod) {
         String nodeName = pod.getSpec().getNodeName();
         String podName = pod.getMetadata().getName();
         String phase = pod.getStatus().getPhase();
@@ -318,20 +326,30 @@ public class MicoStatusService {
             restarts += containerStatus.getRestartCount();
         }
         String age = pod.getStatus().getStartTime();
-        int memoryUsage = -1;
-        int cpuLoad = -1;
-        KubernetesPodMetricsResponseDTO podMetrics = new KubernetesPodMetricsResponseDTO();
-        try {
-            memoryUsage = getMemoryUsageForPod(podName);
-            cpuLoad = getCpuLoadForPod(podName);
-            podMetrics.setAvailable(true);
-        } catch (PrometheusRequestFailedException | ResourceAccessException e) {
-            podMetrics.setAvailable(false);
-            log.error(e.getMessage(), e);
+
+        KubernetesPodInformationResponseDTO kubernetesPodInformationResponseDTO = new KubernetesPodInformationResponseDTO()
+            .setNodeName(nodeName)
+            .setPodName(podName)
+            .setPhase(phase)
+            .setHostIp(hostIp)
+            .setRestarts(restarts)
+            .setStartTime(age);
+
+        // Request values from Prometheus only if the pod phase is "Running"
+        if (phase.equals(POD_PHASE_RUNNING)) {
+            int memoryUsage = 0;
+            int cpuLoad = 0;
+            try {
+                memoryUsage = getMemoryUsageForPod(podName);
+                cpuLoad = getCpuLoadForPod(podName);
+            } catch (PrometheusRequestFailedException | ResourceAccessException e) {
+                log.error(e.getMessage(), e);
+            }
+            kubernetesPodInformationResponseDTO.setMetrics(new KubernetesPodMetricsResponseDTO()
+                .setMemoryUsage(memoryUsage)
+                .setCpuLoad(cpuLoad));
         }
-        podMetrics.setMemoryUsage(memoryUsage);
-        podMetrics.setCpuLoad(cpuLoad);
-        return new KubernetesPodInformationResponseDTO(podName, phase, hostIp, nodeName, restarts, age, podMetrics);
+        return kubernetesPodInformationResponseDTO;
     }
 
     private int getMemoryUsageForPod(String podName) throws PrometheusRequestFailedException {

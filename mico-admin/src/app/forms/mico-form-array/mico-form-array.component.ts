@@ -53,7 +53,6 @@ export class MicoFormArrayComponent implements OnInit, AfterViewInit, AsyncValid
     maxLimitText;
 
     @Input() config: ApiModel;
-    nestedModel: ApiModel;
 
     onChange: any = () => { };
 
@@ -141,10 +140,6 @@ export class MicoFormArrayComponent implements OnInit, AfterViewInit, AsyncValid
 
 
     ngOnInit() {
-        const modelUrl = this.config.items.$ref;
-        this.models.getModel(modelUrl).subscribe(model => {
-            this.nestedModel = model;
-        });
 
         // build strings for min/max limit
         if (this.config.hasOwnProperty('minItems')) {
