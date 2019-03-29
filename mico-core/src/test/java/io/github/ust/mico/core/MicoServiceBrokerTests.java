@@ -259,11 +259,9 @@ public class MicoServiceBrokerTests {
         MicoServiceDependency dependency2 = new MicoServiceDependency().setService(service).setDependedService(service2);
         service.setDependencies(CollectionUtils.listOf(dependency1, dependency2));
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(service));
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME_1, VERSION_1_0_1)).willReturn(Optional.of(service1));
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME_2, VERSION_1_0_2)).willReturn(Optional.of(service2));
+        given(serviceRepository.findDependees(SHORT_NAME, VERSION)).willReturn(CollectionUtils.listOf(service1,service2));
 
-        List<MicoService> dependentServices = micoServiceBroker.getDependentServices(service.getDependencies());
+        List<MicoService> dependentServices = micoServiceBroker.getDependeesByMicoService(service);
 
         assertThat(dependentServices).contains(service1);
         assertThat(dependentServices).contains(service2);
