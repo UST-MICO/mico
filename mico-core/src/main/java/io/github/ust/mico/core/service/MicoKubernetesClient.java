@@ -1074,11 +1074,15 @@ public class MicoKubernetesClient {
      */
     private void undeploy(MicoServiceDeploymentInfo serviceDeploymentInfo) {
     	KubernetesDeploymentInfo kubernetesDeploymentInfo = serviceDeploymentInfo.getKubernetesDeploymentInfo();
+        MicoService micoService = serviceDeploymentInfo.getService();
+
+        // If there is a job with the type 'BUILD' for this specific MICO service running, delete and cancel it.
+        Optional<MicoServiceBackgroundJob> jobOptional = backgroundJobBroker.getJobByMicoService(micoService.getShortName(), micoService.getVersion(), MicoServiceBackgroundJob.Type.BUILD);
+        jobOptional.ifPresent(micoServiceBackgroundJob -> backgroundJobBroker.deleteJob(micoServiceBackgroundJob.getId()));
 
         // Delete Kubernetes Deployment
         log.debug("Delete the Kubernetes deployment '{}' of MicoService '{}' in version '{}'.",
-            kubernetesDeploymentInfo.getDeploymentName(), serviceDeploymentInfo.getService().getShortName(),
-            serviceDeploymentInfo.getService().getVersion());
+            kubernetesDeploymentInfo.getDeploymentName(), micoService.getShortName(), micoService.getVersion());
     	kubernetesClient
     		.apps()
     		.deployments()
@@ -1089,8 +1093,7 @@ public class MicoKubernetesClient {
         // Delete Kubernetes Services
         for (String kubernetesServiceName : kubernetesDeploymentInfo.getServiceNames()) {
             log.debug("Delete the Kubernetes service '{}' of MicoService '{}' in version '{}'.",
-                kubernetesServiceName, serviceDeploymentInfo.getService().getShortName(),
-                serviceDeploymentInfo.getService().getVersion());
+                kubernetesServiceName, micoService.getShortName(), micoService.getVersion());
             kubernetesClient
                 .services()
                 .inNamespace(kubernetesDeploymentInfo.getNamespace())
@@ -1101,22 +1104,23 @@ public class MicoKubernetesClient {
         if(buildBotConfig.isBuildCleanUpByUndeploy()) {
             // Clean up Kubernetes Build resources
             log.debug("Clean up build resources for MicoService '{}' in version '{}'.",
-                serviceDeploymentInfo.getService().getShortName(), serviceDeploymentInfo.getService().getVersion());
-            imageBuilder.deleteBuild(serviceDeploymentInfo.getService());
+                micoService.getShortName(), micoService.getVersion());
+            imageBuilder.deleteBuild(micoService);
+            
             kubernetesClient
                 .pods()
                 .inNamespace(buildBotConfig.getNamespaceBuildExecution())
-                .withLabel(ImageBuilder.BUILD_CRD_GROUP + "/buildName", imageBuilder.createBuildName(serviceDeploymentInfo.getService()))
+                .withLabel(ImageBuilder.BUILD_CRD_GROUP + "/buildName", imageBuilder.createBuildName(micoService))
                 .delete();
         }
 
     	// Delete Kubernetes deployment info in database
 		log.debug("Delete Kubernetes deployment info in database for MicoService '{}' in version '{}'.",
-			serviceDeploymentInfo.getService().getShortName(), serviceDeploymentInfo.getService().getVersion());
+			micoService.getShortName(), micoService.getVersion());
 		kubernetesDeploymentInfoRepository.delete(serviceDeploymentInfo.getKubernetesDeploymentInfo());
 
 		log.info("MicoService '{}' in version '{}' was undeployed successfully.",
-            serviceDeploymentInfo.getService().getShortName(), serviceDeploymentInfo.getService().getVersion());
+            micoService.getShortName(), micoService.getVersion());
     }
     
     /**
