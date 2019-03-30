@@ -1125,8 +1125,6 @@ public class ApplicationResourceIntegrationTests {
             .willReturn(Optional.of(micoApplication));
         given(serviceRepository.findByShortNameAndVersion(service1.getShortName(), service1.getVersion()))
             .willReturn(Optional.of(service1));
-        given(serviceRepository.findAllByApplicationAndShortName(SHORT_NAME, VERSION, SERVICE_SHORT_NAME))
-            .willReturn(CollectionUtils.listOf(service1, service2));
 
         mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + VERSION_1_0_1)
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
