@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -64,7 +63,7 @@ public class MicoServiceBroker {
         return serviceOptional.get();
     }
 
-    public List<MicoService> getAllVersionsOfServiceFromDatabase(String shortName) throws ResponseStatusException {
+    public List<MicoService> getAllVersionsOfServiceFromDatabase(String shortName) {
         return serviceRepository.findByShortName(shortName);
     }
 
