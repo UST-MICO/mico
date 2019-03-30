@@ -49,7 +49,8 @@ public class MicoServiceBroker {
         return serviceOptional.get();
     }
 
-    public MicoService updateExistingService(MicoService service) {
+    public MicoService updateExistingService(MicoService service) throws MicoServiceIsDeployedException {
+        throwConflictIfServiceIsDeployed(service);
         MicoService updatedService = serviceRepository.save(service);
         log.debug("Updated service: {}", updatedService);
         return updatedService;
@@ -67,7 +68,7 @@ public class MicoServiceBroker {
         return serviceRepository.findByShortName(shortName);
     }
 
-    public void deleteService(MicoService service) throws KubernetesResourceException, MicoServiceHasDependersException, MicoServiceIsDeployedException {
+    public void deleteService(MicoService service) throws MicoServiceHasDependersException, MicoServiceIsDeployedException {
         throwConflictIfServiceIsDeployed(service);
         if (!getDependers(service).isEmpty()) {
             throw new MicoServiceHasDependersException(service.getShortName(), service.getVersion());
@@ -76,7 +77,7 @@ public class MicoServiceBroker {
         log.debug("Deleted MicoService '{}' '{}'.", service.getShortName(), service.getVersion());
     }
 
-    public void deleteAllVersionsOfService(String shortName) throws MicoServiceNotFoundException, KubernetesResourceException, MicoServiceIsDeployedException {
+    public void deleteAllVersionsOfService(String shortName) throws MicoServiceIsDeployedException {
         List<MicoService> serviceList = getAllVersionsOfServiceFromDatabase(shortName);
         for (MicoService service : serviceList) {
             throwConflictIfServiceIsDeployed(service);
@@ -88,15 +89,15 @@ public class MicoServiceBroker {
     }
 
     /**
-     * Checks if a service is deployed and throws a ResponseStatusException with the http status CONFLICT (409) if
-     * the service is deployed.
+     * Checks if a service is deployed. If yes the method throws a {@code MicoServiceIsDeployedException}.
      *
      * @param service Checks if this service is deployed
-     * @throws KubernetesResourceException if the service is deployed. It uses the http status CONFLICT
+     * @throws MicoServiceIsDeployedException if the service is deployed
      */
-    private void throwConflictIfServiceIsDeployed(MicoService service) throws KubernetesResourceException, MicoServiceIsDeployedException {
+    private void throwConflictIfServiceIsDeployed(MicoService service) throws MicoServiceIsDeployedException {
         if (micoKubernetesClient.isMicoServiceDeployed(service)) {
-            log.info("MicoService '{}' in version '{}' is deployed. It is not possible to delete a deployed service.", service.getShortName(), service.getVersion());
+            log.info("MicoService '{}' in version '{}' is deployed. Undeployment is required.",
+                service.getShortName(), service.getVersion());
             throw new MicoServiceIsDeployedException(service.getShortName(), service.getVersion());
         }
     }
@@ -144,8 +145,7 @@ public class MicoServiceBroker {
             //TODO: Verfiy how to put this into method into ServiceBroker
             //validateProvidedInterface(newService.getShortName(), newService.getVersion(), serviceInterface);
         }
-        MicoService savedService = serviceRepository.save(newService);
-        return savedService;
+        return serviceRepository.save(newService);
     }
 
     public List<MicoService> getDependeesByMicoService(MicoService service) {
@@ -157,12 +157,18 @@ public class MicoServiceBroker {
             dependency -> dependency.getDependedService().getShortName().equals(serviceDependee.getShortName())
                 && dependency.getDependedService().getVersion().equals(serviceDependee.getVersion()));
 
-        log.debug("Check if the dependency already exists is '{}", dependencyAlreadyExists);
+        log.debug("Check if the dependency between '{}' '{}' and '{}' '{}' already exists: {}",
+            service.getShortName(), service.getVersion(), serviceDependee.getShortName(), serviceDependee.getVersion(),
+            dependencyAlreadyExists);
 
         return dependencyAlreadyExists;
     }
 
-    public MicoService persistNewDependencyBetweenServices(MicoService service, MicoService serviceDependee) {
+    public MicoService persistNewDependencyBetweenServices(MicoService service, MicoService serviceDependee) throws MicoServiceIsDeployedException {
+        // Ensure that the service and the new dependency are not deployed.
+        throwConflictIfServiceIsDeployed(service);
+        throwConflictIfServiceIsDeployed(serviceDependee);
+
         MicoServiceDependency processedServiceDependee = new MicoServiceDependency()
             .setDependedService(serviceDependee)
             .setService(service);
@@ -179,13 +185,15 @@ public class MicoServiceBroker {
         return service;
     }
 
-    public MicoService deleteDependencyBetweenServices(MicoService service, MicoService serviceToDelete) {
+    public MicoService deleteDependencyBetweenServices(MicoService service, MicoService serviceToDelete) throws MicoServiceIsDeployedException {
+        throwConflictIfServiceIsDeployed(service);
         service.getDependencies().removeIf(dependency -> dependency.getDependedService().getId().equals(serviceToDelete.getId()));
-        MicoService updatedService = serviceRepository.save(service);
-        return updatedService;
+        return serviceRepository.save(service);
     }
 
-    public MicoService deleteAllDependees(MicoService service) {
+    public MicoService deleteAllDependees(MicoService service) throws MicoServiceIsDeployedException {
+        throwConflictIfServiceIsDeployed(service);
+
         service.getDependencies().clear();
         MicoService resultingService = serviceRepository.save(service);
 
@@ -243,7 +251,7 @@ public class MicoServiceBroker {
      * @param version   version the version of the {@link MicoService}.
      * @return the kubernetes YAML for the {@link MicoService}.
      */
-    public String getServiceYamlByShortNameAndVersion(String shortName, String version) throws MicoServiceNotFoundException, JsonProcessingException, KubernetesResourceException {
+    public String getServiceYamlByShortNameAndVersion(String shortName, String version) throws MicoServiceNotFoundException, JsonProcessingException {
         return micoKubernetesClient.getYaml(getServiceFromDatabase(shortName, version));
     }
 }
