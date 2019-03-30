@@ -412,7 +412,7 @@ public class ApplicationResourceIntegrationTests {
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingApplication));
         given(applicationRepository.save(eq(expectedApplication))).willReturn(expectedApplication);
         given(micoKubernetesClient.isApplicationUndeployed(updatedApplication)).willReturn(true);
-        given(micoKubernetesClient.getApplicationDeploymentStatus(SHORT_NAME, VERSION)).willReturn(
+        given(micoKubernetesClient.getApplicationDeploymentStatus(existingApplication)).willReturn(
         	MicoApplicationDeploymentStatus.undeployed("MicoApplication is currently not deployed."));
 
         mvc.perform(put(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION)
@@ -455,7 +455,7 @@ public class ApplicationResourceIntegrationTests {
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingApplication));
         given(applicationRepository.save(eq(updatedApplication.setId(ID)))).willReturn(expectedApplication);
         given(micoKubernetesClient.isApplicationUndeployed(any(MicoApplication.class))).willReturn(true);
-        given(micoKubernetesClient.getApplicationDeploymentStatus(SHORT_NAME, VERSION)).willReturn(expectedApplicationDeploymentStatus);
+        given(micoKubernetesClient.getApplicationDeploymentStatus(existingApplication)).willReturn(expectedApplicationDeploymentStatus);
 
         mvc.perform(put(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION)
             .content(mapper.writeValueAsBytes(new MicoApplicationRequestDTO(updatedApplication)))
@@ -608,7 +608,7 @@ public class ApplicationResourceIntegrationTests {
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(applicationRepository.save(any(MicoApplication.class))).willReturn(expectedApplication);
         given(micoKubernetesClient.isApplicationUndeployed(any(MicoApplication.class))).willReturn(true);
-        given(micoKubernetesClient.getApplicationDeploymentStatus(SHORT_NAME, VERSION)).willReturn(
+        given(micoKubernetesClient.getApplicationDeploymentStatus(application)).willReturn(
         	MicoApplicationDeploymentStatus.undeployed("MicoApplication is currently not deployed."));
 
         mvc.perform(put(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION)
