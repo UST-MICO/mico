@@ -1,16 +1,10 @@
-.. java:import:: com.fasterxml.jackson.annotation JsonProperty
+.. java:import:: org.neo4j.ogm.annotation GeneratedValue
 
-.. java:import:: com.fasterxml.jackson.annotation JsonSetter
+.. java:import:: org.neo4j.ogm.annotation Id
 
-.. java:import:: com.fasterxml.jackson.annotation Nulls
+.. java:import:: org.neo4j.ogm.annotation NodeEntity
 
-.. java:import:: io.github.ust.mico.core.configuration.extension CustomOpenApiExtentionsPlugin
-
-.. java:import:: io.swagger.annotations ApiModelProperty
-
-.. java:import:: io.swagger.annotations Extension
-
-.. java:import:: io.swagger.annotations ExtensionProperty
+.. java:import:: io.github.ust.mico.core.dto.request MicoServicePortRequestDTO
 
 .. java:import:: lombok AllArgsConstructor
 
@@ -19,16 +13,6 @@
 .. java:import:: lombok NoArgsConstructor
 
 .. java:import:: lombok.experimental Accessors
-
-.. java:import:: org.neo4j.ogm.annotation GeneratedValue
-
-.. java:import:: org.neo4j.ogm.annotation Id
-
-.. java:import:: org.neo4j.ogm.annotation NodeEntity
-
-.. java:import:: javax.validation.constraints Max
-
-.. java:import:: javax.validation.constraints Min
 
 MicoServicePort
 ===============
@@ -39,4 +23,17 @@ MicoServicePort
 .. java:type:: @Data @NoArgsConstructor @AllArgsConstructor @Accessors @NodeEntity public class MicoServicePort
 
    Represents a basic port with a port number and port type (protocol).
+
+Methods
+-------
+valueOf
+^^^^^^^
+
+.. java:method:: public static MicoServicePort valueOf(MicoServicePortRequestDTO servicePortDto)
+   :outertype: MicoServicePort
+
+   Creates a new \ ``MicoServicePort``\  based on a \ ``MicoServicePortRequestDTO``\ . Note that the id will be set to \ ``null``\ .
+
+   :param servicePortDto: the \ :java:ref:`MicoServicePortRequestDTO`\ .
+   :return: a \ :java:ref:`MicoServicePort`\ .
 

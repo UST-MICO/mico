@@ -1,14 +1,12 @@
-.. java:import:: lombok Getter
-
-.. java:import:: lombok Setter
+.. java:import:: java.util List
 
 .. java:import:: org.springframework.boot.context.properties ConfigurationProperties
 
 .. java:import:: org.springframework.stereotype Component
 
-.. java:import:: javax.validation.constraints NotBlank
+.. java:import:: lombok Getter
 
-.. java:import:: java.util List
+.. java:import:: lombok Setter
 
 CorsConfig
 ==========

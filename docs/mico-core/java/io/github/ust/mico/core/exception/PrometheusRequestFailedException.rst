@@ -1,5 +1,3 @@
-.. java:import:: org.springframework.http HttpStatus
-
 PrometheusRequestFailedException
 ================================
 
@@ -21,6 +19,12 @@ Constructors
 PrometheusRequestFailedException
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:constructor:: public PrometheusRequestFailedException(String message, HttpStatus httpStatus, String prometheusResponseStatus)
+.. java:constructor:: public PrometheusRequestFailedException(String message)
+   :outertype: PrometheusRequestFailedException
+
+PrometheusRequestFailedException
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:constructor:: public PrometheusRequestFailedException()
    :outertype: PrometheusRequestFailedException
 

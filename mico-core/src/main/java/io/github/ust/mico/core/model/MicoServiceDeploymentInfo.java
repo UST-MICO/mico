@@ -43,6 +43,8 @@ import lombok.experimental.Accessors;
 /**
  * Represents the information necessary for deploying a {@link MicoApplication}.
  * DTO is {@link MicoServiceDeploymentInfoResponseDTO}.
+ * <p>
+ * Instances of this class are persisted as nodes in the Neo4j database.
  */
 @Data
 @NoArgsConstructor
@@ -60,7 +62,7 @@ public class MicoServiceDeploymentInfo {
 
 
     // ----------------------
-    // -> Required fields ---
+    // -> Required Fields ---
     // ----------------------
 
 
@@ -73,7 +75,7 @@ public class MicoServiceDeploymentInfo {
 
 
     // ----------------------
-    // -> Optional fields ---
+    // -> Optional Fields ---
     // ----------------------
 
     /**
@@ -114,7 +116,7 @@ public class MicoServiceDeploymentInfo {
 
     /**
      * Indicates whether and when to pull the image.
-     * Default image pull policy is {@link ImagePullPolicy#ALWAYS}.
+     * Default image pull policy is {@link ImagePullPolicy#ALWAYS Always}.
      */
     private ImagePullPolicy imagePullPolicy = ImagePullPolicy.ALWAYS;
 

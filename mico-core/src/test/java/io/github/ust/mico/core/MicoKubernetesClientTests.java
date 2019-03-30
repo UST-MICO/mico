@@ -19,24 +19,13 @@
 
 package io.github.ust.mico.core;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
-import io.fabric8.kubernetes.api.model.apps.DeploymentList;
-import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
-import io.github.ust.mico.core.TestConstants.*;
-import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
-import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
-import io.github.ust.mico.core.exception.KubernetesResourceException;
-import io.github.ust.mico.core.model.*;
-import io.github.ust.mico.core.persistence.KubernetesDeploymentInfoRepository;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
-import io.github.ust.mico.core.util.CollectionUtils;
-import io.github.ust.mico.core.util.UIDUtils;
+import static io.github.ust.mico.core.TestConstants.*;
+import static org.junit.Assert.*;
+import static org.mockito.BDDMockito.*;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -45,15 +34,27 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
-import static io.github.ust.mico.core.TestConstants.*;
-import static org.junit.Assert.*;
-import static org.mockito.BDDMockito.given;
+import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.fabric8.kubernetes.api.model.apps.DeploymentList;
+import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
+import io.github.ust.mico.core.TestConstants.IntegrationTest;
+import io.github.ust.mico.core.broker.BackgroundJobBroker;
+import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
+import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
+import io.github.ust.mico.core.exception.KubernetesResourceException;
+import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.model.MicoServiceBackgroundJob.Status;
+import io.github.ust.mico.core.persistence.KubernetesDeploymentInfoRepository;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
+import io.github.ust.mico.core.util.CollectionUtils;
+import io.github.ust.mico.core.util.UIDUtils;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -76,6 +77,9 @@ public class MicoKubernetesClientTests {
 
     @MockBean
     private ImageBuilder imageBuilder;
+    
+    @MockBean
+    private BackgroundJobBroker backgroundJobBroker;
 
     @MockBean
     private MicoApplicationRepository applicationRepository;
@@ -98,14 +102,14 @@ public class MicoKubernetesClientTests {
         given(micoKubernetesBuildBotConfig.isBuildCleanUpByUndeploy()).willReturn(true);
 
         micoKubernetesClient = new MicoKubernetesClient(micoKubernetesConfig, micoKubernetesBuildBotConfig,
-                mockServer.getClient(), imageBuilder, applicationRepository,
-                serviceDeploymentInfoRepository, kubernetesDeploymentInfoRepository);
+        	mockServer.getClient(), imageBuilder, backgroundJobBroker, applicationRepository,
+        	serviceDeploymentInfoRepository, kubernetesDeploymentInfoRepository);
 
         mockServer.getClient().namespaces().create(new NamespaceBuilder().withNewMetadata().withName(testNamespace).endMetadata().build());
     }
 
     @Test
-    public void creationOfMicoServiceWorks() throws KubernetesResourceException {
+    public void creationOfMicoServiceWorks() {
         // Assert that at the beginning there are no deployment
         DeploymentList deployments = mockServer.getClient().apps().deployments().inNamespace(testNamespace).list();
         assertEquals(0, deployments.getItems().size());
@@ -131,7 +135,7 @@ public class MicoKubernetesClientTests {
     }
 
     @Test
-    public void creationOfMicoServiceWithDeploymentInformationWorks() throws KubernetesResourceException {
+    public void creationOfMicoServiceWithDeploymentInformationWorks() {
         MicoService micoService = getMicoServiceWithoutInterface();
 
         MicoLabel label = new MicoLabel().setKey("some-label-key").setValue("some-label-value");
@@ -208,7 +212,7 @@ public class MicoKubernetesClientTests {
     }
 
     @Test
-    public void creationOfMicoServiceThatAlreadyExistsDoesReplaceTheSameObject() throws KubernetesResourceException {
+    public void creationOfMicoServiceThatAlreadyExistsDoesReplaceTheSameObject() {
         MicoService micoServiceWithoutInterface = getMicoServiceWithoutInterface();
         MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo().setService(micoServiceWithoutInterface);
 
@@ -259,11 +263,218 @@ public class MicoKubernetesClientTests {
         assertEquals("Expected both services have the same name", firstService.getMetadata().getName(), secondService.getMetadata().getName());
         assertEquals("Expected both services are the same", firstService, secondService);
     }
+    
+    @Test
+    public void getApplicationDeploymentStatusForDeployedApplication() {
+    	MicoApplication micoApplication = setUpApplicationDeployment();
+    	
+    	MicoApplicationJobStatus jobStatus = new MicoApplicationJobStatus(micoApplication.getShortName(),
+		    micoApplication.getVersion(), Status.DONE, Collections.emptyList());
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(
+		    micoApplication.getShortName(), micoApplication.getVersion())).willReturn(jobStatus);
+        
+        assertEquals("Application is expected to be deployed but actually is not.",
+        	MicoApplicationDeploymentStatus.Value.DEPLOYED,
+        	micoKubernetesClient.getApplicationDeploymentStatus(micoApplication).getValue());
+    }
+    
+    @Test
+    public void getApplicationDeploymentStatusForPendingDeployment() {
+    	MicoApplication micoApplication = setUpApplicationDeployment();
+    	
+    	MicoApplicationJobStatus jobStatus = new MicoApplicationJobStatus(micoApplication.getShortName(),
+		    micoApplication.getVersion(), Status.PENDING, Collections.emptyList());
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(
+		    micoApplication.getShortName(), micoApplication.getVersion())).willReturn(jobStatus);
+        
+        assertEquals("Application is expected not to be deployed due to the deployment not having started yet.",
+        	MicoApplicationDeploymentStatus.Value.PENDING,
+        	micoKubernetesClient.getApplicationDeploymentStatus(micoApplication).getValue());
+    }
+    
+    @Test
+    public void getApplicationDeploymentStatusForRunningDeployment() {
+    	MicoApplication micoApplication = setUpApplicationDeployment();
+    	
+    	MicoApplicationJobStatus jobStatus = new MicoApplicationJobStatus(micoApplication.getShortName(),
+		    micoApplication.getVersion(), Status.RUNNING, Collections.emptyList());
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(
+		    micoApplication.getShortName(), micoApplication.getVersion())).willReturn(jobStatus);
+        
+        assertEquals("Application is expected not to be deployed due to the deployment currently being in progress.",
+        	MicoApplicationDeploymentStatus.Value.PENDING,
+        	micoKubernetesClient.getApplicationDeploymentStatus(micoApplication).getValue());
+    }
+    
+    @Test
+    public void getApplicationDeploymentStatusForFailedDeployment() {
+    	MicoApplication micoApplication = setUpApplicationDeployment();
+    	
+    	MicoApplicationJobStatus jobStatus = new MicoApplicationJobStatus(micoApplication.getShortName(),
+		    micoApplication.getVersion(), Status.ERROR, Collections.emptyList());
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(
+		    micoApplication.getShortName(), micoApplication.getVersion())).willReturn(jobStatus);
+        
+        assertEquals("Application is expected not to be deployed due to the deployment having failed.",
+        	MicoApplicationDeploymentStatus.Value.INCOMPLETE,
+        	micoKubernetesClient.getApplicationDeploymentStatus(micoApplication).getValue());
+    }
+    
+    @Test
+    public void getApplicationDeploymentStatusForApplicationWithoutServiceDeploymentInfos() {
+    	MicoApplication micoApplication = setUpApplicationDeployment();
+    	
+    	MicoApplicationJobStatus jobStatus = new MicoApplicationJobStatus(micoApplication.getShortName(),
+		    micoApplication.getVersion(), Status.DONE, Collections.emptyList());
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(
+		    micoApplication.getShortName(), micoApplication.getVersion())).willReturn(jobStatus);
+        
+        given(serviceDeploymentInfoRepository.findAllByApplication(
+   			micoApplication.getShortName(), micoApplication.getVersion())).willReturn(Collections.emptyList());
+        
+        assertEquals("Application is expected not to be deployed since it does not provide any service deployment information.",
+        	MicoApplicationDeploymentStatus.Value.UNDEPLOYED,
+        	micoKubernetesClient.getApplicationDeploymentStatus(micoApplication).getValue());
+    }
+    
+    @Test
+    public void getApplicationDeploymentStatusForApplicationWithoutKubernetesDeploymentInfos() {
+    	MicoApplication micoApplication = setUpApplicationDeployment();
+    	
+    	MicoApplicationJobStatus jobStatus = new MicoApplicationJobStatus(micoApplication.getShortName(),
+		    micoApplication.getVersion(), Status.DONE, Collections.emptyList());
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(
+		    micoApplication.getShortName(), micoApplication.getVersion())).willReturn(jobStatus);
+        
+        given(serviceDeploymentInfoRepository.findAllByApplication(
+   			micoApplication.getShortName(), micoApplication.getVersion())).willReturn(
+   				micoApplication.getServiceDeploymentInfos().stream().map(sdi -> sdi.setKubernetesDeploymentInfo(null)).collect(Collectors.toList()));
+        
+        assertEquals("Application is expected to be undeployed since it does not have any Kubernetes deployment information.",
+        	MicoApplicationDeploymentStatus.Value.UNDEPLOYED,
+        	micoKubernetesClient.getApplicationDeploymentStatus(micoApplication).getValue());
+    }
+    
+    @Test
+    public void getApplicationDeploymentStatusForApplicationWithNoUpdatedKubernetesDeploymentInfos() {
+    	MicoApplication micoApplication = setUpApplicationDeployment();
+    	
+    	MicoApplicationJobStatus jobStatus = new MicoApplicationJobStatus(micoApplication.getShortName(),
+		    micoApplication.getVersion(), Status.DONE, Collections.emptyList());
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(
+		    micoApplication.getShortName(), micoApplication.getVersion())).willReturn(jobStatus);
+        
+        mockServer.getClient().apps().deployments().inNamespace(testNamespace).delete();
+
+        assertEquals("Application is expected not to be deployed since there are no Kubernetes resources deployed.",
+        	MicoApplicationDeploymentStatus.Value.UNDEPLOYED,
+        	micoKubernetesClient.getApplicationDeploymentStatus(micoApplication).getValue());
+    }
+
+    @Test
+    public void getApplicationDeploymentStatusForApplicationWithUnknownStatus() {
+        MicoApplication micoApplication = setUpApplicationDeployment();
+
+        // Simulate error while updating Kubernetes Deployment Info (deployment name not set) -> Status Unknown
+        micoApplication.getServiceDeploymentInfos().get(0).getKubernetesDeploymentInfo().setDeploymentName(null);
+
+        MicoApplicationJobStatus jobStatus = new MicoApplicationJobStatus(micoApplication.getShortName(),
+            micoApplication.getVersion(), Status.UNDEFINED, Collections.emptyList());
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(
+            micoApplication.getShortName(), micoApplication.getVersion())).willReturn(jobStatus);
+
+        assertEquals("Application deployment status is expected to be unknown because the name of the Kubernetes deployment name is missing.",
+            MicoApplicationDeploymentStatus.Value.UNKNOWN,
+            micoKubernetesClient.getApplicationDeploymentStatus(micoApplication).getValue());
+    }
+
+    @Test
+    public void getApplicationDeploymentStatusForApplicationWithDeploymentNotAvailableAnymore() {
+        MicoApplication micoApplication = setUpApplicationDeployment(getMicoService(), getMicoService_2());
+
+        MicoApplicationJobStatus jobStatus = new MicoApplicationJobStatus(micoApplication.getShortName(),
+            micoApplication.getVersion(), Status.UNDEFINED, Collections.emptyList());
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(
+            micoApplication.getShortName(), micoApplication.getVersion())).willReturn(jobStatus);
+
+        List<Deployment> deployments = mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems();
+        assertEquals("Expected 2 deployments before deletion of one", 2, deployments.size());
+        mockServer.getClient().apps().deployments().inNamespace(testNamespace).delete(deployments.get(0));
+        deployments = mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems();
+        assertEquals("Expected 1 deployment after deletion of one", 1, deployments.size());
+
+        assertEquals("Application deployment status is expected to be incomplete because a Kubernetes deployment is missing.",
+            MicoApplicationDeploymentStatus.Value.INCOMPLETE,
+            micoKubernetesClient.getApplicationDeploymentStatus(micoApplication).getValue());
+    }
+
+    @Test
+    public void getApplicationDeploymentStatusForApplicationWithTwoServices_FirstUnkown_SecondNotAvailable() {
+        MicoApplication micoApplication = setUpApplicationDeployment(getMicoService(), getMicoService_2());
+        MicoServiceDeploymentInfo serviceDeploymentInfo1 = micoApplication.getServiceDeploymentInfos().get(0);
+        MicoServiceDeploymentInfo serviceDeploymentInfo2 = micoApplication.getServiceDeploymentInfos().get(1);
+
+        // Simulate error while updating Kubernetes Deployment Info (deployment name not set) -> Status Unknown
+        serviceDeploymentInfo1.getKubernetesDeploymentInfo().setDeploymentName(null);
+
+        MicoApplicationJobStatus jobStatus = new MicoApplicationJobStatus(micoApplication.getShortName(),
+            micoApplication.getVersion(), Status.UNDEFINED, Collections.emptyList());
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(
+            micoApplication.getShortName(), micoApplication.getVersion())).willReturn(jobStatus);
+
+        List<Deployment> deployments = mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems();
+        assertEquals("Expected 2 deployments before deletion of one", 2, deployments.size());
+        Deployment firstDeployment = deployments.stream().filter(deployment -> deployment.getMetadata().getName().startsWith(
+            serviceDeploymentInfo2.getService().getShortName())).findFirst().get();
+        mockServer.getClient().apps().deployments().inNamespace(testNamespace).delete(firstDeployment);
+        deployments = mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems();
+        assertEquals("Expected 1 deployment after deletion of one", 1, deployments.size());
+        assertTrue("Expected deployment name starts with short name of service", deployments.get(0).getMetadata().getName().startsWith(
+            serviceDeploymentInfo1.getService().getShortName()));
+
+        assertEquals("Application deployment status is expected to be incomplete because a Kubernetes deployment is missing.",
+            MicoApplicationDeploymentStatus.Value.UNKNOWN,
+            micoKubernetesClient.getApplicationDeploymentStatus(micoApplication).getValue());
+    }
+
+    @Test
+    public void getApplicationDeploymentStatusForApplicationWithKubernetesServiceNotAvailableAnymore() {
+        MicoApplication micoApplication = setUpApplicationDeployment(getMicoService(), getMicoService_2());
+
+        MicoApplicationJobStatus jobStatus = new MicoApplicationJobStatus(micoApplication.getShortName(),
+            micoApplication.getVersion(), Status.UNDEFINED, Collections.emptyList());
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(
+            micoApplication.getShortName(), micoApplication.getVersion())).willReturn(jobStatus);
+
+        List<Service> kubernetesServices = mockServer.getClient().services().inNamespace(testNamespace).list().getItems();
+        assertEquals("Expected 2 Kubernetes Services before deletion of one", 2, kubernetesServices.size());
+        mockServer.getClient().services().inNamespace(testNamespace).delete(kubernetesServices.get(0));
+        kubernetesServices = mockServer.getClient().services().inNamespace(testNamespace).list().getItems();
+        assertEquals("Expected 1 Kubernetes Service after deletion of one", 1, kubernetesServices.size());
+
+        KubernetesDeploymentInfo updatedKubernetesDeploymentInfoAfterDeletion = new KubernetesDeploymentInfo()
+            .setId(micoApplication.getServiceDeploymentInfos().get(0).getKubernetesDeploymentInfo().getId())
+            .setNamespace(micoApplication.getServiceDeploymentInfos().get(0).getKubernetesDeploymentInfo().getNamespace())
+            .setDeploymentName(micoApplication.getServiceDeploymentInfos().get(0).getKubernetesDeploymentInfo().getDeploymentName())
+            .setServiceNames(new ArrayList<>()); // There are no Kubernetes services anymore
+        given(kubernetesDeploymentInfoRepository.save(any(KubernetesDeploymentInfo.class)))
+            .willReturn(updatedKubernetesDeploymentInfoAfterDeletion);
+
+        assertEquals("Application deployment status is expected to be incomplete because a Kubernetes Service is missing.",
+            MicoApplicationDeploymentStatus.Value.INCOMPLETE,
+            micoKubernetesClient.getApplicationDeploymentStatus(micoApplication).getValue());
+    }
 
     @Test
     public void isApplicationDeployed() {
         MicoApplication micoApplication = setUpApplicationDeployment();
-        assertTrue("Expected application is deployed", micoKubernetesClient.isApplicationDeployed(micoApplication));
+        
+		MicoApplicationJobStatus jobStatus = new MicoApplicationJobStatus(micoApplication.getShortName(),
+		    micoApplication.getVersion(), Status.DONE, Collections.emptyList());
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(
+		    micoApplication.getShortName(), micoApplication.getVersion())).willReturn(jobStatus);
+        
+        assertTrue("Expected application is not deployed.", micoKubernetesClient.isApplicationDeployed(micoApplication));
     }
 
     @Test
@@ -286,6 +497,8 @@ public class MicoKubernetesClientTests {
 
         given(serviceDeploymentInfoRepository.findAllByApplication(SHORT_NAME_2, VERSION))
                 .willReturn(CollectionUtils.listOf(serviceDeploymentInfo));
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(SHORT_NAME_2, VERSION))
+            .willReturn(new MicoApplicationJobStatus(SHORT_NAME_2, VERSION, Status.UNDEFINED, Collections.emptyList()));
 
         boolean result = micoKubernetesClient.isApplicationDeployed(micoApplication);
         assertFalse("Application is not deployed, because MicoService was deployed by other application", result);
@@ -294,8 +507,13 @@ public class MicoKubernetesClientTests {
     @Test
     public void isApplicationDeployedWithNotExistingServiceInterfaces() {
         MicoApplication micoApplication = setUpApplicationDeployment();
+        
         // There are no Kubernetes Services
         micoApplication.getServiceDeploymentInfos().get(0).getKubernetesDeploymentInfo().setServiceNames(new ArrayList<>());
+        MicoApplicationJobStatus jobStatus = new MicoApplicationJobStatus(micoApplication.getShortName(),
+		    micoApplication.getVersion(), Status.ERROR, Collections.emptyList());
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(
+		    micoApplication.getShortName(), micoApplication.getVersion())).willReturn(jobStatus);
 
         assertFalse("Expected application is not deployed, because there are no Kubernetes Services", micoKubernetesClient.isApplicationDeployed(micoApplication));
     }
@@ -397,6 +615,12 @@ public class MicoKubernetesClientTests {
             .willReturn(CollectionUtils.listOf(serviceDeploymentInfo3));
         given(applicationRepository.findAllByUsedService(micoService.getShortName(), micoService.getVersion()))
             .willReturn(CollectionUtils.listOf(micoApplication1, micoApplication2, micoApplication3));
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(micoApplication1.getShortName(), micoApplication1.getVersion()))
+            .willReturn(new MicoApplicationJobStatus(micoApplication1.getShortName(), micoApplication1.getVersion(), Status.DONE, new ArrayList<>()));
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(micoApplication2.getShortName(), micoApplication2.getVersion()))
+            .willReturn(new MicoApplicationJobStatus(micoApplication2.getShortName(), micoApplication2.getVersion(), Status.DONE, new ArrayList<>()));
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(micoApplication3.getShortName(), micoApplication3.getVersion()))
+            .willReturn(new MicoApplicationJobStatus(micoApplication3.getShortName(), micoApplication3.getVersion(), Status.UNDEFINED, new ArrayList<>()));
 
         // Prepare build
         mockServer.getClient()
@@ -434,64 +658,69 @@ public class MicoKubernetesClientTests {
     }
 
     public MicoApplication setUpApplicationDeployment() {
+        return setUpApplicationDeployment(getMicoService());
+    }
+
+    public MicoApplication setUpApplicationDeployment(MicoService... micoServices) {
         MicoApplication micoApplication = new MicoApplication()
             .setId(1000L)
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
-            .setName(NAME);
-        MicoService micoService = getMicoService();
-        String deploymentUid = UIDUtils.uidFor(micoService);
-        Deployment existingKubernetesDeployment = getDeploymentObject(micoService, deploymentUid);
-        Map<String, String> labelsOfDeployment = CollectionUtils.mapOf(
+            .setName(NAME)
+            .setServices(Arrays.asList(micoServices));
+
+        for (MicoService micoService : micoApplication.getServices()) {
+            String deploymentUid = UIDUtils.uidFor(micoService);
+            Deployment existingKubernetesDeployment = getDeploymentObject(micoService, deploymentUid);
+            Map<String, String> labelsOfDeployment = CollectionUtils.mapOf(
                 LABEL_NAME_KEY, micoService.getShortName(),
                 LABEL_VERSION_KEY, micoService.getVersion(),
                 LABEL_INSTANCE_KEY, deploymentUid);
-        existingKubernetesDeployment.getMetadata().setLabels(labelsOfDeployment);
-        mockServer.getClient().apps().deployments().inNamespace(testNamespace).createOrReplace(existingKubernetesDeployment);
+            existingKubernetesDeployment.getMetadata().setLabels(labelsOfDeployment);
+            mockServer.getClient().apps().deployments().inNamespace(testNamespace).createOrReplace(existingKubernetesDeployment);
 
-        List<Service> existingKubernetesServices = new ArrayList<>();
-        for (MicoServiceInterface serviceInterface : micoService.getServiceInterfaces()) {
-            String serviceUid = UIDUtils.uidFor(serviceInterface);
-            Service kubernetesService = getServiceObject(serviceInterface, micoService, serviceUid);
-            Map<String, String> labelsOfService = CollectionUtils.mapOf(
+            List<Service> existingKubernetesServices = new ArrayList<>();
+            for (MicoServiceInterface serviceInterface : micoService.getServiceInterfaces()) {
+                String serviceUid = UIDUtils.uidFor(serviceInterface);
+                Service kubernetesService = getServiceObject(serviceInterface, micoService, serviceUid);
+                Map<String, String> labelsOfService = CollectionUtils.mapOf(
                     LABEL_NAME_KEY, micoService.getShortName(),
                     LABEL_VERSION_KEY, micoService.getVersion(),
                     LABEL_INTERFACE_KEY, serviceInterface.getServiceInterfaceName(),
                     LABEL_INSTANCE_KEY, serviceUid);
-            existingKubernetesDeployment.getMetadata().setLabels(labelsOfService);
-            existingKubernetesServices.add(kubernetesService);
+                existingKubernetesDeployment.getMetadata().setLabels(labelsOfService);
+                existingKubernetesServices.add(kubernetesService);
 
-            mockServer.getClient().services().inNamespace(testNamespace).createOrReplace(kubernetesService);
-        }
+                mockServer.getClient().services().inNamespace(testNamespace).createOrReplace(kubernetesService);
+            }
 
-        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
-            .setId(3000L)
-            .setService(micoService)
-            .setKubernetesDeploymentInfo(new KubernetesDeploymentInfo()
-                .setId(4000L)
-                .setNamespace(testNamespace)
-                .setDeploymentName(existingKubernetesDeployment.getMetadata().getName())
-                .setServiceNames(existingKubernetesServices.stream().map(service -> service.getMetadata().getName()).collect(Collectors.toList()))
-            );
+            MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
+                .setId(3000L)
+                .setService(micoService)
+                .setKubernetesDeploymentInfo(new KubernetesDeploymentInfo()
+                    .setId(4000L)
+                    .setNamespace(testNamespace)
+                    .setDeploymentName(existingKubernetesDeployment.getMetadata().getName())
+                    .setServiceNames(existingKubernetesServices.stream().map(service -> service.getMetadata().getName()).collect(Collectors.toList()))
+                );
+            micoApplication.getServiceDeploymentInfos().add(serviceDeploymentInfo);
 
-        micoApplication.setServices(CollectionUtils.listOf(micoService));
-        micoApplication.setServiceDeploymentInfos(CollectionUtils.listOf(serviceDeploymentInfo));
-
-        given(serviceDeploymentInfoRepository.findAllByService(micoService.getShortName(), micoService.getVersion()))
+            given(serviceDeploymentInfoRepository.findAllByService(micoService.getShortName(), micoService.getVersion()))
                 .willReturn(CollectionUtils.listOf(serviceDeploymentInfo));
-        given(serviceDeploymentInfoRepository.findByApplicationAndService(
+            given(serviceDeploymentInfoRepository.findByApplicationAndService(
                 micoApplication.getShortName(), micoApplication.getVersion(), micoService.getShortName(), micoService.getVersion()))
                 .willReturn(Optional.of(serviceDeploymentInfo));
+            given(applicationRepository.findAllByUsedService(micoService.getShortName(), micoService.getVersion()))
+                .willReturn(CollectionUtils.listOf(micoApplication));
+        }
         given(serviceDeploymentInfoRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion()))
-            .willReturn(CollectionUtils.listOf(serviceDeploymentInfo));
-        given(applicationRepository.findAllByUsedService(micoService.getShortName(), micoService.getVersion()))
-            .willReturn(CollectionUtils.listOf(micoApplication));
+            .willReturn(micoApplication.getServiceDeploymentInfos());
 
         return micoApplication;
     }
 
     @Test
-    public void getYaml() throws KubernetesResourceException, JsonProcessingException {
+    public void getYaml() throws JsonProcessingException {
         MicoService micoService = getMicoService();
         String deploymentUid = UIDUtils.uidFor(micoService);
         Deployment existingDeployment = getDeploymentObject(micoService, deploymentUid);
@@ -572,6 +801,15 @@ public class MicoKubernetesClientTests {
     private MicoService getMicoService() {
         MicoService micoService = getMicoServiceWithoutInterface();
         MicoServiceInterface micoServiceInterface = getMicoServiceInterface();
+        micoService.setServiceInterfaces(CollectionUtils.listOf(micoServiceInterface));
+        return micoService;
+    }
+
+    private MicoService getMicoService_2() {
+        MicoService micoService = getMicoServiceWithoutInterface()
+            .setId(ID_1).setShortName(SERVICE_SHORT_NAME_1).setName(NAME_1);
+        MicoServiceInterface micoServiceInterface = getMicoServiceInterface()
+            .setServiceInterfaceName(SERVICE_INTERFACE_NAME_1);
         micoService.setServiceInterfaces(CollectionUtils.listOf(micoServiceInterface));
         return micoService;
     }

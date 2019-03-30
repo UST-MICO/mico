@@ -42,7 +42,7 @@ findAllByUsedService
 .. java:method:: @Query  List<MicoApplication> findAllByUsedService(String shortName, String version)
    :outertype: MicoApplicationRepository
 
-   Find all applications that are using the given service
+   Find all applications that are using the given service.
 
    :param shortName: the shortName of the \ :java:ref:`MicoService`\
    :param version: the version of the \ :java:ref:`MicoService`\

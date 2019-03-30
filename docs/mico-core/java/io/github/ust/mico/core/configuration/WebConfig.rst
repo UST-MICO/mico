@@ -1,7 +1,5 @@
 .. java:import:: java.util List
 
-.. java:import:: lombok.extern.slf4j Slf4j
-
 .. java:import:: org.springframework.beans.factory.annotation Autowired
 
 .. java:import:: org.springframework.boot.web.servlet FilterRegistrationBean
@@ -20,13 +18,15 @@
 
 .. java:import:: org.springframework.web.servlet.config.annotation WebMvcConfigurerAdapter
 
+.. java:import:: lombok.extern.slf4j Slf4j
+
 WebConfig
 =========
 
 .. java:package:: io.github.ust.mico.core.configuration
    :noindex:
 
-.. java:type:: @Configuration @Slf4j public class WebConfig extends WebMvcConfigurerAdapter
+.. java:type:: @Configuration @Slf4j @SuppressWarnings public class WebConfig extends WebMvcConfigurerAdapter
 
 Fields
 ------

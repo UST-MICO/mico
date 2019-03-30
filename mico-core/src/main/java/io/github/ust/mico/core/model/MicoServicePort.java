@@ -31,6 +31,8 @@ import lombok.experimental.Accessors;
 
 /**
  * Represents a basic port with a port number and port type (protocol).
+ * <p>
+ * Instances of this class are persisted as nodes in the Neo4j database.
  */
 @Data
 @NoArgsConstructor
@@ -48,7 +50,7 @@ public class MicoServicePort {
 
     
     // ----------------------
-    // -> Required fields ---
+    // -> Required Fields ---
     // ----------------------
 
     /**

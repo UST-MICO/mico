@@ -22,19 +22,20 @@ package io.github.ust.mico.core.util;
 import java.io.IOException;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Custom deserializer for a response, which is received from Prometheus for CPU load / memory usage requests.
  */
+@Slf4j
 public class PrometheusValueDeserializer extends StdDeserializer<Integer> {
 
-	private static final long serialVersionUID = 8170187864990259257L;
+    private static final long serialVersionUID = 8170187864990259257L;
 
-	public PrometheusValueDeserializer() {
+    public PrometheusValueDeserializer() {
         this(null);
     }
 
@@ -43,11 +44,16 @@ public class PrometheusValueDeserializer extends StdDeserializer<Integer> {
     }
 
     @Override
-    public Integer deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
-        JsonNode dataJson = p.getCodec().readTree(p);
-        JsonNode resultJsonArray = dataJson.get("result");
-        JsonNode resultJsonArrayFirstElement = resultJsonArray.get(0);
-        JsonNode valueNode = resultJsonArrayFirstElement.get("value");
-        return valueNode.get(1).asInt();
+    public Integer deserialize(JsonParser parser, DeserializationContext context) {
+        try {
+            JsonNode dataJson = parser.getCodec().readTree(parser);
+            JsonNode resultJsonArray = dataJson.get("result");
+            JsonNode resultJsonArrayFirstElement = resultJsonArray.get(0);
+            JsonNode valueNode = resultJsonArrayFirstElement.get("value");
+            return valueNode.get(1).asInt();
+        } catch (IOException | NullPointerException e) {
+            log.error(e.getMessage(), e);
+            return 0;
+        }
     }
 }

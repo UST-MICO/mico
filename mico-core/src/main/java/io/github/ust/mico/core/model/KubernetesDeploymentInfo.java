@@ -37,6 +37,8 @@ import lombok.experimental.Accessors;
 /**
  * Information about the Kubernetes resources
  * that are created through an actual deployment of a {@link MicoService}.
+ * <p>
+ * Instances of this class are persisted as nodes in the Neo4j database.
  */
 @Data
 @NoArgsConstructor
@@ -54,7 +56,7 @@ public class KubernetesDeploymentInfo {
 
 
     // ----------------------
-    // -> Optional fields ---
+    // -> Optional Fields ---
     // ----------------------
 
     /**

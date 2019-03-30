@@ -36,6 +36,8 @@ import lombok.experimental.Accessors;
 
 /**
  * Represents a interface, e.g., REST API, of a {@link MicoService}.
+ * <p>
+ * Instances of this class are persisted as nodes in the Neo4j database.
  */
 @Data
 @NoArgsConstructor
@@ -53,7 +55,7 @@ public class MicoServiceInterface {
 
 
     // ----------------------
-    // -> Required fields ---
+    // -> Required Fields ---
     // ----------------------
 
     /**
@@ -71,7 +73,7 @@ public class MicoServiceInterface {
 
 
     // ----------------------
-    // -> Optional fields ---
+    // -> Optional Fields ---
     // ----------------------
 
     /**

@@ -1,28 +1,8 @@
-.. java:import:: io.github.ust.mico.core.exception ImageBuildException
-
-.. java:import:: io.github.ust.mico.core.exception KubernetesResourceException
-
-.. java:import:: io.github.ust.mico.core.exception NotInitializedException
-
-.. java:import:: io.github.ust.mico.core.persistence MicoApplicationRepository
-
-.. java:import:: io.github.ust.mico.core.persistence MicoServiceDeploymentInfoRepository
-
-.. java:import:: io.github.ust.mico.core.persistence MicoServiceRepository
-
-.. java:import:: io.github.ust.mico.core.service MicoCoreBackgroundTaskFactory
-
-.. java:import:: io.github.ust.mico.core.service MicoKubernetesClient
-
-.. java:import:: io.github.ust.mico.core.service.imagebuilder ImageBuilder
-
-.. java:import:: io.github.ust.mico.core.service.imagebuilder.buildtypes Build
-
-.. java:import:: lombok.extern.slf4j Slf4j
-
 .. java:import:: org.springframework.beans.factory.annotation Autowired
 
 .. java:import:: org.springframework.hateoas MediaTypes
+
+.. java:import:: org.springframework.hateoas Resource
 
 .. java:import:: org.springframework.http HttpStatus
 
@@ -38,15 +18,19 @@
 
 .. java:import:: org.springframework.web.server ResponseStatusException
 
-.. java:import:: java.util List
+.. java:import:: io.github.ust.mico.core.broker DeploymentBroker
 
-.. java:import:: java.util Optional
+.. java:import:: io.github.ust.mico.core.dto.response MicoApplicationJobStatusResponseDTO
 
-.. java:import:: java.util.concurrent CompletableFuture
+.. java:import:: io.github.ust.mico.core.exception DeploymentException
 
-.. java:import:: java.util.concurrent ExecutionException
+.. java:import:: io.github.ust.mico.core.exception MicoApplicationDoesNotIncludeMicoServiceException
 
-.. java:import:: java.util.concurrent TimeoutException
+.. java:import:: io.github.ust.mico.core.exception MicoApplicationNotFoundException
+
+.. java:import:: io.github.ust.mico.core.exception MicoServiceInterfaceNotFoundException
+
+.. java:import:: io.github.ust.mico.core.model MicoApplicationJobStatus
 
 DeploymentResource
 ==================
@@ -54,13 +38,19 @@ DeploymentResource
 .. java:package:: io.github.ust.mico.core.resource
    :noindex:
 
-.. java:type:: @Slf4j @RestController @RequestMapping public class DeploymentResource
+.. java:type:: @RestController @RequestMapping public class DeploymentResource
 
 Methods
 -------
 deploy
 ^^^^^^
 
-.. java:method:: @PostMapping public ResponseEntity<Void> deploy(String shortName, String version)
+.. java:method:: @PostMapping public ResponseEntity<Resource<MicoApplicationJobStatusResponseDTO>> deploy(String shortName, String version)
+   :outertype: DeploymentResource
+
+undeploy
+^^^^^^^^
+
+.. java:method:: @PostMapping public ResponseEntity<Void> undeploy(String shortName, String version)
    :outertype: DeploymentResource
 

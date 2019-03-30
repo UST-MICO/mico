@@ -36,6 +36,8 @@ import lombok.experimental.Accessors;
 
 /**
  * Represents a service in the context of MICO.
+ * <p>
+ * Instances of this class are persisted as nodes in the Neo4j database.
  */
 @Data
 @NoArgsConstructor
@@ -55,7 +57,7 @@ public class MicoService {
 
 
     // ----------------------
-    // -> Required fields ---
+    // -> Required Fields ---
     // ----------------------
 
     /**
@@ -93,7 +95,7 @@ public class MicoService {
 
 
     // ----------------------
-    // -> Optional fields ---
+    // -> Optional Fields ---
     // ----------------------
 
     /**

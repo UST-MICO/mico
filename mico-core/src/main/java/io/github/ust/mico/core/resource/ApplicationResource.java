@@ -19,20 +19,16 @@
 
 package io.github.ust.mico.core.resource;
 
-import io.github.ust.mico.core.broker.MicoApplicationBroker;
-import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
-import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
-import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
-import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO.MicoApplicationDeploymentStatus;
-import io.github.ust.mico.core.dto.response.MicoApplicationWithServicesResponseDTO;
-import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO;
-import io.github.ust.mico.core.dto.response.MicoServiceResponseDTO;
-import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
-import io.github.ust.mico.core.exception.*;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
-import io.swagger.annotations.ApiOperation;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.validation.Valid;
+
+import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
@@ -42,21 +38,30 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.validation.Valid;
-import java.util.List;
-import java.util.stream.Collectors;
+import io.github.ust.mico.core.broker.MicoApplicationBroker;
+import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
+import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
+import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
+import io.github.ust.mico.core.dto.response.MicoApplicationWithServicesResponseDTO;
+import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO;
+import io.github.ust.mico.core.dto.response.MicoServiceResponseDTO;
+import io.github.ust.mico.core.dto.response.status.MicoApplicationDeploymentStatusResponseDTO;
+import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
+import io.github.ust.mico.core.exception.*;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.swagger.annotations.ApiOperation;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
-
+@Slf4j
 @RestController
-@RequestMapping(value = "/" + ApplicationResource.PATH_APPLICATIONS, produces = MediaTypes.HAL_JSON_VALUE)
+@RequestMapping(value = "/applications", produces = MediaTypes.HAL_JSON_VALUE)
 public class ApplicationResource {
 
-    static final String PATH_APPLICATIONS = "applications";
     private static final String PATH_SERVICES = "services";
     private static final String PATH_DEPLOYMENT_INFORMATION = "deploymentInformation";
     private static final String PATH_PROMOTE = "promote";
+    private static final String PATH_DEPLOYMENT_STATUS = "deploymentStatus";
     private static final String PATH_STATUS = "status";
 
     private static final String PATH_VARIABLE_SHORT_NAME = "micoApplicationShortName";
@@ -78,12 +83,7 @@ public class ApplicationResource {
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
     public ResponseEntity<Resources<Resource<MicoApplicationWithServicesResponseDTO>>> getApplicationsByShortName(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
-        List<MicoApplication> applications;
-        try {
-            applications = broker.getMicoApplicationsByShortName(shortName);
-        } catch (MicoApplicationNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        }
+        List<MicoApplication> applications = broker.getMicoApplicationsByShortName(shortName);
 
         return ResponseEntity.ok(
                 new Resources<>(getApplicationWithServicesResponseDTOResourceList(applications),
@@ -114,7 +114,6 @@ public class ApplicationResource {
         }
 
         MicoApplicationWithServicesResponseDTO dto = new MicoApplicationWithServicesResponseDTO(application);
-        dto.setDeploymentStatus(MicoApplicationDeploymentStatus.NOT_DEPLOYED); //TODO: necessary?
 
         return ResponseEntity
                 .created(linkTo(methodOn(ApplicationResource.class)
@@ -131,7 +130,7 @@ public class ApplicationResource {
             application = broker.updateMicoApplication(shortName, version, MicoApplication.valueOf(applicationRequestDto));
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        } catch (ShortNameOfMicoApplicationDoesNotMatchException | VersionOfMicoApplicationDoesNotMatchException e) {
+        } catch (ShortNameOfMicoApplicationDoesNotMatchException | VersionOfMicoApplicationDoesNotMatchException | MicoApplicationIsNotUndeployedException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
 
@@ -162,7 +161,7 @@ public class ApplicationResource {
             broker.deleteMicoApplicationByShortNameAndVersion(shortName, version);
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        } catch (MicoApplicationIsDeployedException e) {
+        } catch (MicoApplicationIsNotUndeployedException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
 
@@ -173,9 +172,7 @@ public class ApplicationResource {
     public ResponseEntity<Void> deleteAllVersionsOfAnApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
         try {
             broker.deleteMicoApplicationsByShortName(shortName);
-        } catch (MicoApplicationNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        } catch (MicoApplicationIsDeployedException e) {
+        } catch (MicoApplicationIsNotUndeployedException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
 
@@ -209,7 +206,7 @@ public class ApplicationResource {
             broker.addMicoServiceToMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion, serviceShortName, serviceVersion);
         } catch (MicoApplicationNotFoundException | MicoServiceNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        } catch (MicoServiceAlreadyAddedToMicoApplicationException | MicoServiceAddedMoreThanOnceToMicoApplicationException e) {
+        } catch (MicoServiceAlreadyAddedToMicoApplicationException | MicoServiceAddedMoreThanOnceToMicoApplicationException | MicoApplicationIsNotUndeployedException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
 
@@ -224,7 +221,7 @@ public class ApplicationResource {
             broker.removeMicoServiceFromMicoApplicationByShortNameAndVersion(shortName, version, serviceShortName);
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        } catch (MicoApplicationDoesNotIncludeMicoServiceException e) {
+        } catch (MicoApplicationDoesNotIncludeMicoServiceException | MicoApplicationIsNotUndeployedException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
 
@@ -255,19 +252,35 @@ public class ApplicationResource {
     public ResponseEntity<Resource<MicoServiceDeploymentInfoResponseDTO>> updateServiceDeploymentInformation(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                                              @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                                                              @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName,
-                                                                                                             @Valid @RequestBody MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) {
-        MicoServiceDeploymentInfo micoServiceDeploymentInfo;
+                                                                                                             @Valid @RequestBody MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoRequestDto) {
+        MicoServiceDeploymentInfo updatedServiceDeploymentInfo;
         try {
-            micoServiceDeploymentInfo = broker.updateMicoServiceDeploymentInformation(shortName, version, serviceShortName, serviceDeploymentInfoDTO);
-        } catch (MicoApplicationNotFoundException | MicoServiceDeploymentInformationNotFoundException e) {
+            updatedServiceDeploymentInfo = broker.updateMicoServiceDeploymentInformation(
+                shortName, version, serviceShortName, serviceDeploymentInfoRequestDto);
+        } catch (MicoApplicationNotFoundException | MicoServiceDeploymentInformationNotFoundException
+            | KubernetesResourceException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoApplicationDoesNotIncludeMicoServiceException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
 
-        return ResponseEntity.ok(new Resource<>(new MicoServiceDeploymentInfoResponseDTO(micoServiceDeploymentInfo),
-                linkTo(methodOn(ApplicationResource.class).getServiceDeploymentInformation(shortName, version, serviceShortName))
-                        .withSelfRel()));
+        // Convert to service deployment info DTO and return it
+        MicoServiceDeploymentInfoResponseDTO updatedServiceDeploymentInfoDto = new MicoServiceDeploymentInfoResponseDTO(updatedServiceDeploymentInfo);
+        return ResponseEntity.ok(new Resource<>(updatedServiceDeploymentInfoDto,
+            linkTo(methodOn(ApplicationResource.class).getServiceDeploymentInformation(shortName, version, serviceShortName))
+                .withSelfRel()));
+    }
+    
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPLOYMENT_STATUS)
+    public ResponseEntity<Resource<MicoApplicationDeploymentStatusResponseDTO>> getApplicationDeploymentStatus(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                                     				@PathVariable(PATH_VARIABLE_VERSION) String version) {
+        MicoApplicationDeploymentStatus applicationDeploymentStatus;
+        try {
+            applicationDeploymentStatus = broker.getApplicationDeploymentStatus(shortName, version);
+        } catch (MicoApplicationNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+        return ResponseEntity.ok(new Resource<>(new MicoApplicationDeploymentStatusResponseDTO(applicationDeploymentStatus)));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_STATUS)
@@ -275,20 +288,29 @@ public class ApplicationResource {
                                                                                              @PathVariable(PATH_VARIABLE_VERSION) String version) {
         MicoApplicationStatusResponseDTO applicationStatus;
         try {
-            applicationStatus = broker.getMicoApplicationStatusOfMicoApplicationByShortNameAndVersion(shortName, version);
+            applicationStatus = broker.getApplicationStatus(shortName, version);
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (MicoApplicationIsUndeployedException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
         return ResponseEntity.ok(new Resource<>(applicationStatus));
     }
 
     private List<Resource<MicoApplicationWithServicesResponseDTO>> getApplicationWithServicesResponseDTOResourceList(List<MicoApplication> applications) {
-        return applications.stream().map(application -> getApplicationWithServicesResponseDTOResourceWithDeploymentStatus(application)).collect(Collectors.toList());
+        return applications.stream().map(this::getApplicationWithServicesResponseDTOResourceWithDeploymentStatus).collect(Collectors.toList());
     }
 
     private Resource<MicoApplicationWithServicesResponseDTO> getApplicationWithServicesResponseDTOResourceWithDeploymentStatus(MicoApplication application) {
         MicoApplicationWithServicesResponseDTO dto = new MicoApplicationWithServicesResponseDTO(application);
-        dto.setDeploymentStatus(broker.getMicoApplicationDeploymentStatusOfMicoApplication(application));
+        try {
+            dto.setDeploymentStatus(new MicoApplicationDeploymentStatusResponseDTO(
+                broker.getApplicationDeploymentStatus(application.getShortName(), application.getVersion())));
+        } catch (MicoApplicationNotFoundException e) {
+            // Application was already checked -> it's safe to not throw an exception.
+            // Don't throw an exception because it would make the code way more complex.
+            log.error(e.getMessage());
+        }
         return new Resource<>(dto, broker.getLinksOfMicoApplication(application));
     }
 }

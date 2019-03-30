@@ -19,15 +19,16 @@
 
 package io.github.ust.mico.core;
 
+import java.io.IOException;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ust.mico.core.dto.response.internal.PrometheusResponseDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.io.IOException;
-
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @Slf4j
 @ActiveProfiles("local")
@@ -36,46 +37,63 @@ public class PrometheusValueDeserializerTest {
     @Test
     public void testDeserialize() {
         String testJsonForMemoryUsageRequest = "{\n" +
-                "    \"status\": \"success\",\n" +
-                "    \"data\": {\n" +
-                "        \"resultType\": \"vector\",\n" +
-                "        \"result\": [\n" +
-                "            {\n" +
-                "                \"metric\": {},\n" +
-                "                \"value\": [\n" +
-                "                    1552041266.607,\n" +
-                "                    \"310083584\"\n" +
-                "                ]\n" +
-                "            }\n" +
-                "        ]\n" +
-                "    }\n" +
-                "}";
+            "    \"status\": \"success\",\n" +
+            "    \"data\": {\n" +
+            "        \"resultType\": \"vector\",\n" +
+            "        \"result\": [\n" +
+            "            {\n" +
+            "                \"metric\": {},\n" +
+            "                \"value\": [\n" +
+            "                    1552041266.607,\n" +
+            "                    \"310083584\"\n" +
+            "                ]\n" +
+            "            }\n" +
+            "        ]\n" +
+            "    }\n" +
+            "}";
 
         String testJsonForCpuLoadRequest = "{\n" +
-                "    \"status\": \"success\",\n" +
-                "    \"data\": {\n" +
-                "        \"resultType\": \"vector\",\n" +
-                "        \"result\": [\n" +
-                "            {\n" +
-                "                \"metric\": {},\n" +
-                "                \"value\": [\n" +
-                "                    1552042589.238,\n" +
-                "                    \"0\"\n" +
-                "                ]\n" +
-                "            }\n" +
-                "        ]\n" +
-                "    }\n" +
-                "}";
+            "    \"status\": \"success\",\n" +
+            "    \"data\": {\n" +
+            "        \"resultType\": \"vector\",\n" +
+            "        \"result\": [\n" +
+            "            {\n" +
+            "                \"metric\": {},\n" +
+            "                \"value\": [\n" +
+            "                    1552042589.238,\n" +
+            "                    \"0\"\n" +
+            "                ]\n" +
+            "            }\n" +
+            "        ]\n" +
+            "    }\n" +
+            "}";
 
+        String testJsonForRequestWithNoValue = "{\n" +
+            "    \"status\": \"success\",\n" +
+            "    \"data\": {\n" +
+            "        \"resultType\": \"vector\",\n" +
+            "        \"result\": [\n" +
+            "            {\n" +
+            "                \"metric\": {},\n" +
+            "                \"value\": [\n" +
+            "                ]\n" +
+            "            }\n" +
+            "        ]\n" +
+            "    }\n" +
+            "}";
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             PrometheusResponseDTO responseCpuLoad = objectMapper.readValue(testJsonForCpuLoadRequest, PrometheusResponseDTO.class);
-            assertEquals(true, responseCpuLoad.isSuccess());
+            assertTrue(responseCpuLoad.isSuccess());
             assertEquals(0, responseCpuLoad.getValue());
 
             PrometheusResponseDTO responseMemoryUsage = objectMapper.readValue(testJsonForMemoryUsageRequest, PrometheusResponseDTO.class);
-            assertEquals(true, responseMemoryUsage.isSuccess());
+            assertTrue(responseMemoryUsage.isSuccess());
             assertEquals(310083584, responseMemoryUsage.getValue());
+
+            PrometheusResponseDTO responseDtoWithoutValue = objectMapper.readValue(testJsonForRequestWithNoValue, PrometheusResponseDTO.class);
+            assertTrue(responseDtoWithoutValue.isSuccess());
+            assertEquals(0, responseDtoWithoutValue.getValue());
         } catch (IOException e) {
             log.error(e.getMessage(), e);
         }

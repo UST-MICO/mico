@@ -2,6 +2,16 @@
 
 .. java:import:: com.fasterxml.jackson.annotation JsonInclude
 
+.. java:import:: lombok AllArgsConstructor
+
+.. java:import:: lombok Data
+
+.. java:import:: lombok NoArgsConstructor
+
+.. java:import:: lombok.experimental Accessors
+
+.. java:import:: java.util ArrayList
+
 .. java:import:: java.util List
 
 BuildStatus
@@ -10,7 +20,7 @@ BuildStatus
 .. java:package:: io.github.ust.mico.core.service.imagebuilder.buildtypes
    :noindex:
 
-.. java:type:: @JsonInclude @JsonIgnoreProperties @Getter @Builder @NoArgsConstructor @AllArgsConstructor @ToString @EqualsAndHashCode public class BuildStatus
+.. java:type:: @JsonInclude @JsonIgnoreProperties @Data @NoArgsConstructor @AllArgsConstructor @Accessors public class BuildStatus
 
    BuildStatus is the status for a Build resource
 
