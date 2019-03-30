@@ -27,6 +27,8 @@ import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
+import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
@@ -51,6 +53,7 @@ import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.swagger.annotations.ApiOperation;
 
+@Slf4j
 @RestController
 @RequestMapping(value = "/applications", produces = MediaTypes.HAL_JSON_VALUE)
 public class ApplicationResource {
@@ -271,8 +274,13 @@ public class ApplicationResource {
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPLOYMENT_STATUS)
     public ResponseEntity<Resource<MicoApplicationDeploymentStatusResponseDTO>> getApplicationDeploymentStatus(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                      				@PathVariable(PATH_VARIABLE_VERSION) String version) {
-		return ResponseEntity.ok(new Resource<>(new MicoApplicationDeploymentStatusResponseDTO(
-		    broker.getApplicationDeploymentStatus(shortName, version))));
+        MicoApplicationDeploymentStatus applicationDeploymentStatus;
+        try {
+            applicationDeploymentStatus = broker.getApplicationDeploymentStatus(shortName, version);
+        } catch (MicoApplicationNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+        return ResponseEntity.ok(new Resource<>(new MicoApplicationDeploymentStatusResponseDTO(applicationDeploymentStatus)));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_STATUS)
@@ -295,8 +303,14 @@ public class ApplicationResource {
 
     private Resource<MicoApplicationWithServicesResponseDTO> getApplicationWithServicesResponseDTOResourceWithDeploymentStatus(MicoApplication application) {
         MicoApplicationWithServicesResponseDTO dto = new MicoApplicationWithServicesResponseDTO(application);
-		dto.setDeploymentStatus(new MicoApplicationDeploymentStatusResponseDTO(
-		    broker.getApplicationDeploymentStatus(application.getShortName(), application.getVersion())));
+        try {
+            dto.setDeploymentStatus(new MicoApplicationDeploymentStatusResponseDTO(
+                broker.getApplicationDeploymentStatus(application.getShortName(), application.getVersion())));
+        } catch (MicoApplicationNotFoundException e) {
+            // Application was already checked -> it's safe to not throw an exception.
+            // Don't throw an exception because it would make the code way more complex.
+            log.error(e.getMessage());
+        }
         return new Resource<>(dto, broker.getLinksOfMicoApplication(application));
     }
 }

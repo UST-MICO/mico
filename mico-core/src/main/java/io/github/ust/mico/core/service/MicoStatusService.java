@@ -20,31 +20,25 @@
 package io.github.ust.mico.core.service;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import javax.validation.constraints.NotNull;
 
-import io.fabric8.kubernetes.api.model.ContainerStatus;
-import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
-import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.github.ust.mico.core.configuration.PrometheusConfig;
 import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
 import io.github.ust.mico.core.dto.response.internal.PrometheusResponseDTO;
-import io.github.ust.mico.core.dto.response.status.KubernetesNodeMetricsResponseDTO;
-import io.github.ust.mico.core.dto.response.status.KubernetesPodInformationResponseDTO;
-import io.github.ust.mico.core.dto.response.status.KubernetesPodMetricsResponseDTO;
-import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
-import io.github.ust.mico.core.dto.response.status.MicoMessageResponseDTO;
-import io.github.ust.mico.core.dto.response.status.MicoServiceInterfaceStatusResponseDTO;
-import io.github.ust.mico.core.dto.response.status.MicoServiceStatusResponseDTO;
-import io.github.ust.mico.core.exception.KubernetesResourceException;
+import io.github.ust.mico.core.dto.response.status.*;
 import io.github.ust.mico.core.exception.PrometheusRequestFailedException;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoMessage;
@@ -55,14 +49,6 @@ import io.github.ust.mico.core.persistence.MicoServiceInterfaceRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.util.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * Provides functionality to retrieve status information for a {@link MicoApplication} or a particular {@link

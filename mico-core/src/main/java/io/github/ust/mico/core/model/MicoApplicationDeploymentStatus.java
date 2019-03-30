@@ -280,9 +280,8 @@ public class MicoApplicationDeploymentStatus {
 		return new MicoApplicationDeploymentStatus(Value.UNKNOWN).setMessages(
 			CollectionUtils.listOf(new MicoMessage(message, messageType)));
 	}
-	
 
-	/**
+    /**
 	 * Enumeration for the different values of a
 	 * {@link MicoApplicationDeploymentStatus}.
 	 */
