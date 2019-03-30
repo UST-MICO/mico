@@ -88,13 +88,19 @@ public class MicoRepositoryTestUtils {
 	public static final MicoServiceDeploymentInfo matchMicoServiceDeploymentInfoByService(List<MicoServiceDeploymentInfo> deploymentInfos, MicoService micoService) {
 	    return deploymentInfos
             .stream()
-            .filter(d -> d.getService().getShortName().equals(micoService.getShortName())
-                && d.getService().getVersion().equals(micoService.getVersion()))
+            .filter(sdi -> sdi.getService().getShortName().equals(micoService.getShortName())
+                && sdi.getService().getVersion().equals(micoService.getVersion()))
             .collect(Collectors.toList())
             .get(0);
     }
-	
-	// ===============================================================================
+
+	public static final MicoServiceInterface matchMicoServiceInterface(List<MicoServiceInterface> serviceInterfaces, String serviceInterfaceName) {
+	    return serviceInterfaces
+            .stream()
+            .filter(serviceInterface -> serviceInterface.getServiceInterfaceName().equals(serviceInterfaceName))
+            .collect(Collectors.toList())
+            .get(0);
+    }
 	
 	public static final MicoApplication getMicoApplication(int numberOfMicoServices) {
 		MicoApplication micoApplication = getPureMicoApplication(0);
@@ -127,8 +133,6 @@ public class MicoRepositoryTestUtils {
 		return micoApplication;
 	}
 	
-	// ===============================================================================
-	
 	public static final MicoApplication getPureMicoApplication(int number) {
 		return new MicoApplication()
 			.setShortName(getMicoApplicationShortName(number))
@@ -153,8 +157,6 @@ public class MicoRepositoryTestUtils {
 			.setEnvironmentVariables(CollectionUtils.listOf(getMicoServiceDeploymentInfoEnvironmentVariable(number)))
 			.setInterfaceConnections(CollectionUtils.listOf(getMicoServiceDeploymentInfoInterfaceConection(number)));
 	}
-	
-	// ===============================================================================
 	
 	public static final MicoService getMicoService(int number) {
 		return getPureMicoService(number)

@@ -20,20 +20,14 @@
 package io.github.ust.mico.core;
 
 import static io.github.ust.mico.core.util.MicoRepositoryTestUtils.*;
-import static io.github.ust.mico.core.util.MicoRepositoryTestUtils.addMicoServicesWithDefaultServiceDeploymentInfo;
 import static org.junit.Assert.*;
 
 import java.util.List;
 import java.util.Optional;
 
-import io.github.ust.mico.core.model.MicoApplication;
-import org.junit.After;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Test;
-import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -41,10 +35,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.model.MicoServicePort;
-import io.github.ust.mico.core.persistence.*;
-import io.github.ust.mico.core.util.CollectionUtils;
-import io.github.ust.mico.core.util.EmbeddedRedisServer;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -59,92 +49,69 @@ public class MicoServiceInterfaceRepositoryTests extends MicoRepositoryTests {
     @Commit
     @Test
     public void findInterfaceByService() {
-        // Setup some applications
-        MicoApplication a0 = getPureMicoApplication(0);
-        MicoApplication a1 = getPureMicoApplication(1);
-
         // Setup some services
         MicoService s0 = getMicoService(0);
         MicoService s1 = getMicoService(1);
 
-        // Application #0 only includes the service #0
-        // Application #1 only includes the service #0 and #1
-        addMicoServicesWithServiceDeploymentInfo(a0, s0);
-        addMicoServicesWithServiceDeploymentInfo(a1, s0, s1);
-
         // Save
-        applicationRepository.save(a0);
-        applicationRepository.save(a1);
+        serviceRepository.save(s0);
+        serviceRepository.save(s1);
 
-        // Get all service interfaces that include service #0
-        List<MicoServiceInterface> interfacesUsingS0 = serviceInterfaceRepository.findByService(s0.getShortName(), s0.getVersion());
-        assertEquals(2, interfacesUsingS0.size());
         // Check if the services interfaces are the correct ones
-        assertTrue(s0.getServiceInterfaces().containsAll(interfacesUsingS0) && interfacesUsingS0.containsAll(s0.getServiceInterfaces()));
+        List<MicoServiceInterface> interfacesProvidedByS0 = serviceInterfaceRepository.findByService(s0.getShortName(), s0.getVersion());
+        assertEquals(s0.getServiceInterfaces().size(), interfacesProvidedByS0.size());
+        s0.getServiceInterfaces().forEach(serviceInterface -> assertEquals(serviceInterface, matchMicoServiceInterface(interfacesProvidedByS0, serviceInterface.getServiceInterfaceName())));
     }
 
     @Commit
     @Test
     public void findInterfaceByServiceAndName() {
-        // Setup some applications
-        MicoApplication a0 = getPureMicoApplication(0);
-        MicoApplication a1 = getPureMicoApplication(1);
-
-        // Setup some services
+    	// Setup some services
         MicoService s0 = getMicoService(0);
         MicoService s1 = getMicoService(1);
 
-        // Application #0 only includes the service #0
-        // Application #1 only includes the service #0 and #1
-        addMicoServicesWithServiceDeploymentInfo(a0, s0);
-        addMicoServicesWithServiceDeploymentInfo(a1, s0, s1);
-
         // Save
-        applicationRepository.save(a0);
-        applicationRepository.save(a1);
+        serviceRepository.save(s0);
+        serviceRepository.save(s1);
 
-        // Get service interface by name and used by service #0
-        Optional<MicoServiceInterface> interfaceUsingS0 = serviceInterfaceRepository.findByServiceAndName(
-            s0.getShortName(), s0.getVersion(), s0.getServiceInterfaces().get(0).getServiceInterfaceName());
-        assertTrue(interfaceUsingS0.isPresent());
-        // Check if both service interfaces are the same
-        assertEquals(s0.getServiceInterfaces().get(0), interfaceUsingS0.get());
+        // Check if the services interfaces are the correct ones
+        List<MicoServiceInterface> interfacesProvidedByS0 = serviceInterfaceRepository.findByService(s0.getShortName(), s0.getVersion());
+        assertEquals(s0.getServiceInterfaces().size(), interfacesProvidedByS0.size());
+        s0.getServiceInterfaces().forEach(serviceInterface -> assertEquals(serviceInterface, matchMicoServiceInterface(interfacesProvidedByS0, serviceInterface.getServiceInterfaceName())));
+
+        // Check a service interface of service #1
+        Optional<MicoServiceInterface> firstIntefaceOfS1Optional = serviceInterfaceRepository.findByServiceAndName(s1.getShortName(), s1.getVersion(), s1.getServiceInterfaces().get(0).getServiceInterfaceName());
+        assertTrue(firstIntefaceOfS1Optional.isPresent());
+        assertEquals(s1.getServiceInterfaces().get(0), firstIntefaceOfS1Optional.get());
     }
 
     @Commit
     @Test
     public void deleteInterfaceByServiceAndName() {
-        // Setup some applications
-        MicoApplication a0 = getPureMicoApplication(0);
-        MicoApplication a1 = getPureMicoApplication(1);
-
-        // Setup some services
+    	// Setup some services
         MicoService s0 = getMicoService(0);
         MicoService s1 = getMicoService(1);
 
-        // Application #0 only includes the service #0
-        // Application #1 only includes the service #0 and #1
-        addMicoServicesWithServiceDeploymentInfo(a0, s0);
-        addMicoServicesWithDefaultServiceDeploymentInfo(a1, s0, s1);
-
         // Save
-        applicationRepository.save(a0);
-        applicationRepository.save(a1);
+        serviceRepository.save(s0);
+        serviceRepository.save(s1);
 
         // Number of total mico service interfaces should be 4
-        assertEquals(4, serviceInterfaceRepository.count());
+        int expectedTotalNumberOfServiceInterfaces = s0.getServiceInterfaces().size() + s1.getServiceInterfaces().size();
+        assertEquals(expectedTotalNumberOfServiceInterfaces, serviceInterfaceRepository.count());
 
-        // Delete service interface of service #0
+        // Delete first service interface of service #0
         serviceInterfaceRepository.deleteByServiceAndName(s0.getShortName(), s0.getVersion(), s0.getServiceInterfaces().get(0).getServiceInterfaceName());
-        assertEquals(3, serviceInterfaceRepository.count());
-        // Verify that service interface of service #0 is deleted
-        Optional<MicoServiceInterface> interfaceUsingS0 = serviceInterfaceRepository.findByServiceAndName(
-            s0.getShortName(), s0.getVersion(), s0.getServiceInterfaces().get(0).getServiceInterfaceName());
-        assertFalse(interfaceUsingS0.isPresent());
-        // Verify that service interface of service #1 is still available
-        interfaceUsingS0 = serviceInterfaceRepository.findByServiceAndName(
-            s0.getShortName(), s0.getVersion(), s0.getServiceInterfaces().get(1).getServiceInterfaceName());
-        assertTrue(interfaceUsingS0.isPresent());
+        expectedTotalNumberOfServiceInterfaces--;
+        assertEquals(expectedTotalNumberOfServiceInterfaces, serviceInterfaceRepository.count());
+        // Check that service interface of service #0 has been deleted
+        Optional<MicoServiceInterface> firstInterfaceOfS0Optional = serviceInterfaceRepository.findByServiceAndName(s0.getShortName(), s0.getVersion(), s0.getServiceInterfaces().get(0).getServiceInterfaceName());
+        assertFalse(firstInterfaceOfS0Optional.isPresent());
+        // Check that remaining service interfaces are still there
+        Optional<MicoServiceInterface> otherInterfaceOfS0Optional = serviceInterfaceRepository.findByServiceAndName(s0.getShortName(), s0.getVersion(), s0.getServiceInterfaces().get(1).getServiceInterfaceName());
+        assertTrue(otherInterfaceOfS0Optional.isPresent());
+        assertEquals(s0.getServiceInterfaces().get(1), otherInterfaceOfS0Optional.get());
+        assertEquals(s1.getServiceInterfaces().size(), serviceInterfaceRepository.findByService(s1.getShortName(), s1.getVersion()).size());
     }
 
 }

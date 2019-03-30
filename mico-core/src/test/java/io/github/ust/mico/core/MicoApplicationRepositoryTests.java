@@ -58,8 +58,8 @@ public class MicoApplicationRepositoryTests extends MicoRepositoryTests {
     	MicoService s0 = getMicoService(0);
     	MicoService s1 = getMicoService(1);
     	
-    	// Application #0 only includes the service #0
-    	// Application #1 only includes the service #1
+    	// Application #0 only includes service #0
+    	// Application #1 only includes service #1
     	// Application #2 includes services #0 and #1
     	// Application #3 includes no service
     	addMicoServicesWithServiceDeploymentInfo(a0, s0);

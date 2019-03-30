@@ -20,25 +20,19 @@
 package io.github.ust.mico.core;
 
 import static io.github.ust.mico.core.util.MicoRepositoryTestUtils.*;
-import static io.github.ust.mico.core.util.MicoRepositoryTestUtils.getMicoServiceDeploymentInfoEnvironmentVariable;
 import static org.junit.Assert.assertEquals;
 
-import org.junit.After;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Test;
-import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-import io.github.ust.mico.core.model.*;
-import io.github.ust.mico.core.persistence.*;
-import io.github.ust.mico.core.util.CollectionUtils;
-import io.github.ust.mico.core.util.EmbeddedRedisServer;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoInterfaceConnection;
+import io.github.ust.mico.core.model.MicoService;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
