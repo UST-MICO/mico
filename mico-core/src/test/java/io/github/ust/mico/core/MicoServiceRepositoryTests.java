@@ -21,7 +21,6 @@ package io.github.ust.mico.core;
 
 import static io.github.ust.mico.core.util.MicoRepositoryTestUtils.*;
 import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,7 +33,8 @@ import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.util.CollectionUtils;
 
 @RunWith(SpringRunner.class)
@@ -114,7 +114,7 @@ public class MicoServiceRepositoryTests extends MicoRepositoryTests {
     	serviceRepository.save(s0);
     	
     	// Application #0 includes no service
-    	Optional<MicoService> a0s0Optional = serviceRepository.findAllByApplicationAndServiceShortName(a0.getShortName(), anyString(), anyString());
+    	Optional<MicoService> a0s0Optional = serviceRepository.findAllByApplicationAndServiceShortName(a0.getShortName(), s0.getShortName(), s0.getVersion());
     	assertFalse(a0s0Optional.isPresent());
     	// Application #1 only includes service #1
     	Optional<MicoService> a1s1Optional = serviceRepository.findAllByApplicationAndServiceShortName(a1.getShortName(), a1.getVersion(), s1.getShortName());
