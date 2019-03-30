@@ -291,8 +291,6 @@ public class ApplicationResource {
             applicationStatus = broker.getApplicationStatus(shortName, version);
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        } catch (MicoApplicationIsUndeployedException e) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
         return ResponseEntity.ok(new Resource<>(applicationStatus));
     }
