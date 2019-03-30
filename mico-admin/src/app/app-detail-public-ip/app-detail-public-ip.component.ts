@@ -21,6 +21,7 @@ import { Component, Input, OnChanges, OnInit, OnDestroy, ChangeDetectionStrategy
 import { ApiService } from '../api/api.service';
 import { Subscription } from 'rxjs';
 import { safeUnsubscribeList, safeUnsubscribe } from '../util/utils';
+import { take } from 'rxjs/operators';
 
 @Component({
     selector: 'mico-app-detail-public-ip',
@@ -33,6 +34,7 @@ export class AppDetailPublicIpComponent implements OnInit, OnChanges, OnDestroy 
     private subApplication: Subscription;
     private subPublicIps: Subscription[];
     private subServiceInterfaces: Subscription[];
+    private subPolling: Subscription[];
 
     @Input() applicationShortName;
     @Input() applicationVersion;
@@ -47,12 +49,14 @@ export class AppDetailPublicIpComponent implements OnInit, OnChanges, OnDestroy 
     ngOnInit() {
         this.subPublicIps = [];
         this.subServiceInterfaces = [];
+        this.subPolling = [];
     }
 
     ngOnDestroy() {
         safeUnsubscribe(this.subApplication);
         safeUnsubscribeList(this.subPublicIps);
         safeUnsubscribeList(this.subServiceInterfaces);
+        safeUnsubscribeList(this.subPolling);
     }
 
 
@@ -68,30 +72,49 @@ export class AppDetailPublicIpComponent implements OnInit, OnChanges, OnDestroy 
 
             safeUnsubscribeList(this.subPublicIps);
             safeUnsubscribeList(this.subServiceInterfaces);
+            safeUnsubscribeList(this.subPolling);
 
             // get the public ips
             safeUnsubscribe(this.subApplication);
             this.subApplication = this.apiService.getApplication(this.applicationShortName, this.applicationVersion)
+                .pipe(take(1))
                 .subscribe(application => {
+
+                    safeUnsubscribeList(this.subServiceInterfaces);
+                    this.subServiceInterfaces = [];
+                    safeUnsubscribeList(this.subPublicIps);
+                    this.subPublicIps = [];
+                    safeUnsubscribeList(this.subPolling);
+                    this.subPolling = [];
 
                     application.services.forEach(service => {
 
-                        safeUnsubscribeList(this.subServiceInterfaces);
                         // assumption: one public ip per interface
                         this.subServiceInterfaces.push(this.apiService.getServiceInterfaces(service.shortName, service.version)
+                            .pipe(take(1))
                             .subscribe(serviceInterfaces => {
-
-                                safeUnsubscribeList(this.subPublicIps);
 
                                 serviceInterfaces.forEach(micoInterface => {
                                     this.subPublicIps.push(this.apiService
                                         .getServiceInterfacePublicIp(service.shortName, service.version, micoInterface.serviceInterfaceName)
                                         .subscribe(publicIpDTO => {
 
-                                            this.publicIps.set(service.shortName + '#' + publicIpDTO.name, publicIpDTO);
-                                            this.changeDedection.markForCheck();
+                                            if (publicIpDTO.externalIpIsAvailable) {
+                                                // public ip is already present
+
+                                                this.publicIps.set(service.shortName + '#' + publicIpDTO.name, publicIpDTO);
+                                                this.changeDedection.markForCheck();
+
+                                                // end polling;
+                                                safeUnsubscribe(tempSubPolling);
+                                            }
 
                                         }));
+
+                                    // start polling
+                                    const tempSubPolling = this.apiService.pollServiceInterfacePublicIp(service.shortName,
+                                        service.version, micoInterface.serviceInterfaceName);
+                                    this.subPolling.push(tempSubPolling);
                                 });
                             }));
 

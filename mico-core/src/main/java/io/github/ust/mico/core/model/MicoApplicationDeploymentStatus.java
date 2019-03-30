@@ -24,8 +24,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.neo4j.ogm.annotation.NodeEntity;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.github.ust.mico.core.model.MicoMessage.Type;
@@ -38,12 +36,14 @@ import lombok.experimental.Accessors;
 /**
  * Wraps the deployment status of a {@link MicoApplication}
  * and some messages (optional) with more detailed information.
+ * <p>
+ * Note that this class is only used for business logic purposes
+ * and instances are not persisted.
  */
 @Data
 @RequiredArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@NodeEntity
 public class MicoApplicationDeploymentStatus {
 
     // ----------------------
@@ -74,7 +74,7 @@ public class MicoApplicationDeploymentStatus {
 	/**
 	 * Creates a new {@code MicoApplicationDeploymentStatus} instance
 	 * with the value {@link Value#DEPLOYED} as well as a {@code MicoMessage}
-	 * with the given message content and type {@link Type#INFO}.
+	 * with the given message content and type {@link Type#INFO Info}.
 	 * 
 	 * @param messages one or messages.
 	 * @return a {@link MicoApplicationDeploymentStatus}.
@@ -88,7 +88,7 @@ public class MicoApplicationDeploymentStatus {
 	/**
 	 * Creates a new {@code MicoApplicationDeploymentStatus} instance
 	 * with the value {@link Value#DEPLOYED} as well as a {@code MicoMessage}
-	 * with the given message content and type {@link Type#INFO}.
+	 * with the given message content and type {@link Type#INFO Info}.
 	 * 
 	 * @param messages the {@link List} of messages as {@code String}.
 	 * @return a {@link MicoApplicationDeploymentStatus}.
@@ -116,7 +116,7 @@ public class MicoApplicationDeploymentStatus {
 	/**
 	 * Creates a new {@code MicoApplicationDeploymentStatus} instance
 	 * with the value {@link Value#UNDEPLOYED} as well as a {@code MicoMessage}
-	 * with the given message content and type {@link Type#INFO}.
+	 * with the given message content and type {@link Type#INFO Info}.
 	 * 
 	 * @param messages one or messages.
 	 * @return a {@link MicoApplicationDeploymentStatus}.
@@ -130,7 +130,7 @@ public class MicoApplicationDeploymentStatus {
 	/**
 	 * Creates a new {@code MicoApplicationDeploymentStatus} instance
 	 * with the value {@link Value#UNDEPLOYED} as well as a {@code MicoMessage}
-	 * with the given message content and type {@link Type#INFO}.
+	 * with the given message content and type {@link Type#INFO Info}.
 	 * 
 	 * @param messages the {@link List} of messages as {@code String}.
 	 * @return a {@link MicoApplicationDeploymentStatus}.
@@ -158,7 +158,7 @@ public class MicoApplicationDeploymentStatus {
 	/**
 	 * Creates a new {@code MicoApplicationDeploymentStatus} instance
 	 * with the value {@link Value#PENDING} as well as a {@code MicoMessage}
-	 * with the given message content and type {@link Type#INFO}.
+	 * with the given message content and type {@link Type#INFO Info}.
 	 * 
 	 * @param messages one or messages.
 	 * @return a {@link MicoApplicationDeploymentStatus}.
@@ -172,7 +172,7 @@ public class MicoApplicationDeploymentStatus {
 	/**
 	 * Creates a new {@code MicoApplicationDeploymentStatus} instance
 	 * with the value {@link Value#PENDING} as well as a {@code MicoMessage}
-	 * with the given message content and type {@link Type#INFO}.
+	 * with the given message content and type {@link Type#INFO Info}.
 	 * 
 	 * @param messages the {@link List} of messages as {@code String}.
 	 * @return a {@link MicoApplicationDeploymentStatus}.
@@ -200,7 +200,7 @@ public class MicoApplicationDeploymentStatus {
 	/**
 	 * Creates a new {@code MicoApplicationDeploymentStatus} instance
 	 * with the value {@link Value#INCOMPLETE} as well as a {@code MicoMessage}
-	 * with the given message content and type {@link Type#ERROR}.
+	 * with the given message content and type {@link Type#ERROR Error}.
 	 * 
 	 * @param messages one or messages.
 	 * @return a {@link MicoApplicationDeploymentStatus}.
@@ -214,7 +214,7 @@ public class MicoApplicationDeploymentStatus {
 	/**
 	 * Creates a new {@code MicoApplicationDeploymentStatus} instance
 	 * with the value {@link Value#INCOMPLETE} as well as a {@code MicoMessage}
-	 * with the given message content and type {@link Type#INFO}.
+	 * with the given message content and type {@link Type#ERROR Error}.
 	 * 
 	 * @param messages the {@link List} of messages as {@code String}.
 	 * @return a {@link MicoApplicationDeploymentStatus}.
@@ -242,7 +242,7 @@ public class MicoApplicationDeploymentStatus {
 	/**
 	 * Creates a new {@code MicoApplicationDeploymentStatus} instance
 	 * with the value {@link Value#UNKNOWN} as well as a {@code MicoMessage}
-	 * with the given message content and type {@link Type#INFO}.
+	 * with the given message content and type {@link Type#INFO Info}.
 	 * 
 	 * @param messages one or messages.
 	 * @return a {@link MicoApplicationDeploymentStatus}.
@@ -256,7 +256,7 @@ public class MicoApplicationDeploymentStatus {
 	/**
 	 * Creates a new {@code MicoApplicationDeploymentStatus} instance
 	 * with the value {@link Value#UNKNOWN} as well as a {@code MicoMessage}
-	 * with the given message content and type {@link Type#INFO}.
+	 * with the given message content and type {@link Type#INFO Info}.
 	 * 
 	 * @param messages the {@link List} of messages as {@code String}.
 	 * @return a {@link MicoApplicationDeploymentStatus}.

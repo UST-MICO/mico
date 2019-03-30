@@ -8,12 +8,22 @@ This is the main repository for the development project MICO at the University o
 
 ## Installation
 
-> Note: Currently, MICO is only tested with the Azure Kubernetes Service (AKS). A quick test was also made with the Google Kubernetes Engine (GKE).
+**Supported Kubernetes cluster:**
+
+Currently, MICO is only tested with the [Azure Kubernetes Service (AKS)](https://azure.microsoft.com/en-us/services/kubernetes-service/) and with the [Google Kubernetes Engine (GKE)](https://cloud.google.com/kubernetes-engine/). It may also work in other environments.
+
+If you use GKE, please note that you must grant the user the ability to create roles in Kubernetes before installing MICO.
+This is a prerequisite to use use role-based access control on GKE. For more information see the GKE [instructions](https://cloud.google.com/kubernetes-engine/docs/how-to/role-based-access-control).
+
+Grant permission for the current user (GKE only):
+```bash
+kubectl create clusterrolebinding cluster-admin-binding --clusterrole cluster-admin --user $(gcloud config list account --format "value(core.account)")
+```
 
 **Requirements:**
 
-- Kubernetes cluster with at least 8 GB free memory
-- `kubectl` ([Install and Set Up kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/))
+- Kubernetes cluster version must be v1.11 or newer
+- [`kubectl` CLI tool](https://kubernetes.io/docs/tasks/tools/install-kubectl/) with version v1.10 or newer
 - DockerHub account (required to store Docker images of services that are build by MICO)
 
 Configure `kubectl` to use the cluster in the current context.

@@ -109,7 +109,7 @@ public class MicoKubernetesClientTests {
     }
 
     @Test
-    public void creationOfMicoServiceWorks() throws KubernetesResourceException {
+    public void creationOfMicoServiceWorks() {
         // Assert that at the beginning there are no deployment
         DeploymentList deployments = mockServer.getClient().apps().deployments().inNamespace(testNamespace).list();
         assertEquals(0, deployments.getItems().size());
@@ -135,7 +135,7 @@ public class MicoKubernetesClientTests {
     }
 
     @Test
-    public void creationOfMicoServiceWithDeploymentInformationWorks() throws KubernetesResourceException {
+    public void creationOfMicoServiceWithDeploymentInformationWorks() {
         MicoService micoService = getMicoServiceWithoutInterface();
 
         MicoLabel label = new MicoLabel().setKey("some-label-key").setValue("some-label-value");
@@ -212,7 +212,7 @@ public class MicoKubernetesClientTests {
     }
 
     @Test
-    public void creationOfMicoServiceThatAlreadyExistsDoesReplaceTheSameObject() throws KubernetesResourceException {
+    public void creationOfMicoServiceThatAlreadyExistsDoesReplaceTheSameObject() {
         MicoService micoServiceWithoutInterface = getMicoServiceWithoutInterface();
         MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo().setService(micoServiceWithoutInterface);
 
@@ -451,6 +451,8 @@ public class MicoKubernetesClientTests {
 
         given(serviceDeploymentInfoRepository.findAllByApplication(SHORT_NAME_2, VERSION))
                 .willReturn(CollectionUtils.listOf(serviceDeploymentInfo));
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(SHORT_NAME_2, VERSION))
+            .willReturn(new MicoApplicationJobStatus(SHORT_NAME_2, VERSION, Status.UNDEFINED, Collections.emptyList()));
 
         boolean result = micoKubernetesClient.isApplicationDeployed(micoApplication);
         assertFalse("Application is not deployed, because MicoService was deployed by other application", result);
@@ -672,7 +674,7 @@ public class MicoKubernetesClientTests {
     }
 
     @Test
-    public void getYaml() throws KubernetesResourceException, JsonProcessingException {
+    public void getYaml() throws JsonProcessingException {
         MicoService micoService = getMicoService();
         String deploymentUid = UIDUtils.uidFor(micoService);
         Deployment existingDeployment = getDeploymentObject(micoService, deploymentUid);

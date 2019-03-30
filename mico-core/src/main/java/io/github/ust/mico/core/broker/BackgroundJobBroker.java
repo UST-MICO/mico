@@ -79,16 +79,29 @@ public class BackgroundJobBroker {
      * @return the saved {@link MicoServiceBackgroundJob}
      */
     public MicoServiceBackgroundJob saveJob(MicoServiceBackgroundJob job) {
-        return jobRepository.save(job);
+        MicoServiceBackgroundJob savedJob = jobRepository.save(job);
+        log.debug("Saved job: {}", savedJob);
+        return savedJob;
     }
 
     /**
      * Deletes a job in the database.
+     * If the future is still running, it will be cancelled.
      *
      * @param id the id of the job.
      */
     public void deleteJob(String id) {
-        jobRepository.deleteById(id);
+        Optional<MicoServiceBackgroundJob> jobOptional = getJobById(id);
+        if (jobOptional.isPresent()) {
+            MicoServiceBackgroundJob job = jobOptional.get();
+            if (job.getFuture() != null && !job.getFuture().isCancelled()
+                && !job.getFuture().isCompletedExceptionally() && !job.getFuture().isDone()) {
+                log.warn("Job of type '{}' and current status '{}' of MicoService '{}' '{}' is going to be deleted, " +
+                    "but it's future is still running -> Cancel it.", job.getType(), job.getStatus(), job.getServiceShortName(), job.getServiceVersion());
+                job.getFuture().cancel(true);
+            }
+            jobRepository.delete(job);
+        }
     }
 
     /**
@@ -106,8 +119,8 @@ public class BackgroundJobBroker {
         MicoApplication micoApplication = existingApplicationOptional.get();
 
         List<MicoServiceBackgroundJob> jobList = new ArrayList<>();
-        for (MicoServiceDeploymentInfo deploymentInfo : micoApplication.getServiceDeploymentInfos()) {
-            jobList.addAll(jobRepository.findByServiceShortNameAndServiceVersion(deploymentInfo.getService().getShortName(), deploymentInfo.getService().getVersion()));
+        for (MicoService micoService : micoApplication.getServices()) {
+            jobList.addAll(jobRepository.findByServiceShortNameAndServiceVersion(micoService.getShortName(), micoService.getVersion()));
         }
 
         List<MicoServiceBackgroundJob.Status> statusList = jobList.stream().map(MicoServiceBackgroundJob::getStatus).distinct().collect(Collectors.toList());
@@ -143,7 +156,8 @@ public class BackgroundJobBroker {
             MicoServiceBackgroundJob job = jobOptional.get();
             job.setFuture(future);
             saveJob(job);
-            log.debug("Saved new future of job with type '{}' for '{}' '{}'.", type, micoServiceShortName, micoServiceVersion);
+            log.debug("Saved new future of job '{}' with type '{}' for MicoService '{}' '{}'.",
+                job.getId(), type, micoServiceShortName, micoServiceVersion);
         } else {
             log.warn("No job of type '{}' exists for '{}' '{}'.", type, micoServiceShortName, micoServiceVersion);
         }

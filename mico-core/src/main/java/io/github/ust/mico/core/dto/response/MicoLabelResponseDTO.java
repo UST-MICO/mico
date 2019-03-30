@@ -19,9 +19,6 @@
 
 package io.github.ust.mico.core.dto.response;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
 import io.github.ust.mico.core.dto.request.MicoLabelRequestDTO;
 import io.github.ust.mico.core.model.MicoLabel;
 import lombok.AllArgsConstructor;
@@ -38,7 +35,6 @@ import lombok.experimental.Accessors;
 @EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 @Accessors(chain = true)
-@JsonInclude(Include.ALWAYS)
 public class MicoLabelResponseDTO extends MicoLabelRequestDTO {
 	
 	// Note: as soon as someone adds fields to this class, please check

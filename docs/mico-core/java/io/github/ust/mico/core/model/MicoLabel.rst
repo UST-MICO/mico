@@ -1,14 +1,8 @@
-.. java:import:: com.fasterxml.jackson.annotation JsonIgnoreProperties
+.. java:import:: org.neo4j.ogm.annotation GeneratedValue
 
-.. java:import:: io.github.ust.mico.core.configuration.extension CustomOpenApiExtentionsPlugin
+.. java:import:: org.neo4j.ogm.annotation Id
 
-.. java:import:: io.github.ust.mico.core.util Patterns
-
-.. java:import:: io.swagger.annotations ApiModelProperty
-
-.. java:import:: io.swagger.annotations Extension
-
-.. java:import:: io.swagger.annotations ExtensionProperty
+.. java:import:: io.github.ust.mico.core.dto.request MicoLabelRequestDTO
 
 .. java:import:: lombok AllArgsConstructor
 
@@ -18,19 +12,26 @@
 
 .. java:import:: lombok.experimental Accessors
 
-.. java:import:: javax.validation.constraints Pattern
-
-.. java:import:: javax.validation.constraints Size
-
-.. java:import:: java.util Map
-
 MicoLabel
 =========
 
 .. java:package:: io.github.ust.mico.core.model
    :noindex:
 
-.. java:type:: @Data @NoArgsConstructor @AllArgsConstructor @Accessors @JsonIgnoreProperties public class MicoLabel
+.. java:type:: @Data @NoArgsConstructor @AllArgsConstructor @Accessors public class MicoLabel
 
-   Represents a simple key-value pair label. Necessary since Neo4j does not allow to persist \ :java:ref:`Map`\  implementations.
+   A label represented as a simple key-value pair. Necessary since Neo4j does not allow to persist properties of composite types.
+
+Methods
+-------
+valueOf
+^^^^^^^
+
+.. java:method:: public static MicoLabel valueOf(MicoLabelRequestDTO labelDto)
+   :outertype: MicoLabel
+
+   Creates a new \ ``MicoLabel``\  based on a \ ``MicoLabelRequestDTO``\ . Note that the id will be set to \ ``null``\ .
+
+   :param labelDto: the \ :java:ref:`MicoLabelRequestDTO`\ .
+   :return: a \ :java:ref:`MicoLabel`\ .
 

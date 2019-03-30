@@ -103,14 +103,19 @@ public class ServiceResource {
                                                                           @Valid @RequestBody MicoServiceRequestDTO serviceDto) {
         if (!serviceDto.getShortName().equals(shortName)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "ShortName of the provided service does not match the request parameter");
+                "An update of the short name is not allowed");
         }
         if (!serviceDto.getVersion().equals(version)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "Version of the provided service does not match the request parameter");
         }
 
-        MicoService updatedService = updateServiceViaMicoServiceBroker(shortName, version, serviceDto);
+        MicoService updatedService;
+        try {
+            updatedService = updateServiceViaMicoServiceBroker(shortName, version, serviceDto);
+        } catch (MicoServiceIsDeployedException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        }
 
         return ResponseEntity.ok(getServiceResponseDTOResource(updatedService));
     }
@@ -127,8 +132,6 @@ public class ServiceResource {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
         } catch (MicoServiceIsDeployedException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
-        } catch (KubernetesResourceException e) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
 
         return ResponseEntity.noContent().build();
@@ -141,8 +144,6 @@ public class ServiceResource {
         micoServiceList.forEach(service -> {
             try {
                 micoServiceBroker.deleteService(service);
-            } catch (KubernetesResourceException e) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Service is currently deployed!");
             } catch (MicoServiceHasDependersException e) {
                 throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
             } catch (MicoServiceIsDeployedException e) {
@@ -165,13 +166,7 @@ public class ServiceResource {
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
     public ResponseEntity<Resources<Resource<MicoServiceResponseDTO>>> getVersionsOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
-        List<MicoService> services;
-        try {
-            services = micoServiceBroker.getAllVersionsOfServiceFromDatabase(shortName);
-        } catch (MicoServiceNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        }
-
+        List<MicoService> services = micoServiceBroker.getAllVersionsOfServiceFromDatabase(shortName);
         List<Resource<MicoServiceResponseDTO>> serviceResources = getServiceResponseDTOResourcesList(services);
 
         return ResponseEntity.ok(
@@ -229,7 +224,11 @@ public class ServiceResource {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "The dependency between the given services already exists.");
         }
 
-        micoServiceBroker.persistNewDependencyBetweenServices(service, serviceDependee);
+        try {
+            micoServiceBroker.persistNewDependencyBetweenServices(service, serviceDependee);
+        } catch (MicoServiceIsDeployedException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        }
 
         //TODO: Shoudn't we return 201 created and the new service (processedServiceDependee) with dependency?
         return ResponseEntity.noContent().build();
@@ -240,7 +239,11 @@ public class ServiceResource {
                                                    @PathVariable(PATH_VARIABLE_VERSION) String version) {
         MicoService service = getServiceFromMicoServiceBroker(shortName, version);
 
-        micoServiceBroker.deleteAllDependees(service);
+        try {
+            micoServiceBroker.deleteAllDependees(service);
+        } catch (MicoServiceIsDeployedException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        }
 
         return ResponseEntity.noContent().build();
     }
@@ -254,7 +257,11 @@ public class ServiceResource {
         MicoService service = getServiceFromMicoServiceBroker(shortName, version);
         MicoService serviceToDelete = getServiceFromMicoServiceBroker(dependeeShortName, dependeeVersion);
 
-        micoServiceBroker.deleteDependencyBetweenServices(service, serviceToDelete);
+        try {
+            micoServiceBroker.deleteDependencyBetweenServices(service, serviceToDelete);
+        } catch (MicoServiceIsDeployedException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        }
 
         return ResponseEntity.noContent().build();
     }
@@ -356,8 +363,6 @@ public class ServiceResource {
         String yaml;
         try {
             yaml = micoServiceBroker.getServiceYamlByShortNameAndVersion(shortName, version);
-        } catch (KubernetesResourceException e) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Deployment of service '" + shortName + "' '" + version + "' has a conflict: " + e.getMessage());
         } catch (JsonProcessingException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         } catch (MicoServiceNotFoundException e) {
@@ -366,16 +371,15 @@ public class ServiceResource {
         return ResponseEntity.ok(new Resource<>(new MicoYamlResponseDTO(yaml)));
     }
 
-
-    protected static Resource<MicoServiceResponseDTO> getServiceResponseDTOResource(MicoService service) {
+    static Resource<MicoServiceResponseDTO> getServiceResponseDTOResource(MicoService service) {
         return new Resource<>(new MicoServiceResponseDTO(service), getServiceLinks(service));
     }
 
-    protected static List<Resource<MicoServiceResponseDTO>> getServiceResponseDTOResourcesList(List<MicoService> services) {
+    static List<Resource<MicoServiceResponseDTO>> getServiceResponseDTOResourcesList(List<MicoService> services) {
         return services.stream().map(ServiceResource::getServiceResponseDTOResource).collect(Collectors.toList());
     }
 
-    private static Iterable<Link> getServiceLinks(MicoService service) {
+    static Iterable<Link> getServiceLinks(MicoService service) {
         LinkedList<Link> links = new LinkedList<>();
         links.add(linkTo(methodOn(ServiceResource.class).getServiceByShortNameAndVersion(service.getShortName(), service.getVersion())).withSelfRel());
         links.add(linkTo(methodOn(ServiceResource.class).getServiceList()).withRel("services"));
@@ -400,25 +404,26 @@ public class ServiceResource {
         return service;
     }
 
-    private MicoService updateServiceViaMicoServiceBroker(String shortName, String version, MicoServiceRequestDTO serviceDto) throws ResponseStatusException {
+    /**
+     * Replaces the {@link MicoService} defined by {@code shortName} and {@code version} with the {@link MicoService} given
+     * via the {@code serviceDto} parameter.
+     * @param shortName the shortName of the old {@link MicoService}.
+     * @param version the version of the old {@link MicoService}.
+     * @param serviceDto the replacement {@link MicoService}.
+     * @return the updated {@link MicoService}.
+     * @throws ResponseStatusException if the old {@link MicoService} does not exist.
+     */
+    private MicoService updateServiceViaMicoServiceBroker(String shortName, String version, MicoServiceRequestDTO serviceDto) throws ResponseStatusException, MicoServiceIsDeployedException {
         MicoService existingService = getServiceFromMicoServiceBroker(shortName, version);
-        MicoService updatedService;
-        try {
-            updatedService = micoServiceBroker.updateExistingService(MicoService.valueOf(serviceDto).setId(existingService.getId()));
-        } catch (MicoServiceNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        }
-        return updatedService;
+        MicoService newService = MicoService.valueOf(serviceDto)
+            .setId(existingService.getId())
+            .setServiceInterfaces(existingService.getServiceInterfaces())
+            .setDependencies(existingService.getDependencies());
+        return micoServiceBroker.updateExistingService(newService);
     }
 
     private List<MicoService> getAllVersionsOfServiceFromMicoServiceBroker(String shortName) throws ResponseStatusException {
-        List<MicoService> micoServiceList;
-        try {
-            micoServiceList = micoServiceBroker.getAllVersionsOfServiceFromDatabase(shortName);
-        } catch (MicoServiceNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        }
-        return micoServiceList;
+        return micoServiceBroker.getAllVersionsOfServiceFromDatabase(shortName);
     }
 
 }

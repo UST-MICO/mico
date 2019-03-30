@@ -313,15 +313,12 @@ public class MicoStatusServiceTest {
                 .setInterfacesInformation(CollectionUtils.listOf(
                     new MicoServiceInterfaceStatusResponseDTO()
                         .setName(SERVICE_INTERFACE_NAME)
+                        .setExternalIpIsAvailable(true)
                         .setExternalIp("192.168.2.112")))));
-        try {
-            given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(deployment);
-            given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(kubernetesService);
-            given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(any(MicoService.class))).willReturn(podList.getItems());
-            given(micoKubernetesClient.isApplicationDeployed(otherMicoApplication)).willReturn(true);
-        } catch (KubernetesResourceException e) {
-            e.printStackTrace();
-        }
+        given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(deployment);
+        given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(kubernetesService);
+        given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(any(MicoService.class))).willReturn(podList.getItems());
+        given(micoKubernetesClient.isApplicationDeployed(otherMicoApplication)).willReturn(true);
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
         given(applicationRepository.findAllByUsedService(any(), any())).willReturn(CollectionUtils.listOf(otherMicoApplication, micoApplication));
         given(serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion())).willReturn(CollectionUtils.listOf(micoService));
@@ -386,15 +383,11 @@ public class MicoStatusServiceTest {
                 .setInterfacesInformation(CollectionUtils.listOf(
                     new MicoServiceInterfaceStatusResponseDTO()
                         .setName(SERVICE_INTERFACE_NAME))))); // No IPs
-        try {
-            given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(deployment);
-            given(serviceInterfaceRepository.findByServiceAndName(micoService.getShortName(), micoService.getVersion(), SERVICE_INTERFACE_NAME)).willReturn(Optional.of(micoServiceInterface));
-            given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(Optional.empty());
-            given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(any(MicoService.class))).willReturn(podListWithOnePod.getItems());
-            given(micoKubernetesClient.isApplicationDeployed(otherMicoApplication)).willReturn(true);
-        } catch (KubernetesResourceException e) {
-            e.printStackTrace();
-        }
+        given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(deployment);
+        given(serviceInterfaceRepository.findByServiceAndName(micoService.getShortName(), micoService.getVersion(), SERVICE_INTERFACE_NAME)).willReturn(Optional.of(micoServiceInterface));
+        given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(Optional.empty());
+        given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(any(MicoService.class))).willReturn(podListWithOnePod.getItems());
+        given(micoKubernetesClient.isApplicationDeployed(otherMicoApplication)).willReturn(true);
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
         given(applicationRepository.findAllByUsedService(any(), any())).willReturn(CollectionUtils.listOf(otherMicoApplication, micoApplication));
         given(serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion())).willReturn(CollectionUtils.listOf(micoService));
@@ -419,14 +412,9 @@ public class MicoStatusServiceTest {
                 .setErrorMessages(CollectionUtils
                     .listOf(new MicoMessageResponseDTO().setContent("No deployment of MicoService '" + micoService.getShortName()
                         + "' '" + micoService.getVersion() + "' is available.").setType(Type.ERROR)))));
-        try {
-            given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(Optional.empty());
-            given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(kubernetesService);
-            given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(any(MicoService.class))).willReturn(podList.getItems());
-        } catch (KubernetesResourceException e) {
-            e.printStackTrace();
-        }
-
+        given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(Optional.empty());
+        given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(kubernetesService);
+        given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(any(MicoService.class))).willReturn(podList.getItems());
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
         given(serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion())).willReturn(CollectionUtils.listOf(micoService));
         assertEquals(micoApplicationStatus, micoStatusService.getApplicationStatus(micoApplication));
@@ -507,15 +495,13 @@ public class MicoStatusServiceTest {
             .setErrorMessages(CollectionUtils.listOf())
             .setInterfacesInformation(CollectionUtils.listOf(new MicoServiceInterfaceStatusResponseDTO()
                 .setName(SERVICE_INTERFACE_NAME)
+                .setExternalIpIsAvailable(true)
                 .setExternalIp("192.168.2.112")));
-        try {
-            given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(deployment);
-            given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(kubernetesService);
-            given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(any(MicoService.class))).willReturn(podList.getItems());
-            given(micoKubernetesClient.isApplicationDeployed(otherMicoApplication)).willReturn(true);
-        } catch (KubernetesResourceException e) {
-            e.printStackTrace();
-        }
+
+        given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(deployment);
+        given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(kubernetesService);
+        given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(any(MicoService.class))).willReturn(podList.getItems());
+        given(micoKubernetesClient.isApplicationDeployed(otherMicoApplication)).willReturn(true);
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
         given(applicationRepository.findAllByUsedService(any(), any())).willReturn(CollectionUtils.listOf(otherMicoApplication));
         given(prometheusConfig.getUri()).willReturn("http://localhost:9090/api/v1/query");
@@ -541,7 +527,7 @@ public class MicoStatusServiceTest {
     }
 
     @Test
-    public void getServiceInterfaceStatus() throws KubernetesResourceException {
+    public void getServiceInterfaceStatus() {
 
         given(micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, SERVICE_INTERFACE_NAME))
             .willReturn(kubernetesService);
@@ -549,6 +535,7 @@ public class MicoStatusServiceTest {
 
         MicoServiceInterfaceStatusResponseDTO expectedServiceInterface = new MicoServiceInterfaceStatusResponseDTO()
             .setName(SERVICE_INTERFACE_NAME)
+            .setExternalIpIsAvailable(true)
             .setExternalIp("192.168.2.112");
         List<MicoServiceInterfaceStatusResponseDTO> expectedInterfaceStatusDTO = new LinkedList<>();
         expectedInterfaceStatusDTO.add(expectedServiceInterface);
@@ -561,7 +548,7 @@ public class MicoStatusServiceTest {
     }
 
     @Test
-    public void getServiceInterfaceStatusWithErrors() throws KubernetesResourceException {
+    public void getServiceInterfaceStatusWithErrors() {
 
         given(serviceInterfaceRepository.findByServiceAndName(micoService.getShortName(), micoService.getVersion(), SERVICE_INTERFACE_NAME)).willReturn(Optional.empty());
         given(micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, SERVICE_INTERFACE_NAME))

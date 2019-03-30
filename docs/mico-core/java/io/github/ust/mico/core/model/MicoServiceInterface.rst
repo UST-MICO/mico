@@ -1,26 +1,8 @@
-.. java:import:: com.fasterxml.jackson.annotation JsonProperty
+.. java:import:: java.util ArrayList
 
-.. java:import:: com.fasterxml.jackson.annotation JsonSetter
+.. java:import:: java.util List
 
-.. java:import:: com.fasterxml.jackson.annotation Nulls
-
-.. java:import:: io.github.ust.mico.core.configuration.extension CustomOpenApiExtentionsPlugin
-
-.. java:import:: io.github.ust.mico.core.util Patterns
-
-.. java:import:: io.swagger.annotations ApiModelProperty
-
-.. java:import:: io.swagger.annotations Extension
-
-.. java:import:: io.swagger.annotations ExtensionProperty
-
-.. java:import:: lombok AllArgsConstructor
-
-.. java:import:: lombok Data
-
-.. java:import:: lombok NoArgsConstructor
-
-.. java:import:: lombok.experimental Accessors
+.. java:import:: java.util.stream Collectors
 
 .. java:import:: org.neo4j.ogm.annotation GeneratedValue
 
@@ -30,17 +12,15 @@
 
 .. java:import:: org.neo4j.ogm.annotation Relationship
 
-.. java:import:: org.springframework.data.neo4j.annotation QueryResult
+.. java:import:: io.github.ust.mico.core.dto.request MicoServiceInterfaceRequestDTO
 
-.. java:import:: javax.validation Valid
+.. java:import:: lombok AllArgsConstructor
 
-.. java:import:: javax.validation.constraints NotEmpty
+.. java:import:: lombok Data
 
-.. java:import:: javax.validation.constraints Pattern
+.. java:import:: lombok NoArgsConstructor
 
-.. java:import:: java.util ArrayList
-
-.. java:import:: java.util List
+.. java:import:: lombok.experimental Accessors
 
 MicoServiceInterface
 ====================
@@ -48,7 +28,20 @@ MicoServiceInterface
 .. java:package:: io.github.ust.mico.core.model
    :noindex:
 
-.. java:type:: @Data @NoArgsConstructor @AllArgsConstructor @Accessors @NodeEntity @QueryResult public class MicoServiceInterface
+.. java:type:: @Data @NoArgsConstructor @AllArgsConstructor @Accessors @NodeEntity public class MicoServiceInterface
 
    Represents a interface, e.g., REST API, of a \ :java:ref:`MicoService`\ .
+
+Methods
+-------
+valueOf
+^^^^^^^
+
+.. java:method:: public static MicoServiceInterface valueOf(MicoServiceInterfaceRequestDTO serviceInterfaceDto)
+   :outertype: MicoServiceInterface
+
+   Creates a new \ ``MicoServiceInterface``\  based on a \ ``MicoServiceInterfaceRequestDTO``\ . Note that the id will be set to \ ``null``\ .
+
+   :param serviceInterfaceDto: the \ :java:ref:`MicoServiceInterfaceRequestDTO`\ .
+   :return: a \ :java:ref:`MicoServiceInterface`\ .
 

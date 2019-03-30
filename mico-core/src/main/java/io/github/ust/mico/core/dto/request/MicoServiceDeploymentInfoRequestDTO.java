@@ -145,14 +145,14 @@ public class MicoServiceDeploymentInfoRequestDTO {
 
     /**
      * Indicates whether and when to pull the image.
-     * Default image pull policy is {@link ImagePullPolicy#ALWAYS}.
+     * Default image pull policy is {@link ImagePullPolicy#ALWAYS Always}.
      * {@code null} is ignored.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Image Pull Policy"),
-            @ExtensionProperty(name = "default", value = "ALWAYS"),
+            @ExtensionProperty(name = "default", value = "Always"),
             @ExtensionProperty(name = "x-order", value = "50"),
             @ExtensionProperty(name = "description", value = "Indicates whether and when to pull the image.\n " +
                 "Null is ignored.")

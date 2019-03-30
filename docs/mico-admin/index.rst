@@ -3,9 +3,31 @@ MICO-Admin UI
 
 The MICO-Admin UI uses the `Angular <https://v7.angular.io>`_ framework (v7) with the `Angular Material <https://material.angular.io>`_ component library.
 
-.. hint:: mico-graph dependency
+local testing
+-------------
 
-   To update the mico graph dependency use ``npm run grapheditor``.
+To run the frontend locally first install all dependencys and the start the development server.
+
+.. sourcecode:: bash
+
+    cd mico-admin
+    npm install
+    npm run start
+
+Then open http://localhost:4200 in your browser.
+
+.. hint::
+
+    The frontend (in development mode) expects the backend at http://localhost:8080.
+    You can use :program:`kubectl` to forward traffic to a backend running in a cluster.
+
+
+configuration
+-------------
+
+The backend api url can be set in the :file:`/mico-admin/src/environments/environment.ts`.
+
+The docker container uses the environment variable :envvar:`MICO_REST_API` to setup a forwarding proxy in nginx.
 
 
 Documentation of Core Components

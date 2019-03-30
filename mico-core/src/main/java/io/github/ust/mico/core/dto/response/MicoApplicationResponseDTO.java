@@ -20,19 +20,17 @@
 package io.github.ust.mico.core.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
+import io.github.ust.mico.core.dto.response.status.MicoApplicationDeploymentStatusResponseDTO;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus;
 import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus.Value;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 import lombok.experimental.Accessors;
 
 /**
@@ -52,8 +50,8 @@ public class MicoApplicationResponseDTO extends MicoApplicationRequestDTO {
     // ----------------------
 
     /**
-     * Indicates whether the {@link MicoApplication} is currently deployed. Default is {@link Value#UNDEPLOYED}. Is read
-     * only and will be updated by the backend at every request.
+     * Indicates whether the {@link MicoApplication} is currently deployed. Default is {@link Value#UNDEPLOYED Undeployed}.
+     * Is read only and will be updated by the backend at every request.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -65,7 +63,7 @@ public class MicoApplicationResponseDTO extends MicoApplicationRequestDTO {
         }
     )})
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private MicoApplicationDeploymentStatus deploymentStatus = new MicoApplicationDeploymentStatus(Value.UNDEPLOYED);
+    private MicoApplicationDeploymentStatusResponseDTO deploymentStatus = new MicoApplicationDeploymentStatusResponseDTO().setValue(Value.UNDEPLOYED);
 
 
     // -------------------
@@ -83,14 +81,14 @@ public class MicoApplicationResponseDTO extends MicoApplicationRequestDTO {
     }
 
     /**
-     * Creates an instance of {@code MicoApplicationResponseDTO} based on a {@code MicoApplication} and a {@code
-     * MicoApplicationDeploymentStatus}.
+     * Creates an instance of {@code MicoApplicationResponseDTO} based
+     * on a {@code MicoApplication} and a {@code MicoApplicationDeploymentStatus}.
      *
      * @param application      the {@link MicoApplication}.
      * @param deploymentStatus the {@link MicoApplicationDeploymentStatus}.
      */
     public MicoApplicationResponseDTO(MicoApplication application, MicoApplicationDeploymentStatus deploymentStatus) {
         super(application);
-        this.deploymentStatus = deploymentStatus;
+        this.deploymentStatus = new MicoApplicationDeploymentStatusResponseDTO(deploymentStatus);
     }
 }

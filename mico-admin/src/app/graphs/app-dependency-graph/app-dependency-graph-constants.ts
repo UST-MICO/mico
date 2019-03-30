@@ -57,11 +57,35 @@ export const STYLE_TEMPLATE = {
         .application .text {
             fill: white;
         }
+        .application.undeployed .deployment-indicator {
+            fill: white;
+        }
+        .application.error .deployment-indicator {
+            fill: red;
+        }
+        .application.deployed .deployment-indicator {
+            fill: lightgreen;
+        }
+        .application.pending .deployment-indicator {
+            fill: gold;
+            animation-name: pending;
+            animation-duration: 2s;
+            animation-iteration-count: infinite;
+            animation-timing-function: linear;
+        }
+        @keyframes pending {
+            20% {opacity: 0.2};
+            50% {opacity: 1};
+            10% {opacity: 1};
+        }
         .text.title {
             font-size: 8pt;
             text-decoration: underline;
             text-overflow: ellipsis;
             word-break: break-all;
+        }
+        .service .title {
+            cursor: pointer;
         }
         .text.interface-name {
             text-overflow: ellipsis;
@@ -125,7 +149,9 @@ export const STYLE_TEMPLATE = {
 export const APPLICATION_NODE_TEMPLATE = {
     id: 'application',
     innerHTML: `<polygon points="-49,-15 0,-15 49,-15 58,0 49,15 0,15 -49,15 -58,0" data-link-handles="corners"></polygon>
-        <text class="text title" data-content="title" data-click="title" width="90" x="-45" y="-3"></text>`
+        <text class="text title" data-content="title" data-click="title" width="90" x="-45" y="-3"></text>
+        <circle class="deployment-indicator" cx="-42" cy="6" r="3.5"></circle>
+        <text class="text" data-content="status.value" width="80" x="-35" y="9"></text>`
 };
 
 export const SERVICE_INTERFACE_NODE_TEMPLATE = {
@@ -171,5 +197,6 @@ export interface ApplicationNode extends Node {
     version: string;
     shortName: string;
     description: string;
+    status?: any;
 }
 

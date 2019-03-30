@@ -139,35 +139,27 @@ public class MicoStatusService {
     public MicoServiceStatusResponseDTO getServiceStatus(MicoService micoService) {
         MicoServiceStatusResponseDTO serviceStatus = new MicoServiceStatusResponseDTO();
         String message;
-        try {
-            Optional<Deployment> deploymentOptional = micoKubernetesClient.getDeploymentOfMicoService(micoService);
-            if (deploymentOptional.isPresent()) {
-                Deployment deployment = deploymentOptional.get();
-                serviceStatus.setRequestedReplicas(deployment.getSpec().getReplicas());
-                // Check if there are no replicas available of the deployment of a MicoService.
-                if (deployment.getStatus().getUnavailableReplicas() == null) {
-                    log.info("The MicoService '{}' with version '{}' has '{}' available replicas.",
-                        micoService.getShortName(), micoService.getVersion(), deployment.getStatus().getAvailableReplicas());
-                    serviceStatus.setAvailableReplicas(deployment.getStatus().getAvailableReplicas());
-                } else if ((deployment.getStatus().getUnavailableReplicas() != null) &&
-                    deployment.getStatus().getUnavailableReplicas() < deployment.getSpec().getReplicas()) {
-                    log.info("The MicoService '{}' with version '{}' has '{}' available replicas.",
-                        micoService.getShortName(), micoService.getVersion(), deployment.getStatus().getAvailableReplicas());
-                    serviceStatus.setAvailableReplicas(deployment.getStatus().getAvailableReplicas());
-                } else {
-                    log.info("The MicoService '{}' with version '{}' has no available replicas.", micoService.getShortName(), micoService.getVersion());
-                    serviceStatus.setAvailableReplicas(0);
-                }
+        Optional<Deployment> deploymentOptional = micoKubernetesClient.getDeploymentOfMicoService(micoService);
+        if (deploymentOptional.isPresent()) {
+            Deployment deployment = deploymentOptional.get();
+            serviceStatus.setRequestedReplicas(deployment.getSpec().getReplicas());
+            // Check if there are no replicas available of the deployment of a MicoService.
+            if (deployment.getStatus().getUnavailableReplicas() == null) {
+                log.info("The MicoService '{}' with version '{}' has '{}' available replicas.",
+                    micoService.getShortName(), micoService.getVersion(), deployment.getStatus().getAvailableReplicas());
+                serviceStatus.setAvailableReplicas(deployment.getStatus().getAvailableReplicas());
+            } else if ((deployment.getStatus().getUnavailableReplicas() != null) &&
+                deployment.getStatus().getUnavailableReplicas() < deployment.getSpec().getReplicas()) {
+                log.info("The MicoService '{}' with version '{}' has '{}' available replicas.",
+                    micoService.getShortName(), micoService.getVersion(), deployment.getStatus().getAvailableReplicas());
+                serviceStatus.setAvailableReplicas(deployment.getStatus().getAvailableReplicas());
             } else {
-                message = "No deployment of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' is available.";
-                log.warn(message);
-                MicoMessage errorMessage = MicoMessage.error(message);
-                return serviceStatus.setErrorMessages(CollectionUtils.listOf(new MicoMessageResponseDTO(errorMessage)));
+                log.info("The MicoService '{}' with version '{}' has no available replicas.", micoService.getShortName(), micoService.getVersion());
+                serviceStatus.setAvailableReplicas(0);
             }
-        } catch (KubernetesResourceException e) {
-            message = "Error while retrieving Kubernetes deployment of MicoService '" + micoService.getShortName() + "' '"
-                + micoService.getVersion() + "'. Caused by: " + e.getMessage();
-            log.error(message);
+        } else {
+            message = "No deployment of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' is available.";
+            log.warn(message);
             MicoMessage errorMessage = MicoMessage.error(message);
             return serviceStatus.setErrorMessages(CollectionUtils.listOf(new MicoMessageResponseDTO(errorMessage)));
         }
@@ -215,16 +207,32 @@ public class MicoStatusService {
             for (Pod pod : podsPerNode.get(nodeName)) {
                 KubernetesPodInformationResponseDTO podInformation = getPodInformation(pod);
                 podInfos.add(podInformation);
-                if (pod.getStatus().getPhase().equals(POD_PHASE_RUNNING)) {
+                String phase = pod.getStatus().getPhase();
+                if (phase.equals(POD_PHASE_RUNNING)) {
                     sumCpuLoadOnNode += podInformation.getMetrics().getCpuLoad();
                     sumMemoryUsageOnNode += podInformation.getMetrics().getMemoryUsage();
                     sumRunningPods++;
+                } else {
+                    log.debug("Pod '{}' on node '{}' is not running. It is in phase '{}'.",
+                        pod.getMetadata().getName(), nodeName, phase);
                 }
+            }
+            int averageCpuLoad = 0;
+            int averageMemoryUsage = 0;
+            if (sumRunningPods > 0) {
+                averageCpuLoad = sumCpuLoadOnNode / sumRunningPods;
+                averageMemoryUsage = sumMemoryUsageOnNode / sumRunningPods;
+            } else {
+                message = "There are no Pods running on node '" + nodeName + "' for MICO service '"
+                    + micoService.getShortName() + "' '" + micoService.getVersion() + "'.";
+                log.warn(message);
+                MicoMessage warning = MicoMessage.warning(message);
+                serviceStatus.getErrorMessages().add(new MicoMessageResponseDTO(warning));
             }
             nodeMetrics.add(new KubernetesNodeMetricsResponseDTO()
                 .setNodeName(nodeName)
-                .setAverageCpuLoad(sumCpuLoadOnNode / sumRunningPods)
-                .setAverageMemoryUsage(sumMemoryUsageOnNode / sumRunningPods));
+                .setAverageCpuLoad(averageCpuLoad)
+                .setAverageMemoryUsage(averageMemoryUsage));
         }
         serviceStatus
             .setNodeMetrics(nodeMetrics)
@@ -271,16 +279,7 @@ public class MicoStatusService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                 "Service interface '" + serviceInterfaceName + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' was not found!");
         }
-        Optional<Service> kubernetesServiceOptional;
-        try {
-            kubernetesServiceOptional = micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, serviceInterfaceName);
-        } catch (KubernetesResourceException e) {
-            log.error("Error occur while retrieving Kubernetes service of MicoServiceInterface '{}' of MicoService '{}' in version '{}'. Caused by: {}",
-                serviceInterfaceName, micoService.getShortName(), micoService.getVersion(), e.getMessage());
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                "Error occur while retrieving Kubernetes service of MicoServiceInterface '" + serviceInterfaceName +
-                    "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "'!");
-        }
+        Optional<Service> kubernetesServiceOptional = micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, serviceInterfaceName);
         if (!kubernetesServiceOptional.isPresent()) {
             log.warn("There is no Kubernetes service deployed for MicoServiceInterface with name '{}' of MicoService '{}' in version '{}'.",
                 serviceInterfaceName, micoService.getShortName(), micoService.getVersion());
@@ -294,15 +293,13 @@ public class MicoStatusService {
             if (ingressList != null && ingressList.size() == 1) {
                 log.info("Service interface with name '{}' of MicoService '{}' in version '{}' has external IP: {}",
                     serviceInterfaceName, micoService.getShortName(), micoService.getVersion(), ingressList.get(0).getIp());
-                return new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName).setExternalIp(ingressList.get(0).getIp());
+                return new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName).setExternalIp(ingressList.get(0).getIp()).setExternalIpIsAvailable(true);
             } else if (ingressList != null && ingressList.size() > 1) {
                 log.warn("There are " + ingressList.size() + " IP addresses for the MicoServiceInterface " + serviceInterfaceName + ". Only one IP address is returned.");
-                return new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName).setExternalIp(ingressList.get(0).getIp());
+                return new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName).setExternalIp(ingressList.get(0).getIp()).setExternalIpIsAvailable(true);
             } else {
-                log.error("There is no Kubernetes service for the interface '{}' of MicoService '{}' in version '{}'.",
-                    serviceInterfaceName, micoService.getShortName(), micoService.getVersion());
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "There is no Kubernetes service for the interface '" +
-                    serviceInterfaceName + "' of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "'.");
+                log.info("The IP address for the Kubernetes service of the MicoServiceInterface '{}' is in a pending state.", serviceInterfaceName);
+                return new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName);
             }
         } else {
             log.error("There is no Load Balancer service for the Kubernetes service of the MicoServiceInterface '{}'.", serviceInterfaceName);

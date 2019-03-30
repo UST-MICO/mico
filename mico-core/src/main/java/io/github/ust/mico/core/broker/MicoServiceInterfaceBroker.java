@@ -4,10 +4,11 @@ import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
 import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
 import io.github.ust.mico.core.exception.MicoServiceInterfaceAlreadyExistsException;
 import io.github.ust.mico.core.exception.MicoServiceInterfaceNotFoundException;
-import io.github.ust.mico.core.exception.MicoServiceNotFoundException;
+import io.github.ust.mico.core.exception.MicoServiceIsDeployedException;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoServiceInterfaceRepository;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,10 +27,11 @@ public class MicoServiceInterfaceBroker {
     @Autowired
     private MicoServiceBroker micoServiceBroker;
 
-    public List<MicoServiceInterface> getInterfacesOfService(String shortName, String version) {
-        List<MicoServiceInterface> serviceInterfaces = serviceInterfaceRepository.findByService(shortName, version);
+    @Autowired
+    private MicoKubernetesClient micoKubernetesClient;
 
-        return serviceInterfaces;
+    public List<MicoServiceInterface> getInterfacesOfService(String shortName, String version) {
+        return serviceInterfaceRepository.findByService(shortName, version);
     }
 
     public MicoServiceInterface getInterfaceOfServiceByName(String shortName, String version, String interfaceName) throws MicoServiceInterfaceNotFoundException {
@@ -62,15 +64,23 @@ public class MicoServiceInterfaceBroker {
         return publicIps;
     }
 
-    public void deleteMicoServiceInterface(String shortName, String version, String serviceInterfaceName) {
-        serviceInterfaceRepository.deleteByServiceAndName(shortName, version, serviceInterfaceName);
+    public void deleteMicoServiceInterface(MicoService micoService, String serviceInterfaceName) throws MicoServiceIsDeployedException {
+        // Check whether service is currently deployed, i.e., it's not allowed to delete an interface
+        if(micoKubernetesClient.isMicoServiceDeployed(micoService)) {
+            throw new MicoServiceIsDeployedException(micoService.getShortName(), micoService.getVersion());
+        }
+        serviceInterfaceRepository.deleteByServiceAndName(micoService.getShortName(), micoService.getVersion(), serviceInterfaceName);
     }
 
-    public MicoServiceInterface persistMicoServiceInterface(MicoService micoService, MicoServiceInterface micoServiceInterface) throws MicoServiceInterfaceAlreadyExistsException, MicoServiceNotFoundException {
-        Optional<MicoServiceInterface> micoServiceInterfaceOptional = serviceInterfaceRepository.findByServiceAndName(micoService.getShortName(), micoService.getVersion(), micoServiceInterface.getServiceInterfaceName());
+    public MicoServiceInterface persistMicoServiceInterface(MicoService micoService, MicoServiceInterface micoServiceInterface) throws MicoServiceInterfaceAlreadyExistsException, MicoServiceIsDeployedException {
 
+        Optional<MicoServiceInterface> micoServiceInterfaceOptional = serviceInterfaceRepository.findByServiceAndName(micoService.getShortName(), micoService.getVersion(), micoServiceInterface.getServiceInterfaceName());
         if (micoServiceInterfaceOptional.isPresent()) {
             throw new MicoServiceInterfaceAlreadyExistsException(micoService.getShortName(), micoService.getVersion(), micoServiceInterface.getServiceInterfaceName());
+        }
+        // Check whether service is currently deployed, i.e., it's not allowed to add or update an interface
+        if(micoKubernetesClient.isMicoServiceDeployed(micoService)) {
+            throw new MicoServiceIsDeployedException(micoService.getShortName(), micoService.getVersion());
         }
 
         micoService.getServiceInterfaces().add(micoServiceInterface);
@@ -79,18 +89,22 @@ public class MicoServiceInterfaceBroker {
         return micoServiceInterface;
     }
 
-    public MicoServiceInterface updateMicoServiceInterface(String shortName, String version, String serviceInterfaceName, MicoServiceInterface micoServiceInterface) throws MicoServiceInterfaceNotFoundException {
-        Optional<MicoServiceInterface> serviceInterfaceOptional = serviceInterfaceRepository.findByServiceAndName(shortName, version, serviceInterfaceName);
+    public MicoServiceInterface updateMicoServiceInterface(MicoService micoService, String serviceInterfaceName, MicoServiceInterface micoServiceInterface) throws MicoServiceInterfaceNotFoundException, MicoServiceIsDeployedException {
+        Optional<MicoServiceInterface> serviceInterfaceOptional = serviceInterfaceRepository.findByServiceAndName(
+            micoService.getShortName(), micoService.getVersion(), serviceInterfaceName);
 
         if (!serviceInterfaceOptional.isPresent()) {
-            throw new MicoServiceInterfaceNotFoundException(shortName, version, serviceInterfaceName);
+            throw new MicoServiceInterfaceNotFoundException(micoService.getShortName(), micoService.getVersion(), serviceInterfaceName);
+        }
+        // Check whether service is currently deployed, i.e., it's not allowed to add or update an interface
+        if(micoKubernetesClient.isMicoServiceDeployed(micoService)) {
+            throw new MicoServiceIsDeployedException(micoService.getShortName(), micoService.getVersion());
         }
 
         MicoServiceInterface serviceInterface = serviceInterfaceOptional.get();
         MicoServiceInterface updatedServiceInterface = micoServiceInterface.setId(serviceInterface.getId());
-        MicoServiceInterface persistedServiceInterface = serviceInterfaceRepository.save(updatedServiceInterface);
 
-        return persistedServiceInterface;
+        return serviceInterfaceRepository.save(updatedServiceInterface);
     }
 
 }

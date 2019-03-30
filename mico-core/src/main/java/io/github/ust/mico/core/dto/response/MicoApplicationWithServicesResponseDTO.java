@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
+import io.github.ust.mico.core.dto.response.status.MicoApplicationDeploymentStatusResponseDTO;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus;
 import io.swagger.annotations.ApiModelProperty;
@@ -80,14 +81,14 @@ public class MicoApplicationWithServicesResponseDTO extends MicoApplicationRespo
     }
 
     /**
-     * Creates an instance of {@code MicoApplicationWithServicesResponseDTO} based on a {@code MicoApplication} and a
-     * {@code MicoApplicationDeploymentStatus}.
+     * Creates an instance of {@code MicoApplicationWithServicesResponseDTO}
+     * based on a {@code MicoApplication} and a {@code MicoApplicationDeploymentStatus}.
      *
      * @param application      the {@link MicoApplication}.
      * @param deploymentStatus the {@link MicoApplicationDeploymentStatus}.
      */
     public MicoApplicationWithServicesResponseDTO(MicoApplication application, MicoApplicationDeploymentStatus deploymentStatus) {
         this(application);
-        setDeploymentStatus(deploymentStatus);
+        setDeploymentStatus(new MicoApplicationDeploymentStatusResponseDTO(deploymentStatus));
     }
 }

@@ -10,6 +10,22 @@ Patterns
 
 Fields
 ------
+KUBERNETES_ENV_VAR_NAME_MESSAGE
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:field:: public static final String KUBERNETES_ENV_VAR_NAME_MESSAGE
+   :outertype: Patterns
+
+   Message is used if a match with the \ :java:ref:`Patterns.KUBERNETES_ENV_VAR_NAME_REGEX`\  fails.
+
+KUBERNETES_ENV_VAR_NAME_REGEX
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:field:: public static final String KUBERNETES_ENV_VAR_NAME_REGEX
+   :outertype: Patterns
+
+   Kubernetes environment variable names must only contain letters, numbers and underscores, and must not start with a digit.
+
 KUBERNETES_LABEL_KEY_MESSAGE
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

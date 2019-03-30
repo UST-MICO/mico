@@ -163,10 +163,12 @@ export class ServiceDetailOverviewComponent implements OnChanges, OnDestroy {
             }
         });
         this.subProvide = dialogRef.afterClosed().subscribe(result => {
+
             if (result == null || result === '') {
                 return;
             }
-            this.apiService.putServiceInterface(this.shortName, this.version, serviceInterface.serviceInterfaceName, result).subscribe();
+            this.apiService.putServiceInterface(this.shortName, this.version, serviceInterface.serviceInterfaceName, result)
+                .subscribe();
         });
 
     }

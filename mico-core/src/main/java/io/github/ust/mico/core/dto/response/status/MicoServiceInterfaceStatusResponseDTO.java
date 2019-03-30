@@ -53,13 +53,30 @@ public class MicoServiceInterfaceStatusResponseDTO {
     private String name;
 
     /**
+     * States the availability of the external IP address of the Kubernetes service of this MicoServiceInterface. True
+     * if available, false if in pending state.
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "External IP Is Available"),
+            @ExtensionProperty(name = "default", value = "false"),
+            @ExtensionProperty(name = "x-order", value = "20"),
+            @ExtensionProperty(name = "description", value = "States the availability of the external IP address of the Kubernetes " +
+                "service of this MicoServiceInterface. " +
+                "True if available, false if in pending state.")
+        }
+    )})
+    private boolean externalIpIsAvailable = false;
+
+    /**
      * The external IP address of this {@link MicoServiceInterface}.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "External IP"),
-            @ExtensionProperty(name = "x-order", value = "20"),
+            @ExtensionProperty(name = "x-order", value = "30"),
             @ExtensionProperty(name = "description", value = "The external IP address of this MicoServiceInterface.")
         }
     )})

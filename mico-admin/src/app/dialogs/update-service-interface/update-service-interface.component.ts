@@ -44,7 +44,7 @@ export class UpdateServiceInterfaceComponent {
      * return method of the dialog
      */
     confirmButton() {
-        if (this.valid) {
+        if (!this.valid) {
             return null;
         }
         this.interfaceData.serviceInterfaceName = this.serviceInterfaceName;
