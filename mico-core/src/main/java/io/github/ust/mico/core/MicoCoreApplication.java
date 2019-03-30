@@ -22,7 +22,6 @@ package io.github.ust.mico.core;
 import io.github.ust.mico.core.persistence.MicoBackgroundJobRepository;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -35,7 +34,7 @@ import org.springframework.web.client.RestTemplate;
 /**
  * Entry point for the MICO core application.
  */
-@SpringBootApplication(exclude = {ErrorMvcAutoConfiguration.class})
+@SpringBootApplication
 @EnableNeo4jRepositories(basePackages = "io.github.ust.mico.core.persistence",
     excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = MicoBackgroundJobRepository.class))
 @EnableRedisRepositories(basePackages = "io.github.ust.mico.core.persistence",
