@@ -408,30 +408,9 @@ public class MicoKubernetesClient {
      * @return the {@link MicoApplicationDeploymentStatus}.
      */
     public MicoApplicationDeploymentStatus getApplicationDeploymentStatus(MicoApplication micoApplication) {
-    	return getApplicationDeploymentStatus(micoApplication.getShortName(), micoApplication.getVersion());
-    }
+        String applicationShortName = micoApplication.getShortName();
+        String applicationVersion = micoApplication.getVersion();
 
-    /**
-     * Indicates whether a {@code MicoApplication} is currently deployed.
-     * <p>
-     * In order to determine the application deployment status of the given
-     * {@code MicoApplication} the following points are checked:
-     * <ul>
-     * 	<li>the current {@link MicoApplicationJobStatus} (deployment may be scheduled,
-     * 		running or finished with an error</li>
-     * 	<li>the stored {@link MicoServiceDeploymentInfo} and {@link KubernetesDeploymentInfo}</li>
-     * 	<li>the actual information retrieved from Kubernetes regarding deployments for
-     * 		{@link MicoService MicoServices} and Kubernetes Services for
-     * 		{@link MicoServiceInterface MicoServiceInterfaces}</li>
-     * </ul>
-     * Note that the returned {@code MicoApplicationDeploymentStatus} contains info messages with further
-     * information in case the {@code MicoApplication} currently is <u>not</u> deployed.
-     *
-     * @param applicationShortName the short name of the {@link MicoApplication}.
-     * @param applicationVersion the version of the {@link MicoApplication}.
-     * @return the {@link MicoApplicationDeploymentStatus}.
-     */
-    public MicoApplicationDeploymentStatus getApplicationDeploymentStatus(String applicationShortName, String applicationVersion) {
     	log.debug("Start checking application deployment status for MicoApplication '{}' '{}'.",
     		applicationShortName, applicationVersion);
    		
@@ -451,7 +430,6 @@ public class MicoKubernetesClient {
    		// the stored deployment information and the actual Kubernetes deployments and services.
    		// If there are such errors or inconsistencies, this variable will be updated.
    		MicoApplicationDeploymentStatus.Value applicationDeploymentStatus = Value.DEPLOYED;
-   		List<MicoMessage> messages = new ArrayList<>();
    		String message;
    		
    		// Check whether there are jobs currently running for the deployment of the MicoApplication
@@ -460,34 +438,30 @@ public class MicoKubernetesClient {
    		switch (applicationJobStatus.getStatus()) {
    		case PENDING:
    			// 'Pending' indicates that the deployment is scheduled to be executed in the future
-   			applicationDeploymentStatus = Value.PENDING;
    			message = "The deployment of MicoApplication '" + applicationShortName
                 + "' '" + applicationVersion + "' is scheduled to be started.";
    			log.debug(message);
-   			messages.add(MicoMessage.info(message));
-   			return new MicoApplicationDeploymentStatus(applicationDeploymentStatus, messages);
+   			return MicoApplicationDeploymentStatus.pending(message);
    		case RUNNING:
    			// 'Running' indicates that the deployment is currently in progress
-   			applicationDeploymentStatus = Value.PENDING;
    			message = "The deployment of MicoApplication '" + applicationShortName
                 + "' '" + applicationVersion + "' is currently in progress.";
    			log.debug(message);
-   			messages.add(MicoMessage.info(message));
-   			return new MicoApplicationDeploymentStatus(applicationDeploymentStatus, messages);
+            return MicoApplicationDeploymentStatus.pending(message);
    		case ERROR:
    			// 'Error' indicates that errors occurred during the deployment
-            applicationDeploymentStatus = Value.INCOMPLETE;
             message = "The deployment of MicoApplication '" + applicationShortName
                 + "' '" + applicationVersion + "' failed.";
             log.debug(message);
-            messages.add(MicoMessage.error(message));
+            List<String> messages = new ArrayList<>();
+            messages.add(message);
             // Also add the error messages of the background jobs
-			messages.addAll(applicationJobStatus.getJobs()
-				.stream()
-				.filter(job -> job.getErrorMessage() != null)
-			    .map(job -> MicoMessage.error(job.getErrorMessage()))
-			    .collect(Collectors.toList()));
-   			return new MicoApplicationDeploymentStatus(applicationDeploymentStatus, messages);
+            messages.addAll(applicationJobStatus.getJobs()
+                .stream()
+                .filter(job -> job.getErrorMessage() != null)
+                .map(MicoServiceBackgroundJob::getErrorMessage)
+                .collect(Collectors.toList()));
+            return MicoApplicationDeploymentStatus.incomplete(messages);
 		case DONE:
 		case UNDEFINED:
 		default:
@@ -500,7 +474,8 @@ public class MicoKubernetesClient {
    		// (retrieved from the cluster) is null, i.e., there are no Kubernetes resources for the
    		// given application.
    		boolean allUpdatedKubernetesDeploymentInfoIsNull = true;
-   		
+
+   		List<MicoMessage> messages = new ArrayList<>();
    		// Check deployment status for each MicoService (Kubernetes deployment)
    		for (MicoServiceDeploymentInfo micoServiceDeploymentInfo : micoServiceDeploymentInfos) {
    			MicoService micoService = micoServiceDeploymentInfo.getService();

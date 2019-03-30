@@ -303,8 +303,9 @@ public class MicoApplicationBroker {
         return micoStatusService.getApplicationStatus(micoApplication);
     }
 
-    public MicoApplicationDeploymentStatus getApplicationDeploymentStatus(String shortName, String version) {
-        return micoKubernetesClient.getApplicationDeploymentStatus(shortName, version);
+    public MicoApplicationDeploymentStatus getApplicationDeploymentStatus(String shortName, String version) throws MicoApplicationNotFoundException {
+        MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(shortName, version);
+        return micoKubernetesClient.getApplicationDeploymentStatus(micoApplication);
     }
 
     //TODO: Move to Resource or keep in Broker? (see issue mico#632)

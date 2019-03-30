@@ -137,7 +137,7 @@ public class ApplicationResourceIntegrationTests {
                 new MicoApplication().setId(ID_1).setShortName(SHORT_NAME).setVersion(VERSION_1_0_1),
                 new MicoApplication().setId(ID_2).setShortName(SHORT_NAME).setVersion(VERSION),
                 new MicoApplication().setId(ID_3).setShortName(SHORT_NAME_1).setVersion(VERSION)));
-        given(micoKubernetesClient.getApplicationDeploymentStatus(anyString(), anyString())).willReturn(
+        given(micoKubernetesClient.getApplicationDeploymentStatus(any(MicoApplication.class))).willReturn(
         	MicoApplicationDeploymentStatus.undeployed("MicoApplication is currently not deployed."));
         
         mvc.perform(get(BASE_PATH).accept(MediaTypes.HAL_JSON_UTF8_VALUE))
@@ -159,7 +159,7 @@ public class ApplicationResourceIntegrationTests {
     public void getApplicationByShortName() throws Exception {
         given(applicationRepository.findByShortName(SHORT_NAME)).willReturn(
             CollectionUtils.listOf(new MicoApplication().setId(ID).setShortName(SHORT_NAME).setVersion(VERSION)));
-        given(micoKubernetesClient.getApplicationDeploymentStatus(SHORT_NAME, VERSION)).willReturn(
+        given(micoKubernetesClient.getApplicationDeploymentStatus(any(MicoApplication.class))).willReturn(
         	MicoApplicationDeploymentStatus.undeployed("MicoApplication is currently not deployed."));
 
         mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/").accept(MediaTypes.HAL_JSON_VALUE))
@@ -176,7 +176,7 @@ public class ApplicationResourceIntegrationTests {
     public void getApplicationByShortNameAndVersion() throws Exception {
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(
             Optional.of(new MicoApplication().setId(ID).setShortName(SHORT_NAME).setVersion(VERSION)));
-        given(micoKubernetesClient.getApplicationDeploymentStatus(SHORT_NAME, VERSION)).willReturn(
+        given(micoKubernetesClient.getApplicationDeploymentStatus(any(MicoApplication.class))).willReturn(
         	MicoApplicationDeploymentStatus.undeployed("MicoApplication is currently not deployed."));
 
         mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION).accept(MediaTypes.HAL_JSON_VALUE))
@@ -211,7 +211,7 @@ public class ApplicationResourceIntegrationTests {
         	MicoApplicationDeploymentStatus.undeployed("MicoApplication is currently not deployed.");
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
-        given(micoKubernetesClient.getApplicationDeploymentStatus(SHORT_NAME, VERSION)).willReturn(expectedApplicationDeploymentStatus);
+        given(micoKubernetesClient.getApplicationDeploymentStatus(application)).willReturn(expectedApplicationDeploymentStatus);
 
         mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
@@ -237,7 +237,7 @@ public class ApplicationResourceIntegrationTests {
         given(applicationRepository.findByShortName(SHORT_NAME)).willReturn(
             CollectionUtils.listOf(new MicoApplication().setId(ID).setShortName(SHORT_NAME).setVersion(VERSION)));
         
-        given(micoKubernetesClient.getApplicationDeploymentStatus(SHORT_NAME, VERSION)).willReturn(
+        given(micoKubernetesClient.getApplicationDeploymentStatus(any(MicoApplication.class))).willReturn(
         	MicoApplicationDeploymentStatus.undeployed("MicoApplication is currently not deployed."));
 
         mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/").accept(MediaTypes.HAL_JSON_VALUE))
@@ -411,8 +411,8 @@ public class ApplicationResourceIntegrationTests {
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingApplication));
         given(applicationRepository.save(eq(expectedApplication))).willReturn(expectedApplication);
-        given(micoKubernetesClient.getApplicationDeploymentStatus(SHORT_NAME, VERSION)).willReturn(
-        	MicoApplicationDeploymentStatus.undeployed("MicoApplication is currently not deployed."));
+        given(micoKubernetesClient.getApplicationDeploymentStatus(existingApplication))
+            .willReturn(MicoApplicationDeploymentStatus.undeployed("MicoApplication is currently not deployed."));
 
         mvc.perform(put(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION)
             .content(mapper.writeValueAsBytes(new MicoApplicationRequestDTO(updatedApplication)))
@@ -453,7 +453,7 @@ public class ApplicationResourceIntegrationTests {
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingApplication));
         given(applicationRepository.save(eq(updatedApplication.setId(ID)))).willReturn(expectedApplication);
-        given(micoKubernetesClient.getApplicationDeploymentStatus(SHORT_NAME, VERSION)).willReturn(expectedApplicationDeploymentStatus);
+        given(micoKubernetesClient.getApplicationDeploymentStatus(existingApplication)).willReturn(expectedApplicationDeploymentStatus);
 
         mvc.perform(put(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION)
             .content(mapper.writeValueAsBytes(new MicoApplicationRequestDTO(updatedApplication)))
@@ -528,10 +528,11 @@ public class ApplicationResourceIntegrationTests {
         	MicoApplicationDeploymentStatus.undeployed("MicoApplication is currently not deployed.");
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
+        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, newVersion))
+            .willReturn(Optional.empty()) // first call (check if new version already exists)
+            .willReturn(Optional.of(expectedApplication)); // second call (get deployment status)
         given(applicationRepository.save(any(MicoApplication.class))).willReturn(expectedApplication);
-		given(micoKubernetesClient.getApplicationDeploymentStatus(SHORT_NAME, VERSION)).willReturn(expectedApplicationDeploymentStatus);
-		given(micoKubernetesClient.getApplicationDeploymentStatus(SHORT_NAME, newVersion)).willReturn(expectedApplicationDeploymentStatus);
-        
+		given(micoKubernetesClient.getApplicationDeploymentStatus(expectedApplication)).willReturn(expectedApplicationDeploymentStatus);
 
         ArgumentCaptor<MicoApplication> applicationArgumentCaptor = ArgumentCaptor.forClass(MicoApplication.class);
 
@@ -604,7 +605,7 @@ public class ApplicationResourceIntegrationTests {
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(applicationRepository.save(any(MicoApplication.class))).willReturn(expectedApplication);
-        given(micoKubernetesClient.getApplicationDeploymentStatus(SHORT_NAME, VERSION)).willReturn(
+        given(micoKubernetesClient.getApplicationDeploymentStatus(application)).willReturn(
         	MicoApplicationDeploymentStatus.undeployed("MicoApplication is currently not deployed."));
 
         mvc.perform(put(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION)
@@ -647,7 +648,9 @@ public class ApplicationResourceIntegrationTests {
             .setShortName(SHORT_NAME).setVersion(VERSION)
             .setName(NAME).setDescription(DESCRIPTION);
 
-        given(micoKubernetesClient.getApplicationDeploymentStatus(application.getShortName(), application.getVersion()))
+        given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion()))
+            .willReturn(Optional.of(application));
+        given(micoKubernetesClient.getApplicationDeploymentStatus(application))
             .willReturn(new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.DEPLOYED, new ArrayList<>()));
 
         mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_DEPLOYMENT_STATUS).accept(MediaTypes.HAL_JSON_VALUE))
@@ -664,7 +667,9 @@ public class ApplicationResourceIntegrationTests {
             .setShortName(SHORT_NAME).setVersion(VERSION)
             .setName(NAME).setDescription(DESCRIPTION);
 
-        given(micoKubernetesClient.getApplicationDeploymentStatus(application.getShortName(), application.getVersion()))
+        given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion()))
+            .willReturn(Optional.of(application));
+        given(micoKubernetesClient.getApplicationDeploymentStatus(application))
             .willReturn(new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.UNDEPLOYED, new ArrayList<>()));
 
         mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_DEPLOYMENT_STATUS).accept(MediaTypes.HAL_JSON_VALUE))
@@ -681,7 +686,9 @@ public class ApplicationResourceIntegrationTests {
             .setShortName(SHORT_NAME).setVersion(VERSION)
             .setName(NAME).setDescription(DESCRIPTION);
 
-        given(micoKubernetesClient.getApplicationDeploymentStatus(application.getShortName(), application.getVersion()))
+        given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion()))
+            .willReturn(Optional.of(application));
+        given(micoKubernetesClient.getApplicationDeploymentStatus(application))
             .willReturn(new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.PENDING,
                 CollectionUtils.listOf(MicoMessage.info("The deployment of MicoApplication is scheduled to be started."))));
 
@@ -699,7 +706,9 @@ public class ApplicationResourceIntegrationTests {
             .setShortName(SHORT_NAME).setVersion(VERSION)
             .setName(NAME).setDescription(DESCRIPTION);
 
-        given(micoKubernetesClient.getApplicationDeploymentStatus(application.getShortName(), application.getVersion()))
+        given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion()))
+            .willReturn(Optional.of(application));
+        given(micoKubernetesClient.getApplicationDeploymentStatus(application))
             .willReturn(new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.INCOMPLETE,
                 CollectionUtils.listOf(
                     MicoMessage.error("The deployment of MicoService 1 failed."),
@@ -719,7 +728,9 @@ public class ApplicationResourceIntegrationTests {
             .setShortName(SHORT_NAME).setVersion(VERSION)
             .setName(NAME).setDescription(DESCRIPTION);
 
-        given(micoKubernetesClient.getApplicationDeploymentStatus(application.getShortName(), application.getVersion()))
+        given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion()))
+            .willReturn(Optional.of(application));
+        given(micoKubernetesClient.getApplicationDeploymentStatus(application))
             .willReturn(new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.UNKNOWN,
                 CollectionUtils.listOf(MicoMessage.warning("Unexpected number of clowns appeared."))));
 
