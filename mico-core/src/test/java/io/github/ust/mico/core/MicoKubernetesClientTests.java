@@ -350,7 +350,7 @@ public class MicoKubernetesClientTests {
    			micoApplication.getShortName(), micoApplication.getVersion())).willReturn(
    				micoApplication.getServiceDeploymentInfos().stream().map(sdi -> sdi.setKubernetesDeploymentInfo(null)).collect(Collectors.toList()));
         
-        assertEquals("Application is expected not to be deployed since it does not have any Kubernetes deployment information.",
+        assertEquals("Application is expected to be undeployed since it does not have any Kubernetes deployment information.",
         	MicoApplicationDeploymentStatus.Value.UNDEPLOYED,
         	micoKubernetesClient.getApplicationDeploymentStatus(micoApplication).getValue());
     }
@@ -372,6 +372,23 @@ public class MicoKubernetesClientTests {
     }
 
     @Test
+    public void getApplicationDeploymentStatusForApplicationWithUnknownStatus() {
+        MicoApplication micoApplication = setUpApplicationDeployment();
+
+        // Simulate error while updating Kubernetes Deployment Info (deployment name not set) -> Status Unknown
+        micoApplication.getServiceDeploymentInfos().get(0).getKubernetesDeploymentInfo().setDeploymentName(null);
+
+        MicoApplicationJobStatus jobStatus = new MicoApplicationJobStatus(micoApplication.getShortName(),
+            micoApplication.getVersion(), Status.UNDEFINED, Collections.emptyList());
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(
+            micoApplication.getShortName(), micoApplication.getVersion())).willReturn(jobStatus);
+
+        assertEquals("Application deployment status is expected to be unknown because the name of the Kubernetes deployment name is missing.",
+            MicoApplicationDeploymentStatus.Value.UNKNOWN,
+            micoKubernetesClient.getApplicationDeploymentStatus(micoApplication).getValue());
+    }
+
+    @Test
     public void getApplicationDeploymentStatusForApplicationWithDeploymentNotAvailableAnymore() {
         MicoApplication micoApplication = setUpApplicationDeployment(getMicoService(), getMicoService_2());
 
@@ -388,6 +405,35 @@ public class MicoKubernetesClientTests {
 
         assertEquals("Application deployment status is expected to be incomplete because a Kubernetes deployment is missing.",
             MicoApplicationDeploymentStatus.Value.INCOMPLETE,
+            micoKubernetesClient.getApplicationDeploymentStatus(micoApplication).getValue());
+    }
+
+    @Test
+    public void getApplicationDeploymentStatusForApplicationWithTwoServices_FirstUnkown_SecondNotAvailable() {
+        MicoApplication micoApplication = setUpApplicationDeployment(getMicoService(), getMicoService_2());
+        MicoServiceDeploymentInfo serviceDeploymentInfo1 = micoApplication.getServiceDeploymentInfos().get(0);
+        MicoServiceDeploymentInfo serviceDeploymentInfo2 = micoApplication.getServiceDeploymentInfos().get(1);
+
+        // Simulate error while updating Kubernetes Deployment Info (deployment name not set) -> Status Unknown
+        serviceDeploymentInfo1.getKubernetesDeploymentInfo().setDeploymentName(null);
+
+        MicoApplicationJobStatus jobStatus = new MicoApplicationJobStatus(micoApplication.getShortName(),
+            micoApplication.getVersion(), Status.UNDEFINED, Collections.emptyList());
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(
+            micoApplication.getShortName(), micoApplication.getVersion())).willReturn(jobStatus);
+
+        List<Deployment> deployments = mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems();
+        assertEquals("Expected 2 deployments before deletion of one", 2, deployments.size());
+        Deployment firstDeployment = deployments.stream().filter(deployment -> deployment.getMetadata().getName().startsWith(
+            serviceDeploymentInfo2.getService().getShortName())).findFirst().get();
+        mockServer.getClient().apps().deployments().inNamespace(testNamespace).delete(firstDeployment);
+        deployments = mockServer.getClient().apps().deployments().inNamespace(testNamespace).list().getItems();
+        assertEquals("Expected 1 deployment after deletion of one", 1, deployments.size());
+        assertTrue("Expected deployment name starts with short name of service", deployments.get(0).getMetadata().getName().startsWith(
+            serviceDeploymentInfo1.getService().getShortName()));
+
+        assertEquals("Application deployment status is expected to be incomplete because a Kubernetes deployment is missing.",
+            MicoApplicationDeploymentStatus.Value.UNKNOWN,
             micoKubernetesClient.getApplicationDeploymentStatus(micoApplication).getValue());
     }
 

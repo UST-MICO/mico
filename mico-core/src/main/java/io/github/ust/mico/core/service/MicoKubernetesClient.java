@@ -508,27 +508,37 @@ public class MicoKubernetesClient {
    				// If there is no Kubernetes deployment info,
    				// the current service has/is not (been) deployed,
    				// which means that the deployment is 'incomplete'.
-   				applicationDeploymentStatus = Value.INCOMPLETE;
    				message = "The Kubernetes deployment information for MicoService '"
                     + micoService.getShortName() + "' '" + micoService.getVersion() + "' is not available.";
    				log.warn(message);
 				messages.add(MicoMessage.error(message));
+   				applicationDeploymentStatus = Value.INCOMPLETE;
    			} else {
+
    				// Retrieve Kubernetes deployment information
                 Optional<KubernetesDeploymentInfo> kubernetesDeploymentInfoOptional;
                 try {
                     kubernetesDeploymentInfoOptional = updateKubernetesDeploymentInfo(micoServiceDeploymentInfo);
-                } catch (KubernetesResourceException e) {
-                    messages.add(MicoMessage.error(e.getMessage()));
-                    return new MicoApplicationDeploymentStatus(Value.UNKNOWN, messages);
+                } catch (Exception e) {
+                    message = "Deployment status of MicoService '"
+                        + micoService.getShortName() + "' '" + micoService.getVersion() + "' is unknown. Reason: " + e.getMessage();
+                    log.warn(message);
+                    messages.add(MicoMessage.error(message));
+                    applicationDeploymentStatus = Value.UNKNOWN;
+                    continue;
                 }
+
                 if (!kubernetesDeploymentInfoOptional.isPresent()) {
    					// MicoService had been deployed, but is longer deployed in Kubernetes
-   					applicationDeploymentStatus = Value.INCOMPLETE;
    					message = "The Kubernetes deployment information for MicoService '"
                         + micoService.getShortName() + "' '" + micoService.getVersion() + "' is not available anymore.";
    					log.warn(message);
    					messages.add(MicoMessage.error(message));
+                    if(!applicationDeploymentStatus.equals(Value.UNKNOWN)) {
+                        // If the deployment is already considered to be unknown
+                        // it should not be overwritten with the status incomplete.
+                        applicationDeploymentStatus = Value.INCOMPLETE;
+                    }
    				} else {
                     // There is at least one Kubernetes deployment.
                     allUpdatedKubernetesDeploymentInfoIsNull = false;
@@ -538,11 +548,28 @@ public class MicoKubernetesClient {
    					// Check for the current MicoService whether a deployment actually exists
    					if(!kubernetesDeploymentInfo.getDeploymentName().startsWith(micoService.getShortName())) {
                         // Expected Kubernetes Deployment does not exist.
-                        applicationDeploymentStatus = Value.INCOMPLETE;
                         message = "There is no Kubernetes deployment for the MicoService '" + micoService.getShortName()
                             + "' '" + micoService.getVersion() + "'.";
                         log.warn(message);
                         messages.add(MicoMessage.error(message));
+                        if(!applicationDeploymentStatus.equals(Value.UNKNOWN)) {
+                            // If the deployment is already considered to be unknown
+                            // it should not be overwritten with the status incomplete.
+                            applicationDeploymentStatus = Value.INCOMPLETE;
+                        }
+                    }
+
+   					if(micoService.getServiceInterfaces().isEmpty()) {
+                        message = "There are no interfaces defined for the MicoService '" + micoService.getShortName()
+                            + "' '" + micoService.getVersion() + "'.";
+                        log.warn(message);
+                        messages.add(MicoMessage.error(message));
+                        if(!applicationDeploymentStatus.equals(Value.UNKNOWN)) {
+                            // If the deployment is already considered to be unknown
+                            // it should not be overwritten with the status incomplete.
+                            applicationDeploymentStatus = Value.INCOMPLETE;
+                        }
+                        continue;
                     }
 
    					// Check for each interface of the current MicoService whether a Kubernetes service actually exist
@@ -553,34 +580,39 @@ public class MicoKubernetesClient {
                             .filter(name -> name.startsWith(expectedPrefix)).collect(Collectors.toList());
                         if (found.isEmpty()) {
                             // Expected Kubernetes service does not exist.
-                            applicationDeploymentStatus = Value.INCOMPLETE;
                             message = "There is no Kubernetes service for the interface '"
                                 + serviceInterface.getServiceInterfaceName() + "' of MicoService '" + micoService.getShortName()
                                 + "' '" + micoService.getVersion() + "'.";
                             log.warn(message);
                             messages.add(MicoMessage.error(message));
+                            if(!applicationDeploymentStatus.equals(Value.UNKNOWN)) {
+                                // If the deployment is already considered to be unknown
+                                // it should not be overwritten with the status incomplete.
+                                applicationDeploymentStatus = Value.INCOMPLETE;
+                            }
                         } else if (found.size() > 1) {
                             // There is more than one Kubernetes service for the same interface. That's not allowed.
-                            applicationDeploymentStatus = Value.UNKNOWN;
                             message = "There are " + found.size() + " Kubernetes services for the interface '"
                                 + serviceInterface.getServiceInterfaceName() + "' of MicoService '" + micoService.getShortName()
                                 + "' '" + micoService.getVersion() + "': " + found.toString() + ". Expected only one.";
                             log.warn(message);
                             messages.add(MicoMessage.warning(message));
+                            applicationDeploymentStatus = Value.UNKNOWN;
                         }
                     }
    				}
    			}
    		}
    		
-   		// If all updated Kubernetes deployment information is null,
-   		// the application cannot be deployed
-   		if (allUpdatedKubernetesDeploymentInfoIsNull) {
+   		// If all updated Kubernetes deployment information is null
+        // and the current state of the application is not is not set to unknown,
+        // the application is considered to be undeployed.
+        if (allUpdatedKubernetesDeploymentInfoIsNull && !applicationDeploymentStatus.equals(Value.UNKNOWN)) {
             log.debug("No deployments of the MicoServices of MicoApplication '{}' '{}' are available anymore. " +
-                    "MicoApplication is considered to be not deployed.",
-                    applicationShortName, applicationVersion);
-   			return MicoApplicationDeploymentStatus.undeployed("The MicoApplication is currently not deployed.");
-   		}
+                    "MicoApplication is considered to be undeployed.",
+                applicationShortName, applicationVersion);
+            return MicoApplicationDeploymentStatus.undeployed("The MicoApplication is currently undeployed.");
+        }
    		
    		// If the deployment status is not set to 'deployed' anymore,
    		// return the computed status
