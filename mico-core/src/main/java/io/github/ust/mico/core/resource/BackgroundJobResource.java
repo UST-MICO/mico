@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
+import io.github.ust.mico.core.model.MicoApplicationJobStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
@@ -66,8 +68,15 @@ public class BackgroundJobResource {
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_STATUS)
     public ResponseEntity<Resource<MicoApplicationJobStatusResponseDTO>> getJobStatusByApplicationShortNameAndVersion(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName, @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        return ResponseEntity.ok(new Resource<>(new MicoApplicationJobStatusResponseDTO(
-            backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(shortName, version)), linkTo(methodOn(BackgroundJobResource.class)
+        MicoApplicationJobStatus jobStatus;
+        try {
+            jobStatus = backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(shortName, version);
+        } catch (MicoApplicationNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+
+        return ResponseEntity.ok(new Resource<>(new MicoApplicationJobStatusResponseDTO(jobStatus),
+            linkTo(methodOn(BackgroundJobResource.class)
             .getJobStatusByApplicationShortNameAndVersion(shortName, version)).withSelfRel()));
     }
 
