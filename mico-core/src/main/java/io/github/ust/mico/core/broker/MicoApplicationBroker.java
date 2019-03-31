@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
+import io.github.ust.mico.core.dto.response.status.MicoApplicationDeploymentStatusResponseDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
@@ -320,7 +321,10 @@ public class MicoApplicationBroker {
     //TODO: Change return value to not use a DTO (see issue mico#630)
     public MicoApplicationStatusResponseDTO getApplicationStatus(String shortName, String version) throws MicoApplicationNotFoundException {
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(shortName, version);
-        return micoStatusService.getApplicationStatus(micoApplication);
+        MicoApplicationStatusResponseDTO applicationStatus = micoStatusService.getApplicationStatus(micoApplication);
+        applicationStatus.setApplicationDeploymentStatusResponseDTO(new MicoApplicationDeploymentStatusResponseDTO(
+            getApplicationDeploymentStatus(shortName, version)));
+        return applicationStatus;
     }
 
     public MicoApplicationDeploymentStatus getApplicationDeploymentStatus(String shortName, String version) throws MicoApplicationNotFoundException {
