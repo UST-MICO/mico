@@ -837,9 +837,11 @@ public class ApplicationResourceIntegrationTests {
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(applicationRepository.findAllByUsedService(any(), any())).willReturn(CollectionUtils.listOf(otherMicoApplication));
         given(serviceRepository.findAllByApplication(SHORT_NAME, VERSION)).willReturn(CollectionUtils.listOf(service));
-
         // Mock MicoStatusService
         given(micoStatusService.getApplicationStatus(any(MicoApplication.class))).willReturn(micoApplicationStatus);
+        // Mock MicoKubernetesClient
+        given(micoKubernetesClient.getApplicationDeploymentStatus(any(MicoApplication.class)))
+            .willReturn(new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.DEPLOYED, new ArrayList<>()));
 
         mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_STATUS))
             .andDo(print())
@@ -867,7 +869,9 @@ public class ApplicationResourceIntegrationTests {
             .andExpect(jsonPath(POD_INFO_NODE_NAME_2, is(nodeName)))
             .andExpect(jsonPath(POD_INFO_METRICS_MEMORY_USAGE_2, is(memoryUsage2)))
             .andExpect(jsonPath(POD_INFO_METRICS_CPU_LOAD_2, is(cpuLoad2)))
-            .andExpect(jsonPath(ERROR_MESSAGES, is(CollectionUtils.listOf())));
+            .andExpect(jsonPath(ERROR_MESSAGES, is(CollectionUtils.listOf())))
+            .andExpect(jsonPath(APPLICATION_DEPLOYMENT_STATUS_RESPONSE_DTO + ".value", is(MicoApplicationDeploymentStatus.Value.DEPLOYED.toString())))
+            .andExpect(jsonPath(APPLICATION_DEPLOYMENT_STATUS_RESPONSE_DTO + ".messages", hasSize(0)));
     }
 
     @Test

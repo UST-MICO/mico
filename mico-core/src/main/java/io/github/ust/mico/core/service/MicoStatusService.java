@@ -123,7 +123,11 @@ public class MicoStatusService {
      * MicoService}.
      */
     public MicoServiceStatusResponseDTO getServiceStatus(MicoService micoService) {
-        MicoServiceStatusResponseDTO serviceStatus = new MicoServiceStatusResponseDTO();
+        MicoServiceStatusResponseDTO serviceStatus = new MicoServiceStatusResponseDTO()
+            .setShortName(micoService.getShortName())
+            .setVersion(micoService.getVersion())
+            .setName(micoService.getName());
+
         String message;
         Optional<Deployment> deploymentOptional = micoKubernetesClient.getDeploymentOfMicoService(micoService);
         if (deploymentOptional.isPresent()) {
@@ -149,10 +153,6 @@ public class MicoStatusService {
             MicoMessage errorMessage = MicoMessage.error(message);
             return serviceStatus.setErrorMessages(CollectionUtils.listOf(new MicoMessageResponseDTO(errorMessage)));
         }
-        serviceStatus
-            .setName(micoService.getName())
-            .setShortName(micoService.getShortName())
-            .setVersion(micoService.getVersion());
 
         // Get status information for the service interfaces of this service,
         // if there are any errors, add them to the service status
