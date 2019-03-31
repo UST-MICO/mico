@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import io.github.ust.mico.core.model.MicoApplication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +27,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class MicoServiceBroker {
+
+    @Autowired
+    private MicoApplicationBroker micoApplicationBroker;
 
     @Autowired
     private MicoServiceRepository serviceRepository;
@@ -67,8 +71,9 @@ public class MicoServiceBroker {
         return serviceRepository.findByShortName(shortName);
     }
 
-    public void deleteService(MicoService service) throws MicoServiceHasDependersException, MicoServiceIsDeployedException {
+    public void deleteService(MicoService service) throws MicoServiceHasDependersException, MicoServiceIsDeployedException, MicoServiceIsUsedByMicoApplicationsException {
         throwConflictIfServiceIsDeployed(service);
+        throwConflictIfServiceIsIncludedInApplications(service);
         if (!getDependers(service).isEmpty()) {
             throw new MicoServiceHasDependersException(service.getShortName(), service.getVersion());
         }
@@ -76,10 +81,11 @@ public class MicoServiceBroker {
         log.debug("Deleted MicoService '{}' '{}'.", service.getShortName(), service.getVersion());
     }
 
-    public void deleteAllVersionsOfService(String shortName) throws MicoServiceIsDeployedException {
+    public void deleteAllVersionsOfService(String shortName) throws MicoServiceIsDeployedException, MicoServiceIsUsedByMicoApplicationsException {
         List<MicoService> serviceList = getAllVersionsOfServiceFromDatabase(shortName);
         for (MicoService service : serviceList) {
             throwConflictIfServiceIsDeployed(service);
+            throwConflictIfServiceIsIncludedInApplications(service);
         }
         for (MicoService service : serviceList) {
             serviceRepository.delete(service);
@@ -90,7 +96,7 @@ public class MicoServiceBroker {
     /**
      * Checks if a service is deployed. If yes the method throws a {@code MicoServiceIsDeployedException}.
      *
-     * @param service Checks if this service is deployed
+     * @param service the {@link MicoService}
      * @throws MicoServiceIsDeployedException if the service is deployed
      */
     private void throwConflictIfServiceIsDeployed(MicoService service) throws MicoServiceIsDeployedException {
@@ -98,6 +104,19 @@ public class MicoServiceBroker {
             log.info("MicoService '{}' in version '{}' is deployed. Undeployment is required.",
                 service.getShortName(), service.getVersion());
             throw new MicoServiceIsDeployedException(service.getShortName(), service.getVersion());
+        }
+    }
+
+    /**
+     * Checks if a service is used by other applications. If yes the method throws a {@code MicoServiceIsUsedByMicoApplicationsException}.
+     *
+     * @param service the {@link MicoService}
+     * @throws MicoServiceIsUsedByMicoApplicationsException if the service is used by applications
+     */
+    private void throwConflictIfServiceIsIncludedInApplications(MicoService service) throws MicoServiceIsUsedByMicoApplicationsException {
+        List<MicoApplication> applications = micoApplicationBroker.getMicoApplicationsUsingMicoService(service.getShortName(), service.getVersion());
+        if(!applications.isEmpty()) {
+            throw new MicoServiceIsUsedByMicoApplicationsException(service.getShortName(), service.getVersion(), applications);
         }
     }
 
@@ -138,11 +157,6 @@ public class MicoServiceBroker {
         Optional<MicoService> micoServiceOptional = serviceRepository.findByShortNameAndVersion(newService.getShortName(), newService.getVersion());
         if (micoServiceOptional.isPresent()) {
             throw new MicoServiceAlreadyExistsException(newService.getShortName(), newService.getVersion());
-        }
-        for (MicoServiceInterface serviceInterface : newService.getServiceInterfaces()) {
-        	serviceInterface.getDescription(); // Just to suppress the "unused" warning for serviceInterface ...
-            //TODO: Verfiy how to put this into method into ServiceBroker
-            //validateProvidedInterface(newService.getShortName(), newService.getVersion(), serviceInterface);
         }
         return serviceRepository.save(newService);
     }
