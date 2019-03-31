@@ -96,6 +96,17 @@ public class DeploymentBroker {
                         .filter(j -> !j.isDone() && !j.isCancelled() && !j.isCompletedExceptionally()).collect(Collectors.toList());
                     log.warn("There are still {} other jobs running for the deployment of MicoApplication '{}' '{}'",
                         runningBuildJobs.size(), micoApplication.getShortName(), micoApplication.getVersion());
+
+                    for (CompletableFuture<MicoServiceDeploymentInfo> runningBuildJob : runningBuildJobs) {
+                        try {
+                            MicoServiceDeploymentInfo sdi = runningBuildJob.get();
+                            log.debug("Cancel running build job for MicoService '{}' '{}'.", sdi.getService().getShortName(), sdi.getService().getVersion());
+                            runningBuildJob.cancel(true);
+                            // TODO: Ensure job status will be set to 'CANCELLED' or similar)
+                        } catch (InterruptedException | ExecutionException e) {
+                            log.warn("Failed to cancel build job. Caused by: " + e.getMessage());
+                        }
+                    }
                     return null;
                 });
             log.debug("Started build of MicoService '{}' in version '{}'.", micoService.getShortName(), micoService.getVersion());
