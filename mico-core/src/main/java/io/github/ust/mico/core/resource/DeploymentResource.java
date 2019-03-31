@@ -19,6 +19,7 @@
 
 package io.github.ust.mico.core.resource;
 
+import io.github.ust.mico.core.exception.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
@@ -32,10 +33,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import io.github.ust.mico.core.broker.DeploymentBroker;
 import io.github.ust.mico.core.dto.response.MicoApplicationJobStatusResponseDTO;
-import io.github.ust.mico.core.exception.DeploymentException;
-import io.github.ust.mico.core.exception.MicoApplicationDoesNotIncludeMicoServiceException;
-import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
-import io.github.ust.mico.core.exception.MicoServiceInterfaceNotFoundException;
 import io.github.ust.mico.core.model.MicoApplicationJobStatus;
 
 @RestController
@@ -75,6 +72,8 @@ public class DeploymentResource {
             deploymentBroker.undeployApplication(shortName, version);
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (MicoApplicationIsDeployingException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
 
         return ResponseEntity.noContent().build();
