@@ -997,7 +997,14 @@ public class MicoKubernetesClient {
                     kubernetesDeploymentInfoRepository.delete(serviceDeploymentInfo.getKubernetesDeploymentInfo());
 				}
 			}
-    	}
+
+            // Ensure build job status is not set to failed (influence the application status).
+            Optional<MicoServiceBackgroundJob> buildJobOfService = backgroundJobBroker
+                .getJobByMicoService(service.getShortName(), service.getVersion(), MicoServiceBackgroundJob.Type.BUILD);
+			// TODO: Ensure that there no concurrent applications that use the same job (covered by mico#702)
+            buildJobOfService.ifPresent(micoServiceBackgroundJob -> backgroundJobBroker.deleteJob(micoServiceBackgroundJob.getId()));
+        }
+
     }
     
     /**
