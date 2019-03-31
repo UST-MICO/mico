@@ -167,24 +167,30 @@ public class DeploymentBroker {
         return backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(shortName, version);
     }
 
-    public void undeployApplication(String shortName, String version) throws MicoApplicationNotFoundException {
+    public void undeployApplication(String shortName, String version) throws MicoApplicationNotFoundException, MicoApplicationIsDeployingException {
 
         MicoApplication micoApplication = micoApplicationBroker.getMicoApplicationByShortNameAndVersion(shortName, version);
 
         log.info("Undeploy MicoApplication '{}' in version '{}' with {} included MicoService(s).",
             shortName, version, micoApplication.getServices().size());
 
-        if (!micoKubernetesClient.isApplicationDeployed(micoApplication)) {
-            // Currently we undeploy all MicoServices regardless whether the application is considered
-            // to be deployed or not.
-            // The reason is that there are possible some MicoServices deployed successfully and some not.
-            // This undeployment should delete/scale the actually existing deployments.
-            log.info("MicoApplication '{}' in version '{}' is considered to be not deployed. " +
-                    "Nevertheless check if there are any MicoServices that should be undeployed.",
-                micoApplication.getShortName(), micoApplication.getVersion());
+        MicoApplicationDeploymentStatus applicationDeploymentStatus = micoKubernetesClient.getApplicationDeploymentStatus(micoApplication);
+        switch (applicationDeploymentStatus.getValue()) {
+            case DEPLOYED:
+            case INCOMPLETE:
+            case UNKNOWN:
+                // The application should be undeployed if the current state is either 'deployed', 'incomplete' or unknown'.
+                micoKubernetesClient.undeployApplication(micoApplication);
+                break;
+            case PENDING:
+                throw new MicoApplicationIsDeployingException(micoApplication.getShortName(), micoApplication.getVersion());
+            case UNDEPLOYED:
+                log.info("MicoApplication '{}' in version '{}' is considered to be undeployed. No undeployment required.",
+                    micoApplication.getShortName(), micoApplication.getVersion());
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown application deployment status: " + applicationDeploymentStatus.getValue());
         }
-        // TODO: Undeploy only if application is deployed or it is in a conflicted state. Covered by mico#535
-        micoKubernetesClient.undeployApplication(micoApplication);
     }
 
     private void checkIfMicoApplicationIsDeployable(MicoApplication micoApplication) throws MicoApplicationDoesNotIncludeMicoServiceException, MicoServiceInterfaceNotFoundException, DeploymentException {
