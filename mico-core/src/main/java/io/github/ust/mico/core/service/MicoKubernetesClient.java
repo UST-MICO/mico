@@ -514,7 +514,7 @@ public class MicoKubernetesClient {
 
                 if (!kubernetesDeploymentInfoOptional.isPresent()) {
                     // MicoService had been deployed, but is longer deployed in Kubernetes
-                    message = "The Kubernetes deployment information for MicoService '"
+                    message = "The Kubernetes deployment for MicoService '"
                         + micoService.getShortName() + "' '" + micoService.getVersion() + "' is not available anymore.";
                     log.warn(message);
                     messages.add(MicoMessage.error(message));
@@ -532,7 +532,7 @@ public class MicoKubernetesClient {
                     // Check for the current MicoService whether a deployment actually exists
                     if (!kubernetesDeploymentInfo.getDeploymentName().startsWith(micoService.getShortName())) {
                         // Expected Kubernetes Deployment does not exist.
-                        message = "There is no Kubernetes deployment for the MicoService '" + micoService.getShortName()
+                        message = "There is no valid Kubernetes deployment for the MicoService '" + micoService.getShortName()
                             + "' '" + micoService.getVersion() + "'.";
                         log.warn(message);
                         messages.add(MicoMessage.error(message));
