@@ -19,27 +19,13 @@
 
 package io.github.ust.mico.core.service.imagebuilder;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.*;
-import java.util.stream.Collectors;
-
 import io.fabric8.kubernetes.api.model.ContainerStatus;
-import io.fabric8.kubernetes.client.KubernetesClientException;
-import lombok.Getter;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.core.env.Environment;
-import org.springframework.core.env.Profiles;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.ServiceAccount;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
@@ -50,7 +36,20 @@ import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.service.imagebuilder.buildtypes.*;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.KubernetesNameNormalizer;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 /**
  * Builds container images by using Knative Build and Kaniko.
@@ -107,7 +106,7 @@ public class ImageBuilder {
         }
         try {
             init();
-        } catch(Exception e) {
+        } catch (Exception e) {
             log.error("Failed to initialize image builder. Caused by: " + e.getMessage(), e);
         }
     }
@@ -272,13 +271,9 @@ public class ImageBuilder {
                     // Typically there are 3 steps: build-step-credential-initializer, build-step-git-source-0, build-step-build-and-push
                     List<ContainerStatus> runningSteps = buildPod.getStatus().getInitContainerStatuses().stream()
                         .filter(p -> p.getState().getRunning() != null).collect(Collectors.toList());
-                    if(runningSteps.isEmpty()) {
-                        log.warn("No step of build of MicoService '{}' '{}' is currently running!",
-                            micoService.getShortName(), micoService.getVersion());
-                    }
-                    log.debug("Current phase of build of MicoService '{}' '{}' is '{}'.{}",
+                    log.debug("Current phase of build of MicoService '{}' '{}' is '{}'{}",
                         micoService.getShortName(), micoService.getVersion(), currentBuildPhase,
-                        !runningSteps.isEmpty() ? " (Step: " + runningSteps.get(0).getName() + ")" : "");
+                        !runningSteps.isEmpty() ? " (step: " + runningSteps.get(0).getName() + ")." : ".");
 
                     // During build the phase is 'Pending'.
                     // We wait until the phase is either 'Succeeded' or 'Failed'.
@@ -286,12 +281,11 @@ public class ImageBuilder {
                         String dockerImageUri = createImageName(micoService.getShortName(), micoService.getVersion());
                         completionFuture.complete(dockerImageUri);
                     } else if (currentBuildPhase.equals("Failed")) {
-                        List<ContainerStatus> terminatedSteps = buildPod.getStatus().getInitContainerStatuses().stream()
-                            .filter(p -> p.getState().getTerminated() != null).collect(Collectors.toList());
-                        for (ContainerStatus terminatedStep : terminatedSteps) {
-                            log.debug("Build step '{}' terminated with reason '{}'.", terminatedStep.getName(), terminatedStep.getState().getTerminated().getReason());
-                        }
-                        message = "Build of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' failed!";
+                        // Reason for termination is either 'Completed' or 'Error'
+                        List<ContainerStatus> failedStep = buildPod.getStatus().getInitContainerStatuses().stream()
+                            .filter(p -> p.getState().getTerminated() != null && p.getState().getTerminated().getReason().equals("Error")).collect(Collectors.toList());
+                        message = "Build of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion()
+                            + "' failed" + (!failedStep.isEmpty() ? " in step '" + failedStep.get(0).getName() + "'!" : "!");
                         log.warn(message);
                         completionFuture.completeExceptionally(new ImageBuildException(message));
                     }

@@ -9,6 +9,7 @@ import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.util.FutureUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -89,23 +90,14 @@ public class DeploymentBroker {
             log.info("Start build of MicoService '{}' '{}'.", micoService.getShortName(), micoService.getVersion());
             CompletableFuture<MicoServiceDeploymentInfo> buildJob = CompletableFuture.supplyAsync(() -> buildMicoService(serviceDeploymentInfo))
                 .exceptionally(ex -> {
-                    log.error(ex.getMessage(), ex);
+                    // Build failed
                     backgroundJobBroker.saveNewStatus(micoService.getShortName(), micoService.getVersion(),
-                        MicoServiceBackgroundJob.Type.BUILD, MicoServiceBackgroundJob.Status.ERROR, ex.getMessage());
+                        MicoServiceBackgroundJob.Type.BUILD, MicoServiceBackgroundJob.Status.ERROR, ExceptionUtils.getRootCauseMessage(ex));
                     List<CompletableFuture<MicoServiceDeploymentInfo>> runningBuildJobs = buildJobs.stream()
                         .filter(j -> !j.isDone() && !j.isCancelled() && !j.isCompletedExceptionally()).collect(Collectors.toList());
-                    log.warn("There are still {} other jobs running for the deployment of MicoApplication '{}' '{}'",
-                        runningBuildJobs.size(), micoApplication.getShortName(), micoApplication.getVersion());
-
-                    for (CompletableFuture<MicoServiceDeploymentInfo> runningBuildJob : runningBuildJobs) {
-                        try {
-                            MicoServiceDeploymentInfo sdi = runningBuildJob.get();
-                            log.debug("Cancel running build job for MicoService '{}' '{}'.", sdi.getService().getShortName(), sdi.getService().getVersion());
-                            runningBuildJob.cancel(true);
-                            // TODO: Ensure job status will be set to 'CANCELLED' or similar)
-                        } catch (InterruptedException | ExecutionException e) {
-                            log.warn("Failed to cancel build job. Caused by: " + e.getMessage());
-                        }
+                    if (runningBuildJobs.size() > 1) {
+                        log.debug("There are still {} other job(s) running for the deployment of MicoApplication '{}' '{}'",
+                            runningBuildJobs.size() - 1, micoApplication.getShortName(), micoApplication.getVersion());
                     }
                     return null;
                 });
@@ -120,13 +112,13 @@ public class DeploymentBroker {
             // All failed builds lead to a null in the service deployment list.
             long failedJobs = serviceDeploymentInfosWithNullValues.stream().filter(Objects::isNull).count();
             if (failedJobs > 0) {
-                log.warn("{} build jobs failed. Skip creating / updating of Kubernetes resources.", failedJobs);
+                log.warn("{} build job(s) failed. Skip creating / updating of Kubernetes resources.", failedJobs);
                 return;
             }
 
             List<MicoServiceDeploymentInfo> serviceDeploymentInfos = serviceDeploymentInfosWithNullValues.stream()
                 .filter(Objects::nonNull).collect(toList());
-            log.info("All {} build jobs for the deployment of MicoApplication '{}' '{}' finished successfully. " +
+            log.info("All {} build job(s) for the deployment of MicoApplication '{}' '{}' finished successfully. " +
                     "Start creating or updating Kubernetes resources.", serviceDeploymentInfos.size(),
                 micoApplication.getShortName(), micoApplication.getVersion());
 

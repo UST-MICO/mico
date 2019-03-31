@@ -921,6 +921,12 @@ public class MicoKubernetesClient {
             application.getShortName(), application.getVersion());
 
     	for (MicoService service : application.getServices()) {
+            // Delete build jobs to ensure that they are not set to failed (would be influence the application status).
+            Optional<MicoServiceBackgroundJob> buildJobOfService = backgroundJobBroker
+                .getJobByMicoService(service.getShortName(), service.getVersion(), MicoServiceBackgroundJob.Type.BUILD);
+            // TODO: Ensure that there no concurrent applications that use the same job (covered by mico#702)
+            buildJobOfService.ifPresent(micoServiceBackgroundJob -> backgroundJobBroker.deleteJob(micoServiceBackgroundJob.getId()));
+
     	    log.debug("Check MicoService '{}' '{}' whether it should be scaled in or completely undeployed...",
                 service.getShortName(), service.getVersion());
 
@@ -941,70 +947,69 @@ public class MicoKubernetesClient {
 				log.error("Deployment info for MicoService '{}' in version '{}' is not available in the database.",
 				    service.getShortName(), service.getVersion());
 				throw new IllegalStateException(
-					"Service deployment info for MicoApplication '" 
-						+ application.getShortName() + "' '" + application.getVersion()
+					"Service deployment info for MicoApplication '" + application.getShortName() + "' '" + application.getVersion()
 						+ "' and MicoService '" + service.getShortName() + "' '" + service.getVersion() + "' does not exist!");
-			} else {
-				MicoServiceDeploymentInfo serviceDeploymentInfo = serviceDeploymentInfoOptional.get();
-                if(serviceDeploymentInfo.getKubernetesDeploymentInfo() == null) {
-                    log.info("MicoService '{}' '{}' is not deployed for the MicoApplication '{}' '{}'. No undeployment/scaling required.",
-                        service.getShortName(), service.getVersion(), application.getShortName(), application.getVersion());
-                    continue;
-                }
-                // Check which applications are deployed and are actually using this service
-                List<MicoApplication> applicationsUsingThisService = applicationRepository.findAllByUsedService(service.getShortName(), service.getVersion());
-                List<MicoApplication> otherDeployedApplicationsUsingThisService = applicationsUsingThisService.stream()
-                    .filter(app -> !(app.getShortName().equals(application.getShortName()) && app.getVersion().equals(application.getVersion()))
-                        && isApplicationDeployed(app)).collect(Collectors.toList());
-
-                if (otherDeployedApplicationsUsingThisService.isEmpty()) {
-					// Service is not used by other deployed applications -> simply undeploy it
-					log.debug("MicoService '{}' in version '{}' is not used by other MicoApplications.",
-					    service.getShortName(), service.getVersion());
-					undeploy(serviceDeploymentInfo);
-				} else {
-                    // Service used by multiple applications -> scale in
-                    log.debug("MicoService '{}' in version '{}' is also used by {} other deployed MicoApplication(s): {}",
-                        service.getShortName(), service.getVersion(),
-                        otherDeployedApplicationsUsingThisService.size(),
-                        otherDeployedApplicationsUsingThisService.stream()
-                            .map(app -> "'" + app.getShortName() + "' '" + app.getVersion() + "'").collect(Collectors.toList())
-                    );
-					
-					// Calculate the current total number of requested replicas for 
-					// the currently processed service, which is the sum of requested
-					// replicas of all applications that are using the current service
-					// and are actually deployed.
-					int currentTotalRequestedReplicas = serviceDeploymentInfo.getReplicas();
-					for (MicoApplication otherApplicationUsingThisService : otherDeployedApplicationsUsingThisService) {
-                        currentTotalRequestedReplicas += getServiceDeploymentInfo(otherApplicationUsingThisService, service).getReplicas();
-					}
-					log.debug("Currently {} replica(s) of MicoService '{}' in version '{}' are requested based on the given service deployment information.",
-                        currentTotalRequestedReplicas, service.getShortName(), service.getVersion());
-					
-					// The updated number of total requested replicas for the current service
-					// is the current total minus the replicas of the current service.
-					int updatedTotalRequestedReplicas = currentTotalRequestedReplicas - serviceDeploymentInfo.getReplicas();
-                    log.debug("Scale in MicoService '{}' in version '{}': {} → {}",
-                        service.getShortName(), service.getVersion(), currentTotalRequestedReplicas, updatedTotalRequestedReplicas);
-
-					// Actual scaling
-					scale(serviceDeploymentInfo, updatedTotalRequestedReplicas);
-
-                    // Delete Kubernetes deployment info in database
-                    log.debug("Delete Kubernetes deployment info in database for MicoService '{}' in version '{}'.",
-                        serviceDeploymentInfo.getService().getShortName(), serviceDeploymentInfo.getService().getVersion());
-                    kubernetesDeploymentInfoRepository.delete(serviceDeploymentInfo.getKubernetesDeploymentInfo());
-				}
 			}
 
-            // Ensure build job status is not set to failed (influence the application status).
-            Optional<MicoServiceBackgroundJob> buildJobOfService = backgroundJobBroker
-                .getJobByMicoService(service.getShortName(), service.getVersion(), MicoServiceBackgroundJob.Type.BUILD);
-			// TODO: Ensure that there no concurrent applications that use the same job (covered by mico#702)
-            buildJobOfService.ifPresent(micoServiceBackgroundJob -> backgroundJobBroker.deleteJob(micoServiceBackgroundJob.getId()));
-        }
+            MicoServiceDeploymentInfo serviceDeploymentInfo = serviceDeploymentInfoOptional.get();
+            // Check which applications are deployed and are actually using this service
+            List<MicoApplication> applicationsUsingThisService = applicationRepository.findAllByUsedService(service.getShortName(), service.getVersion());
+            List<MicoApplication> otherDeployedApplicationsUsingThisService = applicationsUsingThisService.stream()
+                .filter(app -> !(app.getShortName().equals(application.getShortName()) && app.getVersion().equals(application.getVersion()))
+                    && isApplicationDeployed(app)).collect(Collectors.toList());
 
+            if(serviceDeploymentInfo.getKubernetesDeploymentInfo() == null) {
+                log.info("MicoService '{}' '{}' is not deployed for the MicoApplication '{}' '{}'. No undeployment/scaling required.",
+                    service.getShortName(), service.getVersion(), application.getShortName(), application.getVersion());
+
+                // Nevertheless check if the service is used by other applications.
+                // If not clean up the build resources that was maybe already created.
+                if (otherDeployedApplicationsUsingThisService.isEmpty()) {
+                    cleanUpBuildResources(service);
+                }
+                continue;
+            }
+
+            if (otherDeployedApplicationsUsingThisService.isEmpty()) {
+                // Service is not used by other deployed applications -> simply undeploy it
+                log.debug("MicoService '{}' in version '{}' is not used by other MicoApplications.",
+                    service.getShortName(), service.getVersion());
+                undeploy(serviceDeploymentInfo);
+            } else {
+                // Service used by multiple applications -> scale in
+                log.debug("MicoService '{}' in version '{}' is also used by {} other deployed MicoApplication(s): {}",
+                    service.getShortName(), service.getVersion(),
+                    otherDeployedApplicationsUsingThisService.size(),
+                    otherDeployedApplicationsUsingThisService.stream()
+                        .map(app -> "'" + app.getShortName() + "' '" + app.getVersion() + "'").collect(Collectors.toList())
+                );
+
+                // Calculate the current total number of requested replicas for
+                // the currently processed service, which is the sum of requested
+                // replicas of all applications that are using the current service
+                // and are actually deployed.
+                int currentTotalRequestedReplicas = serviceDeploymentInfo.getReplicas();
+                for (MicoApplication otherApplicationUsingThisService : otherDeployedApplicationsUsingThisService) {
+                    currentTotalRequestedReplicas += getServiceDeploymentInfo(otherApplicationUsingThisService, service).getReplicas();
+                }
+                log.debug("Currently {} replica(s) of MicoService '{}' in version '{}' are requested based on the given service deployment information.",
+                    currentTotalRequestedReplicas, service.getShortName(), service.getVersion());
+
+                // The updated number of total requested replicas for the current service
+                // is the current total minus the replicas of the current service.
+                int updatedTotalRequestedReplicas = currentTotalRequestedReplicas - serviceDeploymentInfo.getReplicas();
+                log.debug("Scale in MicoService '{}' in version '{}': {} → {}",
+                    service.getShortName(), service.getVersion(), currentTotalRequestedReplicas, updatedTotalRequestedReplicas);
+
+                // Actual scaling
+                scale(serviceDeploymentInfo, updatedTotalRequestedReplicas);
+
+                // Delete Kubernetes deployment info in database
+                log.debug("Delete Kubernetes deployment info in database for MicoService '{}' in version '{}'.",
+                    serviceDeploymentInfo.getService().getShortName(), serviceDeploymentInfo.getService().getVersion());
+                kubernetesDeploymentInfoRepository.delete(serviceDeploymentInfo.getKubernetesDeploymentInfo());
+            }
+        }
     }
     
     /**
@@ -1135,20 +1140,9 @@ public class MicoKubernetesClient {
                 .delete();
         }
 
-        if(buildBotConfig.isBuildCleanUpByUndeploy()) {
-            // Clean up Kubernetes Build resources
-            log.debug("Clean up build resources for MicoService '{}' in version '{}'.",
-                micoService.getShortName(), micoService.getVersion());
-            imageBuilder.deleteBuild(micoService);
-            
-            kubernetesClient
-                .pods()
-                .inNamespace(buildBotConfig.getNamespaceBuildExecution())
-                .withLabel(ImageBuilder.BUILD_CRD_GROUP + "/buildName", imageBuilder.createBuildName(micoService))
-                .delete();
-        }
+        cleanUpBuildResources(micoService);
 
-    	// Delete Kubernetes deployment info in database
+        // Delete Kubernetes deployment info in database
 		log.debug("Delete Kubernetes deployment info in database for MicoService '{}' in version '{}'.",
 			micoService.getShortName(), micoService.getVersion());
 		kubernetesDeploymentInfoRepository.delete(serviceDeploymentInfo.getKubernetesDeploymentInfo());
@@ -1156,7 +1150,31 @@ public class MicoKubernetesClient {
 		log.info("MicoService '{}' in version '{}' was undeployed successfully.",
             micoService.getShortName(), micoService.getVersion());
     }
-    
+
+    /**
+     * Cleans up all Kubernetes Build resources (Build themselves + Build pods).
+     *
+     * @param micoService the {@link MicoService}
+     */
+    private void cleanUpBuildResources(MicoService micoService) {
+        if(buildBotConfig.isBuildCleanUpByUndeploy()) {
+            try {
+                log.debug("Clean up build resources for MicoService '{}' in version '{}'.",
+                    micoService.getShortName(), micoService.getVersion());
+                imageBuilder.deleteBuild(micoService);
+
+                kubernetesClient
+                    .pods()
+                    .inNamespace(buildBotConfig.getNamespaceBuildExecution())
+                    .withLabel(ImageBuilder.BUILD_CRD_GROUP + "/buildName", imageBuilder.createBuildName(micoService))
+                    .delete();
+            } catch(Exception e) {
+                log.warn("Failed to clean up build resources for MicoService '{}' '{}'. Caused by: {}",
+                    micoService.getShortName(), micoService.getVersion(), e.getMessage());
+            }
+        }
+    }
+
     /**
      * Retrieves the service deployment information for a given
      * {@code MicoApplication} and {@code MicoService} from the database.
