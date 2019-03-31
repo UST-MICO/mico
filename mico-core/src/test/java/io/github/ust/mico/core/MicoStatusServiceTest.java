@@ -386,6 +386,9 @@ public class MicoStatusServiceTest {
             .setTotalNumberOfPods(0)
             .setTotalNumberOfMicoServices(1)
             .setServiceStatuses(CollectionUtils.listOf(new MicoServiceStatusResponseDTO()
+                .setShortName(micoApplication.getServices().get(0).getShortName())
+                .setVersion(micoApplication.getServices().get(0).getVersion())
+                .setName(micoApplication.getServices().get(0).getName())
                 .setErrorMessages(CollectionUtils
                     .listOf(new MicoMessageResponseDTO().setContent("No deployment of MicoService '" + micoService.getShortName()
                         + "' '" + micoService.getVersion() + "' is available.").setType(Type.ERROR)))));
