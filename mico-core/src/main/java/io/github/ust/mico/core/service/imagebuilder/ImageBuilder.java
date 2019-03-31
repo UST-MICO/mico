@@ -22,6 +22,7 @@ package io.github.ust.mico.core.service.imagebuilder;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -268,23 +269,30 @@ public class ImageBuilder {
                 Pod buildPod = kubernetesClient.pods().inNamespace(buildNamespace).withName(buildPodName).get();
                 if (buildPod != null) {
                     String currentBuildPhase = buildPod.getStatus().getPhase();
+                    // Typically there are 3 steps: build-step-credential-initializer, build-step-git-source-0, build-step-build-and-push
+                    List<ContainerStatus> runningSteps = buildPod.getStatus().getInitContainerStatuses().stream()
+                        .filter(p -> p.getState().getRunning() != null).collect(Collectors.toList());
+                    if(runningSteps.isEmpty()) {
+                        log.warn("No step of build of MicoService '{}' '{}' is currently running!",
+                            micoService.getShortName(), micoService.getVersion());
+                    }
+                    log.debug("Current phase of build of MicoService '{}' '{}' is '{}'.{}",
+                        micoService.getShortName(), micoService.getVersion(), currentBuildPhase,
+                        !runningSteps.isEmpty() ? " (Step: " + runningSteps.get(0).getName() + ")" : "");
+
                     // During build the phase is 'Pending'.
                     // We wait until the phase is either 'Succeeded' or 'Failed'.
-                    log.debug("Current phase of build of MicoService '{}' '{}' is '{}'.", micoService.getShortName(),
-                        micoService.getVersion(), currentBuildPhase);
                     if (currentBuildPhase.equals("Succeeded")) {
                         String dockerImageUri = createImageName(micoService.getShortName(), micoService.getVersion());
                         completionFuture.complete(dockerImageUri);
                     } else if (currentBuildPhase.equals("Failed")) {
-                        log.info("Build pod failed with message '{}' and reason '{}'.", buildPod.getStatus().getMessage(),
-                            buildPod.getStatus().getReason());
-                        for (ContainerStatus initContainerStatus : buildPod.getStatus().getInitContainerStatuses()) {
-                            log.debug("Build step '{}' finished with termination state: '{}'",
-                            initContainerStatus.getName(), initContainerStatus.getState().getTerminated());
+                        List<ContainerStatus> terminatedSteps = buildPod.getStatus().getInitContainerStatuses().stream()
+                            .filter(p -> p.getState().getTerminated() != null).collect(Collectors.toList());
+                        for (ContainerStatus terminatedStep : terminatedSteps) {
+                            log.debug("Build step '{}' terminated with reason '{}'.", terminatedStep.getName(), terminatedStep.getState().getTerminated().getReason());
                         }
                         message = "Build of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' failed!";
                         log.warn(message);
-
                         completionFuture.completeExceptionally(new ImageBuildException(message));
                     }
                 } else {

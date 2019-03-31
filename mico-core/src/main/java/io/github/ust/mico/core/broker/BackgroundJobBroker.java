@@ -199,8 +199,7 @@ public class BackgroundJobBroker {
                 }
                 job.setStatus(newStatus);
                 job.setErrorMessage(errorMessage);
-                MicoServiceBackgroundJob savedJob = saveJob(job);
-                log.debug("Saved new status of job: {}", savedJob);
+                saveJob(job);
             }
         } else {
             log.warn("No job of type '{}' exists for '{}' '{}'.", type, micoServiceShortName, micoServiceVersion);
