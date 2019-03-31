@@ -170,6 +170,10 @@ public class MicoApplicationBroker {
         return serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion());
     }
 
+    public List<MicoApplication> getMicoApplicationsUsingMicoService(String serviceShortName, String serviceVersion) {
+        return applicationRepository.findAllByUsedService(serviceShortName, serviceVersion);
+    }
+
     public MicoApplication addMicoServiceToMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion) throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAlreadyAddedToMicoApplicationException, MicoServiceAddedMoreThanOnceToMicoApplicationException, MicoApplicationIsNotUndeployedException {
         // Retrieve application and service from database (checks whether they exist)
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);

@@ -130,7 +130,7 @@ public class ServiceResource {
             micoServiceBroker.deleteService(service);
         } catch (MicoServiceHasDependersException e) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
-        } catch (MicoServiceIsDeployedException e) {
+        } catch (MicoServiceIsDeployedException | MicoServiceIsUsedByMicoApplicationsException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
 
@@ -146,7 +146,7 @@ public class ServiceResource {
                 micoServiceBroker.deleteService(service);
             } catch (MicoServiceHasDependersException e) {
                 throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
-            } catch (MicoServiceIsDeployedException e) {
+            } catch (MicoServiceIsDeployedException | MicoServiceIsUsedByMicoApplicationsException e) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
             }
         });
