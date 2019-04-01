@@ -81,4 +81,17 @@ public class MicoServiceInterfaceStatusResponseDTO {
         }
     )})
     private String externalIp;
+
+    /**
+     * The exposed port of this {@link MicoServiceInterface}.
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Port"),
+            @ExtensionProperty(name = "x-order", value = "40"),
+            @ExtensionProperty(name = "description", value = "The exposed port of this MicoServiceInterface.")
+        }
+    )})
+    private int port;
 }
