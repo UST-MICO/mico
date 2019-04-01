@@ -342,9 +342,24 @@ public class MicoKubernetesClient {
 
         String namespace = targetKubernetesService.getMetadata().getNamespace();
         String kubernetesServiceName = targetKubernetesService.getMetadata().getName();
-        String dns = kubernetesServiceName + "." + namespace + ".svc.cluster.local";
+
+        List<MicoServicePort> servicePorts = targetMicoServiceInterface.getPorts();
+        int port = 80;
+        if (servicePorts.isEmpty()) {
+            log.warn("There are no ports defined for interface '{}' of MicoService '{}' '{}'. Using default port {}.",
+                targetMicoServiceInterface.getServiceInterfaceName(), targetMicoService.getShortName(),
+                targetMicoService.getVersion(), port);
+        } else {
+            port = servicePorts.get(0).getPort();
+            if (servicePorts.size() > 1) {
+                log.warn("There are {} ports defined for interface '{}' of MicoService '{}' '{}'. Using first port {}.",
+                    servicePorts.size(), targetMicoServiceInterface.getServiceInterfaceName(),
+                    targetMicoService.getShortName(), targetMicoService.getVersion(), port);
+            }
+        }
+        String dns = kubernetesServiceName + "." + namespace + ".svc.cluster.local:" + port;
         log.debug("For the connection between '{}' '{}' and the interface '{}' of '{}' '{}' the DNS record '{}' is used.",
-            micoServiceToUpdate.getShortName(), micoServiceToUpdate.getVersion(), targetMicoServiceInterface,
+            micoServiceToUpdate.getShortName(), micoServiceToUpdate.getVersion(), targetMicoServiceInterface.getServiceInterfaceName(),
             targetMicoService.getShortName(), targetMicoService.getVersion(), dns);
 
         Optional<Container> containerToUpdateOptional = deploymentToUpdate.getSpec().getTemplate().getSpec().getContainers().stream().filter(
