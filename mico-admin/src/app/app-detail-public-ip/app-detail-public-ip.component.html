@@ -5,9 +5,7 @@
     <mat-card-content>
         <div *ngFor="let ip of publicIps?.values()">
             {{ip?.name}}:
-            <a target="_blank" rel="noopener" href="http://{{ip?.externalIp}}:{{ip?.port}}">
-                {{ip?.externalIp}}:{{ip?.port}}
-            </a><br />
+            <a target="_blank" rel="noopener" href="http://{{ip?.externalIp}}:{{ip?.port}}">{{ip?.externalIp}}:{{ip?.port}}</a><br />
         </div>
     </mat-card-content>
 
