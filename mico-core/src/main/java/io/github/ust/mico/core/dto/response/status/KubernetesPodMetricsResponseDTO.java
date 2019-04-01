@@ -44,9 +44,9 @@ public class KubernetesPodMetricsResponseDTO {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Memory Usage"),
+            @ExtensionProperty(name = "title", value = "Memory Usage (bytes)"),
             @ExtensionProperty(name = "x-order", value = "10"),
-            @ExtensionProperty(name = "description", value = "Memory usage of a pod.")
+            @ExtensionProperty(name = "description", value = "Memory usage of a pod in bytes.")
         }
     )})
     private int memoryUsage;
@@ -57,9 +57,10 @@ public class KubernetesPodMetricsResponseDTO {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "CPU Load"),
+            @ExtensionProperty(name = "title", value = "CPU Load (%)"),
             @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "CPU load of a pod.")
+            @ExtensionProperty(name = "description", value = "CPU load of a pod " +
+                "based on the average of the last 10s in percent (0-100 %).")
         }
     )})
     private int cpuLoad;

@@ -228,7 +228,8 @@ public class ServiceInterfaceResourceIntegrationTests {
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoService));
         given(serviceInterfaceRepository.findByServiceAndName(SHORT_NAME, VERSION, serviceInterfaceName)).willReturn(Optional.of(micoServiceInterface));
         given(micoKubernetesClient.getInterfaceByNameOfMicoService(eq(micoService), eq(serviceInterfaceName))).willReturn(kubernetesService);
-        given(micoStatusService.getPublicIpOfKubernetesService(micoService, serviceInterfaceName)).willReturn(new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName).setExternalIp(externalIP));
+        given(micoStatusService.getPublicIpOfKubernetesService(micoService, micoServiceInterface))
+            .willReturn(new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName).setExternalIp(externalIP).setPort(INTERFACE_PORT));
 
         mvc.perform(get(INTERFACES_URL + "/" + serviceInterfaceName + "/" + PATH_PART_PUBLIC_IP).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
@@ -250,7 +251,7 @@ public class ServiceInterfaceResourceIntegrationTests {
         given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoService));
         given(serviceInterfaceRepository.findByServiceAndName(SHORT_NAME, VERSION, serviceInterfaceName)).willReturn(Optional.of(micoServiceInterface));
         given(micoKubernetesClient.getInterfaceByNameOfMicoService(eq(micoService), eq(serviceInterfaceName))).willReturn(kubernetesService);
-        given(micoStatusService.getPublicIpOfKubernetesService(micoService, serviceInterfaceName)).willReturn(interfaceStatusResponseDTO);
+        given(micoStatusService.getPublicIpOfKubernetesService(micoService, micoServiceInterface)).willReturn(interfaceStatusResponseDTO);
 
         mvc.perform(get(INTERFACES_URL + "/" + serviceInterfaceName + "/" + PATH_PART_PUBLIC_IP).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())

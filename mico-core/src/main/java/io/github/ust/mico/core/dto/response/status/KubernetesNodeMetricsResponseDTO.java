@@ -60,9 +60,10 @@ public class KubernetesNodeMetricsResponseDTO {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Average CPU Load"),
+            @ExtensionProperty(name = "title", value = "Average CPU Load (%)"),
             @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "The average CPU load of all pods of one MicoService running on this Node.")
+            @ExtensionProperty(name = "description", value = "The average CPU load of all pods of one MicoService running on this Node " +
+                "based on the average of the last 10s in percent (0-100 %).")
         }
     )})
     private int averageCpuLoad;
@@ -73,9 +74,9 @@ public class KubernetesNodeMetricsResponseDTO {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Average Memory Usage"),
+            @ExtensionProperty(name = "title", value = "Average Memory Usage (bytes)"),
             @ExtensionProperty(name = "x-order", value = "30"),
-            @ExtensionProperty(name = "description", value = "The average memory usage of all pods of one MicoService running on this Node.")
+            @ExtensionProperty(name = "description", value = "The average memory usage of all pods of one MicoService running on this Node in bytes.")
         }
     )})
     private int averageMemoryUsage;
