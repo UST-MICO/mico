@@ -62,19 +62,16 @@ public class MicoStatusService {
     private final MicoKubernetesClient micoKubernetesClient;
     private final RestTemplate restTemplate;
     private final MicoServiceRepository serviceRepository;
-    private final MicoServiceInterfaceRepository serviceInterfaceRepository;
     private final MicoApplicationRepository micoApplicationRepository;
 
     @Autowired
     public MicoStatusService(PrometheusConfig prometheusConfig, MicoKubernetesClient micoKubernetesClient,
                              RestTemplate restTemplate, MicoServiceRepository serviceRepository,
-                             MicoServiceInterfaceRepository serviceInterfaceRepository,
                              MicoApplicationRepository micoApplicationRepository) {
         this.prometheusConfig = prometheusConfig;
         this.micoKubernetesClient = micoKubernetesClient;
         this.restTemplate = restTemplate;
         this.serviceRepository = serviceRepository;
-        this.serviceInterfaceRepository = serviceInterfaceRepository;
         this.micoApplicationRepository = micoApplicationRepository;
     }
 
@@ -250,9 +247,9 @@ public class MicoStatusService {
     /**
      * Get the public IP of a {@link MicoServiceInterface} by providing the corresponding Kubernetes {@link Service}.
      *
-     * @param micoService          is the {@link MicoService}, that has a {@link MicoServiceInterface}, which is
-     *                             deployed on Kubernetes
-     * @param serviceInterface     the {@link MicoServiceInterface}, that is deployed as a Kubernetes service
+     * @param micoService      is the {@link MicoService}, that has a {@link MicoServiceInterface}, which is
+     *                         deployed on Kubernetes
+     * @param serviceInterface the {@link MicoServiceInterface}, that is deployed as a Kubernetes service
      * @return the  public IP of the provided Kubernetes Service
      * @throws KubernetesResourceException if it's not possible to get the Kubernetes service
      */
@@ -302,7 +299,7 @@ public class MicoStatusService {
         MicoServiceInterfaceStatusResponseDTO responseDTO = new MicoServiceInterfaceStatusResponseDTO()
             .setName(serviceInterfaceName)
             .setPort(port);
-        if(ip.isPresent()) {
+        if (ip.isPresent()) {
             responseDTO.setExternalIpIsAvailable(true);
             responseDTO.setExternalIp(ip.get());
         }
