@@ -77,6 +77,7 @@ public class MicoServiceInterfaceRequestDTO {
     /**
      * The list of ports.
      * Must not be empty.
+     * Only one port per interface is supported.
      */
     @ApiModelProperty(required = true, extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
@@ -84,8 +85,9 @@ public class MicoServiceInterfaceRequestDTO {
             @ExtensionProperty(name = "title", value = "Ports"),
             @ExtensionProperty(name = "x-order", value = "200"),
             @ExtensionProperty(name = "minItems", value = "1"),
+            @ExtensionProperty(name = "maxItems", value = "1"),
             @ExtensionProperty(name = "description", value = "The list of ports of this interface.\n" +
-                " Must not be empty.")
+                " Must not be empty. Only one port per interface is supported.")
         }
     )})
     @NotEmpty
