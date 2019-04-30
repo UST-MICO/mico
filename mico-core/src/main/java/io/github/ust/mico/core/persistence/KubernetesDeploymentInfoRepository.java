@@ -25,11 +25,11 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import io.github.ust.mico.core.model.KubernetesDeploymentInfo;
 
 public interface KubernetesDeploymentInfoRepository extends Neo4jRepository<KubernetesDeploymentInfo, Long> {
-	
-	/**
-	 * Deletes all {@link KubernetesDeploymentInfo} nodes that do <b>not</b> have any relationship to another node.
-	 */
-	@Query("MATCH (kdi:KubernetesDeploymentInfo) WHERE size((kdi)--()) = 0 DELETE kdi")
-	void cleanUp();
-	
+
+    /**
+     * Deletes all {@link KubernetesDeploymentInfo} nodes that do <b>not</b> have any relationship to another node.
+     */
+    @Query("MATCH (kdi:KubernetesDeploymentInfo) WHERE size((kdi)--()) = 0 DELETE kdi")
+    void cleanUp();
+
 }

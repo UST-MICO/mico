@@ -43,11 +43,11 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 @JsonInclude(Include.NON_NULL)
 public class MicoMessageResponseDTO {
-	
+
     // ----------------------
     // -> Required Fields ---
     // ----------------------
-	
+
     /**
      * The actual message content.
      */
@@ -62,7 +62,7 @@ public class MicoMessageResponseDTO {
     )})
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String content;
-    
+
     /**
      * The {@link Type} of the message.
      */
@@ -77,21 +77,21 @@ public class MicoMessageResponseDTO {
     )})
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Type type;
-    
-    
+
+
     // -------------------
     // -> Constructors ---
     // -------------------
-   
+
     /**
      * Creates an instance of {@code MicoMessageResponseDTO} based on a
      * {@code MicoMessage}.
-     *  
+     *
      * @param message the {@link MicoMessage message}.
      */
-	public MicoMessageResponseDTO(MicoMessage message) {
-		this.content = message.getContent();
-		this.type = message.getType();
-	}
-    
+    public MicoMessageResponseDTO(MicoMessage message) {
+        this.content = message.getContent();
+        this.type = message.getType();
+    }
+
 }

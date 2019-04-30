@@ -1,6 +1,6 @@
 package io.github.ust.mico.core.broker;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -18,7 +18,6 @@ import io.github.ust.mico.core.dto.response.status.MicoServiceStatusResponseDTO;
 import io.github.ust.mico.core.exception.*;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
-import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
@@ -115,7 +114,7 @@ public class MicoServiceBroker {
      */
     private void throwConflictIfServiceIsIncludedInApplications(MicoService service) throws MicoServiceIsUsedByMicoApplicationsException {
         List<MicoApplication> applications = micoApplicationBroker.getMicoApplicationsUsingMicoService(service.getShortName(), service.getVersion());
-        if(!applications.isEmpty()) {
+        if (!applications.isEmpty()) {
             throw new MicoServiceIsUsedByMicoApplicationsException(service.getShortName(), service.getVersion(), applications);
         }
     }
@@ -124,7 +123,7 @@ public class MicoServiceBroker {
     public List<MicoService> getDependers(MicoService serviceToLookFor) {
         List<MicoService> serviceList = serviceRepository.findAll(2);
         log.debug("Got following services as list from the database: {}", serviceList);
-        List<MicoService> dependers = new LinkedList<>();
+        List<MicoService> dependers = new ArrayList<>();
 
         serviceList.forEach(service -> {
             List<MicoServiceDependency> dependees = service.getDependencies();
@@ -242,7 +241,7 @@ public class MicoServiceBroker {
 
         List<MicoServiceResponseDTO> micoServiceDTOS = micoServices.stream().map(MicoServiceResponseDTO::new).collect(Collectors.toList());
         MicoServiceDependencyGraphResponseDTO micoServiceDependencyGraph = new MicoServiceDependencyGraphResponseDTO().setMicoServices(micoServiceDTOS);
-        LinkedList<MicoServiceDependencyGraphEdgeResponseDTO> micoServiceDependencyGraphEdgeList = new LinkedList<>();
+        ArrayList<MicoServiceDependencyGraphEdgeResponseDTO> micoServiceDependencyGraphEdgeList = new ArrayList<>();
         for (MicoService micoService : micoServices) {
             //Request each mico service again from the db, because the dependencies are not included
             //in the result of the custom query. TODO improve query to also include the dependencies (Depth parameter)

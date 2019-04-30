@@ -45,12 +45,12 @@ import lombok.experimental.Accessors;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NodeEntity
 public class MicoInterfaceConnection {
-	
-	@Id
+
+    @Id
     @GeneratedValue
     private Long id;
 
-	
+
     // ----------------------
     // -> Required fields ---
     // ----------------------

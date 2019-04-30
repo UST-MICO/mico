@@ -129,23 +129,23 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
         String applicationVersion = application.getVersion();
 
         mvc.perform(post(BASE_PATH + "/" + applicationShortName + "/" + applicationVersion + "/deploy"))
-                .andDo(print())
-                .andExpect(status().isAccepted());
+            .andDo(print())
+            .andExpect(status().isAccepted());
 
         // Wait until all pods (inclusive build pod) are running or succeeded
         CompletableFuture<Boolean> allPodsInNamespaceAreRunning = integrationTestsUtils.waitUntilAllPodsInNamespaceAreRunning(
-                namespace, 10, 1, 60);
+            namespace, 10, 1, 60);
         assertTrue("Deployment failed!", allPodsInNamespaceAreRunning.get());
 
         // Wait until the deployment is created
         CompletableFuture<Deployment> createdDeployment = integrationTestsUtils.waitUntilDeploymentIsCreated(
-                service, 1, 1, 10);
+            service, 1, 1, 10);
         assertNotNull("Kubernetes Deployment was not created!", createdDeployment.get());
         log.debug("Created Kubernetes Deployment: {}", createdDeployment.get().toString());
 
         // Wait until the service is created
         CompletableFuture<Service> createdService = integrationTestsUtils.waitUntilServiceIsCreated(
-                service, 1, 1, 10);
+            service, 1, 1, 10);
         assertNotNull("Kubernetes Service was not created!", createdService.get());
         log.debug("Created Kubernetes Service: {}", createdService.get().toString());
 
@@ -161,26 +161,26 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
 
     private MicoApplication getTestApplication() {
         return new MicoApplication()
-                .setShortName(TestConstants.IntegrationTest.APPLICATION_SHORT_NAME)
-                .setName(TestConstants.IntegrationTest.APPLICATION_NAME)
-                .setVersion(TestConstants.IntegrationTest.APPLICATION_VERSION)
-                .setDescription(TestConstants.IntegrationTest.APPLICATION_DESCRIPTION);
+            .setShortName(TestConstants.IntegrationTest.APPLICATION_SHORT_NAME)
+            .setName(TestConstants.IntegrationTest.APPLICATION_NAME)
+            .setVersion(TestConstants.IntegrationTest.APPLICATION_VERSION)
+            .setDescription(TestConstants.IntegrationTest.APPLICATION_DESCRIPTION);
     }
 
     private MicoService getTestService() {
         MicoService service = new MicoService()
-                .setShortName(TestConstants.IntegrationTest.SERVICE_SHORT_NAME)
-                .setName(TestConstants.IntegrationTest.SERVICE_NAME)
-                .setVersion(TestConstants.IntegrationTest.RELEASE)
-                .setDescription(TestConstants.IntegrationTest.SERVICE_DESCRIPTION)
-                .setGitCloneUrl(TestConstants.IntegrationTest.GIT_CLONE_URL)
-                .setDockerfilePath(TestConstants.IntegrationTest.DOCKERFILE_PATH);
+            .setShortName(TestConstants.IntegrationTest.SERVICE_SHORT_NAME)
+            .setName(TestConstants.IntegrationTest.SERVICE_NAME)
+            .setVersion(TestConstants.IntegrationTest.RELEASE)
+            .setDescription(TestConstants.IntegrationTest.SERVICE_DESCRIPTION)
+            .setGitCloneUrl(TestConstants.IntegrationTest.GIT_CLONE_URL)
+            .setDockerfilePath(TestConstants.IntegrationTest.DOCKERFILE_PATH);
         MicoServiceInterface serviceInterface = new MicoServiceInterface()
-                .setServiceInterfaceName(TestConstants.IntegrationTest.SERVICE_INTERFACE_NAME)
-                .setPorts(CollectionUtils.listOf(new MicoServicePort()
-                        .setPort(TestConstants.IntegrationTest.PORT)
-                        .setTargetPort(TestConstants.IntegrationTest.TARGET_PORT)
-                ));
+            .setServiceInterfaceName(TestConstants.IntegrationTest.SERVICE_INTERFACE_NAME)
+            .setPorts(CollectionUtils.listOf(new MicoServicePort()
+                .setPort(TestConstants.IntegrationTest.PORT)
+                .setTargetPort(TestConstants.IntegrationTest.TARGET_PORT)
+            ));
         service.getServiceInterfaces().add(serviceInterface);
 
         return service;

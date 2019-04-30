@@ -77,8 +77,8 @@ public class ApplicationResource {
         List<MicoApplication> applications = broker.getMicoApplications();
 
         return ResponseEntity.ok(
-                new Resources<>(getApplicationWithServicesResponseDTOResourceList(applications),
-                        linkTo(methodOn(ApplicationResource.class).getAllApplications()).withSelfRel()));
+            new Resources<>(getApplicationWithServicesResponseDTOResourceList(applications),
+                linkTo(methodOn(ApplicationResource.class).getAllApplications()).withSelfRel()));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
@@ -86,8 +86,8 @@ public class ApplicationResource {
         List<MicoApplication> applications = broker.getMicoApplicationsByShortName(shortName);
 
         return ResponseEntity.ok(
-                new Resources<>(getApplicationWithServicesResponseDTOResourceList(applications),
-                        linkTo(methodOn(ApplicationResource.class).getApplicationsByShortName(shortName)).withSelfRel()));
+            new Resources<>(getApplicationWithServicesResponseDTOResourceList(applications),
+                linkTo(methodOn(ApplicationResource.class).getApplicationsByShortName(shortName)).withSelfRel()));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
@@ -116,9 +116,9 @@ public class ApplicationResource {
         MicoApplicationWithServicesResponseDTO dto = new MicoApplicationWithServicesResponseDTO(application);
 
         return ResponseEntity
-                .created(linkTo(methodOn(ApplicationResource.class)
-                        .getApplicationByShortNameAndVersion(application.getShortName(), application.getVersion())).toUri())
-                .body(new Resource<>(dto, broker.getLinksOfMicoApplication(application)));
+            .created(linkTo(methodOn(ApplicationResource.class)
+                .getApplicationByShortNameAndVersion(application.getShortName(), application.getVersion())).toUri())
+            .body(new Resource<>(dto, broker.getLinksOfMicoApplication(application)));
     }
 
     @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
@@ -169,7 +169,7 @@ public class ApplicationResource {
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
-    public ResponseEntity<Void> deleteAllVersionsOfAnApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
+    public ResponseEntity<Void> deleteAllVersionsOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
         try {
             broker.deleteMicoApplicationsByShortName(shortName);
         } catch (MicoApplicationIsNotUndeployedException e) {
@@ -180,8 +180,8 @@ public class ApplicationResource {
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES)
-    public ResponseEntity<Resources<Resource<MicoServiceResponseDTO>>> getServicesFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                                                  @PathVariable(PATH_VARIABLE_VERSION) String version) {
+    public ResponseEntity<Resources<Resource<MicoServiceResponseDTO>>> getServicesOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                                                @PathVariable(PATH_VARIABLE_VERSION) String version) {
         List<MicoService> micoServices;
         try {
             micoServices = broker.getMicoServicesOfMicoApplicationByShortNameAndVersion(shortName, version);
@@ -190,13 +190,13 @@ public class ApplicationResource {
         }
 
         return ResponseEntity.ok(
-                new Resources<>(ServiceResource.getServiceResponseDTOResourcesList(micoServices),
-                        linkTo(methodOn(ApplicationResource.class).getServicesFromApplication(shortName, version)).withSelfRel()));
+            new Resources<>(ServiceResource.getServiceResponseDTOResourcesList(micoServices),
+                linkTo(methodOn(ApplicationResource.class).getServicesOfApplication(shortName, version)).withSelfRel()));
     }
 
     @ApiOperation(value = "Adds or updates an association between a MicoApplication and a MicoService. An existing and" +
-            " already associated MicoService with an equal short name will be replaced with its new version." +
-            " Only one MicoService in one specific version is allowed per MicoApplication.")
+        " already associated MicoService with an equal short name will be replaced with its new version." +
+        " Only one MicoService in one specific version is allowed per MicoApplication.")
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES + "/{" + PATH_VARIABLE_SERVICE_SHORT_NAME + "}/{" + PATH_VARIABLE_SERVICE_VERSION + "}")
     public ResponseEntity<Void> addServiceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
                                                         @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
@@ -244,8 +244,8 @@ public class ApplicationResource {
         // Convert to service deployment info DTO and return it
         MicoServiceDeploymentInfoResponseDTO serviceDeploymentInfoResponseDto = new MicoServiceDeploymentInfoResponseDTO(micoServiceDeploymentInfo);
         return ResponseEntity.ok(new Resource<>(serviceDeploymentInfoResponseDto,
-                linkTo(methodOn(ApplicationResource.class)
-                        .getServiceDeploymentInformation(shortName, version, serviceShortName)).withSelfRel()));
+            linkTo(methodOn(ApplicationResource.class)
+                .getServiceDeploymentInformation(shortName, version, serviceShortName)).withSelfRel()));
     }
 
     @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPLOYMENT_INFORMATION + "/{" + PATH_VARIABLE_SERVICE_SHORT_NAME + "}")
@@ -270,10 +270,10 @@ public class ApplicationResource {
             linkTo(methodOn(ApplicationResource.class).getServiceDeploymentInformation(shortName, version, serviceShortName))
                 .withSelfRel()));
     }
-    
+
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_DEPLOYMENT_STATUS)
     public ResponseEntity<Resource<MicoApplicationDeploymentStatusResponseDTO>> getApplicationDeploymentStatus(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                                     				@PathVariable(PATH_VARIABLE_VERSION) String version) {
+                                                                                                               @PathVariable(PATH_VARIABLE_VERSION) String version) {
         MicoApplicationDeploymentStatus applicationDeploymentStatus;
         try {
             applicationDeploymentStatus = broker.getApplicationDeploymentStatus(shortName, version);

@@ -28,13 +28,13 @@ import lombok.experimental.UtilityClass;
  */
 @UtilityClass
 public class RandomStringFactory {
-    
+
     private final int LENGTH = 8;
     private final boolean LOWERCASE = true;
-    
+
     public final String randomAlphanumeric() {
         if (LOWERCASE) {
-            return RandomStringUtils.randomAlphanumeric(LENGTH).toLowerCase(); 
+            return RandomStringUtils.randomAlphanumeric(LENGTH).toLowerCase();
         } else {
             return RandomStringUtils.randomAlphanumeric(LENGTH);
         }

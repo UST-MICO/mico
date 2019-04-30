@@ -41,74 +41,74 @@ public class MicoMessage {
     // ----------------------
     // -> Required Fields ---
     // ----------------------
-	
-	/**
-	 * The actual message content.
-	 */
-	private String content;
-	
-	/**
-	 * The {@link Type} of this message.
-	 */
-	private Type type;
-	
-	/**
-	 * Creates a new {@code MicoMessage} instance with the
-	 * type {@link Type#INFO} and the given message content.
-	 * 
-	 * @param content the message content as {@code String}.
-	 * @return a {@link MicoMessage}.
-	 */
-	public static final MicoMessage info(String content) {
-		return new MicoMessage(content, Type.INFO);
-	}
-	
-	/**
-	 * Creates a new {@code MicoMessage} instance with the
-	 * type {@link Type#WARNING} and the given message content.
-	 * 
-	 * @param content the message content as {@code String}.
-	 * @return a {@link MicoMessage}.
-	 */
-	public static final MicoMessage warning(String content) {
-		return new MicoMessage(content, Type.WARNING);
-	}
-	
-	/**
-	 * Creates a new {@code MicoMessage} instance with the
-	 * type {@link Type#ERROR} and the given message content.
-	 * 
-	 * @param content the message content as {@code String}.
-	 * @return a {@link MicoMessage}.
-	 */
-	public static final MicoMessage error(String content) {
-		return new MicoMessage(content, Type.ERROR);
-	}
 
-	
-	/**
-	 * Enumeration for all types of a {@code MicoInfoMessage}.
-	 */
-	@AllArgsConstructor
-	public enum Type {
-		
-		@JsonProperty("Info")
-		INFO("Info"),
-		
-		@JsonProperty("Warning")
-		WARNING("Warning"),
-		
-		@JsonProperty("Error")
-		ERROR("Error");
-		
-		
-		private final String value;
-		
-		@Override
-		public String toString() {
-			return value;
-		}
-		
-	}
+    /**
+     * The actual message content.
+     */
+    private String content;
+
+    /**
+     * The {@link Type} of this message.
+     */
+    private Type type;
+
+    /**
+     * Creates a new {@code MicoMessage} instance with the
+     * type {@link Type#INFO} and the given message content.
+     *
+     * @param content the message content as {@code String}.
+     * @return a {@link MicoMessage}.
+     */
+    public static final MicoMessage info(String content) {
+        return new MicoMessage(content, Type.INFO);
+    }
+
+    /**
+     * Creates a new {@code MicoMessage} instance with the
+     * type {@link Type#WARNING} and the given message content.
+     *
+     * @param content the message content as {@code String}.
+     * @return a {@link MicoMessage}.
+     */
+    public static final MicoMessage warning(String content) {
+        return new MicoMessage(content, Type.WARNING);
+    }
+
+    /**
+     * Creates a new {@code MicoMessage} instance with the
+     * type {@link Type#ERROR} and the given message content.
+     *
+     * @param content the message content as {@code String}.
+     * @return a {@link MicoMessage}.
+     */
+    public static final MicoMessage error(String content) {
+        return new MicoMessage(content, Type.ERROR);
+    }
+
+
+    /**
+     * Enumeration for all types of a {@code MicoInfoMessage}.
+     */
+    @AllArgsConstructor
+    public enum Type {
+
+        @JsonProperty("Info")
+        INFO("Info"),
+
+        @JsonProperty("Warning")
+        WARNING("Warning"),
+
+        @JsonProperty("Error")
+        ERROR("Error");
+
+
+        private final String value;
+
+        @Override
+        public String toString() {
+            return value;
+        }
+
+    }
 
 }

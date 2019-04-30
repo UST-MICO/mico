@@ -36,24 +36,24 @@ import lombok.experimental.Accessors;
 @AllArgsConstructor
 @Accessors(chain = true)
 public class MicoLabelResponseDTO extends MicoLabelRequestDTO {
-	
-	// Note: as soon as someone adds fields to this class, please check
-	// whether Jackson requires this class to have a NoArgsConstructor,
-	// if so, add the @NoArgsConstructor to this class.
-    
-    
+
+    // Note: as soon as someone adds fields to this class, please check
+    // whether Jackson requires this class to have a NoArgsConstructor,
+    // if so, add the @NoArgsConstructor to this class.
+
+
     // -------------------
     // -> Constructors ---
     // -------------------
-    
+
     /**
-   	 * Creates an instance of {@code MicoLabelResponseDTO} based on a
-   	 * {@code MicoLabel}.
-   	 * 
-   	 * @param label the {@link MicoLabel}.
-   	 */
-	public MicoLabelResponseDTO(MicoLabel label) {
-		super(label);
-	}
+     * Creates an instance of {@code MicoLabelResponseDTO} based on a
+     * {@code MicoLabel}.
+     *
+     * @param label the {@link MicoLabel}.
+     */
+    public MicoLabelResponseDTO(MicoLabel label) {
+        super(label);
+    }
 
 }

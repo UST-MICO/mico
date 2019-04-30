@@ -153,25 +153,25 @@ public class MicoService {
     // ----------------------
     // -> Static Creators ---
     // ----------------------
-    
+
     /**
      * Creates a new {@code MicoService} based on a {@code MicoServiceRequestDTO}.
      * Note that the id will be set to {@code null}.
-     * 
+     *
      * @param serviceDto the {@link MicoServiceRequestDTO}.
      * @return a {@link MicoService}.
      */
     public static MicoService valueOf(MicoServiceRequestDTO serviceDto) {
         return new MicoService()
-                .setShortName(serviceDto.getShortName())
-                .setName(serviceDto.getName())
-                .setVersion(serviceDto.getVersion())
-                .setDescription(serviceDto.getDescription())
-                .setContact(serviceDto.getContact())
-                .setOwner(serviceDto.getOwner())
-                .setGitCloneUrl(serviceDto.getGitCloneUrl())
-                .setDockerfilePath(serviceDto.getDockerfilePath())
-                .setDockerImageUri(serviceDto.getDockerImageUri());
+            .setShortName(serviceDto.getShortName())
+            .setName(serviceDto.getName())
+            .setVersion(serviceDto.getVersion())
+            .setDescription(serviceDto.getDescription())
+            .setContact(serviceDto.getContact())
+            .setOwner(serviceDto.getOwner())
+            .setGitCloneUrl(serviceDto.getGitCloneUrl())
+            .setDockerfilePath(serviceDto.getDockerfilePath())
+            .setDockerImageUri(serviceDto.getDockerImageUri());
     }
 
 }

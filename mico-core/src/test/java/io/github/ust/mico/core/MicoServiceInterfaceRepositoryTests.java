@@ -66,7 +66,7 @@ public class MicoServiceInterfaceRepositoryTests extends MicoRepositoryTests {
     @Commit
     @Test
     public void findInterfaceByServiceAndName() {
-    	// Setup some services
+        // Setup some services
         MicoService s0 = getMicoService(0);
         MicoService s1 = getMicoService(1);
 
@@ -88,7 +88,7 @@ public class MicoServiceInterfaceRepositoryTests extends MicoRepositoryTests {
     @Commit
     @Test
     public void deleteInterfaceByServiceAndName() {
-    	// Setup some services
+        // Setup some services
         MicoService s0 = getMicoService(0);
         MicoService s1 = getMicoService(1);
 

@@ -30,13 +30,13 @@ public enum MicoServiceCrawlingOrigin {
      * from some GitHub repository.
      */
     GITHUB,
-    
+
     /**
      * Indicates that a service originates
      * from Docker.
      */
     DOCKER,
-    
+
     /**
      * Undefined.
      */

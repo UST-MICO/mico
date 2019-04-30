@@ -50,7 +50,7 @@ import lombok.experimental.Accessors;
 @AllArgsConstructor
 @Accessors(chain = true)
 public class MicoServiceDeploymentInfoRequestDTO {
-	
+
     /**
      * Number of desired instances. Defaults to 1.
      * {@code null} is ignored.
@@ -161,23 +161,23 @@ public class MicoServiceDeploymentInfoRequestDTO {
     @JsonSetter(nulls = Nulls.SKIP)
     private ImagePullPolicy imagePullPolicy = ImagePullPolicy.ALWAYS;
 
-    
+
     // -------------------
     // -> Constructors ---
     // -------------------
-	
+
     /**
-	 * Creates an instance of {@code MicoServiceDeploymentInfoRequestDTO} based on a
-	 * {@code MicoServiceDeploymentInfo}.
-	 * 
-	 * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.
-	 */
-	public MicoServiceDeploymentInfoRequestDTO(MicoServiceDeploymentInfo serviceDeploymentInfo) {
-		this.replicas = serviceDeploymentInfo.getReplicas();
-		this.labels = serviceDeploymentInfo.getLabels().stream().map(MicoLabelRequestDTO::new).collect(Collectors.toList());
-		this.environmentVariables = serviceDeploymentInfo.getEnvironmentVariables().stream().map(MicoEnvironmentVariableRequestDTO::new).collect(Collectors.toList());
-		this.interfaceConnections = serviceDeploymentInfo.getInterfaceConnections().stream().map(MicoInterfaceConnectionRequestDTO::new).collect(Collectors.toList());
-		this.imagePullPolicy = serviceDeploymentInfo.getImagePullPolicy();
-	}
+     * Creates an instance of {@code MicoServiceDeploymentInfoRequestDTO} based on a
+     * {@code MicoServiceDeploymentInfo}.
+     *
+     * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.
+     */
+    public MicoServiceDeploymentInfoRequestDTO(MicoServiceDeploymentInfo serviceDeploymentInfo) {
+        this.replicas = serviceDeploymentInfo.getReplicas();
+        this.labels = serviceDeploymentInfo.getLabels().stream().map(MicoLabelRequestDTO::new).collect(Collectors.toList());
+        this.environmentVariables = serviceDeploymentInfo.getEnvironmentVariables().stream().map(MicoEnvironmentVariableRequestDTO::new).collect(Collectors.toList());
+        this.interfaceConnections = serviceDeploymentInfo.getInterfaceConnections().stream().map(MicoInterfaceConnectionRequestDTO::new).collect(Collectors.toList());
+        this.imagePullPolicy = serviceDeploymentInfo.getImagePullPolicy();
+    }
 
 }

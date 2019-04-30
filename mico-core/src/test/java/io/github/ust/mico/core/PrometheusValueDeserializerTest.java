@@ -23,12 +23,14 @@ import java.io.IOException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ust.mico.core.dto.response.internal.PrometheusResponseDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+@Slf4j
 @ActiveProfiles("local")
 public class PrometheusValueDeserializerTest {
 
@@ -93,7 +95,7 @@ public class PrometheusValueDeserializerTest {
             assertTrue(responseDtoWithoutValue.isSuccess());
             assertEquals(0, responseDtoWithoutValue.getValue());
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
     }
 }

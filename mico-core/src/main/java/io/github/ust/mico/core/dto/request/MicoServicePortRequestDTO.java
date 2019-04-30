@@ -44,12 +44,12 @@ import lombok.experimental.Accessors;
 @AllArgsConstructor
 @Accessors(chain = true)
 public class MicoServicePortRequestDTO {
-	
+
     // ----------------------
     // -> Required Fields ---
     // ----------------------
-	
-	/**
+
+    /**
      * The port number of the externally exposed port.
      */
     @ApiModelProperty(required = true, extensions = {@Extension(
@@ -98,22 +98,22 @@ public class MicoServicePortRequestDTO {
     @Min(value = 1, message = "must be at least 1")
     @Max(value = 65535, message = "must be at most 65535")
     private int targetPort;
-    
-    
+
+
     // -------------------
     // -> Constructors ---
     // -------------------
-    
+
     /**
      * Creates an instance of {@code MicoServicePortRequestDTO} based on a
      * {@code MicoServicePort}.
-     * 
+     *
      * @param servicePort the {@link MicoServicePort}.
      */
     public MicoServicePortRequestDTO(MicoServicePort servicePort) {
-    	this.port = servicePort.getPort();
-    	this.type = servicePort.getType();
-    	this.targetPort = servicePort.getTargetPort();
+        this.port = servicePort.getPort();
+        this.type = servicePort.getType();
+        this.targetPort = servicePort.getTargetPort();
     }
 
 }

@@ -45,7 +45,7 @@ public class MicoVersionRequestDTO {
     // -> Required Fields ---
     // ----------------------
 
-	/**
+    /**
      * The version (in semantic version format).
      */
     @ApiModelProperty(required = true, extensions = {@Extension(
@@ -65,13 +65,13 @@ public class MicoVersionRequestDTO {
     // -> Constructors ---
     // -------------------
 
-	/**
-	 * Creates an instance of {@code MicoVersionRequestDTO} based on the String value {@code version}.
-	 *
-	 * @param version the version.
-	 */
-	public MicoVersionRequestDTO(String version) {
-		this.version = version;
-	}
+    /**
+     * Creates an instance of {@code MicoVersionRequestDTO} based on the String value {@code version}.
+     *
+     * @param version the version.
+     */
+    public MicoVersionRequestDTO(String version) {
+        this.version = version;
+    }
 
 }

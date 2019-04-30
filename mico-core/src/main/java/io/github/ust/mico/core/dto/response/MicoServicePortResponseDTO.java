@@ -36,23 +36,23 @@ import lombok.experimental.Accessors;
 @AllArgsConstructor
 @Accessors(chain = true)
 public class MicoServicePortResponseDTO extends MicoServicePortRequestDTO {
-	
-	// Note: as soon as someone adds fields to this class, please check
-	// whether Jackson requires this class to have a NoArgsConstructor,
-	// if so, add the @NoArgsConstructor to this class.
-	
+
+    // Note: as soon as someone adds fields to this class, please check
+    // whether Jackson requires this class to have a NoArgsConstructor,
+    // if so, add the @NoArgsConstructor to this class.
+
     // -------------------
     // -> Constructors ---
     // -------------------
-    
+
     /**
      * Creates an instance of {@code MicoServicePortResponseDTO} based on a
      * {@code MicoServicePort}.
-     * 
+     *
      * @param servicePort the {@link MicoServicePort}.
      */
     public MicoServicePortResponseDTO(MicoServicePort servicePort) {
-    	super(servicePort);
+        super(servicePort);
     }
 
 }

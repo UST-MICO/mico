@@ -77,21 +77,21 @@ public class MicoLabelRequestDTO {
     @Size(max = 63, message = "must be 63 characters or less")
     @Pattern(regexp = Patterns.KUBERNETES_LABEL_VALUE_REGEX, message = Patterns.KUBERNETES_LABEL_VALUE_MESSAGE)
     private String value;
-    
-    
+
+
     // -------------------
     // -> Constructors ---
     // -------------------
-    
+
     /**
-   	 * Creates an instance of {@code MicoLabelRequestDTO} based on a
-   	 * {@code MicoLabel}.
-   	 * 
-   	 * @param label the {@link MicoLabel}.
-   	 */
-	public MicoLabelRequestDTO(MicoLabel label) {
-		this.key = label.getKey();
-		this.value = label.getValue();
-	}
+     * Creates an instance of {@code MicoLabelRequestDTO} based on a
+     * {@code MicoLabel}.
+     *
+     * @param label the {@link MicoLabel}.
+     */
+    public MicoLabelRequestDTO(MicoLabel label) {
+        this.key = label.getKey();
+        this.value = label.getValue();
+    }
 
 }

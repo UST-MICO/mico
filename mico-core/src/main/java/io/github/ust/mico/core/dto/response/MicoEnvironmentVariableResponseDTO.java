@@ -36,24 +36,24 @@ import lombok.experimental.Accessors;
 @AllArgsConstructor
 @Accessors(chain = true)
 public class MicoEnvironmentVariableResponseDTO extends MicoEnvironmentVariableRequestDTO {
-	
-	// Note: as soon as someone adds fields to this class, please check
-	// whether Jackson requires this class to have a NoArgsConstructor,
-	// if so, add the @NoArgsConstructor to this class.
-	
-    
+
+    // Note: as soon as someone adds fields to this class, please check
+    // whether Jackson requires this class to have a NoArgsConstructor,
+    // if so, add the @NoArgsConstructor to this class.
+
+
     // -------------------
     // -> Constructors ---
     // -------------------
-    
+
     /**
-   	 * Creates an instance of {@code MicoEnvironmentVariableResponseDTO} based on a
-   	 * {@code MicoEnvironmentVariable}.
-   	 * 
-   	 * @param environmentVariable the {@link MicoEnvironmentVariable}.
-   	 */
-	public MicoEnvironmentVariableResponseDTO(MicoEnvironmentVariable environmentVariable) {
-		super(environmentVariable);
-	}
+     * Creates an instance of {@code MicoEnvironmentVariableResponseDTO} based on a
+     * {@code MicoEnvironmentVariable}.
+     *
+     * @param environmentVariable the {@link MicoEnvironmentVariable}.
+     */
+    public MicoEnvironmentVariableResponseDTO(MicoEnvironmentVariable environmentVariable) {
+        super(environmentVariable);
+    }
 
 }

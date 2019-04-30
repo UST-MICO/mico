@@ -39,25 +39,25 @@ import lombok.experimental.Accessors;
 @AllArgsConstructor
 @Accessors(chain = true)
 public class MicoApplicationJobStatus {
-	
+
     /**
      * The short name of the {@link MicoApplication}.
      */
     private String applicationShortName;
-    
+
     /**
      * The version of the {@link MicoApplication}.
      */
     private String applicationVersion;
-    
+
     /**
      * The aggregated status of jobs for the {@link MicoApplication}.
      */
     private MicoServiceBackgroundJob.Status status = Status.UNDEFINED;
-    
+
     /**
      * The list of jobs for the {@link MicoApplication}.
      */
     private List<MicoServiceBackgroundJob> jobs = new ArrayList<>();
-    
+
 }

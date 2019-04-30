@@ -37,9 +37,9 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class MicoInterfaceConnectionResponseDTO extends MicoInterfaceConnectionRequestDTO {
 
-	// Note: as soon as someone adds fields to this class, please check
-	// whether Jackson requires this class to have a NoArgsConstructor,
-	// if so, add the @NoArgsConstructor to this class.
+    // Note: as soon as someone adds fields to this class, please check
+    // whether Jackson requires this class to have a NoArgsConstructor,
+    // if so, add the @NoArgsConstructor to this class.
 
 
     // -------------------
@@ -47,13 +47,13 @@ public class MicoInterfaceConnectionResponseDTO extends MicoInterfaceConnectionR
     // -------------------
 
     /**
-   	 * Creates an instance of {@code MicoInterfaceConnectionResponseDTO} based on a
-   	 * {@code MicoInterfaceConnection}.
-   	 *
-   	 * @param interfaceConnection the {@link MicoInterfaceConnection}.
-   	 */
-	public MicoInterfaceConnectionResponseDTO(MicoInterfaceConnection interfaceConnection) {
-		super(interfaceConnection);
-	}
+     * Creates an instance of {@code MicoInterfaceConnectionResponseDTO} based on a
+     * {@code MicoInterfaceConnection}.
+     *
+     * @param interfaceConnection the {@link MicoInterfaceConnection}.
+     */
+    public MicoInterfaceConnectionResponseDTO(MicoInterfaceConnection interfaceConnection) {
+        super(interfaceConnection);
+    }
 
 }

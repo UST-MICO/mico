@@ -144,7 +144,7 @@ public class MicoStatusServiceTest {
                 .setTargetPort(8080)
                 .setType(MicoPortType.TCP)));
         micoService.setServiceInterfaces(CollectionUtils.listOf(micoServiceInterface));
-        
+
         micoApplication.getServices().add(micoService);
         micoApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(micoService));
 
@@ -517,7 +517,7 @@ public class MicoStatusServiceTest {
             .setExternalIpIsAvailable(true)
             .setExternalIp("192.168.2.112")
             .setPort(8080);
-        List<MicoServiceInterfaceStatusResponseDTO> expectedInterfaceStatusDTO = new LinkedList<>();
+        List<MicoServiceInterfaceStatusResponseDTO> expectedInterfaceStatusDTO = new ArrayList<>();
         expectedInterfaceStatusDTO.add(expectedServiceInterface);
         List<MicoMessageResponseDTO> errorMessages = new ArrayList<>();
 
@@ -536,7 +536,7 @@ public class MicoStatusServiceTest {
 
         MicoServiceInterfaceStatusResponseDTO expectedServiceInterface = new MicoServiceInterfaceStatusResponseDTO()
             .setName(SERVICE_INTERFACE_NAME); // Expect that there are no IPs
-        List<MicoServiceInterfaceStatusResponseDTO> expectedInterfaceStatusDTO = new LinkedList<>();
+        List<MicoServiceInterfaceStatusResponseDTO> expectedInterfaceStatusDTO = new ArrayList<>();
         expectedInterfaceStatusDTO.add(expectedServiceInterface);
 
         List<MicoMessageResponseDTO> errorMessages = new ArrayList<>();

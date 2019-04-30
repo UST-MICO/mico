@@ -187,13 +187,13 @@ public class MicoServiceDeploymentInfo {
      * of the properties of the given {@link MicoServiceDeploymentInfoResponseDTO}.
      */
     public MicoServiceDeploymentInfo applyValuesFrom(MicoServiceDeploymentInfoResponseDTO serviceDeploymentInfoDto) {
-    	MicoServiceDeploymentInfo result = applyValuesFrom((MicoServiceDeploymentInfoRequestDTO) serviceDeploymentInfoDto);
-    	
-    	// Kubernetes deployment info may be null (not initialized)
-    	if (serviceDeploymentInfoDto.getKubernetesDeploymentInfo() != null) {
-    		result.setKubernetesDeploymentInfo(KubernetesDeploymentInfo.valueOf(serviceDeploymentInfoDto.getKubernetesDeploymentInfo()));
-    	}
-        
+        MicoServiceDeploymentInfo result = applyValuesFrom((MicoServiceDeploymentInfoRequestDTO) serviceDeploymentInfoDto);
+
+        // Kubernetes deployment info may be null (not initialized)
+        if (serviceDeploymentInfoDto.getKubernetesDeploymentInfo() != null) {
+            result.setKubernetesDeploymentInfo(KubernetesDeploymentInfo.valueOf(serviceDeploymentInfoDto.getKubernetesDeploymentInfo()));
+        }
+
         return result;
     }
 

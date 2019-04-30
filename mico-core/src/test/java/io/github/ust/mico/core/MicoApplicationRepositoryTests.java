@@ -39,50 +39,50 @@ import io.github.ust.mico.core.model.MicoService;
 @SpringBootTest
 @Transactional
 public class MicoApplicationRepositoryTests extends MicoRepositoryTests {
-	
+
     @Before
     public void setUp() {
         deleteAllData();
     }
-    
+
     @Test
     @Commit
     public void findAllApplicationsByUsedService() {
-    	// Setup some applications
-    	MicoApplication a0 = getPureMicoApplication(0);
-    	MicoApplication a1 = getPureMicoApplication(1);
-    	MicoApplication a2 = getPureMicoApplication(2);
-    	MicoApplication a3 = getPureMicoApplication(3);
-    	
-    	// Setup some services
-    	MicoService s0 = getMicoService(0);
-    	MicoService s1 = getMicoService(1);
-    	
-    	// Application #0 only includes service #0
-    	// Application #1 only includes service #1
-    	// Application #2 includes services #0 and #1
-    	// Application #3 includes no service
-    	addMicoServicesWithServiceDeploymentInfo(a0, s0);
-    	addMicoServicesWithDefaultServiceDeploymentInfo(a1, s1);
-    	addMicoServicesWithDefaultServiceDeploymentInfo(a2, s0, s1);
-    	
-    	// Save
-    	applicationRepository.save(a0);
-    	applicationRepository.save(a1);
-    	applicationRepository.save(a2);
-    	applicationRepository.save(a3);
-    	
-    	// Get all applications that include service #0
-    	List<MicoApplication> applicationsUsingS0 = applicationRepository.findAllByUsedService(s0.getShortName(), s0.getVersion());
-    	// Applications #0 and #2 include service #0
-    	assertEquals(2, applicationsUsingS0.size());
-    	assertTrue(applicationsUsingS0.contains(a0));
-    	assertEquals(a0, matchMicoApplication(applicationsUsingS0, a0));
-    	assertTrue(applicationsUsingS0.contains(a2));
-    	assertEquals(a2, matchMicoApplication(applicationsUsingS0, a2));
-    	// Applications #1 and #3 do not include service #0
-    	assertFalse(applicationsUsingS0.contains(a1));
-    	assertFalse(applicationsUsingS0.contains(a3));
+        // Setup some applications
+        MicoApplication a0 = getPureMicoApplication(0);
+        MicoApplication a1 = getPureMicoApplication(1);
+        MicoApplication a2 = getPureMicoApplication(2);
+        MicoApplication a3 = getPureMicoApplication(3);
+
+        // Setup some services
+        MicoService s0 = getMicoService(0);
+        MicoService s1 = getMicoService(1);
+
+        // Application #0 only includes service #0
+        // Application #1 only includes service #1
+        // Application #2 includes services #0 and #1
+        // Application #3 includes no service
+        addMicoServicesWithServiceDeploymentInfo(a0, s0);
+        addMicoServicesWithDefaultServiceDeploymentInfo(a1, s1);
+        addMicoServicesWithDefaultServiceDeploymentInfo(a2, s0, s1);
+
+        // Save
+        applicationRepository.save(a0);
+        applicationRepository.save(a1);
+        applicationRepository.save(a2);
+        applicationRepository.save(a3);
+
+        // Get all applications that include service #0
+        List<MicoApplication> applicationsUsingS0 = applicationRepository.findAllByUsedService(s0.getShortName(), s0.getVersion());
+        // Applications #0 and #2 include service #0
+        assertEquals(2, applicationsUsingS0.size());
+        assertTrue(applicationsUsingS0.contains(a0));
+        assertEquals(a0, matchMicoApplication(applicationsUsingS0, a0));
+        assertTrue(applicationsUsingS0.contains(a2));
+        assertEquals(a2, matchMicoApplication(applicationsUsingS0, a2));
+        // Applications #1 and #3 do not include service #0
+        assertFalse(applicationsUsingS0.contains(a1));
+        assertFalse(applicationsUsingS0.contains(a3));
     }
 
 }

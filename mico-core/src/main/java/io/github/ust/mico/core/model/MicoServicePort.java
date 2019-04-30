@@ -48,7 +48,7 @@ public class MicoServicePort {
     @GeneratedValue
     private Long id;
 
-    
+
     // ----------------------
     // -> Required Fields ---
     // ----------------------
@@ -68,24 +68,24 @@ public class MicoServicePort {
      * The port inside the container.
      */
     private int targetPort;
- 
-    
+
+
     // ----------------------
     // -> Static Creators ---
     // ----------------------
-    
+
     /**
      * Creates a new {@code MicoServicePort} based on a {@code MicoServicePortRequestDTO}.
      * Note that the id will be set to {@code null}.
-     * 
+     *
      * @param servicePortDto the {@link MicoServicePortRequestDTO}.
      * @return a {@link MicoServicePort}.
      */
     public static MicoServicePort valueOf(MicoServicePortRequestDTO servicePortDto) {
         return new MicoServicePort()
-        	.setPort(servicePortDto.getPort())
-        	.setType(servicePortDto.getType())
-        	.setTargetPort(servicePortDto.getTargetPort());
+            .setPort(servicePortDto.getPort())
+            .setType(servicePortDto.getType())
+            .setTargetPort(servicePortDto.getTargetPort());
     }
-    
+
 }

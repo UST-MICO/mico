@@ -43,7 +43,7 @@ public class MicoServiceInterfaceBroker {
 
     public void deleteMicoServiceInterface(MicoService micoService, String serviceInterfaceName) throws MicoServiceIsDeployedException {
         // Check whether service is currently deployed, i.e., it's not allowed to delete an interface
-        if(micoKubernetesClient.isMicoServiceDeployed(micoService)) {
+        if (micoKubernetesClient.isMicoServiceDeployed(micoService)) {
             throw new MicoServiceIsDeployedException(micoService.getShortName(), micoService.getVersion());
         }
         serviceInterfaceRepository.deleteByServiceAndName(micoService.getShortName(), micoService.getVersion(), serviceInterfaceName);
@@ -56,7 +56,7 @@ public class MicoServiceInterfaceBroker {
             throw new MicoServiceInterfaceAlreadyExistsException(micoService.getShortName(), micoService.getVersion(), micoServiceInterface.getServiceInterfaceName());
         }
         // Check whether service is currently deployed, i.e., it's not allowed to add or update an interface
-        if(micoKubernetesClient.isMicoServiceDeployed(micoService)) {
+        if (micoKubernetesClient.isMicoServiceDeployed(micoService)) {
             throw new MicoServiceIsDeployedException(micoService.getShortName(), micoService.getVersion());
         }
 
@@ -74,7 +74,7 @@ public class MicoServiceInterfaceBroker {
             throw new MicoServiceInterfaceNotFoundException(micoService.getShortName(), micoService.getVersion(), serviceInterfaceName);
         }
         // Check whether service is currently deployed, i.e., it's not allowed to add or update an interface
-        if(micoKubernetesClient.isMicoServiceDeployed(micoService)) {
+        if (micoKubernetesClient.isMicoServiceDeployed(micoService)) {
             throw new MicoServiceIsDeployedException(micoService.getShortName(), micoService.getVersion());
         }
 

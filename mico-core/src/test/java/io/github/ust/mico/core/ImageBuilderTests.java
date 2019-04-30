@@ -71,10 +71,10 @@ public class ImageBuilderTests {
     public void withoutInitializingAnErrorIsThrown() throws NotInitializedException, InterruptedException, ExecutionException, TimeoutException {
 
         MicoService micoService = new MicoService()
-                .setShortName(SERVICE_SHORT_NAME)
-                .setVersion(SERVICE_VERSION)
-                .setName(NAME)
-                .setGitCloneUrl(IntegrationTest.GIT_CLONE_URL);
+            .setShortName(SERVICE_SHORT_NAME)
+            .setVersion(SERVICE_VERSION)
+            .setName(NAME)
+            .setGitCloneUrl(IntegrationTest.GIT_CLONE_URL);
 
         imageBuilder.build(micoService);
     }

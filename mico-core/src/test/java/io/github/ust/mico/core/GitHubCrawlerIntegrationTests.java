@@ -19,6 +19,14 @@
 
 package io.github.ust.mico.core;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.GitHubCrawler;
+import lombok.extern.slf4j.Slf4j;
+
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
@@ -31,14 +39,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.service.GitHubCrawler;
-
+@Slf4j
 @Category(IntegrationTests.class)
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -128,7 +129,7 @@ public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
             String json = mapper.writeValueAsString(object);
             System.out.println(json);
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
     }
 }

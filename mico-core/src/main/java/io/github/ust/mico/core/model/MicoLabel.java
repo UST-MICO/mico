@@ -42,10 +42,10 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 @NodeEntity
 public class MicoLabel {
-	
-	@Id
-	@GeneratedValue
-	private Long id;
+
+    @Id
+    @GeneratedValue
+    private Long id;
 
     /**
      * Key of the label.
@@ -61,18 +61,18 @@ public class MicoLabel {
     // ----------------------
     // -> Static Creators ---
     // ----------------------
-    
+
     /**
      * Creates a new {@code MicoLabel} based on a {@code MicoLabelRequestDTO}.
      * Note that the id will be set to {@code null}.
-     * 
+     *
      * @param labelDto the {@link MicoLabelRequestDTO}.
      * @return a {@link MicoLabel}.
      */
     public static MicoLabel valueOf(MicoLabelRequestDTO labelDto) {
         return new MicoLabel()
-                .setKey(labelDto.getKey())
-                .setValue(labelDto.getValue());
+            .setKey(labelDto.getKey())
+            .setValue(labelDto.getValue());
     }
-    
+
 }

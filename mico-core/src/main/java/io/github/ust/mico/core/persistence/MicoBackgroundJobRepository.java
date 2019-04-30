@@ -27,12 +27,12 @@ import java.util.Optional;
 
 @Repository
 public interface MicoBackgroundJobRepository extends CrudRepository<MicoServiceBackgroundJob, String> {
-	
+
     @Override
     List<MicoServiceBackgroundJob> findAll();
 
     List<MicoServiceBackgroundJob> findByServiceShortNameAndServiceVersion(String micoServiceShortName, String micoServiceVersion);
-    
+
     Optional<MicoServiceBackgroundJob> findByServiceShortNameAndServiceVersionAndType(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundJob.Type type);
-    
+
 }

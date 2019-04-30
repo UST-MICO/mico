@@ -43,8 +43,8 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
-import java.net.URI;
 
+import java.net.URI;
 
 @Slf4j
 @Component
@@ -203,7 +203,6 @@ public class GitHubCrawler {
 
             return versionList;
         } catch (IOException e) {
-            log.error(e.getStackTrace().toString());
             log.error("Getting exception '{}'", e.getMessage());
             throw e;
         }

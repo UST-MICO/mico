@@ -38,7 +38,7 @@ public class FutureUtils {
      * If *any* future completes exceptionally then the resulting future will also complete exceptionally.
      *
      * @param futures the {@link CompletableFuture CompletableFutures}
-     * @param <T> the generic type of the {@link CompletableFuture CompletableFutures}
+     * @param <T>     the generic type of the {@link CompletableFuture CompletableFutures}
      * @return the list of {@link CompletableFuture CompletableFutures}
      */
     public static <T> CompletableFuture<List<T>> all(List<CompletableFuture<T>> futures) {

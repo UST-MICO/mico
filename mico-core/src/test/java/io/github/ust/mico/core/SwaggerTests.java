@@ -51,10 +51,10 @@ public class SwaggerTests {
     public void vendorExtensionsTest() throws Exception {
         // If this test breaks, there is either no x-order annotation anywhere or the CustomOpenApiExtentionsPlugin is missing.
         mvc.perform(get("/v2/api-docs").accept(MediaTypes.HAL_JSON_VALUE))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.definitions.*.properties.*.x-order", not(empty())))
-                .andReturn();
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.definitions.*.properties.*.x-order", not(empty())))
+            .andReturn();
     }
 
 }

@@ -111,12 +111,12 @@ public class ImageBuilderIntegrationTests {
         imageBuilder.init();
 
         MicoService micoService = new MicoService()
-                .setShortName(TestConstants.IntegrationTest.SERVICE_SHORT_NAME)
-                .setName(TestConstants.IntegrationTest.SERVICE_NAME)
-                .setVersion(TestConstants.IntegrationTest.RELEASE)
-                .setDescription(TestConstants.IntegrationTest.SERVICE_DESCRIPTION)
-                .setGitCloneUrl(TestConstants.IntegrationTest.GIT_CLONE_URL)
-                .setDockerfilePath(TestConstants.IntegrationTest.DOCKERFILE_PATH);
+            .setShortName(TestConstants.IntegrationTest.SERVICE_SHORT_NAME)
+            .setName(TestConstants.IntegrationTest.SERVICE_NAME)
+            .setVersion(TestConstants.IntegrationTest.RELEASE)
+            .setDescription(TestConstants.IntegrationTest.SERVICE_DESCRIPTION)
+            .setGitCloneUrl(TestConstants.IntegrationTest.GIT_CLONE_URL)
+            .setDockerfilePath(TestConstants.IntegrationTest.DOCKERFILE_PATH);
 
         CompletableFuture<String> buildJob = imageBuilder.build(micoService);
 

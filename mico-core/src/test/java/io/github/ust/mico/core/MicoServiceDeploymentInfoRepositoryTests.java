@@ -87,7 +87,7 @@ public class MicoServiceDeploymentInfoRepositoryTests extends MicoRepositoryTest
     @Commit
     @Test
     public void findAllDeploymentInfoByService() {
-    	// Setup some applications
+        // Setup some applications
         MicoApplication a0 = getPureMicoApplication(0);
         MicoApplication a1 = getPureMicoApplication(1);
         MicoApplication a2 = getPureMicoApplication(2);
@@ -127,7 +127,7 @@ public class MicoServiceDeploymentInfoRepositoryTests extends MicoRepositoryTest
     @Commit
     @Test
     public void findDeploymentInfoByApplicationAndServiceShortName() {
-    	// Setup some applications
+        // Setup some applications
         MicoApplication a0 = getPureMicoApplication(0);
         MicoApplication a1 = getPureMicoApplication(1);
         MicoApplication a2 = getPureMicoApplication(2);
@@ -167,7 +167,7 @@ public class MicoServiceDeploymentInfoRepositoryTests extends MicoRepositoryTest
     @Commit
     @Test
     public void findDeploymentInfoByApplicationAndService() {
-    	// Setup some applications
+        // Setup some applications
         MicoApplication a0 = getPureMicoApplication(0);
         MicoApplication a1 = getPureMicoApplication(1);
         MicoApplication a2 = getPureMicoApplication(2);

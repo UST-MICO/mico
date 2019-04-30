@@ -3,7 +3,7 @@ package io.github.ust.mico.core.broker;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -296,7 +296,7 @@ public class MicoApplicationBroker {
         // FIXME: Currently we only supported scale in / scale out.
         // 		  If the MICO service is already deployed, we only update the replicas.
         // 	      The other properties are ignored!
-        if(micoKubernetesClient.isApplicationDeployed(micoApplication)) {
+        if (micoKubernetesClient.isApplicationDeployed(micoApplication)) {
             MicoService micoService = updatedServiceDeploymentInfo.getService();
             log.info("MicoApplication '{}' {}' is already deployed. Update the deployment of the included MicoService '{} '{}'.",
                 micoApplication.getShortName(), micoApplication.getVersion(), micoService.getShortName(), micoService.getVersion());
@@ -334,7 +334,7 @@ public class MicoApplicationBroker {
 
     //TODO: Move to Resource or keep in Broker? (see issue mico#632)
     public Iterable<Link> getLinksOfMicoApplication(MicoApplication application) {
-        LinkedList<Link> links = new LinkedList<>();
+        ArrayList<Link> links = new ArrayList<>();
         links.add(linkTo(methodOn(ApplicationResource.class).getApplicationByShortNameAndVersion(application.getShortName(), application.getVersion())).withSelfRel());
         links.add(linkTo(methodOn(ApplicationResource.class).getAllApplications()).withRel("applications"));
         return links;

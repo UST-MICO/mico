@@ -21,7 +21,6 @@ package io.github.ust.mico.core;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -44,6 +43,7 @@ import io.github.ust.mico.core.service.GitHubCrawler;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
 import io.github.ust.mico.core.util.CollectionUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -60,6 +60,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+
+import java.util.*;
 
 import static io.github.ust.mico.core.JsonPathBuilder.HREF;
 import static io.github.ust.mico.core.JsonPathBuilder.LINKS;
@@ -149,6 +151,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Slf4j
 @RunWith(SpringRunner.class)
 @EnableAutoConfiguration
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
@@ -744,7 +747,7 @@ public class ServiceResourceUnitTests {
             String json = mapper.writeValueAsString(object);
             System.out.println(json);
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
     }
 
@@ -808,7 +811,7 @@ public class ServiceResourceUnitTests {
             .setDescription(DESCRIPTION);
 
         given(micoServiceBroker.getServiceFromDatabase(service.getShortName(), service.getVersion())).willReturn(service);
-        given(micoServiceBroker.findDependers(service)).willReturn(new LinkedList<>());
+        given(micoServiceBroker.findDependers(service)).willReturn(new ArrayList<>());
 
         doThrow(MicoServiceIsDeployedException.class).when(micoServiceBroker).deleteService(service);
 
@@ -849,7 +852,7 @@ public class ServiceResourceUnitTests {
         MicoServiceInterface micoServiceInterfaceTwo = new MicoServiceInterface()
             .setServiceInterfaceName(SERVICE_INTERFACE_NAME_1);
 
-        List<MicoServiceInterface> micoServiceInterfaces = new LinkedList<>();
+        List<MicoServiceInterface> micoServiceInterfaces = new ArrayList<>();
         micoServiceInterfaces.add(micoServiceInterface);
         micoServiceInterfaces.add(micoServiceInterfaceTwo);
 
