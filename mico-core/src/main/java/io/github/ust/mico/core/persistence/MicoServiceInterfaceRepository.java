@@ -29,28 +29,28 @@ import org.springframework.data.repository.query.Param;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 
 public interface MicoServiceInterfaceRepository extends Neo4jRepository<MicoServiceInterface, Long> {
-	
-	@Query("MATCH (s:MicoService)-[:PROVIDES]->(i:MicoServiceInterface)-[:PROVIDES]->(p:MicoServicePort) "
-		+ "WHERE s.shortName = {shortName} AND s.version = {version} "
-		+ "RETURN (i)-[:PROVIDES]->(p)")
-    List<MicoServiceInterface> findByService(
-    	@Param("shortName") String shortName,
-    	@Param("version") String version);
-	
-	@Query("MATCH (s:MicoService)-[:PROVIDES]->(i:MicoServiceInterface)-[:PROVIDES]->(p:MicoServicePort) "
-		+ "WHERE s.shortName = {shortName} AND s.version = {version} AND i.serviceInterfaceName = {serviceInterfaceName} "
-		+ "RETURN (i)-[:PROVIDES]->(p)")
-    Optional<MicoServiceInterface> findByServiceAndName(
-    	@Param("shortName") String shortName,
-    	@Param("version") String version,
-    	@Param("serviceInterfaceName") String serviceInterfaceName);
-	
+
     @Query("MATCH (s:MicoService)-[:PROVIDES]->(i:MicoServiceInterface)-[:PROVIDES]->(p:MicoServicePort) "
-    	+ "WHERE s.shortName = {shortName} AND s.version = {version} AND i.serviceInterfaceName = {serviceInterfaceName} "
-    	+ "DETACH DELETE i, p")
+        + "WHERE s.shortName = {shortName} AND s.version = {version} "
+        + "RETURN (i)-[:PROVIDES]->(p)")
+    List<MicoServiceInterface> findByService(
+        @Param("shortName") String shortName,
+        @Param("version") String version);
+
+    @Query("MATCH (s:MicoService)-[:PROVIDES]->(i:MicoServiceInterface)-[:PROVIDES]->(p:MicoServicePort) "
+        + "WHERE s.shortName = {shortName} AND s.version = {version} AND i.serviceInterfaceName = {serviceInterfaceName} "
+        + "RETURN (i)-[:PROVIDES]->(p)")
+    Optional<MicoServiceInterface> findByServiceAndName(
+        @Param("shortName") String shortName,
+        @Param("version") String version,
+        @Param("serviceInterfaceName") String serviceInterfaceName);
+
+    @Query("MATCH (s:MicoService)-[:PROVIDES]->(i:MicoServiceInterface)-[:PROVIDES]->(p:MicoServicePort) "
+        + "WHERE s.shortName = {shortName} AND s.version = {version} AND i.serviceInterfaceName = {serviceInterfaceName} "
+        + "DETACH DELETE i, p")
     void deleteByServiceAndName(
-    	@Param("shortName") String shortName,
-    	@Param("version") String version,
-    	@Param("serviceInterfaceName") String serviceInterfaceName);
-	
+        @Param("shortName") String shortName,
+        @Param("version") String version,
+        @Param("serviceInterfaceName") String serviceInterfaceName);
+
 }

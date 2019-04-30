@@ -47,11 +47,11 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 @JsonInclude(Include.NON_NULL)
 public class MicoApplicationDeploymentStatusResponseDTO {
-	
+
     // ----------------------
     // -> Required Fields ---
     // ----------------------
-	
+
     /**
      * The actual status {@link Value}.
      */
@@ -66,12 +66,12 @@ public class MicoApplicationDeploymentStatusResponseDTO {
     )})
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Value value;
-	
-    
+
+
     // ----------------------
     // -> Optional Fields ---
     // ----------------------
-    
+
     /**
      * Messages with more detailed information about the status.
      */
@@ -86,23 +86,23 @@ public class MicoApplicationDeploymentStatusResponseDTO {
     )})
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private List<MicoMessageResponseDTO> messages = new ArrayList<>();
-    
-    
+
+
     // -------------------
     // -> Constructors ---
     // -------------------
-   
+
     /**
      * Creates an instance of {@code MicoApplicationDeploymentStatusResponseDTO} based on a
      * {@code MicoApplicationDeploymentStatus}.
-     *  
+     *
      * @param applicationDeploymentStatus the {@link MicoApplicationDeploymentStatus applicationDeploymentStatus}.
      */
-	public MicoApplicationDeploymentStatusResponseDTO(MicoApplicationDeploymentStatus applicationDeploymentStatus) {
-		this.value = applicationDeploymentStatus.getValue();
-		this.messages = applicationDeploymentStatus.getMessages()
-			.stream().map(MicoMessageResponseDTO::new)
-		    .collect(Collectors.toList());
-	}
-    
+    public MicoApplicationDeploymentStatusResponseDTO(MicoApplicationDeploymentStatus applicationDeploymentStatus) {
+        this.value = applicationDeploymentStatus.getValue();
+        this.messages = applicationDeploymentStatus.getMessages()
+            .stream().map(MicoMessageResponseDTO::new)
+            .collect(Collectors.toList());
+    }
+
 }

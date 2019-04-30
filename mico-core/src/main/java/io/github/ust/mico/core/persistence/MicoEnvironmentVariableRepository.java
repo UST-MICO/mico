@@ -25,11 +25,11 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import io.github.ust.mico.core.model.MicoEnvironmentVariable;
 
 public interface MicoEnvironmentVariableRepository extends Neo4jRepository<MicoEnvironmentVariable, Long> {
-	
-	/**
-	 * Deletes all environment variables that do <b>not</b> have any relationship to another node.
-	 */
-	@Query("MATCH (env:MicoEnvironmentVariable) WHERE size((env)--()) = 0 DELETE env")
-	void cleanUp();
-	
+
+    /**
+     * Deletes all environment variables that do <b>not</b> have any relationship to another node.
+     */
+    @Query("MATCH (env:MicoEnvironmentVariable) WHERE size((env)--()) = 0 DELETE env")
+    void cleanUp();
+
 }

@@ -73,10 +73,10 @@ public class ServiceInterfaceResource {
         List<MicoServiceInterface> serviceInterfaces = micoServiceInterfaceBroker.getInterfacesOfService(shortName, version);
 
         List<Resource<MicoServiceInterfaceResponseDTO>> serviceInterfaceResources =
-                getServiceInterfaceResponseDTOResourcesList(shortName, version, serviceInterfaces);
+            getServiceInterfaceResponseDTOResourcesList(shortName, version, serviceInterfaces);
 
         return ResponseEntity.ok(new Resources<>(serviceInterfaceResources,
-                linkTo(methodOn(ServiceInterfaceResource.class).getInterfacesOfService(shortName, version)).withSelfRel()));
+            linkTo(methodOn(ServiceInterfaceResource.class).getInterfacesOfService(shortName, version)).withSelfRel()));
     }
 
     @GetMapping(SERVICE_INTERFACE_PATH + "/{" + PATH_VARIABLE_SERVICE_INTERFACE_NAME + "}")
@@ -90,8 +90,8 @@ public class ServiceInterfaceResource {
 
     @GetMapping(SERVICE_INTERFACE_PUBLIC_IP_PATH)
     public ResponseEntity<MicoServiceInterfaceStatusResponseDTO> getInterfacePublicIpByName(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                   @PathVariable(PATH_VARIABLE_VERSION) String version,
-                                                                   @PathVariable(PATH_VARIABLE_SERVICE_INTERFACE_NAME) String serviceInterfaceName) {
+                                                                                            @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                                                            @PathVariable(PATH_VARIABLE_SERVICE_INTERFACE_NAME) String serviceInterfaceName) {
         MicoService micoService = getServiceFromServiceBroker(shortName, version);
         MicoServiceInterface serviceInterface = getServiceInterfaceFromServiceInterfaceBroker(shortName, version, serviceInterfaceName);
 
@@ -141,10 +141,10 @@ public class ServiceInterfaceResource {
         }
 
         return ResponseEntity
-                .created(linkTo(methodOn(ServiceInterfaceResource.class).getInterfaceByName(shortName, version,
-                        serviceInterface.getServiceInterfaceName())).toUri())
-                .body(new Resource<>(new MicoServiceInterfaceResponseDTO(serviceInterface),
-                        getServiceInterfaceLinks(shortName, version, serviceInterface)));
+            .created(linkTo(methodOn(ServiceInterfaceResource.class).getInterfaceByName(shortName, version,
+                serviceInterface.getServiceInterfaceName())).toUri())
+            .body(new Resource<>(new MicoServiceInterfaceResponseDTO(serviceInterface),
+                getServiceInterfaceLinks(shortName, version, serviceInterface)));
     }
 
     /**
@@ -177,7 +177,7 @@ public class ServiceInterfaceResource {
         }
 
         return ResponseEntity.ok(new Resource<>(new MicoServiceInterfaceResponseDTO(updatedServiceInterface),
-                getServiceInterfaceLinks(shortName, version, updatedServiceInterface)));
+            getServiceInterfaceLinks(shortName, version, updatedServiceInterface)));
     }
 
     /**

@@ -49,12 +49,12 @@ import lombok.experimental.Accessors;
 @AllArgsConstructor
 @Accessors(chain = true)
 public class MicoServiceInterfaceRequestDTO {
-	
+
     // ----------------------
     // -> Required Fields ---
     // ----------------------
-	
-	/**
+
+    /**
      * The name of this {@link MicoServiceInterface}.
      * Pattern is the same than the one for Kubernetes Service names.
      */
@@ -66,7 +66,7 @@ public class MicoServiceInterfaceRequestDTO {
             @ExtensionProperty(name = "x-order", value = "20"),
             @ExtensionProperty(name = "description", value = "The name of this MicoServiceInterface"),
             @ExtensionProperty(name = "minLength", value = "3"),
-            @ExtensionProperty(name = "maxLength", value = KubernetesNameNormalizer.MICO_NAME_MAX_SIZE +""),
+            @ExtensionProperty(name = "maxLength", value = KubernetesNameNormalizer.MICO_NAME_MAX_SIZE + ""),
         }
     )})
     @NotNull
@@ -126,24 +126,24 @@ public class MicoServiceInterfaceRequestDTO {
         }
     )})
     private String protocol;
-    
-    
+
+
     // -------------------
     // -> Constructors ---
     // -------------------
-    
+
     /**
      * Creates an instance of {@code MicoServiceInterfaceRequestDTO} based on a
      * {@code MicoServiceInterface}.
-     * 
+     *
      * @param serviceInterface the {@link MicoServiceInterface}.
      */
     public MicoServiceInterfaceRequestDTO(MicoServiceInterface serviceInterface) {
-    	this.serviceInterfaceName = serviceInterface.getServiceInterfaceName();
-    	this.ports = serviceInterface.getPorts().stream().map(MicoServicePortRequestDTO::new).collect(Collectors.toList());
-    	this.description = serviceInterface.getDescription();
-    	this.protocol = serviceInterface.getProtocol();
-    	
+        this.serviceInterfaceName = serviceInterface.getServiceInterfaceName();
+        this.ports = serviceInterface.getPorts().stream().map(MicoServicePortRequestDTO::new).collect(Collectors.toList());
+        this.description = serviceInterface.getDescription();
+        this.protocol = serviceInterface.getProtocol();
+
     }
 
 }

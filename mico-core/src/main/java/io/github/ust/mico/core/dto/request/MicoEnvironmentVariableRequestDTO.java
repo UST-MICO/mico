@@ -42,7 +42,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class MicoEnvironmentVariableRequestDTO {
 
-	/**
+    /**
      * Name of the environment variable.
      */
     @ApiModelProperty(required = true, extensions = {@Extension(
@@ -70,21 +70,21 @@ public class MicoEnvironmentVariableRequestDTO {
         }
     )})
     private String value;
-    
-    
+
+
     // -------------------
     // -> Constructors ---
     // -------------------
-    
+
     /**
-   	 * Creates an instance of {@code MicoEnvironmentVariableRequestDTO} based on a
-   	 * {@code MicoEnvironmentVariable}.
-   	 * 
-   	 * @param environmentVariable the {@link MicoEnvironmentVariable}.
-   	 */
-	public MicoEnvironmentVariableRequestDTO(MicoEnvironmentVariable environmentVariable) {
-		this.name = environmentVariable.getName();
-		this.value = environmentVariable.getValue();
-	}
+     * Creates an instance of {@code MicoEnvironmentVariableRequestDTO} based on a
+     * {@code MicoEnvironmentVariable}.
+     *
+     * @param environmentVariable the {@link MicoEnvironmentVariable}.
+     */
+    public MicoEnvironmentVariableRequestDTO(MicoEnvironmentVariable environmentVariable) {
+        this.name = environmentVariable.getName();
+        this.value = environmentVariable.getValue();
+    }
 
 }

@@ -114,7 +114,7 @@ public class MicoServiceBroker {
      */
     private void throwConflictIfServiceIsIncludedInApplications(MicoService service) throws MicoServiceIsUsedByMicoApplicationsException {
         List<MicoApplication> applications = micoApplicationBroker.getMicoApplicationsUsingMicoService(service.getShortName(), service.getVersion());
-        if(!applications.isEmpty()) {
+        if (!applications.isEmpty()) {
             throw new MicoServiceIsUsedByMicoApplicationsException(service.getShortName(), service.getVersion(), applications);
         }
     }

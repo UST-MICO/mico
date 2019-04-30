@@ -71,9 +71,9 @@ public class ServiceResourceEndToEndTests extends Neo4jTestClass {
         MicoService micoService = new MicoService().setShortName(SHORT_NAME).setVersion(VERSION_1_0_1).setName(NAME);
         serviceRepository.save(micoService);
         mvc.perform(delete(SERVICES_PATH + "/" + SHORT_NAME + "/" + "/" + VERSION_1_0_1).accept(MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andDo(print())
-                .andExpect(status().isNoContent())
-                .andReturn();
+            .andDo(print())
+            .andExpect(status().isNoContent())
+            .andReturn();
         Optional<MicoService> micoServiceOptional = serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION_1_0_1);
         assertFalse("The service was not deleted properly", micoServiceOptional.isPresent());
     }
@@ -111,15 +111,15 @@ public class ServiceResourceEndToEndTests extends Neo4jTestClass {
         //Add a matcher for each mico service
         ResultMatcher[] fulldependencyMatcherList = getResultMatchersMicoServiceList(fullDependencyList);
         mvc.perform(get(SERVICES_PATH + "/" + SHORT_NAME + "/" + "/" + VERSION_1_0_1 + "/dependencyGraph").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath(MICO_SERVICE_LIST_IN_DEPENDENCY_GRAPH_PATH, hasSize(4)))
-                .andExpect(ResultMatcher.matchAll(fulldependencyMatcherList))
-                .andExpect(jsonPath(MICO_SERVICE_LIST_IN_DEPENDENCY_GRAPH_PATH + "[?(@.shortName=='" + independentServiceShortName + "')]", hasSize(0))) //Check that the independent service is not in the result list
-                .andExpect(jsonPath(getJsonPathForEdgeInDependencyGraph(micoService0, micoService1), hasSize(1)))
-                .andExpect(jsonPath(getJsonPathForEdgeInDependencyGraph(micoService0, micoService2), hasSize(1)))
-                .andExpect(jsonPath(getJsonPathForEdgeInDependencyGraph(micoService1, micoService3), hasSize(1)))
-                .andReturn();
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(MICO_SERVICE_LIST_IN_DEPENDENCY_GRAPH_PATH, hasSize(4)))
+            .andExpect(ResultMatcher.matchAll(fulldependencyMatcherList))
+            .andExpect(jsonPath(MICO_SERVICE_LIST_IN_DEPENDENCY_GRAPH_PATH + "[?(@.shortName=='" + independentServiceShortName + "')]", hasSize(0))) //Check that the independent service is not in the result list
+            .andExpect(jsonPath(getJsonPathForEdgeInDependencyGraph(micoService0, micoService1), hasSize(1)))
+            .andExpect(jsonPath(getJsonPathForEdgeInDependencyGraph(micoService0, micoService2), hasSize(1)))
+            .andExpect(jsonPath(getJsonPathForEdgeInDependencyGraph(micoService1, micoService3), hasSize(1)))
+            .andReturn();
     }
 
     /**
@@ -152,14 +152,14 @@ public class ServiceResourceEndToEndTests extends Neo4jTestClass {
         //Add a matcher for each mico service
         ResultMatcher[] fulldependencyMatcherList = getResultMatchersMicoServiceList(fullDependencyList);
         mvc.perform(get(SERVICES_PATH + "/" + micoServiceA.getShortName() + "/" + "/" + micoServiceA.getVersion() + "/dependencyGraph").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath(MICO_SERVICE_LIST_IN_DEPENDENCY_GRAPH_PATH, hasSize(fullDependencyList.size())))
-                .andExpect(ResultMatcher.matchAll(fulldependencyMatcherList))
-                .andExpect(jsonPath(getJsonPathForEdgeInDependencyGraph(micoServiceA, micoServiceB), hasSize(1)))
-                .andExpect(jsonPath(getJsonPathForEdgeInDependencyGraph(micoServiceB, micoServiceC), hasSize(1)))
-                .andExpect(jsonPath(getJsonPathForEdgeInDependencyGraph(micoServiceC, micoServiceB), hasSize(1)))
-                .andReturn();
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(MICO_SERVICE_LIST_IN_DEPENDENCY_GRAPH_PATH, hasSize(fullDependencyList.size())))
+            .andExpect(ResultMatcher.matchAll(fulldependencyMatcherList))
+            .andExpect(jsonPath(getJsonPathForEdgeInDependencyGraph(micoServiceA, micoServiceB), hasSize(1)))
+            .andExpect(jsonPath(getJsonPathForEdgeInDependencyGraph(micoServiceB, micoServiceC), hasSize(1)))
+            .andExpect(jsonPath(getJsonPathForEdgeInDependencyGraph(micoServiceC, micoServiceB), hasSize(1)))
+            .andReturn();
     }
 
     /**
@@ -196,18 +196,18 @@ public class ServiceResourceEndToEndTests extends Neo4jTestClass {
         MicoService micoService0 = new MicoService().setShortName(SHORT_NAME).setVersion(VERSION_1_0_1);
         serviceRepository.save(micoService0);
         mvc.perform(get(SERVICES_PATH + "/" + SHORT_NAME + "/" + "/" + VERSION_1_0_1 + "/dependencyGraph").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath(MICO_SERVICE_LIST_IN_DEPENDENCY_GRAPH_PATH, hasSize(1))) //Should only contain the root mico service it self
-                .andExpect(jsonPath(MICO_SERVICE_LIST_IN_DEPENDENCY_GRAPH_PATH + "[?(@.shortName=='" + micoService0.getShortName() + "')]", hasSize(1)))
-                .andReturn();
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(MICO_SERVICE_LIST_IN_DEPENDENCY_GRAPH_PATH, hasSize(1))) //Should only contain the root mico service it self
+            .andExpect(jsonPath(MICO_SERVICE_LIST_IN_DEPENDENCY_GRAPH_PATH + "[?(@.shortName=='" + micoService0.getShortName() + "')]", hasSize(1)))
+            .andReturn();
     }
 
     @Test
     public void getServiceDependencyGraphEmptyDatabase() throws Exception {
         mvc.perform(get(SERVICES_PATH + "/" + SHORT_NAME + "/" + "/" + VERSION_1_0_1 + "/dependencyGraph").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andDo(print())
-                .andExpect(status().isNotFound())
-                .andReturn();
+            .andDo(print())
+            .andExpect(status().isNotFound())
+            .andReturn();
     }
 }

@@ -54,12 +54,12 @@ import lombok.experimental.Accessors;
 @AllArgsConstructor
 @Accessors(chain = true)
 public class MicoServiceRequestDTO {
-	
+
     // ----------------------
     // -> Required Fields ---
     // ----------------------
 
-	/**
+    /**
      * A brief name for the service.
      * In conjunction with the version it must be unique.
      * Pattern is the same as the one for Kubernetes Service names.
@@ -70,7 +70,7 @@ public class MicoServiceRequestDTO {
             @ExtensionProperty(name = "title", value = "Short Name"),
             @ExtensionProperty(name = "pattern", value = Patterns.KUBERNETES_NAMING_REGEX),
             @ExtensionProperty(name = "minLength", value = "3"),
-            @ExtensionProperty(name = "maxLength", value = KubernetesNameNormalizer.MICO_NAME_MAX_SIZE +""),
+            @ExtensionProperty(name = "maxLength", value = KubernetesNameNormalizer.MICO_NAME_MAX_SIZE + ""),
             @ExtensionProperty(name = "x-order", value = "10"),
             @ExtensionProperty(name = "description", value = "A unique name of the MicoService.")
         }
@@ -208,28 +208,28 @@ public class MicoServiceRequestDTO {
         }
     )})
     private String dockerImageUri;
-    
-    
+
+
     // -------------------
     // -> Constructors ---
     // -------------------
-    
-	/**
-	 * Creates an instance of {@code MicoServiceRequestDTO} based on a
-	 * {@code MicoService}.
-	 * 
-	 * @param service the {@link MicoService}.
-	 */
-	public MicoServiceRequestDTO(MicoService service) {
-		this.shortName = service.getShortName();
-		this.version = service.getVersion();
-		this.name = service.getName();
-		this.description = service.getDescription();
-		this.contact = service.getContact();
-		this.owner = service.getOwner();
-		this.gitCloneUrl = service.getGitCloneUrl();
-		this.dockerfilePath = service.getDockerfilePath();
-		this.dockerImageUri = service.getDockerImageUri();
-	}
+
+    /**
+     * Creates an instance of {@code MicoServiceRequestDTO} based on a
+     * {@code MicoService}.
+     *
+     * @param service the {@link MicoService}.
+     */
+    public MicoServiceRequestDTO(MicoService service) {
+        this.shortName = service.getShortName();
+        this.version = service.getVersion();
+        this.name = service.getName();
+        this.description = service.getDescription();
+        this.contact = service.getContact();
+        this.owner = service.getOwner();
+        this.gitCloneUrl = service.getGitCloneUrl();
+        this.dockerfilePath = service.getDockerfilePath();
+        this.dockerImageUri = service.getDockerImageUri();
+    }
 
 }

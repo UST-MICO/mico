@@ -25,11 +25,11 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import io.github.ust.mico.core.model.MicoLabel;
 
 public interface MicoLabelRepository extends Neo4jRepository<MicoLabel, Long> {
-	
-	/**
-	 * Deletes all labels that do <b>not</b> have any relationship to another node.
-	 */
-	@Query("MATCH (label:MicoLabel) WHERE size((label)--()) = 0 DELETE label")
-	void cleanUp();
-	
+
+    /**
+     * Deletes all labels that do <b>not</b> have any relationship to another node.
+     */
+    @Query("MATCH (label:MicoLabel) WHERE size((label)--()) = 0 DELETE label")
+    void cleanUp();
+
 }

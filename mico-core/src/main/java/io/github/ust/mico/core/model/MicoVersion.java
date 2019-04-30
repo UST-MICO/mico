@@ -75,12 +75,12 @@ public class MicoVersion implements Comparable<MicoVersion> {
     public static MicoVersion valueOf(String version) throws VersionNotSupportedException {
         String[] arr = version.split("\\d+", 2);
         String prefix = arr[0].trim();
-        
+
         // Only letters allowed for prefix
         if (!Pattern.matches(Patterns.ONLY_LETTERS_OR_EMPTY_REGEX, prefix)) {
             throw new VersionNotSupportedException("Illegal prefix, only letters are allowed");
         }
-        
+
         Version semanticVersion;
         try {
             semanticVersion = Version.valueOf(version.substring(prefix.length()).trim());

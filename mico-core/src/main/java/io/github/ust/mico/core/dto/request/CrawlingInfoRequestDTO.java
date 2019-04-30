@@ -20,6 +20,7 @@
 package io.github.ust.mico.core.dto.request;
 
 import javax.validation.constraints.NotEmpty;
+
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
@@ -32,6 +33,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+
 import javax.validation.constraints.Pattern;
 
 /**

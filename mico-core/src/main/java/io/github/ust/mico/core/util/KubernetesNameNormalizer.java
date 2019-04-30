@@ -87,19 +87,19 @@ public class KubernetesNameNormalizer {
 
         return result;
     }
-    
+
     /**
      * Creates a build name based on the short name
      * and version of a service.
      *
      * @param serviceShortName the short name of the {@link MicoService}.
-     * @param serviceVersion the version of the {@link MicoService}.
+     * @param serviceVersion   the version of the {@link MicoService}.
      * @return the name of the {@link Build}.
      */
     public String createBuildName(String serviceShortName, String serviceVersion) {
         return normalizeName("build-" + serviceShortName + "-" + serviceVersion);
     }
-    
+
     /**
      * Creates a build name based on a service.
      *
@@ -109,5 +109,5 @@ public class KubernetesNameNormalizer {
     public String createBuildName(MicoService service) {
         return createBuildName(service.getShortName(), service.getVersion());
     }
-    
+
 }

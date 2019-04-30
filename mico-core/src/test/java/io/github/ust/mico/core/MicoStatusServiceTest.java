@@ -144,7 +144,7 @@ public class MicoStatusServiceTest {
                 .setTargetPort(8080)
                 .setType(MicoPortType.TCP)));
         micoService.setServiceInterfaces(CollectionUtils.listOf(micoServiceInterface));
-        
+
         micoApplication.getServices().add(micoService);
         micoApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(micoService));
 

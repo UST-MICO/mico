@@ -92,20 +92,20 @@ public class MicoServiceInterface {
     // ----------------------
     // -> Static Creators ---
     // ----------------------
-    
+
     /**
      * Creates a new {@code MicoServiceInterface} based on a {@code MicoServiceInterfaceRequestDTO}.
      * Note that the id will be set to {@code null}.
-     * 
+     *
      * @param serviceInterfaceDto the {@link MicoServiceInterfaceRequestDTO}.
      * @return a {@link MicoServiceInterface}.
      */
     public static MicoServiceInterface valueOf(MicoServiceInterfaceRequestDTO serviceInterfaceDto) {
         return new MicoServiceInterface()
-        	.setServiceInterfaceName(serviceInterfaceDto.getServiceInterfaceName())
-        	.setPorts(serviceInterfaceDto.getPorts().stream().map(MicoServicePort::valueOf).collect(Collectors.toList()))
-        	.setDescription(serviceInterfaceDto.getDescription())
-        	.setProtocol(serviceInterfaceDto.getProtocol());
+            .setServiceInterfaceName(serviceInterfaceDto.getServiceInterfaceName())
+            .setPorts(serviceInterfaceDto.getPorts().stream().map(MicoServicePort::valueOf).collect(Collectors.toList()))
+            .setDescription(serviceInterfaceDto.getDescription())
+            .setProtocol(serviceInterfaceDto.getProtocol());
     }
 
 }

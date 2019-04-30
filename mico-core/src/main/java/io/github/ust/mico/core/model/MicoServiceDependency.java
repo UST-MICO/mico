@@ -67,7 +67,7 @@ public class MicoServiceDependency {
      * {@link MicoServiceDependency#service}.
      */
     @ApiModelProperty(required = true)
-    @JsonIdentityInfo(generator=ObjectIdGenerators.PropertyGenerator.class, property="id", scope=MicoService.class)
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id", scope = MicoService.class)
     @EndNode
     @EqualsAndHashCode.Exclude
     @ToString.Exclude

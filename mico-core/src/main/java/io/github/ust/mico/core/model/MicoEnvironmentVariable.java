@@ -45,10 +45,10 @@ import lombok.experimental.Accessors;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NodeEntity
 public class MicoEnvironmentVariable {
-	
-	@Id
-	@GeneratedValue
-	private Long id;
+
+    @Id
+    @GeneratedValue
+    private Long id;
 
     /**
      * Name of the environment variable.
@@ -64,18 +64,18 @@ public class MicoEnvironmentVariable {
     // ----------------------
     // -> Static Creators ---
     // ----------------------
-    
+
     /**
      * Creates a new {@code MicoEnvironmentVariable} based on a {@code MicoEnvironmentVariableRequestDTO}.
      * Note that the id will be set to {@code null}.
-     * 
+     *
      * @param environmentVariableDto the {@link MicoEnvironmentVariableRequestDTO}.
      * @return a {@link MicoEnvironmentVariable}.
      */
     public static MicoEnvironmentVariable valueOf(MicoEnvironmentVariableRequestDTO environmentVariableDto) {
         return new MicoEnvironmentVariable()
-                .setName(environmentVariableDto.getName())
-                .setValue(environmentVariableDto.getValue());
+            .setName(environmentVariableDto.getName())
+            .setValue(environmentVariableDto.getValue());
     }
 
 }

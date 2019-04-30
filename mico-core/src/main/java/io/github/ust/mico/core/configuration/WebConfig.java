@@ -43,6 +43,7 @@ public class WebConfig extends WebMvcConfigurerAdapter {
 
     /**
      * Based on https://github.com/springfox/springfox/issues/2215#issuecomment-446178059
+     *
      * @return
      */
     @Bean
@@ -53,12 +54,12 @@ public class WebConfig extends WebMvcConfigurerAdapter {
         corsConfiguration.addAllowedMethod(HttpMethod.DELETE);
         corsConfiguration.addAllowedMethod(HttpMethod.PUT);
         for (String additionalAllowedMethod : corsUserConfig.getAdditionalAllowedMethods()) {
-            log.info("Adding additional method to CORS config:"+ additionalAllowedMethod);
+            log.info("Adding additional method to CORS config:" + additionalAllowedMethod);
             corsConfiguration.addAllowedMethod(additionalAllowedMethod);
         }
         corsConfiguration.setAllowCredentials(false);
         List<String> allowedOrigins = corsUserConfig.getAllowedOrigins();
-        allowedOrigins.forEach(allowedOrigin -> log.info("Adding additional allowed origin:"+allowedOrigin));
+        allowedOrigins.forEach(allowedOrigin -> log.info("Adding additional allowed origin:" + allowedOrigin));
         corsConfiguration.setAllowedOrigins(allowedOrigins);
         source.registerCorsConfiguration("/**", corsConfiguration);
 

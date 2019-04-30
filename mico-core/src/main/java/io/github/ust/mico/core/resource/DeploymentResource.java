@@ -61,7 +61,7 @@ public class DeploymentResource {
         }
 
         return ResponseEntity.accepted()
-                .body(new Resource<>(new MicoApplicationJobStatusResponseDTO(micoApplicationJobStatus)));
+            .body(new Resource<>(new MicoApplicationJobStatusResponseDTO(micoApplicationJobStatus)));
     }
 
     @PostMapping("/undeploy")

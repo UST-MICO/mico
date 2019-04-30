@@ -88,7 +88,7 @@ public class MicoApplication {
     // ----------------------
     // -> Optional Fields ---
     // ----------------------
-    
+
     /**
      * The list of included {@link MicoService MicoServices}.
      */
@@ -112,7 +112,7 @@ public class MicoApplication {
      * who is responsible for this application.
      */
     private String owner;
-    
+
     public MicoVersion getMicoVersion() throws VersionNotSupportedException {
         MicoVersion micoVersion = MicoVersion.valueOf(this.version);
         return micoVersion;
@@ -122,22 +122,22 @@ public class MicoApplication {
     // ----------------------
     // -> Static Creators ---
     // ----------------------
-    
+
     /**
      * Creates a new {@code MicoApplication} based on a {@code MicoApplicationRequestDTO}.
      * Note that the id will be set to {@code null}.
-     * 
+     *
      * @param applicationDto the {@link MicoApplicationRequestDTO}.
      * @return a {@link MicoApplication}.
      */
     public static MicoApplication valueOf(MicoApplicationRequestDTO applicationDto) {
         return new MicoApplication()
-                .setShortName(applicationDto.getShortName())
-                .setName(applicationDto.getName())
-                .setVersion(applicationDto.getVersion())
-                .setDescription(applicationDto.getDescription())
-                .setContact(applicationDto.getContact())
-                .setOwner(applicationDto.getOwner());
+            .setShortName(applicationDto.getShortName())
+            .setName(applicationDto.getName())
+            .setVersion(applicationDto.getVersion())
+            .setDescription(applicationDto.getDescription())
+            .setContact(applicationDto.getContact())
+            .setOwner(applicationDto.getOwner());
     }
 
 }

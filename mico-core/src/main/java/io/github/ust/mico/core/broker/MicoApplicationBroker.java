@@ -296,7 +296,7 @@ public class MicoApplicationBroker {
         // FIXME: Currently we only supported scale in / scale out.
         // 		  If the MICO service is already deployed, we only update the replicas.
         // 	      The other properties are ignored!
-        if(micoKubernetesClient.isApplicationDeployed(micoApplication)) {
+        if (micoKubernetesClient.isApplicationDeployed(micoApplication)) {
             MicoService micoService = updatedServiceDeploymentInfo.getService();
             log.info("MicoApplication '{}' {}' is already deployed. Update the deployment of the included MicoService '{} '{}'.",
                 micoApplication.getShortName(), micoApplication.getVersion(), micoService.getShortName(), micoService.getVersion());

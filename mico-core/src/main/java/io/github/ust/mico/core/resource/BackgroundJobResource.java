@@ -50,7 +50,7 @@ import io.github.ust.mico.core.model.MicoServiceBackgroundJob;
 @RequestMapping(value = "/jobs", produces = MediaTypes.HAL_JSON_VALUE)
 public class BackgroundJobResource {
 
-	private static final String PATH_STATUS = "status";
+    private static final String PATH_STATUS = "status";
     private static final String PATH_VARIABLE_ID = "id";
     private static final String PATH_VARIABLE_SHORT_NAME = "shortName";
     private static final String PATH_VARIABLE_VERSION = "version";
@@ -77,7 +77,7 @@ public class BackgroundJobResource {
 
         return ResponseEntity.ok(new Resource<>(new MicoApplicationJobStatusResponseDTO(jobStatus),
             linkTo(methodOn(BackgroundJobResource.class)
-            .getJobStatusByApplicationShortNameAndVersion(shortName, version)).withSelfRel()));
+                .getJobStatusByApplicationShortNameAndVersion(shortName, version)).withSelfRel()));
     }
 
     @GetMapping("/{" + PATH_VARIABLE_ID + "}")
@@ -96,7 +96,7 @@ public class BackgroundJobResource {
             return new ResponseEntity<>(responseHeaders, HttpStatus.SEE_OTHER);
 
         } else {
-        	return ResponseEntity.ok(new Resource<>(new MicoServiceBackgroundJobResponseDTO(jobOptional.get()), getJobLinks(jobOptional.get())));
+            return ResponseEntity.ok(new Resource<>(new MicoServiceBackgroundJobResponseDTO(jobOptional.get()), getJobLinks(jobOptional.get())));
         }
     }
 

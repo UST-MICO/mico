@@ -115,21 +115,21 @@ public class IntegrationTestsUtils {
 
         // Set up connection to Docker Hub
         Secret dockerRegistrySecret = new SecretBuilder()
-                .withApiVersion("v1")
-                .withType("kubernetes.io/basic-auth")
-                .withNewMetadata().withName("dockerhub-secret").withNamespace(namespace)
-                .addToAnnotations("build.knative.dev/docker-0", "https://index.docker.io/v1/")
-                .endMetadata()
-                .addToData("username", usernameBase64Encoded)
-                .addToData("password", passwordBase64Encoded)
-                .build();
+            .withApiVersion("v1")
+            .withType("kubernetes.io/basic-auth")
+            .withNewMetadata().withName("dockerhub-secret").withNamespace(namespace)
+            .addToAnnotations("build.knative.dev/docker-0", "https://index.docker.io/v1/")
+            .endMetadata()
+            .addToData("username", usernameBase64Encoded)
+            .addToData("password", passwordBase64Encoded)
+            .build();
         kubernetesClient.secrets().inNamespace(namespace).createOrReplace(dockerRegistrySecret);
 
         ServiceAccount buildServiceAccount = new ServiceAccountBuilder()
-                .withApiVersion("v1")
-                .withNewMetadata().withName(serviceAccountName).withNamespace(namespace).endMetadata()
-                .withSecrets(new ObjectReferenceBuilder().withName(dockerRegistrySecret.getMetadata().getName()).build())
-                .build();
+            .withApiVersion("v1")
+            .withNewMetadata().withName(serviceAccountName).withNamespace(namespace).endMetadata()
+            .withSecrets(new ObjectReferenceBuilder().withName(dockerRegistrySecret.getMetadata().getName()).build())
+            .build();
         kubernetesClient.serviceAccounts().inNamespace(namespace).createOrReplace(buildServiceAccount);
 
         dockerRegistrySecretName = dockerRegistrySecret.getMetadata().getName();
@@ -171,7 +171,7 @@ public class IntegrationTestsUtils {
 
                         log.debug("Pod '{}' in namespace '{}' is now running", podName, namespace);
                         log.info("Currently {} out of {} pods in namespace '{}' are running",
-                                currentlyRunningPods, numberOfPodsInNamespace, namespace);
+                            currentlyRunningPods, numberOfPodsInNamespace, namespace);
                     }
                 } catch (DeploymentException e) {
                     completionFuture.cancel(true);

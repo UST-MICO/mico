@@ -46,7 +46,7 @@ import javax.validation.constraints.Size;
 @AllArgsConstructor
 @Accessors(chain = true)
 public class MicoApplicationRequestDTO {
-	
+
     // ----------------------
     // -> Required Fields ---
     // ----------------------
@@ -61,7 +61,7 @@ public class MicoApplicationRequestDTO {
             @ExtensionProperty(name = "title", value = "Short Name"),
             @ExtensionProperty(name = "pattern", value = Patterns.KUBERNETES_NAMING_REGEX),
             @ExtensionProperty(name = "minLength", value = "3"),
-            @ExtensionProperty(name = "maxLength", value = KubernetesNameNormalizer.MICO_NAME_MAX_SIZE +""),
+            @ExtensionProperty(name = "maxLength", value = KubernetesNameNormalizer.MICO_NAME_MAX_SIZE + ""),
             @ExtensionProperty(name = "x-order", value = "10"),
             @ExtensionProperty(name = "description", value = "Unique short name of the application.")
         }
@@ -151,24 +151,24 @@ public class MicoApplicationRequestDTO {
     )})
     private String owner;
 
-    
+
     // -------------------
     // -> Constructors ---
     // -------------------
-	
+
     /**
-   	 * Creates an instance of {@code MicoApplicationRequestDTO} based on a
-   	 * {@code MicoApplication}.
-   	 * 
-   	 * @param application the {@link MicoApplication}.
-   	 */
-	public MicoApplicationRequestDTO(MicoApplication application) {
-		this.shortName = application.getShortName();
-		this.version = application.getVersion();
-		this.name = application.getName();
-		this.description = application.getDescription();
-		this.contact = application.getContact();
-		this.owner = application.getOwner();
-	}
+     * Creates an instance of {@code MicoApplicationRequestDTO} based on a
+     * {@code MicoApplication}.
+     *
+     * @param application the {@link MicoApplication}.
+     */
+    public MicoApplicationRequestDTO(MicoApplication application) {
+        this.shortName = application.getShortName();
+        this.version = application.getVersion();
+        this.name = application.getName();
+        this.description = application.getDescription();
+        this.contact = application.getContact();
+        this.owner = application.getOwner();
+    }
 
 }

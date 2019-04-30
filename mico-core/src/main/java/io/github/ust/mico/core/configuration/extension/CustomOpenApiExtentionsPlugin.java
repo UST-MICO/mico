@@ -58,7 +58,7 @@ public class CustomOpenApiExtentionsPlugin implements ModelPropertyBuilderPlugin
                 String name = context.getBeanPropertyDefinition().get().getName();
                 List<Extension> extensions = Arrays.asList(annotation.get().extensions());
                 @SuppressWarnings("rawtypes")
-				List<VendorExtension> vendorExtensions = new ArrayList<>();
+                List<VendorExtension> vendorExtensions = new ArrayList<>();
                 extensions.forEach(e -> {
                     //Only process mico extensions because we do not know about the semantics of other extensions.
                     if (X_MICO_CUSTOM_EXTENSION.equals(e.name())) {
