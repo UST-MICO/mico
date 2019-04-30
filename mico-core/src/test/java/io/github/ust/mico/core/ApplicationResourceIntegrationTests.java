@@ -1005,7 +1005,7 @@ public class ApplicationResourceIntegrationTests {
     }
 
     @Test
-    public void deleteAllVersionsOfAnApplication() throws Exception {
+    public void deleteAllVersionsOfApplication() throws Exception {
         MicoApplication micoApplicationV1 = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
         MicoApplication micoApplicationV2 = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION_1_0_1);
         MicoApplication micoApplicationV3 = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION_1_0_2);

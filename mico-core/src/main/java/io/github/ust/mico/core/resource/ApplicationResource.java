@@ -169,7 +169,7 @@ public class ApplicationResource {
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
-    public ResponseEntity<Void> deleteAllVersionsOfAnApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
+    public ResponseEntity<Void> deleteAllVersionsOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
         try {
             broker.deleteMicoApplicationsByShortName(shortName);
         } catch (MicoApplicationIsNotUndeployedException e) {
@@ -180,7 +180,7 @@ public class ApplicationResource {
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES)
-    public ResponseEntity<Resources<Resource<MicoServiceResponseDTO>>> getServicesFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+    public ResponseEntity<Resources<Resource<MicoServiceResponseDTO>>> getServicesOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                                   @PathVariable(PATH_VARIABLE_VERSION) String version) {
         List<MicoService> micoServices;
         try {
@@ -191,7 +191,7 @@ public class ApplicationResource {
 
         return ResponseEntity.ok(
                 new Resources<>(ServiceResource.getServiceResponseDTOResourcesList(micoServices),
-                        linkTo(methodOn(ApplicationResource.class).getServicesFromApplication(shortName, version)).withSelfRel()));
+                        linkTo(methodOn(ApplicationResource.class).getServicesOfApplication(shortName, version)).withSelfRel()));
     }
 
     @ApiOperation(value = "Adds or updates an association between a MicoApplication and a MicoService. An existing and" +
