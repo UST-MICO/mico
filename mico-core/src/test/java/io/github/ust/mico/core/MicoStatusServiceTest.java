@@ -135,19 +135,16 @@ public class MicoStatusServiceTest {
         micoService = new MicoService()
             .setName(NAME)
             .setShortName(SHORT_NAME)
-            .setVersion(VERSION)
-            .setServiceInterfaces(CollectionUtils.listOf(
-                new MicoServiceInterface()
-                    .setServiceInterfaceName(SERVICE_INTERFACE_NAME)
-            ));
+            .setVersion(VERSION);
 
         micoServiceInterface = new MicoServiceInterface()
             .setServiceInterfaceName(SERVICE_INTERFACE_NAME)
             .setPorts(CollectionUtils.listOf(new MicoServicePort()
-                .setPort(80)
-                .setTargetPort(80)
+                .setPort(8080)
+                .setTargetPort(8080)
                 .setType(MicoPortType.TCP)));
-
+        micoService.setServiceInterfaces(CollectionUtils.listOf(micoServiceInterface));
+        
         micoApplication.getServices().add(micoService);
         micoApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(micoService));
 
@@ -291,7 +288,8 @@ public class MicoStatusServiceTest {
                     new MicoServiceInterfaceStatusResponseDTO()
                         .setName(SERVICE_INTERFACE_NAME)
                         .setExternalIpIsAvailable(true)
-                        .setExternalIp("192.168.2.112")))));
+                        .setExternalIp("192.168.2.112")
+                        .setPort(8080)))));
         given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(deployment);
         given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(kubernetesService);
         given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(any(MicoService.class))).willReturn(podList.getItems());
@@ -356,7 +354,7 @@ public class MicoStatusServiceTest {
                             .setMemoryUsage(memoryUsagePod1)
                             .setCpuLoad(cpuLoadPod1))))
                 .setErrorMessages(CollectionUtils.listOf(
-                    new MicoMessageResponseDTO().setContent("404 NOT_FOUND \"No deployed service interface 'service-interface-name' of MicoService 'short-name' '1.0.0' was found!\"").setType(Type.ERROR)))
+                    new MicoMessageResponseDTO().setContent("No deployed service interface 'service-interface-name' of MicoService 'short-name' '1.0.0' was found!").setType(Type.ERROR)))
                 .setInterfacesInformation(CollectionUtils.listOf(
                     new MicoServiceInterfaceStatusResponseDTO()
                         .setName(SERVICE_INTERFACE_NAME))))); // No IPs
@@ -386,6 +384,9 @@ public class MicoStatusServiceTest {
             .setTotalNumberOfPods(0)
             .setTotalNumberOfMicoServices(1)
             .setServiceStatuses(CollectionUtils.listOf(new MicoServiceStatusResponseDTO()
+                .setShortName(micoApplication.getServices().get(0).getShortName())
+                .setVersion(micoApplication.getServices().get(0).getVersion())
+                .setName(micoApplication.getServices().get(0).getName())
                 .setErrorMessages(CollectionUtils
                     .listOf(new MicoMessageResponseDTO().setContent("No deployment of MicoService '" + micoService.getShortName()
                         + "' '" + micoService.getVersion() + "' is available.").setType(Type.ERROR)))));
@@ -473,7 +474,8 @@ public class MicoStatusServiceTest {
             .setInterfacesInformation(CollectionUtils.listOf(new MicoServiceInterfaceStatusResponseDTO()
                 .setName(SERVICE_INTERFACE_NAME)
                 .setExternalIpIsAvailable(true)
-                .setExternalIp("192.168.2.112")));
+                .setExternalIp("192.168.2.112")
+                .setPort(8080)));
 
         given(micoKubernetesClient.getDeploymentOfMicoService(any(MicoService.class))).willReturn(deployment);
         given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(kubernetesService);
@@ -513,7 +515,8 @@ public class MicoStatusServiceTest {
         MicoServiceInterfaceStatusResponseDTO expectedServiceInterface = new MicoServiceInterfaceStatusResponseDTO()
             .setName(SERVICE_INTERFACE_NAME)
             .setExternalIpIsAvailable(true)
-            .setExternalIp("192.168.2.112");
+            .setExternalIp("192.168.2.112")
+            .setPort(8080);
         List<MicoServiceInterfaceStatusResponseDTO> expectedInterfaceStatusDTO = new LinkedList<>();
         expectedInterfaceStatusDTO.add(expectedServiceInterface);
         List<MicoMessageResponseDTO> errorMessages = new ArrayList<>();

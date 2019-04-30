@@ -26,6 +26,7 @@ import static org.mockito.BDDMockito.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -265,7 +266,7 @@ public class MicoKubernetesClientTests {
     }
     
     @Test
-    public void getApplicationDeploymentStatusForDeployedApplication() {
+    public void getApplicationDeploymentStatusForDeployedApplication() throws MicoApplicationNotFoundException {
     	MicoApplication micoApplication = setUpApplicationDeployment();
     	
     	MicoApplicationJobStatus jobStatus = new MicoApplicationJobStatus(micoApplication.getShortName(),
@@ -279,7 +280,7 @@ public class MicoKubernetesClientTests {
     }
     
     @Test
-    public void getApplicationDeploymentStatusForPendingDeployment() {
+    public void getApplicationDeploymentStatusForPendingDeployment() throws MicoApplicationNotFoundException {
     	MicoApplication micoApplication = setUpApplicationDeployment();
     	
     	MicoApplicationJobStatus jobStatus = new MicoApplicationJobStatus(micoApplication.getShortName(),
@@ -293,7 +294,7 @@ public class MicoKubernetesClientTests {
     }
     
     @Test
-    public void getApplicationDeploymentStatusForRunningDeployment() {
+    public void getApplicationDeploymentStatusForRunningDeployment() throws MicoApplicationNotFoundException {
     	MicoApplication micoApplication = setUpApplicationDeployment();
     	
     	MicoApplicationJobStatus jobStatus = new MicoApplicationJobStatus(micoApplication.getShortName(),
@@ -307,7 +308,7 @@ public class MicoKubernetesClientTests {
     }
     
     @Test
-    public void getApplicationDeploymentStatusForFailedDeployment() {
+    public void getApplicationDeploymentStatusForFailedDeployment() throws MicoApplicationNotFoundException {
     	MicoApplication micoApplication = setUpApplicationDeployment();
     	
     	MicoApplicationJobStatus jobStatus = new MicoApplicationJobStatus(micoApplication.getShortName(),
@@ -321,7 +322,7 @@ public class MicoKubernetesClientTests {
     }
     
     @Test
-    public void getApplicationDeploymentStatusForApplicationWithoutServiceDeploymentInfos() {
+    public void getApplicationDeploymentStatusForApplicationWithoutServiceDeploymentInfos() throws MicoApplicationNotFoundException {
     	MicoApplication micoApplication = setUpApplicationDeployment();
     	
     	MicoApplicationJobStatus jobStatus = new MicoApplicationJobStatus(micoApplication.getShortName(),
@@ -338,7 +339,7 @@ public class MicoKubernetesClientTests {
     }
     
     @Test
-    public void getApplicationDeploymentStatusForApplicationWithoutKubernetesDeploymentInfos() {
+    public void getApplicationDeploymentStatusForApplicationWithoutKubernetesDeploymentInfos() throws MicoApplicationNotFoundException {
     	MicoApplication micoApplication = setUpApplicationDeployment();
     	
     	MicoApplicationJobStatus jobStatus = new MicoApplicationJobStatus(micoApplication.getShortName(),
@@ -356,7 +357,7 @@ public class MicoKubernetesClientTests {
     }
     
     @Test
-    public void getApplicationDeploymentStatusForApplicationWithNoUpdatedKubernetesDeploymentInfos() {
+    public void getApplicationDeploymentStatusForApplicationWithNoUpdatedKubernetesDeploymentInfos() throws MicoApplicationNotFoundException {
     	MicoApplication micoApplication = setUpApplicationDeployment();
     	
     	MicoApplicationJobStatus jobStatus = new MicoApplicationJobStatus(micoApplication.getShortName(),
@@ -372,7 +373,7 @@ public class MicoKubernetesClientTests {
     }
 
     @Test
-    public void getApplicationDeploymentStatusForApplicationWithUnknownStatus() {
+    public void getApplicationDeploymentStatusForApplicationWithUnknownStatus() throws MicoApplicationNotFoundException {
         MicoApplication micoApplication = setUpApplicationDeployment();
 
         // Simulate error while updating Kubernetes Deployment Info (deployment name not set) -> Status Unknown
@@ -389,7 +390,7 @@ public class MicoKubernetesClientTests {
     }
 
     @Test
-    public void getApplicationDeploymentStatusForApplicationWithDeploymentNotAvailableAnymore() {
+    public void getApplicationDeploymentStatusForApplicationWithDeploymentNotAvailableAnymore() throws MicoApplicationNotFoundException {
         MicoApplication micoApplication = setUpApplicationDeployment(getMicoService(), getMicoService_2());
 
         MicoApplicationJobStatus jobStatus = new MicoApplicationJobStatus(micoApplication.getShortName(),
@@ -409,7 +410,7 @@ public class MicoKubernetesClientTests {
     }
 
     @Test
-    public void getApplicationDeploymentStatusForApplicationWithTwoServices_FirstUnkown_SecondNotAvailable() {
+    public void getApplicationDeploymentStatusForApplicationWithTwoServices_FirstUnknown_SecondNotAvailable() throws MicoApplicationNotFoundException {
         MicoApplication micoApplication = setUpApplicationDeployment(getMicoService(), getMicoService_2());
         MicoServiceDeploymentInfo serviceDeploymentInfo1 = micoApplication.getServiceDeploymentInfos().get(0);
         MicoServiceDeploymentInfo serviceDeploymentInfo2 = micoApplication.getServiceDeploymentInfos().get(1);
@@ -438,7 +439,7 @@ public class MicoKubernetesClientTests {
     }
 
     @Test
-    public void getApplicationDeploymentStatusForApplicationWithKubernetesServiceNotAvailableAnymore() {
+    public void getApplicationDeploymentStatusForApplicationWithKubernetesServiceNotAvailableAnymore() throws MicoApplicationNotFoundException {
         MicoApplication micoApplication = setUpApplicationDeployment(getMicoService(), getMicoService_2());
 
         MicoApplicationJobStatus jobStatus = new MicoApplicationJobStatus(micoApplication.getShortName(),
@@ -466,7 +467,7 @@ public class MicoKubernetesClientTests {
     }
 
     @Test
-    public void isApplicationDeployed() {
+    public void isApplicationDeployed() throws MicoApplicationNotFoundException {
         MicoApplication micoApplication = setUpApplicationDeployment();
         
 		MicoApplicationJobStatus jobStatus = new MicoApplicationJobStatus(micoApplication.getShortName(),
@@ -478,7 +479,7 @@ public class MicoKubernetesClientTests {
     }
 
     @Test
-    public void isApplicationDeployedWithServicesUsedConcurrentlyByOtherApplications() {
+    public void isApplicationDeployedWithServicesUsedConcurrentlyByOtherApplications() throws MicoApplicationNotFoundException {
         // Arrange already existing MicoService that was deployed by another application
         MicoApplication otherMicoApplication = setUpApplicationDeployment();
         MicoService otherMicoService = otherMicoApplication.getServices().get(0);
@@ -505,7 +506,7 @@ public class MicoKubernetesClientTests {
     }
 
     @Test
-    public void isApplicationDeployedWithNotExistingServiceInterfaces() {
+    public void isApplicationDeployedWithNotExistingServiceInterfaces() throws MicoApplicationNotFoundException {
         MicoApplication micoApplication = setUpApplicationDeployment();
         
         // There are no Kubernetes Services
@@ -557,7 +558,7 @@ public class MicoKubernetesClientTests {
     }
 
     @Test
-    public void undeployApplicationIfServiceIsUsedByMultipleApplications() {
+    public void undeployApplicationIfServiceIsUsedByMultipleApplications() throws MicoApplicationNotFoundException {
         // Create a setup with 3 applications that all uses the same service:
         // Two of them are already deployed, the third wants to use the same service want is not deployed yet.
 

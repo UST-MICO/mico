@@ -18,6 +18,7 @@
  */
 package io.github.ust.mico.core.broker;
 
+import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.model.MicoServiceBackgroundJob.Status;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
@@ -28,7 +29,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -111,10 +111,10 @@ public class BackgroundJobBroker {
      * @param version   the version of the {@link MicoApplication}.
      * @return the {@link MicoApplicationJobStatus} with the status and jobs.
      */
-    public MicoApplicationJobStatus getJobStatusByApplicationShortNameAndVersion(String shortName, String version) {
+    public MicoApplicationJobStatus getJobStatusByApplicationShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException {
         Optional<MicoApplication> existingApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
         if (!existingApplicationOptional.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application '" + shortName + "' '" + version + "' was not found!");
+            throw new MicoApplicationNotFoundException(shortName, version);
         }
         MicoApplication micoApplication = existingApplicationOptional.get();
 
@@ -199,8 +199,7 @@ public class BackgroundJobBroker {
                 }
                 job.setStatus(newStatus);
                 job.setErrorMessage(errorMessage);
-                MicoServiceBackgroundJob savedJob = saveJob(job);
-                log.debug("Saved new status of job: {}", savedJob);
+                saveJob(job);
             }
         } else {
             log.warn("No job of type '{}' exists for '{}' '{}'.", type, micoServiceShortName, micoServiceVersion);

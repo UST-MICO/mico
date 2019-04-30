@@ -24,10 +24,7 @@ import io.github.ust.mico.core.broker.MicoServiceInterfaceBroker;
 import io.github.ust.mico.core.dto.request.MicoServiceInterfaceRequestDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceInterfaceResponseDTO;
 import io.github.ust.mico.core.dto.response.status.MicoServiceInterfaceStatusResponseDTO;
-import io.github.ust.mico.core.exception.MicoServiceInterfaceAlreadyExistsException;
-import io.github.ust.mico.core.exception.MicoServiceInterfaceNotFoundException;
-import io.github.ust.mico.core.exception.MicoServiceIsDeployedException;
-import io.github.ust.mico.core.exception.MicoServiceNotFoundException;
+import io.github.ust.mico.core.exception.*;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.service.MicoStatusService;
@@ -96,8 +93,14 @@ public class ServiceInterfaceResource {
                                                                    @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                    @PathVariable(PATH_VARIABLE_SERVICE_INTERFACE_NAME) String serviceInterfaceName) {
         MicoService micoService = getServiceFromServiceBroker(shortName, version);
+        MicoServiceInterface serviceInterface = getServiceInterfaceFromServiceInterfaceBroker(shortName, version, serviceInterfaceName);
 
-        MicoServiceInterfaceStatusResponseDTO serviceInterfaceStatusResponseDTO = micoStatusService.getPublicIpOfKubernetesService(micoService, serviceInterfaceName);
+        MicoServiceInterfaceStatusResponseDTO serviceInterfaceStatusResponseDTO;
+        try {
+            serviceInterfaceStatusResponseDTO = micoStatusService.getPublicIpOfKubernetesService(micoService, serviceInterface);
+        } catch (KubernetesResourceException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        }
         return ResponseEntity.ok().body(serviceInterfaceStatusResponseDTO);
     }
 

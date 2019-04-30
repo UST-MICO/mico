@@ -1,24 +1,31 @@
 <!--
-  For work in progress add the prefix [WIP] to the PR name
-  After finishing the work remove the prefix and ensure that the following sections are filled correctly
+  For work in progress use the GitHub draft pull request feature.
 -->
+# Description
 
-<!-- Before writing the PR please check the following --->
+Please include a summary of the change and which issue is fixed. Please also include relevant motivation and context. List any dependencies that are required for this change.
 
-- [ ] Ensure that the commit message is [a good commit message](https://github.com/joelparkerhenderson/git_commit_message)
-- [ ] Ensure to use auto format in **all** files
-- [ ] Tests created for changes or:
-  - [ ] Test cases are missing - opened issue for that:
-  - [ ] Reason for missing tests:
-- [ ] Screenshots added (for UI changes)
-- [ ] Change in CHANGELOG.md described
+- [ ] this PR contains breaking changes!
 
----
+# Resolves / is related to
 
-## Short Description
+<!-- Relates to #IssueNumber1, #IssueNumber2 -->
+<!-- Closes #IssueNumber3 -->
+<!-- Closes #IssueNumber4 -->
 
-<!-- Summarize the new functionalities/fixes -->
+# What is affected by this PR
 
-## Resolving Issue/ Feature
+- [ ] Backend
+    - [ ] Kubernetes logic
+    - [ ] Domain model
+- [ ] API
+    - [ ] discussed changes in the team / informed the team about changes
+    - [ ] updated [`insertTestValues.sh`](https://github.com/UST-MICO/mico/blob/master/insertTestValues.sh) and [Postman Collections](https://github.com/UST-MICO/docs/tree/master/debugging-testing/postman) are updated
+- [ ] Frontend
+    - [ ] Ensure that it is compilable for production (`ng serve --prod`)
+- [ ] Documentation
 
-<!-- Reference to the respective issue -->
+# Checklist
+
+- [ ] Ensure that new source files include the [license header](https://github.com/UST-MICO/mico/blob/master/CONTRIBUTING.md#source-file-headers)
+- [ ] Ensure [JavaDoc is up to date](https://github.com/UST-MICO/mico/tree/master/docs#build-the-documentation-locally)

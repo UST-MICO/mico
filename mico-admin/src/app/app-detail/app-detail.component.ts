@@ -25,7 +25,7 @@ import { Subscription, timer } from 'rxjs';
 import { versionComparator } from '../api/semantic-version';
 import { CreateNextVersionComponent } from '../dialogs/create-next-version/create-next-version.component';
 import { MatDialog, MatSnackBar } from '@angular/material';
-import { safeUnsubscribe, safeUnsubscribeList } from '../util/utils';
+import { safeUnsubscribe } from '../util/utils';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 import { take } from 'rxjs/operators';
 
@@ -47,7 +47,6 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     subRouteParams: Subscription;
     subApplicationVersions: Subscription;
     subDeploy: Subscription;
-    subPublicIps: Subscription[] = [];
     subApplication: Subscription;
     subServiceDependency: Subscription;
     subCreateNextVersion: Subscription;
@@ -83,6 +82,7 @@ export class AppDetailComponent implements OnInit, OnDestroy {
     ngOnInit() {
 
         this.subRouteParams = this.route.params.subscribe(params => {
+            this.deploymentStatus = null;
             this.shortName = params['shortName'];
             this.selectedVersion = params['version'];
 
@@ -154,7 +154,6 @@ export class AppDetailComponent implements OnInit, OnDestroy {
         safeUnsubscribe(this.subRouteParams);
         safeUnsubscribe(this.subApplicationVersions);
         safeUnsubscribe(this.subDeploy);
-        safeUnsubscribeList(this.subPublicIps);
         safeUnsubscribe(this.subApplication);
         safeUnsubscribe(this.subServiceDependency);
         safeUnsubscribe(this.subCreateNextVersion);

@@ -119,6 +119,7 @@ class TestConstants {
     static final String TOTAL_NUMBER_OF_AVAILABLE_REPLICAS = buildPath(ROOT, "totalNumberOfAvailableReplicas");
     static final String TOTAL_NUMBER_OF_REQUESTED_REPLICAS = buildPath(ROOT, "totalNumberOfRequestedReplicas");
     static final String TOTAL_NUMBER_OF_PODS = buildPath(ROOT, "totalNumberOfPods");
+    static final String APPLICATION_DEPLOYMENT_STATUS_RESPONSE_DTO = buildPath(ROOT, "applicationDeploymentStatusResponseDTO");
 
 
     /*
