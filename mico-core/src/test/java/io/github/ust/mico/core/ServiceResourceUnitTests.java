@@ -21,7 +21,6 @@ package io.github.ust.mico.core;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -64,7 +63,6 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.*;
 
-import static io.github.ust.mico.core.JsonPathBuilder.*;
 import static io.github.ust.mico.core.JsonPathBuilder.HREF;
 import static io.github.ust.mico.core.JsonPathBuilder.LINKS;
 import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
