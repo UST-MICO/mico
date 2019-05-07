@@ -57,6 +57,13 @@ sed -i -- '/${MICO_PUBLIC_IP}/d' mico-admin.yaml
 sed -i -- '/application.properties: |-/a \    kubernetes.build-bot.namespace-build-execution='"${MICO_TEST_NAMESPACE}"'' mico-core.yaml
 sed -i -- '/application.properties: |-/a \    kubernetes.namespace-mico-workspace='"${MICO_TEST_NAMESPACE}"'' mico-core.yaml
 
+# Change namespace 'knative-build'
+sed -i -- 's/namespace: knative-build/namespace: '"${MICO_TEST_NAMESPACE}"'/g' knative-build.yaml
+
+# Change namespace 'monitoring'
+sed -i -- 's/namespace: monitoring/namespace: '"${MICO_TEST_NAMESPACE}"'/g' monitoring.yaml
+sed -i -- 's/monitoring/'"${MICO_TEST_NAMESPACE}"'/g' mico-core.yaml
+
 # Create test namespace
 kubectl create namespace ${MICO_TEST_NAMESPACE}
 
@@ -71,6 +78,8 @@ kubectl apply -f redis.yaml
 kubectl apply -f mico-core.yaml
 kubectl apply -f mico-admin.yaml
 kubectl apply -f mico-build-bot.yaml
+kubectl apply -f knative-build.yaml
+kubectl apply -f monitoring.yaml
 
 cd ../
 rm -rf tmp/
