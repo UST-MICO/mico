@@ -61,4 +61,23 @@ fi
 # Install external components
 kubectl apply -f ./kube-state-metrics
 kubectl apply -f knative-build.yaml
-kubectl apply -f monitoring.yaml
+# kubectl apply -f monitoring.yaml
+
+# setup openfaas
+echo "Setting up openfaas password and namespace"
+PASSWORD=$(head -c 12 /dev/urandom | shasum| cut -d' ' -f1)
+
+kubectl -n openfaas create secret generic basic-auth \
+--from-literal=basic-auth-user=admin \
+--from-literal=basic-auth-password="$PASSWORD"
+
+kubectl -n monitoring create secret generic basic-auth \
+--from-literal=basic-auth-user=admin \
+--from-literal=basic-auth-password="$PASSWORD"
+
+echo "deploying monitoring"
+kubectl apply -f ./monitoring
+echo "deploying openfaas"
+kubectl apply -f ./openfaas
+echo "fass admin password:"
+echo $PASSWORD
