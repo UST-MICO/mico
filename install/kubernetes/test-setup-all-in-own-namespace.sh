@@ -41,6 +41,11 @@ cd $DIR
 
 mkdir tmp
 cp *.yaml tmp/
+
+#cp /**/*.yaml tmp/
+# loop through files and change namespace
+# database namepace?
+
 cd tmp
 
 # Prepare MICO build bot namespace

@@ -4,6 +4,7 @@ kind: Deployment
 metadata:
   labels:
     app: prometheus
+    component: core
   name: prometheus
   namespace: monitoring
 spec:
@@ -12,6 +13,7 @@ spec:
     metadata:
       labels:
         app: prometheus
+        component: core
       annotations:
         sidecar.istio.io/inject: "false"
         checksum/prometheus-config: "2afc6c40cb4846231cc487145722776289239f56ddb061c208c93aa06701a0db"

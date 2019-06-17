@@ -135,14 +135,19 @@ data:
 apiVersion: v1
 data:
   test.rules: |
-    - alert: NodeCPUUsage
-      exp: (100 - (avg by (instance) (irate(node_cpu{name="node-exporter",mode="idle"}[5m])) * 100)) > 75
-      for: 2m
-      labels:
-        severity: page
-      annotations:
-        description: "{{$labels.instance}}" CPU usage is above 75% (current value is "{{ $value }}")
-        summary: "{{$labels.instance}}" High CPU usage detected
+    groups:
+      - name: test
+        rules:
+        - alert: service_down
+          expr: up == 0
+        - alert: NodeCPUUsage
+          exp: (100 - (avg by (instance) (irate(node_cpu{name="node-exporter",mode="idle"}[5m])) * 100)) > 75
+          for: 2m
+          labels:
+            severity: page
+          annotations:
+            description: "{{$labels.instance}}" CPU usage is above 75% (current value is "{{ $value }}")
+            summary: "{{$labels.instance}}" High CPU usage detected
   cpu-usage.rules: |
     ALERT NodeCPUUsage
       IF (100 - (avg by (instance) (irate(node_cpu{name="node-exporter",mode="idle"}[5m])) * 100)) > 75

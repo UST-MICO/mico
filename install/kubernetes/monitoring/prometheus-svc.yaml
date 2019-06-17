@@ -4,6 +4,7 @@ kind: Service
 metadata:
   labels:
     app: prometheus
+    component: core
   name: prometheus
   namespace: monitoring
   annotations:
@@ -15,4 +16,4 @@ spec:
       targetPort: 9090
   selector:
     app: prometheus
-
+    component: core
