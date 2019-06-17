@@ -15,34 +15,41 @@ data:
           monitor: 'faas-monitor'
     rule_files:
         - 'alert.rules.yml'
-        #- '/etc/prometheus-rules/*.rules'
+        - '/etc/prometheus-rules/*.rules.yml'
     scrape_configs:
       - job_name: 'prometheus'
         scrape_interval: 5s
         static_configs:
           - targets: ['localhost:9090']
+
+      # https://github.com/prometheus/prometheus/blob/master/documentation/examples/prometheus-kubernetes.yml#L156
       - job_name: 'kubernetes-pods'
-        scrape_interval: 5s
-        honor_labels: false
         kubernetes_sd_configs:
           - role: pod
         relabel_configs:
-        - action: labelmap
-          regex: __meta_kubernetes_pod_label_(.+)
-        - source_labels: [__meta_kubernetes_namespace]
-          action: replace
-          target_label: kubernetes_namespace
-        - source_labels: [__meta_kubernetes_pod_name]
-          action: replace
-          target_label: kubernetes_pod_name
-        - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
-          action: keep
-          regex: true
-        - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
-          action: replace
-          regex: ([^:]+)(?::\d+)?;(\d+)
-          replacement: $1:$2
-          target_label: __address__
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: true
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            regex: (.+):(?:\d+);(\d+)
+            replacement: ${1}:${2}
+            target_label: __address__
+          - action: labelmap
+            regex: __meta_kubernetes_pod_label_(.+)
+          - source_labels: [__meta_kubernetes_namespace]
+            action: replace
+            target_label: kubernetes_namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            action: replace
+            target_label: kubernetes_pod_name
+          - source_labels: [__meta_kubernetes_pod_container_port_number]
+            action: keep
+            regex: 9\d{3}
 
       # https://github.com/prometheus/prometheus/blob/master/documentation/examples/prometheus-kubernetes.yml#L37
       - job_name: 'kubernetes-nodes'
@@ -111,6 +118,24 @@ data:
           - source_labels: [__meta_kubernetes_service_name]
             target_label: kubernetes_name
 
+      - job_name: 'kubernetes-cadvisor'
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        kubernetes_sd_configs:
+          - role: node
+        relabel_configs:
+          - action: labelmap
+          - action: labelmap
+            regex: __meta_kubernetes_node_label_(.+)
+          - target_label: __address__
+            replacement: kubernetes.default.svc:443
+          - source_labels: [__meta_kubernetes_node_name]
+            regex: (.+)
+            target_label: __metrics_path__
+            replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor
+
     alerting:
       alertmanagers:
       - static_configs:
@@ -134,84 +159,69 @@ data:
 ---
 apiVersion: v1
 data:
-  test.rules: |
+  test.rules.yml: |
     groups:
-      - name: test
+      - name: monitoring
         rules:
-        - alert: service_down
-          expr: up == 0
         - alert: NodeCPUUsage
-          exp: (100 - (avg by (instance) (irate(node_cpu{name="node-exporter",mode="idle"}[5m])) * 100)) > 75
+          expr: (100 - (avg by(instance) (irate(node_cpu{mode="idle",name="node-exporter"}[5m]))
+            * 100)) > 75
           for: 2m
           labels:
             severity: page
           annotations:
-            description: "{{$labels.instance}}" CPU usage is above 75% (current value is "{{ $value }}")
-            summary: "{{$labels.instance}}" High CPU usage detected
-  cpu-usage.rules: |
-    ALERT NodeCPUUsage
-      IF (100 - (avg by (instance) (irate(node_cpu{name="node-exporter",mode="idle"}[5m])) * 100)) > 75
-      FOR 2m
-      LABELS {
-        severity="page"
-      }
-      ANNOTATIONS {
-        SUMMARY = "{{$labels.instance}}: High CPU usage detected",
-        DESCRIPTION = "{{$labels.instance}}: CPU usage is above 75% (current value is: {{ $value }})"
-      }
-  instance-availability.rules: |
-    ALERT InstanceDown
-      IF up == 0
-      FOR 1m
-      LABELS { severity = "page" }
-      ANNOTATIONS {
-        summary = "Instance {{ $labels.instance }} down",
-        description = "{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 1 minute.",
-      }
-  low-disk-space.rules: |
-    ALERT NodeLowRootDisk
-      IF ((node_filesystem_size{mountpoint="/root-disk"} - node_filesystem_free{mountpoint="/root-disk"} ) / node_filesystem_size{mountpoint="/root-disk"} * 100) > 75
-      FOR 2m
-      LABELS {
-        severity="page"
-      }
-      ANNOTATIONS {
-        SUMMARY = "{{$labels.instance}}: Low root disk space",
-        DESCRIPTION = "{{$labels.instance}}: Root disk usage is above 75% (current value is: {{ $value }})"
-      }
-
-    ALERT NodeLowDataDisk
-      IF ((node_filesystem_size{mountpoint="/data-disk"} - node_filesystem_free{mountpoint="/data-disk"} ) / node_filesystem_size{mountpoint="/data-disk"} * 100) > 75
-      FOR 2m
-      LABELS {
-        severity="page"
-      }
-      ANNOTATIONS {
-        SUMMARY = "{{$labels.instance}}: Low data disk space",
-        DESCRIPTION = "{{$labels.instance}}: Data disk usage is above 75% (current value is: {{ $value }})"
-      }
-  mem-usage.rules: |
-    ALERT NodeSwapUsage
-      IF (((node_memory_SwapTotal-node_memory_SwapFree)/node_memory_SwapTotal)*100) > 75
-      FOR 2m
-      LABELS {
-        severity="page"
-      }
-      ANNOTATIONS {
-        SUMMARY = "{{$labels.instance}}: Swap usage detected",
-        DESCRIPTION = "{{$labels.instance}}: Swap usage usage is above 75% (current value is: {{ $value }})"
-      }
-
-    ALERT NodeMemoryUsage
-      IF (((node_memory_MemTotal-node_memory_MemFree-node_memory_Cached)/(node_memory_MemTotal)*100)) > 75
-      FOR 2m
-      LABELS {
-        severity="page"
-      }
-      ANNOTATIONS {
-        SUMMARY = "{{$labels.instance}}: High memory usage detected",
-        DESCRIPTION = "{{$labels.instance}}: Memory usage is above 75% (current value is: {{ $value }})"
-      }
+            DESCRIPTION: '{{$labels.instance}}: CPU usage is above 75% (current value is:
+              {{ $value }})'
+            SUMMARY: '{{$labels.instance}}: High CPU usage detected'
+        - alert: InstanceDown
+          expr: up == 0
+          for: 1m
+          labels:
+            severity: page
+          annotations:
+            description: '{{ $labels.instance }} of job {{ $labels.job }} has been down
+              for more than 1 minute.'
+            summary: Instance {{ $labels.instance }} down
+        - alert: NodeLowRootDisk
+          expr: ((node_filesystem_size{mountpoint="/root-disk"} - node_filesystem_free{mountpoint="/root-disk"})
+            / node_filesystem_size{mountpoint="/root-disk"} * 100) > 75
+          for: 2m
+          labels:
+            severity: page
+          annotations:
+            DESCRIPTION: '{{$labels.instance}}: Root disk usage is above 75% (current value
+              is: {{ $value }})'
+            SUMMARY: '{{$labels.instance}}: Low root disk space'
+        - alert: NodeLowDataDisk
+          expr: ((node_filesystem_size{mountpoint="/data-disk"} - node_filesystem_free{mountpoint="/data-disk"})
+            / node_filesystem_size{mountpoint="/data-disk"} * 100) > 75
+          for: 2m
+          labels:
+            severity: page
+          annotations:
+            DESCRIPTION: '{{$labels.instance}}: Data disk usage is above 75% (current value
+              is: {{ $value }})'
+            SUMMARY: '{{$labels.instance}}: Low data disk space'
+        - alert: NodeSwapUsage
+          expr: (((node_memory_SwapTotal - node_memory_SwapFree) / node_memory_SwapTotal)
+            * 100) > 75
+          for: 2m
+          labels:
+            severity: page
+          annotations:
+            DESCRIPTION: '{{$labels.instance}}: Swap usage usage is above 75% (current value
+              is: {{ $value }})'
+            SUMMARY: '{{$labels.instance}}: Swap usage detected'
+        - alert: NodeMemoryUsage
+          expr: (((node_memory_MemTotal - node_memory_MemFree - node_memory_Cached) / (node_memory_MemTotal)
+            * 100)) > 75
+          for: 2m
+          labels:
+            severity: page
+          annotations:
+            DESCRIPTION: '{{$labels.instance}}: Memory usage is above 75% (current value
+              is: {{ $value }})'
+            SUMMARY: '{{$labels.instance}}: High memory usage detected'
 kind: ConfigMap
 metadata:
   creationTimestamp: null
