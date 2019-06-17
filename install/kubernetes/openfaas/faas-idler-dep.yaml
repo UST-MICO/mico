@@ -4,7 +4,7 @@ apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
   name: faas-idler
-  namespace: "openfaas"
+  namespace: openfaas
   labels:
     app: openfaas
     component: faas-idler

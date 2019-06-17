@@ -41,11 +41,6 @@ cd $DIR
 
 mkdir tmp
 cp *.yaml tmp/
-
-#cp /**/*.yaml tmp/
-# loop through files and change namespace
-# database namepace?
-
 cd tmp
 
 # Prepare MICO build bot namespace
@@ -84,7 +79,51 @@ kubectl apply -f mico-core.yaml
 kubectl apply -f mico-admin.yaml
 kubectl apply -f mico-build-bot.yaml
 kubectl apply -f knative-build.yaml
-kubectl apply -f monitoring.yaml
+
+mkdir monitoring
+cp ../monitoring/*.yaml monitoring/
+cd monitoring
+# loop through files and change namespace
+for f in *.yaml
+do
+    sed -i -- 's/namespace: monitoring/namespace: '"${MICO_TEST_NAMESPACE}"'/g' $f
+done
+# changing openfaas gateway url
+sed -i -- 's/gateway.openfaas/gateway/g' alertmanager-cfg.yaml
+cd ../
+
+echo "deploying monitoring"
+kubectl apply -f ./monitoring
+
+# setup openfaas
+cd ../
+mkdir openfaas
+cp ../openfaas/*.yaml openfaas
+cd openfaas
+# loop through files and change namespace
+for f in *.yaml
+do
+    sed -i -- 's/namespace: openfaas/namespace: '"${MICO_TEST_NAMESPACE}"'/g' $f
+    sed -i -- 's/namespace: openfaas-fn/namespace: '"${MICO_TEST_NAMESPACE}"'/g' $f
+done
+# changing idler urls
+sed -i -- 's/gateway.openfaas/gateway/g' faas-idler-dep.yaml
+sed -i -- 's/prometheus.monitoring/prometheus/g' faas-idler-dep.yaml
+# change values
+sed -i -- 's/openfaas-fn.svc.cluster.local/'"$MICO_TEST_NAMESPACE"'.svc.cluster.local/g' gateway-dep.yaml
+sed -i -- 's/value: openfaas-fn/value: '"$MICO_TEST_NAMESPACE"'/g' gateway-dep.yaml
+
+cd ../
+
+echo "deploying openfaas"
+PASSWORD=$(head -c 12 /dev/urandom | shasum| cut -d' ' -f1)
+kubectl -n $MICO_TEST_NAMESPACE create secret generic basic-auth \
+--from-literal=basic-auth-user=admin \
+--from-literal=basic-auth-password="$PASSWORD"
+
+kubectl apply -f ./openfaas
+echo "fass admin password:"
+echo $PASSWORD
 
 cd ../
 rm -rf tmp/

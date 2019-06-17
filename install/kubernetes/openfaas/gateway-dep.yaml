@@ -6,7 +6,7 @@ metadata:
     app: openfaas
     component: gateway
   name: gateway
-  namespace: "openfaas"
+  namespace: openfaas
 spec:
   replicas: 1
   template:
@@ -95,7 +95,7 @@ spec:
         - name: port
           value: "8081"
         - name: function_namespace
-          value: "openfaas-fn"
+          value: openfaas-fn
         - name: read_timeout
           value: "60s"
         - name: write_timeout

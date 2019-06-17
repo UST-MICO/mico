@@ -6,7 +6,7 @@ metadata:
     app: openfaas
     component: gateway
   name: gateway
-  namespace: "openfaas"
+  namespace: openfaas
 spec:
   type: ClusterIP
   ports:
