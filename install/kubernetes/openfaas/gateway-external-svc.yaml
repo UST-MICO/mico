@@ -9,11 +9,10 @@ metadata:
   name: gateway-external
   namespace: openfaas
 spec:
-  type: NodePort
+  type: LoadBalancer
   ports:
     - port: 8080
       protocol: TCP
       targetPort: 8080
-      nodePort: 31112
   selector:
     app: gateway

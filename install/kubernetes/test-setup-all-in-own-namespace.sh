@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # This script creates a new namespace that includes the complete MICO setup.
-
+# start clean
+rm -rf tmp/
 # Check if DockerHub credentials are already provided
 if [[ -z "${DOCKERHUB_USERNAME_BASE64}" || -z "${DOCKERHUB_PASSWORD_BASE64}" ]]; then
     # Read in DockerHub username
@@ -61,7 +62,6 @@ sed -i -- '/application.properties: |-/a \    kubernetes.namespace-mico-workspac
 sed -i -- 's/namespace: knative-build/namespace: '"${MICO_TEST_NAMESPACE}"'/g' knative-build.yaml
 
 # Change namespace 'monitoring'
-sed -i -- 's/namespace: monitoring/namespace: '"${MICO_TEST_NAMESPACE}"'/g' monitoring.yaml
 sed -i -- 's/monitoring/'"${MICO_TEST_NAMESPACE}"'/g' mico-core.yaml
 
 # Create test namespace
@@ -96,15 +96,14 @@ echo "deploying monitoring"
 kubectl apply -f ./monitoring
 
 # setup openfaas
-cd ../
 mkdir openfaas
 cp ../openfaas/*.yaml openfaas
 cd openfaas
 # loop through files and change namespace
 for f in *.yaml
 do
-    sed -i -- 's/namespace: openfaas/namespace: '"${MICO_TEST_NAMESPACE}"'/g' $f
     sed -i -- 's/namespace: openfaas-fn/namespace: '"${MICO_TEST_NAMESPACE}"'/g' $f
+    sed -i -- 's/namespace: openfaas/namespace: '"${MICO_TEST_NAMESPACE}"'/g' $f
 done
 # changing idler urls
 sed -i -- 's/gateway.openfaas/gateway/g' faas-idler-dep.yaml

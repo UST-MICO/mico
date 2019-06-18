@@ -61,7 +61,6 @@ fi
 # Install external components
 kubectl apply -f ./kube-state-metrics
 kubectl apply -f knative-build.yaml
-# kubectl apply -f monitoring.yaml
 
 # setup openfaas
 echo "Setting up openfaas password and namespace"
