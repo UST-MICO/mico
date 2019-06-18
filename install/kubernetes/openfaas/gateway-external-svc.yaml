@@ -9,6 +9,7 @@ metadata:
   name: gateway-external
   namespace: openfaas
 spec:
+  loadBalancerIP: ${OPENFAAS_PORTAL_PUBLIC_IP}
   type: LoadBalancer
   ports:
     - port: 8080
