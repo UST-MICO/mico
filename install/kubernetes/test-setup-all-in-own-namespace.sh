@@ -97,6 +97,16 @@ cd ../
 
 kubectl apply -f ./monitoring
 
+# Setup Kafka
+cp -r ../kafka .
+# loop through files and change namespace
+for f in $(find ./kafka/*/ -name '*.yml' -or -name '*.yaml');
+do
+    sed -i -- 's/namespace: kafka/namespace: '"${MICO_TEST_NAMESPACE}"'/g' $f
+done
+
+kubectl apply -k ./kafka/variants/dev-small/
+
 # setup OpenFaaS
 mkdir openfaas
 cp ../openfaas/*.yaml openfaas
@@ -116,7 +126,9 @@ sed -i -- 's/value: openfaas-fn/value: '"$MICO_TEST_NAMESPACE"'/g' gateway-dep.y
 
 cd ../
 
-OPENFAAS_PORTAL_PASSWORD=$(head -c 12 /dev/urandom | shasum| cut -d' ' -f1)
+if [[ -z "${OPENFAAS_PORTAL_PASSWORD}" ]]; then
+    OPENFAAS_PORTAL_PASSWORD=$(head -c 12 /dev/urandom | shasum| cut -d' ' -f1)
+fi
 kubectl -n $MICO_TEST_NAMESPACE create secret generic basic-auth \
 --from-literal=basic-auth-user=admin \
 --from-literal=basic-auth-password="$OPENFAAS_PORTAL_PASSWORD"

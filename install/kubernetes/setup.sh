@@ -4,12 +4,16 @@
 echo -e "MICO Setup\n----------"
 
 # Read in public IP for MICO, if none is provided don't set the field loadBalancerIP
-echo "Public IP address for MICO Dashboard (optional, leave it blank to get an random IP address from your provider):"
-read MICO_PUBLIC_IP
+if [[ -z "${MICO_PUBLIC_IP}" ]]; then
+    echo "Public IP address for MICO Dashboard (optional, leave it blank to get an random IP address from your provider):"
+    read MICO_PUBLIC_IP
+fi
 
 # Read in public IP for OpenFaaS Portal, if none is provided don't set the field loadBalancerIP
-echo "Public IP address for OpenFaaS Portal (optional, leave it blank to get an random IP address from your provider):"
-read OPENFAAS_PORTAL_PUBLIC_IP
+if [[ -z "${OPENFAAS_PORTAL_PUBLIC_IP}" ]]; then
+    echo "Public IP address for OpenFaaS Portal (optional, leave it blank to get an random IP address from your provider):"
+    read OPENFAAS_PORTAL_PUBLIC_IP
+fi
 
 # Check if DockerHub credentials are already provided
 if [[ -z "${DOCKERHUB_USERNAME_BASE64}" || -z "${DOCKERHUB_PASSWORD_BASE64}" ]]; then
@@ -66,8 +70,13 @@ fi
 kubectl apply -f ./kube-state-metrics
 kubectl apply -f knative-build.yaml
 
+# Setup Kafka
+kubectl apply -k ./kafka/variants/dev-small/
+
 # Setup OpenFaaS
-OPENFAAS_PORTAL_PASSWORD=$(head -c 12 /dev/urandom | shasum| cut -d' ' -f1)
+if [[ -z "${OPENFAAS_PORTAL_PASSWORD}" ]]; then
+    OPENFAAS_PORTAL_PASSWORD=$(head -c 12 /dev/urandom | shasum| cut -d' ' -f1)
+fi
 
 kubectl -n openfaas create secret generic basic-auth \
 --from-literal=basic-auth-user=admin \
