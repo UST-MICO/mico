@@ -190,7 +190,9 @@ public class DeploymentBroker {
             throw new MicoApplicationDoesNotIncludeMicoServiceException(micoApplication.getShortName(), micoApplication.getVersion());
         }
         for (MicoService micoService : micoApplication.getServices()) {
-            if (micoService.getServiceInterfaces() == null || micoService.getServiceInterfaces().isEmpty()) {
+            // If the service is not Kafka enabled, there must be at least one interface.
+            if (!micoService.isKafkaEnabled() &&
+                (micoService.getServiceInterfaces() == null || micoService.getServiceInterfaces().isEmpty())) {
                 throw new MicoServiceInterfaceNotFoundException(micoService.getShortName(), micoService.getVersion());
             }
             if (!micoService.getDependencies().isEmpty()) {
