@@ -55,7 +55,6 @@ export class MicoFormBooleanComponent implements OnInit {
     }
 
     onClick() {
-        this.checked = !this.checked;
         this.onChange(this.value);
         this.onTouched();
     }
