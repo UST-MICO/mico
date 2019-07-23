@@ -54,7 +54,7 @@ export class MicoFormBooleanComponent implements OnInit {
         this.onTouched();
     }
 
-    onClick() {
+    onValueChange() {
         this.onChange(this.value);
         this.onTouched();
     }

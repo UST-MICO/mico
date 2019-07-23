@@ -1,4 +1,4 @@
 <div class="mv2">
     <mat-label class="mr3">{{config.title}}:</mat-label>
-    <mat-slide-toggle matInput #input [required]="config['x-required']" (change)="onClick()" [(ngModel)]="checked"></mat-slide-toggle>
+    <mat-slide-toggle matInput #input [required]="config['x-required']" (change)="onValueChange()" [(ngModel)]="checked"></mat-slide-toggle>
 </div>
