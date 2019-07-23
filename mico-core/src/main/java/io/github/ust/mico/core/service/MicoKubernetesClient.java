@@ -558,7 +558,9 @@ public class MicoKubernetesClient {
                         }
                     }
 
-                    if (micoService.getServiceInterfaces().isEmpty()) {
+                    // If the service is not enabled for Kafka and has no interfaces defined,
+                    // the deployment is considered to be incomplete.
+                    if (!micoService.isKafkaEnabled() && micoService.getServiceInterfaces().isEmpty()) {
                         message = "There are no interfaces defined for the MicoService '" + micoService.getShortName()
                             + "' '" + micoService.getVersion() + "'.";
                         log.warn(message);
