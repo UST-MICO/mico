@@ -135,6 +135,21 @@ public class MicoServiceRequestDTO {
     // ----------------------
 
     /**
+     * Indicates whether this service wants to communicate with Kafka.
+     * If so this service is handled differently (e.g. it's not mandatory to have interfaces).
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Kafka Enabled"),
+            @ExtensionProperty(name = "x-order", value = "50"),
+            @ExtensionProperty(name = "default", value = "false"),
+            @ExtensionProperty(name = "description", value = "Enable communication with Kafka.")
+        }
+    )})
+    private boolean kafkaEnabled = false;
+
+    /**
      * Human readable contact information for support purposes.
      */
     @ApiModelProperty(extensions = {@Extension(
@@ -230,6 +245,7 @@ public class MicoServiceRequestDTO {
         this.gitCloneUrl = service.getGitCloneUrl();
         this.dockerfilePath = service.getDockerfilePath();
         this.dockerImageUri = service.getDockerImageUri();
+        this.kafkaEnabled = service.isKafkaEnabled();
     }
 
 }

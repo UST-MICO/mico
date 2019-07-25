@@ -26,6 +26,8 @@ import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.github.ust.mico.core.TestConstants.*;
 import io.github.ust.mico.core.broker.BackgroundJobBroker;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
+import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
+import io.github.ust.mico.core.exception.NotInitializedException;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
@@ -55,6 +57,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import static io.github.ust.mico.core.TestConstants.*;
 import static org.junit.Assert.assertEquals;
@@ -136,40 +140,7 @@ public class DeploymentResourceTests {
         application.getServices().add(service);
         application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(service));
 
-        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
-
-        given(serviceDeploymentInfoRepository
-            .findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName(), service.getVersion()))
-            .willReturn(Optional.of(new MicoServiceDeploymentInfo().setService(service)));
-        given(serviceRepository.save(any(MicoService.class))).willReturn(service);
-        given(serviceDeploymentInfoRepository.save(any(MicoServiceDeploymentInfo.class)))
-            .willReturn(new MicoServiceDeploymentInfo()
-                .setService(service)
-                .setKubernetesDeploymentInfo(new KubernetesDeploymentInfo()
-                    .setNamespace("namespace")
-                    .setDeploymentName("deployment")
-                    .setServiceNames(CollectionUtils.listOf("service"))));
-
-        // Assume asynchronous image build operation was successful
-        CompletableFuture<String> futureOfBuildJob = CompletableFuture.completedFuture(IntegrationTest.DOCKER_IMAGE_URI);
-        given(imageBuilder.build(service)).willReturn(futureOfBuildJob);
-
-        MicoServiceBackgroundJob mockJob = new MicoServiceBackgroundJob()
-            .setFuture(futureOfBuildJob)
-            .setServiceShortName(service.getShortName())
-            .setServiceVersion(service.getVersion())
-            .setType(MicoServiceBackgroundJob.Type.BUILD);
-
-        given(backgroundJobBroker.getJobByMicoService(service.getShortName(), service.getVersion(), MicoServiceBackgroundJob.Type.BUILD))
-            .willReturn(Optional.of(mockJob));
-        given(backgroundJobBroker.saveJob(mockJob)).willReturn(mockJob);
-
-        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(SHORT_NAME, VERSION))
-            .willReturn(new MicoApplicationJobStatus()
-                .setApplicationShortName(SHORT_NAME)
-                .setApplicationVersion(VERSION)
-                .setStatus(MicoServiceBackgroundJob.Status.PENDING)
-                .setJobs(Collections.singletonList(mockJob)));
+        setupDeploymentResources(application, service);
 
         mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/deploy"))
             .andDo(print())
@@ -245,6 +216,58 @@ public class DeploymentResourceTests {
             .andDo(print())
             .andExpect(status().isUnprocessableEntity())
             .andExpect(status().reason(Matchers.containsString("interfaces")));
+    }
+
+    @Test
+    public void deployApplicationWithKafkaEnabledServiceWithoutServiceInterface() throws Exception {
+        MicoService service = getTestService();
+        service.setServiceInterfaces(new ArrayList<>()); // There are no interfaces
+        service.setKafkaEnabled(true); // Service is Kafka enabled
+        MicoApplication application = getTestApplication();
+        application.getServices().add(service);
+        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(service));
+
+        setupDeploymentResources(application, service);
+
+        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/deploy"))
+            .andDo(print())
+            .andExpect(status().isAccepted());
+    }
+
+    private void setupDeploymentResources(MicoApplication application, MicoService service) throws NotInitializedException, InterruptedException, ExecutionException, TimeoutException, MicoApplicationNotFoundException {
+        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
+        given(serviceDeploymentInfoRepository
+            .findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName(), service.getVersion()))
+            .willReturn(Optional.of(new MicoServiceDeploymentInfo().setService(service)));
+        given(serviceRepository.save(any(MicoService.class))).willReturn(service);
+        given(serviceDeploymentInfoRepository.save(any(MicoServiceDeploymentInfo.class)))
+            .willReturn(new MicoServiceDeploymentInfo()
+                .setService(service)
+                .setKubernetesDeploymentInfo(new KubernetesDeploymentInfo()
+                    .setNamespace("namespace")
+                    .setDeploymentName("deployment")
+                    .setServiceNames(CollectionUtils.listOf("service"))));
+
+        // Assume asynchronous image build operation was successful
+        CompletableFuture<String> futureOfBuildJob = CompletableFuture.completedFuture(IntegrationTest.DOCKER_IMAGE_URI);
+        given(imageBuilder.build(service)).willReturn(futureOfBuildJob);
+
+        MicoServiceBackgroundJob mockJob = new MicoServiceBackgroundJob()
+            .setFuture(futureOfBuildJob)
+            .setServiceShortName(service.getShortName())
+            .setServiceVersion(service.getVersion())
+            .setType(MicoServiceBackgroundJob.Type.BUILD);
+
+        given(backgroundJobBroker.getJobByMicoService(service.getShortName(), service.getVersion(), MicoServiceBackgroundJob.Type.BUILD))
+            .willReturn(Optional.of(mockJob));
+        given(backgroundJobBroker.saveJob(mockJob)).willReturn(mockJob);
+
+        given(backgroundJobBroker.getJobStatusByApplicationShortNameAndVersion(SHORT_NAME, VERSION))
+            .willReturn(new MicoApplicationJobStatus()
+                .setApplicationShortName(SHORT_NAME)
+                .setApplicationVersion(VERSION)
+                .setStatus(MicoServiceBackgroundJob.Status.PENDING)
+                .setJobs(Collections.singletonList(mockJob)));
     }
 
     private MicoApplication getTestApplication() {

@@ -99,6 +99,12 @@ public class MicoService {
     // ----------------------
 
     /**
+     * Indicates whether this service wants to communicate with Kafka.
+     * If so this service is handled differently (e.g. it's not mandatory to have interfaces).
+     */
+    private boolean kafkaEnabled;
+
+    /**
      * The list of interfaces this service provides.
      * Is read only. Use special API for updating.
      */
@@ -171,7 +177,8 @@ public class MicoService {
             .setOwner(serviceDto.getOwner())
             .setGitCloneUrl(serviceDto.getGitCloneUrl())
             .setDockerfilePath(serviceDto.getDockerfilePath())
-            .setDockerImageUri(serviceDto.getDockerImageUri());
+            .setDockerImageUri(serviceDto.getDockerImageUri())
+            .setKafkaEnabled(serviceDto.isKafkaEnabled());
     }
 
 }

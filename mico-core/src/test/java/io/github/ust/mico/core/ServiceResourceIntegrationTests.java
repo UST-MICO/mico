@@ -168,6 +168,7 @@ public class ServiceResourceIntegrationTests {
     private static final String SHORT_NAME_PATH = buildPath(ROOT, "shortName");
     private static final String DESCRIPTION_PATH = buildPath(ROOT, "description");
     private static final String VERSION_PATH = buildPath(ROOT, "version");
+    private static final String KAFKA_ENABLED = buildPath(ROOT, "kafkaEnabled");
     private static final String SERVICE_VERSIONS_LIST = buildPath(ROOT_EMBEDDED, "micoVersionRequestDTOList");
     private static final String PATH_PROMOTE = "promote";
 
@@ -602,6 +603,41 @@ public class ServiceResourceIntegrationTests {
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(jsonPath(DESCRIPTION_PATH, is(updatedDescription)))
+            .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
+            .andExpect(jsonPath(VERSION_PATH, is(VERSION)));
+
+        resultUpdate.andExpect(status().isOk());
+    }
+
+    @Test
+    public void updateServiceWithBooleanValueTrue() throws Exception {
+        MicoService existingService = new MicoService()
+            .setId(ID)
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(NAME)
+            .setKafkaEnabled(false);
+        MicoServiceRequestDTO updatedServiceRequestDto = new MicoServiceRequestDTO()
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setName(NAME)
+            .setKafkaEnabled(true);
+        MicoService expectedService = new MicoService()
+            .setId(existingService.getId())
+            .setShortName(updatedServiceRequestDto.getShortName())
+            .setVersion(updatedServiceRequestDto.getVersion())
+            .setName(updatedServiceRequestDto.getName())
+            .setDescription(updatedServiceRequestDto.getDescription())
+            .setKafkaEnabled(updatedServiceRequestDto.isKafkaEnabled());
+
+        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(existingService));
+        given(serviceRepository.save(eq(expectedService))).willReturn(expectedService);
+
+        ResultActions resultUpdate = mvc.perform(put(SERVICES_PATH + "/" + SHORT_NAME + "/" + VERSION)
+            .content(mapper.writeValueAsBytes(updatedServiceRequestDto))
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(jsonPath(KAFKA_ENABLED, is(true)))
             .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
             .andExpect(jsonPath(VERSION_PATH, is(VERSION)));
 
