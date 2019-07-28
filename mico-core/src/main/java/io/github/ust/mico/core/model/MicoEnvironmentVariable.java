@@ -46,6 +46,17 @@ import lombok.experimental.Accessors;
 @NodeEntity
 public class MicoEnvironmentVariable {
 
+    public enum DefaultEnvironemntVariableKafkaNames{
+        KAFKA_BOOTSTRAP_SERVERS,
+        KAFKA_GROUP_ID,
+        KAFKA_TOPIC_INPUT,
+        KAFKA_TOPIC_OUTPUT,
+        KAFKA_TOPIC_INVALID_MESSAGE,
+        KAFKA_TOPIC_DEAD_LETTER,
+        KAFKA_TOPIC_TEST_MESSAGE_OUTPUT,
+        OPENFAAS_GATEWAY
+    }
+
     @Id
     @GeneratedValue
     private Long id;
