@@ -24,6 +24,7 @@ import static io.github.ust.mico.core.TestConstants.*;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
 import static io.github.ust.mico.core.TestConstants.VERSION;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -36,6 +37,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.*;
 import java.util.stream.Collectors;
 
+import io.github.ust.mico.core.configuration.KafkaConfig;
+import io.github.ust.mico.core.configuration.OpenFaaSConfig;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -126,6 +129,12 @@ public class ApplicationResourceIntegrationTests {
 
     @Autowired
     private ObjectMapper mapper;
+
+    @Autowired
+    private OpenFaaSConfig openFaaSConfig;
+
+    @Autowired
+    private KafkaConfig kafkaConfig;
 
     @Captor
     private ArgumentCaptor<List<MicoApplication>> micoApplicationListCaptor;
@@ -1134,5 +1143,59 @@ public class ApplicationResourceIntegrationTests {
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isConflict());
+    }
+
+    @Test
+    public void testDefaultVariablesAddedToKafkaEnabledService() throws Exception {
+        MicoApplication micoApplication = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
+        MicoService service1 = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(VERSION_1_0_1).setKafkaEnabled(true);
+
+        given(applicationRepository.findByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion()))
+            .willReturn(Optional.of(micoApplication));
+        given(serviceRepository.findByShortNameAndVersion(service1.getShortName(), service1.getVersion()))
+            .willReturn(Optional.of(service1));
+        given(micoKubernetesClient.isApplicationUndeployed(micoApplication)).willReturn(true);
+
+        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + VERSION_1_0_1)
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isNoContent());
+
+        ArgumentCaptor<MicoApplication> applicationCaptor = ArgumentCaptor.forClass(MicoApplication.class);
+        verify(applicationRepository, times(1)).save(applicationCaptor.capture());
+        MicoApplication savedApplication = applicationCaptor.getValue();
+        assertThat(savedApplication.getServiceDeploymentInfos(),hasSize(1));
+        LinkedList<MicoEnvironmentVariable> expectedMicoEnvironmentVariables = new LinkedList<>();
+        expectedMicoEnvironmentVariables.addAll(openFaaSConfig.getDefaultEnvironmentVariablesForOpenFaaS());
+        expectedMicoEnvironmentVariables.addAll(kafkaConfig.getDefaultEnvironmentVariablesForKakfa());
+        List<MicoEnvironmentVariable> actualEnvironmentVariables = savedApplication.getServiceDeploymentInfos().get(0).getEnvironmentVariables();
+        assertThat(actualEnvironmentVariables, containsInAnyOrder(expectedMicoEnvironmentVariables.toArray()));
+
+    }
+
+    @Test
+    public void testDefaultVariablesNotAddedToNormalService() throws Exception {
+        MicoApplication micoApplication = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
+        MicoService service1 = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(VERSION_1_0_1);
+        //Kafka enabled is not set
+
+        given(applicationRepository.findByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion()))
+            .willReturn(Optional.of(micoApplication));
+        given(serviceRepository.findByShortNameAndVersion(service1.getShortName(), service1.getVersion()))
+            .willReturn(Optional.of(service1));
+        given(micoKubernetesClient.isApplicationUndeployed(micoApplication)).willReturn(true);
+
+        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + VERSION_1_0_1)
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isNoContent());
+
+        ArgumentCaptor<MicoApplication> applicationCaptor = ArgumentCaptor.forClass(MicoApplication.class);
+        verify(applicationRepository, times(1)).save(applicationCaptor.capture());
+        MicoApplication savedApplication = applicationCaptor.getValue();
+        assertThat(savedApplication.getServiceDeploymentInfos(),hasSize(1));
+        List<MicoEnvironmentVariable> actualEnvironmentVariables = savedApplication.getServiceDeploymentInfos().get(0).getEnvironmentVariables();
+        assertThat(actualEnvironmentVariables, hasSize(0));
+
     }
 }
