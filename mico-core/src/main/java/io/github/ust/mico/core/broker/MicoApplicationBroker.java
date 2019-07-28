@@ -8,8 +8,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.sun.javaws.exceptions.InvalidArgumentException;
+import io.github.ust.mico.core.configuration.KafkaConfig;
+import io.github.ust.mico.core.configuration.OpenFaaSConfig;
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationDeploymentStatusResponseDTO;
+import io.github.ust.mico.core.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
@@ -17,10 +21,6 @@ import org.springframework.stereotype.Service;
 
 import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
 import io.github.ust.mico.core.exception.*;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.persistence.*;
 import io.github.ust.mico.core.resource.ApplicationResource;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
@@ -59,6 +59,12 @@ public class MicoApplicationBroker {
 
     @Autowired
     private MicoInterfaceConnectionRepository micoInterfaceConnectionRepository;
+
+    @Autowired
+    private KafkaConfig kafkaConfig;
+
+    @Autowired
+    private OpenFaaSConfig openFaaSConfig;
 
     public MicoApplication getMicoApplicationByShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException {
         Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
@@ -198,6 +204,8 @@ public class MicoApplicationBroker {
             // Both the service list and the service deployment info list of the application need to be updated ...
             micoApplication.getServices().add(micoService);
             micoApplication.getServiceDeploymentInfos().add(micoServiceDeploymentInfo);
+
+            setDefaultEnvironmentVariablesForKafkaEnabledServices(micoServiceDeploymentInfo);
             // ... before the application can be saved.
             return applicationRepository.save(micoApplication);
         } else {
@@ -224,6 +232,24 @@ public class MicoApplicationBroker {
                 return applicationRepository.save(micoApplication);
             }
         }
+    }
+
+    /**
+     * Sets the default environment variables for Kafka enabled MicoServices. See {@link MicoEnvironmentVariable.DefaultEnvironemntVariableKafkaNames}
+     * for a complete list.
+     * @param micoServiceDeploymentInfo The correct service needs to be set already
+     */
+    private void setDefaultEnvironmentVariablesForKafkaEnabledServices(MicoServiceDeploymentInfo micoServiceDeploymentInfo){
+        if(micoServiceDeploymentInfo.getService() == null){
+            throw new IllegalArgumentException("The MicoServiceDeploymentInfo needs a valid MicoService set to check if the service is Kafka enabled");
+        }
+        if(!micoServiceDeploymentInfo.getService().isKafkaEnabled()){
+            return;
+        }
+        log.debug("Adding default environment variables to the Kafka enabled MicoService '{}'", micoServiceDeploymentInfo.getService());
+        List<MicoEnvironmentVariable>  micoEnvironmentVariables = micoServiceDeploymentInfo.getEnvironmentVariables();
+        micoEnvironmentVariables.addAll(kafkaConfig.getDefaultEnvironmentVariablesForKakfa());
+        micoEnvironmentVariables.addAll(openFaaSConfig.getDefaultEnvironmentVariablesForOpenFaaS());
     }
 
     public MicoApplication removeMicoServiceFromMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException, MicoApplicationIsNotUndeployedException {
