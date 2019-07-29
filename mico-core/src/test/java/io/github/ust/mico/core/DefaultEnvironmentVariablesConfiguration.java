@@ -28,13 +28,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-
-import static io.github.ust.mico.core.model.MicoEnvironmentVariable.DefaultEnvironemntVariableKafkaNames.*;
+import static io.github.ust.mico.core.model.MicoEnvironmentVariable.DefaultEnvironmentVariableKafkaNames.*;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;

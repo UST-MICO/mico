@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import com.sun.javaws.exceptions.InvalidArgumentException;
 import io.github.ust.mico.core.configuration.KafkaConfig;
 import io.github.ust.mico.core.configuration.OpenFaaSConfig;
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
@@ -18,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
 import org.springframework.stereotype.Service;
-
 import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
 import io.github.ust.mico.core.exception.*;
 import io.github.ust.mico.core.persistence.*;
@@ -235,7 +232,7 @@ public class MicoApplicationBroker {
     }
 
     /**
-     * Sets the default environment variables for Kafka enabled MicoServices. See {@link MicoEnvironmentVariable.DefaultEnvironemntVariableKafkaNames}
+     * Sets the default environment variables for Kafka enabled MicoServices. See {@link MicoEnvironmentVariable.DefaultEnvironmentVariableKafkaNames}
      * for a complete list.
      * @param micoServiceDeploymentInfo The correct service needs to be set already
      */

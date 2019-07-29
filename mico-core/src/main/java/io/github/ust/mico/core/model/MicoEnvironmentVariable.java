@@ -46,7 +46,10 @@ import lombok.experimental.Accessors;
 @NodeEntity
 public class MicoEnvironmentVariable {
 
-    public enum DefaultEnvironemntVariableKafkaNames{
+    /**
+     * The default environment variables for a Kafka-enabled micoservices.
+     */
+    public enum DefaultEnvironmentVariableKafkaNames {
         KAFKA_BOOTSTRAP_SERVERS,
         KAFKA_GROUP_ID,
         KAFKA_TOPIC_INPUT,

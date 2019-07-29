@@ -28,7 +28,7 @@ import org.springframework.stereotype.Component;
 import javax.validation.constraints.NotBlank;
 import java.util.LinkedList;
 import java.util.List;
-import io.github.ust.mico.core.model.MicoEnvironmentVariable.DefaultEnvironemntVariableKafkaNames;
+import io.github.ust.mico.core.model.MicoEnvironmentVariable.DefaultEnvironmentVariableKafkaNames;
 
 /**
  * Configuration of the kafka connection.
@@ -82,13 +82,13 @@ public class KafkaConfig {
 
     public List<MicoEnvironmentVariable> getDefaultEnvironmentVariablesForKakfa(){
         LinkedList<MicoEnvironmentVariable> micoEnvironmentVariables = new LinkedList<>();
-        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironemntVariableKafkaNames.KAFKA_BOOTSTRAP_SERVERS.name()).setValue(bootstrapServers));
-        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironemntVariableKafkaNames.KAFKA_GROUP_ID.name()).setValue(groupId));
-        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironemntVariableKafkaNames.KAFKA_TOPIC_DEAD_LETTER.name()).setValue(deadLetterTopic));
-        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironemntVariableKafkaNames.KAFKA_TOPIC_INPUT.name()).setValue(inputTopic));
-        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironemntVariableKafkaNames.KAFKA_TOPIC_INVALID_MESSAGE.name()).setValue(invalidMessageTopic));
-        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironemntVariableKafkaNames.KAFKA_TOPIC_OUTPUT.name()).setValue(outputTopic));
-        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironemntVariableKafkaNames.KAFKA_TOPIC_TEST_MESSAGE_OUTPUT.name()).setValue(testMessageOutputTopic));
+        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironmentVariableKafkaNames.KAFKA_BOOTSTRAP_SERVERS.name()).setValue(bootstrapServers));
+        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironmentVariableKafkaNames.KAFKA_GROUP_ID.name()).setValue(groupId));
+        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironmentVariableKafkaNames.KAFKA_TOPIC_DEAD_LETTER.name()).setValue(deadLetterTopic));
+        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironmentVariableKafkaNames.KAFKA_TOPIC_INPUT.name()).setValue(inputTopic));
+        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironmentVariableKafkaNames.KAFKA_TOPIC_INVALID_MESSAGE.name()).setValue(invalidMessageTopic));
+        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironmentVariableKafkaNames.KAFKA_TOPIC_OUTPUT.name()).setValue(outputTopic));
+        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironmentVariableKafkaNames.KAFKA_TOPIC_TEST_MESSAGE_OUTPUT.name()).setValue(testMessageOutputTopic));
         return micoEnvironmentVariables;
     }
 }

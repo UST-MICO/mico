@@ -27,13 +27,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 
 /**
  * Configuration for the OpenFaaS connection.
@@ -53,7 +50,7 @@ public class OpenFaaSConfig {
 
     public List<MicoEnvironmentVariable> getDefaultEnvironmentVariablesForOpenFaaS(){
         LinkedList<MicoEnvironmentVariable> micoEnvironmentVariables = new LinkedList<>();
-        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(MicoEnvironmentVariable.DefaultEnvironemntVariableKafkaNames.OPENFAAS_GATEWAY.name()).setValue(gateway));
+        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(MicoEnvironmentVariable.DefaultEnvironmentVariableKafkaNames.OPENFAAS_GATEWAY.name()).setValue(gateway));
         return micoEnvironmentVariables;
     }
 }
