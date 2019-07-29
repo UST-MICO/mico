@@ -1166,7 +1166,7 @@ public class ApplicationResourceIntegrationTests {
         assertThat(savedApplication.getServiceDeploymentInfos(), hasSize(1));
         LinkedList<MicoEnvironmentVariable> expectedMicoEnvironmentVariables = new LinkedList<>();
         expectedMicoEnvironmentVariables.addAll(openFaaSConfig.getDefaultEnvironmentVariablesForOpenFaaS());
-        expectedMicoEnvironmentVariables.addAll(kafkaConfig.getDefaultEnvironmentVariablesForKakfa());
+        expectedMicoEnvironmentVariables.addAll(kafkaConfig.getDefaultEnvironmentVariablesForKafka());
         List<MicoEnvironmentVariable> actualEnvironmentVariables = savedApplication.getServiceDeploymentInfos().get(0).getEnvironmentVariables();
         assertThat(actualEnvironmentVariables, containsInAnyOrder(expectedMicoEnvironmentVariables.toArray()));
 

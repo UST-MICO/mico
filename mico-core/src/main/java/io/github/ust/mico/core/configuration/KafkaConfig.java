@@ -80,7 +80,7 @@ public class KafkaConfig {
     @NotBlank
     private String testMessageOutputTopic;
 
-    public List<MicoEnvironmentVariable> getDefaultEnvironmentVariablesForKakfa() {
+    public List<MicoEnvironmentVariable> getDefaultEnvironmentVariablesForKafka() {
         LinkedList<MicoEnvironmentVariable> micoEnvironmentVariables = new LinkedList<>();
         micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironmentVariableKafkaNames.KAFKA_BOOTSTRAP_SERVERS.name()).setValue(bootstrapServers));
         micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironmentVariableKafkaNames.KAFKA_GROUP_ID.name()).setValue(groupId));

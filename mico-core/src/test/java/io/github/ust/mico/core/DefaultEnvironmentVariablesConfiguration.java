@@ -68,8 +68,8 @@ public class DefaultEnvironmentVariablesConfiguration {
         expectedEnvironmentVariables.add(new MicoEnvironmentVariable().setName(KAFKA_TOPIC_INVALID_MESSAGE.name()).setValue(kafkaConfig.getInvalidMessageTopic()));
         expectedEnvironmentVariables.add(new MicoEnvironmentVariable().setName(KAFKA_TOPIC_TEST_MESSAGE_OUTPUT.name()).setValue(kafkaConfig.getTestMessageOutputTopic()));
 
-        assertThat(kafkaConfig.getDefaultEnvironmentVariablesForKakfa(), hasSize(7));
-        assertThat(kafkaConfig.getDefaultEnvironmentVariablesForKakfa(), containsInAnyOrder(expectedEnvironmentVariables.toArray()));
+        assertThat(kafkaConfig.getDefaultEnvironmentVariablesForKafka(), hasSize(7));
+        assertThat(kafkaConfig.getDefaultEnvironmentVariablesForKafka(), containsInAnyOrder(expectedEnvironmentVariables.toArray()));
     }
 
 }

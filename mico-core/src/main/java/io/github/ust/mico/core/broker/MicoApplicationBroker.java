@@ -247,7 +247,7 @@ public class MicoApplicationBroker {
         }
         log.debug("Adding default environment variables to the Kafka enabled MicoService '{}'", micoServiceDeploymentInfo.getService());
         List<MicoEnvironmentVariable> micoEnvironmentVariables = micoServiceDeploymentInfo.getEnvironmentVariables();
-        micoEnvironmentVariables.addAll(kafkaConfig.getDefaultEnvironmentVariablesForKakfa());
+        micoEnvironmentVariables.addAll(kafkaConfig.getDefaultEnvironmentVariablesForKafka());
         micoEnvironmentVariables.addAll(openFaaSConfig.getDefaultEnvironmentVariablesForOpenFaaS());
     }
 
