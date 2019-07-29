@@ -1,27 +1,28 @@
 package io.github.ust.mico.core.broker;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+import io.github.ust.mico.core.configuration.KafkaConfig;
+import io.github.ust.mico.core.configuration.OpenFaaSConfig;
+import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
+import io.github.ust.mico.core.dto.response.status.MicoApplicationDeploymentStatusResponseDTO;
+import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
+import io.github.ust.mico.core.exception.*;
+import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.persistence.*;
+import io.github.ust.mico.core.resource.ApplicationResource;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.service.MicoStatusService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Link;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import io.github.ust.mico.core.configuration.KafkaConfig;
-import io.github.ust.mico.core.configuration.OpenFaaSConfig;
-import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
-import io.github.ust.mico.core.dto.response.status.MicoApplicationDeploymentStatusResponseDTO;
-import io.github.ust.mico.core.model.*;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Link;
-import org.springframework.stereotype.Service;
-import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
-import io.github.ust.mico.core.exception.*;
-import io.github.ust.mico.core.persistence.*;
-import io.github.ust.mico.core.resource.ApplicationResource;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.MicoStatusService;
+
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @Slf4j
 @Service
@@ -232,20 +233,21 @@ public class MicoApplicationBroker {
     }
 
     /**
-     * Sets the default environment variables for Kafka enabled MicoServices. See {@link MicoEnvironmentVariable.DefaultEnvironmentVariableKafkaNames}
+     * Sets the default environment variables for Kafka-enabled MicoServices. See {@link MicoEnvironmentVariable.DefaultEnvironmentVariableKafkaNames}
      * for a complete list.
-     * @param micoServiceDeploymentInfo The correct service needs to be set already
+     *
+     * @param micoServiceDeploymentInfo The {@link MicoServiceDeploymentInfo} with an corresponding MicoService
      */
-    private void setDefaultEnvironmentVariablesForKafkaEnabledServices(MicoServiceDeploymentInfo micoServiceDeploymentInfo){
-        if(micoServiceDeploymentInfo.getService() == null){
+    private void setDefaultEnvironmentVariablesForKafkaEnabledServices(MicoServiceDeploymentInfo micoServiceDeploymentInfo) {
+        if (micoServiceDeploymentInfo.getService() == null) {
             throw new IllegalArgumentException("The MicoServiceDeploymentInfo needs a valid MicoService set to check if the service is Kafka enabled");
         }
-        if(!micoServiceDeploymentInfo.getService().isKafkaEnabled()){
+        if (!micoServiceDeploymentInfo.getService().isKafkaEnabled()) {
             return;
         }
-        log.debug("Adding default environment variables to the Kafka enabled MicoService '{}:{}'", micoServiceDeploymentInfo.getService().getShortName(),micoServiceDeploymentInfo.getService().getVersion());
-        List<MicoEnvironmentVariable>  micoEnvironmentVariables = micoServiceDeploymentInfo.getEnvironmentVariables();
-        micoEnvironmentVariables.addAll(kafkaConfig.getDefaultEnvironmentVariablesForKakfa());
+        log.debug("Adding default environment variables to the Kafka enabled MicoService '{}:{}'", micoServiceDeploymentInfo.getService().getShortName(), micoServiceDeploymentInfo.getService().getVersion());
+        List<MicoEnvironmentVariable> micoEnvironmentVariables = micoServiceDeploymentInfo.getEnvironmentVariables();
+        micoEnvironmentVariables.addAll(kafkaConfig.getDefaultEnvironmentVariablesForKafka());
         micoEnvironmentVariables.addAll(openFaaSConfig.getDefaultEnvironmentVariablesForOpenFaaS());
     }
 
