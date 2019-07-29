@@ -23,14 +23,12 @@ import io.github.ust.mico.core.model.MicoEnvironmentVariable;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import javax.validation.constraints.NotBlank;
 import java.util.LinkedList;
 import java.util.List;
-
-import javax.validation.constraints.NotBlank;
 
 /**
  * Configuration for the OpenFaaS connection.
@@ -48,7 +46,7 @@ public class OpenFaaSConfig {
     @NotBlank
     private String gateway;
 
-    public List<MicoEnvironmentVariable> getDefaultEnvironmentVariablesForOpenFaaS(){
+    public List<MicoEnvironmentVariable> getDefaultEnvironmentVariablesForOpenFaaS() {
         LinkedList<MicoEnvironmentVariable> micoEnvironmentVariables = new LinkedList<>();
         micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(MicoEnvironmentVariable.DefaultEnvironmentVariableKafkaNames.OPENFAAS_GATEWAY.name()).setValue(gateway));
         return micoEnvironmentVariables;

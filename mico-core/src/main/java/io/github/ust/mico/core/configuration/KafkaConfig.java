@@ -20,6 +20,7 @@
 package io.github.ust.mico.core.configuration;
 
 import io.github.ust.mico.core.model.MicoEnvironmentVariable;
+import io.github.ust.mico.core.model.MicoEnvironmentVariable.DefaultEnvironmentVariableKafkaNames;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -28,10 +29,9 @@ import org.springframework.stereotype.Component;
 import javax.validation.constraints.NotBlank;
 import java.util.LinkedList;
 import java.util.List;
-import io.github.ust.mico.core.model.MicoEnvironmentVariable.DefaultEnvironmentVariableKafkaNames;
 
 /**
- * Configuration of the kafka connection.
+ * Configuration of the Kafka connection.
  */
 @Component
 @Setter
@@ -80,7 +80,7 @@ public class KafkaConfig {
     @NotBlank
     private String testMessageOutputTopic;
 
-    public List<MicoEnvironmentVariable> getDefaultEnvironmentVariablesForKakfa(){
+    public List<MicoEnvironmentVariable> getDefaultEnvironmentVariablesForKakfa() {
         LinkedList<MicoEnvironmentVariable> micoEnvironmentVariables = new LinkedList<>();
         micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironmentVariableKafkaNames.KAFKA_BOOTSTRAP_SERVERS.name()).setValue(bootstrapServers));
         micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironmentVariableKafkaNames.KAFKA_GROUP_ID.name()).setValue(groupId));

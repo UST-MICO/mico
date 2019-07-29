@@ -28,8 +28,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+
 import java.util.LinkedList;
 import java.util.List;
+
 import static io.github.ust.mico.core.model.MicoEnvironmentVariable.DefaultEnvironmentVariableKafkaNames.*;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
@@ -47,16 +49,16 @@ public class DefaultEnvironmentVariablesConfiguration {
     KafkaConfig kafkaConfig;
 
     @Test
-    public void testOpenFaaSConfigForEnvironmentVariables(){
+    public void testOpenFaaSConfigForEnvironmentVariables() {
         List<MicoEnvironmentVariable> expectedEnvironmentVariables = new LinkedList<>();
         expectedEnvironmentVariables.add(new MicoEnvironmentVariable().setName(OPENFAAS_GATEWAY.name()).setValue(openFaaSConfig.getGateway()));
 
-        assertThat(openFaaSConfig.getDefaultEnvironmentVariablesForOpenFaaS(),hasSize(1));
-        assertThat(openFaaSConfig.getDefaultEnvironmentVariablesForOpenFaaS(),containsInAnyOrder(expectedEnvironmentVariables.toArray()));
+        assertThat(openFaaSConfig.getDefaultEnvironmentVariablesForOpenFaaS(), hasSize(1));
+        assertThat(openFaaSConfig.getDefaultEnvironmentVariablesForOpenFaaS(), containsInAnyOrder(expectedEnvironmentVariables.toArray()));
     }
 
     @Test
-    public void testKafkaConfigForEnvironmentVariables(){
+    public void testKafkaConfigForEnvironmentVariables() {
         List<MicoEnvironmentVariable> expectedEnvironmentVariables = new LinkedList<>();
         expectedEnvironmentVariables.add(new MicoEnvironmentVariable().setName(KAFKA_BOOTSTRAP_SERVERS.name()).setValue(kafkaConfig.getBootstrapServers()));
         expectedEnvironmentVariables.add(new MicoEnvironmentVariable().setName(KAFKA_GROUP_ID.name()).setValue(kafkaConfig.getGroupId()));
@@ -66,8 +68,8 @@ public class DefaultEnvironmentVariablesConfiguration {
         expectedEnvironmentVariables.add(new MicoEnvironmentVariable().setName(KAFKA_TOPIC_INVALID_MESSAGE.name()).setValue(kafkaConfig.getInvalidMessageTopic()));
         expectedEnvironmentVariables.add(new MicoEnvironmentVariable().setName(KAFKA_TOPIC_TEST_MESSAGE_OUTPUT.name()).setValue(kafkaConfig.getTestMessageOutputTopic()));
 
-        assertThat(kafkaConfig.getDefaultEnvironmentVariablesForKakfa(),hasSize(7));
-        assertThat(kafkaConfig.getDefaultEnvironmentVariablesForKakfa(),containsInAnyOrder(expectedEnvironmentVariables.toArray()));
+        assertThat(kafkaConfig.getDefaultEnvironmentVariablesForKakfa(), hasSize(7));
+        assertThat(kafkaConfig.getDefaultEnvironmentVariablesForKakfa(), containsInAnyOrder(expectedEnvironmentVariables.toArray()));
     }
 
 }

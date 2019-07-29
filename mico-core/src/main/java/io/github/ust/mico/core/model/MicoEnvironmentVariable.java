@@ -19,17 +19,15 @@
 
 package io.github.ust.mico.core.model;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import io.github.ust.mico.core.dto.request.MicoEnvironmentVariableRequestDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
 
 /**
  * An environment variable represented as a simple key-value pair.
@@ -47,7 +45,7 @@ import lombok.experimental.Accessors;
 public class MicoEnvironmentVariable {
 
     /**
-     * The default environment variables for a Kafka-enabled micoservices.
+     * The default environment variables for a Kafka-enabled MicoServices.
      */
     public enum DefaultEnvironmentVariableKafkaNames {
         KAFKA_BOOTSTRAP_SERVERS,
