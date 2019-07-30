@@ -180,6 +180,9 @@ public class MicoApplicationBroker {
     }
 
     public MicoApplication addMicoServiceToMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion) throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAlreadyAddedToMicoApplicationException, MicoServiceAddedMoreThanOnceToMicoApplicationException, MicoApplicationIsNotUndeployedException {
+
+        log.debug("Adding MicoService '{}' '{}' to MicoApplication '{}' '{}'.",
+            serviceShortName, serviceVersion, applicationShortName, applicationVersion);
         // Retrieve application and service from database (checks whether they exist)
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
 
@@ -192,6 +195,8 @@ public class MicoApplicationBroker {
 
         // Find all services with identical short name within this application
         List<MicoService> micoServices = micoApplication.getServices().stream().filter(s -> s.getShortName().equals(serviceShortName)).collect(Collectors.toList());
+        log.debug("Found {} MicoService(s) with short name '{}' within application '{}' '{}'.",
+            micoServices.size(), serviceShortName, applicationShortName, applicationVersion);
 
         if (micoServices.size() > 1) {
             // Illegal state, each service is allowed only once in every application
@@ -199,16 +204,20 @@ public class MicoApplicationBroker {
         } else if (micoServices.size() == 0) {
             // Service not included yet, simply add it
             MicoServiceDeploymentInfo micoServiceDeploymentInfo = new MicoServiceDeploymentInfo().setService(micoService);
+            setDefaultEnvironmentVariablesForKafkaEnabledService(micoServiceDeploymentInfo);
+
             // Both the service list and the service deployment info list of the application need to be updated ...
             micoApplication.getServices().add(micoService);
             micoApplication.getServiceDeploymentInfos().add(micoServiceDeploymentInfo);
 
-            setDefaultEnvironmentVariablesForKafkaEnabledServices(micoServiceDeploymentInfo);
             // ... before the application can be saved.
             return applicationRepository.save(micoApplication);
         } else {
             // Service already included, replace it with its newer version, ...
             MicoService existingMicoService = micoServices.get(0);
+            log.debug("MicoService '{}' is already included in application '{}' '{}' in version '{}'. " +
+                    "Replace it with the version '{}'.", serviceShortName, applicationShortName, applicationVersion,
+                existingMicoService.getVersion(), serviceVersion);
 
             // ... but only replace if the new version is different from the current version
             if (existingMicoService.getVersion().equals(serviceVersion)) {
@@ -238,14 +247,18 @@ public class MicoApplicationBroker {
      *
      * @param micoServiceDeploymentInfo The {@link MicoServiceDeploymentInfo} with an corresponding MicoService
      */
-    private void setDefaultEnvironmentVariablesForKafkaEnabledServices(MicoServiceDeploymentInfo micoServiceDeploymentInfo) {
-        if (micoServiceDeploymentInfo.getService() == null) {
+    private void setDefaultEnvironmentVariablesForKafkaEnabledService(MicoServiceDeploymentInfo micoServiceDeploymentInfo) {
+        MicoService micoService = micoServiceDeploymentInfo.getService();
+        if (micoService == null) {
             throw new IllegalArgumentException("The MicoServiceDeploymentInfo needs a valid MicoService set to check if the service is Kafka enabled");
         }
-        if (!micoServiceDeploymentInfo.getService().isKafkaEnabled()) {
+        if (!micoService.isKafkaEnabled()) {
+            log.debug("MicoService '{}' '{}' is not Kafka-enabled. Not necessary to adding specific env variables.",
+                micoService.getShortName(), micoService.getVersion());
             return;
         }
-        log.debug("Adding default environment variables to the Kafka enabled MicoService '{}:{}'", micoServiceDeploymentInfo.getService().getShortName(), micoServiceDeploymentInfo.getService().getVersion());
+        log.debug("Adding default environment variables to the Kafka-enabled MicoService '{}' '{}'.",
+            micoService.getShortName(), micoService.getVersion());
         List<MicoEnvironmentVariable> micoEnvironmentVariables = micoServiceDeploymentInfo.getEnvironmentVariables();
         micoEnvironmentVariables.addAll(kafkaConfig.getDefaultEnvironmentVariablesForKafka());
         micoEnvironmentVariables.addAll(openFaaSConfig.getDefaultEnvironmentVariablesForOpenFaaS());
