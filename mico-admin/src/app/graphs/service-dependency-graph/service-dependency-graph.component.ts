@@ -28,6 +28,9 @@ import { STYLE_TEMPLATE, SERVICE_NODE_TEMPLATE, ARROW_TEMPLATE } from './graph-c
 import { MatDialog } from '@angular/material';
 import { ChangeServiceVersionComponent } from 'src/app/dialogs/change-service-version/change-service-version.component';
 import { debounceTime } from 'rxjs/operators';
+import { ServicePickerComponent } from 'src/app/dialogs/service-picker/service-picker.component';
+import { safeUnsubscribe } from 'src/app/util/utils';
+import { YesNoDialogComponent } from 'src/app/dialogs/yes-no-dialog/yes-no-dialog.component';
 
 
 @Component({
@@ -44,6 +47,10 @@ export class ServiceDependencyGraphComponent implements OnInit, OnChanges {
 
     serviceSubscription: Subscription;
     graphSubscription: Subscription;
+    serviceDependeesSubscription: Subscription;
+
+
+    private dependees;
 
     private lastX = 0;
 
@@ -79,6 +86,9 @@ export class ServiceDependencyGraphComponent implements OnInit, OnChanges {
             if (className === edge.type) { // set edge class according to edge type
                 return true;
             }
+            if (className === 'editable' && edge.source === this.rootId) {
+                return true;
+            }
             return false;
         };
         graph.addEventListener('nodeclick', this.onNodeClick);
@@ -86,6 +96,8 @@ export class ServiceDependencyGraphComponent implements OnInit, OnChanges {
             event.detail.node.wasMovedByUser = true;
         });
         graph.onCreateDraggedEdge = this.onCreateDraggedEdge;
+        graph.addEventListener('edgedrop', this.onEdgeDrop);
+        graph.addEventListener('edgeremove', this.onEdgeRemove);
         graph.updateTemplates([SERVICE_NODE_TEMPLATE], [STYLE_TEMPLATE], [ARROW_TEMPLATE]);
         this.resetGraph();
     }
@@ -94,12 +106,9 @@ export class ServiceDependencyGraphComponent implements OnInit, OnChanges {
         if (changes.shortName != null || changes.version != null) {
             this.rootId = `${this.shortName}-${this.version}`;
             this.resetGraph();
-            if (this.graphSubscription != null) {
-                this.graphSubscription.unsubscribe();
-            }
-            if (this.serviceSubscription != null) {
-                this.serviceSubscription.unsubscribe();
-            }
+            safeUnsubscribe(this.graphSubscription);
+            safeUnsubscribe(this.serviceSubscription);
+            safeUnsubscribe(this.serviceDependeesSubscription);
             if (this.shortName != null && this.version != null) {
                 // listen for dependency graph updates
                 this.graphSubscription = this.api.getServiceDependencyGraph(this.shortName, this.version).pipe(
@@ -107,6 +116,9 @@ export class ServiceDependencyGraphComponent implements OnInit, OnChanges {
                 ).subscribe(dependencyGraph => {
                     this.updateGraph(dependencyGraph);
                 });
+                // get dependees for dialog
+                this.serviceDependeesSubscription = this.api.getServiceDependees(this.shortName, this.version)
+                    .subscribe(dependees => this.dependees = dependees);
                 // listen for direct updates of this service (e.g. to get edits in description or name)
                 this.serviceSubscription = this.api.getService(this.shortName, this.version).subscribe(service => {
                     const serviceId = `${service.shortName}-${service.version}`;
@@ -150,6 +162,64 @@ export class ServiceDependencyGraphComponent implements OnInit, OnChanges {
                 this.changeServiceVersion(event.detail.node, selected);
             });
             return;
+        }
+    }
+
+    /**
+     * Handle edge drop events.
+     */
+    onEdgeDrop = (event: CustomEvent) => {
+        if (event.detail.sourceNode.id === this.rootId) {
+            if (event.detail.edge.createdFrom == null || event.detail.edge.createdFrom === '') {
+                // completely new edge!
+
+                const dialogRef = this.dialog.open(ServicePickerComponent, {
+                    data: {
+                        filter: '',
+                        choice: 'single',
+                        existingDependencies: this.dependees,
+                        serviceId: this.shortName,
+                    }
+                });
+
+                // handle result
+                const subDialog = dialogRef.afterClosed().subscribe(result => {
+                    if (!result) {
+                        return;
+                    }
+                    this.api.postServiceDependee(this.shortName, this.version, result[0]).subscribe();
+                    safeUnsubscribe(subDialog);
+                });
+            }
+        }
+    }
+
+    /**
+     * Handle edge deletion.
+     */
+    onEdgeRemove = (event: CustomEvent) => {
+        console.log(event);
+        const graph: GraphEditor = this.graph.nativeElement;
+        if (event.detail.eventSource === 'USER_INTERACTION') {
+            // cancel user edge delete to show dialog!
+            event.preventDefault();
+            const dependeeNode = graph.getNode(event.detail.edge.target);
+            const dependee = dependeeNode.service;
+            const dialogRef = this.dialog.open(YesNoDialogComponent, {
+                data: {
+                    object: dependee.shortName,
+                    question: 'deleteDependency'
+                }
+            });
+
+            // handle result
+            const subDialog = dialogRef.afterClosed().subscribe(result => {
+                if (!result) {
+                    return;
+                }
+                this.api.deleteServiceDependee(this.shortName, this.version, dependee.shortName, dependee.version).subscribe();
+                safeUnsubscribe(subDialog);
+            });
         }
     }
 

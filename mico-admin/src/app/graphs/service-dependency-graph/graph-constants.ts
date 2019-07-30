@@ -72,11 +72,14 @@ export const STYLE_TEMPLATE = {
         .node.root.hovered {
             fill: #0099ff;
         }
-        .hovered .link-handle {
+        .root.hovered .link-handle {
             display: initial;
         }
         .node.selected {
             fill: #ccff99;
+        }
+        .editable .link-handle {
+            display: initial;
         }
         .includes .edge {
             stroke: #0099ff;
