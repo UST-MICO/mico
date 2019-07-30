@@ -155,7 +155,8 @@ export class ServiceDependencyGraphComponent implements OnInit, OnChanges {
                 }
             });
 
-            dialogRef.afterClosed().subscribe((selected) => {
+            const subDialog = dialogRef.afterClosed().subscribe((selected) => {
+                safeUnsubscribe(subDialog);
                 if (selected == null || selected === '' || event.detail.node.service.version === selected.version) {
                     return;
                 }
@@ -201,8 +202,6 @@ export class ServiceDependencyGraphComponent implements OnInit, OnChanges {
         console.log(event);
         const graph: GraphEditor = this.graph.nativeElement;
         if (event.detail.eventSource === 'USER_INTERACTION') {
-            // cancel user edge delete to show dialog!
-            event.preventDefault();
             const dependeeNode = graph.getNode(event.detail.edge.target);
             const dependee = dependeeNode.service;
             const dialogRef = this.dialog.open(YesNoDialogComponent, {
@@ -215,6 +214,9 @@ export class ServiceDependencyGraphComponent implements OnInit, OnChanges {
             // handle result
             const subDialog = dialogRef.afterClosed().subscribe(result => {
                 if (!result) {
+                    // readd edge on cancel
+                    graph.addEdge(event.detail.edge);
+                    graph.completeRender();
                     return;
                 }
                 this.api.deleteServiceDependee(this.shortName, this.version, dependee.shortName, dependee.version).subscribe();
