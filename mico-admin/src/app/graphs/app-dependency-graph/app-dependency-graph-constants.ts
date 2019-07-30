@@ -42,7 +42,7 @@ export const STYLE_TEMPLATE = {
             opacity: 0.1;
             transition:r 0.25s ease-out;
         }
-        .edge-group:not(.includes):not(.provides) .link-handle {
+        .edge-group:not(.provides) .link-handle {
             display: initial
         }
         .link-handle:hover {
