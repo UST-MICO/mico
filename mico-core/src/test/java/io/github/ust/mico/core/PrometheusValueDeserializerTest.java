@@ -19,13 +19,13 @@
 
 package io.github.ust.mico.core;
 
-import java.io.IOException;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ust.mico.core.dto.response.internal.PrometheusResponseDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.springframework.test.context.ActiveProfiles;
+
+import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -35,7 +35,7 @@ import static org.junit.Assert.assertTrue;
 public class PrometheusValueDeserializerTest {
 
     @Test
-    public void testDeserialize() {
+    public void testDeserialize() throws IOException {
         String testJsonForMemoryUsageRequest = "{\n" +
             "    \"status\": \"success\",\n" +
             "    \"data\": {\n" +
@@ -61,7 +61,7 @@ public class PrometheusValueDeserializerTest {
             "                \"metric\": {},\n" +
             "                \"value\": [\n" +
             "                    1552042589.238,\n" +
-            "                    \"0\"\n" +
+            "                    \"1\"\n" +
             "                ]\n" +
             "            }\n" +
             "        ]\n" +
@@ -81,21 +81,31 @@ public class PrometheusValueDeserializerTest {
             "        ]\n" +
             "    }\n" +
             "}";
+
+        String testJsonEmptyResult = "{\n" +
+            "    \"status\": \"success\",\n" +
+            "    \"data\": {\n" +
+            "        \"resultType\": \"vector\",\n" +
+            "        \"result\": []\n" +
+            "    }\n" +
+            "}";
+
         ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            PrometheusResponseDTO responseCpuLoad = objectMapper.readValue(testJsonForCpuLoadRequest, PrometheusResponseDTO.class);
-            assertTrue(responseCpuLoad.isSuccess());
-            assertEquals(0, responseCpuLoad.getValue());
 
-            PrometheusResponseDTO responseMemoryUsage = objectMapper.readValue(testJsonForMemoryUsageRequest, PrometheusResponseDTO.class);
-            assertTrue(responseMemoryUsage.isSuccess());
-            assertEquals(310083584, responseMemoryUsage.getValue());
+        PrometheusResponseDTO responseCpuLoad = objectMapper.readValue(testJsonForCpuLoadRequest, PrometheusResponseDTO.class);
+        assertTrue(responseCpuLoad.isSuccess());
+        assertEquals(1, responseCpuLoad.getValue());
 
-            PrometheusResponseDTO responseDtoWithoutValue = objectMapper.readValue(testJsonForRequestWithNoValue, PrometheusResponseDTO.class);
-            assertTrue(responseDtoWithoutValue.isSuccess());
-            assertEquals(0, responseDtoWithoutValue.getValue());
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
-        }
+        PrometheusResponseDTO responseMemoryUsage = objectMapper.readValue(testJsonForMemoryUsageRequest, PrometheusResponseDTO.class);
+        assertTrue(responseMemoryUsage.isSuccess());
+        assertEquals(310083584, responseMemoryUsage.getValue());
+
+        PrometheusResponseDTO responseDtoWithoutValue = objectMapper.readValue(testJsonForRequestWithNoValue, PrometheusResponseDTO.class);
+        assertTrue(responseDtoWithoutValue.isSuccess());
+        assertEquals(0, responseDtoWithoutValue.getValue());
+
+        PrometheusResponseDTO responseDTOWithoutValue2 = objectMapper.readValue(testJsonEmptyResult, PrometheusResponseDTO.class);
+        assertTrue(responseDTOWithoutValue2.isSuccess());
+        assertEquals(0, responseDTOWithoutValue2.getValue());
     }
 }

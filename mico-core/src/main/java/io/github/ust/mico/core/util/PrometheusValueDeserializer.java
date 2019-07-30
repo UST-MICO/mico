@@ -19,13 +19,13 @@
 
 package io.github.ust.mico.core.util;
 
-import java.io.IOException;
-
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import lombok.extern.slf4j.Slf4j;
+
+import java.io.IOException;
 
 /**
  * Custom deserializer for a response, which is received from Prometheus for CPU load / memory usage requests.
@@ -48,12 +48,20 @@ public class PrometheusValueDeserializer extends StdDeserializer<Integer> {
         try {
             JsonNode dataJson = parser.getCodec().readTree(parser);
             JsonNode resultJsonArray = dataJson.get("result");
-            JsonNode resultJsonArrayFirstElement = resultJsonArray.get(0);
-            JsonNode valueNode = resultJsonArrayFirstElement.get("value");
-            return valueNode.get(1).asInt();
+            if (resultJsonArray.size() > 0) {
+                JsonNode resultJsonArrayFirstElement = resultJsonArray.get(0);
+                JsonNode valueNode = resultJsonArrayFirstElement.get("value");
+                if (valueNode.size() > 1) {
+                    return valueNode.get(1).asInt();
+                } else {
+                    log.warn("Prometheus returned no values: {}", dataJson);
+                }
+            } else {
+                log.warn("Prometheus returned no result: {}", dataJson);
+            }
         } catch (IOException | NullPointerException e) {
             log.error(e.getMessage(), e);
-            return 0;
         }
+        return 0;
     }
 }
