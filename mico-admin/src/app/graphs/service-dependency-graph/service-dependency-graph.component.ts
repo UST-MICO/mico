@@ -199,7 +199,6 @@ export class ServiceDependencyGraphComponent implements OnInit, OnChanges {
      * Handle edge deletion.
      */
     onEdgeRemove = (event: CustomEvent) => {
-        console.log(event);
         const graph: GraphEditor = this.graph.nativeElement;
         if (event.detail.eventSource === 'USER_INTERACTION') {
             const dependeeNode = graph.getNode(event.detail.edge.target);
