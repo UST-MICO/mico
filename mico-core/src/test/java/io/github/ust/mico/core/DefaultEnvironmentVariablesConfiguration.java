@@ -62,8 +62,6 @@ public class DefaultEnvironmentVariablesConfiguration {
         List<MicoEnvironmentVariable> expectedEnvironmentVariables = new LinkedList<>();
         expectedEnvironmentVariables.add(new MicoEnvironmentVariable().setName(KAFKA_BOOTSTRAP_SERVERS.name()).setValue(kafkaConfig.getBootstrapServers()));
         expectedEnvironmentVariables.add(new MicoEnvironmentVariable().setName(KAFKA_GROUP_ID.name()).setValue(kafkaConfig.getGroupId()));
-        expectedEnvironmentVariables.add(new MicoEnvironmentVariable().setName(KAFKA_TOPIC_INPUT.name()).setValue(kafkaConfig.getInputTopic()));
-        expectedEnvironmentVariables.add(new MicoEnvironmentVariable().setName(KAFKA_TOPIC_OUTPUT.name()).setValue(kafkaConfig.getOutputTopic()));
         expectedEnvironmentVariables.add(new MicoEnvironmentVariable().setName(KAFKA_TOPIC_DEAD_LETTER.name()).setValue(kafkaConfig.getDeadLetterTopic()));
         expectedEnvironmentVariables.add(new MicoEnvironmentVariable().setName(KAFKA_TOPIC_INVALID_MESSAGE.name()).setValue(kafkaConfig.getInvalidMessageTopic()));
         expectedEnvironmentVariables.add(new MicoEnvironmentVariable().setName(KAFKA_TOPIC_TEST_MESSAGE_OUTPUT.name()).setValue(kafkaConfig.getTestMessageOutputTopic()));

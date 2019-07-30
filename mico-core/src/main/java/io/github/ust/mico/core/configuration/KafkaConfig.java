@@ -54,18 +54,6 @@ public class KafkaConfig {
     private String groupId;
 
     /**
-     * The Kafka input topic.
-     */
-    @NotBlank
-    private String inputTopic;
-
-    /**
-     * The Kafka output topic.
-     */
-    @NotBlank
-    private String outputTopic;
-
-    /**
      * Used to report message processing errors
      */
     @NotBlank
@@ -85,9 +73,7 @@ public class KafkaConfig {
         micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironmentVariableKafkaNames.KAFKA_BOOTSTRAP_SERVERS.name()).setValue(bootstrapServers));
         micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironmentVariableKafkaNames.KAFKA_GROUP_ID.name()).setValue(groupId));
         micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironmentVariableKafkaNames.KAFKA_TOPIC_DEAD_LETTER.name()).setValue(deadLetterTopic));
-        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironmentVariableKafkaNames.KAFKA_TOPIC_INPUT.name()).setValue(inputTopic));
         micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironmentVariableKafkaNames.KAFKA_TOPIC_INVALID_MESSAGE.name()).setValue(invalidMessageTopic));
-        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironmentVariableKafkaNames.KAFKA_TOPIC_OUTPUT.name()).setValue(outputTopic));
         micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironmentVariableKafkaNames.KAFKA_TOPIC_TEST_MESSAGE_OUTPUT.name()).setValue(testMessageOutputTopic));
         return micoEnvironmentVariables;
     }
