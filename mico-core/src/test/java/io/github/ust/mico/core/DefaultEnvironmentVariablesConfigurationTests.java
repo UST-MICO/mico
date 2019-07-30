@@ -25,8 +25,6 @@ import io.github.ust.mico.core.model.MicoEnvironmentVariable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -41,10 +39,8 @@ import static org.junit.Assert.assertThat;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-@AutoConfigureMockMvc
-@EnableAutoConfiguration
 @ActiveProfiles("local")
-public class DefaultEnvironmentVariablesConfiguration {
+public class DefaultEnvironmentVariablesConfigurationTests {
 
     @Autowired
     OpenFaaSConfig openFaaSConfig;
@@ -70,7 +66,7 @@ public class DefaultEnvironmentVariablesConfiguration {
         expectedEnvironmentVariables.add(new MicoEnvironmentVariable().setName(KAFKA_TOPIC_INVALID_MESSAGE.name()).setValue(kafkaConfig.getInvalidMessageTopic()));
         expectedEnvironmentVariables.add(new MicoEnvironmentVariable().setName(KAFKA_TOPIC_TEST_MESSAGE_OUTPUT.name()).setValue(kafkaConfig.getTestMessageOutputTopic()));
 
-        assertThat(kafkaConfig.getDefaultEnvironmentVariablesForKafka(), hasSize(7));
+        assertThat(kafkaConfig.getDefaultEnvironmentVariablesForKafka(), hasSize(5));
         assertThat(kafkaConfig.getDefaultEnvironmentVariablesForKafka(), containsInAnyOrder(expectedEnvironmentVariables.toArray()));
     }
 
