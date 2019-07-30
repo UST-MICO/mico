@@ -32,6 +32,10 @@ import { safeUnsubscribe, safeUnsubscribeList } from 'src/app/util/utils';
 import { YesNoDialogComponent } from 'src/app/dialogs/yes-no-dialog/yes-no-dialog.component';
 import { GraphAddEnvironmentVariableComponent } from 'src/app/dialogs/graph-add-environment-variable/graph-add-environment-variable.component';
 import { Router } from '@angular/router';
+import { ServicePickerComponent } from 'src/app/dialogs/service-picker/service-picker.component';
+
+
+const ROOT_NODE_ID = 'APPLICATION';
 
 
 @Component({
@@ -112,6 +116,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         graph.addEventListener('nodeclick', this.onNodeClick);
         graph.addEventListener('nodepositionchange', this.onNodeMove);
         graph.addEventListener('edgeadd', this.onEdgeAdd);
+        graph.addEventListener('edgedrop', this.onEdgeDrop);
         graph.addEventListener('edgeremove', this.onEdgeRemove);
         graph.onCreateDraggedEdge = this.onCreateDraggedEdge;
         graph.updateTemplates([SERVICE_NODE_TEMPLATE, SERVICE_INTERFACE_NODE_TEMPLATE, APPLICATION_NODE_TEMPLATE],
@@ -172,7 +177,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
      * Handle node click events.
      */
     onNodeClick = (event: CustomEvent) => {
-        if (event.detail.node.id === 'APPLICATION' || event.detail.node.type === 'service-interface') {
+        if (event.detail.node.id === ROOT_NODE_ID || event.detail.node.type === 'service-interface') {
             event.preventDefault();  // prevent selecting application node and interface nodes
             return;
         }
@@ -202,7 +207,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
      * Handle node move events.
      */
     onNodeMove = (event: CustomEvent) => {
-        if (event.detail.node.id === 'APPLICATION') {
+        if (event.detail.node.id === ROOT_NODE_ID) {
             return;
         }
         if (event.detail.node.type === 'service') {  // user moved a service node
@@ -252,7 +257,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             return;
         }
         edge.markerEnd = { template: 'arrow', positionOnLine: 1, lineOffset: 4, scale: 0.5, rotate: { relativeAngle: 0 } };
-        if (edge.source === 'APPLICATION') {
+        if (edge.source === ROOT_NODE_ID) {
             edge.type = 'includes';
             edge.markerEnd.lineOffset = 8;
             edge.markerEnd.scale = 1;
@@ -273,7 +278,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                     // remove all service nodes from valid targets
                     edge.validTargets.delete(key);
                 });
-                edge.validTargets.delete('APPLICATION');
+                edge.validTargets.delete(ROOT_NODE_ID);
             } else {
                 // remove valid targets from edges that were created from an existing edge
                 // forcing the user to drop the edge in the void
@@ -305,21 +310,75 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
     }
 
     /**
+     * Handle edge drop events.
+     */
+    onEdgeDrop = (event: CustomEvent) => {
+        if (event.detail.sourceNode.id === ROOT_NODE_ID) {
+            if (event.detail.edge.createdFrom == null || event.detail.edge.createdFrom === '') {
+                // completely new edge!
+                const dialogRef = this.dialog.open(ServicePickerComponent, {
+                    data: {
+                        filter: '',
+                        choice: 'single',
+                        existingDependencies: this.application.services,
+                        serviceId: '',
+                    }
+                });
+
+                const subDependeesDialog = dialogRef.afterClosed().subscribe(result => {
+                    safeUnsubscribe(subDependeesDialog);
+
+                    if (result === '') {
+                        return;
+                    }
+
+                    result.forEach(service => {
+                        this.api.postApplicationServices(this.application.shortName,
+                            this.application.version, service.shortName, service.version)
+                            .subscribe();
+                    });
+                });
+            }
+        }
+    }
+
+    /**
      * Handle edgeremove events from the grapheditor.
      */
     onEdgeRemove = (event: CustomEvent) => {
         const graph: GraphEditor = this.graph.nativeElement;
-        const edge: Edge = event.detail.edge;
-        if (edge.silentDelete) {
+        if (event.detail.eventSource !== 'USER_INTERACTION') {
             // for deletes that do not require further user interaction
             return;
         }
+        const edge: Edge = event.detail.edge;
         if (edge.type === 'interface-connection') {
             // fetch all involved nodes for an interface connection edge
             const sourceNode = graph.getNode(edge.source) as ServiceNode;
             const targetNode = graph.getNode(edge.target) as ServiceInterfaceNode;
             const targetService = graph.getNode(targetNode.serviceId) as ServiceNode;
             this.removeInterfaceConnection(edge, sourceNode, targetService, targetNode);
+        }
+        if (edge.type === 'includes') {
+            const serviceNode = graph.getNode(edge.target);
+            const service = serviceNode.service;
+            const dialogRef = this.dialog.open(YesNoDialogComponent, {
+                data: {
+                    object: service.shortName,
+                    question: 'deleteDependency'
+                }
+            });
+
+            const subServiceDependency = dialogRef.afterClosed().subscribe(shouldDelete => {
+                safeUnsubscribe(subServiceDependency);
+                if (shouldDelete) {
+                    this.api.deleteApplicationServices(this.application.shortName, this.application.version, service.shortName)
+                        .subscribe();
+                } else {
+                    graph.addEdge(edge);
+                    graph.completeRender();
+                }
+            });
         }
     }
 
@@ -349,7 +408,6 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             if (!result) {
                 const graph: GraphEditor = this.graph.nativeElement;
                 // prevent dialog popup on edge delete
-                edge.silentDelete = true;
                 graph.removeEdge(edge, false);
                 graph.completeRender();
                 return;
@@ -495,10 +553,10 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             toDelete.add(node.id as string);
         });
 
-        if (graph.getNode('APPLICATION') == null) {
+        if (graph.getNode(ROOT_NODE_ID) == null) {
             // create new application root node if node does not exist
             const node: ApplicationNode = {
-                id: 'APPLICATION',
+                id: ROOT_NODE_ID,
                 x: 0,
                 y: 0,
                 type: 'application',
@@ -512,7 +570,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             };
             graph.addNode(node, false);
         } else {
-            const node: ApplicationNode = graph.getNode('APPLICATION') as ApplicationNode;
+            const node: ApplicationNode = graph.getNode(ROOT_NODE_ID) as ApplicationNode;
             node.status = applicationStatus;
         }
 
@@ -560,7 +618,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 graph.addNode(node, false);
                 // add edge from root to service node
                 const edge: Edge = {
-                    source: 'APPLICATION',
+                    source: ROOT_NODE_ID,
                     target: serviceId,
                     type: 'includes',
                     markerEnd: {
@@ -582,9 +640,6 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             const node = nodeMap.get(nodeId);
             node.interfaces.forEach((interfaceId) => {
                 const interfaceNode = interfaceNodeMap.get(interfaceId);
-                // mark interface connection edges as silent delete to prevent dialog popups
-                graph.getEdgesBySource(interfaceId).forEach((edge) => edge.silentDelete = true);
-                graph.getEdgesByTarget(interfaceId).forEach((edge) => edge.silentDelete = true);
                 graph.removeNode(interfaceNode);
                 interfaceNodeMap.delete(interfaceId);
             });
@@ -647,9 +702,6 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         toDelete.forEach((interfaceId) => {
             const node = nodeMap.get(interfaceId);
             serviceNode.interfaces.delete(interfaceId);
-            // mark interface connection edges as silent delete to prevent dialog popups
-            graph.getEdgesBySource(interfaceId).forEach((edge) => edge.silentDelete = true);
-            graph.getEdgesByTarget(interfaceId).forEach((edge) => edge.silentDelete = true);
             graph.removeNode(node);
             nodeMap.delete(interfaceId);
         });
@@ -701,8 +753,6 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         });
 
         toRemove.forEach((edge) => {
-            // prevent dialog popup on edge delete
-            edge.silentDelete = true;
             graph.removeEdge(edge, false);
         });
     }
