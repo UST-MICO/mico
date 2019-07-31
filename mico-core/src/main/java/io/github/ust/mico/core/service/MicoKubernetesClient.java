@@ -19,26 +19,19 @@
 
 package io.github.ust.mico.core.service;
 
-import java.net.PasswordAuthentication;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
-import io.fabric8.kubernetes.client.dsl.Resource;
-import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.internal.SerializationUtils;
 import io.github.ust.mico.core.broker.BackgroundJobBroker;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
-import io.fabric8.kubernetes.client.internal.SerializationUtils;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
+import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus.Value;
 import io.github.ust.mico.core.persistence.KubernetesDeploymentInfoRepository;
@@ -49,6 +42,12 @@ import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.UIDUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.net.PasswordAuthentication;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Provides accessor methods for creating deployments and services in Kubernetes as well as getter methods to retrieve
@@ -109,7 +108,7 @@ public class MicoKubernetesClient {
     /**
      * The name of the secret which holds the OpenFaaS username and password.
      */
-    public static final String OPEN_FAAS_SECRET_NAME_BASIC_AUTH = "basic-auth";
+    public static final String OPEN_FAAS_SECRET_NAME = "basic-auth";
 
     /**
      * The name of the data element which holds the OpenFaaS password inside the secret.
@@ -1238,20 +1237,20 @@ public class MicoKubernetesClient {
     }
 
     /**
-     * Requests the OpenFaaS credentials from a kubernetes secret.
+     * Requests the OpenFaaS credentials from a Kubernetes secret.
+     *
      * @return the username and the password
      */
     public PasswordAuthentication getOpenFaasCredentials() {
         log.debug("Requesting OpenFaaS username and password");
         NonNamespaceOperation<Secret, SecretList, DoneableSecret, Resource<Secret, DoneableSecret>> secrets = kubernetesClient.secrets().inNamespace(micoKubernetesConfig.getNamespaceOpenFaasWorkspace());
-        Secret basicAuthSecret = secrets.withName(OPEN_FAAS_SECRET_NAME_BASIC_AUTH).get();
+        Secret basicAuthSecret = secrets.withName(OPEN_FAAS_SECRET_NAME).get();
         Map<String, String> basicAuthSecretData = basicAuthSecret.getData();
         final String base64Password = basicAuthSecretData.get(OPEN_FAAS_SECRET_DATA_PASSWORD_NAME);
         final String base64UserName = basicAuthSecretData.get(OPEN_FAAS_SECRET_DATA_USERNAME_NAME);
         final String password = new String(Base64.getDecoder().decode(base64Password));
         final String userName = new String(Base64.getDecoder().decode(base64UserName));
-        PasswordAuthentication passwordAuthentication = new PasswordAuthentication(userName,password.toCharArray());
-        return  passwordAuthentication;
+        return new PasswordAuthentication(userName, password.toCharArray());
     }
 
 }

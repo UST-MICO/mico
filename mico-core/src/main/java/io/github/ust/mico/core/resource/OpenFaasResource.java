@@ -58,8 +58,8 @@ public class OpenFaasResource {
             String openFaasFunctionListURI = openFaaSConfig.getGateway() + OPEN_FAAS_FUNCTION_LIST_PATH;
             log.debug("OpenFaaS function list uri {}", openFaasFunctionListURI);
             return restTemplate.getForEntity(openFaasFunctionListURI, String.class);
-        } catch (ResourceAccessException e){
-            log.debug("There was an I/O Error for GET {}{}",OPEN_FAAS_BASE_PATH,FUNCTIONS_PATH,e);
+        } catch (ResourceAccessException e) {
+            log.debug("There was an I/O Error for GET {}{}", OPEN_FAAS_BASE_PATH, FUNCTIONS_PATH, e);
             throw new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT, e.getMessage());
         }
     }

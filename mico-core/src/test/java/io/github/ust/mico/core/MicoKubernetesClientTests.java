@@ -19,39 +19,18 @@
 
 package io.github.ust.mico.core;
 
-import static io.github.ust.mico.core.TestConstants.*;
-import static io.github.ust.mico.core.service.MicoKubernetesClient.*;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
-import static org.mockito.BDDMockito.*;
-
-import java.net.PasswordAuthentication;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.junit4.SpringRunner;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
-
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentList;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
-import io.github.ust.mico.core.TestConstants.IntegrationTest;
+import io.github.ust.mico.core.TestConstants.*;
 import io.github.ust.mico.core.broker.BackgroundJobBroker;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
+import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.model.MicoServiceBackgroundJob.Status;
 import io.github.ust.mico.core.persistence.KubernetesDeploymentInfoRepository;
@@ -61,6 +40,26 @@ import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.UIDUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import java.net.PasswordAuthentication;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static io.github.ust.mico.core.TestConstants.*;
+import static io.github.ust.mico.core.service.MicoKubernetesClient.*;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.*;
+import static org.mockito.BDDMockito.any;
+import static org.mockito.BDDMockito.given;
 
 @Slf4j
 @RunWith(SpringRunner.class)
@@ -773,7 +772,7 @@ public class MicoKubernetesClientTests {
 
 
     @Test
-    public void testGetOpenFaaSCredentialsTest(){
+    public void testGetOpenFaaSCredentialsTest() {
         String testPassword = "testPassword";
         String testUsername = "testUsername";
 
@@ -785,9 +784,9 @@ public class MicoKubernetesClientTests {
         mockServer.getClient().secrets().
             inNamespace(micoKubernetesConfig.getNamespaceOpenFaasWorkspace())
             .create(new SecretBuilder()
-                .addToData(OPEN_FAAS_SECRET_DATA_PASSWORD_NAME,testPasswordBase64)
-                .addToData(OPEN_FAAS_SECRET_DATA_USERNAME_NAME,testUsernameBase64)
-                .withNewMetadata().withName(OPEN_FAAS_SECRET_NAME_BASIC_AUTH).endMetadata().build());
+                .addToData(OPEN_FAAS_SECRET_DATA_PASSWORD_NAME, testPasswordBase64)
+                .addToData(OPEN_FAAS_SECRET_DATA_USERNAME_NAME, testUsernameBase64)
+                .withNewMetadata().withName(OPEN_FAAS_SECRET_NAME).endMetadata().build());
 
         PasswordAuthentication openFaasCredentials = micoKubernetesClient.getOpenFaasCredentials();
 

@@ -37,25 +37,36 @@ public class RestTemplates {
     public static final String QUALIFIER_AUTHENTICATED_OPEN_FAAS_REST_TEMPLATE = "AuthenticatedOpenFaaSRestTemplate";
 
     @Autowired
-    MicoKubernetesClient kubernetesClient;
+    MicoKubernetesClient micoKubernetesClient;
 
+    /**
+     * Constructs the rest template to be able to connect the OpenFaaS Portal.
+     * It uses the OpenFaaS credentials that are stored inside a Kubernetes secret.
+     *
+     * The Spring Bean Request Scope in proxy mode {@code ScopedProxyMode.TARGET_CLASS} is used,
+     * so that it will be instantiated when it is needed (prevents errors during application context is loading).
+     *
+     * @param builder the {@link RestTemplateBuilder}
+     * @return the {@link RestTemplate}
+     */
     @Bean
     @Qualifier(QUALIFIER_AUTHENTICATED_OPEN_FAAS_REST_TEMPLATE)
     @Scope(value = WebApplicationContext.SCOPE_APPLICATION, proxyMode = ScopedProxyMode.TARGET_CLASS)
     public RestTemplate getAuthenticatedOpenFaaSRestTemplate(RestTemplateBuilder builder) {
-        PasswordAuthentication passwordAuthentication = kubernetesClient.getOpenFaasCredentials();
-        log.debug("Building authenticated openFaaS rest template");
+        PasswordAuthentication passwordAuthentication = micoKubernetesClient.getOpenFaasCredentials();
+        log.debug("Building authenticated OpenFaaS rest template with username '{}' and password XXX.", passwordAuthentication.getUserName());
         return builder.basicAuthentication(passwordAuthentication.getUserName(), new String(passwordAuthentication.getPassword())).build();
     }
 
     /**
      * Prefer the not authenticated rest template
+     *
      * @param builder
      * @return
      */
     @Primary
     @Bean
-    public RestTemplate getRestTemplate(RestTemplateBuilder builder){
+    public RestTemplate getRestTemplate(RestTemplateBuilder builder) {
         return new RestTemplate();
     }
 }
