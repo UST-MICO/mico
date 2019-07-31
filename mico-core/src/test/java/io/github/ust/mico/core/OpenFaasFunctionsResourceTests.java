@@ -25,6 +25,7 @@ import io.github.ust.mico.core.util.RestTemplates;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.neo4j.server.rest.RESTRequestGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -36,7 +37,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
+
+import javax.xml.ws.Response;
 
 import static io.github.ust.mico.core.resource.OpenFaasResource.*;
 import static org.mockito.BDDMockito.given;
@@ -64,6 +68,8 @@ public class OpenFaasFunctionsResourceTests {
     @Test
     public void getFunctionsListNotReachable() throws Exception {
         given(openFaaSConfig.getGateway()).willReturn("http://notReachableHost.test");
+        given(restTemplate.getForEntity(openFaaSConfig.getGateway() + OPEN_FAAS_FUNCTION_LIST_PATH, String.class)).willThrow(new ResourceAccessException(" I/O error"));
+
         mvc.perform(get(OPEN_FAAS_BASE_PATH + FUNCTIONS_PATH).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isGatewayTimeout())
