@@ -42,4 +42,11 @@ public class MicoKubernetesConfig {
     @NotBlank
     private String namespaceMicoWorkspace;
 
+
+    /**
+     * The name of the OpenFaaS namespace
+     */
+    @NotBlank
+    private String namespaceOpenFaasWorkspace;
+
 }

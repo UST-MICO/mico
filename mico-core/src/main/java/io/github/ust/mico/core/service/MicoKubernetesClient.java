@@ -19,12 +19,12 @@
 
 package io.github.ust.mico.core.service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.net.PasswordAuthentication;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
 import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -104,6 +104,22 @@ public class MicoKubernetesClient {
      * For more information see https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#revision-history-limit
      */
     private static final Integer REVISION_HISTORY_LIMIT = 0;
+
+
+    /**
+     * The name of the secret which holds the OpenFaaS username and password.
+     */
+    public static final String OPEN_FAAS_SECRET_NAME_BASIC_AUTH = "basic-auth";
+
+    /**
+     * The name of the data element which holds the OpenFaaS password inside the secret.
+     */
+    public static final String OPEN_FAAS_SECRET_DATA_PASSWORD_NAME = "basic-auth-password";
+
+    /**
+     * The name of the data element which holds the OpenFaaS username inside the secret
+     */
+    public static final String OPEN_FAAS_SECRET_DATA_USERNAME_NAME = "basic-auth-user";
 
     private final MicoKubernetesConfig micoKubernetesConfig;
     private final MicoKubernetesBuildBotConfig buildBotConfig;
@@ -1219,6 +1235,19 @@ public class MicoKubernetesClient {
         }
 
         return serviceDeploymentInfoOptional.get();
+    }
+
+    public PasswordAuthentication getOpenFaasCredentials() {
+        log.debug("Requesting OpenFaaS username and password");
+        NonNamespaceOperation<Secret, SecretList, DoneableSecret, Resource<Secret, DoneableSecret>> secrets = kubernetesClient.secrets().inNamespace(micoKubernetesConfig.getNamespaceOpenFaasWorkspace());
+        Secret basicAuthSecret = secrets.withName(OPEN_FAAS_SECRET_NAME_BASIC_AUTH).get();
+        Map<String, String> basicAuthSecretData = basicAuthSecret.getData();
+        final String base64Password = basicAuthSecretData.get(OPEN_FAAS_SECRET_DATA_PASSWORD_NAME);
+        final String base64UserName = basicAuthSecretData.get(OPEN_FAAS_SECRET_DATA_USERNAME_NAME);
+        final String password = new String(Base64.getDecoder().decode(base64Password));
+        final String userName = new String(Base64.getDecoder().decode(base64UserName));
+        PasswordAuthentication passwordAuthentication = new PasswordAuthentication(userName,password.toCharArray());
+        return  passwordAuthentication;
     }
 
 }
