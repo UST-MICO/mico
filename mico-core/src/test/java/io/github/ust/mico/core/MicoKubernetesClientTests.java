@@ -20,13 +20,18 @@
 package io.github.ust.mico.core;
 
 import static io.github.ust.mico.core.TestConstants.*;
+import static io.github.ust.mico.core.service.MicoKubernetesClient.*;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 import static org.mockito.BDDMockito.*;
 
+import java.net.PasswordAuthentication;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -57,6 +62,7 @@ import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.UIDUtils;
 
+@Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class MicoKubernetesClientTests {
@@ -763,6 +769,30 @@ public class MicoKubernetesClientTests {
             "  namespace: \"" + testNamespace + "\"\n" +
             "spec:\n" +
             "  selector: {}\n", micoKubernetesClient.getYaml(micoService));
+    }
+
+
+    @Test
+    public void testGetOpenFaaSCredentialsTest(){
+        String testPassword = "testPassword";
+        String testUsername = "testUsername";
+
+        String testPasswordBase64 = Base64.getEncoder().encodeToString(testPassword.getBytes());
+        String testUsernameBase64 = Base64.getEncoder().encodeToString(testUsername.getBytes());
+
+        given(micoKubernetesConfig.getNamespaceOpenFaasWorkspace()).willReturn("openfaas");
+
+        mockServer.getClient().secrets().
+            inNamespace(micoKubernetesConfig.getNamespaceOpenFaasWorkspace())
+            .create(new SecretBuilder()
+                .addToData(OPEN_FAAS_SECRET_DATA_PASSWORD_NAME,testPasswordBase64)
+                .addToData(OPEN_FAAS_SECRET_DATA_USERNAME_NAME,testUsernameBase64)
+                .withNewMetadata().withName(OPEN_FAAS_SECRET_NAME_BASIC_AUTH).endMetadata().build());
+
+        PasswordAuthentication openFaasCredentials = micoKubernetesClient.getOpenFaasCredentials();
+
+        assertThat(openFaasCredentials.getUserName(), is(equalTo(testUsername)));
+        assertThat(new String(openFaasCredentials.getPassword()), is(equalTo(testPassword)));
     }
 
     private Deployment getDeploymentObject(MicoService micoService, String deploymentUid) {

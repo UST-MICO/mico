@@ -21,32 +21,35 @@ package io.github.ust.mico.core;
 
 import io.github.ust.mico.core.configuration.OpenFaaSConfig;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.util.RestTemplates;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.MediaTypes;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.client.RestTemplate;
 
-import static io.github.ust.mico.core.resource.OpenFaasResource.FUNCTIONS_PATH;
-import static io.github.ust.mico.core.resource.OpenFaasResource.OPEN_FAAS_BASE_PATH;
+import static io.github.ust.mico.core.resource.OpenFaasResource.*;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("local")
 @AutoConfigureMockMvc
-public class OpenFaasFunctionsTests {
+public class OpenFaasFunctionsResourceTests {
 
     @Autowired
     private MockMvc mvc;
@@ -54,6 +57,9 @@ public class OpenFaasFunctionsTests {
     @MockBean
     OpenFaaSConfig openFaaSConfig;
 
+    @MockBean
+    @Qualifier(RestTemplates.QUALIFIER_AUTHENTICATED_OPEN_FAAS_REST_TEMPLATE)
+    RestTemplate restTemplate;
 
     @Test
     public void getFunctionsListNotReachable() throws Exception {
@@ -61,6 +67,19 @@ public class OpenFaasFunctionsTests {
         mvc.perform(get(OPEN_FAAS_BASE_PATH + FUNCTIONS_PATH).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isGatewayTimeout())
+            .andReturn();
+    }
+
+    @Test
+    public void getFunctionsListReachable() throws Exception {
+        given(openFaaSConfig.getGateway()).willReturn("http://reachableHost.test");
+        String testBody = "TestBody";
+        ResponseEntity<String> responseEntity = new ResponseEntity<>("TestBody", HttpStatus.OK);
+        given(restTemplate.getForEntity(openFaaSConfig.getGateway() + OPEN_FAAS_FUNCTION_LIST_PATH, String.class)).willReturn(responseEntity);
+        mvc.perform(get(OPEN_FAAS_BASE_PATH + FUNCTIONS_PATH).accept(MediaTypes.HAL_JSON_VALUE))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(content().string(testBody))
             .andReturn();
     }
 }

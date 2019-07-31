@@ -1237,6 +1237,10 @@ public class MicoKubernetesClient {
         return serviceDeploymentInfoOptional.get();
     }
 
+    /**
+     * Requests the OpenFaaS credentials from a kubernetes secret.
+     * @return the username and the password
+     */
     public PasswordAuthentication getOpenFaasCredentials() {
         log.debug("Requesting OpenFaaS username and password");
         NonNamespaceOperation<Secret, SecretList, DoneableSecret, Resource<Secret, DoneableSecret>> secrets = kubernetesClient.secrets().inNamespace(micoKubernetesConfig.getNamespaceOpenFaasWorkspace());

@@ -21,6 +21,7 @@ package io.github.ust.mico.core.resource;
 
 
 import io.github.ust.mico.core.configuration.OpenFaaSConfig;
+import io.github.ust.mico.core.util.RestTemplates;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -42,9 +43,10 @@ public class OpenFaasResource {
     public static final String OPEN_FAAS_BASE_PATH = "/openfaas";
 
     public static final String FUNCTIONS_PATH = "/functions";
+    public static final String OPEN_FAAS_FUNCTION_LIST_PATH = "/system/functions";
 
     @Autowired
-    @Qualifier("AuthenticatedOpenFaaSRestTemplate")
+    @Qualifier(RestTemplates.QUALIFIER_AUTHENTICATED_OPEN_FAAS_REST_TEMPLATE)
     RestTemplate restTemplate;
 
     @Autowired
@@ -53,7 +55,7 @@ public class OpenFaasResource {
     @GetMapping(FUNCTIONS_PATH)
     public ResponseEntity<String> getOpenFaasFunctions() {
         try {
-            return restTemplate.getForEntity(openFaaSConfig.getGateway() + "/system/functions", String.class);
+            return restTemplate.getForEntity(openFaaSConfig.getGateway() + OPEN_FAAS_FUNCTION_LIST_PATH, String.class);
         } catch (ResourceAccessException e){
             log.debug("There was an I/O Error for GET {}{}",OPEN_FAAS_BASE_PATH,FUNCTIONS_PATH,e);
             throw new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT, e.getMessage());
