@@ -20,12 +20,10 @@
 package io.github.ust.mico.core;
 
 import io.github.ust.mico.core.configuration.OpenFaaSConfig;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.util.RestTemplates;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.neo4j.server.rest.RESTRequestGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -39,9 +37,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
-
-import javax.xml.ws.Response;
-
 import static io.github.ust.mico.core.resource.OpenFaasResource.*;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
