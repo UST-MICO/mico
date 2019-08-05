@@ -49,7 +49,7 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-public class MicoServiceDeploymentInfoRequestDTO {
+public class    MicoServiceDeploymentInfoRequestDTO {
 
     /**
      * Number of desired instances. Defaults to 1.

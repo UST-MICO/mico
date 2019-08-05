@@ -114,6 +114,15 @@ public class MicoServiceDeploymentInfo {
     @Relationship(type = "HAS")
     private List<MicoInterfaceConnection> interfaceConnections = new ArrayList<>();
 
+
+    /**
+     * The list of topics that are used in the deployment of this {@link MicoService}.
+     */
+
+    @Relationship(type = "HAS")
+    private List<MicoTopic> topics = new ArrayList<>();
+
+
     /**
      * Indicates whether and when to pull the image.
      * Default image pull policy is {@link ImagePullPolicy#ALWAYS Always}.
