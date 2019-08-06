@@ -18,6 +18,8 @@
  */
 
 import { Component, OnInit } from '@angular/core';
+import { ApiService } from '../api/api.service';
+
 
 @Component({
   selector: 'mico-toolbar',
@@ -26,9 +28,13 @@ import { Component, OnInit } from '@angular/core';
 })
 export class ToolbarComponent implements OnInit {
 
-  constructor() { }
+  openFaaSIp;
+
+  constructor(private apiService: ApiService) { }
 
   ngOnInit() {
+      console.log(this.apiService.getOpenFaaSIp());
+      this.openFaaSIp = this.apiService.getOpenFaaSIp();
   }
 
 }
