@@ -100,14 +100,15 @@ public class MicoServiceDeploymentInfoRequestDTO {
     private List<MicoLabelRequestDTO> labels = new ArrayList<>();
 
     /**
-     * Topics that are TODO: Description
+     * Kafka topics that are TODO: Description
+     * Possible roles for the topics are INPUT, OUTPUT, DEAD_LETTER, INVALID_MESSAGE, TEST_MESSAGE_OUTPUT
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
             @ExtensionProperty(name = "title", value = "Topics"),
             @ExtensionProperty(name = "x-order", value = "42"),
-            @ExtensionProperty(name = "description", value = "Topics")
+            @ExtensionProperty(name = "description", value = "Topics ")
         }
     )})
     @JsonSetter(nulls = Nulls.SKIP)

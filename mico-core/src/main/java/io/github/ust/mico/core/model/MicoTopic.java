@@ -32,6 +32,7 @@ import org.neo4j.ogm.annotation.NodeEntity;
 /**
  * A Topic represented a kafka-topic
  * Instances of this class are persisted as nodes in the neo4j database
+ * Possible roles for the topics are INPUT, OUTPUT, DEAD_LETTER, INVALID_MESSAGE, TEST_MESSAGE_OUTPUT
  * <p>
  */
 @Data
