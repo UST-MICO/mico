@@ -1192,8 +1192,8 @@ export class ApiService {
     /**
      *
      */
-    getOpenFaaSIp(): Observable<Readonly<ApiObject>> {
-        const resource = '/openFaaS/publicIp';
+    getOpenFaaSIp() {
+        const resource = '/openFaaS/externalAddress';
         const stream = this.getStreamSource<ApiObject>(resource);
 
         this.rest.get<ApiObject>(resource).subscribe(val => {

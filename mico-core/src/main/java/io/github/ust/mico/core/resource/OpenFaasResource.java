@@ -23,6 +23,7 @@ package io.github.ust.mico.core.resource;
 import io.github.ust.mico.core.broker.OpenFaasBroker;
 import io.github.ust.mico.core.configuration.OpenFaaSConfig;
 import io.github.ust.mico.core.dto.response.ExternalUrlDTO;
+import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.util.RestTemplates;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +39,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.net.MalformedURLException;
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -49,7 +51,7 @@ public class OpenFaasResource {
     public static final String FUNCTIONS_PATH = "/functions";
     public static final String OPEN_FAAS_FUNCTION_LIST_PATH = "/system/functions";
 
-    public static final String PUBLIC_IP = "/publicIp";
+    public static final String EXTERNAL_ADDRESS = "/externalAddress";
 
     @Autowired
     @Qualifier(RestTemplates.QUALIFIER_AUTHENTICATED_OPEN_FAAS_REST_TEMPLATE)
@@ -73,13 +75,14 @@ public class OpenFaasResource {
         }
     }
 
-    @GetMapping(PUBLIC_IP)
+    @GetMapping(EXTERNAL_ADDRESS)
     public ResponseEntity<ExternalUrlDTO> getOpenFaasURL() {
         try {
-            String externalAddress = openFaasBroker.getExternalAddress();
+            Optional<String> externalAddressOptional = openFaasBroker.getExternalAddress();
+            String externalAddress = externalAddressOptional.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "There is no external address associated with the OpenFaaS UI"));
             ExternalUrlDTO externalUrlDTO = new ExternalUrlDTO(externalAddress);
             return ResponseEntity.ok().body(externalUrlDTO);
-        } catch (MalformedURLException e) {
+        } catch (MalformedURLException | KubernetesResourceException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
 
