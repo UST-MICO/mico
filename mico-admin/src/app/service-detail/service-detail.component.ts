@@ -17,18 +17,18 @@
  * under the License.
  */
 
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { MatDialog } from '@angular/material';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { take } from 'rxjs/operators';
 
 import { ApiService } from '../api/api.service';
-import { Subscription } from 'rxjs';
 import { ApiObject } from '../api/apiobject';
 import { versionComparator } from '../api/semantic-version';
-import { MatDialog } from '@angular/material';
+import { CreateNextVersionComponent } from '../dialogs/create-next-version/create-next-version.component';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 import { safeUnsubscribe } from '../util/utils';
-import { CreateNextVersionComponent } from '../dialogs/create-next-version/create-next-version.component';
-import { take } from 'rxjs/operators';
 
 export interface Service extends ApiObject {
     name: string;

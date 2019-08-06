@@ -18,9 +18,12 @@
  */
 
 import { Component, Input, OnChanges } from '@angular/core';
-import { ApiService } from '../api/api.service';
-import { DeploymentInformationDialogComponent } from '../dialogs/deployment-information-dialog/deployment-information-dialog.component';
 import { MatDialog } from '@angular/material';
+
+import { ApiService } from '../api/api.service';
+import {
+    DeploymentInformationDialogComponent
+} from '../dialogs/deployment-information-dialog/deployment-information-dialog.component';
 
 @Component({
     selector: 'mico-app-detail-overview-deployment-information',

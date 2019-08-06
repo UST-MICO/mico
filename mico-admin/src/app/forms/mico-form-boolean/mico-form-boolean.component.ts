@@ -17,9 +17,9 @@
  * under the License.
  */
 
-import { Component, forwardRef, OnInit, Input } from '@angular/core';
-import { MatFormFieldControl } from '@angular/material';
+import { Component, forwardRef, Input, OnInit } from '@angular/core';
 import { NG_VALUE_ACCESSOR } from '@angular/forms';
+import { MatFormFieldControl } from '@angular/material';
 import { ApiModel } from 'src/app/api/apimodel';
 
 @Component({

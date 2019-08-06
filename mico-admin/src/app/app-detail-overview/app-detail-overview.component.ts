@@ -18,12 +18,12 @@
  */
 
 import { Component, Input, OnDestroy } from '@angular/core';
+import { MatDialog } from '@angular/material';
+import { Subscription } from 'rxjs';
 
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
-import { MatDialog } from '@angular/material';
 import { ServicePickerComponent } from '../dialogs/service-picker/service-picker.component';
-import { Subscription } from 'rxjs';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 import { safeUnsubscribe } from '../util/utils';
 

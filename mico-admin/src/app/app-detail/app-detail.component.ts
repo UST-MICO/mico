@@ -17,17 +17,18 @@
  * under the License.
  */
 
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { MatDialog, MatSnackBar } from '@angular/material';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription, timer } from 'rxjs';
+import { take } from 'rxjs/operators';
+
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
-import { Subscription, timer } from 'rxjs';
 import { versionComparator } from '../api/semantic-version';
 import { CreateNextVersionComponent } from '../dialogs/create-next-version/create-next-version.component';
-import { MatDialog, MatSnackBar } from '@angular/material';
-import { safeUnsubscribe } from '../util/utils';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
-import { take } from 'rxjs/operators';
+import { safeUnsubscribe } from '../util/utils';
 
 @Component({
     selector: 'mico-app-detail',

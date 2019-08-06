@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import { Component, OnChanges, Input } from '@angular/core';
+import { Component, Input, OnChanges } from '@angular/core';
 import { ApiModel } from 'src/app/api/apimodel';
 
 @Component({

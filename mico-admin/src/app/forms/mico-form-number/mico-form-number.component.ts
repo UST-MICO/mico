@@ -18,8 +18,8 @@
  */
 
 import { Component, forwardRef, Input } from '@angular/core';
-import { MatFormFieldControl } from '@angular/material';
 import { NG_VALUE_ACCESSOR } from '@angular/forms';
+import { MatFormFieldControl } from '@angular/material';
 import { ApiModel } from 'src/app/api/apimodel';
 
 @Component({

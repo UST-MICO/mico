@@ -17,16 +17,15 @@
  * under the License.
  */
 
-import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
-import { Subscription, from } from 'rxjs';
-import { ApiService } from 'src/app/api/api.service';
-import { MatDialogRef, MAT_DIALOG_DATA, MatTableDataSource } from '@angular/material';
 import { SelectionModel } from '@angular/cdk/collections';
-import { ApiObject } from 'src/app/api/apiobject';
+import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef, MatTableDataSource } from '@angular/material';
+import { from, Subscription } from 'rxjs';
 import { groupBy, mergeMap, toArray } from 'rxjs/operators';
+import { ApiService } from 'src/app/api/api.service';
+import { ApiObject } from 'src/app/api/apiobject';
 import { versionComparator } from 'src/app/api/semantic-version';
 import { safeUnsubscribe } from 'src/app/util/utils';
-
 
 enum FilterTypes {
     None,

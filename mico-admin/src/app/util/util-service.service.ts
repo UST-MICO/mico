@@ -18,13 +18,14 @@
  */
 
 import { Injectable } from '@angular/core';
-import { ApiService } from '../api/api.service';
 import { MatDialog, MatSnackBar } from '@angular/material';
 import { Router } from '@angular/router';
-import { safeUnsubscribe } from './utils';
-import { CreateServiceDialogComponent } from '../dialogs/create-service/create-service.component';
-import { CreateApplicationComponent } from '../dialogs/create-application/create-application.component';
 import { take } from 'rxjs/operators';
+
+import { ApiService } from '../api/api.service';
+import { CreateApplicationComponent } from '../dialogs/create-application/create-application.component';
+import { CreateServiceDialogComponent } from '../dialogs/create-service/create-service.component';
+import { safeUnsubscribe } from './utils';
 
 @Injectable({
     providedIn: 'root'

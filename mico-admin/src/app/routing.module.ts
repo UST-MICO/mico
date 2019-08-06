@@ -20,15 +20,12 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
-import { DashboardComponent } from './dashboard/dashboard.component';
-
-import { AppListComponent } from './app-list/app-list.component';
 import { AppDetailComponent } from './app-detail/app-detail.component';
-
-import { ServiceListComponent } from './service-list/service-list.component';
-import { ServiceDetailComponent } from './service-detail/service-detail.component';
-
+import { AppListComponent } from './app-list/app-list.component';
+import { DashboardComponent } from './dashboard/dashboard.component';
 import { MetricChartComponent } from './metric-chart/metric-chart.component';
+import { ServiceDetailComponent } from './service-detail/service-detail.component';
+import { ServiceListComponent } from './service-list/service-list.component';
 
 const routes: Routes = [
     { path: 'dashboard', component: DashboardComponent },

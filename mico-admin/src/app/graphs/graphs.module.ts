@@ -17,21 +17,20 @@
  * under the License.
  */
 
-import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
+import { CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
+import {
+    MatButtonModule, MatButtonToggleModule, MatCardModule, MatChipsModule, MatDialogModule, MatIconModule,
+    MatInputModule, MatListModule, MatMenuModule, MatSidenavModule, MatSlideToggleModule, MatTableModule, MatTabsModule,
+    MatToolbarModule, MatTooltipModule
+} from '@angular/material';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import '@ustutt/grapheditor-webcomponent/lib/index';
 
 import { AppDependencyGraphComponent } from './app-dependency-graph/app-dependency-graph.component';
 import { ServiceDependencyGraphComponent } from './service-dependency-graph/service-dependency-graph.component';
-import {
-    MatButtonModule, MatButtonToggleModule, MatCardModule, MatMenuModule,
-    MatIconModule, MatListModule, MatSidenavModule, MatDialogModule, MatToolbarModule,
-    MatTooltipModule, MatTableModule, MatInputModule, MatTabsModule, MatChipsModule, MatSlideToggleModule,
-} from '@angular/material';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 @NgModule({
     imports: [

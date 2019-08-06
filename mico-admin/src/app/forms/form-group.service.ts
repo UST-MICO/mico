@@ -18,10 +18,9 @@
  */
 
 import { Injectable } from '@angular/core';
-import { FormGroup, FormControl, AbstractControl, Validators } from '@angular/forms';
+import { AbstractControl, FormControl, FormGroup, Validators } from '@angular/forms';
 
 import { ApiModel } from '../api/apimodel';
-
 
 @Injectable({
     providedIn: 'root'

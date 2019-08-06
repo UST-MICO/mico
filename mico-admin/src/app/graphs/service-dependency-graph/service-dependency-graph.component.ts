@@ -17,21 +17,21 @@
  * under the License.
  */
 
-import { Component, OnInit, ViewChild, Input, OnChanges, SimpleChanges } from '@angular/core';
-import GraphEditor from '@ustutt/grapheditor-webcomponent/lib/grapheditor';
-import { Edge, DraggedEdge } from '@ustutt/grapheditor-webcomponent/lib/edge';
-import { Node } from '@ustutt/grapheditor-webcomponent/lib/node';
-import { ApiObject } from 'src/app/api/apiobject';
-import { ApiService } from 'src/app/api/api.service';
-import { Subscription } from 'rxjs';
-import { STYLE_TEMPLATE, SERVICE_NODE_TEMPLATE, ARROW_TEMPLATE } from './graph-constants';
+import { Component, Input, OnChanges, OnInit, SimpleChanges, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material';
-import { ChangeServiceVersionComponent } from 'src/app/dialogs/change-service-version/change-service-version.component';
+import { DraggedEdge, Edge } from '@ustutt/grapheditor-webcomponent/lib/edge';
+import GraphEditor from '@ustutt/grapheditor-webcomponent/lib/grapheditor';
+import { Node } from '@ustutt/grapheditor-webcomponent/lib/node';
+import { Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
+import { ApiService } from 'src/app/api/api.service';
+import { ApiObject } from 'src/app/api/apiobject';
+import { ChangeServiceVersionComponent } from 'src/app/dialogs/change-service-version/change-service-version.component';
 import { ServicePickerComponent } from 'src/app/dialogs/service-picker/service-picker.component';
-import { safeUnsubscribe } from 'src/app/util/utils';
 import { YesNoDialogComponent } from 'src/app/dialogs/yes-no-dialog/yes-no-dialog.component';
+import { safeUnsubscribe } from 'src/app/util/utils';
 
+import { ARROW_TEMPLATE, SERVICE_NODE_TEMPLATE, STYLE_TEMPLATE } from './graph-constants';
 
 @Component({
     selector: 'mico-service-dependency-graph',

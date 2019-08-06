@@ -20,7 +20,6 @@
 import { Node } from '@ustutt/grapheditor-webcomponent/lib/node';
 import { ApiObject } from 'src/app/api/apiobject';
 
-
 export const STYLE_TEMPLATE = {
     id: 'style',
     innerHTML: `

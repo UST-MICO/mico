@@ -17,9 +17,9 @@
  * under the License.
  */
 
-import { Component, OnInit, Input } from '@angular/core';
-import { ApiModel } from 'src/app/api/apimodel';
+import { Component, Input, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
+import { ApiModel } from 'src/app/api/apimodel';
 
 @Component({
   selector: 'mico-form-question',

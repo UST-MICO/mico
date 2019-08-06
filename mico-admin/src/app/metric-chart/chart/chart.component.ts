@@ -18,7 +18,6 @@
  */
 
 import { Component, Input, OnChanges } from '@angular/core';
-
 import * as c3 from 'c3';
 
 @Component({

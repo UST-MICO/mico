@@ -17,16 +17,16 @@
  * under the License.
  */
 
-import { Component, forwardRef, OnInit, Input, ViewChildren, AfterViewInit } from '@angular/core';
+import { AfterViewInit, Component, forwardRef, Input, OnInit, ViewChildren } from '@angular/core';
+import { AsyncValidator, NG_ASYNC_VALIDATORS, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { MatFormFieldControl } from '@angular/material';
-import { NG_VALUE_ACCESSOR, AsyncValidator, NG_ASYNC_VALIDATORS } from '@angular/forms';
+import { BehaviorSubject, combineLatest, Observable, Subject, Subscription } from 'rxjs';
+import { map, take } from 'rxjs/operators';
 import { ApiModel } from 'src/app/api/apimodel';
 import { ModelsService } from 'src/app/api/models.service';
-import { MicoFormComponent } from '../mico-form/mico-form.component';
-import { combineLatest, Observable, BehaviorSubject, Subject, Subscription } from 'rxjs';
-import { map, take } from 'rxjs/operators';
 import { safeUnsubscribe } from 'src/app/util/utils';
 
+import { MicoFormComponent } from '../mico-form/mico-form.component';
 
 @Component({
     selector: 'mico-form-array',

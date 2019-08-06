@@ -17,18 +17,17 @@
  * under the License.
  */
 
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { ApiService } from '../api/api.service';
-import { Subscription } from 'rxjs';
-import { from } from 'rxjs';
-import { groupBy, mergeMap, toArray, map } from 'rxjs/operators';
-import { ApiObject } from '../api/apiobject';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material';
-import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
-import { safeUnsubscribe } from '../util/utils';
-import { UtilServiceService } from '../util/util-service.service';
-import { versionComparator } from '../api/semantic-version';
+import { from, Subscription } from 'rxjs';
+import { groupBy, map, mergeMap, toArray } from 'rxjs/operators';
 
+import { ApiService } from '../api/api.service';
+import { ApiObject } from '../api/apiobject';
+import { versionComparator } from '../api/semantic-version';
+import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
+import { UtilServiceService } from '../util/util-service.service';
+import { safeUnsubscribe } from '../util/utils';
 
 @Component({
     selector: 'mico-service-list',

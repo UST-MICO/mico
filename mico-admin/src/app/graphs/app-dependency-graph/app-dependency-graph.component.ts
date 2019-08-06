@@ -17,23 +17,28 @@
  * under the License.
  */
 
-import { Component, OnInit, ViewChild, Input, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
-import GraphEditor from '@ustutt/grapheditor-webcomponent/lib/grapheditor';
-import { Edge, DraggedEdge, edgeId } from '@ustutt/grapheditor-webcomponent/lib/edge';
-import { Node } from '@ustutt/grapheditor-webcomponent/lib/node';
-import { ApiObject } from 'src/app/api/apiobject';
-import { ApiService } from 'src/app/api/api.service';
-import { Subscription, Subject } from 'rxjs';
-import { STYLE_TEMPLATE, APPLICATION_NODE_TEMPLATE, SERVICE_NODE_TEMPLATE, ARROW_TEMPLATE, ServiceNode, ApplicationNode, ServiceInterfaceNode, SERVICE_INTERFACE_NODE_TEMPLATE } from './app-dependency-graph-constants';
+import { Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material';
-import { ChangeServiceVersionComponent } from 'src/app/dialogs/change-service-version/change-service-version.component';
-import { debounceTime, take, takeLast } from 'rxjs/operators';
-import { safeUnsubscribe, safeUnsubscribeList } from 'src/app/util/utils';
-import { YesNoDialogComponent } from 'src/app/dialogs/yes-no-dialog/yes-no-dialog.component';
-import { GraphAddEnvironmentVariableComponent } from 'src/app/dialogs/graph-add-environment-variable/graph-add-environment-variable.component';
 import { Router } from '@angular/router';
+import { DraggedEdge, Edge, edgeId } from '@ustutt/grapheditor-webcomponent/lib/edge';
+import GraphEditor from '@ustutt/grapheditor-webcomponent/lib/grapheditor';
+import { Node } from '@ustutt/grapheditor-webcomponent/lib/node';
+import { Subject, Subscription } from 'rxjs';
+import { debounceTime, take, takeLast } from 'rxjs/operators';
+import { ApiService } from 'src/app/api/api.service';
+import { ApiObject } from 'src/app/api/apiobject';
+import { ChangeServiceVersionComponent } from 'src/app/dialogs/change-service-version/change-service-version.component';
+import {
+    GraphAddEnvironmentVariableComponent
+} from 'src/app/dialogs/graph-add-environment-variable/graph-add-environment-variable.component';
 import { ServicePickerComponent } from 'src/app/dialogs/service-picker/service-picker.component';
+import { YesNoDialogComponent } from 'src/app/dialogs/yes-no-dialog/yes-no-dialog.component';
+import { safeUnsubscribe, safeUnsubscribeList } from 'src/app/util/utils';
 
+import {
+    APPLICATION_NODE_TEMPLATE, ApplicationNode, ARROW_TEMPLATE, SERVICE_INTERFACE_NODE_TEMPLATE, SERVICE_NODE_TEMPLATE,
+    ServiceInterfaceNode, ServiceNode, STYLE_TEMPLATE
+} from './app-dependency-graph-constants';
 
 const ROOT_NODE_ID = 'APPLICATION';
 

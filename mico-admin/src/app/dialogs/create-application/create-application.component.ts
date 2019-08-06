@@ -18,11 +18,12 @@
  */
 
 import { Component, OnDestroy } from '@angular/core';
-import { ApiService } from 'src/app/api/api.service';
-import { Subscription } from 'rxjs';
 import { MatDialog } from '@angular/material';
-import { ServicePickerComponent } from '../service-picker/service-picker.component';
+import { Subscription } from 'rxjs';
+import { ApiService } from 'src/app/api/api.service';
 import { safeUnsubscribe } from 'src/app/util/utils';
+
+import { ServicePickerComponent } from '../service-picker/service-picker.component';
 
 @Component({
     selector: 'mico-create-application',

@@ -17,16 +17,20 @@
  * under the License.
  */
 
-import { Component, Input, OnDestroy, OnChanges } from '@angular/core';
-import { Subscription } from 'rxjs';
-import { ApiService } from '../api/api.service';
-import { ServicePickerComponent } from '../dialogs/service-picker/service-picker.component';
+import { Component, Input, OnChanges, OnDestroy } from '@angular/core';
 import { MatDialog } from '@angular/material';
-import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
-import { CreateServiceInterfaceComponent } from '../dialogs/create-service-interface/create-service-interface.component';
-import { UpdateServiceInterfaceComponent } from '../dialogs/update-service-interface/update-service-interface.component';
-import { safeUnsubscribe } from '../util/utils';
+import { Subscription } from 'rxjs';
 
+import { ApiService } from '../api/api.service';
+import {
+    CreateServiceInterfaceComponent
+} from '../dialogs/create-service-interface/create-service-interface.component';
+import { ServicePickerComponent } from '../dialogs/service-picker/service-picker.component';
+import {
+    UpdateServiceInterfaceComponent
+} from '../dialogs/update-service-interface/update-service-interface.component';
+import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
+import { safeUnsubscribe } from '../util/utils';
 
 @Component({
     selector: 'mico-service-detail-overview',

@@ -17,11 +17,14 @@
  * under the License.
  */
 
-import { Component, Input, OnChanges, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
-import { ApiService } from '../api/api.service';
+import {
+    ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit
+} from '@angular/core';
 import { Subscription } from 'rxjs';
-import { safeUnsubscribeList, safeUnsubscribe } from '../util/utils';
 import { take } from 'rxjs/operators';
+
+import { ApiService } from '../api/api.service';
+import { safeUnsubscribe, safeUnsubscribeList } from '../util/utils';
 
 @Component({
     selector: 'mico-app-detail-public-ip',

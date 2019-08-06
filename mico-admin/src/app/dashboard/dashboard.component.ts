@@ -17,13 +17,14 @@
  * under the License.
  */
 
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { from, Subscription } from 'rxjs';
+import { groupBy, map, mergeMap, toArray } from 'rxjs/operators';
+
 import { ApiService } from '../api/api.service';
 import { ApiObject } from '../api/apiobject';
-import { groupBy, mergeMap, toArray, map } from 'rxjs/operators';
-import { Subscription, from } from 'rxjs';
-import { safeUnsubscribe } from '../util/utils';
 import { UtilServiceService } from '../util/util-service.service';
+import { safeUnsubscribe } from '../util/utils';
 
 @Component({
     selector: 'mico-dashboard',

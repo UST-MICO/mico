@@ -17,12 +17,13 @@
  * under the License.
  */
 
-import { Component, OnInit, Input, OnChanges, SimpleChanges, EventEmitter, Output } from '@angular/core';
-import { ModelsService } from '../../api/models.service';
-import { ApiModel, ApiModelRef } from '../../api/apimodel';
-import { map, first } from 'rxjs/operators';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { Subscription } from 'rxjs';
+import { first, map } from 'rxjs/operators';
 import { safeUnsubscribe } from 'src/app/util/utils';
+
+import { ApiModel, ApiModelRef } from '../../api/apimodel';
+import { ModelsService } from '../../api/models.service';
 
 @Component({
     selector: 'mico-data',

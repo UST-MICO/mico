@@ -1,6 +1,8 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { AppDetailOverviewDeploymentInformationComponent } from './app-detail-overview-deployment-information.component';
+import {
+    AppDetailOverviewDeploymentInformationComponent
+} from './app-detail-overview-deployment-information.component';
 
 describe('AppDetailOverviewDeploymentInformationComponent', () => {
   let component: AppDetailOverviewDeploymentInformationComponent;

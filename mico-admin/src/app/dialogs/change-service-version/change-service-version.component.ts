@@ -17,14 +17,14 @@
  * under the License.
  */
 
-import { Component, OnInit, Inject } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA, MatTableDataSource } from '@angular/material';
-import { incrementVersion, versionComponents, versionComparator } from 'src/app/api/semantic-version';
-import { ApiObject } from 'src/app/api/apiobject';
-import { ApiService } from 'src/app/api/api.service';
-import { take } from 'rxjs/operators';
 import { SelectionModel } from '@angular/cdk/collections';
+import { Component, Inject, OnInit } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef, MatTableDataSource } from '@angular/material';
 import { selection } from 'd3';
+import { take } from 'rxjs/operators';
+import { ApiService } from 'src/app/api/api.service';
+import { ApiObject } from 'src/app/api/apiobject';
+import { incrementVersion, versionComparator, versionComponents } from 'src/app/api/semantic-version';
 
 @Component({
   selector: 'mico-change-service-version',

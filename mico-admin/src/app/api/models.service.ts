@@ -18,10 +18,11 @@
  */
 
 import { Injectable } from '@angular/core';
-import { AsyncSubject, Observable, of, from } from 'rxjs';
-import { ApiModel, ApiModelAllOf, ApiModelRef, ApiModelProperties } from './apimodel';
-import { concatMap, reduce, first, timeout, map, flatMap } from 'rxjs/operators';
+import { AsyncSubject, from, Observable, of } from 'rxjs';
+import { concatMap, first, flatMap, map, reduce, timeout } from 'rxjs/operators';
+
 import { ApiService, freezeObject } from './api.service';
+import { ApiModel, ApiModelAllOf, ApiModelProperties, ApiModelRef } from './apimodel';
 
 interface PropertyRef {
     key: string;

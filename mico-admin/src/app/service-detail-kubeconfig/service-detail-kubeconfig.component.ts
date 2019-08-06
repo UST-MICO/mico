@@ -17,9 +17,10 @@
  * under the License.
  */
 
-import { Component, OnChanges, Input, OnDestroy } from '@angular/core';
-import { ApiService } from '../api/api.service';
+import { Component, Input, OnChanges, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs';
+
+import { ApiService } from '../api/api.service';
 import { safeUnsubscribe } from '../util/utils';
 
 @Component({

@@ -17,15 +17,14 @@
  * under the License.
  */
 
-import { environment } from '../../environments/environment';
 import { Injectable } from '@angular/core';
-import { Http, Response, Headers, RequestOptions } from '@angular/http';
-import { Observable, throwError } from 'rxjs';
-import { map, catchError, } from 'rxjs/operators';
-import { ApiObject, ApiLinksObject, LinkObject, isApiObject, isApiLinksObject, isLinkObject } from './apiobject';
+import { Headers, Http, RequestOptions, Response } from '@angular/http';
 import { MatSnackBar } from '@angular/material';
+import { Observable, throwError } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 
-
+import { environment } from '../../environments/environment';
+import { ApiLinksObject, ApiObject, isApiLinksObject, isApiObject, isLinkObject, LinkObject } from './apiobject';
 
 @Injectable({
     providedIn: 'root'
