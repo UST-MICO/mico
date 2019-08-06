@@ -49,7 +49,7 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-public class    MicoServiceDeploymentInfoRequestDTO {
+public class MicoServiceDeploymentInfoRequestDTO {
 
     /**
      * Number of desired instances. Defaults to 1.
@@ -100,6 +100,21 @@ public class    MicoServiceDeploymentInfoRequestDTO {
     private List<MicoLabelRequestDTO> labels = new ArrayList<>();
 
     /**
+     * Topics that are
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Topics"),
+            @ExtensionProperty(name = "x-order", value = "42"),
+            @ExtensionProperty(name = "description", value = "Topics")
+        }
+    )})
+    @JsonSetter(nulls = Nulls.SKIP)
+    @Valid
+    private List<MicoTopicRequestDTO> topics = new ArrayList<>();
+
+    /**
      * Environment variables as key-value pairs that are attached to the deployment
      * of this {@link MicoService}. These environment values can be used by the deployed
      * {@link MicoService} during runtime. This could be useful to pass information to the
@@ -143,6 +158,7 @@ public class    MicoServiceDeploymentInfoRequestDTO {
     @Valid
     private List<MicoInterfaceConnectionRequestDTO> interfaceConnections = new ArrayList<>();
 
+
     /**
      * Indicates whether and when to pull the image.
      * Default image pull policy is {@link ImagePullPolicy#ALWAYS Always}.
@@ -178,6 +194,7 @@ public class    MicoServiceDeploymentInfoRequestDTO {
         this.environmentVariables = serviceDeploymentInfo.getEnvironmentVariables().stream().map(MicoEnvironmentVariableRequestDTO::new).collect(Collectors.toList());
         this.interfaceConnections = serviceDeploymentInfo.getInterfaceConnections().stream().map(MicoInterfaceConnectionRequestDTO::new).collect(Collectors.toList());
         this.imagePullPolicy = serviceDeploymentInfo.getImagePullPolicy();
+        this.topics = serviceDeploymentInfo.getTopics().stream().map(MicoTopicRequestDTO::new).collect(Collectors.toList());
     }
 
 }

@@ -45,6 +45,8 @@ public class MicoTopic {
     @GeneratedValue
     private Long id;
 
+
+
     /**
      * Name of the topic
      */

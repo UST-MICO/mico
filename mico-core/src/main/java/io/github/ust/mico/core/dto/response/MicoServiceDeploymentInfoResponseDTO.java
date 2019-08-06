@@ -94,6 +94,8 @@ public class MicoServiceDeploymentInfoResponseDTO extends MicoServiceDeploymentI
         // in MicoServiceDeploymentInfoRequestDTO and typed to MicoInterfaceConnectionRequestDTO.
         setInterfaceConnections(serviceDeploymentInfo.getInterfaceConnections().stream().map(MicoInterfaceConnectionResponseDTO::new).collect(Collectors.toList()));
 
+        setTopics(serviceDeploymentInfo.getTopics().stream().map(MicoTopicResponseDTO::new).collect(Collectors.toList()));
+
         // Kubernetes deployment info maybe null if not available
         if (serviceDeploymentInfo.getKubernetesDeploymentInfo() != null) {
             setKubernetesDeploymentInfo(new KubernetesDeploymentInfoResponseDTO(serviceDeploymentInfo.getKubernetesDeploymentInfo()));

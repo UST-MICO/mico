@@ -177,7 +177,9 @@ public class MicoServiceDeploymentInfo {
             .setLabels(serviceDeploymentInfoDto.getLabels().stream().map(MicoLabel::valueOf).collect(Collectors.toList()))
             .setEnvironmentVariables(serviceDeploymentInfoDto.getEnvironmentVariables().stream().map(MicoEnvironmentVariable::valueOf).collect(Collectors.toList()))
             .setInterfaceConnections(serviceDeploymentInfoDto.getInterfaceConnections().stream().map(MicoInterfaceConnection::valueOf).collect(Collectors.toList()))
-            .setImagePullPolicy(serviceDeploymentInfoDto.getImagePullPolicy());
+            .setImagePullPolicy(serviceDeploymentInfoDto.getImagePullPolicy())
+            .setTopics(serviceDeploymentInfoDto.getTopics().stream().map(MicoTopic::valueOf).collect(Collectors.toList()));
+
     }
 
 
