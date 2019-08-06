@@ -1253,4 +1253,20 @@ public class MicoKubernetesClient {
         return new PasswordAuthentication(userName, password.toCharArray());
     }
 
+
+    public String getPublicIpOfKubernetesService(String name, String namespace) {
+        log.debug("Requesting public ip of '{}' in namespace '{}'", name, namespace);
+        Service service = kubernetesClient.services().inNamespace(namespace).withName(name).get();
+        String ip = service.getStatus().getLoadBalancer().getIngress().get(0).getIp();
+        return ip;
+    }
+
+    public List<Integer> getPublicPortsOfKubernetesService(String name, String namespace) {
+        log.debug("Requesting public port of '{}' in namespace '{}'", name, namespace);
+        Service service = kubernetesClient.services().inNamespace(namespace).withName(name).get();
+        LinkedList<Integer> ports = new LinkedList<>();
+        service.getSpec().getPorts().forEach(servicePort -> ports.add(servicePort.getPort()));
+        return ports;
+    }
+
 }
