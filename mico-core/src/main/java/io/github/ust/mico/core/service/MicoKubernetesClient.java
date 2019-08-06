@@ -715,7 +715,7 @@ public class MicoKubernetesClient {
                 }
 
                 for (String serviceName : serviceNames) {
-                    Service actualKubernetesService = kubernetesClient.services().inNamespace(namespace).withName(serviceName).get();
+                    Service actualKubernetesService = getService(serviceName, namespace);
                     if (actualKubernetesService != null) {
                         actualKubernetesServices.add(actualKubernetesService);
                     } else {
@@ -1254,19 +1254,49 @@ public class MicoKubernetesClient {
     }
 
 
+    /**
+     * Requests the public IP of a kubernetes service or null if the services does not exist.
+     *
+     * @param name      the name of the service.
+     * @param namespace the namespace which contains the service.
+     * @return the public ip of a service or null.
+     */
     public String getPublicIpOfKubernetesService(String name, String namespace) {
         log.debug("Requesting public ip of '{}' in namespace '{}'", name, namespace);
-        Service service = kubernetesClient.services().inNamespace(namespace).withName(name).get();
+        Service service = getService(name, namespace);
+        if (service != null) {
+            return null;
+        }
         String ip = service.getStatus().getLoadBalancer().getIngress().get(0).getIp();
         return ip;
     }
 
+    /**
+     * Requests the list of public ports of a service or an empty list.
+     *
+     * @param name      the name of the service.
+     * @param namespace the namespace which contains the service.
+     * @return a list of ports or an empty list.
+     */
     public List<Integer> getPublicPortsOfKubernetesService(String name, String namespace) {
         log.debug("Requesting public port of '{}' in namespace '{}'", name, namespace);
-        Service service = kubernetesClient.services().inNamespace(namespace).withName(name).get();
+        Service service = getService(name, namespace);
         LinkedList<Integer> ports = new LinkedList<>();
-        service.getSpec().getPorts().forEach(servicePort -> ports.add(servicePort.getPort()));
+        if (service != null) {
+            service.getSpec().getPorts().forEach(servicePort -> ports.add(servicePort.getPort()));
+        }
         return ports;
+    }
+
+    /**
+     * Requests the service with the given name in the given namespace or {@code null} if there is no such service
+     *
+     * @param name      the name of the service.
+     * @param namespace the namespace which contains the service.
+     * @return the service in the namespace and with the given name or null.
+     */
+    private Service getService(String name, String namespace) {
+        return kubernetesClient.services().inNamespace(namespace).withName(name).get();
     }
 
 }
