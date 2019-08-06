@@ -100,7 +100,7 @@ public class MicoServiceDeploymentInfoRequestDTO {
     private List<MicoLabelRequestDTO> labels = new ArrayList<>();
 
     /**
-     * Topics that are
+     * Topics that are TODO: Description
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
