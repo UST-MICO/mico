@@ -1193,7 +1193,7 @@ export class ApiService {
      *
      */
     getOpenFaaSIp() {
-        const resource = '/openfaas/publicIp';
+        const resource = '/openfaas/externalAddress';
         const stream = this.getStreamSource<any>(resource);
 
         this.rest.get<any>(resource).subscribe(val => {
