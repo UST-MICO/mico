@@ -26,6 +26,8 @@ import { Component, OnInit } from '@angular/core';
 })
 export class ToolbarComponent implements OnInit {
 
+  openFaaSIp = 'http://40.115.25.83:8080';
+
   constructor() { }
 
   ngOnInit() {
