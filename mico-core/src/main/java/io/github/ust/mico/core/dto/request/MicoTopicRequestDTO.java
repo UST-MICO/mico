@@ -32,7 +32,7 @@ import lombok.experimental.Accessors;
 public class MicoTopicRequestDTO {
 
 
-    private String topicName;
+    private String name;
 
     // -------------------
     // -> Constructors ---
@@ -45,6 +45,6 @@ public class MicoTopicRequestDTO {
      * @param micoTopic the {@link MicoTopic}.
      */
     public MicoTopicRequestDTO(MicoTopic micoTopic) {
-        this.topicName = micoTopic.getTopicName();
+        this.name = micoTopic.getName();
     }
 }

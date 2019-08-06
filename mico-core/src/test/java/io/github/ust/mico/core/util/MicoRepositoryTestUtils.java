@@ -179,8 +179,8 @@ public class MicoRepositoryTestUtils {
         return new MicoEnvironmentVariable().setName("key-env-label-" + number).setValue("value-env-label-" + number);
     }
 
-    public static final MicoTopic getMicoServiceDeploymentInfoTopic(String topicName) {
-        return new MicoTopic().setTopicName(topicName);
+    public static final MicoTopic getMicoServiceDeploymentInfoTopic(String name) {
+        return new MicoTopic().setName(name);
     }
 
     public static final KubernetesDeploymentInfo getMicoServiceDeploymentInfoKubernetesDeploymentInfo(int number) {

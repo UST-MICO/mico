@@ -50,7 +50,7 @@ public class MicoTopic {
     /**
      * Name of the topic
      */
-    private String topicName;
+    private String name;
 
     // ----------------------
     // -> Static Creators ---
@@ -62,6 +62,6 @@ public class MicoTopic {
 
     public static MicoTopic valueOf(MicoTopicRequestDTO topicDto) {
         return new MicoTopic()
-            .setTopicName(topicDto.getTopicName());
+            .setName(topicDto.getName());
     }
 }
