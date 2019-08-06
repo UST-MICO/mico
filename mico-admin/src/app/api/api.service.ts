@@ -1192,16 +1192,15 @@ export class ApiService {
     /**
      *
      */
-    getOpenFaaSIp() {
-        const resource = '/openfaas/publicIp';
-        const stream = this.getStreamSource<any>(resource);
+    getOpenFaaSIp(): Observable<Readonly<ApiObject>> {
+        const resource = '/openFaaS/publicIp';
+        const stream = this.getStreamSource<ApiObject>(resource);
 
-        this.rest.get<any>(resource).subscribe(val => {
-            stream.next(freezeObject(val));
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+            stream.next(val.externalUrl);
         });
 
-        return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
-            filter(data => data !== undefined)
-        );
+        return stream.asObservable().pipe(
+            filter(data => data !== undefined));
     }
 }
