@@ -715,9 +715,9 @@ public class MicoKubernetesClient {
                 }
 
                 for (String serviceName : serviceNames) {
-                    Service actualKubernetesService = getService(serviceName, namespace);
-                    if (actualKubernetesService != null) {
-                        actualKubernetesServices.add(actualKubernetesService);
+                    Optional<Service> actualKubernetesServiceOptinal = getService(serviceName, namespace);
+                    if (actualKubernetesServiceOptinal.isPresent()) {
+                        actualKubernetesServices.add(actualKubernetesServiceOptinal.get());
                     } else {
                         log.warn("Kubernetes service '{}' of MicoService '{}' '{}' doesn't exist anymore",
                             serviceName, micoService.getShortName(), micoService.getVersion());
@@ -1255,36 +1255,44 @@ public class MicoKubernetesClient {
 
 
     /**
-     * Requests the public IP of a kubernetes service or null if the services does not exist.
+     * Requests the public IP of a Kubernetes service and returns it or an empty optional if the
+     * service has no public IP.
      *
      * @param name      the name of the service.
      * @param namespace the namespace which contains the service.
-     * @return the public ip of a service or null.
+     * @return the public ip of a service or an empty optional.
+     * @throws KubernetesResourceException if there is no such service.
      */
-    public String getPublicIpOfKubernetesService(String name, String namespace) {
+    public Optional<String> getPublicIpOfKubernetesService(String name, String namespace) throws KubernetesResourceException {
         log.debug("Requesting public ip of '{}' in namespace '{}'", name, namespace);
-        Service service = getService(name, namespace);
-        if (service != null) {
-            return null;
+        Optional<Service> serviceOptional = getService(name, namespace);
+        log.debug("Namespaces '{}'", kubernetesClient.namespaces().list());
+        Service service = getServiceOrThrowKubernetesResourceException(name, namespace);
+        List<LoadBalancerIngress> ingresses = service.getStatus().getLoadBalancer().getIngress();
+        if (ingresses.size() != 1) {
+            log.debug("There is no or too many ingresses. We expect only one.");
+            return Optional.empty();
         }
-        String ip = service.getStatus().getLoadBalancer().getIngress().get(0).getIp();
-        return ip;
+        String ip = ingresses.get(0).getIp();
+        log.debug("Returning the ip '{}', for the kubernetes service '{}', in the namespace '{}'", ip, name, namespace);
+        return Optional.ofNullable(ip);
     }
 
     /**
-     * Requests the list of public ports of a service or an empty list.
+     * Requests the list of public ports of a service. It returns the list of ports or an empty list if there are none.
      *
      * @param name      the name of the service.
      * @param namespace the namespace which contains the service.
      * @return a list of ports or an empty list.
+     * @throws KubernetesResourceException if there is no such service.
      */
-    public List<Integer> getPublicPortsOfKubernetesService(String name, String namespace) {
+    public List<Integer> getPublicPortsOfKubernetesService(String name, String namespace) throws KubernetesResourceException {
         log.debug("Requesting public port of '{}' in namespace '{}'", name, namespace);
-        Service service = getService(name, namespace);
+        Optional<Service> serviceOptional = getService(name, namespace);
         LinkedList<Integer> ports = new LinkedList<>();
-        if (service != null) {
-            service.getSpec().getPorts().forEach(servicePort -> ports.add(servicePort.getPort()));
-        }
+        Service service = getServiceOrThrowKubernetesResourceException(name, namespace);
+        service.getSpec().getPorts().forEach(servicePort -> ports.add(servicePort.getPort()));
+        log.debug("Returning the ports '{}', for the kubernetes service '{}', in the namespace '{}'", ports, name, namespace);
         return ports;
     }
 
@@ -1295,8 +1303,20 @@ public class MicoKubernetesClient {
      * @param namespace the namespace which contains the service.
      * @return the service in the namespace and with the given name or null.
      */
-    private Service getService(String name, String namespace) {
-        return kubernetesClient.services().inNamespace(namespace).withName(name).get();
+    public Optional<Service> getService(String name, String namespace) {
+        return Optional.ofNullable(kubernetesClient.services().inNamespace(namespace).withName(name).get());
+    }
+
+    /**
+     * Returns the service with the given name in the namespace or throws a {@link KubernetesResourceException}.
+     *
+     * @param name      the name of the service.
+     * @param namespace the namespace which contains the service.
+     * @return the service with the given name in the namespace.
+     * @throws KubernetesResourceException if there is no such service.
+     */
+    private Service getServiceOrThrowKubernetesResourceException(String name, String namespace) throws KubernetesResourceException {
+        return getService(name, namespace).orElseThrow(() -> new KubernetesResourceException("There is no service with the name:" + name + " in the namespace: " + namespace + " deployed"));
     }
 
 }

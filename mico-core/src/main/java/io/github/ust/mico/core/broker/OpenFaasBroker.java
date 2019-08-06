@@ -20,6 +20,7 @@
 package io.github.ust.mico.core.broker;
 
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
+import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,7 @@ import org.springframework.stereotype.Service;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -40,14 +42,30 @@ public class OpenFaasBroker {
     @Autowired
     MicoKubernetesConfig micoKubernetesConfig;
 
+    /**
+     * The name of the external gateway of the OpenFaaS UI
+     */
     public static final String GATEWAY_EXTERNAL_NAME = "gateway-external";
+
+    /**
+     * The supported protocol of the OpenFaaS UI
+     */
     public static final String OPEN_FAAS_UI_PROTOCOL = "http";
 
-    public String getExternalAddress() throws MalformedURLException {
-        String ip = micoKubernetesClient.getPublicIpOfKubernetesService(GATEWAY_EXTERNAL_NAME, micoKubernetesConfig.getNamespaceOpenFaasWorkspace());
+    /**
+     * Requests the external address of the OpenFaaS UI and returns it or {@code null} if OpenFaaS does not exist.
+     *
+     * @return the external address of the OpenFaaS UI or {@code null}.
+     * @throws MalformedURLException if the address is not in the URL format.
+     */
+    public Optional<String> getExternalAddress() throws MalformedURLException, KubernetesResourceException {
+        Optional<String> ip = micoKubernetesClient.getPublicIpOfKubernetesService(GATEWAY_EXTERNAL_NAME, micoKubernetesConfig.getNamespaceOpenFaasWorkspace());
         List<Integer> ports = micoKubernetesClient.getPublicPortsOfKubernetesService(GATEWAY_EXTERNAL_NAME, micoKubernetesConfig.getNamespaceOpenFaasWorkspace());
+        if (!ip.isPresent() || ports.size() != 1) {
+            return Optional.empty();
+        }
         int port = ports.get(0);
-        URL externalAddress = new URL(OPEN_FAAS_UI_PROTOCOL, ip, port, "");
-        return externalAddress.toExternalForm();
+        URL externalAddress = new URL(OPEN_FAAS_UI_PROTOCOL, ip.get(), port, "");
+        return Optional.ofNullable(externalAddress.toExternalForm());
     }
 }
