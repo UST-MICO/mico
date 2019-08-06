@@ -31,7 +31,7 @@ import java.util.List;
 
 @Slf4j
 @Service
-public class OpenFaaSBroker {
+public class OpenFaasBroker {
 
 
     @Autowired

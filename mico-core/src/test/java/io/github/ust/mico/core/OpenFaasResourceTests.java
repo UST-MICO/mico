@@ -19,6 +19,7 @@
 
 package io.github.ust.mico.core;
 
+import io.github.ust.mico.core.broker.OpenFaasBroker;
 import io.github.ust.mico.core.configuration.OpenFaaSConfig;
 import io.github.ust.mico.core.util.RestTemplates;
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +51,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("local")
 @AutoConfigureMockMvc
-public class OpenFaasFunctionsResourceTests {
+public class OpenFaasResourceTests {
 
     @Autowired
     private MockMvc mvc;
@@ -61,6 +62,9 @@ public class OpenFaasFunctionsResourceTests {
     @MockBean
     @Qualifier(RestTemplates.QUALIFIER_AUTHENTICATED_OPEN_FAAS_REST_TEMPLATE)
     RestTemplate restTemplate;
+
+    @Autowired
+    OpenFaasBroker openFaaSBroker;
 
     @Test
     public void getFunctionsListNotReachable() throws Exception {
@@ -84,5 +88,10 @@ public class OpenFaasFunctionsResourceTests {
             .andExpect(status().isOk())
             .andExpect(content().string(testBody))
             .andReturn();
+    }
+
+    @Test
+    public void getExternalIp() throws Exception {
+        //openFaaSBroker.getExternalAddress();
     }
 }

@@ -20,7 +20,9 @@
 package io.github.ust.mico.core.resource;
 
 
+import io.github.ust.mico.core.broker.OpenFaasBroker;
 import io.github.ust.mico.core.configuration.OpenFaaSConfig;
+import io.github.ust.mico.core.dto.response.ExternalUrlDTO;
 import io.github.ust.mico.core.util.RestTemplates;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,15 +37,19 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.net.MalformedURLException;
+
 @Slf4j
 @RestController
 @RequestMapping(value = OpenFaasResource.OPEN_FAAS_BASE_PATH, produces = MediaTypes.HAL_JSON_VALUE)
 public class OpenFaasResource {
 
-    public static final String OPEN_FAAS_BASE_PATH = "/openfaas";
+    public static final String OPEN_FAAS_BASE_PATH = "/openFaaS";
 
     public static final String FUNCTIONS_PATH = "/functions";
     public static final String OPEN_FAAS_FUNCTION_LIST_PATH = "/system/functions";
+
+    public static final String PUBLIC_IP = "/publicIp";
 
     @Autowired
     @Qualifier(RestTemplates.QUALIFIER_AUTHENTICATED_OPEN_FAAS_REST_TEMPLATE)
@@ -51,6 +57,9 @@ public class OpenFaasResource {
 
     @Autowired
     OpenFaaSConfig openFaaSConfig;
+
+    @Autowired
+    OpenFaasBroker openFaasBroker;
 
     @GetMapping(FUNCTIONS_PATH)
     public ResponseEntity<String> getOpenFaasFunctions() {
@@ -62,5 +71,17 @@ public class OpenFaasResource {
             log.debug("There was an I/O Error for GET {}{}", OPEN_FAAS_BASE_PATH, FUNCTIONS_PATH, e);
             throw new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT, e.getMessage());
         }
+    }
+
+    @GetMapping(PUBLIC_IP)
+    public ResponseEntity<ExternalUrlDTO> getOpenFaasURL() {
+        try {
+            String externalAddress = openFaasBroker.getExternalAddress();
+            ExternalUrlDTO externalUrlDTO = new ExternalUrlDTO(externalAddress);
+            return ResponseEntity.ok().body(externalUrlDTO);
+        } catch (MalformedURLException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+
     }
 }
