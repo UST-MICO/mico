@@ -17,8 +17,10 @@
  * under the License.
  */
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ApiService } from '../api/api.service';
+import { Subscription } from 'rxjs';
+import { safeUnsubscribe } from '../util/utils';
 
 
 @Component({
@@ -26,15 +28,19 @@ import { ApiService } from '../api/api.service';
   templateUrl: './toolbar.component.html',
   styleUrls: ['./toolbar.component.css']
 })
-export class ToolbarComponent implements OnInit {
+export class ToolbarComponent implements OnInit, OnDestroy {
 
   openFaaSIp;
-
-  constructor(private apiService: ApiService) { }
+  subOpenFaaSIp: Subscription;
+  constructor(private apiService: ApiService) {
+      this.subOpenFaaSIp = this.apiService.getOpenFaaSIp().subscribe(val => this.openFaaSIp = val);
+    }
 
   ngOnInit() {
-      console.log(this.apiService.getOpenFaaSIp());
-      this.openFaaSIp = this.apiService.getOpenFaaSIp();
+  }
+
+  ngOnDestroy() {
+    safeUnsubscribe(this.subOpenFaaSIp);
   }
 
 }
