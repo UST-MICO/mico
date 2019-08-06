@@ -30,6 +30,14 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class ExternalUrlDTO {
 
+    /**
+     * An url for a service which is externally reachable.
+     */
     String externalUrl;
+
+    /**
+     * Is true if the url is available
+     */
+    boolean isExternalUrlAvailable;
 
 }

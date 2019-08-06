@@ -79,8 +79,13 @@ public class OpenFaasResource {
     public ResponseEntity<ExternalUrlDTO> getOpenFaasURL() {
         try {
             Optional<String> externalAddressOptional = openFaasBroker.getExternalAddress();
-            String externalAddress = externalAddressOptional.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "There is no external address associated with the OpenFaaS UI"));
-            ExternalUrlDTO externalUrlDTO = new ExternalUrlDTO(externalAddress);
+            ExternalUrlDTO externalUrlDTO;
+            if (externalAddressOptional.isPresent()) {
+                String externalAddress = externalAddressOptional.get();
+                externalUrlDTO = new ExternalUrlDTO(externalAddress, true);
+            } else {
+                externalUrlDTO = new ExternalUrlDTO("", false);
+            }
             return ResponseEntity.ok().body(externalUrlDTO);
         } catch (MalformedURLException | KubernetesResourceException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());

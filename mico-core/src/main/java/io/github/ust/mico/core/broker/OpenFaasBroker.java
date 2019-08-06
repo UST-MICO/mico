@@ -59,13 +59,15 @@ public class OpenFaasBroker {
      * @throws MalformedURLException if the address is not in the URL format.
      */
     public Optional<String> getExternalAddress() throws MalformedURLException, KubernetesResourceException {
-        Optional<String> ip = micoKubernetesClient.getPublicIpOfKubernetesService(GATEWAY_EXTERNAL_NAME, micoKubernetesConfig.getNamespaceOpenFaasWorkspace());
+        Optional<String> ipOptional = micoKubernetesClient.getPublicIpOfKubernetesService(GATEWAY_EXTERNAL_NAME, micoKubernetesConfig.getNamespaceOpenFaasWorkspace());
         List<Integer> ports = micoKubernetesClient.getPublicPortsOfKubernetesService(GATEWAY_EXTERNAL_NAME, micoKubernetesConfig.getNamespaceOpenFaasWorkspace());
-        if (!ip.isPresent() || ports.size() != 1) {
+        if (!ipOptional.isPresent() || ports.size() != 1) {
             return Optional.empty();
         }
+        String ip = ipOptional.get();
         int port = ports.get(0);
-        URL externalAddress = new URL(OPEN_FAAS_UI_PROTOCOL, ip.get(), port, "");
+        log.debug("Using ip '{}' and port '{}'", ip, port);
+        URL externalAddress = new URL(OPEN_FAAS_UI_PROTOCOL, ip, port, "");
         return Optional.ofNullable(externalAddress.toExternalForm());
     }
 }
