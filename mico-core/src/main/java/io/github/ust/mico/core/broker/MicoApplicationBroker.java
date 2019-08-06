@@ -50,6 +50,9 @@ public class MicoApplicationBroker {
     private MicoLabelRepository micoLabelRepository;
 
     @Autowired
+    private MicoTopicRepository micoTopicRepository;
+
+    @Autowired
     private MicoEnvironmentVariableRepository micoEnvironmentVariableRepository;
 
     @Autowired
@@ -327,6 +330,7 @@ public class MicoApplicationBroker {
         // the standard save() function of the service deployment information repository will not delete those
         // "tangling" (without relationships) labels (nodes), hence the manual clean up.
         micoLabelRepository.cleanUp();
+        micoTopicRepository.cleanUp();
         micoEnvironmentVariableRepository.cleanUp();
         kubernetesDeploymentInfoRepository.cleanUp();
         micoInterfaceConnectionRepository.cleanUp();

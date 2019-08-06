@@ -45,7 +45,7 @@ public class MicoTopic {
     @GeneratedValue
     private Long id;
 
-
+    // TODO: Roles as relationship?
 
     /**
      * Name of the topic
