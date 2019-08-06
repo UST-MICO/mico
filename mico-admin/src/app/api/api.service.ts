@@ -18,13 +18,13 @@
  */
 
 import { Injectable } from '@angular/core';
-import { Observable, Subject, BehaviorSubject, AsyncSubject, interval, timer, Subscription } from 'rxjs';
+import { MatSnackBar } from '@angular/material';
+import { AsyncSubject, BehaviorSubject, interval, Observable, Subject, Subscription, timer } from 'rxjs';
 import { filter, flatMap, map } from 'rxjs/operators';
-import { ApiObject } from './apiobject';
+import { safeUnsubscribe } from '../util/utils';
 import { ApiBaseFunctionService } from './api-base-function.service';
 import { ApiModel, ApiModelAllOf } from './apimodel';
-import { safeUnsubscribe } from '../util/utils';
-import { MatSnackBar } from '@angular/material';
+import { ApiObject } from './apiobject';
 
 
 /**
@@ -1189,4 +1189,19 @@ export class ApiService {
         }
     }
 
+    /**
+     *
+     */
+    getOpenFaaSIp() {
+        const resource = '/openfaas/publicIp';
+        const stream = this.getStreamSource<any>(resource);
+
+        this.rest.get<any>(resource).subscribe(val => {
+            stream.next(freezeObject(val));
+        });
+
+        return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
+            filter(data => data !== undefined)
+        );
+    }
 }
