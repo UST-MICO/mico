@@ -48,8 +48,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-@ActiveProfiles("local")
 @AutoConfigureMockMvc
+@ActiveProfiles("local")
 public class OpenFaasFunctionsResourceTests {
 
     @Autowired
