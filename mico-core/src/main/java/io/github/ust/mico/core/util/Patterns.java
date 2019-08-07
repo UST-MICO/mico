@@ -102,7 +102,7 @@ public class Patterns {
      * Regex for strings that MUST be a relative path.
      */
     public static final String RELATIVE_PATH_REGEX = "^(?!/.*$).*";
-    
+
     /**
      * Regex to ensure to only use letters (may be empty).
      */
@@ -124,7 +124,7 @@ public class Patterns {
     public static final String SEMANTIC_VERSION_REGEX = "^" + SEMANTIC_VERSION_TEMP_REGEX + "$";
 
     /**
-     * Regex for a semantic version with a prefix (optional) consisting of letters. 
+     * Regex for a semantic version with a prefix (optional) consisting of letters.
      */
     public static final String SEMANTIC_VERSION_WITH_PREFIX_REGEX = "^[a-zA-Z]*" + SEMANTIC_VERSION_TEMP_REGEX + "$";
 
@@ -132,4 +132,16 @@ public class Patterns {
      * Message is used if a match with the {@link Patterns#SEMANTIC_VERSION_WITH_PREFIX_REGEX} fails.
      */
     public static final String SEMANTIC_VERSIONING_MESSAGE = "must be using Semantic Versioning";
+
+    /**
+     * Kafka topic names must only contain letters, numbers, dots, underscores and minus symbols.
+     */
+    public static final String KAFKA_TOPIC_NAME_REGEX = "[a-zA-Z0-9\\._\\-]+";
+
+    /**
+     * Message is used if a match with the {@link Patterns#KAFKA_TOPIC_NAME_REGEX} fails.
+     */
+    public static final String KAFKA_TOPIC_NAME_MESSAGE = "must be a valid Kafka topic name: " +
+        "Must not contain a character other than ASCII alphanumerics, '.', '_' and '-'.";
+
 }

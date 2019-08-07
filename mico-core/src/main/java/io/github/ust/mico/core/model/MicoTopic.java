@@ -46,23 +46,8 @@ public class MicoTopic {
     @GeneratedValue
     private Long id;
 
-    // TODO: Roles as relationship?
-
     /**
      * Name of the topic
      */
     private String name;
-
-    // ----------------------
-    // -> Static Creators ---
-    // ----------------------
-
-    /**
-     * Creates a new {@code MicoTopic} based on a {@code MicoTopicRequestDTO}.
-     */
-
-    public static MicoTopic valueOf(MicoTopicRequestDTO topicDto) {
-        return new MicoTopic()
-            .setName(topicDto.getName());
-    }
 }

@@ -19,11 +19,24 @@
 
 package io.github.ust.mico.core.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
+import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoTopic;
+import io.github.ust.mico.core.model.MicoTopicRole;
+import io.github.ust.mico.core.util.Patterns;
+import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.Extension;
+import io.swagger.annotations.ExtensionProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 @Data
 @NoArgsConstructor
@@ -31,8 +44,38 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class MicoTopicRequestDTO {
 
-
+    /**
+     * Name of the topic.
+     */
+    @ApiModelProperty(required = true, extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Name"),
+            @ExtensionProperty(name = "pattern", value = Patterns.KAFKA_TOPIC_NAME_REGEX),
+            @ExtensionProperty(name = "minLength", value = "1"),
+            @ExtensionProperty(name = "maxLength", value = "249"),
+            @ExtensionProperty(name = "x-order", value = "10"),
+            @ExtensionProperty(name = "description", value = "Name of the topic.")
+        }
+    )})
+    @Size(min = 1, max = 249, message = "must have a length between 1 and 249")
+    @Pattern(regexp = Patterns.KAFKA_TOPIC_NAME_REGEX, message = Patterns.KAFKA_TOPIC_NAME_MESSAGE)
     private String name;
+
+    /**
+     * Role of the topic.
+     */
+    @ApiModelProperty(required = true, extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Role"),
+            @ExtensionProperty(name = "x-order", value = "20"),
+            @ExtensionProperty(name = "description", value = "Role of the topic. " +
+                "Possible values: INPUT, OUTPUT, DEAD_LETTER, INVALID_MESSAGE, TEST_MESSAGE_OUTPUT")
+        }
+    )})
+    @JsonSetter(nulls = Nulls.SKIP)
+    private MicoTopicRole.Role role;
 
     // -------------------
     // -> Constructors ---
@@ -40,11 +83,12 @@ public class MicoTopicRequestDTO {
 
     /**
      * Creates an instance of {@code MicoTopicRequestDTO} based on a
-     * {@code MicoTopic}.
+     * {@code MicoTopicRole} that includes the {@code MicoTopic} and a role.
      *
-     * @param micoTopic the {@link MicoTopic}.
+     * @param micoTopicRole the {@link MicoTopicRole}.
      */
-    public MicoTopicRequestDTO(MicoTopic micoTopic) {
-        this.name = micoTopic.getName();
+    public MicoTopicRequestDTO(MicoTopicRole micoTopicRole) {
+        this.name = micoTopicRole.getTopic().getName();
+        this.role = micoTopicRole.getRole();
     }
 }

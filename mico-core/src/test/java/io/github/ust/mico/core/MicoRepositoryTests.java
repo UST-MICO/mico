@@ -24,7 +24,7 @@ public class MicoRepositoryTests {
     @Autowired
     MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
 
-    @Autowired
+	@Autowired
     KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
 
     @Autowired

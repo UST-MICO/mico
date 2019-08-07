@@ -183,6 +183,13 @@ public class MicoRepositoryTestUtils {
         return new MicoTopic().setName(name);
     }
 
+    public static final MicoTopicRole getMicoServiceDeploymentInfoTopicRole(MicoTopic topic, MicoServiceDeploymentInfo sdi, MicoTopicRole.Role role) {
+        return new MicoTopicRole()
+            .setServiceDeploymentInfo(sdi)
+            .setRole(role)
+            .setTopic(topic);
+    }
+
     public static final KubernetesDeploymentInfo getMicoServiceDeploymentInfoKubernetesDeploymentInfo(int number) {
         return new KubernetesDeploymentInfo()
             .setDeploymentName("kdi-deployment-name-" + number)

@@ -21,6 +21,7 @@ package io.github.ust.mico.core.dto.response;
 
 import io.github.ust.mico.core.dto.request.MicoTopicRequestDTO;
 import io.github.ust.mico.core.model.MicoTopic;
+import io.github.ust.mico.core.model.MicoTopicRole;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -45,11 +46,11 @@ public class MicoTopicResponseDTO extends MicoTopicRequestDTO {
 
     /**
      * Creates an instance of {@code MicoTopicResponseDTO} based on a
-     * {@code MicoTopic}.
+     * {@code MicoTopicRole}.
      *
-     * @param micoTopic {@link MicoTopic}.
+     * @param micoTopicRole {@link MicoTopicRole}.
      */
-    public MicoTopicResponseDTO(MicoTopic micoTopic) {
-        super(micoTopic);
+    public MicoTopicResponseDTO(MicoTopicRole micoTopicRole) {
+        super(micoTopicRole);
     }
 }

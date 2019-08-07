@@ -22,10 +22,7 @@ package io.github.ust.mico.core;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ust.mico.core.configuration.KafkaConfig;
 import io.github.ust.mico.core.configuration.OpenFaaSConfig;
-import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
-import io.github.ust.mico.core.dto.request.MicoLabelRequestDTO;
-import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
-import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
+import io.github.ust.mico.core.dto.request.*;
 import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoLabelResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO;
@@ -107,6 +104,9 @@ public class ApplicationResourceIntegrationTests {
 
     @MockBean
     private MicoLabelRepository micoLabelRepository;
+
+    @MockBean
+    private MicoTopicRepository micoTopicRepository;
 
     @MockBean
     private MicoEnvironmentVariableRepository micoEnvironmentVariableRepository;
@@ -988,7 +988,8 @@ public class ApplicationResourceIntegrationTests {
         MicoServiceDeploymentInfoRequestDTO updatedServiceDeploymentInfoDTO = new MicoServiceDeploymentInfoRequestDTO()
             .setReplicas(5)
             .setLabels(CollectionUtils.listOf(new MicoLabelRequestDTO().setKey("key-updated").setValue("value-updated")))
-            .setImagePullPolicy(ImagePullPolicy.NEVER);
+            .setImagePullPolicy(ImagePullPolicy.NEVER)
+            .setTopics(CollectionUtils.listOf(new MicoTopicRequestDTO().setName("topic-name").setRole(MicoTopicRole.Role.INPUT)));;
 
         application.getServices().add(service);
         application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
@@ -1009,6 +1010,8 @@ public class ApplicationResourceIntegrationTests {
             .andExpect(jsonPath(SDI_LABELS_PATH + "[0].key", is(updatedServiceDeploymentInfoDTO.getLabels().get(0).getKey())))
             .andExpect(jsonPath(SDI_LABELS_PATH + "[0].value", is(updatedServiceDeploymentInfoDTO.getLabels().get(0).getValue())))
             .andExpect(jsonPath(SDI_IMAGE_PULLPOLICY_PATH, is(updatedServiceDeploymentInfoDTO.getImagePullPolicy().toString())))
+            .andExpect(jsonPath(SDI_TOPICS_PATH + "[0].name", is(updatedServiceDeploymentInfoDTO.getTopics().get(0).getName())))
+            .andExpect(jsonPath(SDI_TOPICS_PATH + "[0].role", is(updatedServiceDeploymentInfoDTO.getTopics().get(0).getRole().toString())))
             .andReturn();
     }
 

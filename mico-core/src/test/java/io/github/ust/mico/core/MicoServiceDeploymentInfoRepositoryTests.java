@@ -19,12 +19,7 @@
 
 package io.github.ust.mico.core;
 
-import static io.github.ust.mico.core.util.MicoRepositoryTestUtils.*;
-import static org.junit.Assert.*;
-
-import java.util.List;
-import java.util.Optional;
-
+import io.github.ust.mico.core.model.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,9 +28,11 @@ import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import java.util.List;
+import java.util.Optional;
+
+import static io.github.ust.mico.core.util.MicoRepositoryTestUtils.*;
+import static org.junit.Assert.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -349,4 +346,41 @@ public class MicoServiceDeploymentInfoRepositoryTests extends MicoRepositoryTest
         assertEquals(a1, applicationRepository.findByShortNameAndVersion(a1.getShortName(), a1.getVersion()).get());
         assertEquals(a3, applicationRepository.findByShortNameAndVersion(a3.getShortName(), a3.getVersion()).get());
     }
+
+    @Commit
+    @Test
+    public void updateTopics() {
+        MicoApplication a0 = getPureMicoApplication(0);
+        MicoService s0 = getMicoService(0);
+        addMicoServicesWithServiceDeploymentInfo(a0, s0);
+
+        MicoServiceDeploymentInfo sdi0 = a0.getServiceDeploymentInfos().get(0);
+        MicoTopic t0 = getMicoServiceDeploymentInfoTopic("topic0");
+        MicoTopicRole tr0 = getMicoServiceDeploymentInfoTopicRole(t0, sdi0, MicoTopicRole.Role.INPUT);
+        sdi0.getTopics().add(tr0);
+        applicationRepository.save(a0);
+
+        MicoServiceDeploymentInfo storedSdi = serviceDeploymentInfoRepository
+            .findByApplicationAndService(a0.getShortName(), a0.getVersion(), s0.getShortName()).get();
+        List<MicoTopicRole> topicRoles = storedSdi.getTopics();
+
+        assertEquals(1, topicRoles.size());
+        assertEquals(MicoTopicRole.Role.INPUT, topicRoles.get(0).getRole());
+        assertEquals(sdi0, topicRoles.get(0).getServiceDeploymentInfo());
+        assertEquals(t0.getName(), topicRoles.get(0).getTopic().getName());
+
+        // Update topic
+        storedSdi.getTopics().get(0).getTopic().setName("topic0-updated");
+        storedSdi.getTopics().get(0).setRole(MicoTopicRole.Role.OUTPUT);
+        MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(storedSdi);
+
+        MicoServiceDeploymentInfo updatedSdi = serviceDeploymentInfoRepository
+            .findByApplicationAndService(a0.getShortName(), a0.getVersion(), s0.getShortName()).get();
+        List<MicoTopicRole> updatedTopicRoles = updatedSdi.getTopics();
+
+        assertEquals(1, updatedTopicRoles.size());
+        assertEquals(MicoTopicRole.Role.OUTPUT, updatedTopicRoles.get(0).getRole());
+        assertEquals("topic0-updated", updatedTopicRoles.get(0).getTopic().getName());
+    }
+
 }

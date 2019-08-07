@@ -1,10 +1,7 @@
 package io.github.ust.mico.core;
 
 
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoLabel;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoTopic;
+import io.github.ust.mico.core.model.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -13,8 +10,9 @@ import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 import static io.github.ust.mico.core.util.MicoRepositoryTestUtils.*;
-import static io.github.ust.mico.core.util.MicoRepositoryTestUtils.getMicoServiceDeploymentInfoLabel;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringRunner.class)
@@ -26,6 +24,33 @@ public class MicoTopicRepositoryTests extends MicoRepositoryTests {
     @Before
     public void setUp() {
         deleteAllData();
+    }
+
+    @Commit
+    @Test
+    public void createTopics() {
+        MicoApplication a0 = getPureMicoApplication(0);
+        MicoService s0 = getMicoService(0);
+        addMicoServicesWithServiceDeploymentInfo(a0, s0);
+
+        MicoServiceDeploymentInfo sdi0 = a0.getServiceDeploymentInfos().get(0);
+        MicoTopic t0 = getMicoServiceDeploymentInfoTopic("topic0");
+        MicoTopicRole tr0 = getMicoServiceDeploymentInfoTopicRole(t0, sdi0, MicoTopicRole.Role.INPUT);
+        sdi0.getTopics().add(tr0);
+        applicationRepository.save(a0);
+
+        // Assert based on application repository
+        assertEquals(1, topicRepository.count());
+        MicoApplication micoApplication = applicationRepository.findByShortNameAndVersion(a0.getShortName(), a0.getVersion()).get();
+        List<MicoTopicRole> topicRoles = micoApplication.getServiceDeploymentInfos().get(0).getTopics();
+        assertEquals(1, topicRoles.size());
+        assertEquals(MicoTopicRole.Role.INPUT, topicRoles.get(0).getRole());
+        assertEquals(sdi0, topicRoles.get(0).getServiceDeploymentInfo());
+        assertEquals(t0.getName(), topicRoles.get(0).getTopic().getName());
+
+        // Check that a clean up don't remove the connection
+        topicRepository.cleanUp();
+        assertEquals(1, topicRepository.count());
     }
 
     @Commit
@@ -48,18 +73,18 @@ public class MicoTopicRepositoryTests extends MicoRepositoryTests {
         addMicoServicesWithServiceDeploymentInfo(a1, s1);
         addMicoServicesWithServiceDeploymentInfo(a2, s2);
 
-        // Setup some labels
-        MicoTopic l0 = getMicoServiceDeploymentInfoTopic("topic0");
-        MicoTopic l1 = getMicoServiceDeploymentInfoTopic("topic1");
-        MicoTopic l2 = getMicoServiceDeploymentInfoTopic("topic2");
+        // Setup some topics
+        MicoTopic t0 = getMicoServiceDeploymentInfoTopic("topic0");
+        MicoTopic t1 = getMicoServiceDeploymentInfoTopic("topic1");
+        MicoTopic t2 = getMicoServiceDeploymentInfoTopic("topic2");
 
         // Save
         applicationRepository.save(a0);
         applicationRepository.save(a1);
         applicationRepository.save(a2);
-        topicRepository.save(l0);
-        topicRepository.save(l1);
-        topicRepository.save(l2);
+        topicRepository.save(t0);
+        topicRepository.save(t1);
+        topicRepository.save(t2);
 
         //  3 (created topics)
         assertEquals(3, topicRepository.count());

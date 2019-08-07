@@ -118,7 +118,7 @@ public class MicoServiceDeploymentInfo {
      */
 
     @Relationship(type = "HAS")
-    private List<MicoTopic> topics = new ArrayList<>();
+    private List<MicoTopicRole> topics = new ArrayList<>();
 
 
     /**
@@ -176,8 +176,7 @@ public class MicoServiceDeploymentInfo {
             .setEnvironmentVariables(serviceDeploymentInfoDto.getEnvironmentVariables().stream().map(MicoEnvironmentVariable::valueOf).collect(Collectors.toList()))
             .setInterfaceConnections(serviceDeploymentInfoDto.getInterfaceConnections().stream().map(MicoInterfaceConnection::valueOf).collect(Collectors.toList()))
             .setImagePullPolicy(serviceDeploymentInfoDto.getImagePullPolicy())
-            .setTopics(serviceDeploymentInfoDto.getTopics().stream().map(MicoTopic::valueOf).collect(Collectors.toList()));
-
+            .setTopics(serviceDeploymentInfoDto.getTopics().stream().map(topicDto -> MicoTopicRole.valueOf(topicDto, this)).collect(Collectors.toList()));
     }
 
 
