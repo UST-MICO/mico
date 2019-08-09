@@ -62,16 +62,16 @@ public class MicoTopicRole {
     private MicoServiceDeploymentInfo serviceDeploymentInfo;
 
     /**
-     * This is the role of the {@link MicoTopicRole#topic}
-     */
-    private Role role;
-
-    /**
      * This is the {@link MicoTopic} included by the
      * {@link MicoTopicRole#serviceDeploymentInfo}.
      */
     @EndNode
     private MicoTopic topic;
+
+    /**
+     * This is the role of the {@link MicoTopicRole#topic}
+     */
+    private Role role;
 
     public enum Role {
         UNKNOWN, INPUT, OUTPUT, DEAD_LETTER, INVALID_MESSAGE, TEST_MESSAGE_OUTPUT

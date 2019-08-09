@@ -20,7 +20,6 @@
 package io.github.ust.mico.core.model;
 
 
-import io.github.ust.mico.core.dto.request.MicoTopicRequestDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

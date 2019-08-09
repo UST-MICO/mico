@@ -19,10 +19,7 @@
 
 package io.github.ust.mico.core.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonSetter;
-import com.fasterxml.jackson.annotation.Nulls;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
-import io.github.ust.mico.core.model.MicoTopic;
 import io.github.ust.mico.core.model.MicoTopicRole;
 import io.github.ust.mico.core.util.Patterns;
 import io.swagger.annotations.ApiModelProperty;
@@ -33,16 +30,29 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
 public class MicoTopicRequestDTO {
+
+    /**
+     * Role of the topic.
+     */
+    @ApiModelProperty(required = true, extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Role"),
+            @ExtensionProperty(name = "x-order", value = "10"),
+            @ExtensionProperty(name = "description", value = "Role of the topic.")
+        }
+    )})
+    @NotNull
+    private MicoTopicRole.Role role;
 
     /**
      * Name of the topic.
@@ -54,7 +64,7 @@ public class MicoTopicRequestDTO {
             @ExtensionProperty(name = "pattern", value = Patterns.KAFKA_TOPIC_NAME_REGEX),
             @ExtensionProperty(name = "minLength", value = "1"),
             @ExtensionProperty(name = "maxLength", value = "249"),
-            @ExtensionProperty(name = "x-order", value = "10"),
+            @ExtensionProperty(name = "x-order", value = "20"),
             @ExtensionProperty(name = "description", value = "Name of the topic.")
         }
     )})
@@ -62,20 +72,6 @@ public class MicoTopicRequestDTO {
     @Pattern(regexp = Patterns.KAFKA_TOPIC_NAME_REGEX, message = Patterns.KAFKA_TOPIC_NAME_MESSAGE)
     private String name;
 
-    /**
-     * Role of the topic.
-     */
-    @ApiModelProperty(required = true, extensions = {@Extension(
-        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
-        properties = {
-            @ExtensionProperty(name = "title", value = "Role"),
-            @ExtensionProperty(name = "x-order", value = "20"),
-            @ExtensionProperty(name = "description", value = "Role of the topic. " +
-                "Possible values: INPUT, OUTPUT, DEAD_LETTER, INVALID_MESSAGE, TEST_MESSAGE_OUTPUT")
-        }
-    )})
-    @JsonSetter(nulls = Nulls.SKIP)
-    private MicoTopicRole.Role role;
 
     // -------------------
     // -> Constructors ---
@@ -88,7 +84,7 @@ public class MicoTopicRequestDTO {
      * @param micoTopicRole the {@link MicoTopicRole}.
      */
     public MicoTopicRequestDTO(MicoTopicRole micoTopicRole) {
-        this.name = micoTopicRole.getTopic().getName();
         this.role = micoTopicRole.getRole();
+        this.name = micoTopicRole.getTopic().getName();
     }
 }
