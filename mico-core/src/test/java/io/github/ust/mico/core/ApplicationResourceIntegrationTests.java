@@ -989,7 +989,9 @@ public class ApplicationResourceIntegrationTests {
             .setReplicas(5)
             .setLabels(CollectionUtils.listOf(new MicoLabelRequestDTO().setKey("key-updated").setValue("value-updated")))
             .setImagePullPolicy(ImagePullPolicy.NEVER)
-            .setTopics(CollectionUtils.listOf(new MicoTopicRequestDTO().setName("topic-name").setRole(MicoTopicRole.Role.INPUT)));;
+            .setTopics(CollectionUtils.listOf(
+                new MicoTopicRequestDTO().setName("input-topic").setRole(MicoTopicRole.Role.INPUT),
+                new MicoTopicRequestDTO().setName("output-topic").setRole(MicoTopicRole.Role.OUTPUT)));
 
         application.getServices().add(service);
         application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
@@ -1010,9 +1012,43 @@ public class ApplicationResourceIntegrationTests {
             .andExpect(jsonPath(SDI_LABELS_PATH + "[0].key", is(updatedServiceDeploymentInfoDTO.getLabels().get(0).getKey())))
             .andExpect(jsonPath(SDI_LABELS_PATH + "[0].value", is(updatedServiceDeploymentInfoDTO.getLabels().get(0).getValue())))
             .andExpect(jsonPath(SDI_IMAGE_PULLPOLICY_PATH, is(updatedServiceDeploymentInfoDTO.getImagePullPolicy().toString())))
+            .andExpect(jsonPath(SDI_TOPICS_PATH, hasSize(2)))
             .andExpect(jsonPath(SDI_TOPICS_PATH + "[0].name", is(updatedServiceDeploymentInfoDTO.getTopics().get(0).getName())))
             .andExpect(jsonPath(SDI_TOPICS_PATH + "[0].role", is(updatedServiceDeploymentInfoDTO.getTopics().get(0).getRole().toString())))
+            .andExpect(jsonPath(SDI_TOPICS_PATH + "[1].name", is(updatedServiceDeploymentInfoDTO.getTopics().get(1).getName())))
+            .andExpect(jsonPath(SDI_TOPICS_PATH + "[1].role", is(updatedServiceDeploymentInfoDTO.getTopics().get(1).getRole().toString())))
             .andReturn();
+    }
+
+    @Test
+    public void updateServiceDeploymentInformationWithDuplicatedTopicRoles() throws Exception {
+        MicoApplication application = new MicoApplication()
+            .setId(ID)
+            .setShortName(SHORT_NAME).setVersion(VERSION);
+
+        MicoService service = new MicoService()
+            .setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
+
+        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
+            .setId(ID_1)
+            .setService(service);
+
+        MicoServiceDeploymentInfoRequestDTO updatedServiceDeploymentInfoDTO = new MicoServiceDeploymentInfoRequestDTO()
+            .setTopics(CollectionUtils.listOf(
+                new MicoTopicRequestDTO().setName("topic-1").setRole(MicoTopicRole.Role.INPUT),
+                new MicoTopicRequestDTO().setName("topic-2").setRole(MicoTopicRole.Role.INPUT)));
+
+        application.getServices().add(service);
+        application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
+
+        given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion())).willReturn(Optional.of(application));
+        given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName())).willReturn(Optional.of(serviceDeploymentInfo));
+
+        mvc.perform(put(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName())
+            .content(mapper.writeValueAsBytes(updatedServiceDeploymentInfoDTO))
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isUnprocessableEntity());
     }
 
     @Test

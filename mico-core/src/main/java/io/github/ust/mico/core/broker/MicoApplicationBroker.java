@@ -3,6 +3,7 @@ package io.github.ust.mico.core.broker;
 import io.github.ust.mico.core.configuration.KafkaConfig;
 import io.github.ust.mico.core.configuration.OpenFaaSConfig;
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
+import io.github.ust.mico.core.dto.request.MicoTopicRequestDTO;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationDeploymentStatusResponseDTO;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
 import io.github.ust.mico.core.exception.*;
@@ -16,9 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
@@ -315,16 +314,24 @@ public class MicoApplicationBroker {
     public MicoServiceDeploymentInfo updateMicoServiceDeploymentInformation(String applicationShortName, String applicationVersion,
                                                                             String serviceShortName, MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) throws
         MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException,
-        MicoServiceDeploymentInformationNotFoundException, KubernetesResourceException {
+        MicoServiceDeploymentInformationNotFoundException, KubernetesResourceException, MicoTopicRoleNotUniqueException {
+
+        validateTopics(serviceDeploymentInfoDTO);
 
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
         MicoServiceDeploymentInfo storedServiceDeploymentInfo = getMicoServiceDeploymentInformation(applicationShortName, applicationVersion, serviceShortName);
 
         int oldReplicas = storedServiceDeploymentInfo.getReplicas();
+
+        Optional<MicoServiceDeploymentInfo> sdiBeforeSave = serviceDeploymentInfoRepository.findByApplicationAndService(applicationShortName, applicationVersion, serviceShortName);
+        log.debug("BEFORE SAVE: {}", sdiBeforeSave.toString());
+
         // Update existing service deployment information and save it in the database.
         MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(
             storedServiceDeploymentInfo.applyValuesFrom(serviceDeploymentInfoDTO));
 
+        Optional<MicoServiceDeploymentInfo> sdiBeforeCleanup = serviceDeploymentInfoRepository.findByApplicationAndService(applicationShortName, applicationVersion, serviceShortName);
+        log.debug("BEFORE CLEANUP: {}", sdiBeforeCleanup.toString());
         // In case addition properties (stored as separate node entity) such as labels, environment variables
         // have been removed from this service deployment information,
         // the standard save() function of the service deployment information repository will not delete those
@@ -334,6 +341,9 @@ public class MicoApplicationBroker {
         micoEnvironmentVariableRepository.cleanUp();
         kubernetesDeploymentInfoRepository.cleanUp();
         micoInterfaceConnectionRepository.cleanUp();
+
+        Optional<MicoServiceDeploymentInfo> sdiAfterCleanup = serviceDeploymentInfoRepository.findByApplicationAndService(applicationShortName, applicationVersion, serviceShortName);
+        log.debug("AFTER CLEANUP:  {}", sdiAfterCleanup.toString());
 
         // FIXME: Currently we only supported scale in / scale out.
         // 		  If the MICO service is already deployed, we only update the replicas.
@@ -358,6 +368,31 @@ public class MicoApplicationBroker {
         }
 
         return updatedServiceDeploymentInfo;
+    }
+
+    /**
+     * Validates the topics.
+     * Throws an error if there are multiple topics with the same role.
+     *
+     * @param serviceDeploymentInfoDTO the {@link MicoServiceDeploymentInfoRequestDTO}
+     * @throws MicoTopicRoleNotUniqueException if an {@code MicoTopicRole.Role} is not unique
+     */
+    private void validateTopics(MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) throws MicoTopicRoleNotUniqueException {
+        List<MicoTopicRequestDTO> newTopics = serviceDeploymentInfoDTO.getTopics();
+        Map<MicoTopicRole.Role, List<MicoTopicRequestDTO>> map = new HashMap<>();
+        for (MicoTopicRequestDTO requestDTO : newTopics) {
+            MicoTopicRole.Role role = requestDTO.getRole();
+            if (!map.containsKey(role)) {
+                map.put(role, new ArrayList<>());
+            }
+            map.get(role).add(requestDTO);
+        }
+        for (MicoTopicRole.Role role : map.keySet()) {
+            if (map.get(role).size() > 1) {
+                List<String> topicNames = map.get(role).stream().map(MicoTopicRequestDTO::getName).collect(Collectors.toList());
+                throw new MicoTopicRoleNotUniqueException(role, topicNames);
+            }
+        }
     }
 
     //TODO: Change return value to not use a DTO (see issue mico#630)

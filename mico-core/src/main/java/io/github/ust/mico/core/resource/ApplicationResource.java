@@ -262,6 +262,8 @@ public class ApplicationResource {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoApplicationDoesNotIncludeMicoServiceException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        } catch (MicoTopicRoleNotUniqueException e) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
         }
 
         // Convert to service deployment info DTO and return it
