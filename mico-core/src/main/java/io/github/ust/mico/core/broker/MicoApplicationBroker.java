@@ -323,15 +323,14 @@ public class MicoApplicationBroker {
 
         int oldReplicas = storedServiceDeploymentInfo.getReplicas();
 
-        Optional<MicoServiceDeploymentInfo> sdiBeforeSave = serviceDeploymentInfoRepository.findByApplicationAndService(applicationShortName, applicationVersion, serviceShortName);
-        log.debug("BEFORE SAVE: {}", sdiBeforeSave.toString());
-
         // Update existing service deployment information and save it in the database.
         MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(
             storedServiceDeploymentInfo.applyValuesFrom(serviceDeploymentInfoDTO));
 
-        Optional<MicoServiceDeploymentInfo> sdiBeforeCleanup = serviceDeploymentInfoRepository.findByApplicationAndService(applicationShortName, applicationVersion, serviceShortName);
-        log.debug("BEFORE CLEANUP: {}", sdiBeforeCleanup.toString());
+        // As a workaround it's necessary to save the same entity twice,
+        // because otherwise it sometimes happens that the relationship entity `MicoTopicRole` has no properties.
+        serviceDeploymentInfoRepository.save(updatedServiceDeploymentInfo);
+
         // In case addition properties (stored as separate node entity) such as labels, environment variables
         // have been removed from this service deployment information,
         // the standard save() function of the service deployment information repository will not delete those
@@ -341,9 +340,6 @@ public class MicoApplicationBroker {
         micoEnvironmentVariableRepository.cleanUp();
         kubernetesDeploymentInfoRepository.cleanUp();
         micoInterfaceConnectionRepository.cleanUp();
-
-        Optional<MicoServiceDeploymentInfo> sdiAfterCleanup = serviceDeploymentInfoRepository.findByApplicationAndService(applicationShortName, applicationVersion, serviceShortName);
-        log.debug("AFTER CLEANUP:  {}", sdiAfterCleanup.toString());
 
         // FIXME: Currently we only supported scale in / scale out.
         // 		  If the MICO service is already deployed, we only update the replicas.
