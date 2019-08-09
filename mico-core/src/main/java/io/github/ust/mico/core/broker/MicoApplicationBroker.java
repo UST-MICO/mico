@@ -322,8 +322,8 @@ public class MicoApplicationBroker {
 
         int oldReplicas = storedServiceDeploymentInfo.getReplicas();
         // Update existing service deployment information and save it in the database.
-        storedServiceDeploymentInfo.applyValuesFrom(serviceDeploymentInfoDTO);
-        MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(storedServiceDeploymentInfo);
+        MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(
+            storedServiceDeploymentInfo.applyValuesFrom(serviceDeploymentInfoDTO));
 
         // In case addition properties (stored as separate node entity) such as labels, environment variables
         // have been removed from this service deployment information,
