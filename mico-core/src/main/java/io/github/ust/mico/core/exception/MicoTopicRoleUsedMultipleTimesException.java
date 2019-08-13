@@ -21,22 +21,16 @@ package io.github.ust.mico.core.exception;
 
 import io.github.ust.mico.core.model.MicoTopicRole;
 
-import java.util.List;
-
-public class MicoTopicRoleNotUniqueException extends Exception {
+public class MicoTopicRoleUsedMultipleTimesException extends Exception {
 
     private static final long serialVersionUID = -8891759393985996523L;
 
-    public MicoTopicRoleNotUniqueException(MicoTopicRole.Role role, List<String> topicNames) {
-        super("Topic role '" + role.toString() + "' must be unique, but is used by '" + topicNames.toString() + "'.");
+    public MicoTopicRoleUsedMultipleTimesException(MicoTopicRole.Role role) {
+        super("Topic role '" + role.toString() + "' must not be used multiple times.");
     }
 
-    public MicoTopicRoleNotUniqueException(MicoTopicRole.Role role) {
-        super("Topic role '" + role.toString() + "' must be unique.");
-    }
-
-    public MicoTopicRoleNotUniqueException() {
-        super("Topic role must be unique.");
+    public MicoTopicRoleUsedMultipleTimesException() {
+        super("Topic role must not be used multiple times.");
     }
 
 }

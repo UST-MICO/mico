@@ -314,7 +314,7 @@ public class MicoApplicationBroker {
     public MicoServiceDeploymentInfo updateMicoServiceDeploymentInformation(String applicationShortName, String applicationVersion,
                                                                             String serviceShortName, MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) throws
         MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException,
-        MicoServiceDeploymentInformationNotFoundException, KubernetesResourceException, MicoTopicRoleNotUniqueException {
+        MicoServiceDeploymentInformationNotFoundException, KubernetesResourceException, MicoTopicRoleUsedMultipleTimesException {
 
         validateTopics(serviceDeploymentInfoDTO);
 
@@ -371,22 +371,15 @@ public class MicoApplicationBroker {
      * Throws an error if there are multiple topics with the same role.
      *
      * @param serviceDeploymentInfoDTO the {@link MicoServiceDeploymentInfoRequestDTO}
-     * @throws MicoTopicRoleNotUniqueException if an {@code MicoTopicRole.Role} is not unique
+     * @throws MicoTopicRoleUsedMultipleTimesException if an {@code MicoTopicRole.Role} is not unique
      */
-    private void validateTopics(MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) throws MicoTopicRoleNotUniqueException {
+    private void validateTopics(MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) throws MicoTopicRoleUsedMultipleTimesException {
         List<MicoTopicRequestDTO> newTopics = serviceDeploymentInfoDTO.getTopics();
-        Map<MicoTopicRole.Role, List<MicoTopicRequestDTO>> map = new HashMap<>();
+        Set<MicoTopicRole.Role> usedRoles = new HashSet<>();
         for (MicoTopicRequestDTO requestDTO : newTopics) {
-            MicoTopicRole.Role role = requestDTO.getRole();
-            if (!map.containsKey(role)) {
-                map.put(role, new ArrayList<>());
-            }
-            map.get(role).add(requestDTO);
-        }
-        for (MicoTopicRole.Role role : map.keySet()) {
-            if (map.get(role).size() > 1) {
-                List<String> topicNames = map.get(role).stream().map(MicoTopicRequestDTO::getName).collect(Collectors.toList());
-                throw new MicoTopicRoleNotUniqueException(role, topicNames);
+            if (!usedRoles.add(requestDTO.getRole())) {
+                // Role is used twice, however a role should be used only once
+                throw new MicoTopicRoleUsedMultipleTimesException(requestDTO.getRole());
             }
         }
     }
