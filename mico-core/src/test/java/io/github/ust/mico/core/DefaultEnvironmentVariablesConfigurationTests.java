@@ -22,6 +22,9 @@ package io.github.ust.mico.core;
 import io.github.ust.mico.core.configuration.KafkaConfig;
 import io.github.ust.mico.core.configuration.OpenFaaSConfig;
 import io.github.ust.mico.core.model.MicoEnvironmentVariable;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.model.MicoTopic;
+import io.github.ust.mico.core.model.MicoTopicRole;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,12 +65,26 @@ public class DefaultEnvironmentVariablesConfigurationTests {
         List<MicoEnvironmentVariable> expectedEnvironmentVariables = new LinkedList<>();
         expectedEnvironmentVariables.add(new MicoEnvironmentVariable().setName(KAFKA_BOOTSTRAP_SERVERS.name()).setValue(kafkaConfig.getBootstrapServers()));
         expectedEnvironmentVariables.add(new MicoEnvironmentVariable().setName(KAFKA_GROUP_ID.name()).setValue(kafkaConfig.getGroupId()));
-        expectedEnvironmentVariables.add(new MicoEnvironmentVariable().setName(KAFKA_TOPIC_DEAD_LETTER.name()).setValue(kafkaConfig.getDeadLetterTopic()));
-        expectedEnvironmentVariables.add(new MicoEnvironmentVariable().setName(KAFKA_TOPIC_INVALID_MESSAGE.name()).setValue(kafkaConfig.getInvalidMessageTopic()));
-        expectedEnvironmentVariables.add(new MicoEnvironmentVariable().setName(KAFKA_TOPIC_TEST_MESSAGE_OUTPUT.name()).setValue(kafkaConfig.getTestMessageOutputTopic()));
 
-        assertThat(kafkaConfig.getDefaultEnvironmentVariablesForKafka(), hasSize(5));
-        assertThat(kafkaConfig.getDefaultEnvironmentVariablesForKafka(), containsInAnyOrder(expectedEnvironmentVariables.toArray()));
+        List<MicoEnvironmentVariable> actualEnvVars = kafkaConfig.getDefaultEnvironmentVariablesForKafka();
+        assertThat(actualEnvVars, hasSize(2));
+        assertThat(actualEnvVars, containsInAnyOrder(expectedEnvironmentVariables.toArray()));
+    }
+
+    @Test
+    public void testKafkaConfigForTopics() {
+        MicoServiceDeploymentInfo sdi = new MicoServiceDeploymentInfo().setId(1000L);
+        List<MicoTopicRole> expectedTopics = new LinkedList<>();
+        expectedTopics.add(new MicoTopicRole().setServiceDeploymentInfo(sdi)
+            .setRole(MicoTopicRole.Role.DEAD_LETTER).setTopic(new MicoTopic().setName(kafkaConfig.getDeadLetterTopic())));
+        expectedTopics.add(new MicoTopicRole().setServiceDeploymentInfo(sdi)
+            .setRole(MicoTopicRole.Role.INVALID_MESSAGE).setTopic(new MicoTopic().setName(kafkaConfig.getInvalidMessageTopic())));
+        expectedTopics.add(new MicoTopicRole().setServiceDeploymentInfo(sdi)
+            .setRole(MicoTopicRole.Role.TEST_MESSAGE_OUTPUT).setTopic(new MicoTopic().setName(kafkaConfig.getTestMessageOutputTopic())));
+
+        List<MicoTopicRole> actualTopics = kafkaConfig.getDefaultTopics(sdi);
+        assertThat(actualTopics, hasSize(3));
+        assertThat(actualTopics, containsInAnyOrder(expectedTopics.toArray()));
     }
 
 }

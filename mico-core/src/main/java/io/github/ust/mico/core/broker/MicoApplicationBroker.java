@@ -259,11 +259,13 @@ public class MicoApplicationBroker {
                 micoService.getShortName(), micoService.getVersion());
             return;
         }
-        log.debug("Adding default environment variables to the Kafka-enabled MicoService '{}' '{}'.",
+        log.debug("Adding default environment variables and topics to the Kafka-enabled MicoService '{}' '{}'.",
             micoService.getShortName(), micoService.getVersion());
         List<MicoEnvironmentVariable> micoEnvironmentVariables = micoServiceDeploymentInfo.getEnvironmentVariables();
         micoEnvironmentVariables.addAll(kafkaConfig.getDefaultEnvironmentVariablesForKafka());
         micoEnvironmentVariables.addAll(openFaaSConfig.getDefaultEnvironmentVariablesForOpenFaaS());
+        List<MicoTopicRole> topics = micoServiceDeploymentInfo.getTopics();
+        topics.addAll(kafkaConfig.getDefaultTopics(micoServiceDeploymentInfo));
     }
 
     public MicoApplication removeMicoServiceFromMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException, MicoApplicationIsNotUndeployedException {
