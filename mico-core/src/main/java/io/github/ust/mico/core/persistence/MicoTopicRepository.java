@@ -23,10 +23,14 @@ import io.github.ust.mico.core.model.MicoTopic;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 
+import java.util.Optional;
+
 public interface MicoTopicRepository extends Neo4jRepository<MicoTopic, Long> {
     /**
      * Deletes all topics that do <b>not</b> have any relationship to another node.
      */
     @Query("MATCH (topic:MicoTopic) WHERE size((topic)--()) = 0 DELETE topic")
     void cleanUp();
+
+    Optional<MicoTopic> findByName(String name);
 }

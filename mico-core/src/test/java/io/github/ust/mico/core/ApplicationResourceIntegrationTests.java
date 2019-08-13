@@ -1052,6 +1052,71 @@ public class ApplicationResourceIntegrationTests {
     }
 
     @Test
+    public void updateServiceDeploymentInformationReusesExistingTopics() throws Exception {
+        MicoApplication application = new MicoApplication()
+            .setId(ID)
+            .setShortName(SHORT_NAME).setVersion(VERSION);
+
+        MicoApplication expectedApplication = new MicoApplication()
+            .setId(ID)
+            .setShortName(SHORT_NAME).setVersion(VERSION);
+
+        MicoService service = new MicoService()
+            .setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
+
+        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
+            .setId(ID_1)
+            .setService(service);
+
+        MicoTopic existingTopic1 = new MicoTopic()
+            .setId(ID_2)
+            .setName("topic-name-1");
+
+        MicoTopic existingTopic2 = new MicoTopic()
+            .setId(ID_3)
+            .setName("topic-name-2");
+
+        String newTopicName = "new-topic";
+        MicoServiceDeploymentInfoRequestDTO updatedServiceDeploymentInfoDTO = new MicoServiceDeploymentInfoRequestDTO()
+            .setTopics(CollectionUtils.listOf(
+                new MicoTopicRequestDTO().setName(existingTopic1.getName()).setRole(MicoTopicRole.Role.INPUT),
+                new MicoTopicRequestDTO().setName(newTopicName).setRole(MicoTopicRole.Role.OUTPUT)));
+
+        application.getServices().add(service);
+        application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
+        expectedApplication.getServices().add(service);
+        expectedApplication.getServiceDeploymentInfos().add(serviceDeploymentInfo.applyValuesFrom(updatedServiceDeploymentInfoDTO));
+
+        given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion())).willReturn(Optional.of(application));
+        given(applicationRepository.save(eq(expectedApplication))).willReturn(expectedApplication);
+        given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName())).willReturn(Optional.of(serviceDeploymentInfo));
+        given(serviceDeploymentInfoRepository.save(any(MicoServiceDeploymentInfo.class))).willReturn(serviceDeploymentInfo.applyValuesFrom(updatedServiceDeploymentInfoDTO));
+        given(micoTopicRepository.findByName(existingTopic1.getName())).willReturn(Optional.of(existingTopic1));
+        given(micoTopicRepository.findByName(existingTopic2.getName())).willReturn(Optional.of(existingTopic2));
+
+        mvc.perform(put(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName())
+            .content(mapper.writeValueAsBytes(updatedServiceDeploymentInfoDTO))
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(SDI_TOPICS_PATH, hasSize(2)))
+            .andExpect(jsonPath(SDI_TOPICS_PATH + "[0].name", is(serviceDeploymentInfo.getTopics().get(0).getTopic().getName())))
+            .andExpect(jsonPath(SDI_TOPICS_PATH + "[1].name", is(serviceDeploymentInfo.getTopics().get(1).getTopic().getName())))
+            .andReturn();
+
+        ArgumentCaptor<MicoServiceDeploymentInfo> sdiCaptor = ArgumentCaptor.forClass(MicoServiceDeploymentInfo.class);
+
+        verify(serviceDeploymentInfoRepository, atLeast(1)).save(sdiCaptor.capture());
+        MicoServiceDeploymentInfo actualSdi = sdiCaptor.getValue();
+        assertEquals(2, actualSdi.getTopics().size());
+        MicoTopicRole actualTopicRole1 = actualSdi.getTopics().get(0);
+        assertEquals("Existing topic was not reused!", existingTopic1.getId(), actualTopicRole1.getTopic().getId());
+        assertEquals(existingTopic1, actualTopicRole1.getTopic());
+        MicoTopicRole actualTopicRole2 = actualSdi.getTopics().get(1);
+        assertEquals("New topic was not saved.", newTopicName, actualTopicRole2.getTopic().getName());
+    }
+
+    @Test
     public void deleteAllVersionsOfApplication() throws Exception {
         MicoApplication micoApplicationV1 = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
         MicoApplication micoApplicationV2 = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION_1_0_1);

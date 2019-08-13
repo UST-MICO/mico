@@ -266,6 +266,8 @@ public class MicoApplicationBroker {
         micoEnvironmentVariables.addAll(openFaaSConfig.getDefaultEnvironmentVariablesForOpenFaaS());
         List<MicoTopicRole> topics = micoServiceDeploymentInfo.getTopics();
         topics.addAll(kafkaConfig.getDefaultTopics(micoServiceDeploymentInfo));
+        // If other services already uses the same default topics, reuse them
+        reuseExistingTopics(micoServiceDeploymentInfo);
     }
 
     public MicoApplication removeMicoServiceFromMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException, MicoApplicationIsNotUndeployedException {
@@ -325,9 +327,10 @@ public class MicoApplicationBroker {
 
         int oldReplicas = storedServiceDeploymentInfo.getReplicas();
 
-        // Update existing service deployment information and save it in the database.
-        MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(
-            storedServiceDeploymentInfo.applyValuesFrom(serviceDeploymentInfoDTO));
+        // Update existing service deployment information, reuse existing topics if and save it in the database.
+        MicoServiceDeploymentInfo sdiWithAppliedValues = storedServiceDeploymentInfo.applyValuesFrom(serviceDeploymentInfoDTO);
+        MicoServiceDeploymentInfo sdiWithReusedTopics = reuseExistingTopics(sdiWithAppliedValues);
+        MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(sdiWithReusedTopics);
 
         // As a workaround it's necessary to save the same entity twice,
         // because otherwise it sometimes happens that the relationship entity `MicoTopicRole` has no properties.
@@ -384,6 +387,23 @@ public class MicoApplicationBroker {
                 throw new MicoTopicRoleUsedMultipleTimesException(requestDTO.getRole());
             }
         }
+    }
+
+    /**
+     * Check if topics with the same name already exists.
+     * If so reuse them by setting the id of the existing Neo4j node.
+     *
+     * @param serviceDeploymentInfoDTO the {@link MicoServiceDeploymentInfoRequestDTO} containing topics
+     */
+    private MicoServiceDeploymentInfo reuseExistingTopics(MicoServiceDeploymentInfo serviceDeploymentInfoDTO) {
+        List<MicoTopicRole> topicRoles = serviceDeploymentInfoDTO.getTopics();
+
+        for (MicoTopicRole topicRole : topicRoles) {
+            String topicName = topicRole.getTopic().getName();
+            Optional<MicoTopic> existingTopic = micoTopicRepository.findByName(topicName);
+            existingTopic.ifPresent(topicRole::setTopic);
+        }
+        return serviceDeploymentInfoDTO;
     }
 
     //TODO: Change return value to not use a DTO (see issue mico#630)
