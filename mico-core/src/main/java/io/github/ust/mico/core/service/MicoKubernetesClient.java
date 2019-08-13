@@ -1265,14 +1265,20 @@ public class MicoKubernetesClient {
      */
     public Optional<String> getPublicIpOfKubernetesService(String name, String namespace) throws KubernetesResourceException {
         log.debug("Requesting public ip of '{}' in namespace '{}'", name, namespace);
-        Optional<Service> serviceOptional = getService(name, namespace);
         log.debug("Namespaces '{}'", kubernetesClient.namespaces().list());
         Service service = getServiceOrThrowKubernetesResourceException(name, namespace);
-        List<LoadBalancerIngress> ingresses = service.getStatus().getLoadBalancer().getIngress();
+        List<LoadBalancerIngress> ingresses;
+        ServiceStatus status = service.getStatus();
+        if (status == null || status.getLoadBalancer() == null || status.getLoadBalancer().getIngress() == null) {
+            throw new KubernetesResourceException("The service with the name '" + name + "' in the namespace '" + namespace + "' does not" +
+                " contain a status, loadbalancer or ingress element.");
+        }
+        ingresses = service.getStatus().getLoadBalancer().getIngress();
         if (ingresses.size() != 1) {
             log.debug("There is no or too many ingresses. We expect only one.");
             return Optional.empty();
         }
+
         String ip = ingresses.get(0).getIp();
         log.debug("Returning the ip '{}', for the kubernetes service '{}', in the namespace '{}'", ip, name, namespace);
         return Optional.ofNullable(ip);
@@ -1288,7 +1294,6 @@ public class MicoKubernetesClient {
      */
     public List<Integer> getPublicPortsOfKubernetesService(String name, String namespace) throws KubernetesResourceException {
         log.debug("Requesting public port of '{}' in namespace '{}'", name, namespace);
-        Optional<Service> serviceOptional = getService(name, namespace);
         LinkedList<Integer> ports = new LinkedList<>();
         Service service = getServiceOrThrowKubernetesResourceException(name, namespace);
         service.getSpec().getPorts().forEach(servicePort -> ports.add(servicePort.getPort()));
