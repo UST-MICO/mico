@@ -20,6 +20,7 @@
 package io.github.ust.mico.core;
 
 import io.github.ust.mico.core.broker.MicoServiceBroker;
+import io.github.ust.mico.core.configuration.KafkaConfig;
 import io.github.ust.mico.core.exception.MicoServiceAlreadyExistsException;
 import io.github.ust.mico.core.exception.VersionNotSupportedException;
 import io.github.ust.mico.core.model.MicoService;
@@ -61,6 +62,8 @@ public class MicoCoreApplication implements ApplicationListener<ApplicationReady
     GitHubCrawler gitHubCrawler;
     @Autowired
     MicoServiceBroker micoServiceBroker;
+    @Autowired
+    KafkaConfig kafkaConfig;
 
     public static void main(String[] args) {
         SpringApplication.run(MicoCoreApplication.class, args);
@@ -78,7 +81,7 @@ public class MicoCoreApplication implements ApplicationListener<ApplicationReady
 
     public void onApplicationEvent(final ApplicationReadyEvent event) {
         try {
-            MicoService kafkaFaasConnector = gitHubCrawler.crawlGitHubRepoLatestRelease("https://github.com/UST-MICO/kafka-faas-connector");
+            MicoService kafkaFaasConnector = gitHubCrawler.crawlGitHubRepoLatestRelease(kafkaConfig.getKafkaFaasConnectorUrl());
             List<MicoService> micoServices = micoServiceBroker.getAllVersionsOfServiceFromDatabase(kafkaFaasConnector.getShortName());
             Optional<MicoVersion> highestKafkaFaasConnectorVersion = micoServices.stream().map(micoService -> {
                 try {

@@ -68,6 +68,9 @@ public class KafkaConfig {
     @NotBlank
     private String testMessageOutputTopic;
 
+    @NotBlank
+    private String kafkaFaasConnectorUrl;
+
     public List<MicoEnvironmentVariable> getDefaultEnvironmentVariablesForKafka() {
         LinkedList<MicoEnvironmentVariable> micoEnvironmentVariables = new LinkedList<>();
         micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironmentVariableKafkaNames.KAFKA_BOOTSTRAP_SERVERS.name()).setValue(bootstrapServers));
