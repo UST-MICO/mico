@@ -53,6 +53,8 @@ import java.net.PasswordAuthentication;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.spotify.hamcrest.optional.OptionalMatchers.emptyOptional;
+import static com.spotify.hamcrest.optional.OptionalMatchers.optionalWithValue;
 import static io.github.ust.mico.core.TestConstants.*;
 import static io.github.ust.mico.core.service.MicoKubernetesClient.*;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -792,6 +794,73 @@ public class MicoKubernetesClientTests {
 
         assertThat(openFaasCredentials.getUserName(), is(equalTo(testUsername)));
         assertThat(new String(openFaasCredentials.getPassword()), is(equalTo(testPassword)));
+    }
+
+    @Test(expected = KubernetesResourceException.class)
+    public void getExternalIpOfServiceNoStatus() throws Exception {
+        String testServiceName = "testservice";
+        mockServer.getClient().services().inNamespace(testNamespace).create(
+            getServiceBuilderWithNameAndNamenspace(testServiceName).build());
+        micoKubernetesClient.getPublicIpOfKubernetesService(testServiceName, testNamespace);
+    }
+
+
+    @Test
+    public void getExternalIpOfService() throws Exception {
+        String testServiceName = "testservice";
+        String ip = "192.168.0.0";
+        mockServer.getClient().services().inNamespace(testNamespace).create(
+            getServiceBuilderWithNameAndNamenspace(testServiceName)
+                .withStatus(
+                    new ServiceStatusBuilder()
+                        .withNewLoadBalancer()
+                        .addNewIngress()
+                        .withIp(ip)
+                        .endIngress()
+                        .endLoadBalancer().build())
+                .build());
+        assertThat(micoKubernetesClient.getPublicIpOfKubernetesService(testServiceName, testNamespace), optionalWithValue(is(ip)));
+    }
+
+    @Test
+    public void getExternalIpOfServiceNoIngress() throws Exception {
+        String testServiceName = "testservice";
+        mockServer.getClient().services().inNamespace(testNamespace).create(
+            getServiceBuilderWithNameAndNamenspace(testServiceName)
+                .withStatus(
+                    new ServiceStatusBuilder()
+                        .withNewLoadBalancer()
+                        .endLoadBalancer().build())
+                .build());
+        assertThat(micoKubernetesClient.getPublicIpOfKubernetesService(testServiceName, testNamespace), emptyOptional());
+    }
+
+    @Test
+    public void getExternalIpOfServiceTooManyIngresses() throws Exception {
+        String testServiceName = "testservice";
+        String ip = "192.168.0.0";
+        mockServer.getClient().services().inNamespace(testNamespace).create(
+            getServiceBuilderWithNameAndNamenspace(testServiceName)
+                .withStatus(
+                    new ServiceStatusBuilder()
+                        .withNewLoadBalancer()
+                        .addNewIngress()
+                        .withIp(ip)
+                        .endIngress()
+                        .addNewIngress()
+                        .withIp(ip)
+                        .endIngress()
+                        .endLoadBalancer().build())
+                .build());
+        assertThat(micoKubernetesClient.getPublicIpOfKubernetesService(testServiceName, testNamespace), emptyOptional());
+    }
+
+
+    private ServiceBuilder getServiceBuilderWithNameAndNamenspace(String testServiceName) {
+        return new ServiceBuilder().withNewMetadata()
+            .withNamespace(testNamespace)
+            .withName(testServiceName)
+            .endMetadata();
     }
 
     private Deployment getDeploymentObject(MicoService micoService, String deploymentUid) {
