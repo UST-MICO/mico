@@ -37,7 +37,7 @@ spec:
     spec:
       containers:
         - name: neo4j
-          image: 'neo4j:3.5.3'
+          image: 'neo4j:3.5.8'
           imagePullPolicy: 'IfNotPresent'
           env:
             - name: NEO4J_dbms_security_auth__enabled

@@ -24,11 +24,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
 import org.junit.runner.RunWith;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 
 @RunWith(SpringRunner.class)
+@ActiveProfiles("local")
 public class KubernetesNameNormalizerTests {
 
     @Rule

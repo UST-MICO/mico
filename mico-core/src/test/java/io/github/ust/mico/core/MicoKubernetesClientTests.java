@@ -47,6 +47,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.net.PasswordAuthentication;
@@ -64,6 +65,7 @@ import static org.mockito.BDDMockito.given;
 @Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@ActiveProfiles("local")
 public class MicoKubernetesClientTests {
 
     private static final String LABEL_PREFIX = "ust.mico/";
