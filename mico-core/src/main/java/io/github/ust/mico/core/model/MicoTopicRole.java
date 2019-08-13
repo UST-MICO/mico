@@ -74,7 +74,7 @@ public class MicoTopicRole {
     private Role role;
 
     public enum Role {
-        UNKNOWN, INPUT, OUTPUT, DEAD_LETTER, INVALID_MESSAGE, TEST_MESSAGE_OUTPUT
+        INPUT, OUTPUT, DEAD_LETTER, INVALID_MESSAGE, TEST_MESSAGE_OUTPUT
     }
 
 

@@ -41,7 +41,7 @@ import javax.validation.constraints.Size;
 public class MicoTopicRequestDTO {
 
     /**
-     * Role of the topic.
+     * Role of the topic. Default is {@code MicoTopicRole.Role#INPUT}
      */
     @ApiModelProperty(required = true, extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
