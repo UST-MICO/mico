@@ -20,7 +20,7 @@
 package io.github.ust.mico.core.configuration;
 
 import io.github.ust.mico.core.model.MicoEnvironmentVariable;
-import io.github.ust.mico.core.model.MicoEnvironmentVariable.DefaultEnvironmentVariableKafkaNames;
+import io.github.ust.mico.core.model.MicoEnvironmentVariable.DefaultNames;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.model.MicoTopic;
 import io.github.ust.mico.core.model.MicoTopicRole;
@@ -73,8 +73,8 @@ public class KafkaConfig {
 
     public List<MicoEnvironmentVariable> getDefaultEnvironmentVariablesForKafka() {
         LinkedList<MicoEnvironmentVariable> micoEnvironmentVariables = new LinkedList<>();
-        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironmentVariableKafkaNames.KAFKA_BOOTSTRAP_SERVERS.name()).setValue(bootstrapServers));
-        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironmentVariableKafkaNames.KAFKA_GROUP_ID.name()).setValue(groupId));
+        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultNames.KAFKA_BOOTSTRAP_SERVERS.name()).setValue(bootstrapServers));
+        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultNames.KAFKA_GROUP_ID.name()).setValue(groupId));
         return micoEnvironmentVariables;
     }
 

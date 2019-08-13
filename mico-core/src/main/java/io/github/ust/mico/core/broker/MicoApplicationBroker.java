@@ -244,7 +244,7 @@ public class MicoApplicationBroker {
     }
 
     /**
-     * Sets the default environment variables for Kafka-enabled MicoServices. See {@link MicoEnvironmentVariable.DefaultEnvironmentVariableKafkaNames}
+     * Sets the default environment variables for Kafka-enabled MicoServices. See {@link MicoEnvironmentVariable.DefaultNames}
      * for a complete list.
      *
      * @param micoServiceDeploymentInfo The {@link MicoServiceDeploymentInfo} with an corresponding MicoService

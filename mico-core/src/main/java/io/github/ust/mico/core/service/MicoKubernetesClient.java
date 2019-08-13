@@ -172,6 +172,9 @@ public class MicoKubernetesClient {
             deploymentUid = existingDeploymentName;
         }
 
+        ArrayList<MicoEnvironmentVariable> micoEnvironmentVariables = new ArrayList<>(serviceDeploymentInfo.getEnvironmentVariables());
+        micoEnvironmentVariables.addAll(serviceDeploymentInfo.getTopics().stream().map(this::createEnvVarBasedOnTopic).collect(Collectors.toList()));
+
         Deployment deployment = new DeploymentBuilder()
             .withNewMetadata()
             .withName(deploymentUid)
@@ -203,7 +206,7 @@ public class MicoKubernetesClient {
                     .withImage(micoService.getDockerImageUri())
                     .withImagePullPolicy(serviceDeploymentInfo.getImagePullPolicy().toString())
                     .withPorts(createContainerPorts(micoService.getServiceInterfaces()))
-                    .withEnv(serviceDeploymentInfo.getEnvironmentVariables().stream().map(
+                    .withEnv(micoEnvironmentVariables.stream().map(
                         environmentVariable -> new EnvVarBuilder()
                             .withName(environmentVariable.getName())
                             .withValue(environmentVariable.getValue())
@@ -219,6 +222,30 @@ public class MicoKubernetesClient {
         log.debug("Successfully created / updated Kubernetes deployment '{}' in namespace '{}' for MicoService '{}' '{}'",
             createdDeployment.getMetadata().getName(), namespace, micoService.getShortName(), micoService.getVersion());
         return createdDeployment;
+    }
+
+    private MicoEnvironmentVariable createEnvVarBasedOnTopic(MicoTopicRole t) {
+        String envVarName;
+        switch (t.getRole()) {
+            case OUTPUT:
+                envVarName = MicoEnvironmentVariable.DefaultNames.KAFKA_TOPIC_OUTPUT.name();
+                break;
+            case DEAD_LETTER:
+                envVarName = MicoEnvironmentVariable.DefaultNames.KAFKA_TOPIC_DEAD_LETTER.name();
+                break;
+            case INVALID_MESSAGE:
+                envVarName = MicoEnvironmentVariable.DefaultNames.KAFKA_TOPIC_INVALID_MESSAGE.name();
+                break;
+            case TEST_MESSAGE_OUTPUT:
+                envVarName = MicoEnvironmentVariable.DefaultNames.KAFKA_TOPIC_TEST_MESSAGE_OUTPUT.name();
+                break;
+            case INPUT:
+            default:
+                envVarName = MicoEnvironmentVariable.DefaultNames.KAFKA_TOPIC_INPUT.name();
+        }
+        return new MicoEnvironmentVariable()
+            .setName(envVarName)
+            .setValue(t.getTopic().getName());
     }
 
     /**

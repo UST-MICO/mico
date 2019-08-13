@@ -35,7 +35,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.util.LinkedList;
 import java.util.List;
 
-import static io.github.ust.mico.core.model.MicoEnvironmentVariable.DefaultEnvironmentVariableKafkaNames.*;
+import static io.github.ust.mico.core.model.MicoEnvironmentVariable.DefaultNames.*;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
