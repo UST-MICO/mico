@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
 import org.springframework.stereotype.Service;
 
+import javax.validation.Valid;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -181,7 +182,7 @@ public class MicoApplicationBroker {
         return applicationRepository.findAllByUsedService(serviceShortName, serviceVersion);
     }
 
-    public MicoApplication addMicoServiceToMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion) throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAlreadyAddedToMicoApplicationException, MicoServiceAddedMoreThanOnceToMicoApplicationException, MicoApplicationIsNotUndeployedException {
+    public void addMicoServiceToMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion) throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAlreadyAddedToMicoApplicationException, MicoServiceAddedMoreThanOnceToMicoApplicationException, MicoApplicationIsNotUndeployedException, MicoTopicRoleUsedMultipleTimesException, MicoServiceDeploymentInformationNotFoundException, KubernetesResourceException, MicoApplicationDoesNotIncludeMicoServiceException {
 
         log.debug("Adding MicoService '{}' '{}' to MicoApplication '{}' '{}'.",
             serviceShortName, serviceVersion, applicationShortName, applicationVersion);
@@ -206,14 +207,18 @@ public class MicoApplicationBroker {
         } else if (micoServices.size() == 0) {
             // Service not included yet, simply add it
             MicoServiceDeploymentInfo micoServiceDeploymentInfo = new MicoServiceDeploymentInfo().setService(micoService);
-            setDefaultEnvironmentVariablesForKafkaEnabledService(micoServiceDeploymentInfo);
 
             // Both the service list and the service deployment info list of the application need to be updated ...
             micoApplication.getServices().add(micoService);
             micoApplication.getServiceDeploymentInfos().add(micoServiceDeploymentInfo);
 
             // ... before the application can be saved.
-            return applicationRepository.save(micoApplication);
+            MicoApplication savedApplication = applicationRepository.save(micoApplication);
+
+            // TODO
+            setDefaultEnvironmentVariablesForKafkaEnabledService(micoServiceDeploymentInfo);
+            updateMicoServiceDeploymentInformation(applicationShortName, applicationVersion, serviceShortName,
+                new MicoServiceDeploymentInfoRequestDTO(micoServiceDeploymentInfo));
         } else {
             // Service already included, replace it with its newer version, ...
             MicoService existingMicoService = micoServices.get(0);
@@ -238,7 +243,7 @@ public class MicoApplicationBroker {
 
                 // Save the application with the updated list of services
                 // and service deployment infos in the database
-                return applicationRepository.save(micoApplication);
+                applicationRepository.save(micoApplication);
             }
         }
     }
@@ -266,8 +271,6 @@ public class MicoApplicationBroker {
         micoEnvironmentVariables.addAll(openFaaSConfig.getDefaultEnvironmentVariablesForOpenFaaS());
         List<MicoTopicRole> topics = micoServiceDeploymentInfo.getTopics();
         topics.addAll(kafkaConfig.getDefaultTopics(micoServiceDeploymentInfo));
-        // If other services already uses the same default topics, reuse them
-        reuseExistingTopics(micoServiceDeploymentInfo);
     }
 
     public MicoApplication removeMicoServiceFromMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException, MicoApplicationIsNotUndeployedException {
@@ -327,14 +330,20 @@ public class MicoApplicationBroker {
 
         int oldReplicas = storedServiceDeploymentInfo.getReplicas();
 
-        // Update existing service deployment information, reuse existing topics if and save it in the database.
         MicoServiceDeploymentInfo sdiWithAppliedValues = storedServiceDeploymentInfo.applyValuesFrom(serviceDeploymentInfoDTO);
-        MicoServiceDeploymentInfo sdiWithReusedTopics = reuseExistingTopics(sdiWithAppliedValues);
-        MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(sdiWithReusedTopics);
+        // At first save the service deployment information with the new values without topics.
+        // This is a workaround to save them later with new relationships. Otherwise Neo4j sometimes deletes the relationships!?
+        sdiWithAppliedValues.setTopics(new ArrayList<>());
+        MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(sdiWithAppliedValues);
 
-        // As a workaround it's necessary to save the same entity twice,
-        // because otherwise it sometimes happens that the relationship entity `MicoTopicRole` has no properties.
-        serviceDeploymentInfoRepository.save(updatedServiceDeploymentInfo);
+        // If there are topics, apply them and save the service deployment information again.
+        if (!serviceDeploymentInfoDTO.getTopics().isEmpty()) {
+            MicoServiceDeploymentInfo sdiWithTopics = updatedServiceDeploymentInfo.setTopics(
+                serviceDeploymentInfoDTO.getTopics().stream().map(topicDto -> MicoTopicRole.valueOf(topicDto, storedServiceDeploymentInfo)).collect(Collectors.toList()));
+            // Check if topics with the same names already exist, if so reuse them.
+            MicoServiceDeploymentInfo sdiWithReusedTopics = createOrReuseTopics(sdiWithTopics);
+            updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(sdiWithReusedTopics);
+        }
 
         // In case addition properties (stored as separate node entity) such as labels, environment variables
         // have been removed from this service deployment information,
@@ -390,20 +399,26 @@ public class MicoApplicationBroker {
     }
 
     /**
-     * Check if topics with the same name already exists.
-     * If so reuse them by setting the id of the existing Neo4j node.
+     * Checks if topics with the same name already exists.
+     * If so reuse them by setting the id of the existing Neo4j node and save them.
+     * If not create them in the database.
      *
-     * @param serviceDeploymentInfoDTO the {@link MicoServiceDeploymentInfoRequestDTO} containing topics
+     * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo} containing topics
      */
-    private MicoServiceDeploymentInfo reuseExistingTopics(MicoServiceDeploymentInfo serviceDeploymentInfoDTO) {
-        List<MicoTopicRole> topicRoles = serviceDeploymentInfoDTO.getTopics();
+    private MicoServiceDeploymentInfo createOrReuseTopics(MicoServiceDeploymentInfo serviceDeploymentInfo) {
+        List<MicoTopicRole> topicRoles = serviceDeploymentInfo.getTopics();
 
         for (MicoTopicRole topicRole : topicRoles) {
             String topicName = topicRole.getTopic().getName();
             Optional<MicoTopic> existingTopic = micoTopicRepository.findByName(topicName);
-            existingTopic.ifPresent(topicRole::setTopic);
+            if (existingTopic.isPresent()) {
+                topicRole.setTopic(existingTopic.get());
+            } else {
+                MicoTopic savedTopic = micoTopicRepository.save(topicRole.getTopic());
+                topicRole.setTopic(savedTopic);
+            }
         }
-        return serviceDeploymentInfoDTO;
+        return serviceDeploymentInfo;
     }
 
     //TODO: Change return value to not use a DTO (see issue mico#630)
