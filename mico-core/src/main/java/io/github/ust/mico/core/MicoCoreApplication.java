@@ -19,10 +19,20 @@
 
 package io.github.ust.mico.core;
 
+import io.github.ust.mico.core.broker.MicoServiceBroker;
+import io.github.ust.mico.core.exception.MicoServiceAlreadyExistsException;
+import io.github.ust.mico.core.exception.VersionNotSupportedException;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoVersion;
 import io.github.ust.mico.core.persistence.MicoBackgroundJobRepository;
+import io.github.ust.mico.core.service.GitHubCrawler;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
@@ -31,16 +41,26 @@ import org.springframework.data.redis.repository.configuration.EnableRedisReposi
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+
 /**
  * Entry point for the MICO core application.
  */
+@Slf4j
 @SpringBootApplication
 @EnableNeo4jRepositories(basePackages = "io.github.ust.mico.core.persistence",
     excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = MicoBackgroundJobRepository.class))
 @EnableRedisRepositories(basePackages = "io.github.ust.mico.core.persistence",
     includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = MicoBackgroundJobRepository.class))
 @EnableScheduling
-public class MicoCoreApplication {
+public class MicoCoreApplication implements ApplicationListener<ApplicationReadyEvent> {
+
+    @Autowired
+    GitHubCrawler gitHubCrawler;
+    @Autowired
+    MicoServiceBroker micoServiceBroker;
 
     public static void main(String[] args) {
         SpringApplication.run(MicoCoreApplication.class, args);
@@ -54,5 +74,31 @@ public class MicoCoreApplication {
     @Bean
     public RestTemplate restTemplate(RestTemplateBuilder builder) {
         return builder.build();
+    }
+
+    public void onApplicationEvent(final ApplicationReadyEvent event) {
+        try {
+            MicoService kafkaFaasConnector = gitHubCrawler.crawlGitHubRepoLatestRelease("https://github.com/UST-MICO/kafka-faas-connector");
+            List<MicoService> micoServices = micoServiceBroker.getAllVersionsOfServiceFromDatabase(kafkaFaasConnector.getShortName());
+            Optional<MicoVersion> highestKafkaFaasConnectorVersion = micoServices.stream().map(micoService -> {
+                try {
+                    return micoService.getMicoVersion();
+                } catch (VersionNotSupportedException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }).max(MicoVersion::compareTo);
+            if (kafkaFaasConnector.getMicoVersion().greaterThan(highestKafkaFaasConnectorVersion.get())) {
+                micoServiceBroker.persistService(kafkaFaasConnector);
+            }
+        } catch (IOException | VersionNotSupportedException e) {
+            e.printStackTrace();
+
+        }
+        // should not happen
+        catch (MicoServiceAlreadyExistsException e) {
+            log.info(e.getMessage());
+        }
+        return;
     }
 }
