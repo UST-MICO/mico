@@ -51,7 +51,7 @@ public class OpenFaasResource {
     public static final String FUNCTIONS_PATH = "/functions";
     public static final String OPEN_FAAS_FUNCTION_LIST_PATH = "/system/functions";
 
-    public static final String EXTERNAL_ADDRESS = "/externalAddress";
+    public static final String EXTERNAL_ADDRESS_PATH = "/externalAddress";
 
     @Autowired
     @Qualifier(RestTemplates.QUALIFIER_AUTHENTICATED_OPEN_FAAS_REST_TEMPLATE)
@@ -75,7 +75,7 @@ public class OpenFaasResource {
         }
     }
 
-    @GetMapping(EXTERNAL_ADDRESS)
+    @GetMapping(EXTERNAL_ADDRESS_PATH)
     public ResponseEntity<ExternalUrlDTO> getOpenFaasURL() {
         try {
             Optional<String> externalAddressOptional = openFaasBroker.getExternalAddress();

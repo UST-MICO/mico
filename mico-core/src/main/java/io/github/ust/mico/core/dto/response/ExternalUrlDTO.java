@@ -36,7 +36,7 @@ public class ExternalUrlDTO {
     String externalUrl;
 
     /**
-     * Is true if the url is available
+     * Is true if the url is available.
      */
     boolean isExternalUrlAvailable;
 

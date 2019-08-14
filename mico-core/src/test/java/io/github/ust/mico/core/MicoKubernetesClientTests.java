@@ -804,7 +804,7 @@ public class MicoKubernetesClientTests {
     public void getExternalIpOfServiceNoStatus() throws Exception {
         String testServiceName = "testservice";
         mockServer.getClient().services().inNamespace(testNamespace).create(
-            getServiceBuilderWithNameAndNamenspace(testServiceName).build());
+            getServiceBuilderWithNameAndNamespace(testServiceName).build());
         micoKubernetesClient.getPublicIpOfKubernetesService(testServiceName, testNamespace);
     }
 
@@ -820,7 +820,7 @@ public class MicoKubernetesClientTests {
         String testServiceName = "testservice";
         String ip = "192.168.0.0";
         mockServer.getClient().services().inNamespace(testNamespace).create(
-            getServiceBuilderWithNameAndNamenspace(testServiceName)
+            getServiceBuilderWithNameAndNamespace(testServiceName)
                 .withStatus(
                     new ServiceStatusBuilder()
                         .withNewLoadBalancer()
@@ -836,7 +836,7 @@ public class MicoKubernetesClientTests {
     public void getExternalIpOfServiceNoIngress() throws Exception {
         String testServiceName = "testservice";
         mockServer.getClient().services().inNamespace(testNamespace).create(
-            getServiceBuilderWithNameAndNamenspace(testServiceName)
+            getServiceBuilderWithNameAndNamespace(testServiceName)
                 .withStatus(
                     new ServiceStatusBuilder()
                         .withNewLoadBalancer()
@@ -850,7 +850,7 @@ public class MicoKubernetesClientTests {
         String testServiceName = "testservice";
         String ip = "192.168.0.0";
         mockServer.getClient().services().inNamespace(testNamespace).create(
-            getServiceBuilderWithNameAndNamenspace(testServiceName)
+            getServiceBuilderWithNameAndNamespace(testServiceName)
                 .withStatus(
                     new ServiceStatusBuilder()
                         .withNewLoadBalancer()
@@ -870,14 +870,14 @@ public class MicoKubernetesClientTests {
         String testServiceName = "testservice";
         int port = 8080;
         mockServer.getClient().services().inNamespace(testNamespace).create(
-            getServiceBuilderWithNameAndNamenspace(testServiceName)
+            getServiceBuilderWithNameAndNamespace(testServiceName)
                 .withNewSpec()
                 .addNewPort()
                 .withNewPort(port)
                 .endPort()
                 .endSpec().build());
         List<Integer> ports = micoKubernetesClient.getPublicPortsOfKubernetesService(testServiceName, testNamespace);
-        assertThat(ports, hasItem(Integer.valueOf(port)));
+        assertThat(ports, hasItem(port));
         assertThat(ports, hasSize(1));
     }
 
@@ -887,7 +887,7 @@ public class MicoKubernetesClientTests {
         int port = 8080;
         int port2 = 8081;
         mockServer.getClient().services().inNamespace(testNamespace).create(
-            getServiceBuilderWithNameAndNamenspace(testServiceName)
+            getServiceBuilderWithNameAndNamespace(testServiceName)
                 .withNewSpec()
                 .addNewPort()
                 .withNewPort(port)
@@ -897,7 +897,7 @@ public class MicoKubernetesClientTests {
                 .endPort()
                 .endSpec().build());
         List<Integer> ports = micoKubernetesClient.getPublicPortsOfKubernetesService(testServiceName, testNamespace);
-        assertThat(ports, hasItems(Integer.valueOf(port), Integer.valueOf(port2)));
+        assertThat(ports, hasItems(port, port2));
         assertThat(ports, hasSize(2));
     }
 
@@ -905,15 +905,15 @@ public class MicoKubernetesClientTests {
     public void getPublicPortsOfKubernetesServiceWithNoSpec() throws Exception {
         String testServiceName = "testservice";
         mockServer.getClient().services().inNamespace(testNamespace).create(
-            getServiceBuilderWithNameAndNamenspace(testServiceName).build());
-        List<Integer> ports = micoKubernetesClient.getPublicPortsOfKubernetesService(testServiceName, testNamespace);
+            getServiceBuilderWithNameAndNamespace(testServiceName).build());
+        micoKubernetesClient.getPublicPortsOfKubernetesService(testServiceName, testNamespace);
     }
 
     @Test
     public void getPublicPortsOfKubernetesServiceWithNoPorts() throws Exception {
         String testServiceName = "testservice";
         mockServer.getClient().services().inNamespace(testNamespace).create(
-            getServiceBuilderWithNameAndNamenspace(testServiceName)
+            getServiceBuilderWithNameAndNamespace(testServiceName)
                 .withNewSpec()
                 .endSpec().build());
         List<Integer> ports = micoKubernetesClient.getPublicPortsOfKubernetesService(testServiceName, testNamespace);
@@ -921,23 +921,24 @@ public class MicoKubernetesClientTests {
     }
 
     @Test
-    public void getService() throws Exception {
+    public void getService() {
         String testServiceName = "testservice";
         mockServer.getClient().services().inNamespace(testNamespace).create(
-            getServiceBuilderWithNameAndNamenspace(testServiceName).build());
+            getServiceBuilderWithNameAndNamespace(testServiceName).build());
         Optional<Service> service = micoKubernetesClient.getService(testServiceName, testNamespace);
         assertThat(service, is(optionalWithValue()));
+        assertTrue(service.isPresent());
         assertThat(service.get().getMetadata().getName(), is(testServiceName));
     }
 
     @Test
-    public void getServiceNoMatchingService() throws Exception {
+    public void getServiceNoMatchingService() {
         String testServiceName = "testservice";
         Optional<Service> service = micoKubernetesClient.getService(testServiceName, testNamespace);
         assertThat(service, is(emptyOptional()));
     }
 
-    private ServiceBuilder getServiceBuilderWithNameAndNamenspace(String testServiceName) {
+    private ServiceBuilder getServiceBuilderWithNameAndNamespace(String testServiceName) {
         return new ServiceBuilder().withNewMetadata()
             .withNamespace(testNamespace)
             .withName(testServiceName)

@@ -51,11 +51,13 @@ public class OpenFaasBroker {
      */
     public static final String OPEN_FAAS_UI_PROTOCOL = "http";
 
+
     /**
      * Requests the external address of the OpenFaaS UI and returns it or {@code null} if OpenFaaS does not exist.
      *
      * @return the external address of the OpenFaaS UI or {@code null}.
-     * @throws MalformedURLException if the address is not in the URL format.
+     * @throws MalformedURLException       if the address is not in the URL format.
+     * @throws KubernetesResourceException if the IP address or the ports of the external gateway svc can't be retrieved
      */
     public Optional<String> getExternalAddress() throws MalformedURLException, KubernetesResourceException {
         Optional<String> ipOptional = micoKubernetesClient.getPublicIpOfKubernetesService(
@@ -67,7 +69,7 @@ public class OpenFaasBroker {
         }
         String ip = ipOptional.get();
         int port = ports.get(0);
-        log.debug("Using ip '{}' and port '{}'", ip, port);
+        log.debug("OpenFaaS gateway external has the IP address '{}' and port '{}'.", ip, port);
         URL externalAddress = new URL(OPEN_FAAS_UI_PROTOCOL, ip, port, "");
         return Optional.ofNullable(externalAddress.toExternalForm());
     }
