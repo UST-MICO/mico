@@ -20,6 +20,7 @@
 package io.github.ust.mico.core.broker;
 
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
+import io.github.ust.mico.core.configuration.OpenFaaSConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import lombok.extern.slf4j.Slf4j;
@@ -42,10 +43,8 @@ public class OpenFaasBroker {
     @Autowired
     MicoKubernetesConfig micoKubernetesConfig;
 
-    /**
-     * The name of the external gateway of the OpenFaaS UI
-     */
-    public static final String GATEWAY_EXTERNAL_NAME = "gateway-external";
+    @Autowired
+    OpenFaaSConfig openFaaSConfig;
 
     /**
      * The supported protocol of the OpenFaaS UI
@@ -59,8 +58,10 @@ public class OpenFaasBroker {
      * @throws MalformedURLException if the address is not in the URL format.
      */
     public Optional<String> getExternalAddress() throws MalformedURLException, KubernetesResourceException {
-        Optional<String> ipOptional = micoKubernetesClient.getPublicIpOfKubernetesService(GATEWAY_EXTERNAL_NAME, micoKubernetesConfig.getNamespaceOpenFaasWorkspace());
-        List<Integer> ports = micoKubernetesClient.getPublicPortsOfKubernetesService(GATEWAY_EXTERNAL_NAME, micoKubernetesConfig.getNamespaceOpenFaasWorkspace());
+        Optional<String> ipOptional = micoKubernetesClient.getPublicIpOfKubernetesService(
+            openFaaSConfig.getGatewayExternalServiceName(), micoKubernetesConfig.getNamespaceOpenFaasWorkspace());
+        List<Integer> ports = micoKubernetesClient.getPublicPortsOfKubernetesService(
+            openFaaSConfig.getGatewayExternalServiceName(), micoKubernetesConfig.getNamespaceOpenFaasWorkspace());
         if (!ipOptional.isPresent() || ports.size() != 1) {
             return Optional.empty();
         }

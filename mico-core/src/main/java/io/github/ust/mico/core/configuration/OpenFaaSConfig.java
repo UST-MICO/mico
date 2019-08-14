@@ -46,6 +46,9 @@ public class OpenFaaSConfig {
     @NotBlank
     private String gateway;
 
+    @NotBlank
+    private String gatewayExternalServiceName;
+
     public List<MicoEnvironmentVariable> getDefaultEnvironmentVariablesForOpenFaaS() {
         LinkedList<MicoEnvironmentVariable> micoEnvironmentVariables = new LinkedList<>();
         micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(MicoEnvironmentVariable.DefaultEnvironmentVariableKafkaNames.OPENFAAS_GATEWAY.name()).setValue(gateway));

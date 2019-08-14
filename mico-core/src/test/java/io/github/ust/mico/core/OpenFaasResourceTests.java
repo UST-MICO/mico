@@ -48,7 +48,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Optional;
 
-import static io.github.ust.mico.core.broker.OpenFaasBroker.GATEWAY_EXTERNAL_NAME;
 import static io.github.ust.mico.core.broker.OpenFaasBroker.OPEN_FAAS_UI_PROTOCOL;
 import static io.github.ust.mico.core.resource.OpenFaasResource.*;
 import static org.hamcrest.CoreMatchers.is;
@@ -113,10 +112,10 @@ public class OpenFaasResourceTests {
     public void getExternalIp() throws Exception {
         String ip = "192.168.0.1";
         int port = 8080;
-        given(micoKubernetesClient.getPublicIpOfKubernetesService(GATEWAY_EXTERNAL_NAME, micoKubernetesConfig.getNamespaceOpenFaasWorkspace())).willReturn(Optional.ofNullable(ip));
-        given(micoKubernetesClient.getPublicPortsOfKubernetesService(GATEWAY_EXTERNAL_NAME, micoKubernetesConfig.getNamespaceOpenFaasWorkspace())).willReturn(Collections.singletonList(Integer.valueOf(port)));
+        given(micoKubernetesClient.getPublicIpOfKubernetesService(openFaaSConfig.getGatewayExternalServiceName(), micoKubernetesConfig.getNamespaceOpenFaasWorkspace())).willReturn(Optional.ofNullable(ip));
+        given(micoKubernetesClient.getPublicPortsOfKubernetesService(openFaaSConfig.getGatewayExternalServiceName(), micoKubernetesConfig.getNamespaceOpenFaasWorkspace())).willReturn(Collections.singletonList(Integer.valueOf(port)));
         URL externalAddress = new URL(OPEN_FAAS_UI_PROTOCOL, ip, port, "");
-        mvc.perform(get(OPEN_FAAS_BASE_PATH + EXTERNAL_ADDRESS).accept(MediaTypes.HAL_JSON_VALUE))
+        mvc.perform(get(OPEN_FAAS_BASE_PATH + EXTERNAL_ADDRESS_PATH).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.externalUrl", is(externalAddress.toExternalForm())))
@@ -127,9 +126,9 @@ public class OpenFaasResourceTests {
     @Test
     public void getEnternalIpNoPorts() throws Exception {
         String ip = "192.168.0.1";
-        given(micoKubernetesClient.getPublicIpOfKubernetesService(GATEWAY_EXTERNAL_NAME, micoKubernetesConfig.getNamespaceOpenFaasWorkspace())).willReturn(Optional.ofNullable("192.168.0.1"));
-        given(micoKubernetesClient.getPublicPortsOfKubernetesService(GATEWAY_EXTERNAL_NAME, micoKubernetesConfig.getNamespaceOpenFaasWorkspace())).willReturn(new LinkedList<>());
-        mvc.perform(get(OPEN_FAAS_BASE_PATH + EXTERNAL_ADDRESS).accept(MediaTypes.HAL_JSON_VALUE))
+        given(micoKubernetesClient.getPublicIpOfKubernetesService(openFaaSConfig.getGatewayExternalServiceName(), micoKubernetesConfig.getNamespaceOpenFaasWorkspace())).willReturn(Optional.ofNullable("192.168.0.1"));
+        given(micoKubernetesClient.getPublicPortsOfKubernetesService(openFaaSConfig.getGatewayExternalServiceName(), micoKubernetesConfig.getNamespaceOpenFaasWorkspace())).willReturn(new LinkedList<>());
+        mvc.perform(get(OPEN_FAAS_BASE_PATH + EXTERNAL_ADDRESS_PATH).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(getEmptyResultMatcher())
             .andReturn();
@@ -138,9 +137,9 @@ public class OpenFaasResourceTests {
     @Test
     public void getEnternalIpNoIp() throws Exception {
         int port = 8080;
-        given(micoKubernetesClient.getPublicIpOfKubernetesService(GATEWAY_EXTERNAL_NAME, micoKubernetesConfig.getNamespaceOpenFaasWorkspace())).willReturn(Optional.empty());
-        given(micoKubernetesClient.getPublicPortsOfKubernetesService(GATEWAY_EXTERNAL_NAME, micoKubernetesConfig.getNamespaceOpenFaasWorkspace())).willReturn(Collections.singletonList(Integer.valueOf(port)));
-        mvc.perform(get(OPEN_FAAS_BASE_PATH + EXTERNAL_ADDRESS).accept(MediaTypes.HAL_JSON_VALUE))
+        given(micoKubernetesClient.getPublicIpOfKubernetesService(openFaaSConfig.getGatewayExternalServiceName(), micoKubernetesConfig.getNamespaceOpenFaasWorkspace())).willReturn(Optional.empty());
+        given(micoKubernetesClient.getPublicPortsOfKubernetesService(openFaaSConfig.getGatewayExternalServiceName(), micoKubernetesConfig.getNamespaceOpenFaasWorkspace())).willReturn(Collections.singletonList(Integer.valueOf(port)));
+        mvc.perform(get(OPEN_FAAS_BASE_PATH + EXTERNAL_ADDRESS_PATH).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(getEmptyResultMatcher())
             .andReturn();
@@ -148,9 +147,9 @@ public class OpenFaasResourceTests {
 
     @Test
     public void getEnternalIpNoPortNoIp() throws Exception {
-        given(micoKubernetesClient.getPublicIpOfKubernetesService(GATEWAY_EXTERNAL_NAME, micoKubernetesConfig.getNamespaceOpenFaasWorkspace())).willReturn(Optional.empty());
-        given(micoKubernetesClient.getPublicPortsOfKubernetesService(GATEWAY_EXTERNAL_NAME, micoKubernetesConfig.getNamespaceOpenFaasWorkspace())).willReturn(new LinkedList<>());
-        mvc.perform(get(OPEN_FAAS_BASE_PATH + EXTERNAL_ADDRESS).accept(MediaTypes.HAL_JSON_VALUE))
+        given(micoKubernetesClient.getPublicIpOfKubernetesService(openFaaSConfig.getGatewayExternalServiceName(), micoKubernetesConfig.getNamespaceOpenFaasWorkspace())).willReturn(Optional.empty());
+        given(micoKubernetesClient.getPublicPortsOfKubernetesService(openFaaSConfig.getGatewayExternalServiceName(), micoKubernetesConfig.getNamespaceOpenFaasWorkspace())).willReturn(new LinkedList<>());
+        mvc.perform(get(OPEN_FAAS_BASE_PATH + EXTERNAL_ADDRESS_PATH).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(getEmptyResultMatcher())
             .andReturn();
@@ -158,8 +157,8 @@ public class OpenFaasResourceTests {
 
     @Test
     public void getEnternalIpKubernetesResourceException() throws Exception {
-        given(micoKubernetesClient.getPublicIpOfKubernetesService(GATEWAY_EXTERNAL_NAME, micoKubernetesConfig.getNamespaceOpenFaasWorkspace())).willThrow(new KubernetesResourceException());
-        mvc.perform(get(OPEN_FAAS_BASE_PATH + EXTERNAL_ADDRESS).accept(MediaTypes.HAL_JSON_VALUE))
+        given(micoKubernetesClient.getPublicIpOfKubernetesService(openFaaSConfig.getGatewayExternalServiceName(), micoKubernetesConfig.getNamespaceOpenFaasWorkspace())).willThrow(new KubernetesResourceException());
+        mvc.perform(get(OPEN_FAAS_BASE_PATH + EXTERNAL_ADDRESS_PATH).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isInternalServerError())
             .andReturn();
@@ -169,9 +168,9 @@ public class OpenFaasResourceTests {
     public void getEnternalIpMalformedURLException() throws Exception {
         String ip = "192.168.0.1";
         int port = -1000; //triggers MalformedURLException
-        given(micoKubernetesClient.getPublicIpOfKubernetesService(GATEWAY_EXTERNAL_NAME, micoKubernetesConfig.getNamespaceOpenFaasWorkspace())).willReturn(Optional.ofNullable(ip));
-        given(micoKubernetesClient.getPublicPortsOfKubernetesService(GATEWAY_EXTERNAL_NAME, micoKubernetesConfig.getNamespaceOpenFaasWorkspace())).willReturn(Collections.singletonList(Integer.valueOf(port)));
-        mvc.perform(get(OPEN_FAAS_BASE_PATH + EXTERNAL_ADDRESS).accept(MediaTypes.HAL_JSON_VALUE))
+        given(micoKubernetesClient.getPublicIpOfKubernetesService(openFaaSConfig.getGatewayExternalServiceName(), micoKubernetesConfig.getNamespaceOpenFaasWorkspace())).willReturn(Optional.ofNullable(ip));
+        given(micoKubernetesClient.getPublicPortsOfKubernetesService(openFaaSConfig.getGatewayExternalServiceName(), micoKubernetesConfig.getNamespaceOpenFaasWorkspace())).willReturn(Collections.singletonList(Integer.valueOf(port)));
+        mvc.perform(get(OPEN_FAAS_BASE_PATH + EXTERNAL_ADDRESS_PATH).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isInternalServerError())
             .andReturn();
