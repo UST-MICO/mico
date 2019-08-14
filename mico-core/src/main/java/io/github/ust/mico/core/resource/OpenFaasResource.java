@@ -46,7 +46,7 @@ import java.util.Optional;
 @RequestMapping(value = OpenFaasResource.OPEN_FAAS_BASE_PATH, produces = MediaTypes.HAL_JSON_VALUE)
 public class OpenFaasResource {
 
-    public static final String OPEN_FAAS_BASE_PATH = "/openfaas";
+    public static final String OPEN_FAAS_BASE_PATH = "/openFaas";
 
     public static final String FUNCTIONS_PATH = "/functions";
     public static final String OPEN_FAAS_FUNCTION_LIST_PATH = "/system/functions";
