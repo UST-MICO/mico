@@ -20,7 +20,10 @@
 package io.github.ust.mico.core.configuration;
 
 import io.github.ust.mico.core.model.MicoEnvironmentVariable;
-import io.github.ust.mico.core.model.MicoEnvironmentVariable.DefaultEnvironmentVariableKafkaNames;
+import io.github.ust.mico.core.model.MicoEnvironmentVariable.DefaultNames;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.model.MicoTopic;
+import io.github.ust.mico.core.model.MicoTopicRole;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -70,11 +73,19 @@ public class KafkaConfig {
 
     public List<MicoEnvironmentVariable> getDefaultEnvironmentVariablesForKafka() {
         LinkedList<MicoEnvironmentVariable> micoEnvironmentVariables = new LinkedList<>();
-        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironmentVariableKafkaNames.KAFKA_BOOTSTRAP_SERVERS.name()).setValue(bootstrapServers));
-        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironmentVariableKafkaNames.KAFKA_GROUP_ID.name()).setValue(groupId));
-        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironmentVariableKafkaNames.KAFKA_TOPIC_DEAD_LETTER.name()).setValue(deadLetterTopic));
-        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironmentVariableKafkaNames.KAFKA_TOPIC_INVALID_MESSAGE.name()).setValue(invalidMessageTopic));
-        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultEnvironmentVariableKafkaNames.KAFKA_TOPIC_TEST_MESSAGE_OUTPUT.name()).setValue(testMessageOutputTopic));
+        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultNames.KAFKA_BOOTSTRAP_SERVERS.name()).setValue(bootstrapServers));
+        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultNames.KAFKA_GROUP_ID.name()).setValue(groupId));
+        return micoEnvironmentVariables;
+    }
+
+    public List<MicoTopicRole> getDefaultTopics(MicoServiceDeploymentInfo sdi) {
+        LinkedList<MicoTopicRole> micoEnvironmentVariables = new LinkedList<>();
+        micoEnvironmentVariables.add(new MicoTopicRole().setServiceDeploymentInfo(sdi)
+            .setRole(MicoTopicRole.Role.DEAD_LETTER).setTopic(new MicoTopic().setName(deadLetterTopic)));
+        micoEnvironmentVariables.add(new MicoTopicRole().setServiceDeploymentInfo(sdi)
+            .setRole(MicoTopicRole.Role.INVALID_MESSAGE).setTopic(new MicoTopic().setName(invalidMessageTopic)));
+        micoEnvironmentVariables.add(new MicoTopicRole().setServiceDeploymentInfo(sdi)
+            .setRole(MicoTopicRole.Role.TEST_MESSAGE_OUTPUT).setTopic(new MicoTopic().setName(testMessageOutputTopic)));
         return micoEnvironmentVariables;
     }
 }

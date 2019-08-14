@@ -148,6 +148,7 @@ public class MicoKubernetesClientTests {
 
         MicoLabel label = new MicoLabel().setKey("some-label-key").setValue("some-label-value");
         MicoEnvironmentVariable environmentVariable = new MicoEnvironmentVariable().setName("some-env-name").setValue("some-env-value");
+        MicoTopicRole topicRole = new MicoTopicRole().setRole(MicoTopicRole.Role.INPUT).setTopic(new MicoTopic().setName("input-topic"));
         MicoInterfaceConnection interfaceConnection = new MicoInterfaceConnection()
             .setEnvironmentVariableName("ENV_VAR")
             .setMicoServiceInterfaceName("INTERFACE_NAME")
@@ -158,6 +159,7 @@ public class MicoKubernetesClientTests {
             .setImagePullPolicy(MicoServiceDeploymentInfo.ImagePullPolicy.NEVER)
             .setLabels(CollectionUtils.listOf(label))
             .setEnvironmentVariables(CollectionUtils.listOf(environmentVariable))
+            .setTopics(CollectionUtils.listOf(topicRole))
             .setInterfaceConnections(CollectionUtils.listOf(interfaceConnection));
 
         micoKubernetesClient.createMicoService(serviceDeploymentInfo);
@@ -177,6 +179,8 @@ public class MicoKubernetesClientTests {
         List<EnvVar> actualEnvVarList = actualDeployment.getSpec().getTemplate().getSpec().getContainers().get(0).getEnv();
         Optional<EnvVar> actualCustomEnvVar = actualEnvVarList.stream().filter(envVar -> envVar.getName().equals(environmentVariable.getName()) && envVar.getValue().equals(environmentVariable.getValue())).findFirst();
         assertTrue("Custom environment variable is not present", actualCustomEnvVar.isPresent());
+        Optional<EnvVar> actualTopicEnvVar = actualEnvVarList.stream().filter(envVar -> envVar.getName().equals(MicoEnvironmentVariable.DefaultNames.KAFKA_TOPIC_INPUT.name()) && envVar.getValue().equals(topicRole.getTopic().getName())).findFirst();
+        assertTrue("Topic environment variable is not present", actualTopicEnvVar.isPresent());
     }
 
     @Test

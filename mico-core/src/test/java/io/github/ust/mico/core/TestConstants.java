@@ -150,6 +150,7 @@ class TestConstants {
 
     static final String SDI_REPLICAS_PATH = buildPath(ROOT, "replicas");
     static final String SDI_LABELS_PATH = buildPath(ROOT, "labels");
+    static final String SDI_TOPICS_PATH = buildPath(ROOT, "topics");
     static final String SDI_IMAGE_PULLPOLICY_PATH = buildPath(ROOT, "imagePullPolicy");
 
     static class IntegrationTest {

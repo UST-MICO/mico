@@ -19,16 +19,8 @@
 
 package io.github.ust.mico.core.dto.request;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.validation.Valid;
-import javax.validation.constraints.Positive;
-
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
-
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
@@ -41,6 +33,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+
+import javax.validation.Valid;
+import javax.validation.constraints.Positive;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * DTO for {@link MicoServiceDeploymentInfo} intended to use with requests only.
@@ -100,6 +98,22 @@ public class MicoServiceDeploymentInfoRequestDTO {
     private List<MicoLabelRequestDTO> labels = new ArrayList<>();
 
     /**
+     * Kafka topics that are TODO: Description
+     * Possible roles for the topics are INPUT, OUTPUT, DEAD_LETTER, INVALID_MESSAGE, TEST_MESSAGE_OUTPUT
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Topics"),
+            @ExtensionProperty(name = "x-order", value = "42"),
+            @ExtensionProperty(name = "description", value = "Topics ")
+        }
+    )})
+    @JsonSetter(nulls = Nulls.SKIP)
+    @Valid
+    private List<MicoTopicRequestDTO> topics = new ArrayList<>();
+
+    /**
      * Environment variables as key-value pairs that are attached to the deployment
      * of this {@link MicoService}. These environment values can be used by the deployed
      * {@link MicoService} during runtime. This could be useful to pass information to the
@@ -143,6 +157,7 @@ public class MicoServiceDeploymentInfoRequestDTO {
     @Valid
     private List<MicoInterfaceConnectionRequestDTO> interfaceConnections = new ArrayList<>();
 
+
     /**
      * Indicates whether and when to pull the image.
      * Default image pull policy is {@link ImagePullPolicy#ALWAYS Always}.
@@ -178,6 +193,7 @@ public class MicoServiceDeploymentInfoRequestDTO {
         this.environmentVariables = serviceDeploymentInfo.getEnvironmentVariables().stream().map(MicoEnvironmentVariableRequestDTO::new).collect(Collectors.toList());
         this.interfaceConnections = serviceDeploymentInfo.getInterfaceConnections().stream().map(MicoInterfaceConnectionRequestDTO::new).collect(Collectors.toList());
         this.imagePullPolicy = serviceDeploymentInfo.getImagePullPolicy();
+        this.topics = serviceDeploymentInfo.getTopics().stream().map(MicoTopicRequestDTO::new).collect(Collectors.toList());
     }
 
 }
