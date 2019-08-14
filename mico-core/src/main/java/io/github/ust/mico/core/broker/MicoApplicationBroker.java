@@ -3,6 +3,7 @@ package io.github.ust.mico.core.broker;
 import io.github.ust.mico.core.configuration.KafkaConfig;
 import io.github.ust.mico.core.configuration.OpenFaaSConfig;
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
+import io.github.ust.mico.core.dto.request.MicoTopicRequestDTO;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationDeploymentStatusResponseDTO;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
 import io.github.ust.mico.core.exception.*;
@@ -16,9 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
@@ -48,6 +47,9 @@ public class MicoApplicationBroker {
 
     @Autowired
     private MicoLabelRepository micoLabelRepository;
+
+    @Autowired
+    private MicoTopicRepository micoTopicRepository;
 
     @Autowired
     private MicoEnvironmentVariableRepository micoEnvironmentVariableRepository;
@@ -242,7 +244,7 @@ public class MicoApplicationBroker {
     }
 
     /**
-     * Sets the default environment variables for Kafka-enabled MicoServices. See {@link MicoEnvironmentVariable.DefaultEnvironmentVariableKafkaNames}
+     * Sets the default environment variables for Kafka-enabled MicoServices. See {@link MicoEnvironmentVariable.DefaultNames}
      * for a complete list.
      *
      * @param micoServiceDeploymentInfo The {@link MicoServiceDeploymentInfo} with an corresponding MicoService
@@ -257,11 +259,15 @@ public class MicoApplicationBroker {
                 micoService.getShortName(), micoService.getVersion());
             return;
         }
-        log.debug("Adding default environment variables to the Kafka-enabled MicoService '{}' '{}'.",
+        log.debug("Adding default environment variables and topics to the Kafka-enabled MicoService '{}' '{}'.",
             micoService.getShortName(), micoService.getVersion());
         List<MicoEnvironmentVariable> micoEnvironmentVariables = micoServiceDeploymentInfo.getEnvironmentVariables();
         micoEnvironmentVariables.addAll(kafkaConfig.getDefaultEnvironmentVariablesForKafka());
         micoEnvironmentVariables.addAll(openFaaSConfig.getDefaultEnvironmentVariablesForOpenFaaS());
+        List<MicoTopicRole> topics = micoServiceDeploymentInfo.getTopics();
+        topics.addAll(kafkaConfig.getDefaultTopics(micoServiceDeploymentInfo));
+        // If other services already uses the same default topics, reuse them
+        reuseExistingTopics(micoServiceDeploymentInfo);
     }
 
     public MicoApplication removeMicoServiceFromMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException, MicoApplicationIsNotUndeployedException {
@@ -312,21 +318,30 @@ public class MicoApplicationBroker {
     public MicoServiceDeploymentInfo updateMicoServiceDeploymentInformation(String applicationShortName, String applicationVersion,
                                                                             String serviceShortName, MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) throws
         MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException,
-        MicoServiceDeploymentInformationNotFoundException, KubernetesResourceException {
+        MicoServiceDeploymentInformationNotFoundException, KubernetesResourceException, MicoTopicRoleUsedMultipleTimesException {
+
+        validateTopics(serviceDeploymentInfoDTO);
 
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
         MicoServiceDeploymentInfo storedServiceDeploymentInfo = getMicoServiceDeploymentInformation(applicationShortName, applicationVersion, serviceShortName);
 
         int oldReplicas = storedServiceDeploymentInfo.getReplicas();
-        // Update existing service deployment information and save it in the database.
-        storedServiceDeploymentInfo.applyValuesFrom(serviceDeploymentInfoDTO);
-        MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(storedServiceDeploymentInfo);
+
+        // Update existing service deployment information, reuse existing topics if and save it in the database.
+        MicoServiceDeploymentInfo sdiWithAppliedValues = storedServiceDeploymentInfo.applyValuesFrom(serviceDeploymentInfoDTO);
+        MicoServiceDeploymentInfo sdiWithReusedTopics = reuseExistingTopics(sdiWithAppliedValues);
+        MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(sdiWithReusedTopics);
+
+        // As a workaround it's necessary to save the same entity twice,
+        // because otherwise it sometimes happens that the relationship entity `MicoTopicRole` has no properties.
+        serviceDeploymentInfoRepository.save(updatedServiceDeploymentInfo);
 
         // In case addition properties (stored as separate node entity) such as labels, environment variables
         // have been removed from this service deployment information,
         // the standard save() function of the service deployment information repository will not delete those
         // "tangling" (without relationships) labels (nodes), hence the manual clean up.
         micoLabelRepository.cleanUp();
+        micoTopicRepository.cleanUp();
         micoEnvironmentVariableRepository.cleanUp();
         kubernetesDeploymentInfoRepository.cleanUp();
         micoInterfaceConnectionRepository.cleanUp();
@@ -354,6 +369,41 @@ public class MicoApplicationBroker {
         }
 
         return updatedServiceDeploymentInfo;
+    }
+
+    /**
+     * Validates the topics.
+     * Throws an error if there are multiple topics with the same role.
+     *
+     * @param serviceDeploymentInfoDTO the {@link MicoServiceDeploymentInfoRequestDTO}
+     * @throws MicoTopicRoleUsedMultipleTimesException if an {@code MicoTopicRole.Role} is not unique
+     */
+    private void validateTopics(MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) throws MicoTopicRoleUsedMultipleTimesException {
+        List<MicoTopicRequestDTO> newTopics = serviceDeploymentInfoDTO.getTopics();
+        Set<MicoTopicRole.Role> usedRoles = new HashSet<>();
+        for (MicoTopicRequestDTO requestDTO : newTopics) {
+            if (!usedRoles.add(requestDTO.getRole())) {
+                // Role is used twice, however a role should be used only once
+                throw new MicoTopicRoleUsedMultipleTimesException(requestDTO.getRole());
+            }
+        }
+    }
+
+    /**
+     * Check if topics with the same name already exists.
+     * If so reuse them by setting the id of the existing Neo4j node.
+     *
+     * @param serviceDeploymentInfoDTO the {@link MicoServiceDeploymentInfoRequestDTO} containing topics
+     */
+    private MicoServiceDeploymentInfo reuseExistingTopics(MicoServiceDeploymentInfo serviceDeploymentInfoDTO) {
+        List<MicoTopicRole> topicRoles = serviceDeploymentInfoDTO.getTopics();
+
+        for (MicoTopicRole topicRole : topicRoles) {
+            String topicName = topicRole.getTopic().getName();
+            Optional<MicoTopic> existingTopic = micoTopicRepository.findByName(topicName);
+            existingTopic.ifPresent(topicRole::setTopic);
+        }
+        return serviceDeploymentInfoDTO;
     }
 
     //TODO: Change return value to not use a DTO (see issue mico#630)

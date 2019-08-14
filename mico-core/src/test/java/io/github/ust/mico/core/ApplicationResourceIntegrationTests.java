@@ -22,10 +22,7 @@ package io.github.ust.mico.core;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ust.mico.core.configuration.KafkaConfig;
 import io.github.ust.mico.core.configuration.OpenFaaSConfig;
-import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
-import io.github.ust.mico.core.dto.request.MicoLabelRequestDTO;
-import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
-import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
+import io.github.ust.mico.core.dto.request.*;
 import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoLabelResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO;
@@ -107,6 +104,9 @@ public class ApplicationResourceIntegrationTests {
 
     @MockBean
     private MicoLabelRepository micoLabelRepository;
+
+    @MockBean
+    private MicoTopicRepository micoTopicRepository;
 
     @MockBean
     private MicoEnvironmentVariableRepository micoEnvironmentVariableRepository;
@@ -988,7 +988,10 @@ public class ApplicationResourceIntegrationTests {
         MicoServiceDeploymentInfoRequestDTO updatedServiceDeploymentInfoDTO = new MicoServiceDeploymentInfoRequestDTO()
             .setReplicas(5)
             .setLabels(CollectionUtils.listOf(new MicoLabelRequestDTO().setKey("key-updated").setValue("value-updated")))
-            .setImagePullPolicy(ImagePullPolicy.NEVER);
+            .setImagePullPolicy(ImagePullPolicy.NEVER)
+            .setTopics(CollectionUtils.listOf(
+                new MicoTopicRequestDTO().setName("input-topic").setRole(MicoTopicRole.Role.INPUT),
+                new MicoTopicRequestDTO().setName("output-topic").setRole(MicoTopicRole.Role.OUTPUT)));
 
         application.getServices().add(service);
         application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
@@ -1009,7 +1012,108 @@ public class ApplicationResourceIntegrationTests {
             .andExpect(jsonPath(SDI_LABELS_PATH + "[0].key", is(updatedServiceDeploymentInfoDTO.getLabels().get(0).getKey())))
             .andExpect(jsonPath(SDI_LABELS_PATH + "[0].value", is(updatedServiceDeploymentInfoDTO.getLabels().get(0).getValue())))
             .andExpect(jsonPath(SDI_IMAGE_PULLPOLICY_PATH, is(updatedServiceDeploymentInfoDTO.getImagePullPolicy().toString())))
+            .andExpect(jsonPath(SDI_TOPICS_PATH, hasSize(2)))
+            .andExpect(jsonPath(SDI_TOPICS_PATH + "[0].name", is(updatedServiceDeploymentInfoDTO.getTopics().get(0).getName())))
+            .andExpect(jsonPath(SDI_TOPICS_PATH + "[0].role", is(updatedServiceDeploymentInfoDTO.getTopics().get(0).getRole().toString())))
+            .andExpect(jsonPath(SDI_TOPICS_PATH + "[1].name", is(updatedServiceDeploymentInfoDTO.getTopics().get(1).getName())))
+            .andExpect(jsonPath(SDI_TOPICS_PATH + "[1].role", is(updatedServiceDeploymentInfoDTO.getTopics().get(1).getRole().toString())))
             .andReturn();
+    }
+
+    @Test
+    public void updateServiceDeploymentInformationWithDuplicatedTopicRoles() throws Exception {
+        MicoApplication application = new MicoApplication()
+            .setId(ID)
+            .setShortName(SHORT_NAME).setVersion(VERSION);
+
+        MicoService service = new MicoService()
+            .setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
+
+        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
+            .setId(ID_1)
+            .setService(service);
+
+        MicoServiceDeploymentInfoRequestDTO updatedServiceDeploymentInfoDTO = new MicoServiceDeploymentInfoRequestDTO()
+            .setTopics(CollectionUtils.listOf(
+                new MicoTopicRequestDTO().setName("topic-1").setRole(MicoTopicRole.Role.INPUT),
+                new MicoTopicRequestDTO().setName("topic-2").setRole(MicoTopicRole.Role.INPUT)));
+
+        application.getServices().add(service);
+        application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
+
+        given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion())).willReturn(Optional.of(application));
+        given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName())).willReturn(Optional.of(serviceDeploymentInfo));
+
+        mvc.perform(put(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName())
+            .content(mapper.writeValueAsBytes(updatedServiceDeploymentInfoDTO))
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    public void updateServiceDeploymentInformationReusesExistingTopics() throws Exception {
+        MicoApplication application = new MicoApplication()
+            .setId(ID)
+            .setShortName(SHORT_NAME).setVersion(VERSION);
+
+        MicoApplication expectedApplication = new MicoApplication()
+            .setId(ID)
+            .setShortName(SHORT_NAME).setVersion(VERSION);
+
+        MicoService service = new MicoService()
+            .setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
+
+        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
+            .setId(ID_1)
+            .setService(service);
+
+        MicoTopic existingTopic1 = new MicoTopic()
+            .setId(ID_2)
+            .setName("topic-name-1");
+
+        MicoTopic existingTopic2 = new MicoTopic()
+            .setId(ID_3)
+            .setName("topic-name-2");
+
+        String newTopicName = "new-topic";
+        MicoServiceDeploymentInfoRequestDTO updatedServiceDeploymentInfoDTO = new MicoServiceDeploymentInfoRequestDTO()
+            .setTopics(CollectionUtils.listOf(
+                new MicoTopicRequestDTO().setName(existingTopic1.getName()).setRole(MicoTopicRole.Role.INPUT),
+                new MicoTopicRequestDTO().setName(newTopicName).setRole(MicoTopicRole.Role.OUTPUT)));
+
+        application.getServices().add(service);
+        application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
+        expectedApplication.getServices().add(service);
+        expectedApplication.getServiceDeploymentInfos().add(serviceDeploymentInfo.applyValuesFrom(updatedServiceDeploymentInfoDTO));
+
+        given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion())).willReturn(Optional.of(application));
+        given(applicationRepository.save(eq(expectedApplication))).willReturn(expectedApplication);
+        given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName())).willReturn(Optional.of(serviceDeploymentInfo));
+        given(serviceDeploymentInfoRepository.save(any(MicoServiceDeploymentInfo.class))).willReturn(serviceDeploymentInfo.applyValuesFrom(updatedServiceDeploymentInfoDTO));
+        given(micoTopicRepository.findByName(existingTopic1.getName())).willReturn(Optional.of(existingTopic1));
+        given(micoTopicRepository.findByName(existingTopic2.getName())).willReturn(Optional.of(existingTopic2));
+
+        mvc.perform(put(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName())
+            .content(mapper.writeValueAsBytes(updatedServiceDeploymentInfoDTO))
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(SDI_TOPICS_PATH, hasSize(2)))
+            .andExpect(jsonPath(SDI_TOPICS_PATH + "[0].name", is(serviceDeploymentInfo.getTopics().get(0).getTopic().getName())))
+            .andExpect(jsonPath(SDI_TOPICS_PATH + "[1].name", is(serviceDeploymentInfo.getTopics().get(1).getTopic().getName())))
+            .andReturn();
+
+        ArgumentCaptor<MicoServiceDeploymentInfo> sdiCaptor = ArgumentCaptor.forClass(MicoServiceDeploymentInfo.class);
+
+        verify(serviceDeploymentInfoRepository, atLeast(1)).save(sdiCaptor.capture());
+        MicoServiceDeploymentInfo actualSdi = sdiCaptor.getValue();
+        assertEquals(2, actualSdi.getTopics().size());
+        MicoTopicRole actualTopicRole1 = actualSdi.getTopics().get(0);
+        assertEquals("Existing topic was not reused!", existingTopic1.getId(), actualTopicRole1.getTopic().getId());
+        assertEquals(existingTopic1, actualTopicRole1.getTopic());
+        MicoTopicRole actualTopicRole2 = actualSdi.getTopics().get(1);
+        assertEquals("New topic was not saved.", newTopicName, actualTopicRole2.getTopic().getName());
     }
 
     @Test
@@ -1164,12 +1268,18 @@ public class ApplicationResourceIntegrationTests {
         verify(applicationRepository, times(1)).save(applicationCaptor.capture());
         MicoApplication savedApplication = applicationCaptor.getValue();
         assertThat(savedApplication.getServiceDeploymentInfos(), hasSize(1));
+        MicoServiceDeploymentInfo actualServiceDeploymentInfo = savedApplication.getServiceDeploymentInfos().get(0);
+
         LinkedList<MicoEnvironmentVariable> expectedMicoEnvironmentVariables = new LinkedList<>();
         expectedMicoEnvironmentVariables.addAll(openFaaSConfig.getDefaultEnvironmentVariablesForOpenFaaS());
         expectedMicoEnvironmentVariables.addAll(kafkaConfig.getDefaultEnvironmentVariablesForKafka());
-        List<MicoEnvironmentVariable> actualEnvironmentVariables = savedApplication.getServiceDeploymentInfos().get(0).getEnvironmentVariables();
+        List<MicoEnvironmentVariable> actualEnvironmentVariables = actualServiceDeploymentInfo.getEnvironmentVariables();
         assertThat(actualEnvironmentVariables, containsInAnyOrder(expectedMicoEnvironmentVariables.toArray()));
 
+        LinkedList<MicoTopicRole> expectedMicoTopics = new LinkedList<>();
+        expectedMicoTopics.addAll(kafkaConfig.getDefaultTopics(actualServiceDeploymentInfo));
+        List<MicoTopicRole> actualTopics = actualServiceDeploymentInfo.getTopics();
+        assertThat(actualTopics, containsInAnyOrder(expectedMicoTopics.toArray()));
     }
 
     @Test
