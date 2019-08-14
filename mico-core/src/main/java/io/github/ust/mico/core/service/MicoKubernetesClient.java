@@ -1296,7 +1296,13 @@ public class MicoKubernetesClient {
         log.debug("Requesting public port of '{}' in namespace '{}'", name, namespace);
         LinkedList<Integer> ports = new LinkedList<>();
         Service service = getServiceOrThrowKubernetesResourceException(name, namespace);
-        service.getSpec().getPorts().forEach(servicePort -> ports.add(servicePort.getPort()));
+        if (service.getSpec() == null) {
+            throw new KubernetesResourceException("The service with the name '" + name + "' in the namespace '" + namespace + "' does not contain a spec object");
+        }
+        List<ServicePort> specPorts = service.getSpec().getPorts();
+        if (specPorts != null) {
+            specPorts.forEach(servicePort -> ports.add(servicePort.getPort()));
+        }
         log.debug("Returning the ports '{}', for the kubernetes service '{}', in the namespace '{}'", ports, name, namespace);
         return ports;
     }
