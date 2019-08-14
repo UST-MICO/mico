@@ -59,6 +59,10 @@ import static io.github.ust.mico.core.TestConstants.*;
 import static io.github.ust.mico.core.service.MicoKubernetesClient.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.hamcrest.collection.IsEmptyCollection.empty;
+import static org.hamcrest.core.IsCollectionContaining.hasItem;
+import static org.hamcrest.core.IsCollectionContaining.hasItems;
 import static org.junit.Assert.*;
 import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.given;
@@ -804,6 +808,12 @@ public class MicoKubernetesClientTests {
         micoKubernetesClient.getPublicIpOfKubernetesService(testServiceName, testNamespace);
     }
 
+    @Test(expected = KubernetesResourceException.class)
+    public void getExternalIpOfServiceWithNoService() throws Exception {
+        String testServiceName = "testservice";
+        micoKubernetesClient.getPublicIpOfKubernetesService(testServiceName, testNamespace);
+    }
+
 
     @Test
     public void getExternalIpOfService() throws Exception {
@@ -819,7 +829,7 @@ public class MicoKubernetesClientTests {
                         .endIngress()
                         .endLoadBalancer().build())
                 .build());
-        assertThat(micoKubernetesClient.getPublicIpOfKubernetesService(testServiceName, testNamespace), optionalWithValue(is(ip)));
+        assertThat(micoKubernetesClient.getPublicIpOfKubernetesService(testServiceName, testNamespace), is(optionalWithValue(is(ip))));
     }
 
     @Test
@@ -832,7 +842,7 @@ public class MicoKubernetesClientTests {
                         .withNewLoadBalancer()
                         .endLoadBalancer().build())
                 .build());
-        assertThat(micoKubernetesClient.getPublicIpOfKubernetesService(testServiceName, testNamespace), emptyOptional());
+        assertThat(micoKubernetesClient.getPublicIpOfKubernetesService(testServiceName, testNamespace), is(emptyOptional()));
     }
 
     @Test
@@ -852,9 +862,80 @@ public class MicoKubernetesClientTests {
                         .endIngress()
                         .endLoadBalancer().build())
                 .build());
-        assertThat(micoKubernetesClient.getPublicIpOfKubernetesService(testServiceName, testNamespace), emptyOptional());
+        assertThat(micoKubernetesClient.getPublicIpOfKubernetesService(testServiceName, testNamespace), is(emptyOptional()));
     }
 
+    @Test
+    public void getPublicPortsOfKubernetesService() throws Exception {
+        String testServiceName = "testservice";
+        int port = 8080;
+        mockServer.getClient().services().inNamespace(testNamespace).create(
+            getServiceBuilderWithNameAndNamenspace(testServiceName)
+                .withNewSpec()
+                .addNewPort()
+                .withNewPort(port)
+                .endPort()
+                .endSpec().build());
+        List<Integer> ports = micoKubernetesClient.getPublicPortsOfKubernetesService(testServiceName, testNamespace);
+        assertThat(ports, hasItem(Integer.valueOf(port)));
+        assertThat(ports, hasSize(1));
+    }
+
+    @Test
+    public void getPublicPortsOfKubernetesServiceWithTwoPorts() throws Exception {
+        String testServiceName = "testservice";
+        int port = 8080;
+        int port2 = 8081;
+        mockServer.getClient().services().inNamespace(testNamespace).create(
+            getServiceBuilderWithNameAndNamenspace(testServiceName)
+                .withNewSpec()
+                .addNewPort()
+                .withNewPort(port)
+                .endPort()
+                .addNewPort()
+                .withNewPort(port2)
+                .endPort()
+                .endSpec().build());
+        List<Integer> ports = micoKubernetesClient.getPublicPortsOfKubernetesService(testServiceName, testNamespace);
+        assertThat(ports, hasItems(Integer.valueOf(port), Integer.valueOf(port2)));
+        assertThat(ports, hasSize(2));
+    }
+
+    @Test(expected = KubernetesResourceException.class)
+    public void getPublicPortsOfKubernetesServiceWithNoSpec() throws Exception {
+        String testServiceName = "testservice";
+        mockServer.getClient().services().inNamespace(testNamespace).create(
+            getServiceBuilderWithNameAndNamenspace(testServiceName).build());
+        List<Integer> ports = micoKubernetesClient.getPublicPortsOfKubernetesService(testServiceName, testNamespace);
+    }
+
+    @Test
+    public void getPublicPortsOfKubernetesServiceWithNoPorts() throws Exception {
+        String testServiceName = "testservice";
+        mockServer.getClient().services().inNamespace(testNamespace).create(
+            getServiceBuilderWithNameAndNamenspace(testServiceName)
+                .withNewSpec()
+                .endSpec().build());
+        List<Integer> ports = micoKubernetesClient.getPublicPortsOfKubernetesService(testServiceName, testNamespace);
+        assertThat(ports, empty());
+    }
+
+    @Test
+    public void getService() throws Exception {
+        String testServiceName = "testservice";
+        mockServer.getClient().services().inNamespace(testNamespace).create(
+            getServiceBuilderWithNameAndNamenspace(testServiceName).build());
+        Optional<Service> service = micoKubernetesClient.getService(testServiceName, testNamespace);
+        assertThat(service, is(optionalWithValue()));
+        assertThat(service.get().getMetadata().getName(), is(testServiceName));
+    }
+
+    @Test
+    public void getServiceNoMatchingService() throws Exception {
+        String testServiceName = "testservice";
+        Optional<Service> service = micoKubernetesClient.getService(testServiceName, testNamespace);
+        assertThat(service, is(emptyOptional()));
+    }
 
     private ServiceBuilder getServiceBuilderWithNameAndNamenspace(String testServiceName) {
         return new ServiceBuilder().withNewMetadata()

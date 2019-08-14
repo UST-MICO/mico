@@ -111,12 +111,6 @@ public class OpenFaasResourceTests {
 
     @Test
     public void getExternalIp() throws Exception {
-        //openFaaSBroker.getExternalAddress();
-
-        //40.115.25.83
-        //8080
-        //micoKubernetesClient.getPublicIpOfKubernetesService("mico-core", "mico-system");
-        //externalUrl":"http://192.168.0.1:8080"
         String ip = "192.168.0.1";
         int port = 8080;
         given(micoKubernetesClient.getPublicIpOfKubernetesService(GATEWAY_EXTERNAL_NAME, micoKubernetesConfig.getNamespaceOpenFaasWorkspace())).willReturn(Optional.ofNullable(ip));
