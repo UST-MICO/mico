@@ -68,6 +68,17 @@ public class MicoServiceDeploymentInfoBroker {
     @Autowired
     private OpenFaaSConfig openFaaSConfig;
 
+    /**
+     * Returns the {@link MicoServiceDeploymentInfo} stored in the database.
+     *
+     * @param applicationShortName the short name of the {@link MicoApplication}
+     * @param applicationVersion   the version of the {@link MicoApplication}
+     * @param serviceShortName     the short name of the {@link MicoService}
+     * @return the {@link MicoServiceDeploymentInfo} stored in the database
+     * @throws MicoServiceDeploymentInformationNotFoundException if there is no {@code MicoServiceDeploymentInfo} stored in the database
+     * @throws MicoApplicationNotFoundException                  if there is no {@code MicoApplication} with the specified short name and version
+     * @throws MicoApplicationDoesNotIncludeMicoServiceException if there is no service included in the specified {@code MicoApplication} with the particular short name
+     */
     public MicoServiceDeploymentInfo getMicoServiceDeploymentInformation(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoServiceDeploymentInformationNotFoundException, MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException {
         applicationBroker.checkForMicoServiceInMicoApplication(applicationShortName, applicationVersion, serviceShortName);
 
@@ -79,6 +90,21 @@ public class MicoServiceDeploymentInfoBroker {
         }
     }
 
+    /**
+     * Updates an existing {@link MicoServiceDeploymentInfo} in the database
+     * based on the values of a {@link MicoServiceDeploymentInfoRequestDTO} object.
+     *
+     * @param applicationShortName     the short name of the {@link MicoApplication}
+     * @param applicationVersion       the version of the {@link MicoApplication}
+     * @param serviceShortName         the short name of the {@link MicoService}
+     * @param serviceDeploymentInfoDTO the {@link MicoServiceDeploymentInfoRequestDTO}
+     * @return the new {@link MicoServiceDeploymentInfo} stored in the database
+     * @throws MicoApplicationNotFoundException                  if there is no {@code MicoApplication} with the specified short name and version
+     * @throws MicoApplicationDoesNotIncludeMicoServiceException if there is no service included in the specified {@code MicoApplication} with the particular short name
+     * @throws MicoServiceDeploymentInformationNotFoundException if there is no {@code MicoServiceDeploymentInfo} stored in the database
+     * @throws KubernetesResourceException                       if there are problems with retrieving Kubernetes resource information
+     * @throws MicoTopicRoleUsedMultipleTimesException           if a {@link MicoTopicRole} is used multiple times
+     */
     public MicoServiceDeploymentInfo updateMicoServiceDeploymentInformation(String applicationShortName, String applicationVersion,
                                                                             String serviceShortName, MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) throws
         MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException,
@@ -90,20 +116,76 @@ public class MicoServiceDeploymentInfoBroker {
         MicoServiceDeploymentInfo storedServiceDeploymentInfo = getMicoServiceDeploymentInformation(applicationShortName, applicationVersion, serviceShortName);
 
         int oldReplicas = storedServiceDeploymentInfo.getReplicas();
+        MicoServiceDeploymentInfo updatedServiceDeploymentInfo = saveValuesToDatabase(serviceDeploymentInfoDTO, storedServiceDeploymentInfo);
 
+        // FIXME: Currently we only supported scale in / scale out.
+        // 		  If the MICO service is already deployed, we only update the replicas.
+        // 	      The other properties are ignored!
+        if (micoKubernetesClient.isApplicationDeployed(micoApplication)) {
+            MicoService micoService = updatedServiceDeploymentInfo.getService();
+            log.info("MicoApplication '{}' {}' is already deployed. Update the deployment of the included MicoService '{} '{}'.",
+                micoApplication.getShortName(), micoApplication.getVersion(), micoService.getShortName(), micoService.getVersion());
+            // MICO service is already deployed. Update the replicas.
+            int requestedReplicas = updatedServiceDeploymentInfo.getReplicas();
+            scaleDeployment(requestedReplicas, oldReplicas, updatedServiceDeploymentInfo);
+        }
+
+        return updatedServiceDeploymentInfo;
+    }
+
+    /**
+     * Scales a deployment of a {@link MicoService} by calculating the required replicas
+     * based on the requested and the old replicas.
+     *
+     * @param requestedReplicas     the requested replicas
+     * @param oldReplicas           the old replicas
+     * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}
+     * @throws KubernetesResourceException if there is an exception during undeploying a Kubernetes service
+     */
+    private void scaleDeployment(int requestedReplicas, int oldReplicas, MicoServiceDeploymentInfo serviceDeploymentInfo) throws KubernetesResourceException {
+        MicoService micoService = serviceDeploymentInfo.getService();
+        int replicasDiff = requestedReplicas - oldReplicas;
+        if (replicasDiff > 0) {
+            log.debug("Increase replicas of MicoService '{}' '{}' by {}.", micoService.getShortName(), micoService.getVersion(), replicasDiff);
+            micoKubernetesClient.scaleOut(serviceDeploymentInfo, replicasDiff);
+        } else if (replicasDiff < 0) {
+            log.debug("Decrease replicas of MicoService '{}' '{}' by {}.", micoService.getShortName(), micoService.getVersion(), replicasDiff);
+            micoKubernetesClient.scaleIn(serviceDeploymentInfo, Math.abs(replicasDiff));
+        } else {
+            // TODO: If no scale operation is required, maybe some other
+            // 		 information still needs to be updated.
+        }
+    }
+
+    /**
+     * Saves the values of a {@link MicoServiceDeploymentInfoRequestDTO} to the database.
+     * A workaround is required to save the topics correctly:
+     * Delete all relationships of this {@link MicoServiceDeploymentInfo} and recreate them.
+     *
+     * @param serviceDeploymentInfoDTO    the {@link MicoServiceDeploymentInfoRequestDTO} that includes the new values
+     * @param storedServiceDeploymentInfo the {@link MicoServiceDeploymentInfo} that is already stored in the database
+     * @return the new {@link MicoServiceDeploymentInfo} stored in the database
+     */
+    private MicoServiceDeploymentInfo saveValuesToDatabase(MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO, MicoServiceDeploymentInfo storedServiceDeploymentInfo) {
         MicoServiceDeploymentInfo sdiWithAppliedValues = storedServiceDeploymentInfo.applyValuesFrom(serviceDeploymentInfoDTO);
         // At first save the service deployment information with the new values without topics.
         // This is a workaround to save them later with new relationships. Otherwise Neo4j sometimes deletes the relationships!?
-        sdiWithAppliedValues.setTopics(new ArrayList<>());
-        MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(sdiWithAppliedValues);
+        // FIXME https://community.neo4j.com/t/neo4jrepository-save-does-not-persist-updated-relation/5163/6
 
-        // If there are topics, apply them and save the service deployment information again.
-        if (!serviceDeploymentInfoDTO.getTopics().isEmpty()) {
-            MicoServiceDeploymentInfo sdiWithTopics = updatedServiceDeploymentInfo.setTopics(
-                serviceDeploymentInfoDTO.getTopics().stream().map(topicDto -> MicoTopicRole.valueOf(topicDto, storedServiceDeploymentInfo)).collect(Collectors.toList()));
+        sdiWithAppliedValues.setTopics(new ArrayList<>());
+        final MicoServiceDeploymentInfo updatedServiceDeploymentInfoWithoutTopics = serviceDeploymentInfoRepository.save(sdiWithAppliedValues);
+
+        final MicoServiceDeploymentInfo finalUpdatedServiceDeploymentInfo;
+        if (serviceDeploymentInfoDTO.getTopics().isEmpty()) {
+            finalUpdatedServiceDeploymentInfo = updatedServiceDeploymentInfoWithoutTopics;
+        } else {
+            // If there are topics, apply them and save the service deployment information again.
+            MicoServiceDeploymentInfo sdiWithTopics = updatedServiceDeploymentInfoWithoutTopics.setTopics(
+                serviceDeploymentInfoDTO.getTopics().stream().map(t -> MicoTopicRole.valueOf(t, updatedServiceDeploymentInfoWithoutTopics)).collect(Collectors.toList()));
+
             // Check if topics with the same names already exist, if so reuse them.
             MicoServiceDeploymentInfo sdiWithReusedTopics = createOrReuseTopics(sdiWithTopics);
-            updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(sdiWithReusedTopics);
+            finalUpdatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(sdiWithReusedTopics);
         }
 
         // In case addition properties (stored as separate node entity) such as labels, environment variables
@@ -116,29 +198,7 @@ public class MicoServiceDeploymentInfoBroker {
         kubernetesDeploymentInfoRepository.cleanUp();
         micoInterfaceConnectionRepository.cleanUp();
 
-        // FIXME: Currently we only supported scale in / scale out.
-        // 		  If the MICO service is already deployed, we only update the replicas.
-        // 	      The other properties are ignored!
-        if (micoKubernetesClient.isApplicationDeployed(micoApplication)) {
-            MicoService micoService = updatedServiceDeploymentInfo.getService();
-            log.info("MicoApplication '{}' {}' is already deployed. Update the deployment of the included MicoService '{} '{}'.",
-                micoApplication.getShortName(), micoApplication.getVersion(), micoService.getShortName(), micoService.getVersion());
-
-            // MICO service is already deployed. Update the replicas.
-            int replicasDiff = serviceDeploymentInfoDTO.getReplicas() - oldReplicas;
-            if (replicasDiff > 0) {
-                log.debug("Increase replicas of MicoService '{}' '{}' by {}.", micoService.getShortName(), micoService.getVersion(), replicasDiff);
-                micoKubernetesClient.scaleOut(updatedServiceDeploymentInfo, replicasDiff);
-            } else if (replicasDiff < 0) {
-                log.debug("Decrease replicas of MicoService '{}' '{}' by {}.", micoService.getShortName(), micoService.getVersion(), replicasDiff);
-                micoKubernetesClient.scaleIn(updatedServiceDeploymentInfo, Math.abs(replicasDiff));
-            } else {
-                // TODO: If no scale operation is required, maybe some other
-                // 		 information still needs to be updated.
-            }
-        }
-
-        return updatedServiceDeploymentInfo;
+        return finalUpdatedServiceDeploymentInfo;
     }
 
     /**
@@ -189,7 +249,7 @@ public class MicoServiceDeploymentInfoBroker {
      *
      * @param micoServiceDeploymentInfo The {@link MicoServiceDeploymentInfo} with an corresponding MicoService
      */
-    public void setDefaultDeploymentInformationForKafkaEnabledService(MicoServiceDeploymentInfo micoServiceDeploymentInfo) {
+    void setDefaultDeploymentInformationForKafkaEnabledService(MicoServiceDeploymentInfo micoServiceDeploymentInfo) {
         MicoService micoService = micoServiceDeploymentInfo.getService();
         if (micoService == null) {
             throw new IllegalArgumentException("The MicoServiceDeploymentInfo needs a valid MicoService set to check if the service is Kafka enabled");
