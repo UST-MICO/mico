@@ -1352,7 +1352,7 @@ public class MicoKubernetesClient {
      * @return the service with the given name in the namespace.
      * @throws KubernetesResourceException if there is no such service.
      */
-    private Service getServiceOrThrowKubernetesResourceException(String name, String namespace) throws KubernetesResourceException {
+    public Service getServiceOrThrowKubernetesResourceException(String name, String namespace) throws KubernetesResourceException {
         return getService(name, namespace).orElseThrow(() -> new KubernetesResourceException(
             "There is no Kubernetes service with the name '" + name + "' in the namespace '" + namespace + "' deployed"));
     }
