@@ -1,5 +1,5 @@
-Sphinx=="1.7.9"
-recommonmark=="0.6.0"
-sphinx_rtd_theme=="0.4.3"
-sphinx-js=="2.7.1"
-javasphinx=="0.9.15"
+Sphinx==1.7.9
+recommonmark==0.6.0
+sphinx_rtd_theme==0.4.3
+sphinx-js==2.7.1
+javasphinx==0.9.15
