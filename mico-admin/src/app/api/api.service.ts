@@ -1190,10 +1190,10 @@ export class ApiService {
     }
 
     /**
-     *
+     * Retrieves the IP address of the OpenFaaS Portal from the backend.
      */
     getOpenFaaSIp() {
-        const resource = '/openfaas/externalAddress';
+        const resource = '/openfaas/';
         const stream = this.getStreamSource<ApiObject>(resource);
 
         this.rest.get<ApiObject>(resource).subscribe(val => {
