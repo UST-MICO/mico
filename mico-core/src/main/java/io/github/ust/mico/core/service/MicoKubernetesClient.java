@@ -1300,14 +1300,19 @@ public class MicoKubernetesClient {
                 " contain a status, loadbalancer or ingress element.");
         }
         ingresses = service.getStatus().getLoadBalancer().getIngress();
-        if (ingresses.size() != 1) {
-            log.debug("There is no or more than one ingress. There should be only one.");
-            return Optional.empty();
+        Optional<String> ip = Optional.empty();
+        if (ingresses.size() == 1) {
+            log.debug("Returning the ip '{}' of the Kubernetes service '{}' in the namespace '{}'", ip, name, namespace);
+            ip = Optional.ofNullable(ingresses.get(0).getIp());
+        } else if (ingresses.size() > 1) {
+            log.warn("There are multiple ingresses for the kubernetes service '{}' in namespace '{}'. We expect only one. Picking the first ingress.", name, namespace);
+            ip = Optional.ofNullable(ingresses.get(0).getIp());
+        } else if (ingresses.size() < 1) {
+            log.warn("There are no ingresses for the kubernetes service '{}' in namespace '{}'. There has to be one " +
+                "to get an external ip of the kubernetes service.", name, namespace);
         }
+        return ip;
 
-        String ip = ingresses.get(0).getIp();
-        log.debug("Returning the ip '{}' of the Kubernetes service '{}' in the namespace '{}'", ip, name, namespace);
-        return Optional.ofNullable(ip);
     }
 
     /**
