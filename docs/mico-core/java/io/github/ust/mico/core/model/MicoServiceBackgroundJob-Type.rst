@@ -31,9 +31,3 @@ BUILD
 .. java:field:: public static final MicoServiceBackgroundJob.Type BUILD
    :outertype: MicoServiceBackgroundJob.Type
 
-UNDEPLOY
-^^^^^^^^
-
-.. java:field:: public static final MicoServiceBackgroundJob.Type UNDEPLOY
-   :outertype: MicoServiceBackgroundJob.Type
-

@@ -1,3 +1,5 @@
+.. java:import:: io.github.ust.mico.core.exception MicoApplicationNotFoundException
+
 .. java:import:: io.github.ust.mico.core.model MicoServiceBackgroundJob.Status
 
 .. java:import:: io.github.ust.mico.core.persistence MicoApplicationRepository
@@ -8,15 +10,11 @@
 
 .. java:import:: org.springframework.beans.factory.annotation Autowired
 
-.. java:import:: org.springframework.http HttpStatus
-
 .. java:import:: org.springframework.lang Nullable
 
 .. java:import:: org.springframework.stereotype Service
 
 .. java:import:: org.springframework.util StringUtils
-
-.. java:import:: org.springframework.web.server ResponseStatusException
 
 .. java:import:: java.util ArrayList
 
@@ -54,7 +52,7 @@ deleteJob
 .. java:method:: public void deleteJob(String id)
    :outertype: BackgroundJobBroker
 
-   Deletes a job in the database. If the future is still running, cancel it.
+   Deletes a job in the database. If the future is still running, it will be cancelled.
 
    :param id: the id of the job.
 
@@ -95,7 +93,7 @@ getJobByMicoService
 getJobStatusByApplicationShortNameAndVersion
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public MicoApplicationJobStatus getJobStatusByApplicationShortNameAndVersion(String shortName, String version)
+.. java:method:: public MicoApplicationJobStatus getJobStatusByApplicationShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException
    :outertype: BackgroundJobBroker
 
    Retrieves the job status of a \ ``MicoApplication``\ .

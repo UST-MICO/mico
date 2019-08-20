@@ -6,6 +6,8 @@
 
 .. java:import:: io.github.ust.mico.core.configuration.extension CustomOpenApiExtentionsPlugin
 
+.. java:import:: io.github.ust.mico.core.dto.response.status MicoApplicationDeploymentStatusResponseDTO
+
 .. java:import:: io.github.ust.mico.core.model MicoApplication
 
 .. java:import:: io.github.ust.mico.core.model MicoApplicationDeploymentStatus

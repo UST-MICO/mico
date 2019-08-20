@@ -30,18 +30,13 @@ Using brew (Mac OS X):
 sudo brew install graphviz
 ```
 
-**Upgrade pip:**
-
-```bash
-sudo -H pip2 install --upgrade pip
-sudo -H pip3 install --upgrade pip
-```
-
 **Install Typedoc**
 
 ```bash
-npm install -g typedoc
+npm install -g typedoc@0.13.0
 ```
+
+*Note: Sphinx v1.7.9 is only compatible with Typedoc v0.13* 
 
 **Install requirements:**
 

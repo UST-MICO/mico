@@ -1,5 +1,3 @@
-.. java:import:: org.neo4j.ogm.annotation NodeEntity
-
 .. java:import:: com.fasterxml.jackson.annotation JsonProperty
 
 .. java:import:: lombok AllArgsConstructor

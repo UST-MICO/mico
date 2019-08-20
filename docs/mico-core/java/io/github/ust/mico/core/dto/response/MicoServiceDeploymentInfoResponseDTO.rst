@@ -1,5 +1,3 @@
-.. java:import:: java.util.stream Collectors
-
 .. java:import:: com.fasterxml.jackson.annotation JsonProperty
 
 .. java:import:: io.fabric8.kubernetes.api.model Service
@@ -18,17 +16,9 @@
 
 .. java:import:: io.swagger.annotations ExtensionProperty
 
-.. java:import:: lombok AllArgsConstructor
-
-.. java:import:: lombok Data
-
-.. java:import:: lombok EqualsAndHashCode
-
-.. java:import:: lombok NoArgsConstructor
-
-.. java:import:: lombok ToString
-
 .. java:import:: lombok.experimental Accessors
+
+.. java:import:: java.util.stream Collectors
 
 MicoServiceDeploymentInfoResponseDTO
 ====================================

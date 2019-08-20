@@ -4,6 +4,8 @@
 
 .. java:import:: io.github.ust.mico.core.dto.request MicoApplicationRequestDTO
 
+.. java:import:: io.github.ust.mico.core.dto.response.status MicoApplicationDeploymentStatusResponseDTO
+
 .. java:import:: io.github.ust.mico.core.model MicoApplication
 
 .. java:import:: io.github.ust.mico.core.model MicoApplicationDeploymentStatus
@@ -15,16 +17,6 @@
 .. java:import:: io.swagger.annotations Extension
 
 .. java:import:: io.swagger.annotations ExtensionProperty
-
-.. java:import:: lombok AllArgsConstructor
-
-.. java:import:: lombok Data
-
-.. java:import:: lombok EqualsAndHashCode
-
-.. java:import:: lombok NoArgsConstructor
-
-.. java:import:: lombok ToString
 
 .. java:import:: lombok.experimental Accessors
 

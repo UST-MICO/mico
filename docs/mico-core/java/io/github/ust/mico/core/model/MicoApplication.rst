@@ -32,6 +32,8 @@ MicoApplication
 
    Represents an application as a set of \ :java:ref:`MicoService`\ s in the context of MICO.
 
+   Instances of this class are persisted as nodes in the Neo4j database.
+
 Methods
 -------
 getMicoVersion

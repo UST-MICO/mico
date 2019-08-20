@@ -12,3 +12,5 @@ MicoServiceDependency
 
    Represents a dependency of a \ :java:ref:`MicoService`\ .
 
+   Instances of this class are persisted as relationships between nodes of the type \ :java:ref:`MicoService`\  in the Neo4j database.
+

@@ -1,22 +1,4 @@
-.. java:import:: java.util List
-
-.. java:import:: java.util Optional
-
 .. java:import:: io.fabric8.kubernetes.api.model ContainerStatus
-
-.. java:import:: org.springframework.beans.factory.annotation Autowired
-
-.. java:import:: org.springframework.context.event ContextRefreshedEvent
-
-.. java:import:: org.springframework.context.event EventListener
-
-.. java:import:: org.springframework.core.env Environment
-
-.. java:import:: org.springframework.core.env Profiles
-
-.. java:import:: org.springframework.stereotype Service
-
-.. java:import:: org.springframework.util StringUtils
 
 .. java:import:: io.fabric8.kubernetes.api.model ObjectMeta
 
@@ -27,6 +9,8 @@
 .. java:import:: io.fabric8.kubernetes.api.model.apiextensions CustomResourceDefinition
 
 .. java:import:: io.fabric8.kubernetes.client KubernetesClient
+
+.. java:import:: io.fabric8.kubernetes.client KubernetesClientException
 
 .. java:import:: io.fabric8.kubernetes.client.dsl MixedOperation
 
@@ -46,7 +30,29 @@
 
 .. java:import:: io.github.ust.mico.core.util KubernetesNameNormalizer
 
+.. java:import:: lombok Getter
+
 .. java:import:: lombok.extern.slf4j Slf4j
+
+.. java:import:: org.springframework.beans.factory.annotation Autowired
+
+.. java:import:: org.springframework.context.event ContextRefreshedEvent
+
+.. java:import:: org.springframework.context.event EventListener
+
+.. java:import:: org.springframework.core.env Environment
+
+.. java:import:: org.springframework.core.env Profiles
+
+.. java:import:: org.springframework.stereotype Service
+
+.. java:import:: org.springframework.util StringUtils
+
+.. java:import:: java.util List
+
+.. java:import:: java.util Optional
+
+.. java:import:: java.util.stream Collectors
 
 ImageBuilder
 ============
@@ -173,11 +179,12 @@ deleteBuild
 getBuildCRD
 ^^^^^^^^^^^
 
-.. java:method:: public Optional<CustomResourceDefinition> getBuildCRD()
+.. java:method:: public Optional<CustomResourceDefinition> getBuildCRD() throws KubernetesClientException
    :outertype: ImageBuilder
 
    Returns the build CRD if exists
 
+   :throws KubernetesClientException: if operation fails
    :return: the build CRD
 
 init

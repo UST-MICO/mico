@@ -1,5 +1,3 @@
-.. java:import:: org.neo4j.ogm.annotation NodeEntity
-
 .. java:import:: com.fasterxml.jackson.annotation JsonProperty
 
 .. java:import:: lombok AllArgsConstructor
@@ -16,9 +14,11 @@ MicoMessage
 .. java:package:: io.github.ust.mico.core.model
    :noindex:
 
-.. java:type:: @Data @NoArgsConstructor @AllArgsConstructor @Accessors @NodeEntity public class MicoMessage
+.. java:type:: @Data @NoArgsConstructor @AllArgsConstructor @Accessors public class MicoMessage
 
    A simple message associated with a \ :java:ref:`Type`\ .
+
+   Note that this class is only used for business logic purposes and instances are not persisted.
 
 Methods
 -------
