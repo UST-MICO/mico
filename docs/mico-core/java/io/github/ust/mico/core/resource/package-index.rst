@@ -9,6 +9,8 @@ io.github.ust.mico.core.resource
    ApplicationResource
    BackgroundJobResource
    DeploymentResource
+   OpenFaasResource
+   ServiceDeploymentInfoResource
    ServiceInterfaceResource
    ServiceResource
 

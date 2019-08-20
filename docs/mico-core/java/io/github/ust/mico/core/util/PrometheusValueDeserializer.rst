@@ -1,5 +1,3 @@
-.. java:import:: java.io IOException
-
 .. java:import:: com.fasterxml.jackson.core JsonParser
 
 .. java:import:: com.fasterxml.jackson.databind DeserializationContext
@@ -9,6 +7,8 @@
 .. java:import:: com.fasterxml.jackson.databind.deser.std StdDeserializer
 
 .. java:import:: lombok.extern.slf4j Slf4j
+
+.. java:import:: java.io IOException
 
 PrometheusValueDeserializer
 ===========================

@@ -32,6 +32,8 @@ MicoService
 
    Represents a service in the context of MICO.
 
+   Instances of this class are persisted as nodes in the Neo4j database.
+
 Methods
 -------
 getMicoVersion

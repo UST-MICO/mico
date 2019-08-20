@@ -8,12 +8,6 @@
 
 .. java:import:: io.github.ust.mico.core.dto.response.status MicoServiceInterfaceStatusResponseDTO
 
-.. java:import:: io.github.ust.mico.core.exception MicoServiceInterfaceAlreadyExistsException
-
-.. java:import:: io.github.ust.mico.core.exception MicoServiceInterfaceNotFoundException
-
-.. java:import:: io.github.ust.mico.core.exception MicoServiceNotFoundException
-
 .. java:import:: io.github.ust.mico.core.model MicoService
 
 .. java:import:: io.github.ust.mico.core.model MicoServiceInterface
@@ -38,7 +32,7 @@
 
 .. java:import:: javax.validation Valid
 
-.. java:import:: java.util LinkedList
+.. java:import:: java.util ArrayList
 
 .. java:import:: java.util List
 
@@ -89,18 +83,6 @@ getInterfacesOfService
 ^^^^^^^^^^^^^^^^^^^^^^
 
 .. java:method:: @GetMapping public ResponseEntity<Resources<Resource<MicoServiceInterfaceResponseDTO>>> getInterfacesOfService(String shortName, String version)
-   :outertype: ServiceInterfaceResource
-
-getServiceInterfaceResponseDTOResource
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. java:method:: protected Resource<MicoServiceInterfaceResponseDTO> getServiceInterfaceResponseDTOResource(String serviceShortName, String serviceVersion, MicoServiceInterface serviceInterface)
-   :outertype: ServiceInterfaceResource
-
-getServiceInterfaceResponseDTOResourcesList
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. java:method:: protected List<Resource<MicoServiceInterfaceResponseDTO>> getServiceInterfaceResponseDTOResourcesList(String serviceShortName, String serviceVersion, List<MicoServiceInterface> serviceInterfaces)
    :outertype: ServiceInterfaceResource
 
 updateServiceInterface

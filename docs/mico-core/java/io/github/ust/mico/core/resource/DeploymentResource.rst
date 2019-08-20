@@ -22,14 +22,6 @@
 
 .. java:import:: io.github.ust.mico.core.dto.response MicoApplicationJobStatusResponseDTO
 
-.. java:import:: io.github.ust.mico.core.exception DeploymentException
-
-.. java:import:: io.github.ust.mico.core.exception MicoApplicationDoesNotIncludeMicoServiceException
-
-.. java:import:: io.github.ust.mico.core.exception MicoApplicationNotFoundException
-
-.. java:import:: io.github.ust.mico.core.exception MicoServiceInterfaceNotFoundException
-
 .. java:import:: io.github.ust.mico.core.model MicoApplicationJobStatus
 
 DeploymentResource

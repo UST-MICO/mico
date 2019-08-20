@@ -22,6 +22,8 @@ MicoVersion
 
    Wrapper for a \ :java:ref:`Version`\  that adds the functionality for a version prefix, so that versions like, e.g., 'v1.2.3' are possible.
 
+   Note that this class is only used for business logic purposes and instances are not persisted.
+
 Methods
 -------
 compareTo

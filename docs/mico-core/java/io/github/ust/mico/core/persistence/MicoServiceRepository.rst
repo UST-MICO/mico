@@ -54,13 +54,13 @@ findAllByApplication
    :param applicationVersion: the version of the \ :java:ref:`MicoApplication`\ .
    :return: a list of \ :java:ref:`MicoServices <MicoService>`\ .
 
-findAllByApplicationAndShortName
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+findAllByApplicationAndServiceShortName
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: @Query  List<MicoService> findAllByApplicationAndShortName(String applicationShortName, String applicationVersion, String serviceShortName)
+.. java:method:: @Query  Optional<MicoService> findAllByApplicationAndServiceShortName(String applicationShortName, String applicationVersion, String serviceShortName)
    :outertype: MicoServiceRepository
 
-   Finds all services that are included by a given application for a given service short name.
+   Finds the service that is included in a given application for a given service short name.
 
    :param applicationShortName: the short name of the \ :java:ref:`MicoApplication`\ .
    :param applicationVersion: the version of the \ :java:ref:`MicoApplication`\ .
@@ -101,7 +101,7 @@ findDependeesIncludeDepender
 
    :param shortName: the short name of the \ :java:ref:`MicoService`\  (depender).
    :param version: the version of the \ :java:ref:`MicoService`\  (depender).
-   :return: a list of \ :java:ref:`MicoServices <MicoService>`\  including all dependees as well as the depender..
+   :return: a list of \ :java:ref:`MicoServices <MicoService>`\  including all dependees as well as the depender.
 
 findDependers
 ^^^^^^^^^^^^^

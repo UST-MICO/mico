@@ -1,4 +1,4 @@
-.. java:import:: java.util LinkedList
+.. java:import:: java.util ArrayList
 
 .. java:import:: java.util List
 
@@ -6,11 +6,11 @@
 
 .. java:import:: java.util.stream Collectors
 
+.. java:import:: io.github.ust.mico.core.model MicoApplication
+
 .. java:import:: org.springframework.beans.factory.annotation Autowired
 
 .. java:import:: org.springframework.stereotype Service
-
-.. java:import:: org.springframework.web.server ResponseStatusException
 
 .. java:import:: com.fasterxml.jackson.core JsonProcessingException
 
@@ -25,8 +25,6 @@
 .. java:import:: io.github.ust.mico.core.model MicoService
 
 .. java:import:: io.github.ust.mico.core.model MicoServiceDependency
-
-.. java:import:: io.github.ust.mico.core.model MicoServiceInterface
 
 .. java:import:: io.github.ust.mico.core.persistence MicoServiceRepository
 
@@ -55,25 +53,25 @@ checkIfDependencyAlreadyExists
 deleteAllDependees
 ^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public MicoService deleteAllDependees(MicoService service)
+.. java:method:: public MicoService deleteAllDependees(MicoService service) throws MicoServiceIsDeployedException
    :outertype: MicoServiceBroker
 
 deleteAllVersionsOfService
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public void deleteAllVersionsOfService(String shortName) throws MicoServiceNotFoundException, KubernetesResourceException, MicoServiceIsDeployedException
+.. java:method:: public void deleteAllVersionsOfService(String shortName) throws MicoServiceIsDeployedException, MicoServiceIsUsedByMicoApplicationsException
    :outertype: MicoServiceBroker
 
 deleteDependencyBetweenServices
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public MicoService deleteDependencyBetweenServices(MicoService service, MicoService serviceToDelete)
+.. java:method:: public MicoService deleteDependencyBetweenServices(MicoService service, MicoService serviceToDelete) throws MicoServiceIsDeployedException
    :outertype: MicoServiceBroker
 
 deleteService
 ^^^^^^^^^^^^^
 
-.. java:method:: public void deleteService(MicoService service) throws KubernetesResourceException, MicoServiceHasDependersException, MicoServiceIsDeployedException
+.. java:method:: public void deleteService(MicoService service) throws MicoServiceHasDependersException, MicoServiceIsDeployedException, MicoServiceIsUsedByMicoApplicationsException
    :outertype: MicoServiceBroker
 
 findDependers
@@ -91,7 +89,7 @@ getAllServicesAsList
 getAllVersionsOfServiceFromDatabase
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public List<MicoService> getAllVersionsOfServiceFromDatabase(String shortName) throws ResponseStatusException, MicoServiceNotFoundException
+.. java:method:: public List<MicoService> getAllVersionsOfServiceFromDatabase(String shortName)
    :outertype: MicoServiceBroker
 
 getDependeesByMicoService
@@ -104,12 +102,6 @@ getDependencyGraph
 ^^^^^^^^^^^^^^^^^^
 
 .. java:method:: public MicoServiceDependencyGraphResponseDTO getDependencyGraph(MicoService micoServiceRoot) throws MicoServiceNotFoundException
-   :outertype: MicoServiceBroker
-
-getDependentServices
-^^^^^^^^^^^^^^^^^^^^
-
-.. java:method:: public LinkedList<MicoService> getDependentServices(List<MicoServiceDependency> dependees)
    :outertype: MicoServiceBroker
 
 getDependers
@@ -133,7 +125,7 @@ getServiceFromDatabase
 getServiceYamlByShortNameAndVersion
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public String getServiceYamlByShortNameAndVersion(String shortName, String version) throws MicoServiceNotFoundException, JsonProcessingException, KubernetesResourceException
+.. java:method:: public String getServiceYamlByShortNameAndVersion(String shortName, String version) throws MicoServiceNotFoundException, JsonProcessingException
    :outertype: MicoServiceBroker
 
    Return yaml for a \ :java:ref:`MicoService`\  for the give shortName and version.
@@ -151,7 +143,7 @@ getStatusOfService
 persistNewDependencyBetweenServices
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public MicoService persistNewDependencyBetweenServices(MicoService service, MicoService serviceDependee)
+.. java:method:: public MicoService persistNewDependencyBetweenServices(MicoService service, MicoService serviceDependee) throws MicoServiceIsDeployedException
    :outertype: MicoServiceBroker
 
 persistService
@@ -169,6 +161,6 @@ promoteService
 updateExistingService
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public MicoService updateExistingService(MicoService service)
+.. java:method:: public MicoService updateExistingService(MicoService service) throws MicoServiceIsDeployedException
    :outertype: MicoServiceBroker
 

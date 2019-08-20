@@ -1,20 +1,6 @@
-.. java:import:: java.util LinkedList
-
-.. java:import:: java.util List
-
-.. java:import:: java.util Optional
-
-.. java:import:: java.util.stream Collectors
-
 .. java:import:: io.github.ust.mico.core.dto.request MicoServiceDeploymentInfoRequestDTO
 
-.. java:import:: lombok.extern.slf4j Slf4j
-
-.. java:import:: org.springframework.beans.factory.annotation Autowired
-
-.. java:import:: org.springframework.hateoas Link
-
-.. java:import:: org.springframework.stereotype Service
+.. java:import:: io.github.ust.mico.core.dto.response.status MicoApplicationDeploymentStatusResponseDTO
 
 .. java:import:: io.github.ust.mico.core.dto.response.status MicoApplicationStatusResponseDTO
 
@@ -26,11 +12,33 @@
 
 .. java:import:: io.github.ust.mico.core.model MicoServiceDeploymentInfo
 
+.. java:import:: io.github.ust.mico.core.persistence MicoApplicationRepository
+
+.. java:import:: io.github.ust.mico.core.persistence MicoServiceDeploymentInfoRepository
+
+.. java:import:: io.github.ust.mico.core.persistence MicoServiceRepository
+
 .. java:import:: io.github.ust.mico.core.resource ApplicationResource
 
 .. java:import:: io.github.ust.mico.core.service MicoKubernetesClient
 
 .. java:import:: io.github.ust.mico.core.service MicoStatusService
+
+.. java:import:: lombok.extern.slf4j Slf4j
+
+.. java:import:: org.springframework.beans.factory.annotation Autowired
+
+.. java:import:: org.springframework.hateoas Link
+
+.. java:import:: org.springframework.stereotype Service
+
+.. java:import:: java.util ArrayList
+
+.. java:import:: java.util List
+
+.. java:import:: java.util Optional
+
+.. java:import:: java.util.stream Collectors
 
 MicoApplicationBroker
 =====================
@@ -45,7 +53,13 @@ Methods
 addMicoServiceToMicoApplicationByShortNameAndVersion
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public MicoApplication addMicoServiceToMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion) throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAlreadyAddedToMicoApplicationException, MicoServiceAddedMoreThanOnceToMicoApplicationException
+.. java:method:: public void addMicoServiceToMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion) throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAlreadyAddedToMicoApplicationException, MicoServiceAddedMoreThanOnceToMicoApplicationException, MicoApplicationIsNotUndeployedException, MicoTopicRoleUsedMultipleTimesException, MicoServiceDeploymentInformationNotFoundException, KubernetesResourceException, MicoApplicationDoesNotIncludeMicoServiceException
+   :outertype: MicoApplicationBroker
+
+checkForMicoServiceInMicoApplication
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method::  MicoApplication checkForMicoServiceInMicoApplication(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException
    :outertype: MicoApplicationBroker
 
 copyAndUpgradeMicoApplicationByShortNameAndVersion
@@ -63,19 +77,25 @@ createMicoApplication
 deleteMicoApplicationByShortNameAndVersion
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public void deleteMicoApplicationByShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException, MicoApplicationIsDeployedException
+.. java:method:: public void deleteMicoApplicationByShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException
    :outertype: MicoApplicationBroker
 
 deleteMicoApplicationsByShortName
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public void deleteMicoApplicationsByShortName(String shortName) throws MicoApplicationNotFoundException, MicoApplicationIsDeployedException
+.. java:method:: public void deleteMicoApplicationsByShortName(String shortName) throws MicoApplicationIsNotUndeployedException
    :outertype: MicoApplicationBroker
 
 getApplicationDeploymentStatus
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public MicoApplicationDeploymentStatus getApplicationDeploymentStatus(String shortName, String version)
+.. java:method:: public MicoApplicationDeploymentStatus getApplicationDeploymentStatus(String shortName, String version) throws MicoApplicationNotFoundException
+   :outertype: MicoApplicationBroker
+
+getApplicationStatus
+^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public MicoApplicationStatusResponseDTO getApplicationStatus(String shortName, String version) throws MicoApplicationNotFoundException
    :outertype: MicoApplicationBroker
 
 getLinksOfMicoApplication
@@ -90,12 +110,6 @@ getMicoApplicationByShortNameAndVersion
 .. java:method:: public MicoApplication getMicoApplicationByShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException
    :outertype: MicoApplicationBroker
 
-getMicoApplicationStatusOfMicoApplicationByShortNameAndVersion
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. java:method:: public MicoApplicationStatusResponseDTO getMicoApplicationStatusOfMicoApplicationByShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException
-   :outertype: MicoApplicationBroker
-
 getMicoApplications
 ^^^^^^^^^^^^^^^^^^^
 
@@ -105,13 +119,13 @@ getMicoApplications
 getMicoApplicationsByShortName
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public List<MicoApplication> getMicoApplicationsByShortName(String shortName) throws MicoApplicationNotFoundException
+.. java:method:: public List<MicoApplication> getMicoApplicationsByShortName(String shortName)
    :outertype: MicoApplicationBroker
 
-getMicoServiceDeploymentInformation
+getMicoApplicationsUsingMicoService
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public MicoServiceDeploymentInfo getMicoServiceDeploymentInformation(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoServiceDeploymentInformationNotFoundException, MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException
+.. java:method:: public List<MicoApplication> getMicoApplicationsUsingMicoService(String serviceShortName, String serviceVersion)
    :outertype: MicoApplicationBroker
 
 getMicoServicesOfMicoApplicationByShortNameAndVersion
@@ -123,18 +137,12 @@ getMicoServicesOfMicoApplicationByShortNameAndVersion
 removeMicoServiceFromMicoApplicationByShortNameAndVersion
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public MicoApplication removeMicoServiceFromMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException
+.. java:method:: public MicoApplication removeMicoServiceFromMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException, MicoApplicationIsNotUndeployedException
    :outertype: MicoApplicationBroker
 
 updateMicoApplication
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public MicoApplication updateMicoApplication(String shortName, String version, MicoApplication micoApplication) throws MicoApplicationNotFoundException, ShortNameOfMicoApplicationDoesNotMatchException, VersionOfMicoApplicationDoesNotMatchException
-   :outertype: MicoApplicationBroker
-
-updateMicoServiceDeploymentInformation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. java:method:: public MicoServiceDeploymentInfo updateMicoServiceDeploymentInformation(String applicationShortName, String applicationVersion, String serviceShortName, MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException, MicoServiceDeploymentInformationNotFoundException, KubernetesResourceException
+.. java:method:: public MicoApplication updateMicoApplication(String shortName, String version, MicoApplication micoApplication) throws MicoApplicationNotFoundException, ShortNameOfMicoApplicationDoesNotMatchException, VersionOfMicoApplicationDoesNotMatchException, MicoApplicationIsNotUndeployedException
    :outertype: MicoApplicationBroker
 

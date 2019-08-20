@@ -12,6 +12,7 @@ io.github.ust.mico.core.model
    MicoApplicationDeploymentStatus-Value
    MicoApplicationJobStatus
    MicoEnvironmentVariable
+   MicoEnvironmentVariable-DefaultNames
    MicoInterfaceConnection
    MicoLabel
    MicoMessage
@@ -27,5 +28,8 @@ io.github.ust.mico.core.model
    MicoServiceDeploymentInfo-ImagePullPolicy
    MicoServiceInterface
    MicoServicePort
+   MicoTopic
+   MicoTopicRole
+   MicoTopicRole-Role
    MicoVersion
 

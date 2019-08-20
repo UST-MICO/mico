@@ -1,7 +1,3 @@
-.. java:import:: com.fasterxml.jackson.annotation JsonInclude
-
-.. java:import:: com.fasterxml.jackson.annotation JsonInclude.Include
-
 .. java:import:: io.github.ust.mico.core.dto.request MicoEnvironmentVariableRequestDTO
 
 .. java:import:: io.github.ust.mico.core.model MicoEnvironmentVariable

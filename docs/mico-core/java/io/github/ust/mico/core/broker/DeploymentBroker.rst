@@ -12,6 +12,8 @@
 
 .. java:import:: lombok.extern.slf4j Slf4j
 
+.. java:import:: org.apache.commons.lang3.exception ExceptionUtils
+
 .. java:import:: org.springframework.beans.factory.annotation Autowired
 
 .. java:import:: org.springframework.stereotype Service
@@ -32,6 +34,8 @@
 
 .. java:import:: java.util.concurrent TimeoutException
 
+.. java:import:: java.util.stream Collectors
+
 DeploymentBroker
 ================
 
@@ -51,6 +55,6 @@ deployApplication
 undeployApplication
 ^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public void undeployApplication(String shortName, String version) throws MicoApplicationNotFoundException
+.. java:method:: public void undeployApplication(String shortName, String version) throws MicoApplicationNotFoundException, MicoApplicationIsDeployingException
    :outertype: DeploymentBroker
 

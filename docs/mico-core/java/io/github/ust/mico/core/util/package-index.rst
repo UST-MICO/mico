@@ -12,5 +12,6 @@ io.github.ust.mico.core.util
    Patterns
    PrometheusValueDeserializer
    RandomStringFactory
+   RestTemplates
    UIDUtils
 

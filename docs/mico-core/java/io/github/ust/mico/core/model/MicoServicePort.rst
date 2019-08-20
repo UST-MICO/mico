@@ -24,6 +24,8 @@ MicoServicePort
 
    Represents a basic port with a port number and port type (protocol).
 
+   Instances of this class are persisted as nodes in the Neo4j database.
+
 Methods
 -------
 valueOf

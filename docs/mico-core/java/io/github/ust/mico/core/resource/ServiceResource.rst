@@ -138,6 +138,12 @@ getServiceByShortNameAndVersion
 .. java:method:: @GetMapping public ResponseEntity<Resource<MicoServiceResponseDTO>> getServiceByShortNameAndVersion(String shortName, String version)
    :outertype: ServiceResource
 
+getServiceLinks
+^^^^^^^^^^^^^^^
+
+.. java:method:: static Iterable<Link> getServiceLinks(MicoService service)
+   :outertype: ServiceResource
+
 getServiceList
 ^^^^^^^^^^^^^^
 
@@ -147,13 +153,13 @@ getServiceList
 getServiceResponseDTOResource
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: protected static Resource<MicoServiceResponseDTO> getServiceResponseDTOResource(MicoService service)
+.. java:method:: static Resource<MicoServiceResponseDTO> getServiceResponseDTOResource(MicoService service)
    :outertype: ServiceResource
 
 getServiceResponseDTOResourcesList
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: protected static List<Resource<MicoServiceResponseDTO>> getServiceResponseDTOResourcesList(List<MicoService> services)
+.. java:method:: static List<Resource<MicoServiceResponseDTO>> getServiceResponseDTOResourcesList(List<MicoService> services)
    :outertype: ServiceResource
 
 getServiceYamlByShortNameAndVersion

@@ -2,7 +2,17 @@
 
 .. java:import:: org.springframework.context.annotation Configuration
 
+.. java:import:: org.springframework.util AntPathMatcher
+
 .. java:import:: org.springframework.web.filter CommonsRequestLoggingFilter
+
+.. java:import:: javax.servlet Filter
+
+.. java:import:: javax.servlet.http HttpServletRequest
+
+.. java:import:: java.util Collections
+
+.. java:import:: java.util List
 
 RequestLoggingFilterConfig
 ==========================
@@ -17,6 +27,6 @@ Methods
 logFilter
 ^^^^^^^^^
 
-.. java:method:: @Bean public CommonsRequestLoggingFilter logFilter()
+.. java:method:: @Bean public Filter logFilter()
    :outertype: RequestLoggingFilterConfig
 

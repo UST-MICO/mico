@@ -15,5 +15,6 @@ io.github.ust.mico.core.dto.request
    MicoServiceInterfaceRequestDTO
    MicoServicePortRequestDTO
    MicoServiceRequestDTO
+   MicoTopicRequestDTO
    MicoVersionRequestDTO
 

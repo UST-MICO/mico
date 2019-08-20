@@ -20,6 +20,7 @@ io.github.ust.mico.core.dto.response
    MicoServiceInterfaceResponseDTO
    MicoServicePortResponseDTO
    MicoServiceResponseDTO
+   MicoTopicResponseDTO
    MicoYamlResponseDTO
    ValidationErrorResponseDTO
 

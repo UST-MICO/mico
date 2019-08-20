@@ -1,7 +1,3 @@
-.. java:import:: org.neo4j.ogm.annotation GeneratedValue
-
-.. java:import:: org.neo4j.ogm.annotation Id
-
 .. java:import:: com.fasterxml.jackson.annotation JsonIgnoreProperties
 
 .. java:import:: io.github.ust.mico.core.dto.request MicoEnvironmentVariableRequestDTO
@@ -14,15 +10,23 @@
 
 .. java:import:: lombok.experimental Accessors
 
+.. java:import:: org.neo4j.ogm.annotation GeneratedValue
+
+.. java:import:: org.neo4j.ogm.annotation Id
+
+.. java:import:: org.neo4j.ogm.annotation NodeEntity
+
 MicoEnvironmentVariable
 =======================
 
 .. java:package:: io.github.ust.mico.core.model
    :noindex:
 
-.. java:type:: @Data @NoArgsConstructor @AllArgsConstructor @Accessors @JsonIgnoreProperties public class MicoEnvironmentVariable
+.. java:type:: @Data @NoArgsConstructor @AllArgsConstructor @Accessors @JsonIgnoreProperties @NodeEntity public class MicoEnvironmentVariable
 
    An environment variable represented as a simple key-value pair. Necessary since Neo4j does not allow to persist properties of composite types.
+
+   Instances of this class are persisted as nodes in the Neo4j database.
 
 Methods
 -------
