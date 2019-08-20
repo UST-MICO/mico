@@ -105,10 +105,16 @@ export const STYLE_TEMPLATE = {
             text-decoration: underline;
         }
         .node:not(.application):not(.selected).hovered {
-            fill: #efefef;
+            fill: #dfdfdf;
         }
         .node.application.hovered {
             fill: #0099ff;
+        }
+        .node .foreground {
+            fill: #dfdfdf;
+        }
+        .node:not(.selected).hovered .foreground {
+            fill: #efefef;
         }
         .hovered:not(.service-interface) .link-handle {
             display: initial;
@@ -159,6 +165,15 @@ export const SERVICE_INTERFACE_NODE_TEMPLATE = {
     innerHTML: `<circle r=20></circle>
         <text class="text interface-name" data-content="title" data-click="title" width="34" text-anchor="middle" x="0" y="0"></text>
         <text class="text protocol" data-content="protocol" data-click="title" width="30" text-anchor="middle" x="0" y="10">PPP</text>`
+};
+
+export const KAFKA_TOPIC_NODE_TEMPLATE = {
+    id: 'kafka-topic',
+    innerHTML: `<polygon points="-29,0 -28,-6 28,-6 29,0 28,6 -28,6" data-link-handles="corners"></polygon>
+    <ellipse class="background" cx="25" cy="0" rx="4" ry="9"/>
+    <rect class="background" x="-25" y="-9" width="50" height="18"></rect>
+    <ellipse class="foreground" cx="-25" cy="0" rx="4" ry="9"/>
+    <text class="text title" data-content="title" data-click="title" width="42" text-anchor="middle" x="2" y="3"></text>`
 };
 
 export const SERVICE_NODE_TEMPLATE = {

@@ -24,7 +24,7 @@ import { Node } from '@ustutt/grapheditor-webcomponent/lib/node';
 import { ApiObject } from 'src/app/api/apiobject';
 import { ApiService } from 'src/app/api/api.service';
 import { Subscription, Subject } from 'rxjs';
-import { STYLE_TEMPLATE, APPLICATION_NODE_TEMPLATE, SERVICE_NODE_TEMPLATE, ARROW_TEMPLATE, ServiceNode, ApplicationNode, ServiceInterfaceNode, SERVICE_INTERFACE_NODE_TEMPLATE } from './app-dependency-graph-constants';
+import { STYLE_TEMPLATE, APPLICATION_NODE_TEMPLATE, SERVICE_NODE_TEMPLATE, ARROW_TEMPLATE, ServiceNode, ApplicationNode, ServiceInterfaceNode, SERVICE_INTERFACE_NODE_TEMPLATE, KAFKA_TOPIC_NODE_TEMPLATE } from './app-dependency-graph-constants';
 import { MatDialog } from '@angular/material';
 import { ChangeServiceVersionComponent } from 'src/app/dialogs/change-service-version/change-service-version.component';
 import { debounceTime, take, takeLast } from 'rxjs/operators';
@@ -113,14 +113,34 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             }
             return false;
         };
+        graph.calculateLinkHandlesForEdge = (edge, sourceHandles, source, targetHandles, target) => {
+            if (edge.type === 'topic') {
+                if (edge.role === 'INPUT') {
+                    return {
+                        sourceHandles: sourceHandles.filter(handle => handle.x > 0),
+                        targetHandles: targetHandles,
+                    };
+                }
+                if (edge.role === 'OUTPUT') {
+                    return {
+                        sourceHandles: sourceHandles,
+                        targetHandles: targetHandles.filter(handle => handle.x < 0),
+                    };
+                }
+            }
+            return null;
+        };
         graph.addEventListener('nodeclick', this.onNodeClick);
         graph.addEventListener('nodepositionchange', this.onNodeMove);
         graph.addEventListener('edgeadd', this.onEdgeAdd);
         graph.addEventListener('edgedrop', this.onEdgeDrop);
         graph.addEventListener('edgeremove', this.onEdgeRemove);
         graph.onCreateDraggedEdge = this.onCreateDraggedEdge;
-        graph.updateTemplates([SERVICE_NODE_TEMPLATE, SERVICE_INTERFACE_NODE_TEMPLATE, APPLICATION_NODE_TEMPLATE],
-            [STYLE_TEMPLATE], [ARROW_TEMPLATE]);
+        graph.updateTemplates(
+            [SERVICE_NODE_TEMPLATE, SERVICE_INTERFACE_NODE_TEMPLATE, KAFKA_TOPIC_NODE_TEMPLATE, APPLICATION_NODE_TEMPLATE],
+            [STYLE_TEMPLATE],
+            [ARROW_TEMPLATE]
+        );
         this.resetGraph();
     }
 
@@ -525,6 +545,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         this.updateGraphFromApplicationData(application, applicationStatus);
         serviceInterfaces.forEach((interfaces, serviceId) => this.updateServiceInterfaceData(serviceId, interfaces));
         deployInfo.forEach((deplInfo, serviceId) => this.updateInterfaceConnectionEdgesFromDeploymentInformation(serviceId, deplInfo));
+        deployInfo.forEach((deplInfo, serviceId) => this.updateTopicsFromDeploymentInformation(serviceId, deplInfo));
 
         // render changes
         graph.completeRender();
@@ -750,6 +771,97 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 }
             }
             toRemove.delete(edgeId(edge));
+        });
+
+        toRemove.forEach((edge) => {
+            graph.removeEdge(edge, false);
+        });
+    }
+
+
+
+    /**
+     * Update the topic connection edges based on the deployment info of a service.
+     *
+     * @param serviceId the graph id of the service the topic corresponds to
+     * @param deployInfo the deployment info of the service
+     */
+    updateTopicsFromDeploymentInformation(serviceId: string, deployInfo: ApiObject) {
+        const graph: GraphEditor = this.graph.nativeElement;
+
+        const toRemove = new Map<string, Edge>();
+
+        graph.getEdgesBySource(serviceId).forEach(edge => {
+            if (edge.type === 'topic') {
+                toRemove.set(edgeId(edge), edge);
+            }
+        });
+
+        graph.getEdgesByTarget(serviceId).forEach(edge => {
+            if (edge.type === 'topic') {
+                toRemove.set(edgeId(edge), edge);
+            }
+        });
+
+        const serviceNode: Node = graph.getNode(serviceId);
+
+        deployInfo.topics.forEach(connection => {
+            if (connection.role !== 'INPUT' && connection.role !== 'OUTPUT') {
+                return;
+            }
+            const topicId = `TOPIC/${connection.name}`;
+            let topicNode: Node = graph.getNode(topicId);
+            if (topicNode == null) {
+                topicNode = {
+                    id: topicId,
+                    x: serviceNode.x,
+                    y: 170,
+                    type: `kafka-topic`,
+                    title: connection.name,
+                };
+                if (connection.role === 'INPUT') {
+                    topicNode.x -= 30;
+                }
+                if (connection.role === 'OUTPUT') {
+                    topicNode.x += 30;
+                }
+                graph.addNode(topicNode, false);
+            }
+
+            const newEdge: Edge = {
+                source: null,
+                target: null,
+                type: 'topic',
+                role: connection.role,
+                markers: [{
+                    template: 'arrow',
+                    positionOnLine: 0.5,
+                    scale: 0.5,
+                    rotate: { relativeAngle: 0 }
+                }],
+                texts: [{
+                    width: 40,
+                    positionOnLine: 0.5,
+                    offsetX: 5,
+                    value: connection.role,
+                }],
+            };
+
+            if (connection.role === 'INPUT') {
+                newEdge.source = topicId;
+                newEdge.target = serviceId;
+            }
+
+            if (connection.role === 'OUTPUT') {
+                newEdge.source = serviceId;
+                newEdge.target = topicId;
+            }
+
+            if (graph.getEdge(edgeId(newEdge)) == null) {
+                graph.addEdge(newEdge, false);
+            }
+
+            toRemove.delete(edgeId(newEdge));
         });
 
         toRemove.forEach((edge) => {
