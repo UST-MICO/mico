@@ -18,13 +18,13 @@
  */
 
 import { Injectable } from '@angular/core';
-import { Observable, Subject, BehaviorSubject, AsyncSubject, interval, timer, Subscription } from 'rxjs';
+import { MatSnackBar } from '@angular/material';
+import { AsyncSubject, BehaviorSubject, interval, Observable, Subject, Subscription, timer } from 'rxjs';
 import { filter, flatMap, map } from 'rxjs/operators';
-import { ApiObject } from './apiobject';
+import { safeUnsubscribe } from '../util/utils';
 import { ApiBaseFunctionService } from './api-base-function.service';
 import { ApiModel, ApiModelAllOf } from './apimodel';
-import { safeUnsubscribe } from '../util/utils';
-import { MatSnackBar } from '@angular/material';
+import { ApiObject } from './apiobject';
 
 
 /**
@@ -1189,4 +1189,18 @@ export class ApiService {
         }
     }
 
+    /**
+     * Retrieves the IP address of the OpenFaaS Portal from the backend.
+     */
+    getOpenFaaSIp() {
+        const resource = '/openfaas/';
+        const stream = this.getStreamSource<ApiObject>(resource);
+
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+            stream.next(val.externalUrl);
+        });
+
+        return stream.asObservable().pipe(
+            filter(data => data !== undefined));
+    }
 }

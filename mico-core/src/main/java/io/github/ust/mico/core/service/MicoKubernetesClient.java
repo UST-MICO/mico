@@ -742,9 +742,9 @@ public class MicoKubernetesClient {
                 }
 
                 for (String serviceName : serviceNames) {
-                    Service actualKubernetesService = kubernetesClient.services().inNamespace(namespace).withName(serviceName).get();
-                    if (actualKubernetesService != null) {
-                        actualKubernetesServices.add(actualKubernetesService);
+                    Optional<Service> actualKubernetesServiceOptional = getService(serviceName, namespace);
+                    if (actualKubernetesServiceOptional.isPresent()) {
+                        actualKubernetesServices.add(actualKubernetesServiceOptional.get());
                     } else {
                         log.warn("Kubernetes service '{}' of MicoService '{}' '{}' doesn't exist anymore",
                             serviceName, micoService.getShortName(), micoService.getVersion());
@@ -1278,6 +1278,88 @@ public class MicoKubernetesClient {
         final String password = new String(Base64.getDecoder().decode(base64Password));
         final String userName = new String(Base64.getDecoder().decode(base64UserName));
         return new PasswordAuthentication(userName, password.toCharArray());
+    }
+
+
+    /**
+     * Requests the public IP of a Kubernetes service and returns it or an empty {@code Optional} if the
+     * service has no public IP.
+     *
+     * @param name      the name of the service.
+     * @param namespace the namespace which contains the service.
+     * @return the public ip of a service or an empty optional.
+     * @throws KubernetesResourceException if there is no such service.
+     */
+    public Optional<String> getPublicIpOfKubernetesService(String name, String namespace) throws KubernetesResourceException {
+        log.debug("Requesting public ip of Kubernetes service '{}' in namespace '{}'", name, namespace);
+        Service service = getServiceOrThrowException(name, namespace);
+        List<LoadBalancerIngress> ingresses;
+        ServiceStatus status = service.getStatus();
+        if (status == null || status.getLoadBalancer() == null || status.getLoadBalancer().getIngress() == null) {
+            throw new KubernetesResourceException("The Kubernetes service with the name '" + name + "' in the namespace '" + namespace + "' does not" +
+                " contain a status, loadbalancer or ingress element.");
+        }
+        ingresses = service.getStatus().getLoadBalancer().getIngress();
+        Optional<String> ip = Optional.empty();
+        if (ingresses.size() == 1) {
+            log.debug("Returning the ip '{}' of the Kubernetes service '{}' in the namespace '{}'", ip, name, namespace);
+            ip = Optional.ofNullable(ingresses.get(0).getIp());
+        } else if (ingresses.size() > 1) {
+            log.warn("There are multiple ingresses for the kubernetes service '{}' in namespace '{}'. We expect only one. Picking the first ingress.", name, namespace);
+            ip = Optional.ofNullable(ingresses.get(0).getIp());
+        } else if (ingresses.size() < 1) {
+            log.warn("There are no ingresses for the kubernetes service '{}' in namespace '{}'. There has to be one " +
+                "to get an external ip of the kubernetes service.", name, namespace);
+        }
+        return ip;
+
+    }
+
+    /**
+     * Requests the list of public ports of a service. It returns the list of ports or an empty list if there are none.
+     *
+     * @param name      the name of the service.
+     * @param namespace the namespace which contains the service.
+     * @return a list of ports or an empty list.
+     * @throws KubernetesResourceException if there is no such service.
+     */
+    public List<Integer> getPublicPortsOfKubernetesService(String name, String namespace) throws KubernetesResourceException {
+        log.debug("Requesting ports of Kubernetes service '{}' in namespace '{}'", name, namespace);
+        LinkedList<Integer> ports = new LinkedList<>();
+        Service service = getServiceOrThrowException(name, namespace);
+        if (service.getSpec() == null) {
+            throw new KubernetesResourceException("The Kubernetes service with the name '" + name + "' in the namespace '" + namespace + "' does not contain a spec object");
+        }
+        List<ServicePort> specPorts = service.getSpec().getPorts();
+        if (specPorts != null) {
+            specPorts.forEach(servicePort -> ports.add(servicePort.getPort()));
+        }
+        log.debug("Returning the ports '{}' of the Kubernetes service '{}' in the namespace '{}'", ports, name, namespace);
+        return ports;
+    }
+
+    /**
+     * Requests the service with the given name in the given namespace or {@code null} if there is no such service
+     *
+     * @param name      the name of the service.
+     * @param namespace the namespace which contains the service.
+     * @return the service in the namespace and with the given name or {@code null}.
+     */
+    public Optional<Service> getService(String name, String namespace) {
+        return Optional.ofNullable(kubernetesClient.services().inNamespace(namespace).withName(name).get());
+    }
+
+    /**
+     * Returns the service with the given name in the namespace or throws a {@link KubernetesResourceException}.
+     *
+     * @param name      the name of the service.
+     * @param namespace the namespace which contains the service.
+     * @return the service with the given name in the namespace.
+     * @throws KubernetesResourceException if there is no such service.
+     */
+    public Service getServiceOrThrowException(String name, String namespace) throws KubernetesResourceException {
+        return getService(name, namespace).orElseThrow(() -> new KubernetesResourceException(
+            "There is no Kubernetes service with the name '" + name + "' in the namespace '" + namespace + "' deployed"));
     }
 
 }

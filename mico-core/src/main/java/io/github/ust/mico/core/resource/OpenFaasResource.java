@@ -20,7 +20,10 @@
 package io.github.ust.mico.core.resource;
 
 
+import io.github.ust.mico.core.broker.OpenFaasBroker;
 import io.github.ust.mico.core.configuration.OpenFaaSConfig;
+import io.github.ust.mico.core.dto.response.ExternalUrlDTO;
+import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.util.RestTemplates;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +37,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -51,6 +58,22 @@ public class OpenFaasResource {
 
     @Autowired
     OpenFaaSConfig openFaaSConfig;
+
+    @Autowired
+    OpenFaasBroker openFaasBroker;
+
+    @GetMapping()
+    public ResponseEntity<ExternalUrlDTO> getOpenFaasURL() {
+        try {
+            Optional<URL> externalAddressOptional = openFaasBroker.getExternalAddress();
+            ExternalUrlDTO externalUrlDTO;
+            externalUrlDTO = new ExternalUrlDTO(externalAddressOptional.orElse(null), externalAddressOptional.isPresent());
+            return ResponseEntity.ok().body(externalUrlDTO);
+        } catch (MalformedURLException | KubernetesResourceException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+
+    }
 
     @GetMapping(FUNCTIONS_PATH)
     public ResponseEntity<String> getOpenFaasFunctions() {

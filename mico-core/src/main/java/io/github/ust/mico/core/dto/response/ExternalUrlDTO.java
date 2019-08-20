@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,30 +17,29 @@
  * under the License.
  */
 
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { ApiService } from '../api/api.service';
-import { Subscription } from 'rxjs';
-import { safeUnsubscribe } from '../util/utils';
+package io.github.ust.mico.core.dto.response;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
-@Component({
-  selector: 'mico-toolbar',
-  templateUrl: './toolbar.component.html',
-  styleUrls: ['./toolbar.component.css']
-})
-export class ToolbarComponent implements OnInit, OnDestroy {
+import java.net.URL;
 
-  openFaaSIp;
-  subOpenFaaSIp: Subscription;
-  constructor(private apiService: ApiService) {
-      this.subOpenFaaSIp = this.apiService.getOpenFaaSIp().subscribe(val => this.openFaaSIp = val);
-    }
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Accessors(chain = true)
+public class ExternalUrlDTO {
 
-  ngOnInit() {
-  }
+    /**
+     * An url for a service which is externally reachable.
+     */
+    URL externalUrl;
 
-  ngOnDestroy() {
-    safeUnsubscribe(this.subOpenFaaSIp);
-  }
+    /**
+     * Is true if the url is available.
+     */
+    boolean isExternalUrlAvailable;
 
 }
