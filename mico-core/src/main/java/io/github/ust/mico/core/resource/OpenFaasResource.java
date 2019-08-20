@@ -39,6 +39,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Optional;
 
 @Slf4j
@@ -78,14 +79,9 @@ public class OpenFaasResource {
     @GetMapping(EXTERNAL_ADDRESS_PATH)
     public ResponseEntity<ExternalUrlDTO> getOpenFaasURL() {
         try {
-            Optional<String> externalAddressOptional = openFaasBroker.getExternalAddress();
+            Optional<URL> externalAddressOptional = openFaasBroker.getExternalAddress();
             ExternalUrlDTO externalUrlDTO;
-            if (externalAddressOptional.isPresent()) {
-                String externalAddress = externalAddressOptional.get();
-                externalUrlDTO = new ExternalUrlDTO(externalAddress, true);
-            } else {
-                externalUrlDTO = new ExternalUrlDTO("", false);
-            }
+            externalUrlDTO = new ExternalUrlDTO(externalAddressOptional.orElse(null), externalAddressOptional.isPresent());
             return ResponseEntity.ok().body(externalUrlDTO);
         } catch (MalformedURLException | KubernetesResourceException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());

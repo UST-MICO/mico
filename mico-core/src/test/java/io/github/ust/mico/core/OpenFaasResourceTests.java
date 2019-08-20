@@ -26,6 +26,7 @@ import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.util.RestTemplates;
 import lombok.extern.slf4j.Slf4j;
+import org.hamcrest.core.IsNull;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +52,6 @@ import java.util.Optional;
 import static io.github.ust.mico.core.broker.OpenFaasBroker.OPEN_FAAS_UI_PROTOCOL;
 import static io.github.ust.mico.core.resource.OpenFaasResource.*;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.isEmptyString;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -187,6 +187,6 @@ public class OpenFaasResourceTests {
     }
 
     private ResultMatcher getEmptyResultMatcher() {
-        return ResultMatcher.matchAll(status().isOk(), jsonPath("$.externalUrl", isEmptyString()), jsonPath("$.externalUrlAvailable", is(false)));
+        return ResultMatcher.matchAll(status().isOk(), jsonPath("$.externalUrl", IsNull.nullValue()), jsonPath("$.externalUrlAvailable", is(false)));
     }
 }

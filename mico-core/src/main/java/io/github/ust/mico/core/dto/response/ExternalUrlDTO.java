@@ -24,6 +24,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+import java.net.URL;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -33,7 +35,7 @@ public class ExternalUrlDTO {
     /**
      * An url for a service which is externally reachable.
      */
-    String externalUrl;
+    URL externalUrl;
 
     /**
      * Is true if the url is available.
