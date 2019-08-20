@@ -22,7 +22,7 @@ Please include a summary of the change and which issue is fixed. Please also inc
     - [ ] discussed changes in the team / informed the team about changes
     - [ ] updated [`insertTestValues.sh`](https://github.com/UST-MICO/mico/blob/master/insertTestValues.sh) and [Postman Collections](https://github.com/UST-MICO/docs/tree/master/debugging-testing/postman) are updated
 - [ ] Frontend
-    - [ ] Ensure that it is compilable for production (`ng serve --prod`)
+    - [ ] Ensure that it is compilable for production (`npm run build -- --prod`)
 - [ ] Documentation
 
 # Checklist
