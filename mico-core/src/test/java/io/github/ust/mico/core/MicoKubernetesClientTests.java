@@ -868,7 +868,7 @@ public class MicoKubernetesClientTests {
                         .endIngress()
                         .endLoadBalancer().build())
                 .build());
-        assertThat(micoKubernetesClient.getPublicIpOfKubernetesService(testServiceName, testNamespace), is(emptyOptional()));
+        assertThat(micoKubernetesClient.getPublicIpOfKubernetesService(testServiceName, testNamespace), is(optionalWithValue(is(ip))));
     }
 
     @Test
