@@ -52,8 +52,6 @@ public class OpenFaasResource {
     public static final String FUNCTIONS_PATH = "/functions";
     public static final String OPEN_FAAS_FUNCTION_LIST_PATH = "/system/functions";
 
-    public static final String EXTERNAL_ADDRESS_PATH = "/externalAddress";
-
     @Autowired
     @Qualifier(RestTemplates.QUALIFIER_AUTHENTICATED_OPEN_FAAS_REST_TEMPLATE)
     RestTemplate restTemplate;
@@ -63,6 +61,19 @@ public class OpenFaasResource {
 
     @Autowired
     OpenFaasBroker openFaasBroker;
+
+    @GetMapping()
+    public ResponseEntity<ExternalUrlDTO> getOpenFaasURL() {
+        try {
+            Optional<URL> externalAddressOptional = openFaasBroker.getExternalAddress();
+            ExternalUrlDTO externalUrlDTO;
+            externalUrlDTO = new ExternalUrlDTO(externalAddressOptional.orElse(null), externalAddressOptional.isPresent());
+            return ResponseEntity.ok().body(externalUrlDTO);
+        } catch (MalformedURLException | KubernetesResourceException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+
+    }
 
     @GetMapping(FUNCTIONS_PATH)
     public ResponseEntity<String> getOpenFaasFunctions() {
@@ -74,18 +85,5 @@ public class OpenFaasResource {
             log.debug("There was an I/O Error for GET {}{}", OPEN_FAAS_BASE_PATH, FUNCTIONS_PATH, e);
             throw new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT, e.getMessage());
         }
-    }
-
-    @GetMapping(EXTERNAL_ADDRESS_PATH)
-    public ResponseEntity<ExternalUrlDTO> getOpenFaasURL() {
-        try {
-            Optional<URL> externalAddressOptional = openFaasBroker.getExternalAddress();
-            ExternalUrlDTO externalUrlDTO;
-            externalUrlDTO = new ExternalUrlDTO(externalAddressOptional.orElse(null), externalAddressOptional.isPresent());
-            return ResponseEntity.ok().body(externalUrlDTO);
-        } catch (MalformedURLException | KubernetesResourceException e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
-        }
-
     }
 }

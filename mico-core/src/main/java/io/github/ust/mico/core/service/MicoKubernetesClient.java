@@ -1292,7 +1292,7 @@ public class MicoKubernetesClient {
      */
     public Optional<String> getPublicIpOfKubernetesService(String name, String namespace) throws KubernetesResourceException {
         log.debug("Requesting public ip of Kubernetes service '{}' in namespace '{}'", name, namespace);
-        Service service = getServiceOrThrowKubernetesResourceException(name, namespace);
+        Service service = getServiceOrThrowException(name, namespace);
         List<LoadBalancerIngress> ingresses;
         ServiceStatus status = service.getStatus();
         if (status == null || status.getLoadBalancer() == null || status.getLoadBalancer().getIngress() == null) {
@@ -1321,7 +1321,7 @@ public class MicoKubernetesClient {
     public List<Integer> getPublicPortsOfKubernetesService(String name, String namespace) throws KubernetesResourceException {
         log.debug("Requesting ports of Kubernetes service '{}' in namespace '{}'", name, namespace);
         LinkedList<Integer> ports = new LinkedList<>();
-        Service service = getServiceOrThrowKubernetesResourceException(name, namespace);
+        Service service = getServiceOrThrowException(name, namespace);
         if (service.getSpec() == null) {
             throw new KubernetesResourceException("The Kubernetes service with the name '" + name + "' in the namespace '" + namespace + "' does not contain a spec object");
         }
@@ -1352,7 +1352,7 @@ public class MicoKubernetesClient {
      * @return the service with the given name in the namespace.
      * @throws KubernetesResourceException if there is no such service.
      */
-    public Service getServiceOrThrowKubernetesResourceException(String name, String namespace) throws KubernetesResourceException {
+    public Service getServiceOrThrowException(String name, String namespace) throws KubernetesResourceException {
         return getService(name, namespace).orElseThrow(() -> new KubernetesResourceException(
             "There is no Kubernetes service with the name '" + name + "' in the namespace '" + namespace + "' deployed"));
     }
