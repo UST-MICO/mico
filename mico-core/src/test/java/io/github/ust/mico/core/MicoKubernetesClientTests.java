@@ -106,8 +106,8 @@ public class MicoKubernetesClientTests {
 
     private MicoKubernetesClient micoKubernetesClient;
 
-    public static String testNamespace = "test-namespace";
-    private static String buildTestNamespace = "test-namespace";
+    private static final String testNamespace = "test-namespace";
+    private static final String buildTestNamespace = "test-namespace";
 
     @Before
     public void setUp() {

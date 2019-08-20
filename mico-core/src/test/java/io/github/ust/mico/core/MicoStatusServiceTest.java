@@ -51,7 +51,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 
-import static io.github.ust.mico.core.MicoKubernetesClientTests.testNamespace;
 import static io.github.ust.mico.core.TestConstants.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -63,6 +62,8 @@ import static org.mockito.Mockito.mock;
 @SpringBootTest
 @ActiveProfiles("local")
 public class MicoStatusServiceTest {
+
+    private static final String testNamespace = "test-namespace";
 
     private static final String POD_PHASE_RUNNING = "Running";
     private static final String POD_PHASE_PENDING = "Pending";

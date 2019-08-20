@@ -269,14 +269,14 @@ public class MicoStatusService {
 
         Optional<String> ip = micoKubernetesClient.getPublicIpOfKubernetesService(kubernetesService.getMetadata().getName(), kubernetesService.getMetadata().getNamespace());
         List<Integer> ports = micoKubernetesClient.getPublicPortsOfKubernetesService(kubernetesService.getMetadata().getName(), kubernetesService.getMetadata().getNamespace());
-        int port = -1;
+        int port;
         if (ports.size() >= 1) {
             port = ports.get(0);
             if (ports.size() > 1) {
                 log.warn("There are {} ports defined for interface '{}' of MicoService '{}' '{}'. Using first port {}.",
                     ports.size(), serviceInterface, micoService.getShortName(), micoService.getVersion(), port);
             }
-        } else if (ports.size() < 1) {
+        } else {
             port = 80;
             log.warn("There are no ports defined for interface '{}' of MicoService '{}' '{}'. Using default port {}.",
                 serviceInterfaceName, micoService.getShortName(), micoService.getVersion(), port);
