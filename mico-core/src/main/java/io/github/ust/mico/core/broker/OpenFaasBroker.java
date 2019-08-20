@@ -65,11 +65,11 @@ public class OpenFaasBroker {
         List<Integer> ports = micoKubernetesClient.getPublicPortsOfKubernetesService(
             openFaaSConfig.getGatewayExternalServiceName(), micoKubernetesConfig.getNamespaceOpenFaasWorkspace());
         if (!ipOptional.isPresent() || ports.size() < 1) {
-            log.warn("The optional of the external Ip '{}' is empty or there are no ports in the ports list '{}'", ipOptional, ports);
+            log.warn("We could not request a valid ip '{}' or ports list '{}'", ipOptional, ports);
             return Optional.empty();
         }
         if (ports.size() > 1) {
-            log.warn("There are multiple different ports available. Picking the first");
+            log.warn("There are multiple different ports available: '{}'. Picking the first '{}'", ports, ports.get(0));
         }
         String ip = ipOptional.get();
         int port = ports.get(0);
