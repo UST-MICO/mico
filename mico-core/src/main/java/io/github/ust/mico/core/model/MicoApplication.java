@@ -96,11 +96,18 @@ public class MicoApplication {
     private List<MicoService> services = new ArrayList<>();
 
     /**
-     * The list of service deployment information
-     * this application uses for the deployment of the required services.
+     * The list of service deployment information this application uses
+     * for the deployment of the included services.
      */
     @Relationship(type = "PROVIDES")
     private List<MicoServiceDeploymentInfo> serviceDeploymentInfos = new ArrayList<>();
+
+    /**
+     * The list of service deployment information this application uses
+     * for the deployment of the KafkaFaasConnector multiple times.
+     */
+    @Relationship(type = "PROVIDES_KF_CONNECTOR")
+    private List<MicoServiceDeploymentInfo> kafkaFaasConnectorDeploymentInfos = new ArrayList<>();
 
     /**
      * Human readable contact information for support purposes.

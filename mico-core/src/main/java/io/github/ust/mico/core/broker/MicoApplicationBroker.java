@@ -4,10 +4,7 @@ import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationDeploymentStatusResponseDTO;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
 import io.github.ust.mico.core.exception.*;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
@@ -145,17 +142,31 @@ public class MicoApplicationBroker {
         // we need to set the id of all those nodes to null. That way, Neo4j will create new entities
         // instead of updating the existing ones.
         micoApplication.setId(null);
-        micoApplication.getServiceDeploymentInfos().forEach(sdi -> sdi.setId(null));
-        micoApplication.getServiceDeploymentInfos().forEach(sdi -> sdi.getLabels().forEach(label -> label.setId(null)));
-        micoApplication.getServiceDeploymentInfos().forEach(sdi -> {
-            sdi.getEnvironmentVariables().forEach(envVar -> envVar.setId(null));
-            sdi.getInterfaceConnections().forEach(ic -> ic.setId(null));
-        });
-        // The actual Kubernetes deployment information must not be copied, because the new application
-        // is considered to be not deployed yet.
-        micoApplication.getServiceDeploymentInfos().forEach(sdi -> sdi.setKubernetesDeploymentInfo(null));
+        prepareServiceDeploymentInfosForCopying(micoApplication.getServiceDeploymentInfos());
+        prepareServiceDeploymentInfosForCopying(micoApplication.getKafkaFaasConnectorDeploymentInfos());
 
         return createMicoApplication(micoApplication);
+    }
+
+    /**
+     * Sets all IDs of the included entities of the service deployment infos to null,
+     * so it's possible to make a copy.
+     * The included {@link KubernetesDeploymentInfo} is deleted completely,
+     * so the new application is considered to be not deployed.
+     *
+     * @param serviceDeploymentInfos the {@link MicoServiceDeploymentInfo MicoServiceDeploymentInfos}
+     */
+    private void prepareServiceDeploymentInfosForCopying(List<MicoServiceDeploymentInfo> serviceDeploymentInfos) {
+        for (MicoServiceDeploymentInfo sdi : serviceDeploymentInfos) {
+            sdi.setId(null);
+            sdi.getLabels().forEach(label -> label.setId(null));
+            sdi.getEnvironmentVariables().forEach(envVar -> envVar.setId(null));
+            sdi.getTopics().forEach(topic -> topic.setId(null));
+            sdi.getInterfaceConnections().forEach(ic -> ic.setId(null));
+            // The actual Kubernetes deployment information must not be copied, because the new application
+            // is considered to be not deployed yet.
+            sdi.setKubernetesDeploymentInfo(null);
+        }
     }
 
     public List<MicoService> getMicoServicesOfMicoApplicationByShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException {
