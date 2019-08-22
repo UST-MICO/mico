@@ -77,6 +77,7 @@ public class MicoApplicationBroker {
         // Any service deployment information this application provides must be deleted
         // before (!) the actual application is deleted, otherwise the query for
         // deleting the service deployment information would not work.
+        // This deletes also the service deployment information for the included KafkaFaasConnectors.
         serviceDeploymentInfoRepository.deleteAllByApplication(shortName, version);
 
         // Delete actual application
@@ -97,6 +98,7 @@ public class MicoApplicationBroker {
         // Any service deployment information one of the applications provides must be deleted
         // before (!) the actual application is deleted, otherwise the query for
         // deleting the service deployment information would not work.
+        // This deletes also the service deployment information for the included KafkaFaasConnectors.
         serviceDeploymentInfoRepository.deleteAllByApplication(shortName);
 
         // No version of the application is deployed -> delete all
@@ -125,9 +127,12 @@ public class MicoApplicationBroker {
             throw new MicoApplicationIsNotUndeployedException(shortName, version);
         }
         // TODO: Ensure consistent strategy to update existing entities (covered by mico#690)
+        // Set the information that are not part of the request DTO based on the existing application:
+        // ID, included services, service deployment information (both for normal services and the KafkaFaasConnectors).
         micoApplication.setId(existingMicoApplication.getId())
             .setServices(existingMicoApplication.getServices())
-            .setServiceDeploymentInfos(serviceDeploymentInfoRepository.findAllByApplication(shortName, version));
+            .setServiceDeploymentInfos(serviceDeploymentInfoRepository.findMicoServiceSDIsByApplication(shortName, version))
+            .setKafkaFaasConnectorDeploymentInfos(serviceDeploymentInfoRepository.findKFConnectorSDIsByApplication(shortName, version));
         return applicationRepository.save(micoApplication);
     }
 

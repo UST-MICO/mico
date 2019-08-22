@@ -318,7 +318,7 @@ public class MicoKubernetesClient {
      * @param micoApplication the {@link MicoApplication}
      */
     public void createOrUpdateInterfaceConnections(MicoApplication micoApplication) {
-        List<MicoServiceDeploymentInfo> serviceDeploymentInfos = serviceDeploymentInfoRepository.findAllByApplication(
+        List<MicoServiceDeploymentInfo> serviceDeploymentInfos = serviceDeploymentInfoRepository.findMicoServiceSDIsByApplication(
             micoApplication.getShortName(), micoApplication.getVersion());
         log.debug("Creating or updating interface connections for MicoServices of MicoApplication '{}' '{}' with {} service deployment information.",
             micoApplication.getShortName(), micoApplication.getVersion(), serviceDeploymentInfos.size());
@@ -543,7 +543,7 @@ public class MicoKubernetesClient {
         boolean allUpdatedKubernetesDeploymentInfoIsNull = true;
 
         List<MicoMessage> messages = new ArrayList<>();
-        // Check deployment status for each MicoService (Kubernetes deployment)
+        // Check deployment status for each MicoService including KafkaFaasConnectors (Kubernetes deployment)
         for (MicoServiceDeploymentInfo micoServiceDeploymentInfo : micoServiceDeploymentInfos) {
             MicoService micoService = micoServiceDeploymentInfo.getService();
             if (micoServiceDeploymentInfo.getKubernetesDeploymentInfo() == null) {
