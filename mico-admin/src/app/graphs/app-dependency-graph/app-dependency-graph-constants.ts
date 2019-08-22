@@ -149,6 +149,12 @@ export const STYLE_TEMPLATE = {
         }
         .highlight-incoming .marker {
             fill: green;
+        }
+        .highlight-outgoing .text {
+            fill: red;
+        }
+        .highlight-incoming .text {
+            fill: green;
         }`
 };
 

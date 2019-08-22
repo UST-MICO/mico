@@ -19,7 +19,7 @@
 
 import { Component, OnInit, ViewChild, Input, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import GraphEditor from '@ustutt/grapheditor-webcomponent/lib/grapheditor';
-import { Edge, DraggedEdge, edgeId } from '@ustutt/grapheditor-webcomponent/lib/edge';
+import { Edge, DraggedEdge, edgeId, TextComponent } from '@ustutt/grapheditor-webcomponent/lib/edge';
 import { Node } from '@ustutt/grapheditor-webcomponent/lib/node';
 import { ApiObject } from 'src/app/api/apiobject';
 import { ApiService } from 'src/app/api/api.service';
@@ -136,6 +136,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         graph.addEventListener('edgedrop', this.onEdgeDrop);
         graph.addEventListener('edgeremove', this.onEdgeRemove);
         graph.onCreateDraggedEdge = this.onCreateDraggedEdge;
+        graph.onDraggedEdgeTargetChange = this.onDraggedEdgeTargetChange;
         graph.updateTemplates(
             [SERVICE_NODE_TEMPLATE, SERVICE_INTERFACE_NODE_TEMPLATE, KAFKA_TOPIC_NODE_TEMPLATE, APPLICATION_NODE_TEMPLATE],
             [STYLE_TEMPLATE],
@@ -276,6 +277,8 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         if (this.serviceInterfaceNodeMap.has(edge.source.toString())) {
             return;
         }
+        const graph: GraphEditor = this.graph.nativeElement;
+
         edge.markerEnd = { template: 'arrow', positionOnLine: 1, lineOffset: 4, scale: 0.5, rotate: { relativeAngle: 0 } };
         if (edge.source === ROOT_NODE_ID) {
             edge.type = 'includes';
@@ -303,7 +306,6 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 // remove valid targets from edges that were created from an existing edge
                 // forcing the user to drop the edge in the void
                 edge.validTargets.clear();
-                const graph: GraphEditor = this.graph.nativeElement;
                 const sourceEdge = graph.getEdge(edge.createdFrom);
                 if (sourceEdge != null) {
                     // allow user dropping the edge on original target
@@ -311,7 +313,74 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 }
             }
         }
+        const sourceNode: Node = graph.getNode(edge.source);
+        if (sourceNode.type === 'kafka-topic') {
+            edge.type = 'topic';
+            edge.role = 'INPUT';
+            delete edge.markerEnd;
+            edge.markers = [{
+                template: 'arrow',
+                positionOnLine: 0.65,
+                scale: 0.5,
+                rotate: { relativeAngle: 0 }
+            }];
+            edge.texts = [{
+                width: 40,
+                positionOnLine: 0.65,
+                offsetX: 5,
+                offsetY: 3,
+                value: 'INPUT',
+            }];
+            edge.validTargets.clear();
+            this.serviceNodeMap.forEach((node, key) => {
+                if (node.service.kafkaEnabled) {
+                    const inputEdges: Set<Edge> = graph.getEdgesByTarget(node.id);
+                    let isValidTarget = true;
+                    inputEdges.forEach((edge) => {
+                        if (edge.type === 'topic' && edge.role === 'INPUT') {
+                            isValidTarget = false;
+                        }
+                    });
+                    if (isValidTarget) {
+                        edge.validTargets.add(node.id.toString());
+                    }
+                }
+            });
+        }
         return edge;
+    }
+
+    /**
+     * Callback to change dragged edges when the current target changes.
+     */
+    onDraggedEdgeTargetChange = (edge: DraggedEdge, source: Node, target: Node) => {
+        if (source.type === 'service') {
+            if (target == null || target.type === 'service-interface') {
+                edge.type = 'interface-connection';
+                edge.markerEnd = { template: 'arrow', positionOnLine: 1, lineOffset: 4, scale: 0.5, rotate: { relativeAngle: 0 } };
+                edge.markers = [];
+                edge.texts = [];
+                return;
+            }
+            if (target.type === 'kafka-topic') {
+                edge.type = 'topic';
+                edge.role = 'OUTPUT';
+                delete edge.markerEnd;
+                edge.markers = [{
+                    template: 'arrow',
+                    positionOnLine: 0.65,
+                    scale: 0.5,
+                    rotate: { relativeAngle: 0 }
+                }];
+                edge.texts = [{
+                    width: 40,
+                    positionOnLine: 0.65,
+                    offsetX: 9,
+                    value: 'OUTPUT',
+                }];
+                return;
+            }
+        }
     }
 
     /**
@@ -326,6 +395,10 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             const targetNode = graph.getNode(edge.target) as ServiceInterfaceNode;
             const targetService = graph.getNode(targetNode.serviceId) as ServiceNode;
             this.createInterfaceConnection(edge, sourceNode, targetService, targetNode);
+        }
+        if (edge.type === 'topic') {
+            // TODO add topic to deployment information
+            console.log(edge)
         }
     }
 
@@ -359,6 +432,10 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                     });
                 });
             }
+        }
+        if (event.detail.edge.type === 'topic') {
+            const edge: Edge = event.detail.edge;
+            // handle edge delete add and change...
         }
     }
 
@@ -625,13 +702,13 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                     interfaces: new Set<string>(),
                 };
                 // super basic layout algorithm:
-                this.lastX += 110;
+                this.lastX += 120;
                 if (this.versionChangedFor != null) {
                     if (this.versionChangedFor.newVersion.shortName === service.shortName &&
                         this.versionChangedFor.newVersion.version === service.version) {
                         node.x = this.versionChangedFor.node.x;
                         node.y = this.versionChangedFor.node.y;
-                        this.lastX -= 110;
+                        this.lastX -= 120;
                         this.versionChangedFor = null;
                     }
                 }
@@ -828,6 +905,16 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 graph.addNode(topicNode, false);
             }
 
+            const isInput = (connection.role === 'INPUT');
+            const isOutput = (connection.role === 'OUTPUT');
+
+            const textComponent: TextComponent = {
+                width: 40,
+                positionOnLine: 0.65,
+                offsetX: 5,
+                value: connection.role,
+            };
+
             const newEdge: Edge = {
                 source: null,
                 target: null,
@@ -835,26 +922,23 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 role: connection.role,
                 markers: [{
                     template: 'arrow',
-                    positionOnLine: 0.5,
+                    positionOnLine: 0.65,
                     scale: 0.5,
                     rotate: { relativeAngle: 0 }
                 }],
-                texts: [{
-                    width: 40,
-                    positionOnLine: 0.5,
-                    offsetX: 5,
-                    value: connection.role,
-                }],
+                texts: [textComponent],
             };
 
-            if (connection.role === 'INPUT') {
+            if (isInput) {
                 newEdge.source = topicId;
                 newEdge.target = serviceId;
+                textComponent.offsetY = 3;
             }
 
-            if (connection.role === 'OUTPUT') {
+            if (isOutput) {
                 newEdge.source = serviceId;
                 newEdge.target = topicId;
+                textComponent.offsetX = 9;
             }
 
             if (graph.getEdge(edgeId(newEdge)) == null) {
