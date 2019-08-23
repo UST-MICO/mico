@@ -5,6 +5,7 @@ import io.github.ust.mico.core.dto.response.status.MicoApplicationDeploymentStat
 import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
 import io.github.ust.mico.core.exception.*;
 import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.persistence.KFConnectorDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
@@ -39,6 +40,9 @@ public class MicoApplicationBroker {
 
     @Autowired
     private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
+
+    @Autowired
+    private KFConnectorDeploymentInfoRepository kfConnectorDeploymentInfoRepository;
 
     @Autowired
     private MicoKubernetesClient micoKubernetesClient;
@@ -132,7 +136,7 @@ public class MicoApplicationBroker {
         micoApplication.setId(existingMicoApplication.getId())
             .setServices(existingMicoApplication.getServices())
             .setServiceDeploymentInfos(serviceDeploymentInfoRepository.findMicoServiceSDIsByApplication(shortName, version))
-            .setKafkaFaasConnectorDeploymentInfos(serviceDeploymentInfoRepository.findKFConnectorSDIsByApplication(shortName, version));
+            .setKafkaFaasConnectorDeploymentInfos(getKfConnectorDeploymentInfos(existingMicoApplication));
         return applicationRepository.save(micoApplication);
     }
 
@@ -148,9 +152,27 @@ public class MicoApplicationBroker {
         // instead of updating the existing ones.
         micoApplication.setId(null);
         prepareServiceDeploymentInfosForCopying(micoApplication.getServiceDeploymentInfos());
-        prepareServiceDeploymentInfosForCopying(micoApplication.getKafkaFaasConnectorDeploymentInfos());
+        prepareServiceDeploymentInfosForCopying(micoApplication.getKafkaFaasConnectorDeploymentInfos().stream()
+            .map(KFConnectorDeploymentInfo::getServiceDeploymentInfo).collect(Collectors.toList()));
 
         return createMicoApplication(micoApplication);
+    }
+
+    /**
+     * Retrieves the list of {@code KFConnectorDeploymentInfos} that are part of the {@code MicoApplication}.
+     *
+     * @param existingMicoApplication the {@link MicoApplication}
+     * @return the list of {@link KFConnectorDeploymentInfo KFConnectorDeploymentInfos}
+     */
+    private List<KFConnectorDeploymentInfo> getKfConnectorDeploymentInfos(MicoApplication existingMicoApplication) {
+        List<String> instanceIds = existingMicoApplication.getKafkaFaasConnectorDeploymentInfos().stream()
+            .map(KFConnectorDeploymentInfo::getInstanceId).collect(Collectors.toList());
+        List<KFConnectorDeploymentInfo> existingKFCDIs = new ArrayList<>();
+        for (String instanceId : instanceIds) {
+            Optional<KFConnectorDeploymentInfo> kfCDIOpt = kfConnectorDeploymentInfoRepository.findByInstanceId(instanceId);
+            kfCDIOpt.ifPresent(existingKFCDIs::add);
+        }
+        return existingKFCDIs;
     }
 
     /**

@@ -107,7 +107,7 @@ public class MicoApplication {
      * for the deployment of the KafkaFaasConnector multiple times.
      */
     @Relationship(type = "PROVIDES_KF_CONNECTOR")
-    private List<MicoServiceDeploymentInfo> kafkaFaasConnectorDeploymentInfos = new ArrayList<>();
+    private List<KFConnectorDeploymentInfo> kafkaFaasConnectorDeploymentInfos = new ArrayList<>();
 
     /**
      * Human readable contact information for support purposes.
