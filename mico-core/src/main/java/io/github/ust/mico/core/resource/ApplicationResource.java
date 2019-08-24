@@ -233,17 +233,15 @@ public class ApplicationResource {
         "Multiple instances of a KafkaFaasConnector are allowed per MicoApplication.")
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR + "/{" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION + "}")
     public ResponseEntity<Resource<KFConnectorDeploymentInfoResponseDTO>> addKafkaFaasConnectorInstanceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
-                                                                                                           @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
-                                                                                                           @PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION) String kfConnectorVersion) {
+                                                                                                                     @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
+                                                                                                                     @PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION) String kfConnectorVersion) {
         KFConnectorDeploymentInfo kfConnectorDeploymentInfo;
         try {
             kfConnectorDeploymentInfo = broker.addKafkaFaasConnectorInstanceToMicoApplicationByVersion(applicationShortName, applicationVersion, kfConnectorVersion);
-        } catch (MicoApplicationNotFoundException | MicoServiceDeploymentInformationNotFoundException | KubernetesResourceException e) {
+        } catch (MicoApplicationNotFoundException | KafkaFaasConnectorVersionNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        } catch (MicoApplicationIsNotUndeployedException | MicoApplicationDoesNotIncludeMicoServiceException e) {
+        } catch (MicoApplicationIsNotUndeployedException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
-        } catch (MicoTopicRoleUsedMultipleTimesException e) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
         }
 
         return ResponseEntity.ok(new Resource<>(new KFConnectorDeploymentInfoResponseDTO(kfConnectorDeploymentInfo)));

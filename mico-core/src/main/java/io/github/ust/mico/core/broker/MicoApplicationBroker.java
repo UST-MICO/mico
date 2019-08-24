@@ -17,7 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
 import org.springframework.stereotype.Service;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -305,7 +304,10 @@ public class MicoApplicationBroker {
         // TODO: Update Kubernetes deployment (see issue mico#627)
     }
 
-    public KFConnectorDeploymentInfo addKafkaFaasConnectorInstanceToMicoApplicationByVersion(String applicationShortName, String applicationVersion, String kfConnectorVersion) throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, MicoTopicRoleUsedMultipleTimesException, MicoServiceDeploymentInformationNotFoundException, KubernetesResourceException, MicoApplicationDoesNotIncludeMicoServiceException {
+    public KFConnectorDeploymentInfo addKafkaFaasConnectorInstanceToMicoApplicationByVersion(
+        String applicationShortName, String applicationVersion, String kfConnectorVersion)
+        throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorVersionNotFoundException {
+
         // Retrieve application and service from database (checks whether they exist)
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
 
@@ -314,19 +316,11 @@ public class MicoApplicationBroker {
             throw new MicoApplicationIsNotUndeployedException(applicationShortName, applicationShortName);
         }
 
-        Optional<MicoService> kfConnectorOpt = Optional.empty();
-        try {
-            kfConnectorOpt = Optional.ofNullable(micoServiceBroker.getServiceFromDatabase(KAFKA_FAAS_CONNECTOR_SERVICE_NAME, kfConnectorVersion));
-        } catch (MicoServiceNotFoundException e) {
-            log.debug("KafkaFaasConnector in version '{}' isn't part of the MicoApplication '{}' '{}' yet.",
-                kfConnectorVersion, applicationShortName, applicationVersion);
-        }
         MicoService kfConnector;
-        if (kfConnectorOpt.isPresent()) {
-            kfConnector = kfConnectorOpt.get();
-        } else {
-            // TODO: There is no KafkaFaasConnector in the specified version available. What to do? (covered in epic mico#750)
-            throw new NotImplementedException();
+        try {
+            kfConnector = micoServiceBroker.getServiceFromDatabase(KAFKA_FAAS_CONNECTOR_SERVICE_NAME, kfConnectorVersion);
+        } catch (MicoServiceNotFoundException e) {
+            throw new KafkaFaasConnectorVersionNotFoundException(kfConnectorVersion);
         }
 
         String instanceId = UIDUtils.uidFor(kfConnector);
@@ -351,7 +345,10 @@ public class MicoApplicationBroker {
         return kfConnectorDeploymentInfo;
     }
 
-    public void removeKafkaFaasConnectorInstanceFromMicoApplicationByInstanceId(String applicationShortName, String applicationVersion, String instanceId) throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorInstanceNotFoundException, MicoApplicationDoesNotIncludeKFConnectorInstanceException {
+    public void removeKafkaFaasConnectorInstanceFromMicoApplicationByInstanceId(
+        String applicationShortName, String applicationVersion, String instanceId)
+        throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorInstanceNotFoundException, MicoApplicationDoesNotIncludeKFConnectorInstanceException {
+
         // Retrieve application from database (checks whether it exists)
         MicoApplication micoApplication = checkForKfConnectorInMicoApplication(applicationShortName, applicationVersion, instanceId);
 
