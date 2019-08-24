@@ -6,6 +6,7 @@ io.github.ust.mico.core.model
 .. toctree::
    :maxdepth: 1
 
+   KFConnectorDeploymentInfo
    KubernetesDeploymentInfo
    MicoApplication
    MicoApplicationDeploymentStatus

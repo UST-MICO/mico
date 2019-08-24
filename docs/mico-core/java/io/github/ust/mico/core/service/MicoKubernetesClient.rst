@@ -203,6 +203,57 @@ getPodsCreatedByDeploymentOfMicoService
    :param micoService: the \ :java:ref:`MicoService`\
    :return: the list of Kubernetes \ :java:ref:`Pod`\  objects
 
+getPublicIpOfKubernetesService
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public Optional<String> getPublicIpOfKubernetesService(String name, String namespace) throws KubernetesResourceException
+   :outertype: MicoKubernetesClient
+
+   Requests the public IP of a Kubernetes service and returns it or an empty \ ``Optional``\  if the service has no public IP.
+
+   :param name: the name of the service.
+   :param namespace: the namespace which contains the service.
+   :throws KubernetesResourceException: if there is no such service.
+   :return: the public ip of a service or an empty optional.
+
+getPublicPortsOfKubernetesService
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public List<Integer> getPublicPortsOfKubernetesService(String name, String namespace) throws KubernetesResourceException
+   :outertype: MicoKubernetesClient
+
+   Requests the list of public ports of a service. It returns the list of ports or an empty list if there are none.
+
+   :param name: the name of the service.
+   :param namespace: the namespace which contains the service.
+   :throws KubernetesResourceException: if there is no such service.
+   :return: a list of ports or an empty list.
+
+getService
+^^^^^^^^^^
+
+.. java:method:: public Optional<Service> getService(String name, String namespace)
+   :outertype: MicoKubernetesClient
+
+   Requests the service with the given name in the given namespace or \ ``null``\  if there is no such service
+
+   :param name: the name of the service.
+   :param namespace: the namespace which contains the service.
+   :return: the service in the namespace and with the given name or \ ``null``\ .
+
+getServiceOrThrowException
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public Service getServiceOrThrowException(String name, String namespace) throws KubernetesResourceException
+   :outertype: MicoKubernetesClient
+
+   Returns the service with the given name in the namespace or throws a \ :java:ref:`KubernetesResourceException`\ .
+
+   :param name: the name of the service.
+   :param namespace: the namespace which contains the service.
+   :throws KubernetesResourceException: if there is no such service.
+   :return: the service with the given name in the namespace.
+
 getYaml
 ^^^^^^^
 
