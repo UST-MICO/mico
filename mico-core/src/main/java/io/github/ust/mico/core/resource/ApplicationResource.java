@@ -22,11 +22,13 @@ package io.github.ust.mico.core.resource;
 import io.github.ust.mico.core.broker.MicoApplicationBroker;
 import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
+import io.github.ust.mico.core.dto.response.KFConnectorDeploymentInfoResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoApplicationWithServicesResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceResponseDTO;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationDeploymentStatusResponseDTO;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
 import io.github.ust.mico.core.exception.*;
+import io.github.ust.mico.core.model.KFConnectorDeploymentInfo;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus;
 import io.github.ust.mico.core.model.MicoService;
@@ -227,17 +229,15 @@ public class ApplicationResource {
         return ResponseEntity.noContent().build();
     }
 
-
-    @ApiOperation(value = "Adds or updates an association between a MicoApplication and a KafkaFaasConnector (MicoService). " +
-        "An existing instance with the same instanceId will be replaced with its new version. " +
-        "Multiple of instances of a KafkaFaasConnector are allowed per MicoApplication.")
-    @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR + "/{" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION + "}/{" + PATH_VARIABLE_INSTANCE_ID + "}")
-    public ResponseEntity<Void> addKafkaFaasConnectorInstanceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
-                                                                           @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
-                                                                           @PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION) String kfConnectorVersion,
-                                                                           @PathVariable(PATH_VARIABLE_INSTANCE_ID) String instanceId) {
+    @ApiOperation(value = "Adds a new association between a MicoApplication and a KafkaFaasConnector (MicoService). " +
+        "Multiple instances of a KafkaFaasConnector are allowed per MicoApplication.")
+    @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR + "/{" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION + "}")
+    public ResponseEntity<Resource<KFConnectorDeploymentInfoResponseDTO>> addKafkaFaasConnectorInstanceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
+                                                                                                           @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
+                                                                                                           @PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION) String kfConnectorVersion) {
+        KFConnectorDeploymentInfo kfConnectorDeploymentInfo;
         try {
-            broker.addKafkaFaasConnectorInstanceToMicoApplicationByVersionAndInstanceId(applicationShortName, applicationVersion, kfConnectorVersion, instanceId);
+            kfConnectorDeploymentInfo = broker.addKafkaFaasConnectorInstanceToMicoApplicationByVersion(applicationShortName, applicationVersion, kfConnectorVersion);
         } catch (MicoApplicationNotFoundException | MicoServiceDeploymentInformationNotFoundException | KubernetesResourceException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoApplicationIsNotUndeployedException | MicoApplicationDoesNotIncludeMicoServiceException e) {
@@ -246,7 +246,7 @@ public class ApplicationResource {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
         }
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(new Resource<>(new KFConnectorDeploymentInfoResponseDTO(kfConnectorDeploymentInfo)));
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR + "/{" + PATH_VARIABLE_INSTANCE_ID + "}")

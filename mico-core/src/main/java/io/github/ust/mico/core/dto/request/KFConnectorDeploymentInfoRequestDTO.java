@@ -20,7 +20,9 @@
 package io.github.ust.mico.core.dto.request;
 
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
+import io.github.ust.mico.core.model.KFConnectorDeploymentInfo;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.model.MicoTopicRole;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -30,6 +32,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import javax.validation.constraints.NotNull;
+import java.util.Optional;
 
 /**
  * DTO for {@link MicoServiceDeploymentInfo} specialised for a KafkaFaasConnector intended to use with requests only.
@@ -82,4 +85,24 @@ public class KFConnectorDeploymentInfoRequestDTO {
     @NotNull
     private String outputTopicName;
 
+
+    // -------------------
+    // -> Constructors ---
+    // -------------------
+
+    /**
+     * Creates an instance of {@code KFConnectorDeploymentInfoRequestDTO} based on a
+     * {@code KFConnectorDeploymentInfo}.
+     *
+     * @param kfConnectorDeploymentInfo the {@link KFConnectorDeploymentInfo}.
+     */
+    public KFConnectorDeploymentInfoRequestDTO(KFConnectorDeploymentInfo kfConnectorDeploymentInfo) {
+        this.instanceId = kfConnectorDeploymentInfo.getInstanceId();
+        Optional<MicoTopicRole> inputTopicRoleOpt = kfConnectorDeploymentInfo.getServiceDeploymentInfo().getTopics().stream()
+            .filter(t -> t.getRole().equals(MicoTopicRole.Role.INPUT)).findFirst();
+        inputTopicRoleOpt.ifPresent(micoTopicRole -> this.inputTopicName = micoTopicRole.getTopic().getName());
+        Optional<MicoTopicRole> outputTopicRoleOpt = kfConnectorDeploymentInfo.getServiceDeploymentInfo().getTopics().stream()
+            .filter(t -> t.getRole().equals(MicoTopicRole.Role.OUTPUT)).findFirst();
+        outputTopicRoleOpt.ifPresent(micoTopicRole -> this.outputTopicName = micoTopicRole.getTopic().getName());
+    }
 }

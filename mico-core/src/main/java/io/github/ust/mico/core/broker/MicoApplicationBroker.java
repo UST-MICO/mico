@@ -1,6 +1,5 @@
 package io.github.ust.mico.core.broker;
 
-import io.github.ust.mico.core.dto.request.KFConnectorDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationDeploymentStatusResponseDTO;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
@@ -13,6 +12,7 @@ import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.resource.ApplicationResource;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
+import io.github.ust.mico.core.util.UIDUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
@@ -213,7 +213,7 @@ public class MicoApplicationBroker {
         throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAlreadyAddedToMicoApplicationException, MicoServiceAddedMoreThanOnceToMicoApplicationException,
         MicoApplicationIsNotUndeployedException, MicoTopicRoleUsedMultipleTimesException, MicoServiceDeploymentInformationNotFoundException, KubernetesResourceException, MicoApplicationDoesNotIncludeMicoServiceException, KafkaFaasConnectorNotAllowedHereException {
 
-        if(serviceShortName.equals(KAFKA_FAAS_CONNECTOR_SERVICE_NAME)) {
+        if (serviceShortName.equals(KAFKA_FAAS_CONNECTOR_SERVICE_NAME)) {
             throw new KafkaFaasConnectorNotAllowedHereException();
         }
 
@@ -305,9 +305,7 @@ public class MicoApplicationBroker {
         // TODO: Update Kubernetes deployment (see issue mico#627)
     }
 
-    public void addKafkaFaasConnectorInstanceToMicoApplicationByVersionAndInstanceId(String applicationShortName, String applicationVersion, String kfConnectorVersion, String instanceId) throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, MicoTopicRoleUsedMultipleTimesException, MicoServiceDeploymentInformationNotFoundException, KubernetesResourceException, MicoApplicationDoesNotIncludeMicoServiceException {
-        log.debug("Adding KafkaFaasConnector in version '{}' with instance ID '{}' to MicoApplication '{}' '{}'.",
-            kfConnectorVersion, instanceId, applicationShortName, applicationVersion);
+    public KFConnectorDeploymentInfo addKafkaFaasConnectorInstanceToMicoApplicationByVersion(String applicationShortName, String applicationVersion, String kfConnectorVersion) throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, MicoTopicRoleUsedMultipleTimesException, MicoServiceDeploymentInformationNotFoundException, KubernetesResourceException, MicoApplicationDoesNotIncludeMicoServiceException {
         // Retrieve application and service from database (checks whether they exist)
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
 
@@ -324,15 +322,14 @@ public class MicoApplicationBroker {
                 kfConnectorVersion, applicationShortName, applicationVersion);
         }
         MicoService kfConnector;
-        if(kfConnectorOpt.isPresent()) {
+        if (kfConnectorOpt.isPresent()) {
             kfConnector = kfConnectorOpt.get();
         } else {
             // TODO: There is no KafkaFaasConnector in the specified version available. What to do?
             throw new NotImplementedException();
         }
 
-        // TODO: Check if instanceId is already used. If so reuse it (and use new version)
-
+        String instanceId = UIDUtils.uidFor(kfConnector);
         MicoServiceDeploymentInfo sdi = new MicoServiceDeploymentInfo().setService(kfConnector);
         KFConnectorDeploymentInfo kfConnectorDeploymentInfo = new KFConnectorDeploymentInfo()
             .setServiceDeploymentInfo(sdi)
@@ -341,11 +338,17 @@ public class MicoApplicationBroker {
         micoApplication.getKafkaFaasConnectorDeploymentInfos().add(kfConnectorDeploymentInfo);
         applicationRepository.save(micoApplication);
 
+        log.debug("Added KafkaFaasConnector in version '{}' with instance ID '{}' to MicoApplication '{}' '{}'." +
+                "This application now uses {} KF connector instances.",
+            kfConnectorVersion, instanceId, applicationShortName, applicationVersion,
+            micoApplication.getKafkaFaasConnectorDeploymentInfos().size());
+
         // TODO: Set default deployment information
         // Set default deployment information (environment variables, topics)
         //serviceDeploymentInfoBroker.setDefaultDeploymentInformationForKafkaEnabledService(sdi);
         //serviceDeploymentInfoBroker.updateKafkaFaasConnectorDeploymentInformation(applicationShortName, applicationVersion, instanceId,
         //    new KFConnectorDeploymentInfoRequestDTO(sdi));
+        return kfConnectorDeploymentInfo;
     }
 
     public void removeKafkaFaasConnectorInstanceFromMicoApplicationByInstanceId(String applicationShortName, String applicationVersion, String instanceId) throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KFConnectorInstanceNotFoundException, MicoApplicationDoesNotIncludeKFConnectorInstanceException {
@@ -358,7 +361,7 @@ public class MicoApplicationBroker {
         }
 
         Optional<KFConnectorDeploymentInfo> kfConnectorDeploymentInfoOpt = kfConnectorDeploymentInfoRepository.findByInstanceId(instanceId);
-        if(!kfConnectorDeploymentInfoOpt.isPresent()) {
+        if (!kfConnectorDeploymentInfoOpt.isPresent()) {
             throw new KFConnectorInstanceNotFoundException(instanceId);
         }
 
