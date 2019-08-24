@@ -351,7 +351,7 @@ public class MicoApplicationBroker {
         return kfConnectorDeploymentInfo;
     }
 
-    public void removeKafkaFaasConnectorInstanceFromMicoApplicationByInstanceId(String applicationShortName, String applicationVersion, String instanceId) throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KFConnectorInstanceNotFoundException, MicoApplicationDoesNotIncludeKFConnectorInstanceException {
+    public void removeKafkaFaasConnectorInstanceFromMicoApplicationByInstanceId(String applicationShortName, String applicationVersion, String instanceId) throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorInstanceNotFoundException, MicoApplicationDoesNotIncludeKFConnectorInstanceException {
         // Retrieve application from database (checks whether it exists)
         MicoApplication micoApplication = checkForKfConnectorInMicoApplication(applicationShortName, applicationVersion, instanceId);
 
@@ -362,7 +362,7 @@ public class MicoApplicationBroker {
 
         Optional<KFConnectorDeploymentInfo> kfConnectorDeploymentInfoOpt = kfConnectorDeploymentInfoRepository.findByInstanceId(instanceId);
         if (!kfConnectorDeploymentInfoOpt.isPresent()) {
-            throw new KFConnectorInstanceNotFoundException(instanceId);
+            throw new KafkaFaasConnectorInstanceNotFoundException(instanceId);
         }
 
         // It's only required to delete the corresponding service deployment information

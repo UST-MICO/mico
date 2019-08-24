@@ -257,7 +257,7 @@ public class ApplicationResource {
             broker.removeKafkaFaasConnectorInstanceFromMicoApplicationByInstanceId(shortName, version, instanceId);
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        } catch (MicoApplicationDoesNotIncludeKFConnectorInstanceException | MicoApplicationIsNotUndeployedException | KFConnectorInstanceNotFoundException e) {
+        } catch (MicoApplicationDoesNotIncludeKFConnectorInstanceException | MicoApplicationIsNotUndeployedException | KafkaFaasConnectorInstanceNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
 
