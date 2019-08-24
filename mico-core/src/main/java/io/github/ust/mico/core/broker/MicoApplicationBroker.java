@@ -325,7 +325,7 @@ public class MicoApplicationBroker {
         if (kfConnectorOpt.isPresent()) {
             kfConnector = kfConnectorOpt.get();
         } else {
-            // TODO: There is no KafkaFaasConnector in the specified version available. What to do?
+            // TODO: There is no KafkaFaasConnector in the specified version available. What to do? (covered in epic mico#750)
             throw new NotImplementedException();
         }
 
@@ -343,7 +343,7 @@ public class MicoApplicationBroker {
             kfConnectorVersion, instanceId, applicationShortName, applicationVersion,
             micoApplication.getKafkaFaasConnectorDeploymentInfos().size());
 
-        // TODO: Set default deployment information
+        // TODO: Set default deployment information (covered in epic mico#750)
         // Set default deployment information (environment variables, topics)
         //serviceDeploymentInfoBroker.setDefaultDeploymentInformationForKafkaEnabledService(sdi);
         //serviceDeploymentInfoBroker.updateKafkaFaasConnectorDeploymentInformation(applicationShortName, applicationVersion, instanceId,
@@ -370,7 +370,7 @@ public class MicoApplicationBroker {
         MicoServiceDeploymentInfo sdi = kfConnectorDeploymentInfo.getServiceDeploymentInfo();
         serviceDeploymentInfoRepository.delete(sdi);
 
-        // TODO: Expect that the KafkaFaasConnectorDeploymentInfo is removed
+        // TODO: Expect that the KafkaFaasConnectorDeploymentInfo is removed (covered in epic mico#750)
         MicoApplication updatedMicoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
         log.debug("Updated MicoApplication: {}", updatedMicoApplication);
 
