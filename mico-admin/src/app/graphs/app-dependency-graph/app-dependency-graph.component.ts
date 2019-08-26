@@ -71,6 +71,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
 
     private serviceNodeMap: Map<string, ServiceNode>;
     private serviceInterfaceNodeMap: Map<string, ServiceInterfaceNode>;
+    private kafkaTopicNodes: Set<string>;
 
     private versionChangedFor: { node: Node, newVersion: ApiObject };
 
@@ -279,6 +280,18 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         }
         const graph: GraphEditor = this.graph.nativeElement;
 
+        if (edge.createdFrom != null) {
+            // remove valid targets from edges that were created from an existing edge
+            // forcing the user to drop the edge in the void
+            edge.validTargets.clear();
+            const sourceEdge = graph.getEdge(edge.createdFrom);
+            if (sourceEdge != null) {
+                // allow user dropping the edge on original target
+                edge.validTargets.add(sourceEdge.target.toString());
+            }
+            return edge;
+        }
+
         edge.markerEnd = { template: 'arrow', positionOnLine: 1, lineOffset: 4, scale: 0.5, rotate: { relativeAngle: 0 } };
         if (edge.source === ROOT_NODE_ID) {
             edge.type = 'includes';
@@ -289,29 +302,24 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         if (this.serviceNodeMap.has(edge.source.toString())) {
             // if the source of the edge was a service node
             edge.type = 'interface-connection';
-            if (edge.createdFrom == null) {
-                // compute valid targets for new edge
-                this.serviceInterfaceNodeMap.forEach((node, key) => {
-                    if (node.serviceId === edge.source) {
-                        // remove all interfaces from the source service
-                        edge.validTargets.delete(key);
-                    }
-                });
-                this.serviceNodeMap.forEach((node, key) => {
-                    // remove all service nodes from valid targets
-                    edge.validTargets.delete(key);
-                });
-                edge.validTargets.delete(ROOT_NODE_ID);
-            } else {
-                // remove valid targets from edges that were created from an existing edge
-                // forcing the user to drop the edge in the void
-                edge.validTargets.clear();
-                const sourceEdge = graph.getEdge(edge.createdFrom);
-                if (sourceEdge != null) {
-                    // allow user dropping the edge on original target
-                    edge.validTargets.add(sourceEdge.target.toString());
+            edge.validTargets.clear();
+            // compute valid targets for new edge
+            this.serviceInterfaceNodeMap.forEach((node, key) => {
+                if (node.serviceId !== edge.source) {
+                    // remove all interfaces from the source service
+                    edge.validTargets.add(key);
+                }
+            });
+            if (graph.getNode(edge.source).service.kafkaEnabled) {
+                // kafka enabled nodes can target kafka topics
+                const depl = this.deploymentInformations.get(edge.source.toString());
+                if (!depl.topics.some(t => t.role === 'OUTPUT')) {
+                    // only nodes that don't have both output topic set
+                    this.kafkaTopicNodes.forEach(e => edge.validTargets.add(e));
                 }
             }
+            const outgoingEdges: Set<Edge> = graph.getEdgesBySource(edge.source);
+            outgoingEdges.forEach(e => e.target != null && edge.validTargets.delete(e.target.toString()));
         }
         const sourceNode: Node = graph.getNode(edge.source);
         if (sourceNode.type === 'kafka-topic') {
@@ -397,8 +405,32 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             this.createInterfaceConnection(edge, sourceNode, targetService, targetNode);
         }
         if (edge.type === 'topic') {
+            let serviceId: string;
+            let topicId: string;
+            if (edge.role === 'INPUT') {
+                serviceId = edge.target.toString();
+                topicId = edge.source.toString();
+            } else if (edge.role === 'OUTPUT') {
+                serviceId = edge.source.toString();
+                topicId = edge.target.toString();
+            } else {
+                // should never happen...
+                console.warn("Only INPUT and OUTPUT topics should be shown in the grapheditor.");
+                return;
+            }
+            const service = this.serviceNodeMap.get(serviceId);
+            const topic = graph.getNode(topicId);
             // TODO add topic to deployment information
-            console.log(edge)
+            const depl = this.deploymentInformations.get(serviceId);
+            // deepcopy since depl is readonly
+            const deplCopy = JSON.parse(JSON.stringify(depl));
+            deplCopy.topics.push({
+                role: edge.role,
+                name: topic.data.topicName,
+            });
+            const putSub = this.api.putServiceDeploymentInformation(this.application.shortName, this.application.version, service.shortName, deplCopy).subscribe(() => {
+                safeUnsubscribe(putSub);
+            });
         }
     }
 
@@ -475,6 +507,26 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                     graph.addEdge(edge);
                     graph.completeRender();
                 }
+            });
+        }
+        if (edge.type === 'topic') {
+            let serviceId: string;
+            if (edge.role === 'INPUT') {
+                serviceId = edge.target.toString();
+            } else if (edge.role === 'OUTPUT') {
+                serviceId = edge.source.toString();
+            } else {
+                // should never happen...
+                console.warn("Only INPUT and OUTPUT topics should be shown in the grapheditor.");
+                return;
+            }
+            const service = this.serviceNodeMap.get(serviceId);
+            const depl = this.deploymentInformations.get(serviceId);
+            // deepcopy since depl is readonly
+            const deplCopy = JSON.parse(JSON.stringify(depl));
+            deplCopy.topics = depl.topics.filter(t => t.role !== edge.role);
+            const putSub = this.api.putServiceDeploymentInformation(this.application.shortName, this.application.version, service.shortName, deplCopy).subscribe(() => {
+                safeUnsubscribe(putSub);
             });
         }
     }
@@ -581,6 +633,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
     resetGraph() {
         this.serviceNodeMap = new Map<string, ServiceNode>();
         this.serviceInterfaceNodeMap = new Map<string, ServiceInterfaceNode>();
+        this.kafkaTopicNodes = new Set<string>();
         this.firstRender = true;
         this.lastX = 0;
         this.versionChangedFor = null;
@@ -895,6 +948,9 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                     y: 170,
                     type: `kafka-topic`,
                     title: connection.name,
+                    data: {
+                        topicName: connection.name,
+                    }
                 };
                 if (connection.role === 'INPUT') {
                     topicNode.x -= 30;
@@ -903,6 +959,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                     topicNode.x += 30;
                 }
                 graph.addNode(topicNode, false);
+                this.kafkaTopicNodes.add(topicId);
             }
 
             const isInput = (connection.role === 'INPUT');
