@@ -6,14 +6,14 @@ io.github.ust.mico.core.exception
 .. toctree::
    :maxdepth: 1
 
-   AmbiguousKubernetesResourceException
    DeploymentException
    GlobalExceptionHandler
    ImageBuildException
    KubernetesResourceException
    MicoApplicationAlreadyExistsException
    MicoApplicationDoesNotIncludeMicoServiceException
-   MicoApplicationIsDeployedException
+   MicoApplicationIsDeployingException
+   MicoApplicationIsNotUndeployedException
    MicoApplicationNotFoundException
    MicoServiceAddedMoreThanOnceToMicoApplicationException
    MicoServiceAlreadyAddedToMicoApplicationException
@@ -23,7 +23,9 @@ io.github.ust.mico.core.exception
    MicoServiceInterfaceAlreadyExistsException
    MicoServiceInterfaceNotFoundException
    MicoServiceIsDeployedException
+   MicoServiceIsUsedByMicoApplicationsException
    MicoServiceNotFoundException
+   MicoTopicRoleUsedMultipleTimesException
    NotInitializedException
    PrometheusRequestFailedException
    ShortNameOfMicoApplicationDoesNotMatchException

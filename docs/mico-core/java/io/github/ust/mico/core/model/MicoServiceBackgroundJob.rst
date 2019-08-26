@@ -20,7 +20,9 @@ MicoServiceBackgroundJob
 .. java:package:: io.github.ust.mico.core.model
    :noindex:
 
-.. java:type:: @Data @NoArgsConstructor @RedisHash @Accessors public class MicoServiceBackgroundJob implements Serializable
+.. java:type:: @Data @NoArgsConstructor @Accessors @RedisHash public class MicoServiceBackgroundJob implements Serializable
 
    Background job for a \ :java:ref:`MicoService`\ .
+
+   Instances of this class are persisted in the Redis database.
 

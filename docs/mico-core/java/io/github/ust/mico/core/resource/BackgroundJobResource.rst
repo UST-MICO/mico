@@ -10,6 +10,10 @@
 
 .. java:import:: java.util.stream Collectors
 
+.. java:import:: io.github.ust.mico.core.exception MicoApplicationNotFoundException
+
+.. java:import:: io.github.ust.mico.core.model MicoApplicationJobStatus
+
 .. java:import:: org.springframework.beans.factory.annotation Autowired
 
 .. java:import:: org.springframework.hateoas Link

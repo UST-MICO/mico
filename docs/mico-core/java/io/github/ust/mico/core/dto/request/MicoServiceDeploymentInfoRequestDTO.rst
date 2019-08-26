@@ -1,13 +1,3 @@
-.. java:import:: java.util ArrayList
-
-.. java:import:: java.util List
-
-.. java:import:: java.util.stream Collectors
-
-.. java:import:: javax.validation Valid
-
-.. java:import:: javax.validation.constraints Positive
-
 .. java:import:: com.fasterxml.jackson.annotation JsonSetter
 
 .. java:import:: com.fasterxml.jackson.annotation Nulls
@@ -35,6 +25,16 @@
 .. java:import:: lombok NoArgsConstructor
 
 .. java:import:: lombok.experimental Accessors
+
+.. java:import:: javax.validation Valid
+
+.. java:import:: javax.validation.constraints Positive
+
+.. java:import:: java.util ArrayList
+
+.. java:import:: java.util List
+
+.. java:import:: java.util.stream Collectors
 
 MicoServiceDeploymentInfoRequestDTO
 ===================================

@@ -6,8 +6,6 @@
 
 .. java:import:: java.util.stream Collectors
 
-.. java:import:: org.neo4j.ogm.annotation NodeEntity
-
 .. java:import:: com.fasterxml.jackson.annotation JsonProperty
 
 .. java:import:: io.github.ust.mico.core.model MicoMessage.Type

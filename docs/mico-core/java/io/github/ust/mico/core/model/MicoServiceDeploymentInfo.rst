@@ -1,17 +1,3 @@
-.. java:import:: java.util ArrayList
-
-.. java:import:: java.util List
-
-.. java:import:: java.util.stream Collectors
-
-.. java:import:: org.neo4j.ogm.annotation GeneratedValue
-
-.. java:import:: org.neo4j.ogm.annotation Id
-
-.. java:import:: org.neo4j.ogm.annotation NodeEntity
-
-.. java:import:: org.neo4j.ogm.annotation Relationship
-
 .. java:import:: com.fasterxml.jackson.annotation JsonProperty
 
 .. java:import:: io.fabric8.kubernetes.api.model Service
@@ -32,6 +18,20 @@
 
 .. java:import:: lombok.experimental Accessors
 
+.. java:import:: org.neo4j.ogm.annotation GeneratedValue
+
+.. java:import:: org.neo4j.ogm.annotation Id
+
+.. java:import:: org.neo4j.ogm.annotation NodeEntity
+
+.. java:import:: org.neo4j.ogm.annotation Relationship
+
+.. java:import:: java.util ArrayList
+
+.. java:import:: java.util List
+
+.. java:import:: java.util.stream Collectors
+
 MicoServiceDeploymentInfo
 =========================
 
@@ -41,6 +41,8 @@ MicoServiceDeploymentInfo
 .. java:type:: @Data @NoArgsConstructor @AllArgsConstructor @Accessors @NodeEntity public class MicoServiceDeploymentInfo
 
    Represents the information necessary for deploying a \ :java:ref:`MicoApplication`\ . DTO is \ :java:ref:`MicoServiceDeploymentInfoResponseDTO`\ .
+
+   Instances of this class are persisted as nodes in the Neo4j database.
 
 Methods
 -------

@@ -1,17 +1,3 @@
-.. java:import:: java.util ArrayList
-
-.. java:import:: java.util List
-
-.. java:import:: java.util Map
-
-.. java:import:: java.util Optional
-
-.. java:import:: java.util.stream Collectors
-
-.. java:import:: org.springframework.beans.factory.annotation Autowired
-
-.. java:import:: org.springframework.stereotype Component
-
 .. java:import:: com.fasterxml.jackson.core JsonProcessingException
 
 .. java:import:: io.fabric8.kubernetes.api.model.apps Deployment
@@ -20,15 +6,21 @@
 
 .. java:import:: io.fabric8.kubernetes.client KubernetesClient
 
+.. java:import:: io.fabric8.kubernetes.client.dsl NonNamespaceOperation
+
+.. java:import:: io.fabric8.kubernetes.client.dsl Resource
+
+.. java:import:: io.fabric8.kubernetes.client.internal SerializationUtils
+
 .. java:import:: io.github.ust.mico.core.broker BackgroundJobBroker
 
 .. java:import:: io.github.ust.mico.core.configuration MicoKubernetesBuildBotConfig
 
-.. java:import:: io.fabric8.kubernetes.client.internal SerializationUtils
-
 .. java:import:: io.github.ust.mico.core.configuration MicoKubernetesConfig
 
 .. java:import:: io.github.ust.mico.core.exception KubernetesResourceException
+
+.. java:import:: io.github.ust.mico.core.exception MicoApplicationNotFoundException
 
 .. java:import:: io.github.ust.mico.core.model MicoApplicationDeploymentStatus.Value
 
@@ -48,6 +40,14 @@
 
 .. java:import:: lombok.extern.slf4j Slf4j
 
+.. java:import:: org.springframework.beans.factory.annotation Autowired
+
+.. java:import:: org.springframework.stereotype Component
+
+.. java:import:: java.net PasswordAuthentication
+
+.. java:import:: java.util.stream Collectors
+
 MicoKubernetesClient
 ====================
 
@@ -57,6 +57,32 @@ MicoKubernetesClient
 .. java:type:: @Slf4j @Component public class MicoKubernetesClient
 
    Provides accessor methods for creating deployments and services in Kubernetes as well as getter methods to retrieve existing Kubernetes deployments and services.
+
+Fields
+------
+OPEN_FAAS_SECRET_DATA_PASSWORD_NAME
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:field:: public static final String OPEN_FAAS_SECRET_DATA_PASSWORD_NAME
+   :outertype: MicoKubernetesClient
+
+   The name of the data element which holds the OpenFaaS password inside the secret.
+
+OPEN_FAAS_SECRET_DATA_USERNAME_NAME
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:field:: public static final String OPEN_FAAS_SECRET_DATA_USERNAME_NAME
+   :outertype: MicoKubernetesClient
+
+   The name of the data element which holds the OpenFaaS username inside the secret
+
+OPEN_FAAS_SECRET_NAME
+^^^^^^^^^^^^^^^^^^^^^
+
+.. java:field:: public static final String OPEN_FAAS_SECRET_NAME
+   :outertype: MicoKubernetesClient
+
+   The name of the secret which holds the OpenFaaS username and password.
 
 Constructors
 ------------
@@ -71,7 +97,7 @@ Methods
 createMicoService
 ^^^^^^^^^^^^^^^^^
 
-.. java:method:: public Deployment createMicoService(MicoServiceDeploymentInfo serviceDeploymentInfo) throws KubernetesResourceException
+.. java:method:: public Deployment createMicoService(MicoServiceDeploymentInfo serviceDeploymentInfo)
    :outertype: MicoKubernetesClient
 
    Create a Kubernetes deployment based on a \ :java:ref:`MicoServiceDeploymentInfo`\ .
@@ -122,32 +148,10 @@ getApplicationDeploymentStatus
    :param micoApplication: the \ :java:ref:`MicoApplication`\ .
    :return: the \ :java:ref:`MicoApplicationDeploymentStatus`\ .
 
-getApplicationDeploymentStatus
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. java:method:: public MicoApplicationDeploymentStatus getApplicationDeploymentStatus(String applicationShortName, String applicationVersion)
-   :outertype: MicoKubernetesClient
-
-   Indicates whether a \ ``MicoApplication``\  is currently deployed.
-
-   In order to determine the application deployment status of the given \ ``MicoApplication``\  the following points are checked:
-
-   ..
-
-   * the current \ :java:ref:`MicoApplicationJobStatus`\  (deployment may be scheduled, running or finished with an error
-   * the stored \ :java:ref:`MicoServiceDeploymentInfo`\  and \ :java:ref:`KubernetesDeploymentInfo`\
-   * the actual information retrieved from Kubernetes regarding deployments for \ :java:ref:`MicoServices <MicoService>`\  and Kubernetes Services for \ :java:ref:`MicoServiceInterfaces <MicoServiceInterface>`\
-
-   Note that the returned \ ``MicoApplicationDeploymentStatus``\  contains info messages with further information in case the \ ``MicoApplication``\  currently is not deployed.
-
-   :param applicationShortName: the short name of the \ :java:ref:`MicoApplication`\ .
-   :param applicationVersion: the version of the \ :java:ref:`MicoApplication`\ .
-   :return: the \ :java:ref:`MicoApplicationDeploymentStatus`\ .
-
 getDeploymentOfMicoService
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public Optional<Deployment> getDeploymentOfMicoService(MicoService micoService) throws KubernetesResourceException
+.. java:method:: public Optional<Deployment> getDeploymentOfMicoService(MicoService micoService)
    :outertype: MicoKubernetesClient
 
    Checks if the \ :java:ref:`MicoService`\  is already deployed to the Kubernetes cluster. Labels are used for the lookup.
@@ -158,7 +162,7 @@ getDeploymentOfMicoService
 getInterfaceByNameOfMicoService
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public Optional<Service> getInterfaceByNameOfMicoService(MicoService micoService, String micoServiceInterfaceName) throws KubernetesResourceException
+.. java:method:: public Optional<Service> getInterfaceByNameOfMicoService(MicoService micoService, String micoServiceInterfaceName)
    :outertype: MicoKubernetesClient
 
    Check if the \ :java:ref:`MicoServiceInterface`\  is already created for the \ :java:ref:`MicoService`\  in the Kubernetes cluster. Labels are used for the lookup.
@@ -178,6 +182,16 @@ getInterfacesOfMicoService
    :param micoService: the \ :java:ref:`MicoService`\
    :return: the list of Kubernetes \ :java:ref:`Service`\  objects
 
+getOpenFaasCredentials
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public PasswordAuthentication getOpenFaasCredentials()
+   :outertype: MicoKubernetesClient
+
+   Requests the OpenFaaS credentials from a Kubernetes secret.
+
+   :return: the username and the password
+
 getPodsCreatedByDeploymentOfMicoService
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -192,13 +206,12 @@ getPodsCreatedByDeploymentOfMicoService
 getYaml
 ^^^^^^^
 
-.. java:method:: public String getYaml(MicoService micoService) throws KubernetesResourceException, JsonProcessingException
+.. java:method:: public String getYaml(MicoService micoService) throws JsonProcessingException
    :outertype: MicoKubernetesClient
 
    Retrieves the yaml for a MicoService, contains the interfaces if they exist.
 
    :param micoService: the \ :java:ref:`MicoService`\
-   :throws KubernetesResourceException: if there is an error while retrieving the Kubernetes objects
    :throws JsonProcessingException: if there is a error processing the content.
    :return: the kubernetes YAML for the \ :java:ref:`MicoService`\ .
 
@@ -211,18 +224,28 @@ isApplicationDeployed
    Checks whether a given \ ``MicoApplication``\  is currently deployed.
 
    :param micoApplication: the \ :java:ref:`MicoApplication`\ .
-   :return: \ ``true``\  if and only if \ :java:ref:`getApplicationDeploymentStatus(MicoApplication)`\  returns a \ :java:ref:`MicoApplicationDeploymentStatus`\  with \ :java:ref:`Value.DEPLOYED`\ ; \ ``false``\  otherwise.
+   :return: \ ``true``\  if and only if \ :java:ref:`getApplicationDeploymentStatus(MicoApplication)`\  returns a \ :java:ref:`MicoApplicationDeploymentStatus`\  with \ :java:ref:`Deployed <Value.DEPLOYED>`\ ; \ ``false``\  otherwise.
+
+isApplicationUndeployed
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public boolean isApplicationUndeployed(MicoApplication micoApplication)
+   :outertype: MicoKubernetesClient
+
+   Checks whether a given \ ``MicoApplication``\  is currently undeployed.
+
+   :param micoApplication: the \ :java:ref:`MicoApplication`\ .
+   :return: \ ``true``\  if and only if \ :java:ref:`getApplicationDeploymentStatus(MicoApplication)`\  returns a \ :java:ref:`MicoApplicationDeploymentStatus`\  with \ :java:ref:`Undeployed <Value.UNDEPLOYED>`\ ; \ ``false``\  otherwise.
 
 isMicoServiceDeployed
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public boolean isMicoServiceDeployed(MicoService micoService) throws KubernetesResourceException
+.. java:method:: public boolean isMicoServiceDeployed(MicoService micoService)
    :outertype: MicoKubernetesClient
 
    Checks if a MICO service is already deployed.
 
    :param micoService: the \ :java:ref:`MicoService`\
-   :throws KubernetesResourceException: if there is an error while retrieving the Kubernetes objects
    :return: \ ``true``\  if the \ :java:ref:`MicoService`\  is deployed.
 
 scaleIn

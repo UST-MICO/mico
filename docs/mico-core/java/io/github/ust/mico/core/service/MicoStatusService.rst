@@ -1,74 +1,10 @@
 .. java:import:: java.net URI
 
-.. java:import:: java.util ArrayList
-
-.. java:import:: java.util HashMap
-
-.. java:import:: java.util List
-
-.. java:import:: java.util Map
-
-.. java:import:: java.util Optional
-
 .. java:import:: javax.validation.constraints NotNull
-
-.. java:import:: io.fabric8.kubernetes.api.model ContainerStatus
-
-.. java:import:: io.fabric8.kubernetes.api.model LoadBalancerIngress
-
-.. java:import:: io.fabric8.kubernetes.api.model LoadBalancerStatus
-
-.. java:import:: io.fabric8.kubernetes.api.model Pod
-
-.. java:import:: io.fabric8.kubernetes.api.model Service
-
-.. java:import:: io.fabric8.kubernetes.api.model.apps Deployment
-
-.. java:import:: io.github.ust.mico.core.configuration PrometheusConfig
-
-.. java:import:: io.github.ust.mico.core.dto.response MicoApplicationResponseDTO
-
-.. java:import:: io.github.ust.mico.core.dto.response.internal PrometheusResponseDTO
-
-.. java:import:: io.github.ust.mico.core.dto.response.status KubernetesNodeMetricsResponseDTO
-
-.. java:import:: io.github.ust.mico.core.dto.response.status KubernetesPodInformationResponseDTO
-
-.. java:import:: io.github.ust.mico.core.dto.response.status KubernetesPodMetricsResponseDTO
-
-.. java:import:: io.github.ust.mico.core.dto.response.status MicoApplicationStatusResponseDTO
-
-.. java:import:: io.github.ust.mico.core.dto.response.status MicoMessageResponseDTO
-
-.. java:import:: io.github.ust.mico.core.dto.response.status MicoServiceInterfaceStatusResponseDTO
-
-.. java:import:: io.github.ust.mico.core.dto.response.status MicoServiceStatusResponseDTO
 
 .. java:import:: io.github.ust.mico.core.exception KubernetesResourceException
 
-.. java:import:: io.github.ust.mico.core.exception PrometheusRequestFailedException
-
-.. java:import:: io.github.ust.mico.core.model MicoApplication
-
-.. java:import:: io.github.ust.mico.core.model MicoMessage
-
-.. java:import:: io.github.ust.mico.core.model MicoService
-
-.. java:import:: io.github.ust.mico.core.model MicoServiceInterface
-
-.. java:import:: io.github.ust.mico.core.persistence MicoApplicationRepository
-
-.. java:import:: io.github.ust.mico.core.persistence MicoServiceInterfaceRepository
-
-.. java:import:: io.github.ust.mico.core.persistence MicoServiceRepository
-
-.. java:import:: io.github.ust.mico.core.util CollectionUtils
-
-.. java:import:: lombok.extern.slf4j Slf4j
-
 .. java:import:: org.springframework.beans.factory.annotation Autowired
-
-.. java:import:: org.springframework.http HttpStatus
 
 .. java:import:: org.springframework.http ResponseEntity
 
@@ -78,9 +14,25 @@
 
 .. java:import:: org.springframework.web.client RestTemplate
 
-.. java:import:: org.springframework.web.server ResponseStatusException
-
 .. java:import:: org.springframework.web.util UriComponentsBuilder
+
+.. java:import:: io.fabric8.kubernetes.api.model.apps Deployment
+
+.. java:import:: io.github.ust.mico.core.configuration PrometheusConfig
+
+.. java:import:: io.github.ust.mico.core.dto.response MicoApplicationResponseDTO
+
+.. java:import:: io.github.ust.mico.core.dto.response.internal PrometheusResponseDTO
+
+.. java:import:: io.github.ust.mico.core.exception PrometheusRequestFailedException
+
+.. java:import:: io.github.ust.mico.core.persistence MicoApplicationRepository
+
+.. java:import:: io.github.ust.mico.core.persistence MicoServiceRepository
+
+.. java:import:: io.github.ust.mico.core.util CollectionUtils
+
+.. java:import:: lombok.extern.slf4j Slf4j
 
 MicoStatusService
 =================
@@ -97,7 +49,7 @@ Constructors
 MicoStatusService
 ^^^^^^^^^^^^^^^^^
 
-.. java:constructor:: @Autowired public MicoStatusService(PrometheusConfig prometheusConfig, MicoKubernetesClient micoKubernetesClient, RestTemplate restTemplate, MicoServiceRepository serviceRepository, MicoServiceInterfaceRepository serviceInterfaceRepository, MicoApplicationRepository micoApplicationRepository)
+.. java:constructor:: @Autowired public MicoStatusService(PrometheusConfig prometheusConfig, MicoKubernetesClient micoKubernetesClient, RestTemplate restTemplate, MicoServiceRepository serviceRepository, MicoApplicationRepository micoApplicationRepository)
    :outertype: MicoStatusService
 
 Methods
@@ -116,13 +68,14 @@ getApplicationStatus
 getPublicIpOfKubernetesService
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public MicoServiceInterfaceStatusResponseDTO getPublicIpOfKubernetesService(MicoService micoService, String serviceInterfaceName)
+.. java:method:: public MicoServiceInterfaceStatusResponseDTO getPublicIpOfKubernetesService(MicoService micoService, MicoServiceInterface serviceInterface) throws KubernetesResourceException
    :outertype: MicoStatusService
 
    Get the public IP of a \ :java:ref:`MicoServiceInterface`\  by providing the corresponding Kubernetes \ :java:ref:`Service`\ .
 
-   :param micoService: is the \ :java:ref:`MicoService`\ , that has a \ :java:ref:`MicoServiceInterface`\ , which is deployed on Kubernetes.
-   :param serviceInterfaceName: is the MicoServiceInterface, that is deployed as Kubernetes service .
+   :param micoService: is the \ :java:ref:`MicoService`\ , that has a \ :java:ref:`MicoServiceInterface`\ , which is deployed on Kubernetes
+   :param serviceInterface: the \ :java:ref:`MicoServiceInterface`\ , that is deployed as a Kubernetes service
+   :throws KubernetesResourceException: if it's not possible to get the Kubernetes service
    :return: the public IP of the provided Kubernetes Service
 
 getServiceInterfaceStatus

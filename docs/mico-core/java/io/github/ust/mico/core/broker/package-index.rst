@@ -10,5 +10,6 @@ io.github.ust.mico.core.broker
    DeploymentBroker
    MicoApplicationBroker
    MicoServiceBroker
+   MicoServiceDeploymentInfoBroker
    MicoServiceInterfaceBroker
 

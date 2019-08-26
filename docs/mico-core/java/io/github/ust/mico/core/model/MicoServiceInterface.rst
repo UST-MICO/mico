@@ -32,6 +32,8 @@ MicoServiceInterface
 
    Represents a interface, e.g., REST API, of a \ :java:ref:`MicoService`\ .
 
+   Instances of this class are persisted as nodes in the Neo4j database.
+
 Methods
 -------
 valueOf

@@ -1,8 +1,26 @@
-.. java:import:: java.util List
+.. java:import:: io.github.ust.mico.core.broker MicoApplicationBroker
 
-.. java:import:: java.util.stream Collectors
+.. java:import:: io.github.ust.mico.core.dto.request MicoApplicationRequestDTO
 
-.. java:import:: javax.validation Valid
+.. java:import:: io.github.ust.mico.core.dto.request MicoVersionRequestDTO
+
+.. java:import:: io.github.ust.mico.core.dto.response MicoApplicationWithServicesResponseDTO
+
+.. java:import:: io.github.ust.mico.core.dto.response MicoServiceResponseDTO
+
+.. java:import:: io.github.ust.mico.core.dto.response.status MicoApplicationDeploymentStatusResponseDTO
+
+.. java:import:: io.github.ust.mico.core.dto.response.status MicoApplicationStatusResponseDTO
+
+.. java:import:: io.github.ust.mico.core.model MicoApplication
+
+.. java:import:: io.github.ust.mico.core.model MicoApplicationDeploymentStatus
+
+.. java:import:: io.github.ust.mico.core.model MicoService
+
+.. java:import:: io.swagger.annotations ApiOperation
+
+.. java:import:: lombok.extern.slf4j Slf4j
 
 .. java:import:: org.springframework.beans.factory.annotation Autowired
 
@@ -18,31 +36,11 @@
 
 .. java:import:: org.springframework.web.server ResponseStatusException
 
-.. java:import:: io.github.ust.mico.core.broker MicoApplicationBroker
+.. java:import:: javax.validation Valid
 
-.. java:import:: io.github.ust.mico.core.dto.request MicoApplicationRequestDTO
+.. java:import:: java.util List
 
-.. java:import:: io.github.ust.mico.core.dto.request MicoServiceDeploymentInfoRequestDTO
-
-.. java:import:: io.github.ust.mico.core.dto.request MicoVersionRequestDTO
-
-.. java:import:: io.github.ust.mico.core.dto.response MicoApplicationWithServicesResponseDTO
-
-.. java:import:: io.github.ust.mico.core.dto.response MicoServiceDeploymentInfoResponseDTO
-
-.. java:import:: io.github.ust.mico.core.dto.response MicoServiceResponseDTO
-
-.. java:import:: io.github.ust.mico.core.dto.response.status MicoApplicationDeploymentStatusResponseDTO
-
-.. java:import:: io.github.ust.mico.core.dto.response.status MicoApplicationStatusResponseDTO
-
-.. java:import:: io.github.ust.mico.core.model MicoApplication
-
-.. java:import:: io.github.ust.mico.core.model MicoService
-
-.. java:import:: io.github.ust.mico.core.model MicoServiceDeploymentInfo
-
-.. java:import:: io.swagger.annotations ApiOperation
+.. java:import:: java.util.stream Collectors
 
 ApplicationResource
 ===================
@@ -50,7 +48,7 @@ ApplicationResource
 .. java:package:: io.github.ust.mico.core.resource
    :noindex:
 
-.. java:type:: @RestController @RequestMapping public class ApplicationResource
+.. java:type:: @Slf4j @RestController @RequestMapping public class ApplicationResource
 
 Methods
 -------
@@ -66,10 +64,10 @@ createApplication
 .. java:method:: @PostMapping public ResponseEntity<Resource<MicoApplicationWithServicesResponseDTO>> createApplication(MicoApplicationRequestDTO applicationDto)
    :outertype: ApplicationResource
 
-deleteAllVersionsOfAnApplication
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+deleteAllVersionsOfApplication
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: @DeleteMapping public ResponseEntity<Void> deleteAllVersionsOfAnApplication(String shortName)
+.. java:method:: @DeleteMapping public ResponseEntity<Void> deleteAllVersionsOfApplication(String shortName)
    :outertype: ApplicationResource
 
 deleteApplication
@@ -108,16 +106,10 @@ getApplicationsByShortName
 .. java:method:: @GetMapping public ResponseEntity<Resources<Resource<MicoApplicationWithServicesResponseDTO>>> getApplicationsByShortName(String shortName)
    :outertype: ApplicationResource
 
-getServiceDeploymentInformation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+getServicesOfApplication
+^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: @GetMapping public ResponseEntity<Resource<MicoServiceDeploymentInfoResponseDTO>> getServiceDeploymentInformation(String shortName, String version, String serviceShortName)
-   :outertype: ApplicationResource
-
-getServicesFromApplication
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. java:method:: @GetMapping public ResponseEntity<Resources<Resource<MicoServiceResponseDTO>>> getServicesFromApplication(String shortName, String version)
+.. java:method:: @GetMapping public ResponseEntity<Resources<Resource<MicoServiceResponseDTO>>> getServicesOfApplication(String shortName, String version)
    :outertype: ApplicationResource
 
 getStatusOfApplication
@@ -136,11 +128,5 @@ updateApplication
 ^^^^^^^^^^^^^^^^^
 
 .. java:method:: @PutMapping public ResponseEntity<Resource<MicoApplicationWithServicesResponseDTO>> updateApplication(String shortName, String version, MicoApplicationRequestDTO applicationRequestDto)
-   :outertype: ApplicationResource
-
-updateServiceDeploymentInformation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. java:method:: @PutMapping public ResponseEntity<Resource<MicoServiceDeploymentInfoResponseDTO>> updateServiceDeploymentInformation(String shortName, String version, String serviceShortName, MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoRequestDto)
    :outertype: ApplicationResource
 

@@ -15,5 +15,7 @@ io.github.ust.mico.core.persistence
    MicoServiceDependencyRepository
    MicoServiceDeploymentInfoRepository
    MicoServiceInterfaceRepository
+   MicoServicePortRepository
    MicoServiceRepository
+   MicoTopicRepository
 

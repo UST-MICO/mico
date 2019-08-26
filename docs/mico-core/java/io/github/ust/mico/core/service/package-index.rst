@@ -7,6 +7,7 @@ io.github.ust.mico.core.service
    :maxdepth: 1
 
    GitHubCrawler
+   ImageBuilderHealthIndicator
    MicoKubernetesClient
    MicoStatusService
 

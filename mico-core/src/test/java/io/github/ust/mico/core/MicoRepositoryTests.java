@@ -23,7 +23,7 @@ public class MicoRepositoryTests {
 
     @Autowired
     MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
-	
+
 	@Autowired
     KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
 
@@ -31,25 +31,29 @@ public class MicoRepositoryTests {
     MicoLabelRepository labelRepository;
 
     @Autowired
+    MicoTopicRepository topicRepository;
+
+    @Autowired
     MicoEnvironmentVariableRepository environmentVariableRepository;
 
     @Autowired
     MicoInterfaceConnectionRepository interfaceConnectionRepository;
 
-	/**
-	 * Deletes all data in the database.
-	 */
-	void deleteAllData() {
-		applicationRepository.deleteAll();
-		serviceRepository.deleteAll();
-		serviceInterfaceRepository.deleteAll();
-		servicePortRepository.deleteAll();
-		serviceDependencyRepository.deleteAll();
-		serviceDeploymentInfoRepository.deleteAll();
-		kubernetesDeploymentInfoRepository.deleteAll();
-		labelRepository.deleteAll();
-		environmentVariableRepository.deleteAll();
-		interfaceConnectionRepository.deleteAll();
-	}
+    /**
+     * Deletes all data in the database.
+     */
+    void deleteAllData() {
+        applicationRepository.deleteAll();
+        serviceRepository.deleteAll();
+        serviceInterfaceRepository.deleteAll();
+        servicePortRepository.deleteAll();
+        serviceDependencyRepository.deleteAll();
+        serviceDeploymentInfoRepository.deleteAll();
+        kubernetesDeploymentInfoRepository.deleteAll();
+        labelRepository.deleteAll();
+        topicRepository.deleteAll();
+        environmentVariableRepository.deleteAll();
+        interfaceConnectionRepository.deleteAll();
+    }
 
 }

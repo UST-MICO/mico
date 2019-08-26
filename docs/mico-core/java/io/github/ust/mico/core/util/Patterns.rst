@@ -10,6 +10,22 @@ Patterns
 
 Fields
 ------
+KAFKA_TOPIC_NAME_MESSAGE
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:field:: public static final String KAFKA_TOPIC_NAME_MESSAGE
+   :outertype: Patterns
+
+   Message is used if a match with the \ :java:ref:`Patterns.KAFKA_TOPIC_NAME_REGEX`\  fails.
+
+KAFKA_TOPIC_NAME_REGEX
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:field:: public static final String KAFKA_TOPIC_NAME_REGEX
+   :outertype: Patterns
+
+   Kafka topic names must only contain letters, numbers, dots, underscores and minus symbols.
+
 KUBERNETES_ENV_VAR_NAME_MESSAGE
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

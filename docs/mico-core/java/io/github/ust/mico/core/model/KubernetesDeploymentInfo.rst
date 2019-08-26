@@ -32,6 +32,8 @@ KubernetesDeploymentInfo
 
    Information about the Kubernetes resources that are created through an actual deployment of a \ :java:ref:`MicoService`\ .
 
+   Instances of this class are persisted as nodes in the Neo4j database.
+
 Methods
 -------
 applyValuesFrom

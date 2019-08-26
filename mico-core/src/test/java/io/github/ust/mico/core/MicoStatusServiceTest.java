@@ -19,26 +19,6 @@
 
 package io.github.ust.mico.core;
 
-import static io.github.ust.mico.core.TestConstants.*;
-import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-
-import java.util.*;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.web.client.RestTemplate;
-
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.PodListBuilder;
 import io.fabric8.kubernetes.api.model.Service;
@@ -57,11 +37,33 @@ import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
 import io.github.ust.mico.core.util.CollectionUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.*;
+
+import static io.github.ust.mico.core.TestConstants.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles("local")
 public class MicoStatusServiceTest {
+
+    private static final String testNamespace = "test-namespace";
 
     private static final String POD_PHASE_RUNNING = "Running";
     private static final String POD_PHASE_PENDING = "Pending";
@@ -160,7 +162,7 @@ public class MicoStatusServiceTest {
             .build());
 
         kubernetesService = Optional.of(new ServiceBuilder()
-            .withNewMetadata().withName(SERVICE_INTERFACE_NAME).endMetadata()
+            .withNewMetadata().withName(SERVICE_INTERFACE_NAME).withNamespace(testNamespace).endMetadata()
             .withNewSpec().endSpec()
             .withNewStatus()
             .withNewLoadBalancer()
@@ -220,7 +222,7 @@ public class MicoStatusServiceTest {
 
     @Test
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public void getApplicationStatus() {
+    public void getApplicationStatus() throws Exception {
         MicoApplicationStatusResponseDTO micoApplicationStatus = new MicoApplicationStatusResponseDTO();
         micoApplicationStatus
             .setTotalNumberOfRequestedReplicas(1)
@@ -299,6 +301,13 @@ public class MicoStatusServiceTest {
         given(serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion())).willReturn(CollectionUtils.listOf(micoService));
         given(prometheusConfig.getUri()).willReturn("http://localhost:9090/api/v1/query");
         given(serviceInterfaceRepository.findByServiceAndName(micoService.getShortName(), micoService.getVersion(), SERVICE_INTERFACE_NAME)).willReturn(Optional.of(micoServiceInterface));
+
+        given(micoKubernetesClient.getPublicIpOfKubernetesService(kubernetesService.get().getMetadata().getName(),
+            kubernetesService.get().getMetadata().getNamespace())).willReturn(Optional.ofNullable("192.168.2.112"));
+        given(micoKubernetesClient.getPublicPortsOfKubernetesService(kubernetesService.get().getMetadata().getName(),
+            kubernetesService.get().getMetadata().getNamespace())).willReturn(Collections.singletonList(8080));
+
+
         ResponseEntity responseEntityMemoryUsagePod1 = getPrometheusResponseEntity(memoryUsagePod1);
         ResponseEntity responseEntityCpuLoadPod1 = getPrometheusResponseEntity(cpuLoadPod1);
         ResponseEntity responseEntityMemoryUsagePod2 = getPrometheusResponseEntity(memoryUsagePod2);
@@ -412,7 +421,7 @@ public class MicoStatusServiceTest {
 
     @Test
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public void getServiceStatus() {
+    public void getServiceStatus() throws Exception {
         MicoServiceStatusResponseDTO micoServiceStatus = new MicoServiceStatusResponseDTO();
         micoServiceStatus
             .setName(NAME)
@@ -485,6 +494,12 @@ public class MicoStatusServiceTest {
         given(applicationRepository.findAllByUsedService(any(), any())).willReturn(CollectionUtils.listOf(otherMicoApplication));
         given(prometheusConfig.getUri()).willReturn("http://localhost:9090/api/v1/query");
         given(serviceInterfaceRepository.findByServiceAndName(micoService.getShortName(), micoService.getVersion(), SERVICE_INTERFACE_NAME)).willReturn(Optional.of(micoServiceInterface));
+
+        given(micoKubernetesClient.getPublicIpOfKubernetesService(kubernetesService.get().getMetadata().getName(),
+            kubernetesService.get().getMetadata().getNamespace())).willReturn(Optional.ofNullable("192.168.2.112"));
+        given(micoKubernetesClient.getPublicPortsOfKubernetesService(kubernetesService.get().getMetadata().getName(),
+            kubernetesService.get().getMetadata().getNamespace())).willReturn(Collections.singletonList(8080));
+
         ResponseEntity responseEntityMemoryUsagePod1 = getPrometheusResponseEntity(memoryUsagePod1);
         ResponseEntity responseEntityCpuLoadPod1 = getPrometheusResponseEntity(cpuLoadPod1);
         ResponseEntity responseEntityMemoryUsagePod2 = getPrometheusResponseEntity(memoryUsagePod2);
@@ -506,11 +521,15 @@ public class MicoStatusServiceTest {
     }
 
     @Test
-    public void getServiceInterfaceStatus() {
+    public void getServiceInterfaceStatus() throws Exception {
 
         given(micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, SERVICE_INTERFACE_NAME))
             .willReturn(kubernetesService);
-        given(serviceInterfaceRepository.findByServiceAndName(micoService.getShortName(), micoService.getVersion(), SERVICE_INTERFACE_NAME)).willReturn(Optional.of(micoServiceInterface));
+
+        given(micoKubernetesClient.getPublicIpOfKubernetesService(kubernetesService.get().getMetadata().getName(),
+            kubernetesService.get().getMetadata().getNamespace())).willReturn(Optional.ofNullable("192.168.2.112"));
+        given(micoKubernetesClient.getPublicPortsOfKubernetesService(kubernetesService.get().getMetadata().getName(),
+            kubernetesService.get().getMetadata().getNamespace())).willReturn(Collections.singletonList(8080));
 
         MicoServiceInterfaceStatusResponseDTO expectedServiceInterface = new MicoServiceInterfaceStatusResponseDTO()
             .setName(SERVICE_INTERFACE_NAME)

@@ -1,6 +1,6 @@
-.. java:import:: java.util Arrays
+.. java:import:: java.util ArrayList
 
-.. java:import:: java.util LinkedList
+.. java:import:: java.util Arrays
 
 .. java:import:: java.util List
 

@@ -20,18 +20,15 @@
 package io.github.ust.mico.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.ust.mico.core.broker.MicoServiceDeploymentInfoBroker;
 import io.github.ust.mico.core.configuration.KafkaConfig;
 import io.github.ust.mico.core.configuration.OpenFaaSConfig;
 import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
-import io.github.ust.mico.core.dto.request.MicoLabelRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
 import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
-import io.github.ust.mico.core.dto.response.MicoLabelResponseDTO;
-import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO;
 import io.github.ust.mico.core.dto.response.status.*;
 import io.github.ust.mico.core.model.*;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo.ImagePullPolicy;
 import io.github.ust.mico.core.persistence.*;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
@@ -50,7 +47,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -91,7 +87,6 @@ public class ApplicationResourceIntegrationTests {
     private static final String JSON_PATH_LINKS_SECTION = "$._links.";
     private static final String BASE_PATH = "/applications";
     private static final String PATH_SERVICES = "services";
-    private static final String PATH_DEPLOYMENT_INFORMATION = "deploymentInformation";
     private static final String PATH_PROMOTE = "promote";
     private static final String PATH_DEPLOYMENT_STATUS = "deploymentStatus";
     private static final String PATH_STATUS = "status";
@@ -109,6 +104,9 @@ public class ApplicationResourceIntegrationTests {
     private MicoLabelRepository micoLabelRepository;
 
     @MockBean
+    private MicoTopicRepository micoTopicRepository;
+
+    @MockBean
     private MicoEnvironmentVariableRepository micoEnvironmentVariableRepository;
 
     @MockBean
@@ -122,6 +120,9 @@ public class ApplicationResourceIntegrationTests {
 
     @MockBean
     private MicoStatusService micoStatusService;
+
+    @MockBean
+    private MicoServiceDeploymentInfoBroker micoServiceDeploymentInfoBroker;
 
     @Autowired
     private MockMvc mvc;
@@ -895,6 +896,8 @@ public class ApplicationResourceIntegrationTests {
         given(serviceRepository.findByShortNameAndVersion(SERVICE_SHORT_NAME, SERVICE_VERSION)).willReturn(Optional.of(service));
         given(serviceRepository.findAllByApplication(SHORT_NAME, VERSION)).willReturn(CollectionUtils.listOf(service));
         given(micoKubernetesClient.isApplicationUndeployed(application)).willReturn(true);
+        given(micoServiceDeploymentInfoBroker.updateMicoServiceDeploymentInformation(
+            eq(SHORT_NAME), eq(VERSION), eq(SERVICE_SHORT_NAME), any(MicoServiceDeploymentInfoRequestDTO.class))).willReturn(new MicoServiceDeploymentInfo());
 
         ArgumentCaptor<MicoApplication> micoApplicationCaptor = ArgumentCaptor.forClass(MicoApplication.class);
 
@@ -929,87 +932,6 @@ public class ApplicationResourceIntegrationTests {
         mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/services/" + SERVICE_SHORT_NAME))
             .andDo(print())
             .andExpect(status().isNoContent());
-    }
-
-    @Test
-    public void getServiceDeploymentInformation() throws Exception {
-        MicoApplication application = new MicoApplication()
-            .setId(ID)
-            .setShortName(SHORT_NAME).setVersion(VERSION);
-
-        MicoService service = new MicoService()
-            .setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
-
-        List<MicoLabel> labels = CollectionUtils.listOf(new MicoLabel().setKey("key").setValue("value"));
-        ImagePullPolicy imagePullPolicy = ImagePullPolicy.IF_NOT_PRESENT;
-        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
-            .setService(service)
-            .setReplicas(3)
-            .setLabels(labels)
-            .setImagePullPolicy(imagePullPolicy);
-
-        application.getServices().add(service);
-        application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
-
-        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
-        given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(),
-            application.getVersion(), service.getShortName())).willReturn(Optional.of(serviceDeploymentInfo));
-
-        mvc.perform(get(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName()))
-            .andDo(print())
-            .andExpect(status().isOk())
-            .andExpect(jsonPath(SDI_REPLICAS_PATH, is(serviceDeploymentInfo.getReplicas())))
-            .andExpect(jsonPath(SDI_LABELS_PATH + "[0].key", is(labels.get(0).getKey())))
-            .andExpect(jsonPath(SDI_LABELS_PATH + "[0].value", is(labels.get(0).getValue())))
-            .andExpect(jsonPath(SDI_IMAGE_PULLPOLICY_PATH, is(imagePullPolicy.toString())))
-            .andReturn();
-    }
-
-    @Test
-    public void updateServiceDeploymentInformation() throws Exception {
-        MicoApplication application = new MicoApplication()
-            .setId(ID)
-            .setShortName(SHORT_NAME).setVersion(VERSION);
-
-        MicoApplication expectedApplication = new MicoApplication()
-            .setId(ID)
-            .setShortName(SHORT_NAME).setVersion(VERSION);
-
-        MicoService service = new MicoService()
-            .setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
-
-        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
-            .setId(ID_1)
-            .setService(service)
-            .setReplicas(3)
-            .setLabels(CollectionUtils.listOf(new MicoLabel().setKey("key").setValue("value")))
-            .setImagePullPolicy(ImagePullPolicy.IF_NOT_PRESENT);
-
-        MicoServiceDeploymentInfoRequestDTO updatedServiceDeploymentInfoDTO = new MicoServiceDeploymentInfoRequestDTO()
-            .setReplicas(5)
-            .setLabels(CollectionUtils.listOf(new MicoLabelRequestDTO().setKey("key-updated").setValue("value-updated")))
-            .setImagePullPolicy(ImagePullPolicy.NEVER);
-
-        application.getServices().add(service);
-        application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
-        expectedApplication.getServices().add(service);
-        expectedApplication.getServiceDeploymentInfos().add(serviceDeploymentInfo.applyValuesFrom(updatedServiceDeploymentInfoDTO));
-
-        given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion())).willReturn(Optional.of(application));
-        given(applicationRepository.save(eq(expectedApplication))).willReturn(expectedApplication);
-        given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName())).willReturn(Optional.of(serviceDeploymentInfo));
-        given(serviceDeploymentInfoRepository.save(any(MicoServiceDeploymentInfo.class))).willReturn(serviceDeploymentInfo.applyValuesFrom(updatedServiceDeploymentInfoDTO));
-
-        mvc.perform(put(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName())
-            .content(mapper.writeValueAsBytes(updatedServiceDeploymentInfoDTO))
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print())
-            .andExpect(status().isOk())
-            .andExpect(jsonPath(SDI_REPLICAS_PATH, is(serviceDeploymentInfo.getReplicas())))
-            .andExpect(jsonPath(SDI_LABELS_PATH + "[0].key", is(updatedServiceDeploymentInfoDTO.getLabels().get(0).getKey())))
-            .andExpect(jsonPath(SDI_LABELS_PATH + "[0].value", is(updatedServiceDeploymentInfoDTO.getLabels().get(0).getValue())))
-            .andExpect(jsonPath(SDI_IMAGE_PULLPOLICY_PATH, is(updatedServiceDeploymentInfoDTO.getImagePullPolicy().toString())))
-            .andReturn();
     }
 
     @Test
@@ -1054,44 +976,6 @@ public class ApplicationResourceIntegrationTests {
             .andReturn();
 
         verify(applicationRepository, never()).deleteAll(micoApplicationListCaptor.capture());
-    }
-
-
-    @Test
-    public void invalidLabelsThrowAnException() throws Exception {
-        List<MicoLabel> labels = CollectionUtils.listOf(new MicoLabel().setKey("invalid-key!").setValue("value"));
-
-        MicoApplication application = new MicoApplication()
-            .setId(ID)
-            .setShortName(SHORT_NAME).setVersion(VERSION);
-
-        MicoApplication expectedApplication = new MicoApplication()
-            .setId(ID)
-            .setShortName(SHORT_NAME).setVersion(VERSION);
-
-        MicoService service = new MicoService()
-            .setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
-
-        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo().setService(service);
-
-        MicoServiceDeploymentInfoResponseDTO updatedServiceDeploymentInfoDTO =
-            (MicoServiceDeploymentInfoResponseDTO) new MicoServiceDeploymentInfoResponseDTO()
-                .setLabels(labels.stream().map(MicoLabelResponseDTO::new).collect(Collectors.toList()));
-
-        application.getServices().add(service);
-        application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
-        expectedApplication.getServices().add(service);
-        expectedApplication.getServiceDeploymentInfos().add(serviceDeploymentInfo.applyValuesFrom(updatedServiceDeploymentInfoDTO));
-
-        given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion()))
-            .willReturn(Optional.of(application));
-
-        final ResultActions result = mvc.perform(put(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName())
-            .content(mapper.writeValueAsBytes(updatedServiceDeploymentInfoDTO))
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print());
-
-        result.andExpect(status().isUnprocessableEntity());
     }
 
     @Test
@@ -1142,59 +1026,5 @@ public class ApplicationResourceIntegrationTests {
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isConflict());
-    }
-
-    @Test
-    public void testDefaultVariablesAddedToKafkaEnabledService() throws Exception {
-        MicoApplication micoApplication = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
-        MicoService service1 = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(VERSION_1_0_1).setKafkaEnabled(true);
-
-        given(applicationRepository.findByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion()))
-            .willReturn(Optional.of(micoApplication));
-        given(serviceRepository.findByShortNameAndVersion(service1.getShortName(), service1.getVersion()))
-            .willReturn(Optional.of(service1));
-        given(micoKubernetesClient.isApplicationUndeployed(micoApplication)).willReturn(true);
-
-        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + VERSION_1_0_1)
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print())
-            .andExpect(status().isNoContent());
-
-        ArgumentCaptor<MicoApplication> applicationCaptor = ArgumentCaptor.forClass(MicoApplication.class);
-        verify(applicationRepository, times(1)).save(applicationCaptor.capture());
-        MicoApplication savedApplication = applicationCaptor.getValue();
-        assertThat(savedApplication.getServiceDeploymentInfos(), hasSize(1));
-        LinkedList<MicoEnvironmentVariable> expectedMicoEnvironmentVariables = new LinkedList<>();
-        expectedMicoEnvironmentVariables.addAll(openFaaSConfig.getDefaultEnvironmentVariablesForOpenFaaS());
-        expectedMicoEnvironmentVariables.addAll(kafkaConfig.getDefaultEnvironmentVariablesForKafka());
-        List<MicoEnvironmentVariable> actualEnvironmentVariables = savedApplication.getServiceDeploymentInfos().get(0).getEnvironmentVariables();
-        assertThat(actualEnvironmentVariables, containsInAnyOrder(expectedMicoEnvironmentVariables.toArray()));
-
-    }
-
-    @Test
-    public void testDefaultVariablesNotAddedToNormalService() throws Exception {
-        MicoApplication micoApplication = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
-        MicoService service1 = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(VERSION_1_0_1);
-        //Kafka enabled is not set
-
-        given(applicationRepository.findByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion()))
-            .willReturn(Optional.of(micoApplication));
-        given(serviceRepository.findByShortNameAndVersion(service1.getShortName(), service1.getVersion()))
-            .willReturn(Optional.of(service1));
-        given(micoKubernetesClient.isApplicationUndeployed(micoApplication)).willReturn(true);
-
-        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + VERSION_1_0_1)
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print())
-            .andExpect(status().isNoContent());
-
-        ArgumentCaptor<MicoApplication> applicationCaptor = ArgumentCaptor.forClass(MicoApplication.class);
-        verify(applicationRepository, times(1)).save(applicationCaptor.capture());
-        MicoApplication savedApplication = applicationCaptor.getValue();
-        assertThat(savedApplication.getServiceDeploymentInfos(), hasSize(1));
-        List<MicoEnvironmentVariable> actualEnvironmentVariables = savedApplication.getServiceDeploymentInfos().get(0).getEnvironmentVariables();
-        assertThat(actualEnvironmentVariables, hasSize(0));
-
     }
 }

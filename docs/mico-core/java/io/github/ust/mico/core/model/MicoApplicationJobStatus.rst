@@ -22,3 +22,5 @@ MicoApplicationJobStatus
 
    Represents the job status for a \ :java:ref:`MicoApplication`\ . Contains a list of jobs.
 
+   Note that this class is only used for business logic purposes and instances are not persisted.
+

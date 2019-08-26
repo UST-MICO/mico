@@ -6,8 +6,6 @@
 
 .. java:import:: java.util.stream Collectors
 
-.. java:import:: org.neo4j.ogm.annotation NodeEntity
-
 .. java:import:: com.fasterxml.jackson.annotation JsonProperty
 
 .. java:import:: io.github.ust.mico.core.model MicoMessage.Type
@@ -28,9 +26,11 @@ MicoApplicationDeploymentStatus
 .. java:package:: io.github.ust.mico.core.model
    :noindex:
 
-.. java:type:: @Data @RequiredArgsConstructor @AllArgsConstructor @Accessors @NodeEntity public class MicoApplicationDeploymentStatus
+.. java:type:: @Data @RequiredArgsConstructor @AllArgsConstructor @Accessors public class MicoApplicationDeploymentStatus
 
    Wraps the deployment status of a \ :java:ref:`MicoApplication`\  and some messages (optional) with more detailed information.
+
+   Note that this class is only used for business logic purposes and instances are not persisted.
 
 Methods
 -------

@@ -1,13 +1,16 @@
 package io.github.ust.mico.core.broker;
 
-import io.github.ust.mico.core.configuration.KafkaConfig;
-import io.github.ust.mico.core.configuration.OpenFaaSConfig;
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationDeploymentStatusResponseDTO;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
 import io.github.ust.mico.core.exception.*;
-import io.github.ust.mico.core.model.*;
-import io.github.ust.mico.core.persistence.*;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.resource.ApplicationResource;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
@@ -47,22 +50,7 @@ public class MicoApplicationBroker {
     private MicoStatusService micoStatusService;
 
     @Autowired
-    private MicoLabelRepository micoLabelRepository;
-
-    @Autowired
-    private MicoEnvironmentVariableRepository micoEnvironmentVariableRepository;
-
-    @Autowired
-    private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
-
-    @Autowired
-    private MicoInterfaceConnectionRepository micoInterfaceConnectionRepository;
-
-    @Autowired
-    private KafkaConfig kafkaConfig;
-
-    @Autowired
-    private OpenFaaSConfig openFaaSConfig;
+    private MicoServiceDeploymentInfoBroker serviceDeploymentInfoBroker;
 
     public MicoApplication getMicoApplicationByShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException {
         Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
@@ -179,7 +167,9 @@ public class MicoApplicationBroker {
         return applicationRepository.findAllByUsedService(serviceShortName, serviceVersion);
     }
 
-    public MicoApplication addMicoServiceToMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion) throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAlreadyAddedToMicoApplicationException, MicoServiceAddedMoreThanOnceToMicoApplicationException, MicoApplicationIsNotUndeployedException {
+    public void addMicoServiceToMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion)
+        throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAlreadyAddedToMicoApplicationException, MicoServiceAddedMoreThanOnceToMicoApplicationException,
+        MicoApplicationIsNotUndeployedException, MicoTopicRoleUsedMultipleTimesException, MicoServiceDeploymentInformationNotFoundException, KubernetesResourceException, MicoApplicationDoesNotIncludeMicoServiceException {
 
         log.debug("Adding MicoService '{}' '{}' to MicoApplication '{}' '{}'.",
             serviceShortName, serviceVersion, applicationShortName, applicationVersion);
@@ -204,14 +194,18 @@ public class MicoApplicationBroker {
         } else if (micoServices.size() == 0) {
             // Service not included yet, simply add it
             MicoServiceDeploymentInfo micoServiceDeploymentInfo = new MicoServiceDeploymentInfo().setService(micoService);
-            setDefaultEnvironmentVariablesForKafkaEnabledService(micoServiceDeploymentInfo);
 
             // Both the service list and the service deployment info list of the application need to be updated ...
             micoApplication.getServices().add(micoService);
             micoApplication.getServiceDeploymentInfos().add(micoServiceDeploymentInfo);
 
             // ... before the application can be saved.
-            return applicationRepository.save(micoApplication);
+            applicationRepository.save(micoApplication);
+
+            // Set default deployment information (environment variables, topics)
+            serviceDeploymentInfoBroker.setDefaultDeploymentInformationForKafkaEnabledService(micoServiceDeploymentInfo);
+            serviceDeploymentInfoBroker.updateMicoServiceDeploymentInformation(applicationShortName, applicationVersion, serviceShortName,
+                new MicoServiceDeploymentInfoRequestDTO(micoServiceDeploymentInfo));
         } else {
             // Service already included, replace it with its newer version, ...
             MicoService existingMicoService = micoServices.get(0);
@@ -236,32 +230,9 @@ public class MicoApplicationBroker {
 
                 // Save the application with the updated list of services
                 // and service deployment infos in the database
-                return applicationRepository.save(micoApplication);
+                applicationRepository.save(micoApplication);
             }
         }
-    }
-
-    /**
-     * Sets the default environment variables for Kafka-enabled MicoServices. See {@link MicoEnvironmentVariable.DefaultEnvironmentVariableKafkaNames}
-     * for a complete list.
-     *
-     * @param micoServiceDeploymentInfo The {@link MicoServiceDeploymentInfo} with an corresponding MicoService
-     */
-    private void setDefaultEnvironmentVariablesForKafkaEnabledService(MicoServiceDeploymentInfo micoServiceDeploymentInfo) {
-        MicoService micoService = micoServiceDeploymentInfo.getService();
-        if (micoService == null) {
-            throw new IllegalArgumentException("The MicoServiceDeploymentInfo needs a valid MicoService set to check if the service is Kafka enabled");
-        }
-        if (!micoService.isKafkaEnabled()) {
-            log.debug("MicoService '{}' '{}' is not Kafka-enabled. Not necessary to adding specific env variables.",
-                micoService.getShortName(), micoService.getVersion());
-            return;
-        }
-        log.debug("Adding default environment variables to the Kafka-enabled MicoService '{}' '{}'.",
-            micoService.getShortName(), micoService.getVersion());
-        List<MicoEnvironmentVariable> micoEnvironmentVariables = micoServiceDeploymentInfo.getEnvironmentVariables();
-        micoEnvironmentVariables.addAll(kafkaConfig.getDefaultEnvironmentVariablesForKafka());
-        micoEnvironmentVariables.addAll(openFaaSConfig.getDefaultEnvironmentVariablesForOpenFaaS());
     }
 
     public MicoApplication removeMicoServiceFromMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException, MicoApplicationIsNotUndeployedException {
@@ -289,71 +260,13 @@ public class MicoApplicationBroker {
         // TODO: Update Kubernetes deployment (see issue mico#627)
     }
 
-    public MicoServiceDeploymentInfo getMicoServiceDeploymentInformation(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoServiceDeploymentInformationNotFoundException, MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException {
-        checkForMicoServiceInMicoApplication(applicationShortName, applicationVersion, serviceShortName);
-
-        Optional<MicoServiceDeploymentInfo> micoServiceDeploymentInfoOptional = serviceDeploymentInfoRepository.findByApplicationAndService(applicationShortName, applicationVersion, serviceShortName);
-        if (micoServiceDeploymentInfoOptional.isPresent()) {
-            return micoServiceDeploymentInfoOptional.get();
-        } else {
-            throw new MicoServiceDeploymentInformationNotFoundException(applicationShortName, applicationVersion, serviceShortName);
-        }
-    }
-
-    private MicoApplication checkForMicoServiceInMicoApplication(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException {
+    MicoApplication checkForMicoServiceInMicoApplication(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException {
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
 
         if (micoApplication.getServices().stream().noneMatch(service -> service.getShortName().equals(serviceShortName))) {
             throw new MicoApplicationDoesNotIncludeMicoServiceException(applicationShortName, applicationVersion, serviceShortName);
         }
         return micoApplication;
-    }
-
-    public MicoServiceDeploymentInfo updateMicoServiceDeploymentInformation(String applicationShortName, String applicationVersion,
-                                                                            String serviceShortName, MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) throws
-        MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException,
-        MicoServiceDeploymentInformationNotFoundException, KubernetesResourceException {
-
-        MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
-        MicoServiceDeploymentInfo storedServiceDeploymentInfo = getMicoServiceDeploymentInformation(applicationShortName, applicationVersion, serviceShortName);
-
-        int oldReplicas = storedServiceDeploymentInfo.getReplicas();
-        // Update existing service deployment information and save it in the database.
-        storedServiceDeploymentInfo.applyValuesFrom(serviceDeploymentInfoDTO);
-        MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(storedServiceDeploymentInfo);
-
-        // In case addition properties (stored as separate node entity) such as labels, environment variables
-        // have been removed from this service deployment information,
-        // the standard save() function of the service deployment information repository will not delete those
-        // "tangling" (without relationships) labels (nodes), hence the manual clean up.
-        micoLabelRepository.cleanUp();
-        micoEnvironmentVariableRepository.cleanUp();
-        kubernetesDeploymentInfoRepository.cleanUp();
-        micoInterfaceConnectionRepository.cleanUp();
-
-        // FIXME: Currently we only supported scale in / scale out.
-        // 		  If the MICO service is already deployed, we only update the replicas.
-        // 	      The other properties are ignored!
-        if (micoKubernetesClient.isApplicationDeployed(micoApplication)) {
-            MicoService micoService = updatedServiceDeploymentInfo.getService();
-            log.info("MicoApplication '{}' {}' is already deployed. Update the deployment of the included MicoService '{} '{}'.",
-                micoApplication.getShortName(), micoApplication.getVersion(), micoService.getShortName(), micoService.getVersion());
-
-            // MICO service is already deployed. Update the replicas.
-            int replicasDiff = serviceDeploymentInfoDTO.getReplicas() - oldReplicas;
-            if (replicasDiff > 0) {
-                log.debug("Increase replicas of MicoService '{}' '{}' by {}.", micoService.getShortName(), micoService.getVersion(), replicasDiff);
-                micoKubernetesClient.scaleOut(updatedServiceDeploymentInfo, replicasDiff);
-            } else if (replicasDiff < 0) {
-                log.debug("Decrease replicas of MicoService '{}' '{}' by {}.", micoService.getShortName(), micoService.getVersion(), replicasDiff);
-                micoKubernetesClient.scaleIn(updatedServiceDeploymentInfo, Math.abs(replicasDiff));
-            } else {
-                // TODO: If no scale operation is required, maybe some other
-                // 		 information still needs to be updated.
-            }
-        }
-
-        return updatedServiceDeploymentInfo;
     }
 
     //TODO: Change return value to not use a DTO (see issue mico#630)
