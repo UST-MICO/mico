@@ -34,6 +34,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
 
     /**
      * Retrieves all service deployment information of a particular application.
+     * Also includes these which are used for the deployments of KafkaFaasConnector instances.
      *
      * @param applicationShortName the short name of the {@link MicoApplication}.
      * @param applicationVersion   the version of the {@link MicoApplication}.
@@ -77,7 +78,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
     /**
      * Retrieves all service deployment information of a service.
      * Note that one service can be used by (included in) multiple applications.
-     * Also works with a KafkaFaasConnector.
+     * Also works with a KafkaFaasConnector instance.
      *
      * @param serviceShortName the short name of the {@link MicoService}.
      * @param serviceVersion   the version of the {@link MicoService}.
@@ -92,7 +93,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
 
     /**
      * Retrieves the deployment information for a particular application and service.
-     * Also works with a KafkaFaasConnector.
+     * Also works with a KafkaFaasConnector instance.
      *
      * @param applicationShortName the short name of the {@link MicoApplication}.
      * @param applicationVersion   the version of the {@link MicoApplication}.
@@ -110,7 +111,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
 
     /**
      * Retrieves the deployment information for a particular application and service.
-     * Also works with a KafkaFaasConnector.
+     * Also works with a KafkaFaasConnector instance.
      *
      * @param applicationShortName the short name of the {@link MicoApplication}.
      * @param applicationVersion   the version of the {@link MicoApplication}.
@@ -165,6 +166,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
      * All additional properties of a {@link MicoServiceDeploymentInfo} that
      * are stored as a separate node entity and connected to it via a {@code [:HAS]}
      * relationship will be deleted, too.
+     * Also works with a KafkaFaasConnector instance.
      *
      * @param applicationShortName the short name of the {@link MicoApplication}.
      * @param applicationVersion   the version of the {@link MicoApplication}.
@@ -185,6 +187,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
      * All additional properties of a {@link MicoServiceDeploymentInfo} that
      * are stored as a separate node entity and connected to it via a {@code [:HAS]}
      * relationship will be deleted, too.
+     * Also works with a KafkaFaasConnector instance.
      *
      * @param applicationShortName the short name of the {@link MicoApplication}.
      * @param applicationVersion   the version of the {@link MicoApplication}.
