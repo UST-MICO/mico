@@ -51,7 +51,7 @@ deleteByApplicationAndService
 .. java:method:: @Query  void deleteByApplicationAndService(String applicationShortName, String applicationVersion, String serviceShortName)
    :outertype: MicoServiceDeploymentInfoRepository
 
-   Deletes the deployment information for a particular application and service. All additional properties of a \ :java:ref:`MicoServiceDeploymentInfo`\  that are stored as a separate node entity and connected to it via a \ ``[:HAS]``\  relationship will be deleted, too.
+   Deletes the deployment information for a particular application and service. All additional properties of a \ :java:ref:`MicoServiceDeploymentInfo`\  that are stored as a separate node entity and connected to it via a \ ``[:HAS]``\  relationship will be deleted, too. Also works with a KafkaFaasConnector instance.
 
    :param applicationShortName: the short name of the \ :java:ref:`MicoApplication`\ .
    :param applicationVersion: the version of the \ :java:ref:`MicoApplication`\ .
@@ -63,7 +63,7 @@ deleteByApplicationAndService
 .. java:method:: @Query  void deleteByApplicationAndService(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion)
    :outertype: MicoServiceDeploymentInfoRepository
 
-   Deletes the deployment information for a particular application and service. All additional properties of a \ :java:ref:`MicoServiceDeploymentInfo`\  that are stored as a separate node entity and connected to it via a \ ``[:HAS]``\  relationship will be deleted, too.
+   Deletes the deployment information for a particular application and service. All additional properties of a \ :java:ref:`MicoServiceDeploymentInfo`\  that are stored as a separate node entity and connected to it via a \ ``[:HAS]``\  relationship will be deleted, too. Also works with a KafkaFaasConnector instance.
 
    :param applicationShortName: the short name of the \ :java:ref:`MicoApplication`\ .
    :param applicationVersion: the version of the \ :java:ref:`MicoApplication`\ .
@@ -76,7 +76,7 @@ findAllByApplication
 .. java:method:: @Query  List<MicoServiceDeploymentInfo> findAllByApplication(String applicationShortName, String applicationVersion)
    :outertype: MicoServiceDeploymentInfoRepository
 
-   Retrieves all service deployment information of a particular application.
+   Retrieves all service deployment information of a particular application. Also includes these which are used for the deployments of KafkaFaasConnector instances.
 
    :param applicationShortName: the short name of the \ :java:ref:`MicoApplication`\ .
    :param applicationVersion: the version of the \ :java:ref:`MicoApplication`\ .
@@ -88,7 +88,7 @@ findAllByService
 .. java:method:: @Query  List<MicoServiceDeploymentInfo> findAllByService(String serviceShortName, String serviceVersion)
    :outertype: MicoServiceDeploymentInfoRepository
 
-   Retrieves all service deployment information of a service. Note that one service can be used by (included in) multiple applications. Also works with a KafkaFaasConnector.
+   Retrieves all service deployment information of a service. Note that one service can be used by (included in) multiple applications. Also works with a KafkaFaasConnector instance.
 
    :param serviceShortName: the short name of the \ :java:ref:`MicoService`\ .
    :param serviceVersion: the version of the \ :java:ref:`MicoService`\ .
@@ -100,7 +100,7 @@ findByApplicationAndService
 .. java:method:: @Query  Optional<MicoServiceDeploymentInfo> findByApplicationAndService(String applicationShortName, String applicationVersion, String serviceShortName)
    :outertype: MicoServiceDeploymentInfoRepository
 
-   Retrieves the deployment information for a particular application and service. Also works with a KafkaFaasConnector.
+   Retrieves the deployment information for a particular application and service. Also works with a KafkaFaasConnector instance.
 
    :param applicationShortName: the short name of the \ :java:ref:`MicoApplication`\ .
    :param applicationVersion: the version of the \ :java:ref:`MicoApplication`\ .
@@ -113,7 +113,7 @@ findByApplicationAndService
 .. java:method:: @Query  Optional<MicoServiceDeploymentInfo> findByApplicationAndService(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion)
    :outertype: MicoServiceDeploymentInfoRepository
 
-   Retrieves the deployment information for a particular application and service. Also works with a KafkaFaasConnector.
+   Retrieves the deployment information for a particular application and service. Also works with a KafkaFaasConnector instance.
 
    :param applicationShortName: the short name of the \ :java:ref:`MicoApplication`\ .
    :param applicationVersion: the version of the \ :java:ref:`MicoApplication`\ .
