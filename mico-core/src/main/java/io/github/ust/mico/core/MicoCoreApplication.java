@@ -80,10 +80,18 @@ public class MicoCoreApplication implements ApplicationListener<ApplicationReady
     }
 
     /**
-     * Runs when application is ready. persists the latest KafkaFaasConnector to our service database
+     * Runs when application is ready.
+     *
      * @param event
      */
     public void onApplicationEvent(final ApplicationReadyEvent event) {
+        addKafkaFaasConnectorToDatabase();
+    }
+
+    /**
+     * persists the latest KafkaFaasConnector to our service database
+     */
+    public void addKafkaFaasConnectorToDatabase() {
         try {
             MicoService kafkaFaasConnector = gitHubCrawler.crawlGitHubRepoLatestRelease(kafkaConfig.getKafkaFaasConnectorUrl());
             List<MicoService> micoServices = micoServiceBroker.getAllVersionsOfServiceFromDatabase(kafkaFaasConnector.getShortName());
@@ -95,9 +103,10 @@ public class MicoCoreApplication implements ApplicationListener<ApplicationReady
                 }
                 return null;
             }).max(MicoVersion::compareTo);
-            if (kafkaFaasConnector.getMicoVersion().greaterThan(highestKafkaFaasConnectorVersion.get())) {
-                micoServiceBroker.persistService(kafkaFaasConnector);
-            }
+            if (highestKafkaFaasConnectorVersion.isPresent())
+                if (kafkaFaasConnector.getMicoVersion().greaterThan(highestKafkaFaasConnectorVersion.get())) {
+                    micoServiceBroker.persistService(kafkaFaasConnector);
+                }
         } catch (IOException | VersionNotSupportedException e) {
             log.debug(e.getMessage());
 
@@ -106,6 +115,5 @@ public class MicoCoreApplication implements ApplicationListener<ApplicationReady
         catch (MicoServiceAlreadyExistsException e) {
             log.info("onApplicationReadyEvent kafkaFaasConnector mico version check failed. should not happen since we checked before");
         }
-        return;
     }
 }

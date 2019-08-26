@@ -25,10 +25,12 @@ import io.github.ust.mico.core.model.MicoEnvironmentVariable;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.model.MicoTopic;
 import io.github.ust.mico.core.model.MicoTopicRole;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -39,6 +41,7 @@ import static io.github.ust.mico.core.model.MicoEnvironmentVariable.DefaultNames
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.reset;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
@@ -50,6 +53,13 @@ public class DefaultEnvironmentVariablesConfigurationTests {
 
     @Autowired
     KafkaConfig kafkaConfig;
+    @MockBean
+    private MicoCoreApplication micoCoreApplication;
+
+    @Before
+    public void setUp() {
+        reset(micoCoreApplication);
+    }
 
     @Test
     public void testOpenFaaSConfigForEnvironmentVariables() {

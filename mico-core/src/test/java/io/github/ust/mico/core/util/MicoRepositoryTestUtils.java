@@ -19,11 +19,11 @@
 
 package io.github.ust.mico.core.util;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo.ImagePullPolicy;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class MicoRepositoryTestUtils {
 

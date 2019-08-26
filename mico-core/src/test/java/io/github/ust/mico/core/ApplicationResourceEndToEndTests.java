@@ -25,6 +25,7 @@ import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +48,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.*;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.reset;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -78,6 +80,14 @@ public class ApplicationResourceEndToEndTests extends Neo4jTestClass {
 
     @MockBean
     private MicoKubernetesClient micoKubernetesClient;
+
+    @MockBean
+    private MicoCoreApplication micoCoreApplication;
+
+    @Before
+    public void setUp() {
+        reset(micoCoreApplication);
+    }
 
     @Test
     public void testDefaultVariablesAddedToKafkaEnabledService() throws Exception {

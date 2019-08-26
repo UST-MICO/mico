@@ -57,6 +57,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -81,6 +82,8 @@ public class MicoStatusServiceTest {
     private MicoServiceInterfaceRepository serviceInterfaceRepository;
     @Autowired
     private MicoStatusService micoStatusService;
+    @MockBean
+    private MicoCoreApplication micoCoreApplication;
 
     private MicoApplication micoApplication;
     private MicoApplication otherMicoApplication;
@@ -125,6 +128,9 @@ public class MicoStatusServiceTest {
 
     @Before
     public void setupMicoApplication() {
+
+        reset(micoCoreApplication);
+
         micoApplication = new MicoApplication()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION);

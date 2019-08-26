@@ -23,6 +23,7 @@ import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.EmbeddedRedisServer;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -50,6 +51,7 @@ import static io.github.ust.mico.core.TestConstants.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.reset;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -81,6 +83,13 @@ public class BackgroundJobResourceTest {
 
     @Autowired
     private MockMvc mvc;
+    @MockBean
+    private MicoCoreApplication micoCoreApplication;
+
+    @Before
+    public void setUp() {
+        reset(micoCoreApplication);
+    }
 
     @Test
     public void getAllJobs() throws Exception {

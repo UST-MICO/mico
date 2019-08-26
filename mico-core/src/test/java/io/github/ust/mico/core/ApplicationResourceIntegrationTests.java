@@ -33,6 +33,7 @@ import io.github.ust.mico.core.persistence.*;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
 import io.github.ust.mico.core.util.CollectionUtils;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -56,7 +57,6 @@ import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
 import static io.github.ust.mico.core.TestConstants.VERSION;
 import static io.github.ust.mico.core.TestConstants.*;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -138,6 +138,13 @@ public class ApplicationResourceIntegrationTests {
 
     @Captor
     private ArgumentCaptor<List<MicoApplication>> micoApplicationListCaptor;
+    @MockBean
+    private MicoCoreApplication micoCoreApplication;
+
+    @Before
+    public void setUp() {
+        reset(micoCoreApplication);
+    }
 
     @Test
     public void getAllApplications() throws Exception {
