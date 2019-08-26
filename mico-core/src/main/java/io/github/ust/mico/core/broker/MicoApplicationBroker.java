@@ -215,6 +215,8 @@ public class MicoApplicationBroker {
         throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAlreadyAddedToMicoApplicationException, MicoServiceAddedMoreThanOnceToMicoApplicationException,
         MicoApplicationIsNotUndeployedException, MicoTopicRoleUsedMultipleTimesException, MicoServiceDeploymentInformationNotFoundException, KubernetesResourceException, MicoApplicationDoesNotIncludeMicoServiceException, KafkaFaasConnectorNotAllowedHereException {
 
+        // KafkaFaasConnector is not allowed here, because it should be handled differently.
+        // See method `addKafkaFaasConnectorInstanceToMicoApplicationByVersion`
         if (serviceShortName.equals(kafkaFaasConnectorConfig.getServiceName())) {
             throw new KafkaFaasConnectorNotAllowedHereException();
         }
