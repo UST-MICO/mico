@@ -26,18 +26,18 @@ import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
 @Component
-public class MicoHealthIndicator implements HealthIndicator {
+public class ImageBuilderHealthIndicator implements HealthIndicator {
 
     private final ImageBuilder imageBuilder;
 
     @Autowired
-    public MicoHealthIndicator(ImageBuilder imageBuilder) {
+    public ImageBuilderHealthIndicator(ImageBuilder imageBuilder) {
         this.imageBuilder = imageBuilder;
     }
 
     @Override
     public Health health() {
-        // Application is considered healthy if the Image Builder could be initialized successfully.
+        // The Image Builder is considered healthy if it is initialized successfully
         return imageBuilder.isInitialized() ? Health.up().build() : Health.down().build();
     }
 }

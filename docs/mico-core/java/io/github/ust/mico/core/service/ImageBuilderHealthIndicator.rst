@@ -8,21 +8,21 @@
 
 .. java:import:: org.springframework.stereotype Component
 
-MicoHealthIndicator
-===================
+ImageBuilderHealthIndicator
+===========================
 
 .. java:package:: io.github.ust.mico.core.service
    :noindex:
 
-.. java:type:: @Component public class MicoHealthIndicator implements HealthIndicator
+.. java:type:: @Component public class ImageBuilderHealthIndicator implements HealthIndicator
 
 Constructors
 ------------
-MicoHealthIndicator
-^^^^^^^^^^^^^^^^^^^
+ImageBuilderHealthIndicator
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:constructor:: @Autowired public MicoHealthIndicator(ImageBuilder imageBuilder)
-   :outertype: MicoHealthIndicator
+.. java:constructor:: @Autowired public ImageBuilderHealthIndicator(ImageBuilder imageBuilder)
+   :outertype: ImageBuilderHealthIndicator
 
 Methods
 -------
@@ -30,5 +30,5 @@ health
 ^^^^^^
 
 .. java:method:: @Override public Health health()
-   :outertype: MicoHealthIndicator
+   :outertype: ImageBuilderHealthIndicator
 
