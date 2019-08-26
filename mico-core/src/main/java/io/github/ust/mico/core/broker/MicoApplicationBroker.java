@@ -309,6 +309,18 @@ public class MicoApplicationBroker {
         // TODO: Update Kubernetes deployment (see issue mico#627)
     }
 
+    /**
+     * Adds a new KafkaFaasConnector instance to the {@code kafkaFaasConnectorDeploymentInfos} of the {@link MicoApplication}.
+     * An unique instance ID will be created that is returned as part of a {@link KFConnectorDeploymentInfo}.
+     *
+     * @param applicationShortName the short name of the {@link MicoApplication}
+     * @param applicationVersion the version of the {@link MicoApplication}
+     * @param kfConnectorVersion the version of the KafkaFaasConnector ({@link MicoService}
+     * @return the {@link KFConnectorDeploymentInfo} including the newly created instance ID
+     * @throws MicoApplicationNotFoundException if the {@code MicoApplication} does not exist
+     * @throws MicoApplicationIsNotUndeployedException if the {@code MicoApplication} is not undeployed
+     * @throws KafkaFaasConnectorVersionNotFoundException if the version of the KafkaFaasConnector does not exist in MICO
+     */
     public KFConnectorDeploymentInfo addKafkaFaasConnectorInstanceToMicoApplicationByVersion(
         String applicationShortName, String applicationVersion, String kfConnectorVersion)
         throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorVersionNotFoundException {
@@ -350,6 +362,17 @@ public class MicoApplicationBroker {
         return kfConnectorDeploymentInfo;
     }
 
+    /**
+     * Removes a KafkaFaasConnector instance from the {@code kafkaFaasConnectorDeploymentInfos} of the {@link MicoApplication}.
+     *
+     * @param applicationShortName the short name of the {@link MicoApplication}
+     * @param applicationVersion the version of the {@link MicoApplication}
+     * @param instanceId the instance ID of the {@link KFConnectorDeploymentInfo}
+     * @throws MicoApplicationNotFoundException if the {@code MicoApplication} does not exist
+     * @throws MicoApplicationIsNotUndeployedException if the {@code MicoApplication} is not undeployed
+     * @throws KafkaFaasConnectorInstanceNotFoundException if the instance of the KafkaFaasConnector does not exist in MICO
+     * @throws MicoApplicationDoesNotIncludeKFConnectorInstanceException if the {@code MicoApplication} does not include the KafkaFaasConnector deployment with the provided instance ID
+     */
     public void removeKafkaFaasConnectorInstanceFromMicoApplicationByInstanceId(
         String applicationShortName, String applicationVersion, String instanceId)
         throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorInstanceNotFoundException, MicoApplicationDoesNotIncludeKFConnectorInstanceException {
