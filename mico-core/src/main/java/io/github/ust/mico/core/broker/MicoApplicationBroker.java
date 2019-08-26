@@ -165,6 +165,7 @@ public class MicoApplicationBroker {
 
     /**
      * Retrieves the list of {@code KFConnectorDeploymentInfos} that are part of the {@code MicoApplication}.
+     * They are used for the deployment of KafkaFaasConnector instances.
      *
      * @param existingMicoApplication the {@link MicoApplication}
      * @return the list of {@link KFConnectorDeploymentInfo KFConnectorDeploymentInfos}
@@ -352,7 +353,7 @@ public class MicoApplicationBroker {
         throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorInstanceNotFoundException, MicoApplicationDoesNotIncludeKFConnectorInstanceException {
 
         // Retrieve application from database (checks whether it exists)
-        MicoApplication micoApplication = checkForKfConnectorInMicoApplication(applicationShortName, applicationVersion, instanceId);
+        MicoApplication micoApplication = checkForKFConnectorInMicoApplication(applicationShortName, applicationVersion, instanceId);
 
         // Check whether application is currently undeployed, if not it is not allowed to remove a KafkaFaasConnector instance from the application
         if (!micoKubernetesClient.isApplicationUndeployed(micoApplication)) {
@@ -385,7 +386,7 @@ public class MicoApplicationBroker {
         return micoApplication;
     }
 
-    MicoApplication checkForKfConnectorInMicoApplication(String applicationShortName, String applicationVersion, String instanceId) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeKFConnectorInstanceException {
+    private MicoApplication checkForKFConnectorInMicoApplication(String applicationShortName, String applicationVersion, String instanceId) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeKFConnectorInstanceException {
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
 
         if (micoApplication.getKafkaFaasConnectorDeploymentInfos().stream().noneMatch(kf_cdi -> kf_cdi.getInstanceId().equals(instanceId))) {
