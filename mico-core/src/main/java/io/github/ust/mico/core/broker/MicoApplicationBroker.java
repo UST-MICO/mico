@@ -1,5 +1,6 @@
 package io.github.ust.mico.core.broker;
 
+import io.github.ust.mico.core.configuration.KafkaFaasConnectorConfig;
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationDeploymentStatusResponseDTO;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
@@ -30,7 +31,8 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 @Service
 public class MicoApplicationBroker {
 
-    private static final String KAFKA_FAAS_CONNECTOR_SERVICE_NAME = "kafka-faas-connector";
+    @Autowired
+    private KafkaFaasConnectorConfig kafkaFaasConnectorConfig;
 
     @Autowired
     private MicoServiceBroker micoServiceBroker;
@@ -212,7 +214,7 @@ public class MicoApplicationBroker {
         throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAlreadyAddedToMicoApplicationException, MicoServiceAddedMoreThanOnceToMicoApplicationException,
         MicoApplicationIsNotUndeployedException, MicoTopicRoleUsedMultipleTimesException, MicoServiceDeploymentInformationNotFoundException, KubernetesResourceException, MicoApplicationDoesNotIncludeMicoServiceException, KafkaFaasConnectorNotAllowedHereException {
 
-        if (serviceShortName.equals(KAFKA_FAAS_CONNECTOR_SERVICE_NAME)) {
+        if (serviceShortName.equals(kafkaFaasConnectorConfig.getServiceName())) {
             throw new KafkaFaasConnectorNotAllowedHereException();
         }
 
@@ -318,7 +320,7 @@ public class MicoApplicationBroker {
 
         MicoService kfConnector;
         try {
-            kfConnector = micoServiceBroker.getServiceFromDatabase(KAFKA_FAAS_CONNECTOR_SERVICE_NAME, kfConnectorVersion);
+            kfConnector = micoServiceBroker.getServiceFromDatabase(kafkaFaasConnectorConfig.getServiceName(), kfConnectorVersion);
         } catch (MicoServiceNotFoundException e) {
             throw new KafkaFaasConnectorVersionNotFoundException(kfConnectorVersion);
         }
