@@ -79,6 +79,10 @@ public class MicoCoreApplication implements ApplicationListener<ApplicationReady
         return builder.build();
     }
 
+    /**
+     * Runs when application is ready. persists the latest KafkaFaasConnector to our service database
+     * @param event
+     */
     public void onApplicationEvent(final ApplicationReadyEvent event) {
         try {
             MicoService kafkaFaasConnector = gitHubCrawler.crawlGitHubRepoLatestRelease(kafkaConfig.getKafkaFaasConnectorUrl());
@@ -87,7 +91,7 @@ public class MicoCoreApplication implements ApplicationListener<ApplicationReady
                 try {
                     return micoService.getMicoVersion();
                 } catch (VersionNotSupportedException e) {
-                    e.printStackTrace();
+                    log.debug(e.getMessage());
                 }
                 return null;
             }).max(MicoVersion::compareTo);
@@ -95,12 +99,12 @@ public class MicoCoreApplication implements ApplicationListener<ApplicationReady
                 micoServiceBroker.persistService(kafkaFaasConnector);
             }
         } catch (IOException | VersionNotSupportedException e) {
-            e.printStackTrace();
+            log.debug(e.getMessage());
 
         }
         // should not happen
         catch (MicoServiceAlreadyExistsException e) {
-            log.info(e.getMessage());
+            log.info("onApplicationReadyEvent kafkaFaasConnector mico version check failed. should not happen since we checked before");
         }
         return;
     }
