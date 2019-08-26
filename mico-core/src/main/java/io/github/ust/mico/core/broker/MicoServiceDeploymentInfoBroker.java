@@ -80,7 +80,7 @@ public class MicoServiceDeploymentInfoBroker {
      * @throws MicoApplicationDoesNotIncludeMicoServiceException if there is no service included in the specified {@code MicoApplication} with the particular short name
      */
     public MicoServiceDeploymentInfo getMicoServiceDeploymentInformation(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoServiceDeploymentInformationNotFoundException, MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException {
-        applicationBroker.checkForMicoServiceInMicoApplication(applicationShortName, applicationVersion, serviceShortName);
+        applicationBroker.getMicoApplicationForMicoService(applicationShortName, applicationVersion, serviceShortName);
 
         Optional<MicoServiceDeploymentInfo> micoServiceDeploymentInfoOptional = serviceDeploymentInfoRepository.findByApplicationAndService(applicationShortName, applicationVersion, serviceShortName);
         if (micoServiceDeploymentInfoOptional.isPresent()) {

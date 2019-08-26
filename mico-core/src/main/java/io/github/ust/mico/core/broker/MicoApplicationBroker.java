@@ -287,7 +287,7 @@ public class MicoApplicationBroker {
 
     public MicoApplication removeMicoServiceFromMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException, MicoApplicationIsNotUndeployedException {
         // Retrieve application from database (checks whether it exists)
-        MicoApplication micoApplication = checkForMicoServiceInMicoApplication(applicationShortName, applicationVersion, serviceShortName);
+        MicoApplication micoApplication = getMicoApplicationForMicoService(applicationShortName, applicationVersion, serviceShortName);
 
         // Check whether application is currently undeployed, if not it is not allowed to remove services from the application
         if (!micoKubernetesClient.isApplicationUndeployed(micoApplication)) {
@@ -355,7 +355,7 @@ public class MicoApplicationBroker {
         throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorInstanceNotFoundException, MicoApplicationDoesNotIncludeKFConnectorInstanceException {
 
         // Retrieve application from database (checks whether it exists)
-        MicoApplication micoApplication = checkForKFConnectorInMicoApplication(applicationShortName, applicationVersion, instanceId);
+        MicoApplication micoApplication = getMicoApplicationForKFConnectorInstance(applicationShortName, applicationVersion, instanceId);
 
         // Check whether application is currently undeployed, if not it is not allowed to remove a KafkaFaasConnector instance from the application
         if (!micoKubernetesClient.isApplicationUndeployed(micoApplication)) {
@@ -379,7 +379,18 @@ public class MicoApplicationBroker {
         // TODO: Update Kubernetes deployment (see issue mico#627)
     }
 
-    MicoApplication checkForMicoServiceInMicoApplication(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException {
+    /**
+     * Returns the {@link MicoApplication} for the provided short name and version if it exists
+     * and if it includes the {@link MicoService} with the provided short name.
+     *
+     * @param applicationShortName the short name of the {@link MicoApplication}
+     * @param applicationVersion the version of the {@link MicoApplication}
+     * @param serviceShortName the short name of the {@link MicoService}
+     * @return the {@link MicoApplication}
+     * @throws MicoApplicationNotFoundException if the {@code MicoApplication} does not exist
+     * @throws MicoApplicationDoesNotIncludeMicoServiceException if the {@code MicoApplication} does not include the {@code MicoService} with the provided short name
+     */
+    MicoApplication getMicoApplicationForMicoService(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException {
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
 
         if (micoApplication.getServices().stream().noneMatch(service -> service.getShortName().equals(serviceShortName))) {
@@ -388,7 +399,18 @@ public class MicoApplicationBroker {
         return micoApplication;
     }
 
-    private MicoApplication checkForKFConnectorInMicoApplication(String applicationShortName, String applicationVersion, String instanceId) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeKFConnectorInstanceException {
+    /**
+     * Returns the {@link MicoApplication} for the provided short name and version if it exists
+     * and if it refers to the KafkaFaasConnector deployment with the provided instance id.
+     *
+     * @param applicationShortName the short name of the {@link MicoApplication}
+     * @param applicationVersion the version of the {@link MicoApplication}
+     * @param instanceId the instance ID of the {@link KFConnectorDeploymentInfo}
+     * @return the {@link MicoApplication}
+     * @throws MicoApplicationNotFoundException if the {@code MicoApplication} does not exist
+     * @throws MicoApplicationDoesNotIncludeKFConnectorInstanceException if the {@code MicoApplication} does not include the KafkaFaasConnector deployment with the provided instance ID
+     */
+    private MicoApplication getMicoApplicationForKFConnectorInstance(String applicationShortName, String applicationVersion, String instanceId) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeKFConnectorInstanceException {
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
 
         if (micoApplication.getKafkaFaasConnectorDeploymentInfos().stream().noneMatch(kf_cdi -> kf_cdi.getInstanceId().equals(instanceId))) {
