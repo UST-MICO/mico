@@ -315,7 +315,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 // kafka enabled nodes can target kafka topics
                 const depl = this.deploymentInformations.get(edge.source.toString());
                 if (!depl.topics.some(t => t.role === 'OUTPUT')) {
-                    // only nodes that don't have both output topic set
+                    // only nodes that don't have an output topic set
                     this.kafkaTopicNodes.forEach(e => edge.validTargets.add(e));
                 }
             }
