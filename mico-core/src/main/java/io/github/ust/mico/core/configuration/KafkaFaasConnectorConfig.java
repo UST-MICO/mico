@@ -42,4 +42,9 @@ public class KafkaFaasConnectorConfig {
     @NotBlank
     private String serviceName;
 
+    /**
+     * The GitHub URL of the KafkaFaasConnector.
+     */
+    @NotBlank
+    private String githubUrl;
 }
