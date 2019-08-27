@@ -42,7 +42,7 @@ import static org.junit.Assert.assertThat;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-@ActiveProfiles("local")
+@ActiveProfiles("unit-testing")
 public class DefaultEnvironmentVariablesConfigurationTests {
 
     @Autowired

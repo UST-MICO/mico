@@ -55,7 +55,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @EnableAutoConfiguration
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
-@ActiveProfiles("local")
+@ActiveProfiles("unit-testing")
 public class ServiceResourceEndToEndTests extends Neo4jTestClass {
 
     private static final String MICO_SERVICE_LIST_IN_DEPENDENCY_GRAPH_PATH = JsonPathBuilder.buildPath(ROOT, "micoServices");

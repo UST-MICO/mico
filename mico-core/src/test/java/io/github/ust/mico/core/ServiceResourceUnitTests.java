@@ -79,7 +79,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @EnableAutoConfiguration
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
-@ActiveProfiles("local")
+@ActiveProfiles("unit-testing")
 public class ServiceResourceUnitTests {
 
     private static final String BASE_PATH = "/services";
