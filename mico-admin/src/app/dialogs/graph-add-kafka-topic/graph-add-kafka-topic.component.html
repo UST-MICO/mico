@@ -1,0 +1,28 @@
+<h2 mat-dialog-title>Add Kafka-Topic</h2>
+<mat-dialog-content style="min-width: 48rem">
+
+    Add
+
+    <mat-form-field>
+        <input matInput placeholder="kafka topic" [(ngModel)]="topic" [pattern]="'[a-zA-Z0-9\\._\\-]+'">
+    </mat-form-field>
+
+    as
+
+    <mat-form-field>
+        <mat-label>role</mat-label>
+        <mat-select [(ngModel)]="role">
+            <mat-option *ngFor="let role of possibleRoles" [value]="role">
+                {{role.toLowerCase()}}
+            </mat-option>
+        </mat-select>
+    </mat-form-field>
+
+    to <b>{{serviceShortName}}</b>.
+
+</mat-dialog-content>
+<mat-dialog-actions>
+    <button mat-button mat-dialog-close>Cancel</button>
+    <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
+    <button mat-button [mat-dialog-close]="response()" [disabled]="!isValid()">Ok</button>
+</mat-dialog-actions>
