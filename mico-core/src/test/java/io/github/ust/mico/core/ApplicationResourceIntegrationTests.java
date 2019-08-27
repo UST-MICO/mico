@@ -21,8 +21,6 @@ package io.github.ust.mico.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ust.mico.core.broker.MicoServiceDeploymentInfoBroker;
-import io.github.ust.mico.core.configuration.KafkaConfig;
-import io.github.ust.mico.core.configuration.OpenFaaSConfig;
 import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;

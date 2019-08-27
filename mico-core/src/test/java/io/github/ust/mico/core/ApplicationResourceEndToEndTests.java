@@ -91,7 +91,7 @@ public class ApplicationResourceEndToEndTests extends Neo4jTestClass {
         mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + VERSION_1_0_1)
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
-            .andExpect(status().isNoContent());
+            .andExpect(status().isOk());
 
         Optional<MicoApplication> savedApplicationOpt = applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION);
         assertTrue(savedApplicationOpt.isPresent());
@@ -128,7 +128,7 @@ public class ApplicationResourceEndToEndTests extends Neo4jTestClass {
         mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + VERSION_1_0_1)
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
-            .andExpect(status().isNoContent());
+            .andExpect(status().isOk());
 
         Optional<MicoApplication> savedApplicationOpt = applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION);
         assertTrue(savedApplicationOpt.isPresent());
