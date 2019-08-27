@@ -72,7 +72,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
      */
     @Query("MATCH (a:MicoApplication)-[:PROVIDES_KF_CONNECTOR]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
         + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
-        + "RETURN (sdi:MicoServiceDeploymentInfo)-[:FOR|:HAS*0..1]->(), (s)-[PROVIDES*2]->()")
+        + "RETURN (sdi:MicoServiceDeploymentInfo)-[:FOR|:HAS*0..1]->(), (s)-[:PROVIDES*2]->()")
     List<MicoServiceDeploymentInfo> findKFConnectorSDIsByApplication(
         @Param("applicationShortName") String applicationShortName,
         @Param("applicationVersion") String applicationVersion);
