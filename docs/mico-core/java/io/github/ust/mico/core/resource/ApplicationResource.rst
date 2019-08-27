@@ -1,5 +1,7 @@
 .. java:import:: io.github.ust.mico.core.broker MicoApplicationBroker
 
+.. java:import:: io.github.ust.mico.core.dto.request KFConnectorDeploymentInfoRequestDTO
+
 .. java:import:: io.github.ust.mico.core.dto.request MicoApplicationRequestDTO
 
 .. java:import:: io.github.ust.mico.core.dto.request MicoVersionRequestDTO
@@ -8,19 +10,21 @@
 
 .. java:import:: io.github.ust.mico.core.dto.response MicoApplicationWithServicesResponseDTO
 
+.. java:import:: io.github.ust.mico.core.dto.response MicoServiceDeploymentInfoResponseDTO
+
 .. java:import:: io.github.ust.mico.core.dto.response MicoServiceResponseDTO
 
 .. java:import:: io.github.ust.mico.core.dto.response.status MicoApplicationDeploymentStatusResponseDTO
 
 .. java:import:: io.github.ust.mico.core.dto.response.status MicoApplicationStatusResponseDTO
 
-.. java:import:: io.github.ust.mico.core.model KFConnectorDeploymentInfo
-
 .. java:import:: io.github.ust.mico.core.model MicoApplication
 
 .. java:import:: io.github.ust.mico.core.model MicoApplicationDeploymentStatus
 
 .. java:import:: io.github.ust.mico.core.model MicoService
+
+.. java:import:: io.github.ust.mico.core.model MicoServiceDeploymentInfo
 
 .. java:import:: io.swagger.annotations ApiOperation
 
@@ -65,7 +69,7 @@ addKafkaFaasConnectorInstanceToApplication
 addServiceToApplication
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: @ApiOperation @PostMapping public ResponseEntity<Void> addServiceToApplication(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion)
+.. java:method:: @ApiOperation @PostMapping public ResponseEntity<Resource<MicoServiceDeploymentInfoResponseDTO>> addServiceToApplication(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion)
    :outertype: ApplicationResource
 
 createApplication

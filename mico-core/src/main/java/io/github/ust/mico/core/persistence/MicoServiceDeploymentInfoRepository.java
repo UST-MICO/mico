@@ -32,6 +32,8 @@ import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 
 public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<MicoServiceDeploymentInfo, Long> {
 
+    Optional<MicoServiceDeploymentInfo> findByInstanceId(String instanceId);
+
     /**
      * Retrieves all service deployment information of a particular application.
      * Also includes these which are used for the deployments of KafkaFaasConnector instances.

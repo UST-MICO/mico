@@ -20,18 +20,20 @@
 package io.github.ust.mico.core.resource;
 
 import io.github.ust.mico.core.broker.MicoApplicationBroker;
+import io.github.ust.mico.core.dto.request.KFConnectorDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
 import io.github.ust.mico.core.dto.response.KFConnectorDeploymentInfoResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoApplicationWithServicesResponseDTO;
+import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceResponseDTO;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationDeploymentStatusResponseDTO;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
 import io.github.ust.mico.core.exception.*;
-import io.github.ust.mico.core.model.KFConnectorDeploymentInfo;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus;
 import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -197,12 +199,14 @@ public class ApplicationResource {
         " already associated MicoService with an equal short name will be replaced with its new version." +
         " Only one MicoService in one specific version is allowed per MicoApplication.")
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES + "/{" + PATH_VARIABLE_SERVICE_SHORT_NAME + "}/{" + PATH_VARIABLE_SERVICE_VERSION + "}")
-    public ResponseEntity<Void> addServiceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
-                                                        @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
-                                                        @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName,
-                                                        @PathVariable(PATH_VARIABLE_SERVICE_VERSION) String serviceVersion) {
+    public ResponseEntity<Resource<MicoServiceDeploymentInfoResponseDTO>> addServiceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
+                                                                                                  @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
+                                                                                                  @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName,
+                                                                                                  @PathVariable(PATH_VARIABLE_SERVICE_VERSION) String serviceVersion) {
+        MicoServiceDeploymentInfo serviceDeploymentInfo;
         try {
-            broker.addMicoServiceToMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion, serviceShortName, serviceVersion);
+            serviceDeploymentInfo = broker.addMicoServiceToMicoApplicationByShortNameAndVersion(
+                applicationShortName, applicationVersion, serviceShortName, serviceVersion);
         } catch (MicoApplicationNotFoundException | MicoServiceNotFoundException | MicoServiceDeploymentInformationNotFoundException | KubernetesResourceException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoServiceAlreadyAddedToMicoApplicationException | MicoServiceAddedMoreThanOnceToMicoApplicationException | MicoApplicationIsNotUndeployedException | MicoApplicationDoesNotIncludeMicoServiceException e) {
@@ -211,7 +215,7 @@ public class ApplicationResource {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
         }
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(new Resource<>(new MicoServiceDeploymentInfoResponseDTO(serviceDeploymentInfo)));
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES + "/{" + PATH_VARIABLE_SERVICE_SHORT_NAME + "}")
@@ -235,16 +239,16 @@ public class ApplicationResource {
     public ResponseEntity<Resource<KFConnectorDeploymentInfoResponseDTO>> addKafkaFaasConnectorInstanceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
                                                                                                                      @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
                                                                                                                      @PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION) String kfConnectorVersion) {
-        KFConnectorDeploymentInfo kfConnectorDeploymentInfo;
+        MicoServiceDeploymentInfo kafkaFaasConnectorSDI;
         try {
-            kfConnectorDeploymentInfo = broker.addKafkaFaasConnectorInstanceToMicoApplicationByVersion(applicationShortName, applicationVersion, kfConnectorVersion);
+            kafkaFaasConnectorSDI = broker.addKafkaFaasConnectorInstanceToMicoApplicationByVersion(applicationShortName, applicationVersion, kfConnectorVersion);
         } catch (MicoApplicationNotFoundException | KafkaFaasConnectorVersionNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoApplicationIsNotUndeployedException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
 
-        return ResponseEntity.ok(new Resource<>(new KFConnectorDeploymentInfoResponseDTO(kfConnectorDeploymentInfo)));
+        return ResponseEntity.ok(new Resource<>(new KFConnectorDeploymentInfoResponseDTO(kafkaFaasConnectorSDI)));
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR + "/{" + PATH_VARIABLE_INSTANCE_ID + "}")

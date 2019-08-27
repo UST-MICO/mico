@@ -6,8 +6,6 @@
 
 .. java:import:: io.github.ust.mico.core.dto.response.status MicoApplicationStatusResponseDTO
 
-.. java:import:: io.github.ust.mico.core.persistence KFConnectorDeploymentInfoRepository
-
 .. java:import:: io.github.ust.mico.core.persistence MicoApplicationRepository
 
 .. java:import:: io.github.ust.mico.core.persistence MicoServiceDeploymentInfoRepository
@@ -51,10 +49,10 @@ Methods
 addKafkaFaasConnectorInstanceToMicoApplicationByVersion
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public KFConnectorDeploymentInfo addKafkaFaasConnectorInstanceToMicoApplicationByVersion(String applicationShortName, String applicationVersion, String kfConnectorVersion) throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorVersionNotFoundException
+.. java:method:: public MicoServiceDeploymentInfo addKafkaFaasConnectorInstanceToMicoApplicationByVersion(String applicationShortName, String applicationVersion, String kfConnectorVersion) throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorVersionNotFoundException
    :outertype: MicoApplicationBroker
 
-   Adds a new KafkaFaasConnector instance to the \ ``kafkaFaasConnectorDeploymentInfos``\  of the \ :java:ref:`MicoApplication`\ . An unique instance ID will be created that is returned as part of a \ :java:ref:`KFConnectorDeploymentInfo`\ .
+   Adds a new KafkaFaasConnector instance to the \ ``kafkaFaasConnectorDeploymentInfos``\  of the \ :java:ref:`MicoApplication`\ . An unique instance ID will be created that is returned as part of a \ :java:ref:`MicoServiceDeploymentInfo`\ .
 
    :param applicationShortName: the short name of the \ :java:ref:`MicoApplication`\
    :param applicationVersion: the version of the \ :java:ref:`MicoApplication`\
@@ -62,12 +60,12 @@ addKafkaFaasConnectorInstanceToMicoApplicationByVersion
    :throws MicoApplicationNotFoundException: if the \ ``MicoApplication``\  does not exist
    :throws MicoApplicationIsNotUndeployedException: if the \ ``MicoApplication``\  is not undeployed
    :throws KafkaFaasConnectorVersionNotFoundException: if the version of the KafkaFaasConnector does not exist in MICO
-   :return: the \ :java:ref:`KFConnectorDeploymentInfo`\  including the newly created instance ID
+   :return: the \ :java:ref:`MicoServiceDeploymentInfo`\  including the newly created instance ID
 
 addMicoServiceToMicoApplicationByShortNameAndVersion
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public void addMicoServiceToMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion) throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAlreadyAddedToMicoApplicationException, MicoServiceAddedMoreThanOnceToMicoApplicationException, MicoApplicationIsNotUndeployedException, MicoTopicRoleUsedMultipleTimesException, MicoServiceDeploymentInformationNotFoundException, KubernetesResourceException, MicoApplicationDoesNotIncludeMicoServiceException, KafkaFaasConnectorNotAllowedHereException
+.. java:method:: public MicoServiceDeploymentInfo addMicoServiceToMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion) throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAlreadyAddedToMicoApplicationException, MicoServiceAddedMoreThanOnceToMicoApplicationException, MicoApplicationIsNotUndeployedException, MicoTopicRoleUsedMultipleTimesException, MicoServiceDeploymentInformationNotFoundException, KubernetesResourceException, MicoApplicationDoesNotIncludeMicoServiceException, KafkaFaasConnectorNotAllowedHereException
    :outertype: MicoApplicationBroker
 
 copyAndUpgradeMicoApplicationByShortNameAndVersion
@@ -167,7 +165,7 @@ removeKafkaFaasConnectorInstanceFromMicoApplicationByInstanceId
 
    :param applicationShortName: the short name of the \ :java:ref:`MicoApplication`\
    :param applicationVersion: the version of the \ :java:ref:`MicoApplication`\
-   :param instanceId: the instance ID of the \ :java:ref:`KFConnectorDeploymentInfo`\
+   :param instanceId: the instance ID of the \ :java:ref:`MicoServiceDeploymentInfo`\
    :throws MicoApplicationNotFoundException: if the \ ``MicoApplication``\  does not exist
    :throws MicoApplicationIsNotUndeployedException: if the \ ``MicoApplication``\  is not undeployed
    :throws KafkaFaasConnectorInstanceNotFoundException: if the instance of the KafkaFaasConnector does not exist in MICO

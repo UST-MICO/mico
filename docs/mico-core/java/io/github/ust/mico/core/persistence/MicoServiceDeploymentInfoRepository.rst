@@ -121,6 +121,12 @@ findByApplicationAndService
    :param serviceVersion: the version of the \ :java:ref:`MicoService`\ .
    :return: an \ :java:ref:`Optional`\  of \ :java:ref:`MicoServiceDeploymentInfo`\ .
 
+findByInstanceId
+^^^^^^^^^^^^^^^^
+
+.. java:method::  Optional<MicoServiceDeploymentInfo> findByInstanceId(String instanceId)
+   :outertype: MicoServiceDeploymentInfoRepository
+
 findKFConnectorSDIsByApplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

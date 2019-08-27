@@ -71,6 +71,11 @@ public class MicoServiceDeploymentInfo {
     @ToString.Exclude
     private MicoService service;
 
+    /**
+     * The instance id of the this deployment.
+     */
+    private String instanceId;
+
 
     // ----------------------
     // -> Optional Fields ---

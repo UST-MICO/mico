@@ -20,7 +20,6 @@
 package io.github.ust.mico.core.dto.response;
 
 import io.github.ust.mico.core.dto.request.KFConnectorDeploymentInfoRequestDTO;
-import io.github.ust.mico.core.model.KFConnectorDeploymentInfo;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -44,11 +43,11 @@ public class KFConnectorDeploymentInfoResponseDTO extends KFConnectorDeploymentI
 
     /**
      * Creates an instance of {@code KFConnectorDeploymentInfoResponseDTO} based on a {@code
-     * KFConnectorDeploymentInfo}.
+     * MicoServiceDeploymentInfo}.
      *
-     * @param kfConnectorDeploymentInfo the {@link KFConnectorDeploymentInfo}.
+     * @param kfConnectorDeploymentInfo the {@link MicoServiceDeploymentInfo}.
      */
-    public KFConnectorDeploymentInfoResponseDTO(KFConnectorDeploymentInfo kfConnectorDeploymentInfo) {
+    public KFConnectorDeploymentInfoResponseDTO(MicoServiceDeploymentInfo kfConnectorDeploymentInfo) {
         super(kfConnectorDeploymentInfo);
     }
 }

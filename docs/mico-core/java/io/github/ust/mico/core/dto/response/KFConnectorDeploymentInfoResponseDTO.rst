@@ -1,7 +1,5 @@
 .. java:import:: io.github.ust.mico.core.dto.request KFConnectorDeploymentInfoRequestDTO
 
-.. java:import:: io.github.ust.mico.core.model KFConnectorDeploymentInfo
-
 .. java:import:: io.github.ust.mico.core.model MicoServiceDeploymentInfo
 
 .. java:import:: lombok Data
@@ -29,10 +27,10 @@ Constructors
 KFConnectorDeploymentInfoResponseDTO
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:constructor:: public KFConnectorDeploymentInfoResponseDTO(KFConnectorDeploymentInfo kfConnectorDeploymentInfo)
+.. java:constructor:: public KFConnectorDeploymentInfoResponseDTO(MicoServiceDeploymentInfo kfConnectorDeploymentInfo)
    :outertype: KFConnectorDeploymentInfoResponseDTO
 
-   Creates an instance of \ ``KFConnectorDeploymentInfoResponseDTO``\  based on a \ ``KFConnectorDeploymentInfo``\ .
+   Creates an instance of \ ``KFConnectorDeploymentInfoResponseDTO``\  based on a \ ``MicoServiceDeploymentInfo``\ .
 
-   :param kfConnectorDeploymentInfo: the \ :java:ref:`KFConnectorDeploymentInfo`\ .
+   :param kfConnectorDeploymentInfo: the \ :java:ref:`MicoServiceDeploymentInfo`\ .
 

@@ -1,7 +1,5 @@
 .. java:import:: io.github.ust.mico.core.configuration.extension CustomOpenApiExtentionsPlugin
 
-.. java:import:: io.github.ust.mico.core.model KFConnectorDeploymentInfo
-
 .. java:import:: io.github.ust.mico.core.model MicoServiceDeploymentInfo
 
 .. java:import:: io.github.ust.mico.core.model MicoTopicRole
@@ -39,10 +37,10 @@ Constructors
 KFConnectorDeploymentInfoRequestDTO
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:constructor:: public KFConnectorDeploymentInfoRequestDTO(KFConnectorDeploymentInfo kfConnectorDeploymentInfo)
+.. java:constructor:: public KFConnectorDeploymentInfoRequestDTO(MicoServiceDeploymentInfo kfConnectorDeploymentInfo)
    :outertype: KFConnectorDeploymentInfoRequestDTO
 
-   Creates an instance of \ ``KFConnectorDeploymentInfoRequestDTO``\  based on a \ ``KFConnectorDeploymentInfo``\ .
+   Creates an instance of \ ``KFConnectorDeploymentInfoRequestDTO``\  based on a \ ``MicoServiceDeploymentInfo``\ .
 
-   :param kfConnectorDeploymentInfo: the \ :java:ref:`KFConnectorDeploymentInfo`\ .
+   :param kfConnectorDeploymentInfo: the \ :java:ref:`MicoServiceDeploymentInfo`\ .
 

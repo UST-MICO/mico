@@ -20,7 +20,6 @@
 package io.github.ust.mico.core.dto.request;
 
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
-import io.github.ust.mico.core.model.KFConnectorDeploymentInfo;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.model.MicoTopicRole;
 import io.swagger.annotations.ApiModelProperty;
@@ -92,16 +91,16 @@ public class KFConnectorDeploymentInfoRequestDTO {
 
     /**
      * Creates an instance of {@code KFConnectorDeploymentInfoRequestDTO} based on a
-     * {@code KFConnectorDeploymentInfo}.
+     * {@code MicoServiceDeploymentInfo}.
      *
-     * @param kfConnectorDeploymentInfo the {@link KFConnectorDeploymentInfo}.
+     * @param kfConnectorDeploymentInfo the {@link MicoServiceDeploymentInfo}.
      */
-    public KFConnectorDeploymentInfoRequestDTO(KFConnectorDeploymentInfo kfConnectorDeploymentInfo) {
+    public KFConnectorDeploymentInfoRequestDTO(MicoServiceDeploymentInfo kfConnectorDeploymentInfo) {
         this.instanceId = kfConnectorDeploymentInfo.getInstanceId();
-        Optional<MicoTopicRole> inputTopicRoleOpt = kfConnectorDeploymentInfo.getServiceDeploymentInfo().getTopics().stream()
+        Optional<MicoTopicRole> inputTopicRoleOpt = kfConnectorDeploymentInfo.getTopics().stream()
             .filter(t -> t.getRole().equals(MicoTopicRole.Role.INPUT)).findFirst();
         inputTopicRoleOpt.ifPresent(micoTopicRole -> this.inputTopicName = micoTopicRole.getTopic().getName());
-        Optional<MicoTopicRole> outputTopicRoleOpt = kfConnectorDeploymentInfo.getServiceDeploymentInfo().getTopics().stream()
+        Optional<MicoTopicRole> outputTopicRoleOpt = kfConnectorDeploymentInfo.getTopics().stream()
             .filter(t -> t.getRole().equals(MicoTopicRole.Role.OUTPUT)).findFirst();
         outputTopicRoleOpt.ifPresent(micoTopicRole -> this.outputTopicName = micoTopicRole.getTopic().getName());
     }

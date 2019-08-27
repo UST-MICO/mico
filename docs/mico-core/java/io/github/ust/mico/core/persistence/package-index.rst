@@ -6,7 +6,6 @@ io.github.ust.mico.core.persistence
 .. toctree::
    :maxdepth: 1
 
-   KFConnectorDeploymentInfoRepository
    KubernetesDeploymentInfoRepository
    MicoApplicationRepository
    MicoBackgroundJobRepository

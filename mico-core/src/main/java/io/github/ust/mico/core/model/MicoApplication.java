@@ -19,20 +19,19 @@
 
 package io.github.ust.mico.core.model;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
-
 import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
 import io.github.ust.mico.core.exception.VersionNotSupportedException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Relationship;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Represents an application as a set of {@link MicoService}s
@@ -107,7 +106,7 @@ public class MicoApplication {
      * for the deployment of the KafkaFaasConnector multiple times.
      */
     @Relationship(type = "PROVIDES_KF_CONNECTOR")
-    private List<KFConnectorDeploymentInfo> kafkaFaasConnectorDeploymentInfos = new ArrayList<>();
+    private List<MicoServiceDeploymentInfo> kafkaFaasConnectorDeploymentInfos = new ArrayList<>();
 
     /**
      * Human readable contact information for support purposes.
