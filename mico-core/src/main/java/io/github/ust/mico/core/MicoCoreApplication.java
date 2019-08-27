@@ -89,7 +89,7 @@ public class MicoCoreApplication implements ApplicationListener<ApplicationReady
     public void onApplicationEvent(final ApplicationReadyEvent event) {
         Environment environment = event.getApplicationContext().getEnvironment();
         if (environment.acceptsProfiles(Profiles.of("unit-testing"))) {
-            log.info("Travis profile is active. Don't add kafka-faas-connector to database.");
+            log.info("Unit testing profile is active. Don't add kafka-faas-connector to database.");
             return;
         }
         addKafkaFaasConnectorToDatabase();
