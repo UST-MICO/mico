@@ -1,7 +1,5 @@
 .. java:import:: io.github.ust.mico.core.broker MicoApplicationBroker
 
-.. java:import:: io.github.ust.mico.core.dto.request KFConnectorDeploymentInfoRequestDTO
-
 .. java:import:: io.github.ust.mico.core.dto.request MicoApplicationRequestDTO
 
 .. java:import:: io.github.ust.mico.core.dto.request MicoVersionRequestDTO
@@ -78,6 +76,12 @@ createApplication
 .. java:method:: @PostMapping public ResponseEntity<Resource<MicoApplicationWithServicesResponseDTO>> createApplication(MicoApplicationRequestDTO applicationDto)
    :outertype: ApplicationResource
 
+deleteAllKafkaFaasConnectorInstancesFromApplication
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: @DeleteMapping public ResponseEntity<Void> deleteAllKafkaFaasConnectorInstancesFromApplication(String shortName, String version)
+   :outertype: ApplicationResource
+
 deleteAllVersionsOfApplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -93,7 +97,13 @@ deleteApplication
 deleteKafkaFaasConnectorInstanceFromApplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: @DeleteMapping public ResponseEntity<Void> deleteKafkaFaasConnectorInstanceFromApplication(String shortName, String version, String instanceId)
+.. java:method:: @DeleteMapping public ResponseEntity<Void> deleteKafkaFaasConnectorInstanceFromApplication(String shortName, String version, String kfConnectorVersion, String instanceId)
+   :outertype: ApplicationResource
+
+deleteKafkaFaasConnectorInstancesFromApplication
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: @DeleteMapping public ResponseEntity<Void> deleteKafkaFaasConnectorInstancesFromApplication(String shortName, String version, String kfConnectorVersion)
    :outertype: ApplicationResource
 
 deleteServiceFromApplication
