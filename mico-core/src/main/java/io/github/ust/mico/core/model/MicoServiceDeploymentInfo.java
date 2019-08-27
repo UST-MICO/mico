@@ -73,6 +73,9 @@ public class MicoServiceDeploymentInfo {
 
     /**
      * The instance id of the this deployment.
+     * It is used to be able to have multiple independent deployments
+     * of the same MICO service.
+     * Especially for KafkaFaasConnectors this is a must have.
      */
     private String instanceId;
 
