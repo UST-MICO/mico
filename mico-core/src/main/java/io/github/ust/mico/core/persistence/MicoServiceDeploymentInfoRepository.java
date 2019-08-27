@@ -32,8 +32,25 @@ import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 
 public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<MicoServiceDeploymentInfo, Long> {
 
+    Optional<MicoServiceDeploymentInfo> findByInstanceId(String instanceId);
+
     /**
      * Retrieves all service deployment information of a particular application.
+     * Also includes these which are used for the deployments of KafkaFaasConnector instances.
+     *
+     * @param applicationShortName the short name of the {@link MicoApplication}.
+     * @param applicationVersion   the version of the {@link MicoApplication}.
+     * @return a {@link List} of {@link MicoServiceDeploymentInfo} instances.
+     */
+    @Query("MATCH (a:MicoApplication)-[:PROVIDES|:PROVIDES_KF_CONNECTOR]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
+        + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
+        + "RETURN (sdi:MicoServiceDeploymentInfo)-[:FOR|:HAS*0..1]->(), (s)-[:PROVIDES*2]->()")
+    List<MicoServiceDeploymentInfo> findAllByApplication(
+        @Param("applicationShortName") String applicationShortName,
+        @Param("applicationVersion") String applicationVersion);
+
+    /**
+     * Retrieves all service deployment information that are used for normal MicoServices of a particular application.
      *
      * @param applicationShortName the short name of the {@link MicoApplication}.
      * @param applicationVersion   the version of the {@link MicoApplication}.
@@ -42,19 +59,34 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
     @Query("MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
         + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
         + "RETURN (sdi:MicoServiceDeploymentInfo)-[:FOR|:HAS*0..1]->(), (s)-[:PROVIDES*2]->()")
-    List<MicoServiceDeploymentInfo> findAllByApplication(
+    List<MicoServiceDeploymentInfo> findMicoServiceSDIsByApplication(
+        @Param("applicationShortName") String applicationShortName,
+        @Param("applicationVersion") String applicationVersion);
+
+    /**
+     * Retrieves all service deployment information that are used for KafkaFaasConnectors of a particular application.
+     *
+     * @param applicationShortName the short name of the {@link MicoApplication}.
+     * @param applicationVersion   the version of the {@link MicoApplication}.
+     * @return a {@link List} of {@link MicoServiceDeploymentInfo} instances.
+     */
+    @Query("MATCH (a:MicoApplication)-[:PROVIDES_KF_CONNECTOR]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
+        + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
+        + "RETURN (sdi:MicoServiceDeploymentInfo)-[:FOR|:HAS*0..1]->(), (s)-[PROVIDES*2]->()")
+    List<MicoServiceDeploymentInfo> findKFConnectorSDIsByApplication(
         @Param("applicationShortName") String applicationShortName,
         @Param("applicationVersion") String applicationVersion);
 
     /**
      * Retrieves all service deployment information of a service.
      * Note that one service can be used by (included in) multiple applications.
+     * Also works with a KafkaFaasConnector instance.
      *
      * @param serviceShortName the short name of the {@link MicoService}.
      * @param serviceVersion   the version of the {@link MicoService}.
      * @return a {@link List} of {@link MicoServiceDeploymentInfo} instances.
      */
-    @Query("MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
+    @Query("MATCH (a:MicoApplication)-[:PROVIDES|:PROVIDES_KF_CONNECTOR]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
         + "WHERE s.shortName = {serviceShortName} AND s.version = {serviceVersion} "
         + "RETURN (sdi:MicoServiceDeploymentInfo)-[:FOR|:HAS*0..1]->(), (s)-[:PROVIDES*2]->()")
     List<MicoServiceDeploymentInfo> findAllByService(
@@ -63,13 +95,14 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
 
     /**
      * Retrieves the deployment information for a particular application and service.
+     * Also works with a KafkaFaasConnector instance.
      *
      * @param applicationShortName the short name of the {@link MicoApplication}.
      * @param applicationVersion   the version of the {@link MicoApplication}.
      * @param serviceShortName     the short name of the {@link MicoService}.
      * @return an {@link Optional} of {@link MicoServiceDeploymentInfo}.
      */
-    @Query("MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
+    @Query("MATCH (a:MicoApplication)-[:PROVIDES|:PROVIDES_KF_CONNECTOR]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
         + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
         + "AND s.shortName = {serviceShortName} "
         + "RETURN (sdi:MicoServiceDeploymentInfo)-[:FOR|:HAS*0..1]->(), (s)-[:PROVIDES*2]->()")
@@ -80,6 +113,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
 
     /**
      * Retrieves the deployment information for a particular application and service.
+     * Also works with a KafkaFaasConnector instance.
      *
      * @param applicationShortName the short name of the {@link MicoApplication}.
      * @param applicationVersion   the version of the {@link MicoApplication}.
@@ -87,7 +121,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
      * @param serviceVersion       the version of the {@link MicoService}.
      * @return an {@link Optional} of {@link MicoServiceDeploymentInfo}.
      */
-    @Query("MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
+    @Query("MATCH (a:MicoApplication)-[:PROVIDES|:PROVIDES_KF_CONNECTOR]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
         + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
         + "AND s.shortName = {serviceShortName} AND s.version = {serviceVersion} "
         + "RETURN (sdi:MicoServiceDeploymentInfo)-[:FOR|:HAS*0..1]->(), (s)-[:PROVIDES*2]->()")
@@ -98,14 +132,14 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
         @Param("serviceVersion") String serviceVersion);
 
     /**
-     * Deletes all deployment information for all versions of an application.
+     * Deletes all deployment information for all versions of an application including the ones for the KafkaFaasConnectors.
      * All additional properties of a {@link MicoServiceDeploymentInfo} that
      * are stored as a separate node entity and connected to it via a {@code [:HAS]}
      * relationship will be deleted, too.
      *
      * @param applicationShortName the short name of the {@link MicoApplication}.
      */
-    @Query("MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
+    @Query("MATCH (a:MicoApplication)-[:PROVIDES|:PROVIDES_KF_CONNECTOR]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
         + "WHERE a.shortName = {applicationShortName} "
         + "WITH a, sdi OPTIONAL MATCH (sdi)-[:HAS]->(additionalProperty) "
         + "WHERE a.shortName = {applicationShortName} "
@@ -113,7 +147,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
     void deleteAllByApplication(@Param("applicationShortName") String applicationShortName);
 
     /**
-     * Deletes all deployment information for a particular application.
+     * Deletes all deployment information for a particular application including the ones for the KafkaFaasConnectors.
      * All additional properties of a {@link MicoServiceDeploymentInfo} that
      * are stored as a separate node entity and connected to it via a {@code [:HAS]}
      * relationship will be deleted, too.
@@ -121,7 +155,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
      * @param applicationShortName the short name of the {@link MicoApplication}.
      * @param applicationVersion   the version of the {@link MicoApplication}.
      */
-    @Query("MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
+    @Query("MATCH (a:MicoApplication)-[:PROVIDES|:PROVIDES_KF_CONNECTOR]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
         + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
         + "WITH a, sdi OPTIONAL MATCH (sdi)-[:HAS]->(additionalProperty) "
         + "DETACH DELETE sdi, additionalProperty")
@@ -134,12 +168,13 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
      * All additional properties of a {@link MicoServiceDeploymentInfo} that
      * are stored as a separate node entity and connected to it via a {@code [:HAS]}
      * relationship will be deleted, too.
+     * Also works with a KafkaFaasConnector instance.
      *
      * @param applicationShortName the short name of the {@link MicoApplication}.
      * @param applicationVersion   the version of the {@link MicoApplication}.
      * @param serviceShortName     the short name of the {@link MicoService}.
      */
-    @Query("MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
+    @Query("MATCH (a:MicoApplication)-[:PROVIDES|:PROVIDES_KF_CONNECTOR]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
         + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
         + "AND s.shortName = {serviceShortName} "
         + "WITH a, sdi, s OPTIONAL MATCH (sdi)-[:HAS]->(additionalProperty) "
@@ -154,13 +189,14 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
      * All additional properties of a {@link MicoServiceDeploymentInfo} that
      * are stored as a separate node entity and connected to it via a {@code [:HAS]}
      * relationship will be deleted, too.
+     * Also works with a KafkaFaasConnector instance.
      *
      * @param applicationShortName the short name of the {@link MicoApplication}.
      * @param applicationVersion   the version of the {@link MicoApplication}.
      * @param serviceShortName     the short name of the {@link MicoService}.
      * @param serviceVersion       the version of the {@link MicoService}.
      */
-    @Query("MATCH (a:MicoApplication)-[:PROVIDES]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
+    @Query("MATCH (a:MicoApplication)-[:PROVIDES|:PROVIDES_KF_CONNECTOR]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
         + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
         + "AND s.shortName = {serviceShortName} AND s.version = {serviceVersion} "
         + "WITH a, sdi, s OPTIONAL MATCH (sdi)-[:HAS]->(additionalProperty) "

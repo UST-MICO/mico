@@ -1,8 +1,36 @@
-.. java:import:: java.net URI
+.. java:import:: io.fabric8.kubernetes.api.model ContainerStatus
 
-.. java:import:: javax.validation.constraints NotNull
+.. java:import:: io.fabric8.kubernetes.api.model Pod
+
+.. java:import:: io.fabric8.kubernetes.api.model Service
+
+.. java:import:: io.fabric8.kubernetes.api.model.apps Deployment
+
+.. java:import:: io.github.ust.mico.core.configuration PrometheusConfig
+
+.. java:import:: io.github.ust.mico.core.dto.response MicoApplicationResponseDTO
+
+.. java:import:: io.github.ust.mico.core.dto.response.internal PrometheusResponseDTO
 
 .. java:import:: io.github.ust.mico.core.exception KubernetesResourceException
+
+.. java:import:: io.github.ust.mico.core.exception PrometheusRequestFailedException
+
+.. java:import:: io.github.ust.mico.core.model MicoApplication
+
+.. java:import:: io.github.ust.mico.core.model MicoMessage
+
+.. java:import:: io.github.ust.mico.core.model MicoService
+
+.. java:import:: io.github.ust.mico.core.model MicoServiceInterface
+
+.. java:import:: io.github.ust.mico.core.persistence MicoApplicationRepository
+
+.. java:import:: io.github.ust.mico.core.persistence MicoServiceRepository
+
+.. java:import:: io.github.ust.mico.core.util CollectionUtils
+
+.. java:import:: lombok.extern.slf4j Slf4j
 
 .. java:import:: org.springframework.beans.factory.annotation Autowired
 
@@ -16,23 +44,9 @@
 
 .. java:import:: org.springframework.web.util UriComponentsBuilder
 
-.. java:import:: io.fabric8.kubernetes.api.model.apps Deployment
+.. java:import:: javax.validation.constraints NotNull
 
-.. java:import:: io.github.ust.mico.core.configuration PrometheusConfig
-
-.. java:import:: io.github.ust.mico.core.dto.response MicoApplicationResponseDTO
-
-.. java:import:: io.github.ust.mico.core.dto.response.internal PrometheusResponseDTO
-
-.. java:import:: io.github.ust.mico.core.exception PrometheusRequestFailedException
-
-.. java:import:: io.github.ust.mico.core.persistence MicoApplicationRepository
-
-.. java:import:: io.github.ust.mico.core.persistence MicoServiceRepository
-
-.. java:import:: io.github.ust.mico.core.util CollectionUtils
-
-.. java:import:: lombok.extern.slf4j Slf4j
+.. java:import:: java.net URI
 
 MicoStatusService
 =================

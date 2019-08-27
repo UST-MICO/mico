@@ -6,6 +6,8 @@ io.github.ust.mico.core.dto.response
 .. toctree::
    :maxdepth: 1
 
+   ExternalUrlDTO
+   KFConnectorDeploymentInfoResponseDTO
    KubernetesDeploymentInfoResponseDTO
    MicoApplicationJobStatusResponseDTO
    MicoApplicationResponseDTO

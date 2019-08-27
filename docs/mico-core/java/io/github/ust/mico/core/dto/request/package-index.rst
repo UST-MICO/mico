@@ -7,6 +7,7 @@ io.github.ust.mico.core.dto.request
    :maxdepth: 1
 
    CrawlingInfoRequestDTO
+   KFConnectorDeploymentInfoRequestDTO
    MicoApplicationRequestDTO
    MicoEnvironmentVariableRequestDTO
    MicoInterfaceConnectionRequestDTO

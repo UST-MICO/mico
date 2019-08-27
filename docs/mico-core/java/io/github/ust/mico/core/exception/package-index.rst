@@ -9,8 +9,12 @@ io.github.ust.mico.core.exception
    DeploymentException
    GlobalExceptionHandler
    ImageBuildException
+   KafkaFaasConnectorInstanceNotFoundException
+   KafkaFaasConnectorNotAllowedHereException
+   KafkaFaasConnectorVersionNotFoundException
    KubernetesResourceException
    MicoApplicationAlreadyExistsException
+   MicoApplicationDoesNotIncludeKFConnectorInstanceException
    MicoApplicationDoesNotIncludeMicoServiceException
    MicoApplicationIsDeployingException
    MicoApplicationIsNotUndeployedException

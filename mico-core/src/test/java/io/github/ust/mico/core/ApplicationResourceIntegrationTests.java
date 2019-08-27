@@ -21,8 +21,6 @@ package io.github.ust.mico.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ust.mico.core.broker.MicoServiceDeploymentInfoBroker;
-import io.github.ust.mico.core.configuration.KafkaConfig;
-import io.github.ust.mico.core.configuration.OpenFaaSConfig;
 import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
@@ -128,12 +126,6 @@ public class ApplicationResourceIntegrationTests {
 
     @Autowired
     private ObjectMapper mapper;
-
-    @Autowired
-    private OpenFaaSConfig openFaaSConfig;
-
-    @Autowired
-    private KafkaConfig kafkaConfig;
 
     @Captor
     private ArgumentCaptor<List<MicoApplication>> micoApplicationListCaptor;
@@ -891,18 +883,23 @@ public class ApplicationResourceIntegrationTests {
         MicoService service = new MicoService()
             .setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
 
+        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
+            .setService(service);
+
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(serviceRepository.findByShortNameAndVersion(SERVICE_SHORT_NAME, SERVICE_VERSION)).willReturn(Optional.of(service));
         given(serviceRepository.findAllByApplication(SHORT_NAME, VERSION)).willReturn(CollectionUtils.listOf(service));
+        given(serviceDeploymentInfoRepository.findByApplicationAndService(SHORT_NAME, VERSION, SERVICE_SHORT_NAME, SERVICE_VERSION))
+            .willReturn(Optional.of(serviceDeploymentInfo));
         given(micoKubernetesClient.isApplicationUndeployed(application)).willReturn(true);
         given(micoServiceDeploymentInfoBroker.updateMicoServiceDeploymentInformation(
-            eq(SHORT_NAME), eq(VERSION), eq(SERVICE_SHORT_NAME), any(MicoServiceDeploymentInfoRequestDTO.class))).willReturn(new MicoServiceDeploymentInfo());
+            eq(SHORT_NAME), eq(VERSION), eq(SERVICE_SHORT_NAME), any(MicoServiceDeploymentInfoRequestDTO.class))).willReturn(serviceDeploymentInfo);
 
         ArgumentCaptor<MicoApplication> micoApplicationCaptor = ArgumentCaptor.forClass(MicoApplication.class);
 
         mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + SERVICE_VERSION))
             .andDo(print())
-            .andExpect(status().isNoContent());
+            .andExpect(status().isOk());
 
         verify(applicationRepository, times(1)).save(micoApplicationCaptor.capture());
         MicoApplication savedMicoApplication = micoApplicationCaptor.getValue();
@@ -983,6 +980,8 @@ public class ApplicationResourceIntegrationTests {
         MicoService serviceOld = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(VERSION_1_0_1);
         MicoService serviceNew = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(VERSION_1_0_2);
         MicoServiceDeploymentInfo serviceDeploymentInfoOld = new MicoServiceDeploymentInfo().setService(serviceOld);
+        MicoServiceDeploymentInfo serviceDeploymentInfoNew = new MicoServiceDeploymentInfo()
+            .setService(serviceNew);
 
         application.getServices().add(serviceOld);
         application.getServiceDeploymentInfos().add(serviceDeploymentInfoOld);
@@ -992,11 +991,13 @@ public class ApplicationResourceIntegrationTests {
         given(serviceRepository.findByShortNameAndVersion(serviceNew.getShortName(), serviceNew.getVersion()))
             .willReturn(Optional.of(serviceNew));
         given(micoKubernetesClient.isApplicationUndeployed(application)).willReturn(true);
+        given(serviceDeploymentInfoRepository.findByApplicationAndService(SHORT_NAME, VERSION, SERVICE_SHORT_NAME, VERSION_1_0_2))
+            .willReturn(Optional.of(serviceDeploymentInfoNew));
 
         mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + VERSION_1_0_2)
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
-            .andExpect(status().isNoContent());
+            .andExpect(status().isOk());
 
         ArgumentCaptor<MicoApplication> applicationCaptor = ArgumentCaptor.forClass(MicoApplication.class);
 

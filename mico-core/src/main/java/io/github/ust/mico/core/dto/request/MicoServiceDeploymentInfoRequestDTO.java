@@ -98,8 +98,8 @@ public class MicoServiceDeploymentInfoRequestDTO {
     private List<MicoLabelRequestDTO> labels = new ArrayList<>();
 
     /**
-     * Kafka topics that are TODO: Description
-     * Possible roles for the topics are INPUT, OUTPUT, DEAD_LETTER, INVALID_MESSAGE, TEST_MESSAGE_OUTPUT
+     * Topics that are used for Kafka.
+     * MICO topics consist of a role (e.g. INPUT) and a name.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,

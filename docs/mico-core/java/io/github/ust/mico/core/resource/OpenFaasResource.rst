@@ -1,4 +1,10 @@
+.. java:import:: io.github.ust.mico.core.broker OpenFaasBroker
+
 .. java:import:: io.github.ust.mico.core.configuration OpenFaaSConfig
+
+.. java:import:: io.github.ust.mico.core.dto.response ExternalUrlDTO
+
+.. java:import:: io.github.ust.mico.core.exception KubernetesResourceException
 
 .. java:import:: io.github.ust.mico.core.util RestTemplates
 
@@ -25,6 +31,12 @@
 .. java:import:: org.springframework.web.client RestTemplate
 
 .. java:import:: org.springframework.web.server ResponseStatusException
+
+.. java:import:: java.net MalformedURLException
+
+.. java:import:: java.net URL
+
+.. java:import:: java.util Optional
 
 OpenFaasResource
 ================
@@ -60,6 +72,12 @@ openFaaSConfig
 .. java:field:: @Autowired  OpenFaaSConfig openFaaSConfig
    :outertype: OpenFaasResource
 
+openFaasBroker
+^^^^^^^^^^^^^^
+
+.. java:field:: @Autowired  OpenFaasBroker openFaasBroker
+   :outertype: OpenFaasResource
+
 restTemplate
 ^^^^^^^^^^^^
 
@@ -72,5 +90,11 @@ getOpenFaasFunctions
 ^^^^^^^^^^^^^^^^^^^^
 
 .. java:method:: @GetMapping public ResponseEntity<String> getOpenFaasFunctions()
+   :outertype: OpenFaasResource
+
+getOpenFaasURL
+^^^^^^^^^^^^^^
+
+.. java:method:: @GetMapping public ResponseEntity<ExternalUrlDTO> getOpenFaasURL()
    :outertype: OpenFaasResource
 
