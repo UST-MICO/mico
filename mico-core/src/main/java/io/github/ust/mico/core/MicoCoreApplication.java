@@ -102,18 +102,23 @@ public class MicoCoreApplication implements ApplicationListener<ApplicationReady
         try {
             MicoService kafkaFaasConnector = gitHubCrawler.crawlGitHubRepoLatestRelease(kafkaConfig.getKafkaFaasConnectorUrl());
             List<MicoService> micoServices = micoServiceBroker.getAllVersionsOfServiceFromDatabase(kafkaFaasConnector.getShortName());
-            Optional<MicoVersion> highestKafkaFaasConnectorVersion = micoServices.stream().map(micoService -> {
-                try {
-                    return micoService.getMicoVersion();
-                } catch (VersionNotSupportedException e) {
-                    log.debug(e.getMessage());
-                }
-                return null;
-            }).max(MicoVersion::compareTo);
-            if (highestKafkaFaasConnectorVersion.isPresent())
+            if (micoServices.size() == 0) {
+                micoServiceBroker.persistService(kafkaFaasConnector);
+                log.info("added first version of " + kafkaFaasConnector.getShortName() + " to database");
+            } else {
+                Optional<MicoVersion> highestKafkaFaasConnectorVersion = micoServices.stream().map(micoService -> {
+                    try {
+                        return micoService.getMicoVersion();
+                    } catch (VersionNotSupportedException e) {
+                        log.debug(e.getMessage());
+                    }
+                    return null;
+                }).max(MicoVersion::compareTo);
                 if (kafkaFaasConnector.getMicoVersion().greaterThan(highestKafkaFaasConnectorVersion.get())) {
                     micoServiceBroker.persistService(kafkaFaasConnector);
+                    log.info("added new version of " + kafkaFaasConnector.getShortName() + " to database");
                 }
+            }
         } catch (IOException | VersionNotSupportedException e) {
             log.debug(e.getMessage());
 
