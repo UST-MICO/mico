@@ -46,6 +46,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -84,7 +85,7 @@ public class MicoCoreApplication implements ApplicationListener<ApplicationReady
     /**
      * Runs when application is ready.
      *
-     * @param event
+     * @param event the {@link ApplicationReadyEvent}
      */
     public void onApplicationEvent(final ApplicationReadyEvent event) {
         Environment environment = event.getApplicationContext().getEnvironment();
@@ -96,36 +97,43 @@ public class MicoCoreApplication implements ApplicationListener<ApplicationReady
     }
 
     /**
-     * persists the latest KafkaFaasConnector to our service database
+     * Retrieves the latest KafkaFaasConnector and stores it in the service database.
      */
-    public void addKafkaFaasConnectorToDatabase() {
+    private void addKafkaFaasConnectorToDatabase() {
         try {
             MicoService kafkaFaasConnector = gitHubCrawler.crawlGitHubRepoLatestRelease(kafkaFaasConnectorConfig.getGithubUrl());
-            List<MicoService> micoServices = micoServiceBroker.getAllVersionsOfServiceFromDatabase(kafkaFaasConnector.getShortName());
-            if (micoServices.size() == 0) {
+            kafkaFaasConnector.setKafkaEnabled(true);
+            List<MicoService> kafkaFaasConnectors = micoServiceBroker.getAllVersionsOfServiceFromDatabase(kafkaFaasConnector.getShortName());
+
+            // Get the newest currently existing KafkaFaasConnector stored in the database.
+            Optional<MicoVersion> highestKafkaFaasConnectorVersionOpt = kafkaFaasConnectors.stream().map(micoService -> {
+                try {
+                    return micoService.getMicoVersion();
+                } catch (VersionNotSupportedException e) {
+                    log.debug(e.getMessage());
+                }
+                return null;
+            }).filter(Objects::nonNull).max(MicoVersion::compareTo);
+
+            // If there is no version, add it directly to the database.
+            // Otherwise check if the retrieved version is newer than the existing ones
+            // and only if that's the case add the new version to the database.
+            if (!highestKafkaFaasConnectorVersionOpt.isPresent()) {
                 micoServiceBroker.persistService(kafkaFaasConnector);
-                log.info("added first version of " + kafkaFaasConnector.getShortName() + " to database");
+                log.info("Add first {} in version {} to the database.",
+                    kafkaFaasConnector.getShortName(), kafkaFaasConnector.getVersion());
             } else {
-                Optional<MicoVersion> highestKafkaFaasConnectorVersion = micoServices.stream().map(micoService -> {
-                    try {
-                        return micoService.getMicoVersion();
-                    } catch (VersionNotSupportedException e) {
-                        log.debug(e.getMessage());
-                    }
-                    return null;
-                }).max(MicoVersion::compareTo);
-                if (kafkaFaasConnector.getMicoVersion().greaterThan(highestKafkaFaasConnectorVersion.get())) {
+                if (kafkaFaasConnector.getMicoVersion().greaterThan(highestKafkaFaasConnectorVersionOpt.get())) {
                     micoServiceBroker.persistService(kafkaFaasConnector);
-                    log.info("added new version of " + kafkaFaasConnector.getShortName() + " to database");
+                    log.info("A new {} in version {} exists -> add it to the database.",
+                        kafkaFaasConnector.getShortName(), kafkaFaasConnector.getVersion());
+                } else {
+                    log.debug("Newest {} is already stored in the database in version {}.",
+                        kafkaFaasConnector.getShortName(), kafkaFaasConnector.getVersion());
                 }
             }
-        } catch (IOException | VersionNotSupportedException e) {
-            log.debug(e.getMessage());
-
-        }
-        // should not happen
-        catch (MicoServiceAlreadyExistsException e) {
-            log.info("onApplicationReadyEvent kafkaFaasConnector mico version check failed. should not happen since we checked before");
+        } catch (IOException | VersionNotSupportedException | MicoServiceAlreadyExistsException e) {
+            log.error("Error while trying to add KafkaFaasConnector to the database. Caused by: {}", e.getMessage(), e);
         }
     }
 }
