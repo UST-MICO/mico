@@ -19,9 +19,9 @@
 
 package io.github.ust.mico.core;
 
-import static io.github.ust.mico.core.util.MicoRepositoryTestUtils.*;
-import static org.junit.Assert.assertEquals;
-
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoEnvironmentVariable;
+import io.github.ust.mico.core.model.MicoService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,9 +31,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoEnvironmentVariable;
-import io.github.ust.mico.core.model.MicoService;
+import static io.github.ust.mico.core.util.MicoRepositoryTestUtils.*;
+import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest

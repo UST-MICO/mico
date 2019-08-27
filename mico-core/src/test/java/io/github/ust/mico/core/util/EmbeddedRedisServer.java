@@ -15,11 +15,10 @@
  */
 package io.github.ust.mico.core.util;
 
-import java.io.IOException;
-
 import org.junit.rules.ExternalResource;
-
 import redis.embedded.RedisServer;
+
+import java.io.IOException;
 
 /**
  * JUnit rule implementation to start and shut down an embedded Redis instance.

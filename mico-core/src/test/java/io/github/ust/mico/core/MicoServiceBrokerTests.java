@@ -17,7 +17,10 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 import static io.github.ust.mico.core.TestConstants.*;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;

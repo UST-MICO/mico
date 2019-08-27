@@ -1,8 +1,7 @@
 package io.github.ust.mico.core;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import io.github.ust.mico.core.persistence.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class MicoRepositoryTests {
 
@@ -24,7 +23,7 @@ public class MicoRepositoryTests {
     @Autowired
     MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
 
-	@Autowired
+    @Autowired
     KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
 
     @Autowired
