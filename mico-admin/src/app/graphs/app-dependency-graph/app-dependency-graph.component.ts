@@ -31,6 +31,7 @@ import { debounceTime, take, takeLast } from 'rxjs/operators';
 import { safeUnsubscribe, safeUnsubscribeList } from 'src/app/util/utils';
 import { YesNoDialogComponent } from 'src/app/dialogs/yes-no-dialog/yes-no-dialog.component';
 import { GraphAddEnvironmentVariableComponent } from 'src/app/dialogs/graph-add-environment-variable/graph-add-environment-variable.component';
+import { GraphAddKafkaTopicComponent } from 'src/app/dialogs/graph-add-kafka-topic/graph-add-kafka-topic.component';
 import { Router } from '@angular/router';
 import { ServicePickerComponent } from 'src/app/dialogs/service-picker/service-picker.component';
 
@@ -439,35 +440,76 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
      */
     onEdgeDrop = (event: CustomEvent) => {
         if (event.detail.sourceNode.id === ROOT_NODE_ID) {
-            if (event.detail.edge.createdFrom == null || event.detail.edge.createdFrom === '') {
-                // completely new edge!
-                const dialogRef = this.dialog.open(ServicePickerComponent, {
-                    data: {
-                        filter: '',
-                        choice: 'single',
-                        existingDependencies: this.application.services,
-                        serviceId: '',
-                    }
-                });
-
-                const subDependeesDialog = dialogRef.afterClosed().subscribe(result => {
-                    safeUnsubscribe(subDependeesDialog);
-
-                    if (result === '') {
-                        return;
-                    }
-
-                    result.forEach(service => {
-                        this.api.postApplicationServices(this.application.shortName,
-                            this.application.version, service.shortName, service.version)
-                            .subscribe();
-                    });
-                });
-            }
-        }
-        if (event.detail.edge.type === 'topic') {
             const edge: Edge = event.detail.edge;
-            // handle edge delete add and change...
+            if (edge.createdFrom != null && edge.createdFrom !== '') {
+                // do not handle edges that were created from an existing edge here
+                return;
+            }
+            const dialogRef = this.dialog.open(ServicePickerComponent, {
+                data: {
+                    filter: '',
+                    choice: 'single',
+                    existingDependencies: this.application.services,
+                    serviceId: '',
+                }
+            });
+
+            const subDependeesDialog = dialogRef.afterClosed().subscribe(result => {
+                safeUnsubscribe(subDependeesDialog);
+
+                if (result === '') {
+                    return;
+                }
+
+                result.forEach(service => {
+                    this.api.postApplicationServices(this.application.shortName,
+                        this.application.version, service.shortName, service.version)
+                        .subscribe();
+                });
+            });
+        }
+        if (event.detail.sourceNode.type === 'service') {
+            const edge: Edge = event.detail.edge;
+            if (edge.createdFrom != null && edge.createdFrom !== '') {
+                // do not handle edges that were created from an existing edge here
+                return;
+            }
+            // TODO create new topic edge
+            const serviceNode: ServiceNode = event.detail.sourceNode;
+            if (!serviceNode.service.kafkaEnabled) {
+                // not kafka enabled nodes don't need topics
+                return;
+            }
+            const depl = this.deploymentInformations.get(serviceNode.id.toString());
+            const existingRoles: string[] = depl.topics.map(t => t.role);
+            if (existingRoles.length >= 2) {
+                // both roleas already used.
+                return;
+            }
+            const dialogRef = this.dialog.open(GraphAddKafkaTopicComponent, {
+                data: {
+                    serviceShortName: serviceNode.shortName,
+                    existingRoles: existingRoles,
+                }
+            });
+
+            const subTopicDialog = dialogRef.afterClosed().subscribe(result => {
+                safeUnsubscribe(subTopicDialog);
+
+                if (result === '') {
+                    return;
+                }
+
+                // deepcopy since depl is readonly
+                const deplCopy = JSON.parse(JSON.stringify(depl));
+                deplCopy.topics.push({
+                    role: result.role,
+                    name: result.kafkaTopicName,
+                });
+                const putSub = this.api.putServiceDeploymentInformation(this.application.shortName, this.application.version, serviceNode.service.shortName, deplCopy).subscribe(() => {
+                    safeUnsubscribe(putSub);
+                });
+            });
         }
     }
 
