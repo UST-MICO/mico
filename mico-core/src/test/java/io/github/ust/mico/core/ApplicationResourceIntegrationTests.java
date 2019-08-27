@@ -138,13 +138,6 @@ public class ApplicationResourceIntegrationTests {
 
     @Captor
     private ArgumentCaptor<List<MicoApplication>> micoApplicationListCaptor;
-    @MockBean
-    private MicoCoreApplication micoCoreApplication;
-
-    @Before
-    public void setUp() {
-        reset(micoCoreApplication);
-    }
 
     @Test
     public void getAllApplications() throws Exception {

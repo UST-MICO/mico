@@ -37,6 +37,8 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -85,6 +87,11 @@ public class MicoCoreApplication implements ApplicationListener<ApplicationReady
      * @param event
      */
     public void onApplicationEvent(final ApplicationReadyEvent event) {
+        Environment environment = event.getApplicationContext().getEnvironment();
+        if (environment.acceptsProfiles(Profiles.of("local"))) {
+            log.info("Local profile is active. Don't initialize image builder.");
+            return;
+        }
         addKafkaFaasConnectorToDatabase();
     }
 

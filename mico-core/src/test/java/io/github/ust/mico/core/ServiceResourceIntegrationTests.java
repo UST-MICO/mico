@@ -40,7 +40,6 @@ import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -101,9 +100,6 @@ public class ServiceResourceIntegrationTests {
     private MicoServiceRepository serviceRepository;
 
     @MockBean
-    private ApplicationReadyEvent applicationReadyEvent;
-
-    @MockBean
     private MicoCoreApplication micoCoreApplication;
     @MockBean
     private GitHubCrawler crawler;
@@ -116,9 +112,6 @@ public class ServiceResourceIntegrationTests {
 
     @MockBean
     private MicoKubernetesClient micoKubernetesClient;
-
-    public void emptyFunction() {
-    }
 
     @Before
     public void setUp() {

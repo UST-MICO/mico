@@ -83,13 +83,6 @@ public class BackgroundJobResourceTest {
 
     @Autowired
     private MockMvc mvc;
-    @MockBean
-    private MicoCoreApplication micoCoreApplication;
-
-    @Before
-    public void setUp() {
-        reset(micoCoreApplication);
-    }
 
     @Test
     public void getAllJobs() throws Exception {

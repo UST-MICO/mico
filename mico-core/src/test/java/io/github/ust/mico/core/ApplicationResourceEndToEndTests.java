@@ -81,14 +81,6 @@ public class ApplicationResourceEndToEndTests extends Neo4jTestClass {
     @MockBean
     private MicoKubernetesClient micoKubernetesClient;
 
-    @MockBean
-    private MicoCoreApplication micoCoreApplication;
-
-    @Before
-    public void setUp() {
-        reset(micoCoreApplication);
-    }
-
     @Test
     public void testDefaultVariablesAddedToKafkaEnabledService() throws Exception {
         MicoApplication micoApplication = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);

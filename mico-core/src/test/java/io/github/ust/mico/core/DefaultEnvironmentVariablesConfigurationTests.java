@@ -53,13 +53,6 @@ public class DefaultEnvironmentVariablesConfigurationTests {
 
     @Autowired
     KafkaConfig kafkaConfig;
-    @MockBean
-    private MicoCoreApplication micoCoreApplication;
-
-    @Before
-    public void setUp() {
-        reset(micoCoreApplication);
-    }
 
     @Test
     public void testOpenFaaSConfigForEnvironmentVariables() {

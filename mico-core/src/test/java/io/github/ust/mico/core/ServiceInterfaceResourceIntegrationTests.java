@@ -106,15 +106,9 @@ public class ServiceInterfaceResourceIntegrationTests {
 
     @MockBean
     private MicoStatusService micoStatusService;
-    @MockBean
-    private MicoCoreApplication micoCoreApplication;
+
     @Autowired
     private ObjectMapper mapper;
-
-    @Before
-    public void setUp() {
-        reset(micoCoreApplication);
-    }
 
     @Test
     public void postServiceInterface() throws Exception {

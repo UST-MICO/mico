@@ -82,8 +82,6 @@ public class MicoStatusServiceTest {
     private MicoServiceInterfaceRepository serviceInterfaceRepository;
     @Autowired
     private MicoStatusService micoStatusService;
-    @MockBean
-    private MicoCoreApplication micoCoreApplication;
 
     private MicoApplication micoApplication;
     private MicoApplication otherMicoApplication;
@@ -128,9 +126,6 @@ public class MicoStatusServiceTest {
 
     @Before
     public void setupMicoApplication() {
-
-        reset(micoCoreApplication);
-
         micoApplication = new MicoApplication()
             .setShortName(SHORT_NAME)
             .setVersion(VERSION);

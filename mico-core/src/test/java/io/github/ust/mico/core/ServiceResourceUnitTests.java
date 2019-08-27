@@ -117,13 +117,6 @@ public class ServiceResourceUnitTests {
 
     @MockBean
     private MicoKubernetesClient micoKubernetesClient;
-    @MockBean
-    private MicoCoreApplication micoCoreApplication;
-
-    @Before
-    public void setUp() {
-        reset(micoCoreApplication);
-    }
 
     @Test
     public void getStatusOfService() throws Exception {
