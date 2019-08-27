@@ -998,11 +998,11 @@ public class MicoKubernetesClient {
             List<MicoServiceDeploymentInfo> serviceDeploymentInfos = serviceDeploymentInfoRepository.findAllByService(service.getShortName(), service.getVersion());
 
             // Service deployment info of the currently processed service
-            Optional<MicoServiceDeploymentInfo> serviceDeploymentInfoOptional = serviceDeploymentInfoRepository.findByApplicationAndService(
+            List<MicoServiceDeploymentInfo> currentSDIs = serviceDeploymentInfoRepository.findByApplicationAndService(
                 application.getShortName(), application.getVersion(), service.getShortName(), service.getVersion());
 
             // No service deployment info would mean that this service is not deployed
-            if (!serviceDeploymentInfoOptional.isPresent() || serviceDeploymentInfos.isEmpty()) {
+            if (currentSDIs.isEmpty() || serviceDeploymentInfos.isEmpty()) {
                 log.error("Deployment info for MicoService '{}' in version '{}' is not available in the database.",
                     service.getShortName(), service.getVersion());
                 throw new IllegalStateException(
@@ -1010,7 +1010,7 @@ public class MicoKubernetesClient {
                         + "' and MicoService '" + service.getShortName() + "' '" + service.getVersion() + "' does not exist!");
             }
 
-            MicoServiceDeploymentInfo serviceDeploymentInfo = serviceDeploymentInfoOptional.get();
+            MicoServiceDeploymentInfo serviceDeploymentInfo = currentSDIs.get(0);
             // Check which applications are deployed and are actually using this service
             List<MicoApplication> applicationsUsingThisService = applicationRepository.findAllByUsedService(service.getShortName(), service.getVersion());
             List<MicoApplication> otherDeployedApplicationsUsingThisService = applicationsUsingThisService.stream()
@@ -1246,12 +1246,12 @@ public class MicoKubernetesClient {
      *                               does not exist in the database.
      */
     private MicoServiceDeploymentInfo getServiceDeploymentInfo(MicoApplication application, MicoService service) throws IllegalStateException {
-        Optional<MicoServiceDeploymentInfo> serviceDeploymentInfoOptional =
+        List<MicoServiceDeploymentInfo> serviceDeploymentInfos =
             serviceDeploymentInfoRepository.findByApplicationAndService(
                 application.getShortName(), application.getVersion(),
                 service.getShortName(), service.getVersion());
 
-        if (!serviceDeploymentInfoOptional.isPresent()) {
+        if (serviceDeploymentInfos.isEmpty()) {
             log.error("Deployment info for MicoApplication '{}' in version '{}' and "
                     + "MicoService '{}' in version '{}' is not available in the database.",
                 application.getShortName(), application.getVersion(), service.getShortName(), service.getVersion());
@@ -1259,8 +1259,7 @@ public class MicoKubernetesClient {
                 + application.getShortName() + "' '" + application.getVersion()
                 + "' and MicoService '" + service.getShortName() + "' '" + service.getVersion() + "' does not exist!");
         }
-
-        return serviceDeploymentInfoOptional.get();
+        return serviceDeploymentInfos.get(0);
     }
 
     /**

@@ -82,12 +82,11 @@ public class MicoServiceDeploymentInfoBroker {
     public MicoServiceDeploymentInfo getMicoServiceDeploymentInformation(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoServiceDeploymentInformationNotFoundException, MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException {
         applicationBroker.getMicoApplicationForMicoService(applicationShortName, applicationVersion, serviceShortName);
 
-        Optional<MicoServiceDeploymentInfo> micoServiceDeploymentInfoOptional = serviceDeploymentInfoRepository.findByApplicationAndService(applicationShortName, applicationVersion, serviceShortName);
-        if (micoServiceDeploymentInfoOptional.isPresent()) {
-            return micoServiceDeploymentInfoOptional.get();
-        } else {
+        List<MicoServiceDeploymentInfo> serviceDeploymentInfos = serviceDeploymentInfoRepository.findByApplicationAndService(applicationShortName, applicationVersion, serviceShortName);
+        if (serviceDeploymentInfos.isEmpty()) {
             throw new MicoServiceDeploymentInformationNotFoundException(applicationShortName, applicationVersion, serviceShortName);
         }
+        return serviceDeploymentInfos.get(0);
     }
 
     /**

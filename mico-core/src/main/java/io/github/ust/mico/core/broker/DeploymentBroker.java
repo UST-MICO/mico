@@ -79,13 +79,15 @@ public class DeploymentBroker {
                 .setStatus(MicoServiceBackgroundJob.Status.RUNNING);
             backgroundJobBroker.saveJob(job);
 
-            Optional<MicoServiceDeploymentInfo> serviceDeploymentInfoOptional = serviceDeploymentInfoRepository
+            List<MicoServiceDeploymentInfo> serviceDeploymentInfos = serviceDeploymentInfoRepository
                 .findByApplicationAndService(micoApplication.getShortName(), micoApplication.getVersion(),
                     micoService.getShortName(), micoService.getVersion());
-            MicoServiceDeploymentInfo serviceDeploymentInfo = serviceDeploymentInfoOptional.orElseThrow(() ->
-                new IllegalStateException("Service deployment information for service '" + micoService.getShortName()
+            if(serviceDeploymentInfos.isEmpty()) {
+                throw new IllegalStateException("Service deployment information for service '" + micoService.getShortName()
                     + "' in application '" + micoApplication.getShortName() + "' '" + micoApplication.getVersion()
-                    + "' could not be found."));
+                    + "' could not be found.");
+            }
+            MicoServiceDeploymentInfo serviceDeploymentInfo = serviceDeploymentInfos.get(0);
 
             log.info("Start build of MicoService '{}' '{}'.", micoService.getShortName(), micoService.getVersion());
             CompletableFuture<MicoServiceDeploymentInfo> buildJob = CompletableFuture.supplyAsync(() -> buildMicoService(serviceDeploymentInfo))

@@ -238,7 +238,7 @@ public class DeploymentResourceTests {
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(serviceDeploymentInfoRepository
             .findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName(), service.getVersion()))
-            .willReturn(Optional.of(new MicoServiceDeploymentInfo().setService(service)));
+            .willReturn(CollectionUtils.listOf(new MicoServiceDeploymentInfo().setService(service)));
         given(serviceRepository.save(any(MicoService.class))).willReturn(service);
         given(serviceDeploymentInfoRepository.save(any(MicoServiceDeploymentInfo.class)))
             .willReturn(new MicoServiceDeploymentInfo()

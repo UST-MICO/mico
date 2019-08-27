@@ -618,13 +618,13 @@ public class MicoKubernetesClientTests {
             .willReturn(CollectionUtils.listOf(serviceDeploymentInfo1, serviceDeploymentInfo2, serviceDeploymentInfo3));
         given(serviceDeploymentInfoRepository.findByApplicationAndService(
             micoApplication1.getShortName(), micoApplication1.getVersion(), micoService.getShortName(), micoService.getVersion()))
-            .willReturn(Optional.of(serviceDeploymentInfo1));
+            .willReturn(CollectionUtils.listOf(serviceDeploymentInfo1));
         given(serviceDeploymentInfoRepository.findByApplicationAndService(
             micoApplication2.getShortName(), micoApplication2.getVersion(), micoService.getShortName(), micoService.getVersion()))
-            .willReturn(Optional.of(serviceDeploymentInfo2));
+            .willReturn(CollectionUtils.listOf(serviceDeploymentInfo2));
         given(serviceDeploymentInfoRepository.findByApplicationAndService(
             micoApplication3.getShortName(), micoApplication3.getVersion(), micoService.getShortName(), micoService.getVersion()))
-            .willReturn(Optional.of(serviceDeploymentInfo3));
+            .willReturn(CollectionUtils.listOf(serviceDeploymentInfo3));
         given(serviceDeploymentInfoRepository.findAllByApplication(micoApplication1.getShortName(), micoApplication1.getVersion()))
             .willReturn(CollectionUtils.listOf(serviceDeploymentInfo1));
         given(serviceDeploymentInfoRepository.findAllByApplication(micoApplication2.getShortName(), micoApplication2.getVersion()))
@@ -727,7 +727,7 @@ public class MicoKubernetesClientTests {
                 .willReturn(CollectionUtils.listOf(serviceDeploymentInfo));
             given(serviceDeploymentInfoRepository.findByApplicationAndService(
                 micoApplication.getShortName(), micoApplication.getVersion(), micoService.getShortName(), micoService.getVersion()))
-                .willReturn(Optional.of(serviceDeploymentInfo));
+                .willReturn(CollectionUtils.listOf(serviceDeploymentInfo));
             given(applicationRepository.findAllByUsedService(micoService.getShortName(), micoService.getVersion()))
                 .willReturn(CollectionUtils.listOf(micoApplication));
         }
