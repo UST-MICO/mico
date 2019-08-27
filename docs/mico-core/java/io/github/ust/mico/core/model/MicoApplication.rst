@@ -1,15 +1,3 @@
-.. java:import:: java.util ArrayList
-
-.. java:import:: java.util List
-
-.. java:import:: org.neo4j.ogm.annotation GeneratedValue
-
-.. java:import:: org.neo4j.ogm.annotation Id
-
-.. java:import:: org.neo4j.ogm.annotation NodeEntity
-
-.. java:import:: org.neo4j.ogm.annotation Relationship
-
 .. java:import:: io.github.ust.mico.core.dto.request MicoApplicationRequestDTO
 
 .. java:import:: io.github.ust.mico.core.exception VersionNotSupportedException
@@ -21,6 +9,18 @@
 .. java:import:: lombok NoArgsConstructor
 
 .. java:import:: lombok.experimental Accessors
+
+.. java:import:: org.neo4j.ogm.annotation GeneratedValue
+
+.. java:import:: org.neo4j.ogm.annotation Id
+
+.. java:import:: org.neo4j.ogm.annotation NodeEntity
+
+.. java:import:: org.neo4j.ogm.annotation Relationship
+
+.. java:import:: java.util ArrayList
+
+.. java:import:: java.util List
 
 MicoApplication
 ===============

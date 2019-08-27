@@ -8,6 +8,7 @@ io.github.ust.mico.core.configuration
 
    CorsConfig
    KafkaConfig
+   KafkaFaasConnectorConfig
    MicoKubernetesBuildBotConfig
    MicoKubernetesConfig
    MicoRedisConfiguration

@@ -12,4 +12,5 @@ io.github.ust.mico.core.broker
    MicoServiceBroker
    MicoServiceDeploymentInfoBroker
    MicoServiceInterfaceBroker
+   OpenFaasBroker
 
