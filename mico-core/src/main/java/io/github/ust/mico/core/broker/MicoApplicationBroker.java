@@ -37,6 +37,9 @@ public class MicoApplicationBroker {
     private MicoServiceBroker micoServiceBroker;
 
     @Autowired
+    private MicoServiceDeploymentInfoBroker micoServiceDeploymentInfoBroker;
+
+    @Autowired
     private MicoApplicationRepository applicationRepository;
 
     @Autowired
@@ -279,12 +282,7 @@ public class MicoApplicationBroker {
             }
         }
 
-        List<MicoServiceDeploymentInfo> serviceDeploymentInfos = serviceDeploymentInfoRepository.findByApplicationAndService(
-            applicationShortName, applicationVersion, serviceShortName, serviceVersion);
-        if(serviceDeploymentInfos.isEmpty()) {
-            throw new IllegalStateException("Previously stored service deployment information not found.");
-        }
-        return serviceDeploymentInfos.get(0);
+        return micoServiceDeploymentInfoBroker.getExistingServiceDeploymentInfo(micoApplication, micoService);
     }
 
     public MicoApplication removeMicoServiceFromMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException, MicoApplicationIsNotUndeployedException {

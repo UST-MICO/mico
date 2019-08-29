@@ -27,6 +27,7 @@ import io.fabric8.kubernetes.api.model.apps.DeploymentList;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.github.ust.mico.core.TestConstants.*;
 import io.github.ust.mico.core.broker.BackgroundJobBroker;
+import io.github.ust.mico.core.broker.MicoServiceDeploymentInfoBroker;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
@@ -104,6 +105,9 @@ public class MicoKubernetesClientTests {
     @MockBean
     private KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
 
+    @MockBean
+    private MicoServiceDeploymentInfoBroker micoServiceDeploymentInfoBroker;
+
     private MicoKubernetesClient micoKubernetesClient;
 
     private static final String testNamespace = "test-namespace";
@@ -116,7 +120,7 @@ public class MicoKubernetesClientTests {
         given(micoKubernetesBuildBotConfig.isBuildCleanUpByUndeploy()).willReturn(true);
 
         micoKubernetesClient = new MicoKubernetesClient(micoKubernetesConfig, micoKubernetesBuildBotConfig,
-            mockServer.getClient(), imageBuilder, backgroundJobBroker, applicationRepository,
+            mockServer.getClient(), imageBuilder, micoServiceDeploymentInfoBroker, backgroundJobBroker, applicationRepository,
             serviceDeploymentInfoRepository, kubernetesDeploymentInfoRepository);
 
         mockServer.getClient().namespaces().create(new NamespaceBuilder().withNewMetadata().withName(testNamespace).endMetadata().build());
@@ -614,17 +618,12 @@ public class MicoKubernetesClientTests {
             .setServices(CollectionUtils.listOf(micoService))
             .setServiceDeploymentInfos(CollectionUtils.listOf(serviceDeploymentInfo3));
 
-        given(serviceDeploymentInfoRepository.findAllByService(micoService.getShortName(), micoService.getVersion()))
-            .willReturn(CollectionUtils.listOf(serviceDeploymentInfo1, serviceDeploymentInfo2, serviceDeploymentInfo3));
-        given(serviceDeploymentInfoRepository.findByApplicationAndService(
-            micoApplication1.getShortName(), micoApplication1.getVersion(), micoService.getShortName(), micoService.getVersion()))
-            .willReturn(CollectionUtils.listOf(serviceDeploymentInfo1));
-        given(serviceDeploymentInfoRepository.findByApplicationAndService(
-            micoApplication2.getShortName(), micoApplication2.getVersion(), micoService.getShortName(), micoService.getVersion()))
-            .willReturn(CollectionUtils.listOf(serviceDeploymentInfo2));
-        given(serviceDeploymentInfoRepository.findByApplicationAndService(
-            micoApplication3.getShortName(), micoApplication3.getVersion(), micoService.getShortName(), micoService.getVersion()))
-            .willReturn(CollectionUtils.listOf(serviceDeploymentInfo3));
+        given(micoServiceDeploymentInfoBroker.getExistingServiceDeploymentInfo(micoApplication1, micoService))
+            .willReturn(serviceDeploymentInfo1);
+        given(micoServiceDeploymentInfoBroker.getExistingServiceDeploymentInfo(micoApplication2, micoService))
+            .willReturn(serviceDeploymentInfo2);
+        given(micoServiceDeploymentInfoBroker.getExistingServiceDeploymentInfo(micoApplication3, micoService))
+            .willReturn(serviceDeploymentInfo3);
         given(serviceDeploymentInfoRepository.findAllByApplication(micoApplication1.getShortName(), micoApplication1.getVersion()))
             .willReturn(CollectionUtils.listOf(serviceDeploymentInfo1));
         given(serviceDeploymentInfoRepository.findAllByApplication(micoApplication2.getShortName(), micoApplication2.getVersion()))
@@ -723,11 +722,11 @@ public class MicoKubernetesClientTests {
                 );
             micoApplication.getServiceDeploymentInfos().add(serviceDeploymentInfo);
 
-            given(serviceDeploymentInfoRepository.findAllByService(micoService.getShortName(), micoService.getVersion()))
-                .willReturn(CollectionUtils.listOf(serviceDeploymentInfo));
             given(serviceDeploymentInfoRepository.findByApplicationAndService(
                 micoApplication.getShortName(), micoApplication.getVersion(), micoService.getShortName(), micoService.getVersion()))
                 .willReturn(CollectionUtils.listOf(serviceDeploymentInfo));
+            given(micoServiceDeploymentInfoBroker.getExistingServiceDeploymentInfo(micoApplication, micoService))
+                .willReturn(serviceDeploymentInfo);
             given(applicationRepository.findAllByUsedService(micoService.getShortName(), micoService.getVersion()))
                 .willReturn(CollectionUtils.listOf(micoApplication));
         }

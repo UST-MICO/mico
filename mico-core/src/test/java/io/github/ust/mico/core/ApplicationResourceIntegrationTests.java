@@ -889,8 +889,8 @@ public class ApplicationResourceIntegrationTests {
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(serviceRepository.findByShortNameAndVersion(SERVICE_SHORT_NAME, SERVICE_VERSION)).willReturn(Optional.of(service));
         given(serviceRepository.findAllByApplication(SHORT_NAME, VERSION)).willReturn(CollectionUtils.listOf(service));
-        given(serviceDeploymentInfoRepository.findByApplicationAndService(SHORT_NAME, VERSION, SERVICE_SHORT_NAME, SERVICE_VERSION))
-            .willReturn(CollectionUtils.listOf(serviceDeploymentInfo));
+        given(micoServiceDeploymentInfoBroker.getExistingServiceDeploymentInfo(application, service))
+            .willReturn(serviceDeploymentInfo);
         given(micoKubernetesClient.isApplicationUndeployed(application)).willReturn(true);
         given(micoServiceDeploymentInfoBroker.updateMicoServiceDeploymentInformation(
             eq(SHORT_NAME), eq(VERSION), eq(SERVICE_SHORT_NAME), any(MicoServiceDeploymentInfoRequestDTO.class))).willReturn(serviceDeploymentInfo);
@@ -991,8 +991,8 @@ public class ApplicationResourceIntegrationTests {
         given(serviceRepository.findByShortNameAndVersion(serviceNew.getShortName(), serviceNew.getVersion()))
             .willReturn(Optional.of(serviceNew));
         given(micoKubernetesClient.isApplicationUndeployed(application)).willReturn(true);
-        given(serviceDeploymentInfoRepository.findByApplicationAndService(SHORT_NAME, VERSION, SERVICE_SHORT_NAME, VERSION_1_0_2))
-            .willReturn(CollectionUtils.listOf(serviceDeploymentInfoNew));
+        given(micoServiceDeploymentInfoBroker.getExistingServiceDeploymentInfo(application, serviceNew))
+            .willReturn(serviceDeploymentInfoNew);
 
         mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + VERSION_1_0_2)
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))

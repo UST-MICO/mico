@@ -28,6 +28,7 @@ import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.internal.SerializationUtils;
 import io.github.ust.mico.core.broker.BackgroundJobBroker;
+import io.github.ust.mico.core.broker.MicoServiceDeploymentInfoBroker;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
@@ -125,19 +126,23 @@ public class MicoKubernetesClient {
     private final KubernetesClient kubernetesClient;
     private final ImageBuilder imageBuilder;
     private final BackgroundJobBroker backgroundJobBroker;
+    private final MicoServiceDeploymentInfoBroker micoServiceDeploymentInfoBroker;
     private final MicoApplicationRepository applicationRepository;
     private final MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
     private final KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository;
 
     @Autowired
     public MicoKubernetesClient(MicoKubernetesConfig micoKubernetesConfig, MicoKubernetesBuildBotConfig buildBotConfig,
-                                KubernetesClient kubernetesClient, ImageBuilder imageBuilder, BackgroundJobBroker backgroundJobBroker,
-                                MicoApplicationRepository applicationRepository, MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository,
+                                KubernetesClient kubernetesClient, ImageBuilder imageBuilder,
+                                MicoServiceDeploymentInfoBroker micoServiceDeploymentInfoBroker,
+                                BackgroundJobBroker backgroundJobBroker, MicoApplicationRepository applicationRepository,
+                                MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository,
                                 KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository) {
         this.micoKubernetesConfig = micoKubernetesConfig;
         this.buildBotConfig = buildBotConfig;
         this.kubernetesClient = kubernetesClient;
         this.imageBuilder = imageBuilder;
+        this.micoServiceDeploymentInfoBroker = micoServiceDeploymentInfoBroker;
         this.backgroundJobBroker = backgroundJobBroker;
         this.applicationRepository = applicationRepository;
         this.serviceDeploymentInfoRepository = serviceDeploymentInfoRepository;
@@ -989,34 +994,13 @@ public class MicoKubernetesClient {
             log.debug("Check MicoService '{}' '{}' whether it should be scaled in or completely undeployed...",
                 service.getShortName(), service.getVersion());
 
-            // Get all service deployment infos for this service,
-            // if there are multiple service deployment infos
-            // with known Kubernetes deployment information,
-            // this service is used by multiple applications, i.e.,
-            // this service can't be simply undeployed but has to be
-            // scaled in instead.
-            List<MicoServiceDeploymentInfo> serviceDeploymentInfos = serviceDeploymentInfoRepository.findAllByService(service.getShortName(), service.getVersion());
-
-            // Service deployment info of the currently processed service
-            List<MicoServiceDeploymentInfo> currentSDIs = serviceDeploymentInfoRepository.findByApplicationAndService(
-                application.getShortName(), application.getVersion(), service.getShortName(), service.getVersion());
-
-            // No service deployment info would mean that this service is not deployed
-            if (currentSDIs.isEmpty() || serviceDeploymentInfos.isEmpty()) {
-                log.error("Deployment info for MicoService '{}' in version '{}' is not available in the database.",
-                    service.getShortName(), service.getVersion());
-                throw new IllegalStateException(
-                    "Service deployment info for MicoApplication '" + application.getShortName() + "' '" + application.getVersion()
-                        + "' and MicoService '" + service.getShortName() + "' '" + service.getVersion() + "' does not exist!");
-            }
-
-            MicoServiceDeploymentInfo serviceDeploymentInfo = currentSDIs.get(0);
             // Check which applications are deployed and are actually using this service
             List<MicoApplication> applicationsUsingThisService = applicationRepository.findAllByUsedService(service.getShortName(), service.getVersion());
             List<MicoApplication> otherDeployedApplicationsUsingThisService = applicationsUsingThisService.stream()
                 .filter(app -> !(app.getShortName().equals(application.getShortName()) && app.getVersion().equals(application.getVersion()))
                     && isApplicationDeployed(app)).collect(Collectors.toList());
 
+            MicoServiceDeploymentInfo serviceDeploymentInfo = micoServiceDeploymentInfoBroker.getExistingServiceDeploymentInfo(application, service);
             if (serviceDeploymentInfo.getKubernetesDeploymentInfo() == null) {
                 log.info("MicoService '{}' '{}' is not deployed for the MicoApplication '{}' '{}'. No undeployment/scaling required.",
                     service.getShortName(), service.getVersion(), application.getShortName(), application.getVersion());
@@ -1049,7 +1033,8 @@ public class MicoKubernetesClient {
                 // and are actually deployed.
                 int currentTotalRequestedReplicas = serviceDeploymentInfo.getReplicas();
                 for (MicoApplication otherApplicationUsingThisService : otherDeployedApplicationsUsingThisService) {
-                    currentTotalRequestedReplicas += getServiceDeploymentInfo(otherApplicationUsingThisService, service).getReplicas();
+                    MicoServiceDeploymentInfo otherSDI = micoServiceDeploymentInfoBroker.getExistingServiceDeploymentInfo(otherApplicationUsingThisService, service);
+                    currentTotalRequestedReplicas += otherSDI.getReplicas();
                 }
                 log.debug("Currently {} replica(s) of MicoService '{}' in version '{}' are requested based on the given service deployment information.",
                     currentTotalRequestedReplicas, service.getShortName(), service.getVersion());
@@ -1233,33 +1218,6 @@ public class MicoKubernetesClient {
                     micoService.getShortName(), micoService.getVersion(), e.getMessage());
             }
         }
-    }
-
-    /**
-     * Retrieves the service deployment information for a given
-     * {@code MicoApplication} and {@code MicoService} from the database.
-     *
-     * @param application the {@link MicoApplication}.
-     * @param service     the {@link MicoService}.
-     * @return the {@link MicoServiceDeploymentInfo} if it exists.
-     * @throws IllegalStateException if the {@code MicoServiceDeploymentInfo}
-     *                               does not exist in the database.
-     */
-    private MicoServiceDeploymentInfo getServiceDeploymentInfo(MicoApplication application, MicoService service) throws IllegalStateException {
-        List<MicoServiceDeploymentInfo> serviceDeploymentInfos =
-            serviceDeploymentInfoRepository.findByApplicationAndService(
-                application.getShortName(), application.getVersion(),
-                service.getShortName(), service.getVersion());
-
-        if (serviceDeploymentInfos.isEmpty()) {
-            log.error("Deployment info for MicoApplication '{}' in version '{}' and "
-                    + "MicoService '{}' in version '{}' is not available in the database.",
-                application.getShortName(), application.getVersion(), service.getShortName(), service.getVersion());
-            throw new IllegalStateException("Service deployment info for MicoApplication '"
-                + application.getShortName() + "' '" + application.getVersion()
-                + "' and MicoService '" + service.getShortName() + "' '" + service.getVersion() + "' does not exist!");
-        }
-        return serviceDeploymentInfos.get(0);
     }
 
     /**
