@@ -155,21 +155,49 @@ getMicoServicesOfMicoApplicationByShortNameAndVersion
 .. java:method:: public List<MicoService> getMicoServicesOfMicoApplicationByShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException
    :outertype: MicoApplicationBroker
 
-removeKafkaFaasConnectorInstanceFromMicoApplicationByInstanceId
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+removeAllKafkaFaasConnectorInstancesFromMicoApplication
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public void removeKafkaFaasConnectorInstanceFromMicoApplicationByInstanceId(String applicationShortName, String applicationVersion, String instanceId) throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorInstanceNotFoundException, MicoApplicationDoesNotIncludeKFConnectorInstanceException
+.. java:method:: public void removeAllKafkaFaasConnectorInstancesFromMicoApplication(String applicationShortName, String applicationVersion) throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException
    :outertype: MicoApplicationBroker
 
-   Removes a KafkaFaasConnector instance from the \ ``kafkaFaasConnectorDeploymentInfos``\  of the \ :java:ref:`MicoApplication`\ .
+   Removes all KafkaFaasConnector instances from the \ :java:ref:`MicoApplication`\ .
 
    :param applicationShortName: the short name of the \ :java:ref:`MicoApplication`\
    :param applicationVersion: the version of the \ :java:ref:`MicoApplication`\
+   :throws MicoApplicationNotFoundException: if the \ ``MicoApplication``\  does not exist
+   :throws MicoApplicationIsNotUndeployedException: if the \ ``MicoApplication``\  is not undeployed
+
+removeKafkaFaasConnectorInstanceFromMicoApplicationByVersionAndInstanceId
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public void removeKafkaFaasConnectorInstanceFromMicoApplicationByVersionAndInstanceId(String applicationShortName, String applicationVersion, String kfConnectorVersion, String instanceId) throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorInstanceNotFoundException, MicoApplicationDoesNotIncludeKFConnectorInstanceException
+   :outertype: MicoApplicationBroker
+
+   Removes a KafkaFaasConnector instance that has the requested instance id from the \ :java:ref:`MicoApplication`\ .
+
+   :param applicationShortName: the short name of the \ :java:ref:`MicoApplication`\
+   :param applicationVersion: the version of the \ :java:ref:`MicoApplication`\
+   :param kfConnectorVersion: the version of the KafkaFaasConnector \ :java:ref:`MicoService`\
    :param instanceId: the instance ID of the \ :java:ref:`MicoServiceDeploymentInfo`\
    :throws MicoApplicationNotFoundException: if the \ ``MicoApplication``\  does not exist
    :throws MicoApplicationIsNotUndeployedException: if the \ ``MicoApplication``\  is not undeployed
    :throws KafkaFaasConnectorInstanceNotFoundException: if the instance of the KafkaFaasConnector does not exist in MICO
    :throws MicoApplicationDoesNotIncludeKFConnectorInstanceException: if the \ ``MicoApplication``\  does not include the KafkaFaasConnector deployment with the provided instance ID
+
+removeKafkaFaasConnectorInstancesFromMicoApplicationByVersion
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public void removeKafkaFaasConnectorInstancesFromMicoApplicationByVersion(String applicationShortName, String applicationVersion, String kfConnectorVersion) throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException
+   :outertype: MicoApplicationBroker
+
+   Removes all KafkaFaasConnector instances that have the requested version from the \ :java:ref:`MicoApplication`\ .
+
+   :param applicationShortName: the short name of the \ :java:ref:`MicoApplication`\
+   :param applicationVersion: the version of the \ :java:ref:`MicoApplication`\
+   :param kfConnectorVersion: the version of the KafkaFaasConnector \ :java:ref:`MicoService`\
+   :throws MicoApplicationNotFoundException: if the \ ``MicoApplication``\  does not exist
+   :throws MicoApplicationIsNotUndeployedException: if the \ ``MicoApplication``\  is not undeployed
 
 removeMicoServiceFromMicoApplicationByShortNameAndVersion
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
