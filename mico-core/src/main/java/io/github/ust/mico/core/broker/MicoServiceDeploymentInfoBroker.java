@@ -82,12 +82,42 @@ public class MicoServiceDeploymentInfoBroker {
     public MicoServiceDeploymentInfo getMicoServiceDeploymentInformation(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoServiceDeploymentInformationNotFoundException, MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException {
         applicationBroker.getMicoApplicationForMicoService(applicationShortName, applicationVersion, serviceShortName);
 
-        Optional<MicoServiceDeploymentInfo> micoServiceDeploymentInfoOptional = serviceDeploymentInfoRepository.findByApplicationAndService(applicationShortName, applicationVersion, serviceShortName);
-        if (micoServiceDeploymentInfoOptional.isPresent()) {
-            return micoServiceDeploymentInfoOptional.get();
-        } else {
+        List<MicoServiceDeploymentInfo> serviceDeploymentInfos = serviceDeploymentInfoRepository.findByApplicationAndService(applicationShortName, applicationVersion, serviceShortName);
+        if (serviceDeploymentInfos.isEmpty()) {
             throw new MicoServiceDeploymentInformationNotFoundException(applicationShortName, applicationVersion, serviceShortName);
         }
+        return serviceDeploymentInfos.get(0);
+    }
+
+    /**
+     * Retrieves the {@link MicoServiceDeploymentInfo} that is used for the deployment
+     * of the requested {link MicoService} as part of a {@link MicoApplication}.
+     * There must not be zero or more than one service deployment information stored.
+     * If that's the case, an {@link IllegalStateException} will be thrown.
+     *
+     * @param micoApplication the {@link MicoApplication}
+     * @param micoService     the {@link MicoService}
+     * @return the one and only existing {@link MicoServiceDeploymentInfo}
+     * @throws IllegalStateException if there is no or more than one service deployment information stored
+     */
+    public MicoServiceDeploymentInfo getExistingServiceDeploymentInfo(MicoApplication micoApplication, MicoService micoService) throws IllegalStateException {
+        List<MicoServiceDeploymentInfo> serviceDeploymentInfos = serviceDeploymentInfoRepository
+            .findByApplicationAndService(micoApplication.getShortName(), micoApplication.getVersion(),
+                micoService.getShortName(), micoService.getVersion());
+        if (serviceDeploymentInfos.isEmpty()) {
+            String errorMessage = "Previously stored service deployment information for service '" + micoService.getShortName() + "' '" +
+                micoService.getVersion() + "' used by application '" + micoApplication.getShortName() + "' '" + micoApplication.getVersion() + "' not found.";
+            log.error(errorMessage);
+            throw new IllegalStateException(errorMessage);
+        }
+        if (serviceDeploymentInfos.size() > 1) {
+            String errorMessage = "There are " + serviceDeploymentInfos.size() + " service deployment information stored for service '" +
+                micoService.getShortName() + "' '" + micoService.getVersion() + "' used by application '" + micoApplication.getShortName() + "' '" +
+                micoApplication.getVersion() + "'. However, there must be only one.";
+            log.error(errorMessage);
+            throw new IllegalStateException(errorMessage);
+        }
+        return serviceDeploymentInfos.get(0);
     }
 
     /**

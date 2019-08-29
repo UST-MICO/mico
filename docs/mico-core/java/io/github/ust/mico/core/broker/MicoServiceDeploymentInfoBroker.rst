@@ -26,6 +26,19 @@ MicoServiceDeploymentInfoBroker
 
 Methods
 -------
+getExistingServiceDeploymentInfo
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public MicoServiceDeploymentInfo getExistingServiceDeploymentInfo(MicoApplication micoApplication, MicoService micoService) throws IllegalStateException
+   :outertype: MicoServiceDeploymentInfoBroker
+
+   Retrieves the \ :java:ref:`MicoServiceDeploymentInfo`\  that is used for the deployment of the requested {link MicoService} as part of a \ :java:ref:`MicoApplication`\ . There must not be zero or more than one service deployment information stored. If that's the case, an \ :java:ref:`IllegalStateException`\  will be thrown.
+
+   :param micoApplication: the \ :java:ref:`MicoApplication`\
+   :param micoService: the \ :java:ref:`MicoService`\
+   :throws IllegalStateException: if there is no or more than one service deployment information stored
+   :return: the one and only existing \ :java:ref:`MicoServiceDeploymentInfo`\
+
 getMicoServiceDeploymentInformation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
