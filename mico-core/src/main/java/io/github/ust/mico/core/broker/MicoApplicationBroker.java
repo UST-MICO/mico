@@ -74,10 +74,8 @@ public class MicoApplicationBroker {
         // Retrieve application to delete from the database (checks whether it exists)
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(shortName, version);
 
-        // Check whether application is currently undeployed, if not it is not allowed to delete the application
-        if (!micoKubernetesClient.isApplicationUndeployed(micoApplication)) {
-            throw new MicoApplicationIsNotUndeployedException(shortName, version);
-        }
+        // If application is currently not undeployed, it is not allowed to delete the application
+        checkIfApplicationIsUndeployed(micoApplication);
 
         // Any service deployment information this application provides must be deleted
         // before (!) the actual application is deleted, otherwise the query for
@@ -95,9 +93,7 @@ public class MicoApplicationBroker {
         // If at least one version of the application is currently not undeployed,
         // none of the versions shall be deleted
         for (MicoApplication micoApplication : micoApplicationList) {
-            if (!micoKubernetesClient.isApplicationUndeployed(micoApplication)) {
-                throw new MicoApplicationIsNotUndeployedException(micoApplication.getShortName(), micoApplication.getVersion());
-            }
+            checkIfApplicationIsUndeployed(micoApplication);
         }
 
         // Any service deployment information one of the applications provides must be deleted
@@ -127,10 +123,10 @@ public class MicoApplicationBroker {
             throw new VersionOfMicoApplicationDoesNotMatchException();
         }
         MicoApplication existingMicoApplication = getMicoApplicationByShortNameAndVersion(shortName, version);
-        // Check whether application is currently undeployed, if not it is not allowed to update the application
-        if (!micoKubernetesClient.isApplicationUndeployed(micoApplication)) {
-            throw new MicoApplicationIsNotUndeployedException(shortName, version);
-        }
+
+        // If application is currently not undeployed, it is not allowed to update the application
+        checkIfApplicationIsUndeployed(micoApplication);
+
         // TODO: Ensure consistent strategy to update existing entities (covered by mico#690)
         // Set the information that are not part of the request DTO based on the existing application:
         // ID, included services, service deployment information (both for normal services and the KafkaFaasConnectors).
@@ -220,11 +216,7 @@ public class MicoApplicationBroker {
             serviceShortName, serviceVersion, applicationShortName, applicationVersion);
         // Retrieve application and service from database (checks whether they exist)
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
-
-        // Check whether application is currently undeployed, if not it is not allowed to add service to the application
-        if (!micoKubernetesClient.isApplicationUndeployed(micoApplication)) {
-            throw new MicoApplicationIsNotUndeployedException(applicationShortName, applicationShortName);
-        }
+        checkIfApplicationIsUndeployed(micoApplication);
 
         MicoService micoService = micoServiceBroker.getServiceFromDatabase(serviceShortName, serviceVersion);
 
@@ -289,10 +281,8 @@ public class MicoApplicationBroker {
         // Retrieve application from database (checks whether it exists)
         MicoApplication micoApplication = getMicoApplicationForMicoService(applicationShortName, applicationVersion, serviceShortName);
 
-        // Check whether application is currently undeployed, if not it is not allowed to remove services from the application
-        if (!micoKubernetesClient.isApplicationUndeployed(micoApplication)) {
-            throw new MicoApplicationIsNotUndeployedException(applicationShortName, applicationVersion);
-        }
+        // If application is currently not undeployed, it is not allowed to remove services from the application
+        checkIfApplicationIsUndeployed(micoApplication);
 
         // Check whether the application contains the service
         if (micoApplication.getServices().stream().noneMatch(s -> s.getShortName().equals(serviceShortName))) {
@@ -329,9 +319,7 @@ public class MicoApplicationBroker {
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
 
         // Check whether application is currently undeployed, if not it is not allowed to add a KafkaFaasConnector instance to the application
-        if (!micoKubernetesClient.isApplicationUndeployed(micoApplication)) {
-            throw new MicoApplicationIsNotUndeployedException(applicationShortName, applicationShortName);
-        }
+        checkIfApplicationIsUndeployed(micoApplication);
 
         MicoService kfConnector;
         try {
@@ -379,10 +367,8 @@ public class MicoApplicationBroker {
         // Retrieve application from database (checks whether it exists)
         MicoApplication micoApplication = getMicoApplicationForKFConnectorInstance(applicationShortName, applicationVersion, instanceId);
 
-        // Check whether application is currently undeployed, if not it is not allowed to remove a KafkaFaasConnector instance from the application
-        if (!micoKubernetesClient.isApplicationUndeployed(micoApplication)) {
-            throw new MicoApplicationIsNotUndeployedException(applicationShortName, applicationVersion);
-        }
+        // If application is currently not undeployed, it is not allowed to remove a KafkaFaasConnector instance from the application
+        checkIfApplicationIsUndeployed(micoApplication);
 
         log.debug("Remove KafkaFaasConnector instance in version '{}' with instance id '{}' from application '{}' '{}'.",
             kfConnectorVersion, instanceId, applicationShortName, applicationVersion);
@@ -420,10 +406,8 @@ public class MicoApplicationBroker {
         // Retrieve application from database (checks whether it exists)
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
 
-        // Check whether application is currently undeployed, if not it is not allowed to remove a KafkaFaasConnector instance from the application
-        if (!micoKubernetesClient.isApplicationUndeployed(micoApplication)) {
-            throw new MicoApplicationIsNotUndeployedException(applicationShortName, applicationVersion);
-        }
+        // If application is currently not undeployed, it is not allowed to remove a KafkaFaasConnector instance from the application
+        checkIfApplicationIsUndeployed(micoApplication);
 
         List<MicoServiceDeploymentInfo> kafkaFaasConnectorSDIs =
             serviceDeploymentInfoRepository.findKFConnectorSDIsByApplication(applicationShortName, applicationVersion);
@@ -467,10 +451,8 @@ public class MicoApplicationBroker {
         // Retrieve application from database (checks whether it exists)
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
 
-        // Check whether application is currently undeployed, if not it is not allowed to remove a KafkaFaasConnector instance from the application
-        if (!micoKubernetesClient.isApplicationUndeployed(micoApplication)) {
-            throw new MicoApplicationIsNotUndeployedException(applicationShortName, applicationVersion);
-        }
+        // If application is currently not undeployed, it is not allowed to remove a KafkaFaasConnector instance from the application
+        checkIfApplicationIsUndeployed(micoApplication);
 
         List<MicoServiceDeploymentInfo> kafkaFaasConnectorSDIs =
             serviceDeploymentInfoRepository.findKFConnectorSDIsByApplication(applicationShortName, applicationVersion);
@@ -557,6 +539,19 @@ public class MicoApplicationBroker {
         links.add(linkTo(methodOn(ApplicationResource.class).getApplicationByShortNameAndVersion(application.getShortName(), application.getVersion())).withSelfRel());
         links.add(linkTo(methodOn(ApplicationResource.class).getAllApplications()).withRel("applications"));
         return links;
+    }
+
+    /**
+     * Checks whether application is currently undeployed.
+     * If not an {@link MicoApplicationIsNotUndeployedException} is thrown.
+     *
+     * @param micoApplication the {@link MicoApplication}
+     * @throws MicoApplicationIsNotUndeployedException if the application is not undeployed
+     */
+    private void checkIfApplicationIsUndeployed(MicoApplication micoApplication) throws MicoApplicationIsNotUndeployedException {
+        if (!micoKubernetesClient.isApplicationUndeployed(micoApplication)) {
+            throw new MicoApplicationIsNotUndeployedException(micoApplication.getShortName(), micoApplication.getVersion());
+        }
     }
 
 }
