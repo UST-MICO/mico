@@ -161,7 +161,7 @@ removeAllKafkaFaasConnectorInstancesFromMicoApplication
 .. java:method:: public void removeAllKafkaFaasConnectorInstancesFromMicoApplication(String applicationShortName, String applicationVersion) throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException
    :outertype: MicoApplicationBroker
 
-   Removes all KafkaFaasConnector instances from the \ ``kafkaFaasConnectorDeploymentInfos``\  of the \ :java:ref:`MicoApplication`\ .
+   Removes all KafkaFaasConnector instances from the \ :java:ref:`MicoApplication`\ .
 
    :param applicationShortName: the short name of the \ :java:ref:`MicoApplication`\
    :param applicationVersion: the version of the \ :java:ref:`MicoApplication`\
@@ -174,7 +174,7 @@ removeKafkaFaasConnectorInstanceFromMicoApplicationByVersionAndInstanceId
 .. java:method:: public void removeKafkaFaasConnectorInstanceFromMicoApplicationByVersionAndInstanceId(String applicationShortName, String applicationVersion, String kfConnectorVersion, String instanceId) throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorInstanceNotFoundException, MicoApplicationDoesNotIncludeKFConnectorInstanceException
    :outertype: MicoApplicationBroker
 
-   Removes a KafkaFaasConnector instance from the \ ``kafkaFaasConnectorDeploymentInfos``\  of the \ :java:ref:`MicoApplication`\ .
+   Removes a KafkaFaasConnector instance that has the requested instance id from the \ :java:ref:`MicoApplication`\ .
 
    :param applicationShortName: the short name of the \ :java:ref:`MicoApplication`\
    :param applicationVersion: the version of the \ :java:ref:`MicoApplication`\
@@ -191,7 +191,7 @@ removeKafkaFaasConnectorInstancesFromMicoApplicationByVersion
 .. java:method:: public void removeKafkaFaasConnectorInstancesFromMicoApplicationByVersion(String applicationShortName, String applicationVersion, String kfConnectorVersion) throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException
    :outertype: MicoApplicationBroker
 
-   Removes KafkaFaasConnector instances from the \ ``kafkaFaasConnectorDeploymentInfos``\  of the \ :java:ref:`MicoApplication`\  that are used in the requested version.
+   Removes all KafkaFaasConnector instances that have the requested version from the \ :java:ref:`MicoApplication`\ .
 
    :param applicationShortName: the short name of the \ :java:ref:`MicoApplication`\
    :param applicationVersion: the version of the \ :java:ref:`MicoApplication`\

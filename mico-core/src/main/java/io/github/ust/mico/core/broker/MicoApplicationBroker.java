@@ -349,7 +349,7 @@ public class MicoApplicationBroker {
     }
 
     /**
-     * Removes a KafkaFaasConnector instance from the {@code kafkaFaasConnectorDeploymentInfos} of the {@link MicoApplication}.
+     * Removes a KafkaFaasConnector instance that has the requested instance id from the {@link MicoApplication}.
      *
      * @param applicationShortName the short name of the {@link MicoApplication}
      * @param applicationVersion   the version of the {@link MicoApplication}
@@ -390,8 +390,7 @@ public class MicoApplicationBroker {
     }
 
     /**
-     * Removes KafkaFaasConnector instances from the {@code kafkaFaasConnectorDeploymentInfos} of the {@link MicoApplication}
-     * that are used in the requested version.
+     * Removes all KafkaFaasConnector instances that have the requested version from the {@link MicoApplication}.
      *
      * @param applicationShortName the short name of the {@link MicoApplication}
      * @param applicationVersion   the version of the {@link MicoApplication}
@@ -425,20 +424,8 @@ public class MicoApplicationBroker {
         deleteKafkaFaasConnectorDeploymentInfos(applicationShortName, applicationVersion, kafkaFaasConnectorSDIs);
     }
 
-    private void deleteKafkaFaasConnectorDeploymentInfos(String applicationShortName, String applicationVersion, List<MicoServiceDeploymentInfo> kafkaFaasConnectorSDIs) throws MicoApplicationNotFoundException {
-        // It's only required to delete the corresponding service deployment information
-        for (MicoServiceDeploymentInfo kafkaFaasConnectorSDI : kafkaFaasConnectorSDIs) {
-            serviceDeploymentInfoRepository.delete(kafkaFaasConnectorSDI);
-        }
-
-        MicoApplication updatedMicoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
-        log.debug("Updated MicoApplication: {}", updatedMicoApplication);
-
-        // TODO: Update Kubernetes deployment (see issue mico#627)
-    }
-
     /**
-     * Removes all KafkaFaasConnector instances from the {@code kafkaFaasConnectorDeploymentInfos} of the {@link MicoApplication}.
+     * Removes all KafkaFaasConnector instances from the {@link MicoApplication}.
      *
      * @param applicationShortName the short name of the {@link MicoApplication}
      * @param applicationVersion   the version of the {@link MicoApplication}
@@ -495,6 +482,18 @@ public class MicoApplicationBroker {
             throw new MicoApplicationDoesNotIncludeMicoServiceException(applicationShortName, applicationVersion, serviceShortName);
         }
         return micoApplication;
+    }
+
+    private void deleteKafkaFaasConnectorDeploymentInfos(String applicationShortName, String applicationVersion, List<MicoServiceDeploymentInfo> kafkaFaasConnectorSDIs) throws MicoApplicationNotFoundException {
+        // It's only required to delete the corresponding service deployment information
+        for (MicoServiceDeploymentInfo kafkaFaasConnectorSDI : kafkaFaasConnectorSDIs) {
+            serviceDeploymentInfoRepository.delete(kafkaFaasConnectorSDI);
+        }
+
+        MicoApplication updatedMicoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
+        log.debug("Updated MicoApplication: {}", updatedMicoApplication);
+
+        // TODO: Update Kubernetes deployment (see issue mico#627)
     }
 
     /**
