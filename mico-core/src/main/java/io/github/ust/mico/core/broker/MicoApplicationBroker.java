@@ -307,7 +307,7 @@ public class MicoApplicationBroker {
      * @throws MicoApplicationIsNotUndeployedException    if the {@code MicoApplication} is not undeployed
      * @throws KafkaFaasConnectorVersionNotFoundException if the version of the KafkaFaasConnector does not exist in MICO
      */
-    public MicoServiceDeploymentInfo updateKafkaFaasConnectorInstanceOfMicoApplicationByVersionAndInstanceId(
+    public MicoServiceDeploymentInfo addKafkaFaasConnectorInstanceToMicoApplicationByVersion(
         String applicationShortName, String applicationVersion, String kfConnectorVersion)
         throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorVersionNotFoundException {
 

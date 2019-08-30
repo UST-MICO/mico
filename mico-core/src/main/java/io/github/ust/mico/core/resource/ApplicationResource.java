@@ -241,7 +241,7 @@ public class ApplicationResource {
                                                                                                                      @PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION) String kfConnectorVersion) {
         MicoServiceDeploymentInfo kafkaFaasConnectorSDI;
         try {
-            kafkaFaasConnectorSDI = broker.updateKafkaFaasConnectorInstanceOfMicoApplicationByVersionAndInstanceId(
+            kafkaFaasConnectorSDI = broker.addKafkaFaasConnectorInstanceToMicoApplicationByVersion(
                 applicationShortName, applicationVersion, kfConnectorVersion);
         } catch (MicoApplicationNotFoundException | KafkaFaasConnectorVersionNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
