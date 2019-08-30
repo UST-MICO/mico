@@ -209,7 +209,7 @@ public class ApplicationResource {
                 applicationShortName, applicationVersion, serviceShortName, serviceVersion);
         } catch (MicoApplicationNotFoundException | MicoServiceNotFoundException | MicoServiceDeploymentInformationNotFoundException | KubernetesResourceException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        } catch (MicoServiceAlreadyAddedToMicoApplicationException | MicoServiceAddedMoreThanOnceToMicoApplicationException | MicoApplicationIsNotUndeployedException | MicoApplicationDoesNotIncludeMicoServiceException e) {
+        } catch (MicoServiceAddedMoreThanOnceToMicoApplicationException | MicoApplicationIsNotUndeployedException | MicoApplicationDoesNotIncludeMicoServiceException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         } catch (MicoTopicRoleUsedMultipleTimesException | KafkaFaasConnectorNotAllowedHereException e) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
@@ -264,7 +264,7 @@ public class ApplicationResource {
                 applicationShortName, applicationVersion, kfConnectorVersion, instanceId);
         } catch (MicoApplicationNotFoundException | KafkaFaasConnectorVersionNotFoundException | KafkaFaasConnectorInstanceNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        } catch (MicoApplicationIsNotUndeployedException | KafkaFaasConnectorInstanceAlreadyIncludedWithSameVersionInMicoApplicationException e) {
+        } catch (MicoApplicationIsNotUndeployedException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
 

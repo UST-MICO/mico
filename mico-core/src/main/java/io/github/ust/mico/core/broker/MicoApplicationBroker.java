@@ -206,8 +206,9 @@ public class MicoApplicationBroker {
     }
 
     public MicoServiceDeploymentInfo addMicoServiceToMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion)
-        throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAlreadyAddedToMicoApplicationException, MicoServiceAddedMoreThanOnceToMicoApplicationException,
-        MicoApplicationIsNotUndeployedException, MicoTopicRoleUsedMultipleTimesException, MicoServiceDeploymentInformationNotFoundException, KubernetesResourceException, MicoApplicationDoesNotIncludeMicoServiceException, KafkaFaasConnectorNotAllowedHereException {
+        throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAddedMoreThanOnceToMicoApplicationException,
+        MicoApplicationIsNotUndeployedException, MicoTopicRoleUsedMultipleTimesException, MicoServiceDeploymentInformationNotFoundException,
+        KubernetesResourceException, MicoApplicationDoesNotIncludeMicoServiceException, KafkaFaasConnectorNotAllowedHereException {
 
         // KafkaFaasConnector is not allowed here, because it should be handled differently.
         // See method `addKafkaFaasConnectorInstanceToMicoApplicationByVersion`
@@ -252,11 +253,6 @@ public class MicoApplicationBroker {
             log.debug("MicoService '{}' is already included in application '{}' '{}' in version '{}'. " +
                     "Replace it with the version '{}'.", serviceShortName, applicationShortName, applicationVersion,
                 existingMicoService.getVersion(), serviceVersion);
-
-            // ... but only replace if the new version is different from the current version
-            if (existingMicoService.getVersion().equals(serviceVersion)) {
-                throw new MicoServiceAlreadyAddedToMicoApplicationException(applicationShortName, applicationVersion, serviceShortName, serviceVersion);
-            }
 
             // Replace service in list of services in application
             micoApplication.getServices().remove(existingMicoService);
@@ -355,12 +351,10 @@ public class MicoApplicationBroker {
      * @throws MicoApplicationIsNotUndeployedException                                            if the {@code MicoApplication} is not undeployed
      * @throws KafkaFaasConnectorVersionNotFoundException                                         if the version of the KafkaFaasConnector does not exist in MICO
      * @throws KafkaFaasConnectorInstanceNotFoundException                                        if there is no instance for the provided instance id
-     * @throws KafkaFaasConnectorInstanceAlreadyIncludedWithSameVersionInMicoApplicationException if the KafkaFaasConnector instance is already used in the same version by the application
      */
     public MicoServiceDeploymentInfo updateKafkaFaasConnectorInstanceOfMicoApplicationByVersionAndInstanceId(
         String applicationShortName, String applicationVersion, String kfConnectorVersion, String instanceId)
-        throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorVersionNotFoundException,
-        KafkaFaasConnectorInstanceNotFoundException, KafkaFaasConnectorInstanceAlreadyIncludedWithSameVersionInMicoApplicationException {
+        throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorVersionNotFoundException, KafkaFaasConnectorInstanceNotFoundException {
 
         // Retrieve application and service from database (checks whether they exist)
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
@@ -388,17 +382,11 @@ public class MicoApplicationBroker {
             log.error(errorMessage);
             throw new IllegalStateException(errorMessage);
         }
-        // There is already one instance with the same id, replace its newer version...
+        // There is already one instance with the same id, replace its newer version.
         MicoServiceDeploymentInfo existingKfConnectorSDI = kfConnectorsWithSameInstanceId.get(0);
         log.debug("KafkaFaasConnector with instance ID '{}' and version '{}' is already used by the application '{}' '{}'. " +
                 "Replace it with the version '{}'.", existingKfConnectorSDI.getInstanceId(), existingKfConnectorSDI.getService().getVersion(),
             applicationShortName, applicationVersion, kfConnectorVersion);
-
-        // ... but only replace if the new version is different from the current version
-        if (existingKfConnectorSDI.getService().getVersion().equals(kfConnectorVersion)) {
-            throw new KafkaFaasConnectorInstanceAlreadyIncludedWithSameVersionInMicoApplicationException(
-                applicationShortName, applicationVersion, instanceId, kfConnectorVersion);
-        }
 
         // Move the edge between the application and the KafkaFaasConnector to the new version
         // by updating the corresponding deployment info
