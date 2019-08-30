@@ -147,20 +147,20 @@ public class MicoServiceDeploymentInfoRepositoryTests extends MicoRepositoryTest
         applicationRepository.save(a2);
 
         // Application #0 includes no service
-        assertFalse(serviceDeploymentInfoRepository.findByApplicationAndService(a0.getShortName(), a0.getVersion(), s0.getShortName()).isPresent());
-        assertFalse(serviceDeploymentInfoRepository.findByApplicationAndService(a0.getShortName(), a0.getVersion(), s1.getShortName()).isPresent());
+        assertTrue(serviceDeploymentInfoRepository.findByApplicationAndService(a0.getShortName(), a0.getVersion(), s0.getShortName()).isEmpty());
+        assertTrue(serviceDeploymentInfoRepository.findByApplicationAndService(a0.getShortName(), a0.getVersion(), s1.getShortName()).isEmpty());
         // Application #1 only includes service #1
-        assertFalse(serviceDeploymentInfoRepository.findByApplicationAndService(a1.getShortName(), a1.getVersion(), s0.getShortName()).isPresent());
-        Optional<MicoServiceDeploymentInfo> deploymentInfoOptionalA1S1 = serviceDeploymentInfoRepository.findByApplicationAndService(a1.getShortName(), a1.getVersion(), s1.getShortName());
-        assertTrue(deploymentInfoOptionalA1S1.isPresent());
-        assertEquals(a1.getServiceDeploymentInfos().get(0), deploymentInfoOptionalA1S1.get());
+        assertTrue(serviceDeploymentInfoRepository.findByApplicationAndService(a1.getShortName(), a1.getVersion(), s0.getShortName()).isEmpty());
+        List<MicoServiceDeploymentInfo> deploymentInfosA1S1 = serviceDeploymentInfoRepository.findByApplicationAndService(a1.getShortName(), a1.getVersion(), s1.getShortName());
+        assertEquals(1, deploymentInfosA1S1.size());
+        assertEquals(a1.getServiceDeploymentInfos().get(0), deploymentInfosA1S1.get(0));
         // Application #2 includes services #0 and #1
-        Optional<MicoServiceDeploymentInfo> deploymentInfoOptionalA2S0 = serviceDeploymentInfoRepository.findByApplicationAndService(a2.getShortName(), a2.getVersion(), s0.getShortName());
-        assertTrue(deploymentInfoOptionalA2S0.isPresent());
-        assertEquals(matchMicoServiceDeploymentInfoByService(a2.getServiceDeploymentInfos(), s0), deploymentInfoOptionalA2S0.get());
-        Optional<MicoServiceDeploymentInfo> deploymentInfoOptionalA2S1 = serviceDeploymentInfoRepository.findByApplicationAndService(a2.getShortName(), a2.getVersion(), s1.getShortName());
-        assertTrue(deploymentInfoOptionalA2S1.isPresent());
-        assertEquals(matchMicoServiceDeploymentInfoByService(a2.getServiceDeploymentInfos(), s1), deploymentInfoOptionalA2S1.get());
+        List<MicoServiceDeploymentInfo> deploymentInfosA2S0 = serviceDeploymentInfoRepository.findByApplicationAndService(a2.getShortName(), a2.getVersion(), s0.getShortName());
+        assertEquals(1, deploymentInfosA2S0.size());
+        assertEquals(matchMicoServiceDeploymentInfoByService(a2.getServiceDeploymentInfos(), s0), deploymentInfosA2S0.get(0));
+        List<MicoServiceDeploymentInfo> deploymentInfosA2S1 = serviceDeploymentInfoRepository.findByApplicationAndService(a2.getShortName(), a2.getVersion(), s1.getShortName());
+        assertEquals(1, deploymentInfosA2S1.size());
+        assertEquals(matchMicoServiceDeploymentInfoByService(a2.getServiceDeploymentInfos(), s1), deploymentInfosA2S1.get(0));
     }
 
     @Commit
@@ -187,20 +187,20 @@ public class MicoServiceDeploymentInfoRepositoryTests extends MicoRepositoryTest
         applicationRepository.save(a2);
 
         // Application #0 includes no service
-        assertFalse(serviceDeploymentInfoRepository.findByApplicationAndService(a0.getShortName(), a0.getVersion(), s0.getShortName(), s0.getVersion()).isPresent());
-        assertFalse(serviceDeploymentInfoRepository.findByApplicationAndService(a0.getShortName(), a0.getVersion(), s1.getShortName(), s1.getVersion()).isPresent());
+        assertTrue(serviceDeploymentInfoRepository.findByApplicationAndService(a0.getShortName(), a0.getVersion(), s0.getShortName(), s0.getVersion()).isEmpty());
+        assertTrue(serviceDeploymentInfoRepository.findByApplicationAndService(a0.getShortName(), a0.getVersion(), s1.getShortName(), s1.getVersion()).isEmpty());
         // Application #1 only includes service #1
-        assertFalse(serviceDeploymentInfoRepository.findByApplicationAndService(a1.getShortName(), a1.getVersion(), s0.getShortName(), s0.getVersion()).isPresent());
-        Optional<MicoServiceDeploymentInfo> deploymentInfoOptionalA1S1 = serviceDeploymentInfoRepository.findByApplicationAndService(a1.getShortName(), a1.getVersion(), s1.getShortName(), s1.getVersion());
-        assertTrue(deploymentInfoOptionalA1S1.isPresent());
-        assertEquals(a1.getServiceDeploymentInfos().get(0), deploymentInfoOptionalA1S1.get());
+        assertTrue(serviceDeploymentInfoRepository.findByApplicationAndService(a1.getShortName(), a1.getVersion(), s0.getShortName(), s0.getVersion()).isEmpty());
+        List<MicoServiceDeploymentInfo> deploymentInfosA1S1 = serviceDeploymentInfoRepository.findByApplicationAndService(a1.getShortName(), a1.getVersion(), s1.getShortName(), s1.getVersion());
+        assertEquals(1, deploymentInfosA1S1.size());
+        assertEquals(a1.getServiceDeploymentInfos().get(0), deploymentInfosA1S1.get(0));
         // Application #2 includes services #0 and #1
-        Optional<MicoServiceDeploymentInfo> deploymentInfoOptionalA2S0 = serviceDeploymentInfoRepository.findByApplicationAndService(a2.getShortName(), a2.getVersion(), s0.getShortName(), s0.getVersion());
-        assertTrue(deploymentInfoOptionalA2S0.isPresent());
-        assertEquals(matchMicoServiceDeploymentInfoByService(a2.getServiceDeploymentInfos(), s0), deploymentInfoOptionalA2S0.get());
-        Optional<MicoServiceDeploymentInfo> deploymentInfoOptionalA2S1 = serviceDeploymentInfoRepository.findByApplicationAndService(a2.getShortName(), a2.getVersion(), s1.getShortName(), s1.getVersion());
-        assertTrue(deploymentInfoOptionalA2S1.isPresent());
-        assertEquals(matchMicoServiceDeploymentInfoByService(a2.getServiceDeploymentInfos(), s1), deploymentInfoOptionalA2S1.get());
+        List<MicoServiceDeploymentInfo> deploymentInfosA2S0 = serviceDeploymentInfoRepository.findByApplicationAndService(a2.getShortName(), a2.getVersion(), s0.getShortName(), s0.getVersion());
+        assertEquals(1, deploymentInfosA2S0.size());
+        assertEquals(matchMicoServiceDeploymentInfoByService(a2.getServiceDeploymentInfos(), s0), deploymentInfosA2S0.get(0));
+        List<MicoServiceDeploymentInfo> deploymentInfosA2S1 = serviceDeploymentInfoRepository.findByApplicationAndService(a2.getShortName(), a2.getVersion(), s1.getShortName(), s1.getVersion());
+        assertEquals(1, deploymentInfosA2S1.size());
+        assertEquals(matchMicoServiceDeploymentInfoByService(a2.getServiceDeploymentInfos(), s1), deploymentInfosA2S1.get(0));
     }
 
     @Commit
@@ -362,9 +362,11 @@ public class MicoServiceDeploymentInfoRepositoryTests extends MicoRepositoryTest
         sdi0.getTopics().add(tr0);
         applicationRepository.save(a0);
 
-        MicoServiceDeploymentInfo storedSdi = serviceDeploymentInfoRepository
-            .findByApplicationAndService(a0.getShortName(), a0.getVersion(), s0.getShortName()).get();
-        List<MicoTopicRole> topicRoles = storedSdi.getTopics();
+        List<MicoServiceDeploymentInfo> storedSDIs = serviceDeploymentInfoRepository
+            .findByApplicationAndService(a0.getShortName(), a0.getVersion(), s0.getShortName());
+        assertEquals(1, storedSDIs.size());
+        MicoServiceDeploymentInfo storedSDI = storedSDIs.get(0);
+        List<MicoTopicRole> topicRoles = storedSDI.getTopics();
 
         assertEquals(1, topicRoles.size());
         assertEquals(MicoTopicRole.Role.INPUT, topicRoles.get(0).getRole());
@@ -372,13 +374,15 @@ public class MicoServiceDeploymentInfoRepositoryTests extends MicoRepositoryTest
         assertEquals(t0.getName(), topicRoles.get(0).getTopic().getName());
 
         // Update topic
-        storedSdi.getTopics().get(0).getTopic().setName("topic0-updated");
-        storedSdi.getTopics().get(0).setRole(MicoTopicRole.Role.OUTPUT);
-        MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(storedSdi);
+        storedSDI.getTopics().get(0).getTopic().setName("topic0-updated");
+        storedSDI.getTopics().get(0).setRole(MicoTopicRole.Role.OUTPUT);
+        MicoServiceDeploymentInfo updatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(storedSDI);
 
-        MicoServiceDeploymentInfo updatedSdi = serviceDeploymentInfoRepository
-            .findByApplicationAndService(a0.getShortName(), a0.getVersion(), s0.getShortName()).get();
-        List<MicoTopicRole> updatedTopicRoles = updatedSdi.getTopics();
+        List<MicoServiceDeploymentInfo> updatedSDIs = serviceDeploymentInfoRepository
+            .findByApplicationAndService(a0.getShortName(), a0.getVersion(), s0.getShortName());
+        assertEquals(1, updatedSDIs.size());
+        MicoServiceDeploymentInfo updatedSDI = updatedSDIs.get(0);
+        List<MicoTopicRole> updatedTopicRoles = updatedSDI.getTopics();
 
         assertEquals(1, updatedTopicRoles.size());
         assertEquals(MicoTopicRole.Role.OUTPUT, updatedTopicRoles.get(0).getRole());

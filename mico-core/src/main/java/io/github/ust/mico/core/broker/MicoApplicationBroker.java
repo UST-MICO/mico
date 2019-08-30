@@ -37,6 +37,9 @@ public class MicoApplicationBroker {
     private MicoServiceBroker micoServiceBroker;
 
     @Autowired
+    private MicoServiceDeploymentInfoBroker micoServiceDeploymentInfoBroker;
+
+    @Autowired
     private MicoApplicationRepository applicationRepository;
 
     @Autowired
@@ -74,10 +77,8 @@ public class MicoApplicationBroker {
         // Retrieve application to delete from the database (checks whether it exists)
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(shortName, version);
 
-        // Check whether application is currently undeployed, if not it is not allowed to delete the application
-        if (!micoKubernetesClient.isApplicationUndeployed(micoApplication)) {
-            throw new MicoApplicationIsNotUndeployedException(shortName, version);
-        }
+        // If application is currently not undeployed, it is not allowed to delete the application
+        checkIfApplicationIsUndeployed(micoApplication);
 
         // Any service deployment information this application provides must be deleted
         // before (!) the actual application is deleted, otherwise the query for
@@ -95,9 +96,7 @@ public class MicoApplicationBroker {
         // If at least one version of the application is currently not undeployed,
         // none of the versions shall be deleted
         for (MicoApplication micoApplication : micoApplicationList) {
-            if (!micoKubernetesClient.isApplicationUndeployed(micoApplication)) {
-                throw new MicoApplicationIsNotUndeployedException(micoApplication.getShortName(), micoApplication.getVersion());
-            }
+            checkIfApplicationIsUndeployed(micoApplication);
         }
 
         // Any service deployment information one of the applications provides must be deleted
@@ -127,10 +126,10 @@ public class MicoApplicationBroker {
             throw new VersionOfMicoApplicationDoesNotMatchException();
         }
         MicoApplication existingMicoApplication = getMicoApplicationByShortNameAndVersion(shortName, version);
-        // Check whether application is currently undeployed, if not it is not allowed to update the application
-        if (!micoKubernetesClient.isApplicationUndeployed(micoApplication)) {
-            throw new MicoApplicationIsNotUndeployedException(shortName, version);
-        }
+
+        // If application is currently not undeployed, it is not allowed to update the application
+        checkIfApplicationIsUndeployed(micoApplication);
+
         // TODO: Ensure consistent strategy to update existing entities (covered by mico#690)
         // Set the information that are not part of the request DTO based on the existing application:
         // ID, included services, service deployment information (both for normal services and the KafkaFaasConnectors).
@@ -220,11 +219,7 @@ public class MicoApplicationBroker {
             serviceShortName, serviceVersion, applicationShortName, applicationVersion);
         // Retrieve application and service from database (checks whether they exist)
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
-
-        // Check whether application is currently undeployed, if not it is not allowed to add service to the application
-        if (!micoKubernetesClient.isApplicationUndeployed(micoApplication)) {
-            throw new MicoApplicationIsNotUndeployedException(applicationShortName, applicationShortName);
-        }
+        checkIfApplicationIsUndeployed(micoApplication);
 
         MicoService micoService = micoServiceBroker.getServiceFromDatabase(serviceShortName, serviceVersion);
 
@@ -279,20 +274,15 @@ public class MicoApplicationBroker {
             }
         }
 
-        Optional<MicoServiceDeploymentInfo> sdiOptional = serviceDeploymentInfoRepository.findByApplicationAndService(
-            applicationShortName, applicationVersion, serviceShortName, serviceVersion);
-        sdiOptional.orElseThrow(() -> new IllegalStateException("Previously stored service deployment information not found."));
-        return sdiOptional.get();
+        return micoServiceDeploymentInfoBroker.getExistingServiceDeploymentInfo(micoApplication, micoService);
     }
 
     public MicoApplication removeMicoServiceFromMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException, MicoApplicationIsNotUndeployedException {
         // Retrieve application from database (checks whether it exists)
         MicoApplication micoApplication = getMicoApplicationForMicoService(applicationShortName, applicationVersion, serviceShortName);
 
-        // Check whether application is currently undeployed, if not it is not allowed to remove services from the application
-        if (!micoKubernetesClient.isApplicationUndeployed(micoApplication)) {
-            throw new MicoApplicationIsNotUndeployedException(applicationShortName, applicationVersion);
-        }
+        // If application is currently not undeployed, it is not allowed to remove services from the application
+        checkIfApplicationIsUndeployed(micoApplication);
 
         // Check whether the application contains the service
         if (micoApplication.getServices().stream().noneMatch(s -> s.getShortName().equals(serviceShortName))) {
@@ -329,9 +319,7 @@ public class MicoApplicationBroker {
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
 
         // Check whether application is currently undeployed, if not it is not allowed to add a KafkaFaasConnector instance to the application
-        if (!micoKubernetesClient.isApplicationUndeployed(micoApplication)) {
-            throw new MicoApplicationIsNotUndeployedException(applicationShortName, applicationShortName);
-        }
+        checkIfApplicationIsUndeployed(micoApplication);
 
         MicoService kfConnector;
         try {
@@ -361,28 +349,29 @@ public class MicoApplicationBroker {
     }
 
     /**
-     * Removes a KafkaFaasConnector instance from the {@code kafkaFaasConnectorDeploymentInfos} of the {@link MicoApplication}.
+     * Removes a KafkaFaasConnector instance that has the requested instance id from the {@link MicoApplication}.
      *
      * @param applicationShortName the short name of the {@link MicoApplication}
      * @param applicationVersion   the version of the {@link MicoApplication}
+     * @param kfConnectorVersion   the version of the KafkaFaasConnector {@link MicoService}
      * @param instanceId           the instance ID of the {@link MicoServiceDeploymentInfo}
      * @throws MicoApplicationNotFoundException                          if the {@code MicoApplication} does not exist
      * @throws MicoApplicationIsNotUndeployedException                   if the {@code MicoApplication} is not undeployed
      * @throws KafkaFaasConnectorInstanceNotFoundException               if the instance of the KafkaFaasConnector does not exist in MICO
      * @throws MicoApplicationDoesNotIncludeKFConnectorInstanceException if the {@code MicoApplication} does not include the KafkaFaasConnector deployment with the provided instance ID
      */
-    public void removeKafkaFaasConnectorInstanceFromMicoApplicationByInstanceId(
-        String applicationShortName, String applicationVersion, String instanceId)
+    public void removeKafkaFaasConnectorInstanceFromMicoApplicationByVersionAndInstanceId(
+        String applicationShortName, String applicationVersion, String kfConnectorVersion, String instanceId)
         throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorInstanceNotFoundException, MicoApplicationDoesNotIncludeKFConnectorInstanceException {
 
         // Retrieve application from database (checks whether it exists)
         MicoApplication micoApplication = getMicoApplicationForKFConnectorInstance(applicationShortName, applicationVersion, instanceId);
 
-        // Check whether application is currently undeployed, if not it is not allowed to remove a KafkaFaasConnector instance from the application
-        if (!micoKubernetesClient.isApplicationUndeployed(micoApplication)) {
-            throw new MicoApplicationIsNotUndeployedException(applicationShortName, applicationVersion);
-        }
+        // If application is currently not undeployed, it is not allowed to remove a KafkaFaasConnector instance from the application
+        checkIfApplicationIsUndeployed(micoApplication);
 
+        log.debug("Remove KafkaFaasConnector instance in version '{}' with instance id '{}' from application '{}' '{}'.",
+            kfConnectorVersion, instanceId, applicationShortName, applicationVersion);
         Optional<MicoServiceDeploymentInfo> kafkaFaasConnectorSDIOptional =
             serviceDeploymentInfoRepository.findByInstanceId(instanceId);
         if (!kafkaFaasConnectorSDIOptional.isPresent()) {
@@ -394,6 +383,79 @@ public class MicoApplicationBroker {
         serviceDeploymentInfoRepository.delete(kafkaFaasConnectorSDI);
 
         // TODO: Expect that the KafkaFaasConnectorDeploymentInfo is removed (covered in epic mico#750)
+        MicoApplication updatedMicoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
+        log.debug("Updated MicoApplication: {}", updatedMicoApplication);
+
+        // TODO: Update Kubernetes deployment (see issue mico#627)
+    }
+
+    /**
+     * Removes all KafkaFaasConnector instances that have the requested version from the {@link MicoApplication}.
+     *
+     * @param applicationShortName the short name of the {@link MicoApplication}
+     * @param applicationVersion   the version of the {@link MicoApplication}
+     * @param kfConnectorVersion   the version of the KafkaFaasConnector {@link MicoService}
+     * @throws MicoApplicationNotFoundException        if the {@code MicoApplication} does not exist
+     * @throws MicoApplicationIsNotUndeployedException if the {@code MicoApplication} is not undeployed
+     */
+    public void removeKafkaFaasConnectorInstancesFromMicoApplicationByVersion(
+        String applicationShortName, String applicationVersion, String kfConnectorVersion)
+        throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException {
+
+        // Retrieve application from database (checks whether it exists)
+        MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
+
+        // If application is currently not undeployed, it is not allowed to remove a KafkaFaasConnector instance from the application
+        checkIfApplicationIsUndeployed(micoApplication);
+
+        List<MicoServiceDeploymentInfo> kafkaFaasConnectorSDIs =
+            serviceDeploymentInfoRepository.findKFConnectorSDIsByApplication(applicationShortName, applicationVersion);
+        List<MicoServiceDeploymentInfo> kafkaFaasConnectorsWithRequestedVersion = kafkaFaasConnectorSDIs.stream()
+            .filter(sdi -> kfConnectorVersion.equals(sdi.getService().getVersion())).collect(Collectors.toList());
+
+        if (kafkaFaasConnectorsWithRequestedVersion.isEmpty()) {
+            log.debug("There is no KafkaFaasConnector instance in version '{}' used by the application '{}' '{}'. Nothing to do.",
+                kfConnectorVersion, applicationShortName, applicationVersion);
+            return;
+        }
+
+        log.debug("Remove {} KafkaFaasConnector instances in version '{}' from application '{}' '{}'.",
+            kafkaFaasConnectorsWithRequestedVersion.size(), kfConnectorVersion, applicationShortName, applicationVersion);
+        deleteKafkaFaasConnectorDeploymentInfos(applicationShortName, applicationVersion, kafkaFaasConnectorSDIs);
+    }
+
+    /**
+     * Removes all KafkaFaasConnector instances from the {@link MicoApplication}.
+     *
+     * @param applicationShortName the short name of the {@link MicoApplication}
+     * @param applicationVersion   the version of the {@link MicoApplication}
+     * @throws MicoApplicationNotFoundException        if the {@code MicoApplication} does not exist
+     * @throws MicoApplicationIsNotUndeployedException if the {@code MicoApplication} is not undeployed
+     */
+    public void removeAllKafkaFaasConnectorInstancesFromMicoApplication(String applicationShortName, String applicationVersion)
+        throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException {
+
+        // Retrieve application from database (checks whether it exists)
+        MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
+
+        // If application is currently not undeployed, it is not allowed to remove a KafkaFaasConnector instance from the application
+        checkIfApplicationIsUndeployed(micoApplication);
+
+        List<MicoServiceDeploymentInfo> kafkaFaasConnectorSDIs =
+            serviceDeploymentInfoRepository.findKFConnectorSDIsByApplication(applicationShortName, applicationVersion);
+        if (kafkaFaasConnectorSDIs.isEmpty()) {
+            log.debug("There is no KafkaFaasConnector instance used by the application '{}' '{}'. Nothing to do.",
+                applicationShortName, applicationVersion);
+            return;
+        }
+
+        log.debug("Remove {} KafkaFaasConnector instances from application '{}' '{}'.",
+            kafkaFaasConnectorSDIs.size(), applicationShortName, applicationVersion);
+        // It's only required to delete the corresponding service deployment information
+        for (MicoServiceDeploymentInfo kafkaFaasConnectorSDI : kafkaFaasConnectorSDIs) {
+            serviceDeploymentInfoRepository.delete(kafkaFaasConnectorSDI);
+        }
+
         MicoApplication updatedMicoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
         log.debug("Updated MicoApplication: {}", updatedMicoApplication);
 
@@ -420,6 +482,18 @@ public class MicoApplicationBroker {
             throw new MicoApplicationDoesNotIncludeMicoServiceException(applicationShortName, applicationVersion, serviceShortName);
         }
         return micoApplication;
+    }
+
+    private void deleteKafkaFaasConnectorDeploymentInfos(String applicationShortName, String applicationVersion, List<MicoServiceDeploymentInfo> kafkaFaasConnectorSDIs) throws MicoApplicationNotFoundException {
+        // It's only required to delete the corresponding service deployment information
+        for (MicoServiceDeploymentInfo kafkaFaasConnectorSDI : kafkaFaasConnectorSDIs) {
+            serviceDeploymentInfoRepository.delete(kafkaFaasConnectorSDI);
+        }
+
+        MicoApplication updatedMicoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
+        log.debug("Updated MicoApplication: {}", updatedMicoApplication);
+
+        // TODO: Update Kubernetes deployment (see issue mico#627)
     }
 
     /**
@@ -464,6 +538,19 @@ public class MicoApplicationBroker {
         links.add(linkTo(methodOn(ApplicationResource.class).getApplicationByShortNameAndVersion(application.getShortName(), application.getVersion())).withSelfRel());
         links.add(linkTo(methodOn(ApplicationResource.class).getAllApplications()).withRel("applications"));
         return links;
+    }
+
+    /**
+     * Checks whether application is currently undeployed.
+     * If not an {@link MicoApplicationIsNotUndeployedException} is thrown.
+     *
+     * @param micoApplication the {@link MicoApplication}
+     * @throws MicoApplicationIsNotUndeployedException if the application is not undeployed
+     */
+    private void checkIfApplicationIsUndeployed(MicoApplication micoApplication) throws MicoApplicationIsNotUndeployedException {
+        if (!micoKubernetesClient.isApplicationUndeployed(micoApplication)) {
+            throw new MicoApplicationIsNotUndeployedException(micoApplication.getShortName(), micoApplication.getVersion());
+        }
     }
 
 }

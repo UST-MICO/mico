@@ -19,8 +19,15 @@
 
 package io.github.ust.mico.core.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.dto.request.KFConnectorDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.Extension;
+import io.swagger.annotations.ExtensionProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -37,6 +44,25 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class KFConnectorDeploymentInfoResponseDTO extends KFConnectorDeploymentInfoRequestDTO {
 
+    /**
+     * Information about the actual Kubernetes resources created by a deployment.
+     * Contains details about the used Kubernetes {@link Deployment} and {@link Service Services}.
+     * Is read only.
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Kubernetes Deployment Information"),
+            @ExtensionProperty(name = "readOnly", value = "true"),
+            @ExtensionProperty(name = "x-order", value = "100"),
+            @ExtensionProperty(name = "description", value = "Information about the actual Kubernetes resources " +
+                "created by a deployment. Contains details about the used Kubernetes Deployment and Services.")
+        }
+    )})
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private KubernetesDeploymentInfoResponseDTO kubernetesDeploymentInfo;
+
+
     // -------------------
     // -> Constructors ---
     // -------------------
@@ -49,5 +75,11 @@ public class KFConnectorDeploymentInfoResponseDTO extends KFConnectorDeploymentI
      */
     public KFConnectorDeploymentInfoResponseDTO(MicoServiceDeploymentInfo kfConnectorDeploymentInfo) {
         super(kfConnectorDeploymentInfo);
+
+        // Kubernetes deployment info could be null if not available
+        if (kfConnectorDeploymentInfo.getKubernetesDeploymentInfo() != null) {
+            setKubernetesDeploymentInfo(new KubernetesDeploymentInfoResponseDTO(
+                kfConnectorDeploymentInfo.getKubernetesDeploymentInfo()));
+        }
     }
 }
