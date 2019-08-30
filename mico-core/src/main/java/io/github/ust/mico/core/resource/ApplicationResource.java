@@ -46,7 +46,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
@@ -234,25 +233,35 @@ public class ApplicationResource {
         return ResponseEntity.noContent().build();
     }
 
-    @ApiOperation(value = "Adds or updates an association between a MicoApplication and a KafkaFaasConnector (MicoService). " +
+    @ApiOperation(value = "Adds a new association between a MicoApplication and a KafkaFaasConnector (MicoService). " +
         "Multiple instances of a KafkaFaasConnector are allowed per MicoApplication.")
-    @PostMapping(path = {"/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR + "/{" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION + "}",
-        "/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR + "/{" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION + "}/{" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID + "}"})
+    @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR + "/{" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION + "}")
     public ResponseEntity<Resource<KFConnectorDeploymentInfoResponseDTO>> addKafkaFaasConnectorInstanceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
                                                                                                                      @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
-                                                                                                                     @PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION) String kfConnectorVersion,
-                                                                                                                     @PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID) Optional<String> instanceId) {
+                                                                                                                     @PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION) String kfConnectorVersion) {
         MicoServiceDeploymentInfo kafkaFaasConnectorSDI;
         try {
-            // If an instance ID is provided, update the existing instance.
-            // Otherwise create a new instance with an unique ID.
-            if (instanceId.isPresent()) {
-                kafkaFaasConnectorSDI = broker.updateKafkaFaasConnectorInstanceOfMicoApplicationByVersionAndInstanceId(
-                    applicationShortName, applicationVersion, kfConnectorVersion, instanceId.get());
-            } else {
-                kafkaFaasConnectorSDI = broker.addKafkaFaasConnectorInstanceToMicoApplicationByVersion(
-                    applicationShortName, applicationVersion, kfConnectorVersion);
-            }
+            kafkaFaasConnectorSDI = broker.addKafkaFaasConnectorInstanceToMicoApplicationByVersion(
+                applicationShortName, applicationVersion, kfConnectorVersion);
+        } catch (MicoApplicationNotFoundException | KafkaFaasConnectorVersionNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (MicoApplicationIsNotUndeployedException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        }
+
+        return ResponseEntity.ok(new Resource<>(new KFConnectorDeploymentInfoResponseDTO(kafkaFaasConnectorSDI)));
+    }
+
+    @ApiOperation(value = "Updates an existing KafkaFaasConnector deployment information instance with a new version.")
+    @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR + "/{" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION + "}/{" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID + "}")
+    public ResponseEntity<Resource<KFConnectorDeploymentInfoResponseDTO>> updateKafkaFaasConnectorInstanceOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
+                                                                                                                        @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
+                                                                                                                        @PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION) String kfConnectorVersion,
+                                                                                                                        @PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID) String instanceId) {
+        MicoServiceDeploymentInfo kafkaFaasConnectorSDI;
+        try {
+            kafkaFaasConnectorSDI = broker.updateKafkaFaasConnectorInstanceOfMicoApplicationByVersionAndInstanceId(
+                applicationShortName, applicationVersion, kfConnectorVersion, instanceId);
         } catch (MicoApplicationNotFoundException | KafkaFaasConnectorVersionNotFoundException | KafkaFaasConnectorInstanceNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoApplicationIsNotUndeployedException e) {
