@@ -470,23 +470,6 @@ public class MicoApplicationBroker {
     }
 
     /**
-     * Retrieves the KafkaFaasConnector {@link MicoService} with the requested version from the database.
-     *
-     * @param kfConnectorVersion the version of the KafkaFaasConnector
-     * @return the KafkaFaasConnector {@link MicoService}
-     * @throws KafkaFaasConnectorVersionNotFoundException if the version of the KafkaFaasConnector does not exist in MICO
-     */
-    private MicoService getKafkaFaasConnectorServiceByVersion(String kfConnectorVersion) throws KafkaFaasConnectorVersionNotFoundException {
-        MicoService kfConnectorWithRequestedVersion;
-        try {
-            kfConnectorWithRequestedVersion = micoServiceBroker.getServiceFromDatabase(kafkaFaasConnectorConfig.getServiceName(), kfConnectorVersion);
-        } catch (MicoServiceNotFoundException e) {
-            throw new KafkaFaasConnectorVersionNotFoundException(kfConnectorVersion);
-        }
-        return kfConnectorWithRequestedVersion;
-    }
-
-    /**
      * Deletes a KafkaFaasConnector deployment information from the application.
      *
      * @param application           the {@link MicoApplication}
