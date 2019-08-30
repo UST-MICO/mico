@@ -160,3 +160,9 @@ updateApplication
 .. java:method:: @PutMapping public ResponseEntity<Resource<MicoApplicationWithServicesResponseDTO>> updateApplication(String shortName, String version, MicoApplicationRequestDTO applicationRequestDto)
    :outertype: ApplicationResource
 
+updateKafkaFaasConnectorInstanceOfApplication
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: @ApiOperation @PostMapping public ResponseEntity<Resource<KFConnectorDeploymentInfoResponseDTO>> updateKafkaFaasConnectorInstanceOfApplication(String applicationShortName, String applicationVersion, String kfConnectorVersion, String instanceId)
+   :outertype: ApplicationResource
+
