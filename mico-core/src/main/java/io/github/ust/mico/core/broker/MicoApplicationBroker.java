@@ -256,22 +256,22 @@ public class MicoApplicationBroker {
             // ... but only replace if the new version is different from the current version
             if (existingMicoService.getVersion().equals(serviceVersion)) {
                 throw new MicoServiceAlreadyAddedToMicoApplicationException(applicationShortName, applicationVersion, serviceShortName, serviceVersion);
-            } else {
-                // Replace service in list of services in application
-                micoApplication.getServices().remove(existingMicoService);
-                micoApplication.getServices().add(micoService);
-
-                // Move the edge between the application and the service to the new version of the service
-                // by updating the corresponding deployment info
-                micoApplication.getServiceDeploymentInfos().stream()
-                    .filter(sdi -> sdi.getService().getShortName().equals(serviceShortName))
-                    .collect(Collectors.toList())
-                    .forEach(sdi -> sdi.setService(micoService));
-
-                // Save the application with the updated list of services
-                // and service deployment infos in the database
-                applicationRepository.save(micoApplication);
             }
+
+            // Replace service in list of services in application
+            micoApplication.getServices().remove(existingMicoService);
+            micoApplication.getServices().add(micoService);
+
+            // Move the edge between the application and the service to the new version of the service
+            // by updating the corresponding deployment info
+            micoApplication.getServiceDeploymentInfos().stream()
+                .filter(sdi -> sdi.getService().getShortName().equals(serviceShortName))
+                .collect(Collectors.toList())
+                .forEach(sdi -> sdi.setService(micoService));
+
+            // Save the application with the updated list of services
+            // and service deployment infos in the database
+            applicationRepository.save(micoApplication);
         }
 
         return micoServiceDeploymentInfoBroker.getExistingServiceDeploymentInfo(micoApplication, micoService);
@@ -288,13 +288,13 @@ public class MicoApplicationBroker {
         if (micoApplication.getServices().stream().noneMatch(s -> s.getShortName().equals(serviceShortName))) {
             // Application does not include the service -> cannot not be deleted from it
             throw new MicoApplicationDoesNotIncludeMicoServiceException(applicationShortName, applicationVersion, serviceShortName);
-        } else {
-            // 1. Delete the corresponding service deployment information
-            serviceDeploymentInfoRepository.deleteByApplicationAndService(applicationShortName, applicationVersion, serviceShortName);
-            // 2. Remove the service from the application
-            micoApplication.getServices().removeIf(s -> s.getShortName().equals(serviceShortName));
-            return applicationRepository.save(micoApplication);
         }
+
+        // 1. Delete the corresponding service deployment information
+        serviceDeploymentInfoRepository.deleteByApplicationAndService(applicationShortName, applicationVersion, serviceShortName);
+        // 2. Remove the service from the application
+        micoApplication.getServices().removeIf(s -> s.getShortName().equals(serviceShortName));
+        return applicationRepository.save(micoApplication);
 
         // TODO: Update Kubernetes deployment (see issue mico#627)
     }
@@ -398,16 +398,16 @@ public class MicoApplicationBroker {
         if (existingKfConnectorSDI.getService().getVersion().equals(kfConnectorVersion)) {
             throw new KafkaFaasConnectorInstanceAlreadyIncludedWithSameVersionInMicoApplicationException(
                 applicationShortName, applicationVersion, instanceId, kfConnectorVersion);
-        } else {
-            // Move the edge between the application and the KafkaFaasConnector to the new version
-            // by updating the corresponding deployment info
-            existingKfConnectorSDI.setService(kfConnectorWithRequestedVersion);
-
-            // Save the application with the updated list of KafkaFaasConnector deployment infos in the database
-            applicationRepository.save(micoApplication);
-
-            // TODO: Update Kubernetes deployment (see issue mico#627)
         }
+
+        // Move the edge between the application and the KafkaFaasConnector to the new version
+        // by updating the corresponding deployment info
+        existingKfConnectorSDI.setService(kfConnectorWithRequestedVersion);
+
+        // Save the application with the updated list of KafkaFaasConnector deployment infos in the database
+        applicationRepository.save(micoApplication);
+
+        // TODO: Update Kubernetes deployment (see issue mico#627)
         return existingKfConnectorSDI;
     }
 
