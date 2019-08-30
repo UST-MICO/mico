@@ -67,7 +67,7 @@ addKafkaFaasConnectorInstanceToMicoApplicationByVersion
 addMicoServiceToMicoApplicationByShortNameAndVersion
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public MicoServiceDeploymentInfo addMicoServiceToMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion) throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAlreadyAddedToMicoApplicationException, MicoServiceAddedMoreThanOnceToMicoApplicationException, MicoApplicationIsNotUndeployedException, MicoTopicRoleUsedMultipleTimesException, MicoServiceDeploymentInformationNotFoundException, KubernetesResourceException, MicoApplicationDoesNotIncludeMicoServiceException, KafkaFaasConnectorNotAllowedHereException
+.. java:method:: public MicoServiceDeploymentInfo addMicoServiceToMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion) throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAddedMoreThanOnceToMicoApplicationException, MicoApplicationIsNotUndeployedException, MicoTopicRoleUsedMultipleTimesException, MicoServiceDeploymentInformationNotFoundException, KubernetesResourceException, MicoApplicationDoesNotIncludeMicoServiceException, KafkaFaasConnectorNotAllowedHereException
    :outertype: MicoApplicationBroker
 
 copyAndUpgradeMicoApplicationByShortNameAndVersion
@@ -206,6 +206,24 @@ removeMicoServiceFromMicoApplicationByShortNameAndVersion
 
 .. java:method:: public MicoApplication removeMicoServiceFromMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException, MicoApplicationIsNotUndeployedException
    :outertype: MicoApplicationBroker
+
+updateKafkaFaasConnectorInstanceOfMicoApplicationByVersionAndInstanceId
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public MicoServiceDeploymentInfo updateKafkaFaasConnectorInstanceOfMicoApplicationByVersionAndInstanceId(String applicationShortName, String applicationVersion, String kfConnectorVersion, String instanceId) throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorVersionNotFoundException, KafkaFaasConnectorInstanceNotFoundException
+   :outertype: MicoApplicationBroker
+
+   Updates an existing KafkaFaasConnector instance of the \ :java:ref:`MicoApplication`\  to a new version.
+
+   :param applicationShortName: the short name of the \ :java:ref:`MicoApplication`\
+   :param applicationVersion: the version of the \ :java:ref:`MicoApplication`\
+   :param kfConnectorVersion: the version of the KafkaFaasConnector (\ :java:ref:`MicoService`\
+   :param instanceId: the instance ID of an existing \ :java:ref:`MicoServiceDeploymentInfo`\ . It will be reused to update its version
+   :throws MicoApplicationNotFoundException: if the \ ``MicoApplication``\  does not exist
+   :throws MicoApplicationIsNotUndeployedException: if the \ ``MicoApplication``\  is not undeployed
+   :throws KafkaFaasConnectorVersionNotFoundException: if the version of the KafkaFaasConnector does not exist in MICO
+   :throws KafkaFaasConnectorInstanceNotFoundException: if there is no instance for the provided instance id
+   :return: the existing \ :java:ref:`MicoServiceDeploymentInfo`\  with the new version
 
 updateMicoApplication
 ^^^^^^^^^^^^^^^^^^^^^
