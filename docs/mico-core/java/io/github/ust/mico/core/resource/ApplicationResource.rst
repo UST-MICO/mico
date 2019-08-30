@@ -46,8 +46,6 @@
 
 .. java:import:: java.util List
 
-.. java:import:: java.util Optional
-
 .. java:import:: java.util.stream Collectors
 
 ApplicationResource
@@ -63,7 +61,7 @@ Methods
 addKafkaFaasConnectorInstanceToApplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: @ApiOperation @PostMapping public ResponseEntity<Resource<KFConnectorDeploymentInfoResponseDTO>> addKafkaFaasConnectorInstanceToApplication(String applicationShortName, String applicationVersion, String kfConnectorVersion, Optional<String> instanceId)
+.. java:method:: @ApiOperation @PostMapping public ResponseEntity<Resource<KFConnectorDeploymentInfoResponseDTO>> addKafkaFaasConnectorInstanceToApplication(String applicationShortName, String applicationVersion, String kfConnectorVersion)
    :outertype: ApplicationResource
 
 addServiceToApplication
@@ -160,5 +158,11 @@ updateApplication
 ^^^^^^^^^^^^^^^^^
 
 .. java:method:: @PutMapping public ResponseEntity<Resource<MicoApplicationWithServicesResponseDTO>> updateApplication(String shortName, String version, MicoApplicationRequestDTO applicationRequestDto)
+   :outertype: ApplicationResource
+
+updateKafkaFaasConnectorInstanceOfApplication
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: @ApiOperation @PostMapping public ResponseEntity<Resource<KFConnectorDeploymentInfoResponseDTO>> updateKafkaFaasConnectorInstanceOfApplication(String applicationShortName, String applicationVersion, String kfConnectorVersion, String instanceId)
    :outertype: ApplicationResource
 
