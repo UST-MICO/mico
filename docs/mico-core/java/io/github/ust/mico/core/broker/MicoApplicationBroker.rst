@@ -18,6 +18,8 @@
 
 .. java:import:: io.github.ust.mico.core.service MicoStatusService
 
+.. java:import:: io.github.ust.mico.core.util CollectionUtils
+
 .. java:import:: io.github.ust.mico.core.util UIDUtils
 
 .. java:import:: lombok.extern.slf4j Slf4j
