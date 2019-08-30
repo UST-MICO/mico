@@ -46,10 +46,26 @@ MicoApplicationBroker
 
 Methods
 -------
+addKafkaFaasConnectorInstanceToMicoApplicationByVersion
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public MicoServiceDeploymentInfo addKafkaFaasConnectorInstanceToMicoApplicationByVersion(String applicationShortName, String applicationVersion, String kfConnectorVersion) throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorVersionNotFoundException
+   :outertype: MicoApplicationBroker
+
+   Adds a new KafkaFaasConnector instance to the \ ``kafkaFaasConnectorDeploymentInfos``\  of the \ :java:ref:`MicoApplication`\ . An unique instance ID will be created that is returned as part of a \ :java:ref:`MicoServiceDeploymentInfo`\ .
+
+   :param applicationShortName: the short name of the \ :java:ref:`MicoApplication`\
+   :param applicationVersion: the version of the \ :java:ref:`MicoApplication`\
+   :param kfConnectorVersion: the version of the KafkaFaasConnector (\ :java:ref:`MicoService`\
+   :throws MicoApplicationNotFoundException: if the \ ``MicoApplication``\  does not exist
+   :throws MicoApplicationIsNotUndeployedException: if the \ ``MicoApplication``\  is not undeployed
+   :throws KafkaFaasConnectorVersionNotFoundException: if the version of the KafkaFaasConnector does not exist in MICO
+   :return: the \ :java:ref:`MicoServiceDeploymentInfo`\  including the newly created instance ID
+
 addMicoServiceToMicoApplicationByShortNameAndVersion
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public MicoServiceDeploymentInfo addMicoServiceToMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion) throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAlreadyAddedToMicoApplicationException, MicoServiceAddedMoreThanOnceToMicoApplicationException, MicoApplicationIsNotUndeployedException, MicoTopicRoleUsedMultipleTimesException, MicoServiceDeploymentInformationNotFoundException, KubernetesResourceException, MicoApplicationDoesNotIncludeMicoServiceException, KafkaFaasConnectorNotAllowedHereException
+.. java:method:: public MicoServiceDeploymentInfo addMicoServiceToMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion) throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAddedMoreThanOnceToMicoApplicationException, MicoApplicationIsNotUndeployedException, MicoTopicRoleUsedMultipleTimesException, MicoServiceDeploymentInformationNotFoundException, KubernetesResourceException, MicoApplicationDoesNotIncludeMicoServiceException, KafkaFaasConnectorNotAllowedHereException
    :outertype: MicoApplicationBroker
 
 copyAndUpgradeMicoApplicationByShortNameAndVersion
@@ -192,23 +208,7 @@ removeMicoServiceFromMicoApplicationByShortNameAndVersion
 updateKafkaFaasConnectorInstanceOfMicoApplicationByVersionAndInstanceId
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public MicoServiceDeploymentInfo updateKafkaFaasConnectorInstanceOfMicoApplicationByVersionAndInstanceId(String applicationShortName, String applicationVersion, String kfConnectorVersion) throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorVersionNotFoundException
-   :outertype: MicoApplicationBroker
-
-   Adds a new KafkaFaasConnector instance to the \ ``kafkaFaasConnectorDeploymentInfos``\  of the \ :java:ref:`MicoApplication`\ . An unique instance ID will be created that is returned as part of a \ :java:ref:`MicoServiceDeploymentInfo`\ .
-
-   :param applicationShortName: the short name of the \ :java:ref:`MicoApplication`\
-   :param applicationVersion: the version of the \ :java:ref:`MicoApplication`\
-   :param kfConnectorVersion: the version of the KafkaFaasConnector (\ :java:ref:`MicoService`\
-   :throws MicoApplicationNotFoundException: if the \ ``MicoApplication``\  does not exist
-   :throws MicoApplicationIsNotUndeployedException: if the \ ``MicoApplication``\  is not undeployed
-   :throws KafkaFaasConnectorVersionNotFoundException: if the version of the KafkaFaasConnector does not exist in MICO
-   :return: the \ :java:ref:`MicoServiceDeploymentInfo`\  including the newly created instance ID
-
-updateKafkaFaasConnectorInstanceOfMicoApplicationByVersionAndInstanceId
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. java:method:: public MicoServiceDeploymentInfo updateKafkaFaasConnectorInstanceOfMicoApplicationByVersionAndInstanceId(String applicationShortName, String applicationVersion, String kfConnectorVersion, String instanceId) throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorVersionNotFoundException, KafkaFaasConnectorInstanceNotFoundException, KafkaFaasConnectorInstanceAlreadyIncludedWithSameVersionInMicoApplicationException
+.. java:method:: public MicoServiceDeploymentInfo updateKafkaFaasConnectorInstanceOfMicoApplicationByVersionAndInstanceId(String applicationShortName, String applicationVersion, String kfConnectorVersion, String instanceId) throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorVersionNotFoundException, KafkaFaasConnectorInstanceNotFoundException
    :outertype: MicoApplicationBroker
 
    Updates an existing KafkaFaasConnector instance of the \ :java:ref:`MicoApplication`\  to a new version.
@@ -221,7 +221,6 @@ updateKafkaFaasConnectorInstanceOfMicoApplicationByVersionAndInstanceId
    :throws MicoApplicationIsNotUndeployedException: if the \ ``MicoApplication``\  is not undeployed
    :throws KafkaFaasConnectorVersionNotFoundException: if the version of the KafkaFaasConnector does not exist in MICO
    :throws KafkaFaasConnectorInstanceNotFoundException: if there is no instance for the provided instance id
-   :throws KafkaFaasConnectorInstanceAlreadyIncludedWithSameVersionInMicoApplicationException: if the KafkaFaasConnector instance is already used in the same version by the application
    :return: the existing \ :java:ref:`MicoServiceDeploymentInfo`\  with the new version
 
 updateMicoApplication

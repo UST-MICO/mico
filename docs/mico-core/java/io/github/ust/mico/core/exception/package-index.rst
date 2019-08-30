@@ -9,7 +9,6 @@ io.github.ust.mico.core.exception
    DeploymentException
    GlobalExceptionHandler
    ImageBuildException
-   KafkaFaasConnectorInstanceAlreadyIncludedWithSameVersionInMicoApplicationException
    KafkaFaasConnectorInstanceNotFoundException
    KafkaFaasConnectorNotAllowedHereException
    KafkaFaasConnectorVersionNotFoundException
