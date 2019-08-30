@@ -311,7 +311,7 @@ public class MicoApplicationBroker {
      * @throws MicoApplicationIsNotUndeployedException    if the {@code MicoApplication} is not undeployed
      * @throws KafkaFaasConnectorVersionNotFoundException if the version of the KafkaFaasConnector does not exist in MICO
      */
-    public MicoServiceDeploymentInfo addKafkaFaasConnectorInstanceToMicoApplicationByVersion(
+    public MicoServiceDeploymentInfo updateKafkaFaasConnectorInstanceOfMicoApplicationByVersionAndInstanceId(
         String applicationShortName, String applicationVersion, String kfConnectorVersion)
         throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorVersionNotFoundException {
 
@@ -321,12 +321,7 @@ public class MicoApplicationBroker {
         // Check whether application is currently undeployed, if not it is not allowed to add a KafkaFaasConnector instance to the application
         checkIfApplicationIsUndeployed(micoApplication);
 
-        MicoService kfConnector;
-        try {
-            kfConnector = micoServiceBroker.getServiceFromDatabase(kafkaFaasConnectorConfig.getServiceName(), kfConnectorVersion);
-        } catch (MicoServiceNotFoundException e) {
-            throw new KafkaFaasConnectorVersionNotFoundException(kfConnectorVersion);
-        }
+        MicoService kfConnector = getKafkaFaasConnectorServiceByVersion(kfConnectorVersion);
 
         String instanceId = UIDUtils.uidFor(kfConnector);
         MicoServiceDeploymentInfo sdi = new MicoServiceDeploymentInfo()
@@ -346,6 +341,74 @@ public class MicoApplicationBroker {
         //serviceDeploymentInfoBroker.updateKafkaFaasConnectorDeploymentInformation(applicationShortName, applicationVersion, instanceId,
         //    new KFConnectorDeploymentInfoRequestDTO(sdi));
         return sdi;
+    }
+
+    /**
+     * Updates an existing KafkaFaasConnector instance of the {@link MicoApplication} to a new version.
+     *
+     * @param applicationShortName the short name of the {@link MicoApplication}
+     * @param applicationVersion   the version of the {@link MicoApplication}
+     * @param kfConnectorVersion   the version of the KafkaFaasConnector ({@link MicoService}
+     * @param instanceId           the instance ID of an existing {@link MicoServiceDeploymentInfo}. It will be reused to update its version
+     * @return the existing {@link MicoServiceDeploymentInfo} with the new version
+     * @throws MicoApplicationNotFoundException                                                   if the {@code MicoApplication} does not exist
+     * @throws MicoApplicationIsNotUndeployedException                                            if the {@code MicoApplication} is not undeployed
+     * @throws KafkaFaasConnectorVersionNotFoundException                                         if the version of the KafkaFaasConnector does not exist in MICO
+     * @throws KafkaFaasConnectorInstanceNotFoundException                                        if there is no instance for the provided instance id
+     * @throws KafkaFaasConnectorInstanceAlreadyIncludedWithSameVersionInMicoApplicationException if the KafkaFaasConnector instance is already used in the same version by the application
+     */
+    public MicoServiceDeploymentInfo updateKafkaFaasConnectorInstanceOfMicoApplicationByVersionAndInstanceId(
+        String applicationShortName, String applicationVersion, String kfConnectorVersion, String instanceId)
+        throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorVersionNotFoundException,
+        KafkaFaasConnectorInstanceNotFoundException, KafkaFaasConnectorInstanceAlreadyIncludedWithSameVersionInMicoApplicationException {
+
+        // Retrieve application and service from database (checks whether they exist)
+        MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
+
+        // Check whether application is currently undeployed, if not it is not allowed to add a KafkaFaasConnector instance to the application
+        checkIfApplicationIsUndeployed(micoApplication);
+
+        MicoService kfConnectorWithRequestedVersion = getKafkaFaasConnectorServiceByVersion(kfConnectorVersion);
+
+        // Find all service deployment information with identical instance ID within this application
+        List<MicoServiceDeploymentInfo> kfConnectorsWithSameInstanceId = micoApplication.getKafkaFaasConnectorDeploymentInfos().stream()
+            .filter(kfCDI -> kfCDI.getInstanceId().equals(instanceId)).collect(Collectors.toList());
+        log.debug("Found {} KafkaFaasConnector(s) with instance ID '{}' within application '{}' '{}'.",
+            kfConnectorsWithSameInstanceId.size(), instanceId, applicationShortName, applicationVersion);
+
+        if (kfConnectorsWithSameInstanceId.isEmpty()) {
+            throw new KafkaFaasConnectorInstanceNotFoundException(instanceId);
+        }
+        if (kfConnectorsWithSameInstanceId.size() > 1) {
+            // Illegal state, an instanceIdOptional must be unique
+            String errorMessage = "There are " + kfConnectorsWithSameInstanceId.size() +
+                " service deployment information stored for KafkaFaasConnector in version with the same instance ID '"
+                + instanceId + "' used by the application '" + micoApplication.getShortName() +
+                "' '" + micoApplication.getVersion() + "'. However, an instance ID must be unique.";
+            log.error(errorMessage);
+            throw new IllegalStateException(errorMessage);
+        }
+        // There is already one instance with the same id, replace its newer version...
+        MicoServiceDeploymentInfo existingKfConnectorSDI = kfConnectorsWithSameInstanceId.get(0);
+        log.debug("KafkaFaasConnector with instance ID '{}' and version '{}' is already used by the application '{}' '{}'. " +
+                "Replace it with the version '{}'.", existingKfConnectorSDI.getInstanceId(), existingKfConnectorSDI.getService().getVersion(),
+            applicationShortName, applicationVersion, kfConnectorVersion);
+
+        // ... but only replace if the new version is different from the current version
+        if (existingKfConnectorSDI.getService().getVersion().equals(kfConnectorVersion)) {
+            throw new KafkaFaasConnectorInstanceAlreadyIncludedWithSameVersionInMicoApplicationException(
+                applicationShortName, applicationVersion, instanceId, kfConnectorVersion);
+        } else {
+            // Move the edge between the application and the KafkaFaasConnector to the new version
+            // by updating the corresponding deployment info
+            existingKfConnectorSDI.setService(kfConnectorWithRequestedVersion);
+
+            // Save the application with the updated list of KafkaFaasConnector deployment infos in the database
+            applicationRepository.save(micoApplication);
+
+            // TODO: Update Kubernetes deployment (see issue mico#627)
+        }
+        return existingKfConnectorSDI;
     }
 
     /**
@@ -482,6 +545,23 @@ public class MicoApplicationBroker {
             throw new MicoApplicationDoesNotIncludeMicoServiceException(applicationShortName, applicationVersion, serviceShortName);
         }
         return micoApplication;
+    }
+
+    /**
+     * Retrieves the KafkaFaasConnector {@link MicoService} with the requested version from the database.
+     *
+     * @param kfConnectorVersion the version of the KafkaFaasConnector
+     * @return the KafkaFaasConnector {@link MicoService}
+     * @throws KafkaFaasConnectorVersionNotFoundException if the version of the KafkaFaasConnector does not exist in MICO
+     */
+    private MicoService getKafkaFaasConnectorServiceByVersion(String kfConnectorVersion) throws KafkaFaasConnectorVersionNotFoundException {
+        MicoService kfConnectorWithRequestedVersion;
+        try {
+            kfConnectorWithRequestedVersion = micoServiceBroker.getServiceFromDatabase(kafkaFaasConnectorConfig.getServiceName(), kfConnectorVersion);
+        } catch (MicoServiceNotFoundException e) {
+            throw new KafkaFaasConnectorVersionNotFoundException(kfConnectorVersion);
+        }
+        return kfConnectorWithRequestedVersion;
     }
 
     private void deleteKafkaFaasConnectorDeploymentInfos(String applicationShortName, String applicationVersion, List<MicoServiceDeploymentInfo> kafkaFaasConnectorSDIs) throws MicoApplicationNotFoundException {
