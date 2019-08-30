@@ -249,10 +249,12 @@ public class MicoApplicationBroker {
             serviceDeploymentInfoBroker.updateMicoServiceDeploymentInformation(applicationShortName, applicationVersion, serviceShortName,
                 new MicoServiceDeploymentInfoRequestDTO(micoServiceDeploymentInfo));
         } else {
-            // Service already included, replace it with its newer version, ...
+            // Service already included, replace it with its newer version if it differs from the current version.
             MicoService existingMicoService = micoServices.get(0);
-            if (!existingMicoService.getVersion().equals(serviceVersion)) {
-                // ... but only if the new version is different from the current version.
+            if (existingMicoService.getVersion().equals(serviceVersion)) {
+                log.debug("MicoService '{}' is already included in application '{}' '{}' in requested version '{}'. " +
+                    "Nothing to do.", serviceShortName, applicationShortName, applicationVersion, serviceVersion);
+            } else {
                 log.debug("MicoService '{}' is already included in application '{}' '{}' in version '{}'. " +
                         "Replace it with the version '{}'.", serviceShortName, applicationShortName, applicationVersion,
                     existingMicoService.getVersion(), serviceVersion);
@@ -271,9 +273,6 @@ public class MicoApplicationBroker {
                 // Save the application with the updated list of services
                 // and service deployment infos in the database
                 applicationRepository.save(micoApplication);
-            } else {
-                log.debug("MicoService '{}' is already included in application '{}' '{}' in requested version '{}'. " +
-                    "Nothing to do.", serviceShortName, applicationShortName, applicationVersion, serviceVersion);
             }
         }
 
@@ -390,10 +389,14 @@ public class MicoApplicationBroker {
             throw new IllegalStateException(errorMessage);
         }
 
-        // There is already one instance with the same id, replace its newer version, ...
+        // There is already one instance with the same id,
+        // replace it with its newer version if it differs from the current version.
         MicoServiceDeploymentInfo existingKfConnectorSDI = kfConnectorsWithSameInstanceId.get(0);
-        if (!existingKfConnectorSDI.getService().getVersion().equals(kfConnectorVersion)) {
-            // ... but only if the new version is different from the current version.
+        if (existingKfConnectorSDI.getService().getVersion().equals(kfConnectorVersion)) {
+            log.debug("KafkaFaasConnector with instance ID '{}' and requested version '{}' is already used by the application '{}' '{}'. " +
+                    "Nothing to do.", existingKfConnectorSDI.getInstanceId(), existingKfConnectorSDI.getService().getVersion(),
+                applicationShortName, applicationVersion);
+        } else {
             log.debug("KafkaFaasConnector with instance ID '{}' and version '{}' is already used by the application '{}' '{}'. " +
                     "Replace it with the version '{}'.", existingKfConnectorSDI.getInstanceId(), existingKfConnectorSDI.getService().getVersion(),
                 applicationShortName, applicationVersion, kfConnectorVersion);
@@ -404,10 +407,6 @@ public class MicoApplicationBroker {
 
             // Save the application with the updated list of KafkaFaasConnector deployment infos in the database
             applicationRepository.save(micoApplication);
-        } else {
-            log.debug("KafkaFaasConnector with instance ID '{}' and requested version '{}' is already used by the application '{}' '{}'. " +
-                    "Nothing to do.", existingKfConnectorSDI.getInstanceId(), existingKfConnectorSDI.getService().getVersion(),
-                applicationShortName, applicationVersion);
         }
 
         // TODO: Update Kubernetes deployment (see issue mico#627)
