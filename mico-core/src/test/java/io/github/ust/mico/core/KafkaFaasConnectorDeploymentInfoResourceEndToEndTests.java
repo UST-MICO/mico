@@ -89,6 +89,30 @@ public class KafkaFaasConnectorDeploymentInfoResourceEndToEndTests extends Neo4j
             .andExpect(jsonPath(DEPLOYMENT_INFO_RESPONSE_DTO_LIST_JSON_PATH, hasSize(1)));
     }
 
+    @Test
+    public void getKafkaFaasConnectorDeploymentInfoMoreElements() throws Exception {
+        MicoApplication application = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
+        MicoService kafkaFaasConnectorMicoService = getKafkaFaasConnectorMicoService();
+        micoServiceRepository.save(kafkaFaasConnectorMicoService);
+        int count = 3;
+        for (int i = 0; i < count; i++) {
+            addKafkaFaasConnectorToApplication(application, kafkaFaasConnectorMicoService);
+        }
+        applicationRepository.save(application);
+
+        mvc.perform(get(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECOTR_DEPLOYMENT_INFORMATION))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(DEPLOYMENT_INFO_RESPONSE_DTO_LIST_JSON_PATH, hasSize(count)));
+    }
+
+    @Test
+    public void getKafkaFaasConnectorDeploymentInfoNoApplication() throws Exception {
+        mvc.perform(get(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECOTR_DEPLOYMENT_INFORMATION))
+            .andDo(print())
+            .andExpect(status().isNotFound());
+    }
+
     private void addKafkaFaasConnectorToApplication(MicoApplication application, MicoService kafkaFaasConnectorMicoService) {
         String instanceId = UIDUtils.uidFor(kafkaFaasConnectorMicoService);
         MicoServiceDeploymentInfo sdi = new MicoServiceDeploymentInfo()
