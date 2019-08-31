@@ -19,7 +19,14 @@
 
 package io.github.ust.mico.core;
 
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceCrawlingOrigin;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.util.UIDUtils;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -29,6 +36,18 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static io.github.ust.mico.core.JsonPathBuilder.EMBEDDED;
+import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.VERSION;
+import static io.github.ust.mico.core.resource.ApplicationResource.PATH_APPLICATIONS;
+import static io.github.ust.mico.core.resource.KafkaFaasConnectorDeploymentInfoResource.PATH_KAFKA_FAAS_CONNECOTR_DEPLOYMENT_INFORMATION;
+import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 @RunWith(SpringRunner.class)
 @EnableAutoConfiguration
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
@@ -36,10 +55,57 @@ import org.springframework.test.web.servlet.MockMvc;
 @ActiveProfiles("local")
 public class KafkaFaasConnectorDeploymentInfoResourceEndToEndTests extends Neo4jTestClass {
 
+    protected static final String DEPLOYMENT_INFO_RESPONSE_DTO_LIST_JSON_PATH = JsonPathBuilder.buildPath(ROOT, EMBEDDED, "micoServiceDeploymentInfoResponseDTOList");
     @Autowired
     private MockMvc mvc;
 
     @Autowired
     MicoApplicationRepository applicationRepository;
-    
+
+    @Autowired
+    MicoServiceRepository micoServiceRepository;
+
+    @Test
+    public void getKafkaFaasConnectorDeploymentInfoEmptyList() throws Exception {
+        MicoApplication application = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
+        applicationRepository.save(application);
+
+        mvc.perform(get(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECOTR_DEPLOYMENT_INFORMATION))
+            .andDo(print())
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    public void getKafkaFaasConnectorDeploymentInfoOneElement() throws Exception {
+        MicoApplication application = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
+        MicoService kafkaFaasConnectorMicoService = getKafkaFaasConnectorMicoService();
+        micoServiceRepository.save(kafkaFaasConnectorMicoService);
+        addKafkaFaasConnectorToApplication(application, kafkaFaasConnectorMicoService);
+        applicationRepository.save(application);
+
+        mvc.perform(get(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECOTR_DEPLOYMENT_INFORMATION))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(DEPLOYMENT_INFO_RESPONSE_DTO_LIST_JSON_PATH, hasSize(1)));
+    }
+
+    private void addKafkaFaasConnectorToApplication(MicoApplication application, MicoService kafkaFaasConnectorMicoService) {
+        String instanceId = UIDUtils.uidFor(kafkaFaasConnectorMicoService);
+        MicoServiceDeploymentInfo sdi = new MicoServiceDeploymentInfo()
+            .setService(kafkaFaasConnectorMicoService)
+            .setInstanceId(instanceId);
+        application.getKafkaFaasConnectorDeploymentInfos().add(sdi);
+    }
+
+    private MicoService getKafkaFaasConnectorMicoService() {
+        return new MicoService()
+            .setShortName("kafka-faas-connector")
+            .setVersion("v1.0.1")
+            .setKafkaEnabled(true)
+            .setName("UST-MICO/kafka-faas-connector")
+            .setGitCloneUrl("https://github.com/UST-MICO/kafka-faas-connector.git")
+            .setServiceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB);
+    }
+
+
 }
