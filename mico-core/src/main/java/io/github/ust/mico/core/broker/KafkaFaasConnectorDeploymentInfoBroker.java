@@ -19,11 +19,27 @@
 
 package io.github.ust.mico.core.broker;
 
+import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Slf4j
 @Service
 public class KafkaFaasConnectorDeploymentInfoBroker {
+
+    @Autowired
+    private MicoApplicationBroker applicationBroker;
+
+    public List<MicoServiceDeploymentInfo> getKafkaFaasConnectorDeploymentInformation(String micoApplicationShortName, String micoApplicationVersion) throws MicoApplicationNotFoundException {
+        MicoApplication micoApplication = applicationBroker.getMicoApplicationByShortNameAndVersion(micoApplicationShortName, micoApplicationVersion);
+        List<MicoServiceDeploymentInfo> micoServiceDeploymentInfos = micoApplication.getKafkaFaasConnectorDeploymentInfos();
+        log.debug("There are {} kafkaFaasConnectorDeploymentInformation for MicoApplication '{}' in version '{}' ", micoServiceDeploymentInfos.size(), micoApplicationShortName, micoApplicationVersion);
+        return micoApplication.getKafkaFaasConnectorDeploymentInfos();
+    }
 
 }
