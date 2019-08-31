@@ -19,7 +19,10 @@
 
 package io.github.ust.mico.core.resource;
 
+import io.github.ust.mico.core.broker.DeploymentBroker;
+import io.github.ust.mico.core.dto.response.MicoApplicationJobStatusResponseDTO;
 import io.github.ust.mico.core.exception.*;
+import io.github.ust.mico.core.model.MicoApplicationJobStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
@@ -31,12 +34,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import io.github.ust.mico.core.broker.DeploymentBroker;
-import io.github.ust.mico.core.dto.response.MicoApplicationJobStatusResponseDTO;
-import io.github.ust.mico.core.model.MicoApplicationJobStatus;
+import static io.github.ust.mico.core.resource.ApplicationResource.PATH_APPLICATIONS;
 
 @RestController
-@RequestMapping(value = "/applications/{shortName}/{version}", produces = MediaTypes.HAL_JSON_VALUE)
+@RequestMapping(value = PATH_APPLICATIONS + "/{shortName}/{version}", produces = MediaTypes.HAL_JSON_VALUE)
 public class DeploymentResource {
     private static final String PATH_VARIABLE_SHORT_NAME = "shortName";
     private static final String PATH_VARIABLE_VERSION = "version";

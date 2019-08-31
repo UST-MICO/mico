@@ -50,6 +50,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static io.github.ust.mico.core.TestConstants.*;
+import static io.github.ust.mico.core.resource.ApplicationResource.PATH_APPLICATIONS;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
@@ -70,7 +71,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("local")
 public class ServiceDeploymentInfoIntegrationTests {
 
-    private static final String BASE_PATH = "/applications";
     private static final String PATH_DEPLOYMENT_INFORMATION = "deploymentInformation";
 
     @MockBean
@@ -133,7 +133,7 @@ public class ServiceDeploymentInfoIntegrationTests {
         given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(),
             application.getVersion(), service.getShortName())).willReturn(CollectionUtils.listOf(serviceDeploymentInfo));
 
-        mvc.perform(get(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName()))
+        mvc.perform(get(PATH_APPLICATIONS + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName()))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath(SDI_REPLICAS_PATH, is(serviceDeploymentInfo.getReplicas())))
@@ -187,7 +187,7 @@ public class ServiceDeploymentInfoIntegrationTests {
         given(micoTopicRepository.save(eq(expectedTopicInput))).willReturn(expectedTopicInput);
         given(micoTopicRepository.save(eq(expectedTopicOutput))).willReturn(expectedTopicOutput);
 
-        mvc.perform(put(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName())
+        mvc.perform(put(PATH_APPLICATIONS + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName())
             .content(mapper.writeValueAsBytes(updatedServiceDeploymentInfoDTO))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -228,7 +228,7 @@ public class ServiceDeploymentInfoIntegrationTests {
         given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion())).willReturn(Optional.of(application));
         given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName())).willReturn(CollectionUtils.listOf(serviceDeploymentInfo));
 
-        mvc.perform(put(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName())
+        mvc.perform(put(PATH_APPLICATIONS + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName())
             .content(mapper.writeValueAsBytes(updatedServiceDeploymentInfoDTO))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -281,7 +281,7 @@ public class ServiceDeploymentInfoIntegrationTests {
         given(micoTopicRepository.save(eq(existingTopic1))).willReturn(existingTopic1);
         given(micoTopicRepository.save(eq(expectedTopicNew))).willReturn(expectedTopicNew);
 
-        mvc.perform(put(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName())
+        mvc.perform(put(PATH_APPLICATIONS + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName())
             .content(mapper.writeValueAsBytes(updatedServiceDeploymentInfoDTO))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -332,7 +332,7 @@ public class ServiceDeploymentInfoIntegrationTests {
         given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion()))
             .willReturn(Optional.of(application));
 
-        final ResultActions result = mvc.perform(put(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName())
+        final ResultActions result = mvc.perform(put(PATH_APPLICATIONS + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName())
             .content(mapper.writeValueAsBytes(updatedServiceDeploymentInfoDTO))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print());

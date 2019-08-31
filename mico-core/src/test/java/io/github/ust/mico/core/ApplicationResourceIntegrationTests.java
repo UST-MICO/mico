@@ -53,6 +53,7 @@ import static io.github.ust.mico.core.JsonPathBuilder.*;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
 import static io.github.ust.mico.core.TestConstants.VERSION;
 import static io.github.ust.mico.core.TestConstants.*;
+import static io.github.ust.mico.core.resource.ApplicationResource.PATH_APPLICATIONS;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.*;
@@ -82,7 +83,6 @@ public class ApplicationResourceIntegrationTests {
     private static final String VALUE_PATH = buildPath(ROOT, "value");
     private static final String MESSAGES_PATH = buildPath(ROOT, "messages");
     private static final String JSON_PATH_LINKS_SECTION = "$._links.";
-    private static final String BASE_PATH = "/applications";
     private static final String PATH_SERVICES = "services";
     private static final String PATH_PROMOTE = "promote";
     private static final String PATH_DEPLOYMENT_STATUS = "deploymentStatus";
@@ -140,7 +140,7 @@ public class ApplicationResourceIntegrationTests {
         given(micoKubernetesClient.getApplicationDeploymentStatus(any(MicoApplication.class))).willReturn(
             MicoApplicationDeploymentStatus.undeployed("MicoApplication is currently not deployed."));
 
-        mvc.perform(get(BASE_PATH).accept(MediaTypes.HAL_JSON_UTF8_VALUE))
+        mvc.perform(get(PATH_APPLICATIONS).accept(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
@@ -151,7 +151,7 @@ public class ApplicationResourceIntegrationTests {
             .andExpect(jsonPath(APPLICATION_WITH_SERVICES_DTO_LIST_PATH + "[1].version", is(VERSION)))
             .andExpect(jsonPath(APPLICATION_WITH_SERVICES_DTO_LIST_PATH + "[2].shortName", is(SHORT_NAME_1)))
             .andExpect(jsonPath(APPLICATION_WITH_SERVICES_DTO_LIST_PATH + "[2].version", is(VERSION)))
-            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "self.href", is("http://localhost/applications")))
+            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "self.href", is("http://localhost/" + PATH_APPLICATIONS)))
             .andReturn();
     }
 
@@ -162,13 +162,13 @@ public class ApplicationResourceIntegrationTests {
         given(micoKubernetesClient.getApplicationDeploymentStatus(any(MicoApplication.class))).willReturn(
             MicoApplicationDeploymentStatus.undeployed("MicoApplication is currently not deployed."));
 
-        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/").accept(MediaTypes.HAL_JSON_VALUE))
+        mvc.perform(get(PATH_APPLICATIONS + "/" + SHORT_NAME + "/").accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
             .andExpect(jsonPath(APPLICATION_WITH_SERVICES_DTO_LIST_PATH + "[0].shortName", is(SHORT_NAME)))
             .andExpect(jsonPath(APPLICATION_WITH_SERVICES_DTO_LIST_PATH + "[0].version", is(VERSION)))
-            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/applications/" + SHORT_NAME)))
+            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/+ " + PATH_APPLICATIONS + "/" + SHORT_NAME)))
             .andReturn();
     }
 
@@ -179,14 +179,14 @@ public class ApplicationResourceIntegrationTests {
         given(micoKubernetesClient.getApplicationDeploymentStatus(any(MicoApplication.class))).willReturn(
             MicoApplicationDeploymentStatus.undeployed("MicoApplication is currently not deployed."));
 
-        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION).accept(MediaTypes.HAL_JSON_VALUE))
+        mvc.perform(get(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
             .andExpect(jsonPath(SHORT_NAME_PATH, is(SHORT_NAME)))
             .andExpect(jsonPath(VERSION_PATH, is(VERSION)))
-            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/applications/" + SHORT_NAME + "/" + VERSION)))
-            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "applications.href", is("http://localhost/applications")))
+            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/" + PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION)))
+            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "applications.href", is("http://localhost/" + PATH_APPLICATIONS)))
             .andReturn();
     }
 
@@ -213,7 +213,7 @@ public class ApplicationResourceIntegrationTests {
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(micoKubernetesClient.getApplicationDeploymentStatus(application)).willReturn(expectedApplicationDeploymentStatus);
 
-        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION).accept(MediaTypes.HAL_JSON_VALUE))
+        mvc.perform(get(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
@@ -227,8 +227,8 @@ public class ApplicationResourceIntegrationTests {
             .andExpect(jsonPath(DEPLOYMENT_STATUS_PATH + ".value", is(expectedApplicationDeploymentStatus.getValue().toString())))
             .andExpect(jsonPath(DEPLOYMENT_STATUS_PATH + ".messages[0].type", is(expectedApplicationDeploymentStatus.getMessages().get(0).getType().toString())))
             .andExpect(jsonPath(DEPLOYMENT_STATUS_PATH + ".messages[0].content", is(expectedApplicationDeploymentStatus.getMessages().get(0).getContent())))
-            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/applications/" + SHORT_NAME + "/" + VERSION)))
-            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "applications.href", is("http://localhost/applications")))
+            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost" + PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION)))
+            .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + "applications.href", is("http://localhost" + PATH_APPLICATIONS)))
             .andReturn();
     }
 
@@ -240,7 +240,7 @@ public class ApplicationResourceIntegrationTests {
         given(micoKubernetesClient.getApplicationDeploymentStatus(any(MicoApplication.class))).willReturn(
             MicoApplicationDeploymentStatus.undeployed("MicoApplication is currently not deployed."));
 
-        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/").accept(MediaTypes.HAL_JSON_VALUE))
+        mvc.perform(get(PATH_APPLICATIONS + "/" + SHORT_NAME + "/").accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andReturn();
@@ -255,7 +255,7 @@ public class ApplicationResourceIntegrationTests {
 
         given(applicationRepository.save(any(MicoApplication.class))).willReturn(application);
 
-        mvc.perform(post(BASE_PATH)
+        mvc.perform(post(PATH_APPLICATIONS)
             .content(mapper.writeValueAsBytes(new MicoApplicationRequestDTO(application)))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -290,7 +290,7 @@ public class ApplicationResourceIntegrationTests {
             .setShortName(SHORT_NAME).setVersion(VERSION)
             .setName(NAME).setDescription(DESCRIPTION);
 
-        mvc.perform(post(BASE_PATH)
+        mvc.perform(post(PATH_APPLICATIONS)
             .content(mapper.writeValueAsBytes(newApplicationDto))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -319,7 +319,7 @@ public class ApplicationResourceIntegrationTests {
         given(applicationRepository.findByShortNameAndVersion(eq(application.getShortName()),
             eq(application.getVersion()))).willReturn(Optional.of(application));
 
-        mvc.perform(post(BASE_PATH)
+        mvc.perform(post(PATH_APPLICATIONS)
             .content(mapper.writeValueAsBytes(new MicoApplicationRequestDTO(application)))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -333,7 +333,7 @@ public class ApplicationResourceIntegrationTests {
             .setShortName(SHORT_NAME).setVersion(VERSION)
             .setName(null).setDescription(DESCRIPTION);
 
-        mvc.perform(post(BASE_PATH)
+        mvc.perform(post(PATH_APPLICATIONS)
             .content(mapper.writeValueAsBytes(new MicoApplicationRequestDTO(application)))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -355,7 +355,7 @@ public class ApplicationResourceIntegrationTests {
 
         given(applicationRepository.save(any(MicoApplication.class))).willReturn(expectedApplication);
 
-        mvc.perform(post(BASE_PATH)
+        mvc.perform(post(PATH_APPLICATIONS)
             .content(mapper.writeValueAsBytes(new MicoApplicationRequestDTO(newApplication)))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -381,7 +381,7 @@ public class ApplicationResourceIntegrationTests {
 
         given(applicationRepository.save(any(MicoApplication.class))).willReturn(expectedApplication);
 
-        mvc.perform(post(BASE_PATH)
+        mvc.perform(post(PATH_APPLICATIONS)
             .content(mapper.writeValueAsBytes(new MicoApplicationRequestDTO(newApplication)))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -415,7 +415,7 @@ public class ApplicationResourceIntegrationTests {
         given(micoKubernetesClient.getApplicationDeploymentStatus(existingApplication)).willReturn(
             MicoApplicationDeploymentStatus.undeployed("MicoApplication is currently not deployed."));
 
-        mvc.perform(put(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION)
+        mvc.perform(put(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION)
             .content(mapper.writeValueAsBytes(new MicoApplicationRequestDTO(updatedApplication)))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -457,7 +457,7 @@ public class ApplicationResourceIntegrationTests {
         given(micoKubernetesClient.isApplicationUndeployed(any(MicoApplication.class))).willReturn(true);
         given(micoKubernetesClient.getApplicationDeploymentStatus(existingApplication)).willReturn(expectedApplicationDeploymentStatus);
 
-        mvc.perform(put(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION)
+        mvc.perform(put(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION)
             .content(mapper.writeValueAsBytes(new MicoApplicationRequestDTO(updatedApplication)))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -538,7 +538,7 @@ public class ApplicationResourceIntegrationTests {
 
         ArgumentCaptor<MicoApplication> applicationArgumentCaptor = ArgumentCaptor.forClass(MicoApplication.class);
 
-        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_PROMOTE)
+        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_PROMOTE)
             .content(mapper.writeValueAsBytes(new MicoVersionRequestDTO(newVersion)))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -580,7 +580,7 @@ public class ApplicationResourceIntegrationTests {
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
 
-        mvc.perform(put(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION)
+        mvc.perform(put(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION)
             .content(mapper.writeValueAsBytes(new MicoApplicationRequestDTO(updatedApplication)))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -611,7 +611,7 @@ public class ApplicationResourceIntegrationTests {
         given(micoKubernetesClient.getApplicationDeploymentStatus(application)).willReturn(
             MicoApplicationDeploymentStatus.undeployed("MicoApplication is currently not deployed."));
 
-        mvc.perform(put(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION)
+        mvc.perform(put(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION)
             .content(mapper.writeValueAsBytes(new MicoApplicationRequestDTO(updatedApplication)))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
@@ -635,7 +635,7 @@ public class ApplicationResourceIntegrationTests {
 
         ArgumentCaptor<MicoApplication> appCaptor = ArgumentCaptor.forClass(MicoApplication.class);
 
-        mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION).accept(MediaTypes.HAL_JSON_VALUE))
+        mvc.perform(delete(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isNoContent())
             .andReturn();
@@ -657,7 +657,7 @@ public class ApplicationResourceIntegrationTests {
         given(micoKubernetesClient.getApplicationDeploymentStatus(application))
             .willReturn(new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.DEPLOYED, new ArrayList<>()));
 
-        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_DEPLOYMENT_STATUS).accept(MediaTypes.HAL_JSON_VALUE))
+        mvc.perform(get(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_DEPLOYMENT_STATUS).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath(VALUE_PATH, is(MicoApplicationDeploymentStatus.Value.DEPLOYED.toString())))
@@ -676,7 +676,7 @@ public class ApplicationResourceIntegrationTests {
         given(micoKubernetesClient.getApplicationDeploymentStatus(application))
             .willReturn(new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.UNDEPLOYED, new ArrayList<>()));
 
-        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_DEPLOYMENT_STATUS).accept(MediaTypes.HAL_JSON_VALUE))
+        mvc.perform(get(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_DEPLOYMENT_STATUS).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath(VALUE_PATH, is(MicoApplicationDeploymentStatus.Value.UNDEPLOYED.toString())))
@@ -696,7 +696,7 @@ public class ApplicationResourceIntegrationTests {
             .willReturn(new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.PENDING,
                 CollectionUtils.listOf(MicoMessage.info("The deployment of MicoApplication is scheduled to be started."))));
 
-        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_DEPLOYMENT_STATUS).accept(MediaTypes.HAL_JSON_VALUE))
+        mvc.perform(get(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_DEPLOYMENT_STATUS).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath(VALUE_PATH, is(MicoApplicationDeploymentStatus.Value.PENDING.toString())))
@@ -718,7 +718,7 @@ public class ApplicationResourceIntegrationTests {
                     MicoMessage.error("The deployment of MicoService 1 failed."),
                     MicoMessage.error("The deployment of MicoService 2 failed."))));
 
-        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_DEPLOYMENT_STATUS).accept(MediaTypes.HAL_JSON_VALUE))
+        mvc.perform(get(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_DEPLOYMENT_STATUS).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath(VALUE_PATH, is(MicoApplicationDeploymentStatus.Value.INCOMPLETE.toString())))
@@ -738,7 +738,7 @@ public class ApplicationResourceIntegrationTests {
             .willReturn(new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.UNKNOWN,
                 CollectionUtils.listOf(MicoMessage.warning("Unexpected number of clowns appeared."))));
 
-        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_DEPLOYMENT_STATUS).accept(MediaTypes.HAL_JSON_VALUE))
+        mvc.perform(get(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_DEPLOYMENT_STATUS).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath(VALUE_PATH, is(MicoApplicationDeploymentStatus.Value.UNKNOWN.toString())))
@@ -843,7 +843,7 @@ public class ApplicationResourceIntegrationTests {
         given(micoKubernetesClient.getApplicationDeploymentStatus(any(MicoApplication.class)))
             .willReturn(new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.DEPLOYED, new ArrayList<>()));
 
-        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_STATUS))
+        mvc.perform(get(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_STATUS))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath(SERVICE_INFORMATION_NAME, is(NAME)))
@@ -897,7 +897,7 @@ public class ApplicationResourceIntegrationTests {
 
         ArgumentCaptor<MicoApplication> micoApplicationCaptor = ArgumentCaptor.forClass(MicoApplication.class);
 
-        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + SERVICE_VERSION))
+        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + SERVICE_VERSION))
             .andDo(print())
             .andExpect(status().isOk());
 
@@ -925,7 +925,7 @@ public class ApplicationResourceIntegrationTests {
             .willReturn(application.getServiceDeploymentInfos());
         given(micoKubernetesClient.isApplicationUndeployed(application)).willReturn(true);
 
-        mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/services/" + SERVICE_SHORT_NAME))
+        mvc.perform(delete(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/services/" + SERVICE_SHORT_NAME))
             .andDo(print())
             .andExpect(status().isNoContent());
     }
@@ -941,7 +941,7 @@ public class ApplicationResourceIntegrationTests {
         given(applicationRepository.findByShortName(SHORT_NAME_2)).willReturn(CollectionUtils.listOf(otherApplication));
         given(micoKubernetesClient.isApplicationUndeployed(any(MicoApplication.class))).willReturn(true);
 
-        mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME))
+        mvc.perform(delete(PATH_APPLICATIONS + "/" + SHORT_NAME))
             .andDo(print())
             .andExpect(status().isNoContent())
             .andReturn();
@@ -965,7 +965,7 @@ public class ApplicationResourceIntegrationTests {
         given(micoKubernetesClient.isApplicationUndeployed(micoApplicationV2)).willReturn(false);
         given(micoKubernetesClient.isApplicationUndeployed(micoApplicationV3)).willReturn(true);
 
-        mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME))
+        mvc.perform(delete(PATH_APPLICATIONS + "/" + SHORT_NAME))
             .andDo(print())
             .andExpect(status().isConflict())
             .andExpect(status().reason("Application 'short-name' '1.0.1' is currently not undeployed!"))
@@ -994,7 +994,7 @@ public class ApplicationResourceIntegrationTests {
         given(micoServiceDeploymentInfoBroker.getExistingServiceDeploymentInfo(application, serviceNew))
             .willReturn(serviceDeploymentInfoNew);
 
-        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + VERSION_1_0_2)
+        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + VERSION_1_0_2)
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isOk());
@@ -1022,7 +1022,7 @@ public class ApplicationResourceIntegrationTests {
         given(serviceRepository.findByShortNameAndVersion(service1.getShortName(), service1.getVersion()))
             .willReturn(Optional.of(service1));
 
-        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + VERSION_1_0_1)
+        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + VERSION_1_0_1)
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
             .andExpect(status().isConflict());

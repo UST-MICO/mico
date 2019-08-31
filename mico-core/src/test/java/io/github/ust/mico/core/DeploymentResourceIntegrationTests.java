@@ -42,6 +42,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.concurrent.CompletableFuture;
 
+import static io.github.ust.mico.core.resource.ApplicationResource.PATH_APPLICATIONS;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -59,8 +60,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("dev")
 public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
-
-    private static final String BASE_PATH = "/applications";
 
     @ClassRule
     public static RuleChain rules = RuleChain.outerRule(EmbeddedRedisServer.runningAt(6379).suppressExceptions());
@@ -128,7 +127,7 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
         String applicationShortName = application.getShortName();
         String applicationVersion = application.getVersion();
 
-        mvc.perform(post(BASE_PATH + "/" + applicationShortName + "/" + applicationVersion + "/deploy"))
+        mvc.perform(post(PATH_APPLICATIONS + "/" + applicationShortName + "/" + applicationVersion + "/deploy"))
             .andDo(print())
             .andExpect(status().isAccepted());
 

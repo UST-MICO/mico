@@ -41,17 +41,16 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.LinkedList;
 import java.util.List;
 
-import static io.github.ust.mico.core.resource.ApplicationResource.PATH_VARIABLE_SHORT_NAME;
-import static io.github.ust.mico.core.resource.ApplicationResource.PATH_VARIABLE_VERSION;
+import static io.github.ust.mico.core.resource.ApplicationResource.*;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @Slf4j
 @RestController
-@RequestMapping(value = "/applications", produces = MediaTypes.HAL_JSON_VALUE)
+@RequestMapping(value = PATH_APPLICATIONS, produces = MediaTypes.HAL_JSON_VALUE)
 public class KafkaFaasConnectorDeploymentInfoResource {
 
-    private static final String PATH_KAFKA_FAAS_CONNECOTR_DEPLOYMENT_INFORMATION = "kafkaFaasConnectorDeploymentInformation";
+    public static final String PATH_KAFKA_FAAS_CONNECOTR_DEPLOYMENT_INFORMATION = "kafkaFaasConnectorDeploymentInformation";
 
     @Autowired
     private KafkaFaasConnectorDeploymentInfoBroker kafkaFaasConnectorDeploymentInfoBroker;

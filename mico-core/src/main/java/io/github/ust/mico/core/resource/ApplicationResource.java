@@ -53,7 +53,7 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @Slf4j
 @RestController
-@RequestMapping(value = "/applications", produces = MediaTypes.HAL_JSON_VALUE)
+@RequestMapping(value = ApplicationResource.PATH_APPLICATIONS, produces = MediaTypes.HAL_JSON_VALUE)
 public class ApplicationResource {
 
     private static final String PATH_SERVICES = "services";
@@ -69,6 +69,7 @@ public class ApplicationResource {
     private static final String PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION = "kafkaFaasConnectorVersion";
     private static final String PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID = "kafkaFaasConnectorInstanceId";
     private static final String PATH_VARIABLE_INSTANCE_ID = "instanceId";
+    public static final String PATH_APPLICATIONS = "/applications";
 
     @Autowired
     private MicoApplicationBroker broker;
