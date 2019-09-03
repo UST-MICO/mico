@@ -20,7 +20,7 @@
 package io.github.ust.mico.core.resource;
 
 import io.github.ust.mico.core.broker.KafkaFaasConnectorDeploymentInfoBroker;
-import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO;
+import io.github.ust.mico.core.dto.response.KFConnectorDeploymentInfoResponseDTO;
 import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
@@ -56,7 +56,7 @@ public class KafkaFaasConnectorDeploymentInfoResource {
     private KafkaFaasConnectorDeploymentInfoBroker kafkaFaasConnectorDeploymentInfoBroker;
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECOTR_DEPLOYMENT_INFORMATION)
-    public ResponseEntity<Resources<Resource<MicoServiceDeploymentInfoResponseDTO>>> getKafkaFaasConnectorDeploymentInformation(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+    public ResponseEntity<Resources<Resource<KFConnectorDeploymentInfoResponseDTO>>> getKafkaFaasConnectorDeploymentInformation(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                                                                 @PathVariable(PATH_VARIABLE_VERSION) String version) {
         log.debug("Request to getKafkaFaasConnectorDeploymentInformation with the micoApplicationShortname '{}' and version '{}'.", shortName, version);
         List<MicoServiceDeploymentInfo> micoServiceDeploymentInfos;
@@ -65,18 +65,42 @@ public class KafkaFaasConnectorDeploymentInfoResource {
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
-        // Convert to service deployment info DTOs and return it
-        LinkedList<Resource<MicoServiceDeploymentInfoResponseDTO>> micoServiceDeploymentInfoResources = new LinkedList<>();
+        List<Resource<KFConnectorDeploymentInfoResponseDTO>> micoServiceDeploymentInfoResources = getKfConnectorDeploymentInfoResponseDTOResources(shortName, version, micoServiceDeploymentInfos);
+        return ResponseEntity.ok(new Resources<>(micoServiceDeploymentInfoResources, linkTo(methodOn(KafkaFaasConnectorDeploymentInfoResource.class).getKafkaFaasConnectorDeploymentInformation(shortName, version)).withSelfRel()));
+    }
+
+    /**
+     * Warps a list of {@link MicoServiceDeploymentInfo} into a list of {@link KFConnectorDeploymentInfoResponseDTO} resources.
+     *
+     * @param shortName
+     * @param version
+     * @param micoServiceDeploymentInfos
+     * @return A list of resources. Each item in the list contains a {@link KFConnectorDeploymentInfoResponseDTO}.
+     */
+    private List<Resource<KFConnectorDeploymentInfoResponseDTO>> getKfConnectorDeploymentInfoResponseDTOResources(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName, @PathVariable(PATH_VARIABLE_VERSION) String version, List<MicoServiceDeploymentInfo> micoServiceDeploymentInfos) {
+        LinkedList<Resource<KFConnectorDeploymentInfoResponseDTO>> micoServiceDeploymentInfoResources = new LinkedList<>();
         for (MicoServiceDeploymentInfo micoServiceDeploymentInfo : micoServiceDeploymentInfos) {
-            MicoServiceDeploymentInfoResponseDTO serviceDeploymentInfoResponseDto = new MicoServiceDeploymentInfoResponseDTO(micoServiceDeploymentInfo);
-            MicoService micoService = micoServiceDeploymentInfo.getService();
-            LinkedList<Link> links = new LinkedList<>();
-            links.add(linkTo(methodOn(ApplicationResource.class).getApplicationByShortNameAndVersion(shortName, version)).withRel("application"));
-            links.add(linkTo(methodOn(ServiceResource.class).getServiceByShortNameAndVersion(micoService.getShortName(), micoService.getVersion())).withRel("kafkaFaasConnector"));
-            Resource<MicoServiceDeploymentInfoResponseDTO> micoServiceDeploymentInfoResource = new Resource<>(serviceDeploymentInfoResponseDto, links);
+            Resource<KFConnectorDeploymentInfoResponseDTO> micoServiceDeploymentInfoResource = getKfConnectorDeploymentInfoResponseDTOResource(shortName, version, micoServiceDeploymentInfo);
             micoServiceDeploymentInfoResources.add(micoServiceDeploymentInfoResource);
         }
-        return ResponseEntity.ok(new Resources<>(micoServiceDeploymentInfoResources, linkTo(methodOn(KafkaFaasConnectorDeploymentInfoResource.class).getKafkaFaasConnectorDeploymentInformation(shortName, version)).withSelfRel()));
+        return micoServiceDeploymentInfoResources;
+    }
+
+    /**
+     * Warps a {@link KFConnectorDeploymentInfoResponseDTO} into a HATOAS resource with a link to the application and a self-link.
+     *
+     * @param shortName
+     * @param version
+     * @param micoServiceDeploymentInfo
+     * @return
+     */
+    private Resource<KFConnectorDeploymentInfoResponseDTO> getKfConnectorDeploymentInfoResponseDTOResource(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName, @PathVariable(PATH_VARIABLE_VERSION) String version, MicoServiceDeploymentInfo micoServiceDeploymentInfo) {
+        KFConnectorDeploymentInfoResponseDTO kfConnectorDeploymentInfoResponseDTO = new KFConnectorDeploymentInfoResponseDTO(micoServiceDeploymentInfo);
+        MicoService micoService = micoServiceDeploymentInfo.getService();
+        LinkedList<Link> links = new LinkedList<>();
+        links.add(linkTo(methodOn(ApplicationResource.class).getApplicationByShortNameAndVersion(shortName, version)).withRel("application"));
+        links.add(linkTo(methodOn(ServiceResource.class).getServiceByShortNameAndVersion(micoService.getShortName(), micoService.getVersion())).withRel("kafkaFaasConnector"));
+        return new Resource<>(kfConnectorDeploymentInfoResponseDTO, links);
     }
 
 
