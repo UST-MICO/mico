@@ -19,10 +19,6 @@
 
 package io.github.ust.mico.core.dto.response;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationDeploymentStatusResponseDTO;
 import io.github.ust.mico.core.model.MicoApplication;
@@ -30,12 +26,12 @@ import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 import lombok.experimental.Accessors;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * DTO for a {@link MicoApplication} intended to use with responses only. Additionally includes all of services of the
@@ -62,6 +58,19 @@ public class MicoApplicationWithServicesResponseDTO extends MicoApplicationRespo
     )})
     private List<MicoServiceResponseDTO> services = new ArrayList<>();
 
+    /**
+     * All KafkaFaasConnector deployment information
+     * used by the application as {@link KFConnectorDeploymentInfoResponseDTO}.
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "KafkaFaasConnectors"),
+            @ExtensionProperty(name = "x-order", value = "110"),
+            @ExtensionProperty(name = "description", value = "All KafkaFaasConnector deployment information used by the application.")
+        }
+    )})
+    private List<KFConnectorDeploymentInfoResponseDTO> kfConnectorDeploymentInfos = new ArrayList<>();
 
     // -------------------
     // -> Constructors ---
@@ -77,6 +86,9 @@ public class MicoApplicationWithServicesResponseDTO extends MicoApplicationRespo
         super(application);
         services = application.getServices().stream()
             .map(MicoServiceResponseDTO::new)
+            .collect(Collectors.toList());
+        kfConnectorDeploymentInfos = application.getKafkaFaasConnectorDeploymentInfos().stream()
+            .map(KFConnectorDeploymentInfoResponseDTO::new)
             .collect(Collectors.toList());
     }
 
