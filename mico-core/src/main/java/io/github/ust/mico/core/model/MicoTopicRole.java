@@ -29,7 +29,7 @@ import org.neo4j.ogm.annotation.*;
  * Represents a role of a {@link MicoTopic}.
  * <p>
  * An instance of this class is persisted as a relationship between
- * between a {@link MicoServiceDeploymentInfo} and a {@link MicoTopic} node
+ * a {@link MicoServiceDeploymentInfo} and a {@link MicoTopic} node
  * in the Neo4j database.
  */
 @Data
