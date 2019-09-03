@@ -50,15 +50,16 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 @RequestMapping(value = PATH_APPLICATIONS, produces = MediaTypes.HAL_JSON_VALUE)
 public class KafkaFaasConnectorDeploymentInfoResource {
 
-    public static final String PATH_KAFKA_FAAS_CONNECOTR_DEPLOYMENT_INFORMATION = "kafkaFaasConnectorDeploymentInformation";
+    public static final String PATH_KAFKA_FAAS_CONNECTOR_DEPLOYMENT_INFORMATION = "kafkaFaasConnectorDeploymentInformation";
 
     @Autowired
     private KafkaFaasConnectorDeploymentInfoBroker kafkaFaasConnectorDeploymentInfoBroker;
 
-    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECOTR_DEPLOYMENT_INFORMATION)
+
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR_DEPLOYMENT_INFORMATION)
     public ResponseEntity<Resources<Resource<KFConnectorDeploymentInfoResponseDTO>>> getKafkaFaasConnectorDeploymentInformation(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                                                                 @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        log.debug("Request to getKafkaFaasConnectorDeploymentInformation with the micoApplicationShortname '{}' and version '{}'.", shortName, version);
+        log.debug("Get the KafkaFaasConnector deployment information of the MicoApplication '{}' '{}'.", shortName, version);
         List<MicoServiceDeploymentInfo> micoServiceDeploymentInfos;
         try {
             micoServiceDeploymentInfos = kafkaFaasConnectorDeploymentInfoBroker.getKafkaFaasConnectorDeploymentInformation(shortName, version);
@@ -102,6 +103,5 @@ public class KafkaFaasConnectorDeploymentInfoResource {
         links.add(linkTo(methodOn(ServiceResource.class).getServiceByShortNameAndVersion(micoService.getShortName(), micoService.getVersion())).withRel("kafkaFaasConnector"));
         return new Resource<>(kfConnectorDeploymentInfoResponseDTO, links);
     }
-
 
 }

@@ -46,7 +46,8 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
     public List<MicoServiceDeploymentInfo> getKafkaFaasConnectorDeploymentInformation(String micoApplicationShortName, String micoApplicationVersion) throws MicoApplicationNotFoundException {
         MicoApplication micoApplication = applicationBroker.getMicoApplicationByShortNameAndVersion(micoApplicationShortName, micoApplicationVersion);
         List<MicoServiceDeploymentInfo> micoServiceDeploymentInfos = micoApplication.getKafkaFaasConnectorDeploymentInfos();
-        log.debug("There are {} kafkaFaasConnectorDeploymentInformation for MicoApplication '{}' in version '{}' ", micoServiceDeploymentInfos.size(), micoApplicationShortName, micoApplicationVersion);
+        log.debug("There are {} KafkaFaasConnector deployment information for MicoApplication '{}' in version '{}'.",
+            micoServiceDeploymentInfos.size(), micoApplicationShortName, micoApplicationVersion);
         return micoApplication.getKafkaFaasConnectorDeploymentInfos();
     }
 

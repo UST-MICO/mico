@@ -56,20 +56,21 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 @RequestMapping(value = ApplicationResource.PATH_APPLICATIONS, produces = MediaTypes.HAL_JSON_VALUE)
 public class ApplicationResource {
 
+    public static final String PATH_APPLICATIONS = "/applications";
+
     private static final String PATH_SERVICES = "services";
     private static final String PATH_PROMOTE = "promote";
     private static final String PATH_DEPLOYMENT_STATUS = "deploymentStatus";
     private static final String PATH_STATUS = "status";
     private static final String PATH_KAFKA_FAAS_CONNECTOR = "kafka-faas-connector";
 
-    public static final String PATH_VARIABLE_SHORT_NAME = "micoApplicationShortName";
-    public static final String PATH_VARIABLE_VERSION = "micoApplicationVersion";
+    static final String PATH_VARIABLE_SHORT_NAME = "micoApplicationShortName";
+    static final String PATH_VARIABLE_VERSION = "micoApplicationVersion";
     private static final String PATH_VARIABLE_SERVICE_SHORT_NAME = "micoServiceShortName";
     private static final String PATH_VARIABLE_SERVICE_VERSION = "micoServiceVersion";
     private static final String PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION = "kafkaFaasConnectorVersion";
     private static final String PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID = "kafkaFaasConnectorInstanceId";
     private static final String PATH_VARIABLE_INSTANCE_ID = "instanceId";
-    public static final String PATH_APPLICATIONS = "/applications";
 
     @Autowired
     private MicoApplicationBroker broker;

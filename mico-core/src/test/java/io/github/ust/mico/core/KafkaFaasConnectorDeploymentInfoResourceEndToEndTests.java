@@ -41,7 +41,7 @@ import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
 import static io.github.ust.mico.core.TestConstants.VERSION;
 import static io.github.ust.mico.core.resource.ApplicationResource.PATH_APPLICATIONS;
-import static io.github.ust.mico.core.resource.KafkaFaasConnectorDeploymentInfoResource.PATH_KAFKA_FAAS_CONNECOTR_DEPLOYMENT_INFORMATION;
+import static io.github.ust.mico.core.resource.KafkaFaasConnectorDeploymentInfoResource.PATH_KAFKA_FAAS_CONNECTOR_DEPLOYMENT_INFORMATION;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -55,7 +55,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("local")
 public class KafkaFaasConnectorDeploymentInfoResourceEndToEndTests extends Neo4jTestClass {
 
-    protected static final String DEPLOYMENT_INFO_RESPONSE_DTO_LIST_JSON_PATH = JsonPathBuilder.buildPath(ROOT, EMBEDDED, "micoServiceDeploymentInfoResponseDTOList");
+    private static final String DEPLOYMENT_INFO_RESPONSE_DTO_LIST_JSON_PATH = JsonPathBuilder.buildPath(ROOT, EMBEDDED, "kFConnectorDeploymentInfoResponseDTOList");
+
     @Autowired
     private MockMvc mvc;
 
@@ -70,7 +71,7 @@ public class KafkaFaasConnectorDeploymentInfoResourceEndToEndTests extends Neo4j
         MicoApplication application = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
         applicationRepository.save(application);
 
-        mvc.perform(get(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECOTR_DEPLOYMENT_INFORMATION))
+        mvc.perform(get(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR_DEPLOYMENT_INFORMATION))
             .andDo(print())
             .andExpect(status().isOk());
     }
@@ -83,7 +84,7 @@ public class KafkaFaasConnectorDeploymentInfoResourceEndToEndTests extends Neo4j
         addKafkaFaasConnectorToApplication(application, kafkaFaasConnectorMicoService);
         applicationRepository.save(application);
 
-        mvc.perform(get(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECOTR_DEPLOYMENT_INFORMATION))
+        mvc.perform(get(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR_DEPLOYMENT_INFORMATION))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath(DEPLOYMENT_INFO_RESPONSE_DTO_LIST_JSON_PATH, hasSize(1)));
@@ -100,7 +101,7 @@ public class KafkaFaasConnectorDeploymentInfoResourceEndToEndTests extends Neo4j
         }
         applicationRepository.save(application);
 
-        mvc.perform(get(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECOTR_DEPLOYMENT_INFORMATION))
+        mvc.perform(get(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR_DEPLOYMENT_INFORMATION))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath(DEPLOYMENT_INFO_RESPONSE_DTO_LIST_JSON_PATH, hasSize(count)));
@@ -108,7 +109,7 @@ public class KafkaFaasConnectorDeploymentInfoResourceEndToEndTests extends Neo4j
 
     @Test
     public void getKafkaFaasConnectorDeploymentInfoNoApplication() throws Exception {
-        mvc.perform(get(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECOTR_DEPLOYMENT_INFORMATION))
+        mvc.perform(get(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR_DEPLOYMENT_INFORMATION))
             .andDo(print())
             .andExpect(status().isNotFound());
     }
@@ -130,6 +131,5 @@ public class KafkaFaasConnectorDeploymentInfoResourceEndToEndTests extends Neo4j
             .setGitCloneUrl("https://github.com/UST-MICO/kafka-faas-connector.git")
             .setServiceCrawlingOrigin(MicoServiceCrawlingOrigin.GITHUB);
     }
-
 
 }
