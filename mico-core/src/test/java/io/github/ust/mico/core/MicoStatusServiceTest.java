@@ -60,7 +60,7 @@ import static org.mockito.Mockito.mock;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-@ActiveProfiles("local")
+@ActiveProfiles("unit-testing")
 public class MicoStatusServiceTest {
 
     private static final String testNamespace = "test-namespace";

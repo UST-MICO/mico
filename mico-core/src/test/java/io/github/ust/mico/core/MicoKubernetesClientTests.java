@@ -71,7 +71,7 @@ import static org.mockito.BDDMockito.given;
 @Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest
-@ActiveProfiles("local")
+@ActiveProfiles("unit-testing")
 public class MicoKubernetesClientTests {
 
     private static final String LABEL_PREFIX = "ust.mico/";

@@ -31,7 +31,7 @@ import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-@ActiveProfiles("local")
+@ActiveProfiles("unit-testing")
 public class MicoVersionTests {
 
     @Test

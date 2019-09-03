@@ -42,7 +42,7 @@ import static org.junit.Assert.assertEquals;
 @Category(IntegrationTests.class)
 @RunWith(SpringRunner.class)
 @SpringBootTest
-@ActiveProfiles("local")
+@ActiveProfiles("unit-testing")
 public class GitHubCrawlerIntegrationTests extends Neo4jTestClass {
 
     private static final String REPO_URI_API = "https://api.github.com/repos/octokit/octokit.rb";
