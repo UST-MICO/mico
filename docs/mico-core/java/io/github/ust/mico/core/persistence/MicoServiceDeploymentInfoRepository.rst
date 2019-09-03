@@ -97,7 +97,7 @@ findAllByService
 findByApplicationAndService
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: @Query  Optional<MicoServiceDeploymentInfo> findByApplicationAndService(String applicationShortName, String applicationVersion, String serviceShortName)
+.. java:method:: @Query  List<MicoServiceDeploymentInfo> findByApplicationAndService(String applicationShortName, String applicationVersion, String serviceShortName)
    :outertype: MicoServiceDeploymentInfoRepository
 
    Retrieves the deployment information for a particular application and service. Also works with a KafkaFaasConnector instance.
@@ -110,7 +110,7 @@ findByApplicationAndService
 findByApplicationAndService
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: @Query  Optional<MicoServiceDeploymentInfo> findByApplicationAndService(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion)
+.. java:method:: @Query  List<MicoServiceDeploymentInfo> findByApplicationAndService(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion)
    :outertype: MicoServiceDeploymentInfoRepository
 
    Retrieves the deployment information for a particular application and service. Also works with a KafkaFaasConnector instance.

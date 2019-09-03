@@ -131,7 +131,7 @@ public class ServiceDeploymentInfoIntegrationTests {
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(),
-            application.getVersion(), service.getShortName())).willReturn(Optional.of(serviceDeploymentInfo));
+            application.getVersion(), service.getShortName())).willReturn(CollectionUtils.listOf(serviceDeploymentInfo));
 
         mvc.perform(get(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName()))
             .andDo(print())
@@ -181,7 +181,7 @@ public class ServiceDeploymentInfoIntegrationTests {
 
         given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion())).willReturn(Optional.of(application));
         given(applicationRepository.save(eq(expectedApplication))).willReturn(expectedApplication);
-        given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName())).willReturn(Optional.of(serviceDeploymentInfo));
+        given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName())).willReturn(CollectionUtils.listOf(serviceDeploymentInfo));
         given(serviceDeploymentInfoRepository.save(any(MicoServiceDeploymentInfo.class))).willReturn(serviceDeploymentInfo.applyValuesFrom(updatedServiceDeploymentInfoDTO));
         given(micoTopicRepository.findByName(anyString())).willReturn(Optional.empty());
         given(micoTopicRepository.save(eq(expectedTopicInput))).willReturn(expectedTopicInput);
@@ -226,7 +226,7 @@ public class ServiceDeploymentInfoIntegrationTests {
         application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
 
         given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion())).willReturn(Optional.of(application));
-        given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName())).willReturn(Optional.of(serviceDeploymentInfo));
+        given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName())).willReturn(CollectionUtils.listOf(serviceDeploymentInfo));
 
         mvc.perform(put(BASE_PATH + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName())
             .content(mapper.writeValueAsBytes(updatedServiceDeploymentInfoDTO))
@@ -274,7 +274,7 @@ public class ServiceDeploymentInfoIntegrationTests {
 
         given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion())).willReturn(Optional.of(application));
         given(applicationRepository.save(eq(expectedApplication))).willReturn(expectedApplication);
-        given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName())).willReturn(Optional.of(serviceDeploymentInfo));
+        given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName())).willReturn(CollectionUtils.listOf(serviceDeploymentInfo));
         given(serviceDeploymentInfoRepository.save(any(MicoServiceDeploymentInfo.class))).willReturn(serviceDeploymentInfo.applyValuesFrom(updatedServiceDeploymentInfoDTO));
         given(micoTopicRepository.findByName(existingTopic1.getName())).willReturn(Optional.of(existingTopic1));
         given(micoTopicRepository.findByName(existingTopic2.getName())).willReturn(Optional.of(existingTopic2));

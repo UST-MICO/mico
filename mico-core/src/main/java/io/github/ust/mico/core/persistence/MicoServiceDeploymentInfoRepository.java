@@ -72,7 +72,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
      */
     @Query("MATCH (a:MicoApplication)-[:PROVIDES_KF_CONNECTOR]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
         + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
-        + "RETURN (sdi:MicoServiceDeploymentInfo)-[:FOR|:HAS*0..1]->(), (s)-[PROVIDES*2]->()")
+        + "RETURN (sdi:MicoServiceDeploymentInfo)-[:FOR|:HAS*0..1]->(), (s)-[:PROVIDES*2]->()")
     List<MicoServiceDeploymentInfo> findKFConnectorSDIsByApplication(
         @Param("applicationShortName") String applicationShortName,
         @Param("applicationVersion") String applicationVersion);
@@ -106,7 +106,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
         + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
         + "AND s.shortName = {serviceShortName} "
         + "RETURN (sdi:MicoServiceDeploymentInfo)-[:FOR|:HAS*0..1]->(), (s)-[:PROVIDES*2]->()")
-    Optional<MicoServiceDeploymentInfo> findByApplicationAndService(
+    List<MicoServiceDeploymentInfo> findByApplicationAndService(
         @Param("applicationShortName") String applicationShortName,
         @Param("applicationVersion") String applicationVersion,
         @Param("serviceShortName") String serviceShortName);
@@ -125,7 +125,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
         + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
         + "AND s.shortName = {serviceShortName} AND s.version = {serviceVersion} "
         + "RETURN (sdi:MicoServiceDeploymentInfo)-[:FOR|:HAS*0..1]->(), (s)-[:PROVIDES*2]->()")
-    Optional<MicoServiceDeploymentInfo> findByApplicationAndService(
+    List<MicoServiceDeploymentInfo> findByApplicationAndService(
         @Param("applicationShortName") String applicationShortName,
         @Param("applicationVersion") String applicationVersion,
         @Param("serviceShortName") String serviceShortName,

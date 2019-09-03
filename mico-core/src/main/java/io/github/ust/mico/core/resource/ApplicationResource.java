@@ -20,7 +20,6 @@
 package io.github.ust.mico.core.resource;
 
 import io.github.ust.mico.core.broker.MicoApplicationBroker;
-import io.github.ust.mico.core.dto.request.KFConnectorDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
 import io.github.ust.mico.core.dto.response.KFConnectorDeploymentInfoResponseDTO;
@@ -68,6 +67,7 @@ public class ApplicationResource {
     private static final String PATH_VARIABLE_SERVICE_SHORT_NAME = "micoServiceShortName";
     private static final String PATH_VARIABLE_SERVICE_VERSION = "micoServiceVersion";
     private static final String PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION = "kafkaFaasConnectorVersion";
+    private static final String PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID = "kafkaFaasConnectorInstanceId";
     private static final String PATH_VARIABLE_INSTANCE_ID = "instanceId";
 
     @Autowired
@@ -209,7 +209,7 @@ public class ApplicationResource {
                 applicationShortName, applicationVersion, serviceShortName, serviceVersion);
         } catch (MicoApplicationNotFoundException | MicoServiceNotFoundException | MicoServiceDeploymentInformationNotFoundException | KubernetesResourceException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        } catch (MicoServiceAlreadyAddedToMicoApplicationException | MicoServiceAddedMoreThanOnceToMicoApplicationException | MicoApplicationIsNotUndeployedException | MicoApplicationDoesNotIncludeMicoServiceException e) {
+        } catch (MicoServiceAddedMoreThanOnceToMicoApplicationException | MicoApplicationIsNotUndeployedException | MicoApplicationDoesNotIncludeMicoServiceException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         } catch (MicoTopicRoleUsedMultipleTimesException | KafkaFaasConnectorNotAllowedHereException e) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
@@ -241,7 +241,8 @@ public class ApplicationResource {
                                                                                                                      @PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION) String kfConnectorVersion) {
         MicoServiceDeploymentInfo kafkaFaasConnectorSDI;
         try {
-            kafkaFaasConnectorSDI = broker.addKafkaFaasConnectorInstanceToMicoApplicationByVersion(applicationShortName, applicationVersion, kfConnectorVersion);
+            kafkaFaasConnectorSDI = broker.addKafkaFaasConnectorInstanceToMicoApplicationByVersion(
+                applicationShortName, applicationVersion, kfConnectorVersion);
         } catch (MicoApplicationNotFoundException | KafkaFaasConnectorVersionNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoApplicationIsNotUndeployedException e) {
@@ -251,12 +252,61 @@ public class ApplicationResource {
         return ResponseEntity.ok(new Resource<>(new KFConnectorDeploymentInfoResponseDTO(kafkaFaasConnectorSDI)));
     }
 
-    @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR + "/{" + PATH_VARIABLE_INSTANCE_ID + "}")
+    @ApiOperation(value = "Updates an existing KafkaFaasConnector deployment information instance with a new version.")
+    @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR + "/{" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION + "}/{" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID + "}")
+    public ResponseEntity<Resource<KFConnectorDeploymentInfoResponseDTO>> updateKafkaFaasConnectorInstanceOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
+                                                                                                                        @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
+                                                                                                                        @PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION) String kfConnectorVersion,
+                                                                                                                        @PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID) String instanceId) {
+        MicoServiceDeploymentInfo kafkaFaasConnectorSDI;
+        try {
+            kafkaFaasConnectorSDI = broker.updateKafkaFaasConnectorInstanceOfMicoApplicationByVersionAndInstanceId(
+                applicationShortName, applicationVersion, kfConnectorVersion, instanceId);
+        } catch (MicoApplicationNotFoundException | KafkaFaasConnectorVersionNotFoundException | KafkaFaasConnectorInstanceNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (MicoApplicationIsNotUndeployedException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        }
+
+        return ResponseEntity.ok(new Resource<>(new KFConnectorDeploymentInfoResponseDTO(kafkaFaasConnectorSDI)));
+    }
+
+    @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR)
+    public ResponseEntity<Void> deleteAllKafkaFaasConnectorInstancesFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                                    @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        try {
+            broker.removeAllKafkaFaasConnectorInstancesFromMicoApplication(shortName, version);
+        } catch (MicoApplicationNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (MicoApplicationIsNotUndeployedException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        }
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR + "/{" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION + "}")
+    public ResponseEntity<Void> deleteKafkaFaasConnectorInstancesFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                                 @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                                                 @PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION) String kfConnectorVersion) {
+        try {
+            broker.removeKafkaFaasConnectorInstancesFromMicoApplicationByVersion(shortName, version, kfConnectorVersion);
+        } catch (MicoApplicationNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (MicoApplicationIsNotUndeployedException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        }
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR + "/{" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION + "}/{" + PATH_VARIABLE_INSTANCE_ID + "}")
     public ResponseEntity<Void> deleteKafkaFaasConnectorInstanceFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                 @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                                                @PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION) String kfConnectorVersion,
                                                                                 @PathVariable(PATH_VARIABLE_INSTANCE_ID) String instanceId) {
         try {
-            broker.removeKafkaFaasConnectorInstanceFromMicoApplicationByInstanceId(shortName, version, instanceId);
+            broker.removeKafkaFaasConnectorInstanceFromMicoApplicationByVersionAndInstanceId(shortName, version, kfConnectorVersion, instanceId);
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoApplicationDoesNotIncludeKFConnectorInstanceException | MicoApplicationIsNotUndeployedException | KafkaFaasConnectorInstanceNotFoundException e) {

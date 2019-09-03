@@ -20,9 +20,11 @@
 package io.github.ust.mico.core;
 
 import io.github.ust.mico.core.configuration.KafkaConfig;
+import io.github.ust.mico.core.configuration.KafkaFaasConnectorConfig;
 import io.github.ust.mico.core.configuration.OpenFaaSConfig;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import org.junit.Test;
@@ -43,10 +45,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static io.github.ust.mico.core.TestConstants.*;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.*;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -60,12 +64,16 @@ public class ApplicationResourceEndToEndTests extends Neo4jTestClass {
 
     private static final String BASE_PATH = "/applications";
     private static final String PATH_SERVICES = "services";
+    private static final String PATH_KAFKA_FAAS_CONNECTOR = "kafka-faas-connector";
 
     @Autowired
     MicoApplicationRepository applicationRepository;
 
     @Autowired
     MicoServiceRepository serviceRepository;
+
+    @Autowired
+    MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
 
     @Autowired
     private MockMvc mvc;
@@ -76,8 +84,225 @@ public class ApplicationResourceEndToEndTests extends Neo4jTestClass {
     @Autowired
     private KafkaConfig kafkaConfig;
 
+    @Autowired
+    private KafkaFaasConnectorConfig kafkaFaasConnectorConfig;
+
     @MockBean
     private MicoKubernetesClient micoKubernetesClient;
+
+    @Test
+    public void addServiceToApplicationShouldBeIdempotent() throws Exception {
+        MicoApplication application = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
+        applicationRepository.save(application);
+
+        MicoService service = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
+        serviceRepository.save(service);
+
+        given(micoKubernetesClient.isApplicationUndeployed(application)).willReturn(true);
+
+        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + SERVICE_VERSION))
+            .andDo(print())
+            .andExpect(status().isOk());
+
+        Optional<MicoApplication> result = applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion());
+        assertTrue(result.isPresent());
+        assertThat(result.get().getServices().size(), is(1));
+        assertThat(result.get().getServices().get(0), is(service));
+        assertThat(result.get().getServiceDeploymentInfos().size(), is(1));
+        assertThat(result.get().getServiceDeploymentInfos().get(0).getService(), is(service));
+
+        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + SERVICE_VERSION))
+            .andDo(print())
+            .andExpect(status().isOk());
+
+        Optional<MicoApplication> result2 = applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion());
+        assertTrue(result2.isPresent());
+        assertThat(result2.get().getServices().size(), is(1));
+        assertThat(result2.get().getServices().get(0), is(service));
+        assertThat(result2.get().getServiceDeploymentInfos().size(), is(1));
+        assertThat(result2.get().getServiceDeploymentInfos().get(0).getService(), is(service));
+    }
+
+    @Test
+    public void addKafkaFaasConnectorInstanceOfApplication() throws Exception {
+        MicoApplication application = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
+        applicationRepository.save(application);
+
+        String kafkaFaasConnectorServiceName = kafkaFaasConnectorConfig.getServiceName();
+        MicoService kfConnectorService = new MicoService().setShortName(kafkaFaasConnectorServiceName).setVersion(SERVICE_VERSION).setKafkaEnabled(true);
+        serviceRepository.save(kfConnectorService);
+
+        given(micoKubernetesClient.isApplicationUndeployed(application)).willReturn(true);
+
+        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR + "/" + SERVICE_VERSION))
+            .andDo(print())
+            .andExpect(status().isOk());
+
+        Optional<MicoApplication> result = applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion());
+        assertTrue(result.isPresent());
+        assertThat(result.get().getServices().size(), is(0));
+        assertThat(result.get().getServiceDeploymentInfos().size(), is(0));
+        assertThat(result.get().getKafkaFaasConnectorDeploymentInfos().size(), is(1));
+        assertThat(result.get().getKafkaFaasConnectorDeploymentInfos().get(0).getService(), is(kfConnectorService));
+    }
+
+    @Test
+    public void updateKafkaFaasConnectorInstanceOfApplicationShouldBeIdempotent() throws Exception {
+        MicoApplication application = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
+        applicationRepository.save(application);
+
+        String kafkaFaasConnectorServiceName = kafkaFaasConnectorConfig.getServiceName();
+        MicoService kfConnectorService = new MicoService().setShortName(kafkaFaasConnectorServiceName).setVersion(SERVICE_VERSION).setKafkaEnabled(true);
+        serviceRepository.save(kfConnectorService);
+
+        given(micoKubernetesClient.isApplicationUndeployed(application)).willReturn(true);
+
+        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR + "/" + SERVICE_VERSION))
+            .andDo(print())
+            .andExpect(status().isOk());
+
+        Optional<MicoApplication> result = applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion());
+        assertTrue(result.isPresent());
+        assertThat(result.get().getKafkaFaasConnectorDeploymentInfos().size(), is(1));
+        assertThat(result.get().getKafkaFaasConnectorDeploymentInfos().get(0).getService(), is(kfConnectorService));
+        String instanceId = result.get().getKafkaFaasConnectorDeploymentInfos().get(0).getInstanceId();
+
+        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR + "/" + SERVICE_VERSION + "/" + instanceId))
+            .andDo(print())
+            .andExpect(status().isOk());
+
+        Optional<MicoApplication> result2 = applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion());
+        assertTrue(result2.isPresent());
+        assertThat(result2.get().getKafkaFaasConnectorDeploymentInfos().size(), is(1));
+        assertThat(result2.get().getKafkaFaasConnectorDeploymentInfos().get(0).getService(), is(kfConnectorService));
+        assertThat(result2.get().getKafkaFaasConnectorDeploymentInfos().get(0).getInstanceId(), is(instanceId));
+
+        mvc.perform(post(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR + "/" + SERVICE_VERSION + "/" + instanceId))
+            .andDo(print())
+            .andExpect(status().isOk());
+
+        Optional<MicoApplication> result3 = applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion());
+        assertTrue(result3.isPresent());
+        assertThat(result3.get().getKafkaFaasConnectorDeploymentInfos().size(), is(1));
+        assertThat(result3.get().getKafkaFaasConnectorDeploymentInfos().get(0).getService(), is(kfConnectorService));
+        assertThat(result3.get().getKafkaFaasConnectorDeploymentInfos().get(0).getInstanceId(), is(instanceId));
+    }
+
+    @Test
+    public void deleteAllKafkaFaasConnectorInstancesFromApplication() throws Exception {
+        MicoApplication application = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
+
+        String kafkaFaasConnectorServiceName = kafkaFaasConnectorConfig.getServiceName();
+        MicoService kfConnectorService = new MicoService().setShortName(kafkaFaasConnectorServiceName).setVersion(SERVICE_VERSION).setKafkaEnabled(true);
+        MicoServiceDeploymentInfo sdi1 = new MicoServiceDeploymentInfo()
+            .setService(kfConnectorService)
+            .setInstanceId(INSTANCE_ID_1);
+        MicoServiceDeploymentInfo sdi2 = new MicoServiceDeploymentInfo()
+            .setService(kfConnectorService)
+            .setInstanceId(INSTANCE_ID_2);
+        application.getKafkaFaasConnectorDeploymentInfos().add(sdi1);
+        application.getKafkaFaasConnectorDeploymentInfos().add(sdi2);
+        serviceRepository.save(kfConnectorService);
+        applicationRepository.save(application);
+
+        given(micoKubernetesClient.isApplicationUndeployed(application)).willReturn(true);
+
+        List<MicoServiceDeploymentInfo> sdiBefore = serviceDeploymentInfoRepository.findByApplicationAndService(
+            application.getShortName(), application.getVersion(), kafkaFaasConnectorServiceName);
+        assertThat(sdiBefore.size(), is(2));
+        Optional<MicoApplication> appBefore = applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion());
+        assertTrue(appBefore.isPresent());
+        assertThat(appBefore.get().getKafkaFaasConnectorDeploymentInfos().size(), is(2));
+
+        mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR))
+            .andDo(print())
+            .andExpect(status().isNoContent());
+
+        List<MicoServiceDeploymentInfo> sdiAfter = serviceDeploymentInfoRepository.findByApplicationAndService(
+            application.getShortName(), application.getVersion(), kafkaFaasConnectorServiceName);
+        assertThat(sdiAfter.size(), is(0));
+        Optional<MicoApplication> appAfter = applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion());
+        assertTrue(appAfter.isPresent());
+        assertThat(appAfter.get().getKafkaFaasConnectorDeploymentInfos().size(), is(0));
+    }
+
+    @Test
+    public void deleteKafkaFaasConnectorInstancesFromApplicationByVersion() throws Exception {
+        MicoApplication application = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
+
+        String kafkaFaasConnectorServiceName = kafkaFaasConnectorConfig.getServiceName();
+        MicoService kfConnectorService = new MicoService().setShortName(kafkaFaasConnectorServiceName).setVersion(SERVICE_VERSION).setKafkaEnabled(true);
+        MicoServiceDeploymentInfo sdi1 = new MicoServiceDeploymentInfo()
+            .setService(kfConnectorService)
+            .setInstanceId(INSTANCE_ID_1);
+        MicoServiceDeploymentInfo sdi2 = new MicoServiceDeploymentInfo()
+            .setService(kfConnectorService)
+            .setInstanceId(INSTANCE_ID_2);
+        application.getKafkaFaasConnectorDeploymentInfos().add(sdi1);
+        application.getKafkaFaasConnectorDeploymentInfos().add(sdi2);
+        serviceRepository.save(kfConnectorService);
+        applicationRepository.save(application);
+
+        given(micoKubernetesClient.isApplicationUndeployed(application)).willReturn(true);
+
+        List<MicoServiceDeploymentInfo> sdiBefore = serviceDeploymentInfoRepository.findByApplicationAndService(
+            application.getShortName(), application.getVersion(), kafkaFaasConnectorServiceName);
+        assertThat(sdiBefore.size(), is(2));
+        Optional<MicoApplication> appBefore = applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion());
+        assertTrue(appBefore.isPresent());
+        assertThat(appBefore.get().getKafkaFaasConnectorDeploymentInfos().size(), is(2));
+
+        mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR + "/" + SERVICE_VERSION))
+            .andDo(print())
+            .andExpect(status().isNoContent());
+
+        List<MicoServiceDeploymentInfo> sdiAfter = serviceDeploymentInfoRepository.findByApplicationAndService(
+            application.getShortName(), application.getVersion(), kafkaFaasConnectorServiceName);
+        assertThat(sdiAfter.size(), is(0));
+        Optional<MicoApplication> appAfter = applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion());
+        assertTrue(appAfter.isPresent());
+        assertThat(appAfter.get().getKafkaFaasConnectorDeploymentInfos().size(), is(0));
+    }
+
+    @Test
+    public void deleteKafkaFaasConnectorInstanceFromApplicationByInstanceId() throws Exception {
+        MicoApplication application = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
+
+        String kafkaFaasConnectorServiceName = kafkaFaasConnectorConfig.getServiceName();
+        MicoService kfConnectorService = new MicoService().setShortName(kafkaFaasConnectorServiceName).setVersion(SERVICE_VERSION).setKafkaEnabled(true);
+        MicoServiceDeploymentInfo sdi1 = new MicoServiceDeploymentInfo()
+            .setService(kfConnectorService)
+            .setInstanceId(INSTANCE_ID_1);
+        MicoServiceDeploymentInfo sdi2 = new MicoServiceDeploymentInfo()
+            .setService(kfConnectorService)
+            .setInstanceId(INSTANCE_ID_2);
+        application.getKafkaFaasConnectorDeploymentInfos().add(sdi1);
+        application.getKafkaFaasConnectorDeploymentInfos().add(sdi2);
+        serviceRepository.save(kfConnectorService);
+        applicationRepository.save(application);
+
+        given(micoKubernetesClient.isApplicationUndeployed(application)).willReturn(true);
+
+        List<MicoServiceDeploymentInfo> sdiBefore = serviceDeploymentInfoRepository.findByApplicationAndService(
+            application.getShortName(), application.getVersion(), kafkaFaasConnectorServiceName);
+        assertThat(sdiBefore.size(), is(2));
+        Optional<MicoApplication> appBefore = applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion());
+        assertTrue(appBefore.isPresent());
+        assertThat(appBefore.get().getKafkaFaasConnectorDeploymentInfos().size(), is(2));
+
+        mvc.perform(delete(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR + "/" + SERVICE_VERSION + "/" + INSTANCE_ID_1))
+            .andDo(print())
+            .andExpect(status().isNoContent());
+
+        List<MicoServiceDeploymentInfo> sdiAfter = serviceDeploymentInfoRepository.findByApplicationAndService(
+            application.getShortName(), application.getVersion(), kafkaFaasConnectorServiceName);
+        assertThat(sdiAfter.size(), is(1));
+        assertThat(sdiAfter.get(0).getInstanceId(), is(INSTANCE_ID_2));
+        Optional<MicoApplication> appAfter = applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion());
+        assertTrue(appAfter.isPresent());
+        assertThat(appAfter.get().getKafkaFaasConnectorDeploymentInfos().size(), is(1));
+        assertThat(appAfter.get().getKafkaFaasConnectorDeploymentInfos().get(0).getInstanceId(), is(INSTANCE_ID_2));
+    }
 
     @Test
     public void testDefaultVariablesAddedToKafkaEnabledService() throws Exception {

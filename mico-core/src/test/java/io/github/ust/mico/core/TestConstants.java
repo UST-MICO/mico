@@ -87,6 +87,10 @@ class TestConstants {
 
     static final String OWNER = "owner";
 
+    static final String INSTANCE_ID = "instance-id";
+    static final String INSTANCE_ID_1 = "instance-id-1";
+    static final String INSTANCE_ID_2 = "instance-id-2";
+
     /*
      * For tests in ApplicationResourceIntegrationTests, one service is added to the list of MicoServiceStatusDTOs in MicoApplicationStatusDTO.
      * All paths are build on the path for the status of this service.

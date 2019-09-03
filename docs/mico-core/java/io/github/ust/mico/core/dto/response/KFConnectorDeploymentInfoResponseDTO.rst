@@ -1,6 +1,20 @@
+.. java:import:: com.fasterxml.jackson.annotation JsonProperty
+
+.. java:import:: io.fabric8.kubernetes.api.model Service
+
+.. java:import:: io.fabric8.kubernetes.api.model.apps Deployment
+
+.. java:import:: io.github.ust.mico.core.configuration.extension CustomOpenApiExtentionsPlugin
+
 .. java:import:: io.github.ust.mico.core.dto.request KFConnectorDeploymentInfoRequestDTO
 
 .. java:import:: io.github.ust.mico.core.model MicoServiceDeploymentInfo
+
+.. java:import:: io.swagger.annotations ApiModelProperty
+
+.. java:import:: io.swagger.annotations Extension
+
+.. java:import:: io.swagger.annotations ExtensionProperty
 
 .. java:import:: lombok Data
 
