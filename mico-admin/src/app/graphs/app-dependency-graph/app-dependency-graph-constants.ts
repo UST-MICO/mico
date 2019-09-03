@@ -182,6 +182,14 @@ export const KAFKA_TOPIC_NODE_TEMPLATE = {
     <text class="text title" data-content="title" data-click="title" width="42" text-anchor="middle" x="2" y="3"></text>`
 };
 
+export const KAFKA_FAAS_CONNECTOR_NODE_TEMPLATE = {
+    id: 'kafka-faas-connector',
+    innerHTML: `<polygon points="-32.1,0 -32,-8 32,-8 33,0 32,8 -32,8" data-link-handles="corners"></polygon>
+    <path d="M-38 -15 L28 -15 A 6 15 0 0 1 28 15 L-38 15 A 6 15 0 0 0 -38 -15 Z" />
+    <text class="text title" data-content="title" data-click="faas-function" width="55" x="-27" y="-3"></text>
+    <text class="text version" data-content="data.version" data-click="version" width="40" x="-27" y="11"></text>`
+};
+
 export const SERVICE_NODE_TEMPLATE = {
     id: 'default',
     innerHTML: `<rect width="100" height="60" x="-50" y="-30"></rect>
