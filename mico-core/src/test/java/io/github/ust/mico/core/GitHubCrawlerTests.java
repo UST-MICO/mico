@@ -28,7 +28,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringRunner.class)
-@ActiveProfiles("local")
+@ActiveProfiles("unit-testing")
 public class GitHubCrawlerTests {
 
     private static final String REPO_URI_API = "https://api.github.com/repos/octokit/octokit.rb";

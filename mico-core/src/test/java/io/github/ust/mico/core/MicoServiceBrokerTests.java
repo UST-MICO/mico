@@ -29,7 +29,7 @@ import static org.mockito.BDDMockito.given;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-@ActiveProfiles("local")
+@ActiveProfiles("unit-testing")
 public class MicoServiceBrokerTests {
 
     @MockBean

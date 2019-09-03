@@ -68,7 +68,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @EnableAutoConfiguration
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
-@ActiveProfiles("local")
+@ActiveProfiles("unit-testing")
 public class ServiceDeploymentInfoIntegrationTests {
 
     private static final String PATH_DEPLOYMENT_INFORMATION = "deploymentInformation";

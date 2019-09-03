@@ -1,7 +1,7 @@
 sudo: false
 language: java
 env:
-  - spring_profiles_active=local
+  - spring_profiles_active=unit-testing
 cache:
   npm: true
   directories:
