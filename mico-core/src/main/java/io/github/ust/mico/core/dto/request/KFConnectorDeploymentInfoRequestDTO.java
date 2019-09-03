@@ -20,6 +20,7 @@
 package io.github.ust.mico.core.dto.request;
 
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
+import io.github.ust.mico.core.model.MicoEnvironmentVariable;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.model.MicoTopicRole;
 import io.swagger.annotations.ApiModelProperty;
@@ -84,6 +85,20 @@ public class KFConnectorDeploymentInfoRequestDTO {
     @NotNull
     private String outputTopicName;
 
+    /**
+     * Name of the OpenFaaS function.
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "OpenFaaSFunctionName"),
+            @ExtensionProperty(name = "x-order", value = "40"),
+            @ExtensionProperty(name = "description", value = "Name of the OpenFaaS function.")
+        }
+    )})
+    @NotNull
+    private String openFaaSFunctionName;
+
 
     // -------------------
     // -> Constructors ---
@@ -103,5 +118,8 @@ public class KFConnectorDeploymentInfoRequestDTO {
         Optional<MicoTopicRole> outputTopicRoleOpt = kfConnectorDeploymentInfo.getTopics().stream()
             .filter(t -> t.getRole().equals(MicoTopicRole.Role.OUTPUT)).findFirst();
         outputTopicRoleOpt.ifPresent(micoTopicRole -> this.outputTopicName = micoTopicRole.getTopic().getName());
+        kfConnectorDeploymentInfo.getEnvironmentVariables().stream()
+            .filter(env -> env.getName().equals(MicoEnvironmentVariable.DefaultNames.OPENFAAS_FUNCTION_NAME))
+            .findFirst().ifPresent(micoEnvironmentVariable -> this.openFaaSFunctionName = micoEnvironmentVariable.getValue());
     }
 }
