@@ -36,14 +36,17 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
     private MicoApplicationBroker applicationBroker;
 
     /**
-     * Fetches a list of {@link MicoServiceDeploymentInfo} of all kafkaFaasConnector instances associated  with the specified micoApplication.
+     * Fetches a list of {@link MicoServiceDeploymentInfo MicoServiceDeploymentInfos} of all KafkaFaasConnector instances
+     * associated with the specified {@link MicoApplication}.
      *
      * @param micoApplicationShortName the shortName of the micoApplication
      * @param micoApplicationVersion   the version of the micoApplication
-     * @return
+     * @return the list of {@link MicoServiceDeploymentInfo MicoServiceDeploymentInfos}
      * @throws MicoApplicationNotFoundException if there is no such micoApplication
      */
-    public List<MicoServiceDeploymentInfo> getKafkaFaasConnectorDeploymentInformation(String micoApplicationShortName, String micoApplicationVersion) throws MicoApplicationNotFoundException {
+    public List<MicoServiceDeploymentInfo> getKafkaFaasConnectorDeploymentInformation(
+        String micoApplicationShortName, String micoApplicationVersion) throws MicoApplicationNotFoundException {
+
         MicoApplication micoApplication = applicationBroker.getMicoApplicationByShortNameAndVersion(micoApplicationShortName, micoApplicationVersion);
         List<MicoServiceDeploymentInfo> micoServiceDeploymentInfos = micoApplication.getKafkaFaasConnectorDeploymentInfos();
         log.debug("There are {} KafkaFaasConnector deployment information for MicoApplication '{}' in version '{}'.",
