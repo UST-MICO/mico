@@ -84,13 +84,15 @@ public class MicoCoreApplication implements ApplicationListener<ApplicationReady
 
     /**
      * Runs when application is ready.
+     * Add KafkaFaasConnector in latest version to the database,
+     * if the current profile is not 'unit-testing' (e.g. Travis CI).
      *
      * @param event the {@link ApplicationReadyEvent}
      */
     public void onApplicationEvent(final ApplicationReadyEvent event) {
         Environment environment = event.getApplicationContext().getEnvironment();
         if (environment.acceptsProfiles(Profiles.of("unit-testing"))) {
-            log.info("Unit testing profile is active. Don't add kafka-faas-connector to database.");
+            log.info("Profile 'unit-testing' is active. Don't add {} to database.", kafkaFaasConnectorConfig.getServiceName());
             return;
         }
         addKafkaFaasConnectorToDatabase();

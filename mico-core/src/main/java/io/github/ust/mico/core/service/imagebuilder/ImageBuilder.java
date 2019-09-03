@@ -46,6 +46,7 @@ import org.springframework.core.env.Profiles;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
@@ -98,10 +99,11 @@ public class ImageBuilder {
         log.info("Application context refreshed.");
 
         // Initialization must only be executed in an environment with a connection to Kubernetes.
-        // Skip the initialization if we are in the 'local' profile (e.g. Travis CI).
+        // Skip the initialization if we are in the 'local' or 'unit-testing' profile (e.g. Travis CI).
         Environment environment = cre.getApplicationContext().getEnvironment();
         if (environment.acceptsProfiles(Profiles.of("local", "unit-testing"))) {
-            log.info("Local or unit testing profile is active. Don't initialize image builder.");
+            log.info("Profile(s) {} is/are active. Don't initialize image builder.",
+                Arrays.toString(environment.getActiveProfiles()));
             return;
         }
         try {
