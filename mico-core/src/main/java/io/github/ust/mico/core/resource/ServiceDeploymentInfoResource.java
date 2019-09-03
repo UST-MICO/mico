@@ -35,12 +35,13 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.Valid;
 
+import static io.github.ust.mico.core.resource.ApplicationResource.PATH_APPLICATIONS;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @Slf4j
 @RestController
-@RequestMapping(value = "/applications", produces = MediaTypes.HAL_JSON_VALUE)
+@RequestMapping(value = PATH_APPLICATIONS, produces = MediaTypes.HAL_JSON_VALUE)
 public class ServiceDeploymentInfoResource {
 
     private static final String PATH_DEPLOYMENT_INFORMATION = "deploymentInformation";
