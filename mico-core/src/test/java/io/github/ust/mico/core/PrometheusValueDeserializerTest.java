@@ -31,7 +31,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @Slf4j
-@ActiveProfiles("local")
+@ActiveProfiles("unit-testing")
 public class PrometheusValueDeserializerTest {
 
     @Test

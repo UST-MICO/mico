@@ -30,7 +30,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import static org.hamcrest.CoreMatchers.equalTo;
 
 @RunWith(SpringRunner.class)
-@ActiveProfiles("local")
+@ActiveProfiles("unit-testing")
 public class KubernetesNameNormalizerTests {
 
     @Rule

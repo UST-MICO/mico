@@ -42,7 +42,7 @@ import static io.github.ust.mico.core.TestConstants.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-@ActiveProfiles("local")
+@ActiveProfiles("unit-testing")
 public class ImageBuilderTests {
 
     @Rule

@@ -19,7 +19,7 @@ import static org.junit.Assert.assertEquals;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @Transactional
-@ActiveProfiles("local")
+@ActiveProfiles("unit-testing")
 public class MicoTopicRepositoryTests extends MicoRepositoryTests {
 
 

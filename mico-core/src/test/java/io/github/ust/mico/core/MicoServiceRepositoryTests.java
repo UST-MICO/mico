@@ -42,7 +42,7 @@ import static org.junit.Assert.*;
 @SpringBootTest
 @Transactional
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-@ActiveProfiles("local")
+@ActiveProfiles("unit-testing")
 public class MicoServiceRepositoryTests extends MicoRepositoryTests {
 
     public void setUp() {

@@ -38,7 +38,7 @@ import static org.junit.Assert.*;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @Transactional
-@ActiveProfiles("local")
+@ActiveProfiles("unit-testing")
 public class MicoApplicationRepositoryTests extends MicoRepositoryTests {
 
     @Before
