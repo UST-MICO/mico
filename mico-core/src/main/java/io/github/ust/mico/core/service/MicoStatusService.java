@@ -92,6 +92,7 @@ public class MicoStatusService {
             podCount += kfConnectorServiceStatus.getPodsInformation().size();
             requestedReplicasCount += kfConnectorServiceStatus.getRequestedReplicas();
             availableReplicasCount += kfConnectorServiceStatus.getAvailableReplicas();
+            applicationStatus.getServiceStatuses().add(kfConnectorServiceStatus);
         }
 
         for (MicoService micoService : micoServices) {
