@@ -35,6 +35,14 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
     @Autowired
     private MicoApplicationBroker applicationBroker;
 
+    /**
+     * Fetches a list of {@link MicoServiceDeploymentInfo} of all kafkaFaasConnector instances associated  with the specified micoApplication.
+     *
+     * @param micoApplicationShortName the shortName of the micoApplication
+     * @param micoApplicationVersion   the version of the micoApplication
+     * @return
+     * @throws MicoApplicationNotFoundException if there is no such micoApplication
+     */
     public List<MicoServiceDeploymentInfo> getKafkaFaasConnectorDeploymentInformation(String micoApplicationShortName, String micoApplicationVersion) throws MicoApplicationNotFoundException {
         MicoApplication micoApplication = applicationBroker.getMicoApplicationByShortNameAndVersion(micoApplicationShortName, micoApplicationVersion);
         List<MicoServiceDeploymentInfo> micoServiceDeploymentInfos = micoApplication.getKafkaFaasConnectorDeploymentInfos();
