@@ -69,10 +69,10 @@ public class KafkaFaasConnectorDeploymentInfoResource {
         return ResponseEntity.ok(new Resources<>(micoServiceDeploymentInfoResources, linkTo(methodOn(KafkaFaasConnectorDeploymentInfoResource.class).getKafkaFaasConnectorDeploymentInformation(shortName, version)).withSelfRel()));
     }
 
-    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR + "/" + PATH_VARIABLE_INSTANCE_ID)
-    public ResponseEntity<Resource<KFConnectorDeploymentInfoResponseDTO>> getKafkaFaasConnectorDeploymentInformation(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version,
-                                                                                                                     @PathVariable(PATH_VARIABLE_INSTANCE_ID) String instanceId) {
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR + "/" + "{" + PATH_VARIABLE_INSTANCE_ID + "}")
+    public ResponseEntity<Resource<KFConnectorDeploymentInfoResponseDTO>> getKafkaFaasConnectorDeploymentInformationInstance(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                                                                             @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                                                                                             @PathVariable(PATH_VARIABLE_INSTANCE_ID) String instanceId) {
         log.debug("Get the KafkaFaasConnector deployment information of the MicoApplication '{}' '{}' with instanceId '{}'.", shortName, version, instanceId);
         Optional<MicoServiceDeploymentInfo> micoServiceDeploymentInfoOptional;
         try {
@@ -123,7 +123,7 @@ public class KafkaFaasConnectorDeploymentInfoResource {
         LinkedList<Link> links = new LinkedList<>();
         links.add(linkTo(methodOn(ApplicationResource.class).getApplicationByShortNameAndVersion(applicationShortName, applicationVersion)).withRel("application"));
         links.add(linkTo(methodOn(ServiceResource.class).getServiceByShortNameAndVersion(micoService.getShortName(), micoService.getVersion())).withRel("kafkaFaasConnector"));
-        links.add(linkTo(methodOn(KafkaFaasConnectorDeploymentInfoResource.class).getKafkaFaasConnectorDeploymentInformation(applicationShortName, applicationVersion, micoServiceDeploymentInfo.getInstanceId())).withSelfRel());
+        links.add(linkTo(methodOn(KafkaFaasConnectorDeploymentInfoResource.class).getKafkaFaasConnectorDeploymentInformationInstance(applicationShortName, applicationVersion, micoServiceDeploymentInfo.getInstanceId())).withSelfRel());
         return new Resource<>(kfConnectorDeploymentInfoResponseDTO, links);
     }
 

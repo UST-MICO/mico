@@ -42,6 +42,7 @@ import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
 import static io.github.ust.mico.core.TestConstants.VERSION;
 import static io.github.ust.mico.core.resource.ApplicationResource.PATH_APPLICATIONS;
 import static io.github.ust.mico.core.resource.ApplicationResource.PATH_KAFKA_FAAS_CONNECTOR;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -114,8 +115,34 @@ public class KafkaFaasConnectorDeploymentInfoResourceEndToEndTests extends Neo4j
             .andExpect(status().isNotFound());
     }
 
+    @Test
+    public void getKafkaFaasConnectorDeploymentInfoInstanceNoApplication() throws Exception {
+        mvc.perform(get(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR + "/Instance"))
+            .andDo(print())
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void getKafkaFaasConnectorDeploymentInfoInstance() throws Exception {
+        MicoApplication application = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
+        MicoService kafkaFaasConnectorMicoService = getKafkaFaasConnectorMicoService();
+        String instanceId = "instanceId";
+        micoServiceRepository.save(kafkaFaasConnectorMicoService);
+        addKafkaFaasConnectorToApplication(application, kafkaFaasConnectorMicoService, instanceId);
+        applicationRepository.save(application);
+
+        mvc.perform(get(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR + "/" + instanceId))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(JsonPathBuilder.buildPath(ROOT, "instanceId"), is(instanceId)));
+    }
+
     private void addKafkaFaasConnectorToApplication(MicoApplication application, MicoService kafkaFaasConnectorMicoService) {
         String instanceId = UIDUtils.uidFor(kafkaFaasConnectorMicoService);
+        addKafkaFaasConnectorToApplication(application, kafkaFaasConnectorMicoService, instanceId);
+    }
+
+    private void addKafkaFaasConnectorToApplication(MicoApplication application, MicoService kafkaFaasConnectorMicoService, String instanceId) {
         MicoServiceDeploymentInfo sdi = new MicoServiceDeploymentInfo()
             .setService(kafkaFaasConnectorMicoService)
             .setInstanceId(instanceId);
