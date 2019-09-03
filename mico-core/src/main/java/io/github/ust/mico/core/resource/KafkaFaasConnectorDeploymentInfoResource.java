@@ -22,6 +22,7 @@ package io.github.ust.mico.core.resource;
 import io.github.ust.mico.core.broker.KafkaFaasConnectorDeploymentInfoBroker;
 import io.github.ust.mico.core.dto.response.KFConnectorDeploymentInfoResponseDTO;
 import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
+import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import lombok.extern.slf4j.Slf4j;
@@ -55,7 +56,6 @@ public class KafkaFaasConnectorDeploymentInfoResource {
     @Autowired
     private KafkaFaasConnectorDeploymentInfoBroker kafkaFaasConnectorDeploymentInfoBroker;
 
-
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR_DEPLOYMENT_INFORMATION)
     public ResponseEntity<Resources<Resource<KFConnectorDeploymentInfoResponseDTO>>> getKafkaFaasConnectorDeploymentInformation(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                                                                 @PathVariable(PATH_VARIABLE_VERSION) String version) {
@@ -71,35 +71,39 @@ public class KafkaFaasConnectorDeploymentInfoResource {
     }
 
     /**
-     * Warps a list of {@link MicoServiceDeploymentInfo} into a list of {@link KFConnectorDeploymentInfoResponseDTO} resources.
+     * Wraps a list of {@link MicoServiceDeploymentInfo MicoServiceDeploymentInfos} into a list of {@link KFConnectorDeploymentInfoResponseDTO} resources.
      *
-     * @param shortName
-     * @param version
-     * @param micoServiceDeploymentInfos
-     * @return A list of resources. Each item in the list contains a {@link KFConnectorDeploymentInfoResponseDTO}.
+     * @param applicationShortName       the short name of the {@link MicoApplication}
+     * @param applicationVersion         the version of the {@link MicoApplication}
+     * @param micoServiceDeploymentInfos the {@link MicoServiceDeploymentInfo MicoServiceDeploymentInfos}
+     * @return A list of resources containing the {@link KFConnectorDeploymentInfoResponseDTO KFConnectorDeploymentInfoResponseDTOs}.
      */
-    private List<Resource<KFConnectorDeploymentInfoResponseDTO>> getKfConnectorDeploymentInfoResponseDTOResources(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName, @PathVariable(PATH_VARIABLE_VERSION) String version, List<MicoServiceDeploymentInfo> micoServiceDeploymentInfos) {
+    private List<Resource<KFConnectorDeploymentInfoResponseDTO>> getKfConnectorDeploymentInfoResponseDTOResources(
+        String applicationShortName, String applicationVersion, List<MicoServiceDeploymentInfo> micoServiceDeploymentInfos) {
+
         LinkedList<Resource<KFConnectorDeploymentInfoResponseDTO>> micoServiceDeploymentInfoResources = new LinkedList<>();
         for (MicoServiceDeploymentInfo micoServiceDeploymentInfo : micoServiceDeploymentInfos) {
-            Resource<KFConnectorDeploymentInfoResponseDTO> micoServiceDeploymentInfoResource = getKfConnectorDeploymentInfoResponseDTOResource(shortName, version, micoServiceDeploymentInfo);
+            Resource<KFConnectorDeploymentInfoResponseDTO> micoServiceDeploymentInfoResource = getKfConnectorDeploymentInfoResponseDTOResource(applicationShortName, applicationVersion, micoServiceDeploymentInfo);
             micoServiceDeploymentInfoResources.add(micoServiceDeploymentInfoResource);
         }
         return micoServiceDeploymentInfoResources;
     }
 
     /**
-     * Warps a {@link KFConnectorDeploymentInfoResponseDTO} into a HATOAS resource with a link to the application and a self-link.
+     * Wraps a {@link KFConnectorDeploymentInfoResponseDTO} into a HATEOAS resource with a link to the application and a self-link.
      *
-     * @param shortName
-     * @param version
-     * @param micoServiceDeploymentInfo
-     * @return
+     * @param applicationShortName      the short name of the {@link MicoApplication}
+     * @param applicationVersion        the version of the {@link MicoApplication}
+     * @param micoServiceDeploymentInfo the {@link MicoServiceDeploymentInfo}
+     * @return The resource containing the {@link KFConnectorDeploymentInfoResponseDTO}.
      */
-    private Resource<KFConnectorDeploymentInfoResponseDTO> getKfConnectorDeploymentInfoResponseDTOResource(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName, @PathVariable(PATH_VARIABLE_VERSION) String version, MicoServiceDeploymentInfo micoServiceDeploymentInfo) {
+    private Resource<KFConnectorDeploymentInfoResponseDTO> getKfConnectorDeploymentInfoResponseDTOResource(
+        String applicationShortName, String applicationVersion, MicoServiceDeploymentInfo micoServiceDeploymentInfo) {
+
         KFConnectorDeploymentInfoResponseDTO kfConnectorDeploymentInfoResponseDTO = new KFConnectorDeploymentInfoResponseDTO(micoServiceDeploymentInfo);
         MicoService micoService = micoServiceDeploymentInfo.getService();
         LinkedList<Link> links = new LinkedList<>();
-        links.add(linkTo(methodOn(ApplicationResource.class).getApplicationByShortNameAndVersion(shortName, version)).withRel("application"));
+        links.add(linkTo(methodOn(ApplicationResource.class).getApplicationByShortNameAndVersion(applicationShortName, applicationVersion)).withRel("application"));
         links.add(linkTo(methodOn(ServiceResource.class).getServiceByShortNameAndVersion(micoService.getShortName(), micoService.getVersion())).withRel("kafkaFaasConnector"));
         return new Resource<>(kfConnectorDeploymentInfoResponseDTO, links);
     }
