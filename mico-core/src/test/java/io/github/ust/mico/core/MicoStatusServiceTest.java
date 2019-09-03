@@ -25,6 +25,7 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.github.ust.mico.core.configuration.KafkaFaasConnectorConfig;
 import io.github.ust.mico.core.configuration.PrometheusConfig;
 import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
 import io.github.ust.mico.core.dto.response.internal.PrometheusResponseDTO;
@@ -72,6 +73,8 @@ public class MicoStatusServiceTest {
     @MockBean
     private PrometheusConfig prometheusConfig;
     @MockBean
+    private KafkaFaasConnectorConfig kafkaFaasConnectorConfig;
+    @MockBean
     private RestTemplate restTemplate;
     @MockBean
     private MicoApplicationRepository applicationRepository;
@@ -85,6 +88,7 @@ public class MicoStatusServiceTest {
     private MicoApplication micoApplication;
     private MicoApplication otherMicoApplication;
     private MicoService micoService;
+    private MicoService kfConnectorService;
     private MicoServiceInterface micoServiceInterface;
     private Optional<Deployment> deployment;
     private Optional<Service> kubernetesService;
@@ -96,28 +100,28 @@ public class MicoStatusServiceTest {
     private String deploymentName = "deployment1";
     // Metrics for pod 1
     private String podName1 = "pod1";
-    private int memoryUsagePod1 = 70;
-    private int cpuLoadPod1 = 30;
+    private int memoryUsagePod1 = 5;
+    private int cpuLoadPod1 = 5;
     private String startTimePod1 = new Date().toString();
     private int restartsPod1 = 0;
 
     // Metrics for pod 2
     private String podName2 = "pod2";
-    private int memoryUsagePod2 = 50;
-    private int cpuLoadPod2 = 10;
+    private int memoryUsagePod2 = 5;
+    private int cpuLoadPod2 = 5;
     private String startTimePod2 = new Date().toString();
     private int restartsPod2 = 0;
 
     // Metrics for pod 3
     private String podName3 = "pod3";
-    private int memoryUsagePod3 = 50;
-    private int cpuLoadPod3 = 10;
+    private int memoryUsagePod3 = 5;
+    private int cpuLoadPod3 = 5;
     private String startTimePod3 = new Date().toString();
     private int restartsPod3 = 0;
 
     // Metrics for pod 4
     private String podName4 = "pod4";
-    private int memoryUsagePod4 = 65;
+    private int memoryUsagePod4 = 5;
     private int cpuLoadPod4 = 5;
     private String startTimePod4 = new Date().toString();
     private int restartsPod4 = 0;
@@ -146,10 +150,12 @@ public class MicoStatusServiceTest {
                 .setTargetPort(8080)
                 .setType(MicoPortType.TCP)));
         micoService.setServiceInterfaces(CollectionUtils.listOf(micoServiceInterface));
-
+        kfConnectorService = new MicoService()
+            .setName(kafkaFaasConnectorConfig.getServiceName())
+            .setVersion(VERSION);
         micoApplication.getServices().add(micoService);
         micoApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(micoService));
-
+        micoApplication.getKafkaFaasConnectorDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(kfConnectorService));
         otherMicoApplication.getServices().add(micoService);
         otherMicoApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(micoService));
 
@@ -225,10 +231,10 @@ public class MicoStatusServiceTest {
     public void getApplicationStatus() throws Exception {
         MicoApplicationStatusResponseDTO micoApplicationStatus = new MicoApplicationStatusResponseDTO();
         micoApplicationStatus
-            .setTotalNumberOfRequestedReplicas(1)
-            .setTotalNumberOfAvailableReplicas(1)
-            .setTotalNumberOfPods(4)
-            .setTotalNumberOfMicoServices(1)
+            .setTotalNumberOfRequestedReplicas(2)
+            .setTotalNumberOfAvailableReplicas(2)
+            .setTotalNumberOfPods(8)
+            .setTotalNumberOfMicoServices(2)
             .setServiceStatuses(CollectionUtils.listOf(new MicoServiceStatusResponseDTO()
                 .setName(NAME)
                 .setShortName(SHORT_NAME)
@@ -239,12 +245,12 @@ public class MicoStatusServiceTest {
                 .setNodeMetrics(CollectionUtils.listOf(
                     new KubernetesNodeMetricsResponseDTO()
                         .setNodeName(nodeName1)
-                        .setAverageCpuLoad(20)
-                        .setAverageMemoryUsage(60),
+                        .setAverageCpuLoad(5)
+                        .setAverageMemoryUsage(5),
                     new KubernetesNodeMetricsResponseDTO()
                         .setNodeName(nodeName2)
-                        .setAverageCpuLoad(10)
-                        .setAverageMemoryUsage(50)
+                        .setAverageCpuLoad(5)
+                        .setAverageMemoryUsage(5)
                 ))
                 // Add four pods (on two different nodes)
                 .setPodsInformation(Arrays.asList(
@@ -333,10 +339,10 @@ public class MicoStatusServiceTest {
     public void getApplicationStatusWithMissingKubernetesService() {
         MicoApplicationStatusResponseDTO micoApplicationStatus = new MicoApplicationStatusResponseDTO();
         micoApplicationStatus
-            .setTotalNumberOfRequestedReplicas(1)
-            .setTotalNumberOfAvailableReplicas(1)
-            .setTotalNumberOfPods(1)
-            .setTotalNumberOfMicoServices(1)
+            .setTotalNumberOfRequestedReplicas(2)
+            .setTotalNumberOfAvailableReplicas(2)
+            .setTotalNumberOfPods(2)
+            .setTotalNumberOfMicoServices(2)
             .setServiceStatuses(CollectionUtils.listOf(new MicoServiceStatusResponseDTO()
                 .setName(NAME)
                 .setShortName(SHORT_NAME)
@@ -347,8 +353,8 @@ public class MicoStatusServiceTest {
                 .setNodeMetrics(CollectionUtils.listOf(
                     new KubernetesNodeMetricsResponseDTO()
                         .setNodeName(nodeName1)
-                        .setAverageCpuLoad(30)
-                        .setAverageMemoryUsage(70)
+                        .setAverageCpuLoad(5)
+                        .setAverageMemoryUsage(5)
                 ))
                 // Add four pods (on two different nodes)
                 .setPodsInformation(CollectionUtils.listOf(
@@ -391,7 +397,7 @@ public class MicoStatusServiceTest {
             .setTotalNumberOfRequestedReplicas(0)
             .setTotalNumberOfAvailableReplicas(0)
             .setTotalNumberOfPods(0)
-            .setTotalNumberOfMicoServices(1)
+            .setTotalNumberOfMicoServices(2)
             .setServiceStatuses(CollectionUtils.listOf(new MicoServiceStatusResponseDTO()
                 .setShortName(micoApplication.getServices().get(0).getShortName())
                 .setVersion(micoApplication.getServices().get(0).getVersion())
@@ -433,12 +439,12 @@ public class MicoStatusServiceTest {
             .setNodeMetrics(CollectionUtils.listOf(
                 new KubernetesNodeMetricsResponseDTO()
                     .setNodeName(nodeName1)
-                    .setAverageCpuLoad(20)
-                    .setAverageMemoryUsage(60),
+                    .setAverageCpuLoad(5)
+                    .setAverageMemoryUsage(5),
                 new KubernetesNodeMetricsResponseDTO()
                     .setNodeName(nodeName2)
-                    .setAverageCpuLoad(10)
-                    .setAverageMemoryUsage(50)
+                    .setAverageCpuLoad(5)
+                    .setAverageMemoryUsage(5)
             ))
             // Add four pods (on two different nodes)
             .setPodsInformation(Arrays.asList(
