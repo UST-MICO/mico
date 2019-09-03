@@ -62,7 +62,7 @@ public class ApplicationResource {
     private static final String PATH_PROMOTE = "promote";
     private static final String PATH_DEPLOYMENT_STATUS = "deploymentStatus";
     private static final String PATH_STATUS = "status";
-    private static final String PATH_KAFKA_FAAS_CONNECTOR = "kafka-faas-connector";
+    public static final String PATH_KAFKA_FAAS_CONNECTOR = "kafka-faas-connector";
 
     static final String PATH_VARIABLE_SHORT_NAME = "micoApplicationShortName";
     static final String PATH_VARIABLE_VERSION = "micoApplicationVersion";
@@ -70,7 +70,7 @@ public class ApplicationResource {
     private static final String PATH_VARIABLE_SERVICE_VERSION = "micoServiceVersion";
     private static final String PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION = "kafkaFaasConnectorVersion";
     private static final String PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID = "kafkaFaasConnectorInstanceId";
-    private static final String PATH_VARIABLE_INSTANCE_ID = "instanceId";
+    public static final String PATH_VARIABLE_INSTANCE_ID = "instanceId";
 
     @Autowired
     private MicoApplicationBroker broker;

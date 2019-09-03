@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -44,7 +45,7 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
      * @return the list of {@link MicoServiceDeploymentInfo MicoServiceDeploymentInfos}
      * @throws MicoApplicationNotFoundException if there is no such micoApplication
      */
-    public List<MicoServiceDeploymentInfo> getKafkaFaasConnectorDeploymentInformation(
+    public List<MicoServiceDeploymentInfo> getKafkaFaasConnectorDeploymentInformations(
         String micoApplicationShortName, String micoApplicationVersion) throws MicoApplicationNotFoundException {
 
         MicoApplication micoApplication = applicationBroker.getMicoApplicationByShortNameAndVersion(micoApplicationShortName, micoApplicationVersion);
@@ -52,6 +53,32 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
         log.debug("There are {} KafkaFaasConnector deployment information for MicoApplication '{}' in version '{}'.",
             micoServiceDeploymentInfos.size(), micoApplicationShortName, micoApplicationVersion);
         return micoApplication.getKafkaFaasConnectorDeploymentInfos();
+    }
+
+    /**
+     * Filters the list of {@link MicoServiceDeploymentInfo} from {@link KafkaFaasConnectorDeploymentInfoBroker#getKafkaFaasConnectorDeploymentInformations(String, String)}
+     * for a specific instanceId.
+     *
+     * @param micoApplicationShortName
+     * @param micoApplicationVersion
+     * @param instanceId
+     * @return a single {@link MicoServiceDeploymentInfo} with an instanceId equal to the give one.
+     * @throws MicoApplicationNotFoundException
+     */
+    public Optional<MicoServiceDeploymentInfo> getKafkaFaasConnectorDeploymentInformationInstance(
+        String micoApplicationShortName, String micoApplicationVersion, String instanceId) throws MicoApplicationNotFoundException {
+        List<MicoServiceDeploymentInfo> micoServiceDeploymentInfos = getKafkaFaasConnectorDeploymentInformations(micoApplicationShortName, micoApplicationVersion);
+        Optional<MicoServiceDeploymentInfo> micoServiceDeploymentInfoOptional = micoServiceDeploymentInfos.stream().filter(micoServiceDeploymentInfo -> micoServiceDeploymentInfo.getInstanceId().equals(instanceId))
+            .reduce((a, b) -> {
+                    throw new IllegalStateException("There are multiple kafkaFaasConnectors with the same instance: " + a + ", " + b);
+                }
+            );
+        if (micoServiceDeploymentInfoOptional.isPresent()) {
+            log.debug("There is a micoServiceDeploymentInfo for MicoApplication '{}' in version '{}' with the instanceId '{}'.", micoApplicationShortName, micoApplicationVersion, instanceId);
+        } else {
+            log.debug("There is no micoServiceDeploymentInfo for MicoApplication '{}' in version '{}' with the instanceId '{}'.", micoApplicationShortName, micoApplicationVersion, instanceId);
+        }
+        return micoServiceDeploymentInfoOptional;
     }
 
 }
