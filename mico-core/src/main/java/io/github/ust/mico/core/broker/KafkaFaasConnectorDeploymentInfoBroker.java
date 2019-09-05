@@ -56,21 +56,23 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
     }
 
     /**
-     * Filters the list of {@link MicoServiceDeploymentInfo} from {@link KafkaFaasConnectorDeploymentInfoBroker#getKafkaFaasConnectorDeploymentInformations(String, String)}
-     * for a specific instanceId.
+     * Filters the list of {@link MicoServiceDeploymentInfo} from
+     * {@link KafkaFaasConnectorDeploymentInfoBroker#getKafkaFaasConnectorDeploymentInformations(String, String)}
+     * for a specific {@code instanceId}.
      *
-     * @param micoApplicationShortName
-     * @param micoApplicationVersion
-     * @param instanceId
-     * @return a single {@link MicoServiceDeploymentInfo} with an instanceId equal to the give one.
-     * @throws MicoApplicationNotFoundException
+     * @param micoApplicationShortName the short name of the {@link MicoApplication}
+     * @param micoApplicationVersion   the version of the {@link MicoApplication}
+     * @param instanceId               the instance ID of the {@link MicoServiceDeploymentInfo}
+     * @return a single {@link MicoServiceDeploymentInfo} with an instance ID equal to the give one.
+     * @throws MicoApplicationNotFoundException if the {@link MicoApplication} does not exist.
      */
     public Optional<MicoServiceDeploymentInfo> getKafkaFaasConnectorDeploymentInformationInstance(
         String micoApplicationShortName, String micoApplicationVersion, String instanceId) throws MicoApplicationNotFoundException {
         List<MicoServiceDeploymentInfo> micoServiceDeploymentInfos = getKafkaFaasConnectorDeploymentInformations(micoApplicationShortName, micoApplicationVersion);
-        Optional<MicoServiceDeploymentInfo> micoServiceDeploymentInfoOptional = micoServiceDeploymentInfos.stream().filter(micoServiceDeploymentInfo -> micoServiceDeploymentInfo.getInstanceId().equals(instanceId))
+        Optional<MicoServiceDeploymentInfo> micoServiceDeploymentInfoOptional = micoServiceDeploymentInfos.stream()
+            .filter(sdi -> sdi.getInstanceId().equals(instanceId))
             .reduce((a, b) -> {
-                    throw new IllegalStateException("There are multiple kafkaFaasConnectors with the same instance: " + a + ", " + b);
+                    throw new IllegalStateException("There are multiple KafkaFaasConnectors with the same instance id: " + a + ", " + b);
                 }
             );
         if (micoServiceDeploymentInfoOptional.isPresent()) {
