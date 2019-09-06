@@ -50,7 +50,8 @@ public class DeploymentBroker {
     @Autowired
     private MicoServiceRepository serviceRepository;
 
-    public MicoApplicationJobStatus deployApplication(String shortName, String version) throws MicoApplicationNotFoundException, MicoServiceInterfaceNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException, DeploymentException {
+    public MicoApplicationJobStatus deployApplication(String shortName, String version)
+        throws MicoApplicationNotFoundException, MicoServiceInterfaceNotFoundException, DeploymentException {
 
         MicoApplication micoApplication = micoApplicationBroker.getMicoApplicationByShortNameAndVersion(shortName, version);
 
@@ -182,10 +183,7 @@ public class DeploymentBroker {
         }
     }
 
-    private void checkIfMicoApplicationIsDeployable(MicoApplication micoApplication) throws MicoApplicationDoesNotIncludeMicoServiceException, MicoServiceInterfaceNotFoundException, DeploymentException {
-        if (micoApplication.getServices() == null || micoApplication.getServices().isEmpty()) {
-            throw new MicoApplicationDoesNotIncludeMicoServiceException(micoApplication.getShortName(), micoApplication.getVersion());
-        }
+    private void checkIfMicoApplicationIsDeployable(MicoApplication micoApplication) throws MicoServiceInterfaceNotFoundException, DeploymentException {
         for (MicoService micoService : micoApplication.getServices()) {
             // If the service is not Kafka enabled, there must be at least one interface.
             if (!micoService.isKafkaEnabled() &&

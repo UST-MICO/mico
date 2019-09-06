@@ -21,7 +21,10 @@ package io.github.ust.mico.core.resource;
 
 import io.github.ust.mico.core.broker.DeploymentBroker;
 import io.github.ust.mico.core.dto.response.MicoApplicationJobStatusResponseDTO;
-import io.github.ust.mico.core.exception.*;
+import io.github.ust.mico.core.exception.DeploymentException;
+import io.github.ust.mico.core.exception.MicoApplicationIsDeployingException;
+import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
+import io.github.ust.mico.core.exception.MicoServiceInterfaceNotFoundException;
 import io.github.ust.mico.core.model.MicoApplicationJobStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.MediaTypes;
@@ -54,8 +57,6 @@ public class DeploymentResource {
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoServiceInterfaceNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
-        } catch (MicoApplicationDoesNotIncludeMicoServiceException e) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
         } catch (DeploymentException e) {
             throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, e.getMessage());
