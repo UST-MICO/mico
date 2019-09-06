@@ -257,7 +257,7 @@ public class DeploymentBroker {
             log.info("MicoService '{}' '{}' was already deployed by another MicoApplication. Scale out by increasing the replicas by {}.",
                 micoService.getShortName(), micoService.getVersion(), serviceDeploymentInfo.getReplicas());
 
-            Optional<Deployment> deploymentOptional = micoKubernetesClient.getDeploymentOfMicoService(micoService);
+            Optional<Deployment> deploymentOptional = micoKubernetesClient.getDeploymentOfMicoServiceInstance(serviceDeploymentInfo);
             if (deploymentOptional.isPresent()) {
                 deployment = deploymentOptional.get();
             } else {

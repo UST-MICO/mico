@@ -82,6 +82,7 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
     private String namespace;
     private MicoService service;
     private MicoApplication application;
+    private MicoServiceDeploymentInfo serviceDeploymentInfo;
 
     /**
      * Set up everything that is required to execute the integration tests for the deployment.
@@ -103,11 +104,12 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
 
         application = getTestApplication();
         service = getTestService();
+        serviceDeploymentInfo = new MicoServiceDeploymentInfo()
+            .setService(service)
+            .setInstanceId(TestConstants.IntegrationTest.INSTANCE_ID);
 
         application.getServices().add(service);
-        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
-            .setService(service)
-            .setInstanceId(TestConstants.IntegrationTest.INSTANCE_ID));
+        application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
 
         applicationRepository.save(application);
     }
@@ -140,7 +142,7 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
 
         // Wait until the deployment is created
         CompletableFuture<Deployment> createdDeployment = integrationTestsUtils.waitUntilDeploymentIsCreated(
-            service, 1, 1, 10);
+            serviceDeploymentInfo, 1, 1, 10);
         assertNotNull("Kubernetes Deployment was not created!", createdDeployment.get());
         log.debug("Created Kubernetes Deployment: {}", createdDeployment.get().toString());
 

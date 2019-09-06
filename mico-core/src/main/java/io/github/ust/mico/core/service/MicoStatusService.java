@@ -129,9 +129,11 @@ public class MicoStatusService {
             .setName(micoService.getName());
 
         String message;
-        Optional<Deployment> deploymentOptional = micoKubernetesClient.getDeploymentOfMicoService(micoService);
-        if (deploymentOptional.isPresent()) {
-            Deployment deployment = deploymentOptional.get();
+        List<Deployment> deployments = micoKubernetesClient.getDeploymentsOfMicoService(micoService);
+        if (deployments.size() > 1) {
+            throw new IllegalStateException("Currently MICO doesn't support multiple instance deployments.");
+        } else if (deployments.size() == 1) {
+            Deployment deployment = deployments.get(0);
             serviceStatus.setRequestedReplicas(deployment.getSpec().getReplicas());
             // Check if there are no replicas available of the deployment of a MicoService.
             if (deployment.getStatus().getUnavailableReplicas() == null) {

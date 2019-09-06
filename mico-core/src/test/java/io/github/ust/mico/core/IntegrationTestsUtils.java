@@ -26,6 +26,7 @@ import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.exception.DeploymentException;
 import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 import lombok.Getter;
@@ -230,22 +231,23 @@ public class IntegrationTestsUtils {
     /**
      * Create a future that polls the deployment until it is created.
      *
-     * @param micoService  the {@link MicoService}
-     * @param initialDelay the initial delay in seconds
-     * @param period       the period in seconds
-     * @param timeout      the timeout in seconds
+     * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}
+     * @param initialDelay          the initial delay in seconds
+     * @param period                the period in seconds
+     * @param timeout               the timeout in seconds
      * @return CompletableFuture with a boolean. True indicates that it finished successful.
      * @throws InterruptedException if the build process is interrupted unexpectedly
      * @throws TimeoutException     if the build does not finish or fail in the expected time
      * @throws ExecutionException   if the build process fails unexpectedly
      */
-    CompletableFuture<Deployment> waitUntilDeploymentIsCreated(MicoService micoService, int initialDelay, int period, int timeout) throws InterruptedException, ExecutionException, TimeoutException {
+    CompletableFuture<Deployment> waitUntilDeploymentIsCreated(MicoServiceDeploymentInfo serviceDeploymentInfo, int initialDelay, int period, int timeout) throws InterruptedException, ExecutionException, TimeoutException {
         CompletableFuture<Deployment> completionFuture = new CompletableFuture<>();
 
+        MicoService micoService = serviceDeploymentInfo.getService();
         log.info("Wait until deployment of MicoService '{}' '{}' is created", micoService.getShortName(), micoService.getVersion());
         executorService.scheduleAtFixedRate(() -> {
 
-            Optional<Deployment> deployment = micoKubernetesClient.getDeploymentOfMicoService(micoService);
+            Optional<Deployment> deployment = micoKubernetesClient.getDeploymentOfMicoServiceInstance(serviceDeploymentInfo);
             deployment.ifPresent(completionFuture::complete);
         }, initialDelay, period, TimeUnit.SECONDS);
 
