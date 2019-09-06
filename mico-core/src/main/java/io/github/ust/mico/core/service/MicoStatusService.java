@@ -29,7 +29,10 @@ import io.github.ust.mico.core.dto.response.internal.PrometheusResponseDTO;
 import io.github.ust.mico.core.dto.response.status.*;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.PrometheusRequestFailedException;
-import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoMessage;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.util.CollectionUtils;
@@ -87,13 +90,6 @@ public class MicoStatusService {
         int podCount = 0;
         int requestedReplicasCount = 0;
         int availableReplicasCount = 0;
-        for (MicoServiceDeploymentInfo kfConnectorDeploymentInfo : micoApplication.getKafkaFaasConnectorDeploymentInfos()) {
-            MicoServiceStatusResponseDTO kfConnectorServiceStatus = getServiceStatus(kfConnectorDeploymentInfo.getService());
-            podCount += kfConnectorServiceStatus.getPodsInformation().size();
-            requestedReplicasCount += kfConnectorServiceStatus.getRequestedReplicas();
-            availableReplicasCount += kfConnectorServiceStatus.getAvailableReplicas();
-            applicationStatus.getServiceStatuses().add(kfConnectorServiceStatus);
-        }
 
         for (MicoService micoService : micoServices) {
             MicoServiceStatusResponseDTO micoServiceStatus = getServiceStatus(micoService);
@@ -107,7 +103,8 @@ public class MicoStatusService {
             applicationStatus.getServiceStatuses().add(micoServiceStatus);
         }
         applicationStatus
-            .setTotalNumberOfMicoServices(micoServices.size() + micoApplication.getKafkaFaasConnectorDeploymentInfos().size())
+            .setTotalNumberOfMicoServices(micoServices.size())
+            .setTotalNumberOfKafkaFaasConnectors(micoApplication.getKafkaFaasConnectorDeploymentInfos().size())
             .setTotalNumberOfPods(podCount)
             .setTotalNumberOfAvailableReplicas(availableReplicasCount)
             .setTotalNumberOfRequestedReplicas(requestedReplicasCount);
