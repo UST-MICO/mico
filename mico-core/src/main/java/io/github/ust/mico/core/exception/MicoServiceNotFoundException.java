@@ -4,6 +4,10 @@ public class MicoServiceNotFoundException extends Exception {
 
     private static final long serialVersionUID = -935780471998542258L;
 
+    public MicoServiceNotFoundException(String shortName, String version, String instanceId) {
+        super("Service '" + shortName + "' '" + version + "' in instance '" + instanceId + "' was not found!");
+    }
+
     public MicoServiceNotFoundException(String shortName, String version) {
         super("Service '" + shortName + "' '" + version + "' was not found!");
     }

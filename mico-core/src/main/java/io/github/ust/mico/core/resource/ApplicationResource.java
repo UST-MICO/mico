@@ -46,6 +46,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
@@ -70,7 +71,7 @@ public class ApplicationResource {
     private static final String PATH_VARIABLE_SERVICE_VERSION = "micoServiceVersion";
     private static final String PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION = "kafkaFaasConnectorVersion";
     private static final String PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID = "kafkaFaasConnectorInstanceId";
-    private static final String PATH_VARIABLE_INSTANCE_ID = "instanceId";
+    private static final String PATH_VARIABLE_INSTANCE_ID = "instanceIdOptional";
 
     @Autowired
     private MicoApplicationBroker broker;
@@ -200,15 +201,19 @@ public class ApplicationResource {
     @ApiOperation(value = "Adds or updates an association between a MicoApplication and a MicoService. An existing and" +
         " already associated MicoService with an equal short name will be replaced with its new version." +
         " Only one MicoService in one specific version is allowed per MicoApplication.")
-    @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES + "/{" + PATH_VARIABLE_SERVICE_SHORT_NAME + "}/{" + PATH_VARIABLE_SERVICE_VERSION + "}")
+    @PostMapping(path = {
+        "/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES + "/{" + PATH_VARIABLE_SERVICE_SHORT_NAME + "}/{" + PATH_VARIABLE_SERVICE_VERSION + "}",
+        "/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES + "/{" + PATH_VARIABLE_SERVICE_SHORT_NAME + "}/{" + PATH_VARIABLE_SERVICE_VERSION + "}/{" + PATH_VARIABLE_INSTANCE_ID + "}"
+    })
     public ResponseEntity<Resource<MicoServiceDeploymentInfoResponseDTO>> addServiceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
                                                                                                   @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
                                                                                                   @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName,
-                                                                                                  @PathVariable(PATH_VARIABLE_SERVICE_VERSION) String serviceVersion) {
+                                                                                                  @PathVariable(PATH_VARIABLE_SERVICE_VERSION) String serviceVersion,
+                                                                                                  @PathVariable(name = PATH_VARIABLE_INSTANCE_ID, required = false) Optional<String> instanceIdOptional) {
         MicoServiceDeploymentInfo serviceDeploymentInfo;
         try {
             serviceDeploymentInfo = broker.addMicoServiceToMicoApplicationByShortNameAndVersion(
-                applicationShortName, applicationVersion, serviceShortName, serviceVersion);
+                applicationShortName, applicationVersion, serviceShortName, serviceVersion, instanceIdOptional);
         } catch (MicoApplicationNotFoundException | MicoServiceNotFoundException | MicoServiceDeploymentInformationNotFoundException | KubernetesResourceException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoServiceAddedMoreThanOnceToMicoApplicationException | MicoApplicationIsNotUndeployedException | MicoApplicationDoesNotIncludeMicoServiceException e) {
