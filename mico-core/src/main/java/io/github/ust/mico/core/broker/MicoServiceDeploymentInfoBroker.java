@@ -91,7 +91,7 @@ public class MicoServiceDeploymentInfoBroker {
 
     /**
      * Retrieves the {@link MicoServiceDeploymentInfo} that is used for the deployment
-     * of the requested {link MicoService} as part of a {@link MicoApplication}.
+     * of the requested {@link MicoService} as part of a {@link MicoApplication}.
      * There must not be zero or more than one service deployment information stored.
      * If that's the case, an {@link IllegalStateException} will be thrown.
      *
