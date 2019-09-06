@@ -138,7 +138,9 @@ public class DeploymentResourceTests {
 
         MicoApplication application = getTestApplication();
         application.getServices().add(service);
-        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(service));
+        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
+            .setService(service)
+            .setInstanceId(INSTANCE_ID));
 
         setupDeploymentResources(application, service);
 
@@ -209,7 +211,9 @@ public class DeploymentResourceTests {
         service.setServiceInterfaces(new ArrayList<>()); // There are no interfaces
         MicoApplication application = getTestApplication();
         application.getServices().add(service);
-        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(service));
+        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
+            .setService(service)
+            .setInstanceId(INSTANCE_ID));
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
 
         mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/deploy"))
@@ -225,7 +229,9 @@ public class DeploymentResourceTests {
         service.setKafkaEnabled(true); // Service is Kafka enabled
         MicoApplication application = getTestApplication();
         application.getServices().add(service);
-        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(service));
+        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
+            .setService(service)
+            .setInstanceId(INSTANCE_ID));
 
         setupDeploymentResources(application, service);
 
@@ -238,11 +244,14 @@ public class DeploymentResourceTests {
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(serviceDeploymentInfoRepository
             .findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName(), service.getVersion()))
-            .willReturn(CollectionUtils.listOf(new MicoServiceDeploymentInfo().setService(service)));
+            .willReturn(CollectionUtils.listOf(new MicoServiceDeploymentInfo()
+                .setService(service)
+                .setInstanceId(INSTANCE_ID)));
         given(serviceRepository.save(any(MicoService.class))).willReturn(service);
         given(serviceDeploymentInfoRepository.save(any(MicoServiceDeploymentInfo.class)))
             .willReturn(new MicoServiceDeploymentInfo()
                 .setService(service)
+                .setInstanceId(INSTANCE_ID)
                 .setKubernetesDeploymentInfo(new KubernetesDeploymentInfo()
                     .setNamespace("namespace")
                     .setDeploymentName("deployment")

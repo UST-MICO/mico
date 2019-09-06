@@ -157,20 +157,13 @@ public class MicoKubernetesClient {
             throw new IllegalArgumentException("MicoService of service deployment information must not be null!");
         }
         String namespace = micoKubernetesConfig.getNamespaceMicoWorkspace();
-        String deploymentUid;
+        String instanceId = serviceDeploymentInfo.getInstanceId();
 
         // Check if there are already Kubernetes deployments for the requested MicoService
         Optional<Deployment> existingDeployment = getDeploymentOfMicoService(micoService);
-        if (!existingDeployment.isPresent()) {
-            // There is no existing deployment -> create new Kubernetes Deployment with a new name
-            deploymentUid = UIDUtils.uidFor(micoService);
-        } else {
-            // There is already a Kubernetes Deployment -> use existing name and update the Deployment
-            String existingDeploymentName = existingDeployment.get().getMetadata().getName();
+        if (existingDeployment.isPresent()) {
             log.info("MicoService '{}' in version '{}' is already deployed. Kubernetes Deployment '{}' will be updated.",
-                micoService.getShortName(), micoService.getVersion(), existingDeploymentName);
-
-            deploymentUid = existingDeploymentName;
+                micoService.getShortName(), micoService.getVersion(), instanceId);
         }
 
         ArrayList<MicoEnvironmentVariable> micoEnvironmentVariables = new ArrayList<>(serviceDeploymentInfo.getEnvironmentVariables());
@@ -178,19 +171,19 @@ public class MicoKubernetesClient {
 
         Deployment deployment = new DeploymentBuilder()
             .withNewMetadata()
-            .withName(deploymentUid)
+            .withName(instanceId)
             .withNamespace(micoKubernetesConfig.getNamespaceMicoWorkspace())
             .withLabels(serviceDeploymentInfo.getLabels().stream().collect(
                 Collectors.toMap(MicoLabel::getKey, MicoLabel::getValue)))
             .addToLabels(LABEL_NAME_KEY, micoService.getShortName())
             .addToLabels(LABEL_VERSION_KEY, micoService.getVersion())
-            .addToLabels(LABEL_INSTANCE_KEY, deploymentUid)
+            .addToLabels(LABEL_INSTANCE_KEY, instanceId)
             .endMetadata()
             .withNewSpec()
             .withRevisionHistoryLimit(REVISION_HISTORY_LIMIT)
             .withReplicas(serviceDeploymentInfo.getReplicas())
             .withNewSelector()
-            .addToMatchLabels(LABEL_INSTANCE_KEY, deploymentUid)
+            .addToMatchLabels(LABEL_INSTANCE_KEY, instanceId)
             .endSelector()
             .withNewTemplate()
             .withNewMetadata()
@@ -198,7 +191,7 @@ public class MicoKubernetesClient {
                 Collectors.toMap(MicoLabel::getKey, MicoLabel::getValue)))
             .addToLabels(LABEL_NAME_KEY, micoService.getShortName())
             .addToLabels(LABEL_VERSION_KEY, micoService.getVersion())
-            .addToLabels(LABEL_INSTANCE_KEY, deploymentUid)
+            .addToLabels(LABEL_INSTANCE_KEY, instanceId)
             .endMetadata()
             .withNewSpec()
             .withContainers(
