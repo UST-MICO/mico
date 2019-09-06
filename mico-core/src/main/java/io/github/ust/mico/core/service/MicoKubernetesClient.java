@@ -785,7 +785,26 @@ public class MicoKubernetesClient {
     }
 
     /**
-     * Checks if a MICO service is already deployed.
+     * Checks if a {@link MicoService} instance is already deployed.
+     *
+     * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}
+     * @return {@code true} if the {@link MicoService} is deployed.
+     */
+    public boolean isMicoServiceInstanceDeployed(MicoServiceDeploymentInfo serviceDeploymentInfo) {
+        boolean result = false;
+        MicoService micoService = serviceDeploymentInfo.getService();
+        Optional<Deployment> deploymentOptional = getDeploymentOfMicoServiceInstance(serviceDeploymentInfo);
+        if (deploymentOptional.isPresent()) {
+            result = true;
+        }
+        String deploymentStatus = result ? "deployed" : "not deployed";
+        log.debug("MicoService '{}' in version '{}' in instance '{}' is {}.",
+            micoService.getShortName(), micoService.getVersion(), serviceDeploymentInfo.getInstanceId(), deploymentStatus);
+        return result;
+    }
+
+    /**
+     * Checks if a {@link MicoService} is already deployed at least with one instance.
      *
      * @param micoService the {@link MicoService}
      * @return {@code true} if the {@link MicoService} is deployed.
