@@ -122,6 +122,7 @@ public class ServiceDeploymentInfoIntegrationTests {
         ImagePullPolicy imagePullPolicy = ImagePullPolicy.IF_NOT_PRESENT;
         MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
             .setService(service)
+            .setInstanceId(INSTANCE_ID)
             .setReplicas(3)
             .setLabels(labels)
             .setImagePullPolicy(imagePullPolicy);
@@ -159,6 +160,7 @@ public class ServiceDeploymentInfoIntegrationTests {
         MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
             .setId(ID_1)
             .setService(service)
+            .setInstanceId(INSTANCE_ID)
             .setReplicas(3)
             .setLabels(CollectionUtils.listOf(new MicoLabel().setKey("key").setValue("value")))
             .setImagePullPolicy(ImagePullPolicy.IF_NOT_PRESENT);
@@ -215,6 +217,7 @@ public class ServiceDeploymentInfoIntegrationTests {
 
         MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
             .setId(ID_1)
+            .setInstanceId(INSTANCE_ID)
             .setService(service);
 
         MicoServiceDeploymentInfoRequestDTO updatedServiceDeploymentInfoDTO = new MicoServiceDeploymentInfoRequestDTO()
@@ -250,6 +253,7 @@ public class ServiceDeploymentInfoIntegrationTests {
 
         MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
             .setId(ID_1)
+            .setInstanceId(INSTANCE_ID)
             .setService(service);
 
         MicoTopic existingTopic1 = new MicoTopic()
@@ -318,7 +322,9 @@ public class ServiceDeploymentInfoIntegrationTests {
         MicoService service = new MicoService()
             .setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
 
-        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo().setService(service);
+        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
+            .setService(service)
+            .setInstanceId(INSTANCE_ID);
 
         MicoServiceDeploymentInfoResponseDTO updatedServiceDeploymentInfoDTO =
             (MicoServiceDeploymentInfoResponseDTO) new MicoServiceDeploymentInfoResponseDTO()

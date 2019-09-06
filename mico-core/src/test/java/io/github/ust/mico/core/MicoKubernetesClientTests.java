@@ -129,7 +129,9 @@ public class MicoKubernetesClientTests {
         assertEquals(0, deployments.getItems().size());
 
         MicoService micoService = getMicoServiceWithoutInterface();
-        MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo().setService(micoService);
+        MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo()
+            .setService(micoService)
+            .setInstanceId(INSTANCE_ID);
 
         micoKubernetesClient.createMicoService(deploymentInfo);
 
@@ -137,8 +139,8 @@ public class MicoKubernetesClientTests {
         assertEquals(1, deployments.getItems().size());
         Deployment actualDeployment = deployments.getItems().get(0);
         assertNotNull(actualDeployment);
-        assertTrue("Name of Kubernetes Deployment does not start with short name of MicoService",
-            actualDeployment.getMetadata().getName().startsWith(micoService.getShortName()));
+        assertEquals("Name of Kubernetes Deployment does not match provided instance id",
+            INSTANCE_ID, actualDeployment.getMetadata().getName());
         assertEquals(testNamespace, actualDeployment.getMetadata().getNamespace());
         assertEquals("Expected 1 container",
             1, actualDeployment.getSpec().getTemplate().getSpec().getContainers().size());
@@ -146,6 +148,8 @@ public class MicoKubernetesClientTests {
             3, actualDeployment.getMetadata().getLabels().size());
         assertEquals("Expected 3 labels in template",
             3, actualDeployment.getSpec().getTemplate().getMetadata().getLabels().size());
+        assertEquals("Expected instance id is used for instance id label",
+            INSTANCE_ID, actualDeployment.getSpec().getTemplate().getMetadata().getLabels().get(LABEL_INSTANCE_KEY));
     }
 
     @Test
@@ -161,6 +165,7 @@ public class MicoKubernetesClientTests {
             .setMicoServiceShortName("SERVICE_NAME");
         MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
             .setService(micoService)
+            .setInstanceId(INSTANCE_ID)
             .setReplicas(3)
             .setImagePullPolicy(MicoServiceDeploymentInfo.ImagePullPolicy.NEVER)
             .setLabels(CollectionUtils.listOf(label))
@@ -197,10 +202,10 @@ public class MicoKubernetesClientTests {
 
         MicoService micoService = getMicoService();
         MicoServiceInterface micoServiceInterface = getMicoServiceInterface();
-        String deploymentUid = UIDUtils.uidFor(micoService);
+        String instanceId = UIDUtils.uidFor(micoService);
 
         // Arrange existing deployments
-        Deployment existingDeployment = getDeploymentObject(micoService, deploymentUid);
+        Deployment existingDeployment = getDeploymentObject(micoService, instanceId);
         mockServer.getClient().apps().deployments().inNamespace(testNamespace).create(existingDeployment);
 
         micoKubernetesClient.createMicoServiceInterface(micoServiceInterface, micoService);
@@ -232,7 +237,9 @@ public class MicoKubernetesClientTests {
     @Test
     public void creationOfMicoServiceThatAlreadyExistsDoesReplaceTheSameObject() {
         MicoService micoServiceWithoutInterface = getMicoServiceWithoutInterface();
-        MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo().setService(micoServiceWithoutInterface);
+        MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo()
+            .setService(micoServiceWithoutInterface)
+            .setInstanceId(INSTANCE_ID);
 
         // First creation
         micoKubernetesClient.createMicoService(deploymentInfo);
@@ -510,6 +517,7 @@ public class MicoKubernetesClientTests {
         // Kubernetes deployment information is null, because the service was not deployed by this application
         MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
             .setService(otherMicoService)
+            .setInstanceId(INSTANCE_ID_2)
             .setKubernetesDeploymentInfo(null);
         micoApplication.getServiceDeploymentInfos().add(serviceDeploymentInfo);
 
@@ -594,6 +602,7 @@ public class MicoKubernetesClientTests {
         MicoServiceDeploymentInfo serviceDeploymentInfo2 = new MicoServiceDeploymentInfo()
             .setId(3001L)
             .setService(micoService)
+            .setInstanceId(INSTANCE_ID_1)
             .setKubernetesDeploymentInfo(kubernetesDeploymentInfo2);
         MicoApplication micoApplication2 = new MicoApplication()
             .setShortName(SHORT_NAME_1)
@@ -605,6 +614,7 @@ public class MicoKubernetesClientTests {
         // Create third application (not deployed)
         MicoServiceDeploymentInfo serviceDeploymentInfo3 = new MicoServiceDeploymentInfo()
             .setId(3002L)
+            .setInstanceId(INSTANCE_ID_2)
             .setService(micoService)
             .setKubernetesDeploymentInfo(null);
         MicoApplication micoApplication3 = new MicoApplication()
@@ -686,12 +696,12 @@ public class MicoKubernetesClientTests {
             .setServices(Arrays.asList(micoServices));
 
         for (MicoService micoService : micoApplication.getServices()) {
-            String deploymentUid = UIDUtils.uidFor(micoService);
-            Deployment existingKubernetesDeployment = getDeploymentObject(micoService, deploymentUid);
+            String instanceId = UIDUtils.uidFor(micoService);
+            Deployment existingKubernetesDeployment = getDeploymentObject(micoService, instanceId);
             Map<String, String> labelsOfDeployment = CollectionUtils.mapOf(
                 LABEL_NAME_KEY, micoService.getShortName(),
                 LABEL_VERSION_KEY, micoService.getVersion(),
-                LABEL_INSTANCE_KEY, deploymentUid);
+                LABEL_INSTANCE_KEY, instanceId);
             existingKubernetesDeployment.getMetadata().setLabels(labelsOfDeployment);
             mockServer.getClient().apps().deployments().inNamespace(testNamespace).createOrReplace(existingKubernetesDeployment);
 
@@ -713,6 +723,7 @@ public class MicoKubernetesClientTests {
             MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
                 .setId(3000L)
                 .setService(micoService)
+                .setInstanceId(instanceId)
                 .setKubernetesDeploymentInfo(new KubernetesDeploymentInfo()
                     .setId(4000L)
                     .setNamespace(testNamespace)
@@ -949,14 +960,14 @@ public class MicoKubernetesClientTests {
             .endMetadata();
     }
 
-    private Deployment getDeploymentObject(MicoService micoService, String deploymentUid) {
+    private Deployment getDeploymentObject(MicoService micoService, String instanceId) {
         Map<String, String> labels = CollectionUtils.mapOf(
             LABEL_NAME_KEY, micoService.getShortName(),
             LABEL_VERSION_KEY, micoService.getVersion(),
-            LABEL_INSTANCE_KEY, deploymentUid);
+            LABEL_INSTANCE_KEY, instanceId);
         return new DeploymentBuilder()
             .withNewMetadata()
-            .withName(deploymentUid)
+            .withName(instanceId)
             .withNamespace(testNamespace)
             .withLabels(labels)
             .endMetadata()

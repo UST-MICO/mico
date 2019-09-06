@@ -116,8 +116,12 @@ public class BackgroundJobResourceTest {
             .setId(ID)
             .setShortName(SHORT_NAME).setVersion(VERSION);
 
-        MicoServiceDeploymentInfo serviceDeploymentInfo1 = new MicoServiceDeploymentInfo().setService(service1);
-        MicoServiceDeploymentInfo serviceDeploymentInfo2 = new MicoServiceDeploymentInfo().setService(service2);
+        MicoServiceDeploymentInfo serviceDeploymentInfo1 = new MicoServiceDeploymentInfo()
+            .setService(service1)
+            .setInstanceId(INSTANCE_ID_1);
+        MicoServiceDeploymentInfo serviceDeploymentInfo2 = new MicoServiceDeploymentInfo()
+            .setService(service2)
+            .setInstanceId(INSTANCE_ID_2);
 
         application.getServices().add(service1);
         application.getServices().add(service2);

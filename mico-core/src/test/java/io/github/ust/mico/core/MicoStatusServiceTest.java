@@ -153,10 +153,16 @@ public class MicoStatusServiceTest {
             .setShortName(kfConnectorName)
             .setVersion(VERSION);
         micoApplication.getServices().add(micoService);
-        micoApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(micoService));
-        micoApplication.getKafkaFaasConnectorDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(kfConnectorService));
+        micoApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
+            .setService(micoService)
+            .setInstanceId(INSTANCE_ID));
+        micoApplication.getKafkaFaasConnectorDeploymentInfos().add(new MicoServiceDeploymentInfo()
+            .setService(kfConnectorService)
+            .setInstanceId(INSTANCE_ID_1));
         otherMicoApplication.getServices().add(micoService);
-        otherMicoApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(micoService));
+        otherMicoApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
+            .setService(micoService)
+            .setInstanceId(INSTANCE_ID_2));
 
         int availableReplicas = 1;
         int replicas = 1;

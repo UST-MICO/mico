@@ -105,7 +105,9 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
         service = getTestService();
 
         application.getServices().add(service);
-        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(service));
+        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
+            .setService(service)
+            .setInstanceId(TestConstants.IntegrationTest.INSTANCE_ID));
 
         applicationRepository.save(application);
     }
