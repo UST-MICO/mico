@@ -195,17 +195,6 @@ public class DeploymentResourceTests {
     }
 
     @Test
-    public void deployApplicationWithoutServices() throws Exception {
-        MicoApplication application = getTestApplication();
-        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
-
-        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/deploy"))
-            .andDo(print())
-            .andExpect(status().isUnprocessableEntity())
-            .andExpect(status().reason(Matchers.containsString("services")));
-    }
-
-    @Test
     public void deployApplicationWithServiceWithoutServiceInterface() throws Exception {
         MicoService service = getTestService();
         service.setServiceInterfaces(new ArrayList<>()); // There are no interfaces
