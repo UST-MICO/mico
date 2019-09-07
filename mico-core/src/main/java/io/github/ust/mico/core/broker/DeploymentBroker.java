@@ -152,8 +152,8 @@ public class DeploymentBroker {
 
         MicoApplication micoApplication = micoApplicationBroker.getMicoApplicationByShortNameAndVersion(shortName, version);
 
-        log.info("Undeploy MicoApplication '{}' in version '{}' with {} included MicoService(s).",
-            shortName, version, micoApplication.getServices().size());
+        log.info("Undeploy MicoApplication '{}' in version '{}' with {} included MicoService(s) and {} KafkaFaasConnector instance(s).",
+            shortName, version, micoApplication.getServices().size(), micoApplication.getKafkaFaasConnectorDeploymentInfos().size());
 
         MicoApplicationDeploymentStatus applicationDeploymentStatus = micoKubernetesClient.getApplicationDeploymentStatus(micoApplication);
         switch (applicationDeploymentStatus.getValue()) {
