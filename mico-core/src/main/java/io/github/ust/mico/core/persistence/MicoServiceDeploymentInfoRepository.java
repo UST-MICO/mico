@@ -203,7 +203,7 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
     @Query("MATCH (a:MicoApplication)-[:PROVIDES|:PROVIDES_KF_CONNECTOR]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
         + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
         + "AND s.shortName = {serviceShortName} AND s.version = {serviceVersion} "
-        + "WITH a, sdi, s"
+        + "WITH a, sdi, s "
         + "OPTIONAL MATCH (sdi)-[:HAS]->(allRelatedNodes) "
         + "WHERE size((allRelatedNodes)--()) = 1 "
         + "DETACH DELETE sdi, allRelatedNodes")
