@@ -164,6 +164,26 @@ public class MicoApplicationBroker {
         return applicationRepository.findAllByUsedService(serviceShortName, serviceVersion);
     }
 
+    /**
+     * Adds a {@link MicoService} to a {@link MicoApplication}.
+     * If an instance id is provided, the existing {@link MicoServiceDeploymentInfo} will be reused.
+     *
+     * @param applicationShortName the short name of the {@link MicoApplication}
+     * @param applicationVersion   the version of the {@link MicoApplication}
+     * @param serviceShortName     the short name of the {@link MicoService}
+     * @param serviceVersion       the version of the {@link MicoService}
+     * @param instanceIdOptional   the optional instance if of the {@link MicoServiceDeploymentInfo}
+     * @return the {@link MicoServiceDeploymentInfo} that was created or reused
+     * @throws MicoApplicationNotFoundException                       if the {@link MicoApplication} does not exist
+     * @throws MicoServiceNotFoundException                           if the {@link MicoService} does not exist
+     * @throws MicoServiceAddedMoreThanOnceToMicoApplicationException if the {@link MicoService} is added more than once to the {@link MicoApplication}
+     * @throws MicoApplicationIsNotUndeployedException                if the {@link MicoApplication} is not undeployed
+     * @throws MicoTopicRoleUsedMultipleTimesException                if a role of a {@link MicoTopicRole} is used multiple times
+     * @throws MicoServiceDeploymentInformationNotFoundException      if the {@link MicoServiceDeploymentInfo} does not exist
+     * @throws KubernetesResourceException                            if there is an error with Kubernetes
+     * @throws MicoApplicationDoesNotIncludeMicoServiceException      if the {@link MicoApplication} does not include the {@link MicoService}, if it is expected
+     * @throws KafkaFaasConnectorNotAllowedHereException              if a KafkaFaasConnector is provided instead of a normal {@link MicoService}
+     */
     public MicoServiceDeploymentInfo addMicoServiceToMicoApplicationByShortNameAndVersion(
         String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion, Optional<String> instanceIdOptional)
         throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAddedMoreThanOnceToMicoApplicationException,
