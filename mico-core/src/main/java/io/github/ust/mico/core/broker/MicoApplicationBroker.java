@@ -207,7 +207,7 @@ public class MicoApplicationBroker {
     }
 
     public MicoServiceDeploymentInfo addMicoServiceToMicoApplicationByShortNameAndVersion(
-        String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion, Optional<String> instanceIdOpt)
+        String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion, Optional<String> instanceIdOptional)
         throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAddedMoreThanOnceToMicoApplicationException,
         MicoApplicationIsNotUndeployedException, MicoTopicRoleUsedMultipleTimesException, MicoServiceDeploymentInformationNotFoundException,
         KubernetesResourceException, MicoApplicationDoesNotIncludeMicoServiceException, KafkaFaasConnectorNotAllowedHereException {
@@ -226,6 +226,12 @@ public class MicoApplicationBroker {
 
         MicoService micoService = micoServiceBroker.getServiceFromDatabase(serviceShortName, serviceVersion);
 
+        Optional<MicoServiceDeploymentInfo> existingServiceDeploymentInfoOptional = Optional.empty();
+        if (instanceIdOptional.isPresent()) {
+            existingServiceDeploymentInfoOptional = Optional.of(getServiceDeploymentInfoByInstanceId(
+                serviceShortName, serviceVersion, instanceIdOptional.get()));
+        }
+
         // Find all services with identical short name within this application
         List<MicoService> micoServices = micoApplication.getServices().stream()
             .filter(s -> s.getShortName().equals(serviceShortName)).collect(Collectors.toList());
@@ -240,19 +246,10 @@ public class MicoApplicationBroker {
             MicoServiceDeploymentInfo sdi;
             String instanceId;
             boolean setDefaultDeploymentInfos = false;
-            if (instanceIdOpt.isPresent()) {
-                // Instance id provided. Check if the instance exists and it is the right one for the requested service.
-                instanceId = instanceIdOpt.get();
-                Optional<MicoServiceDeploymentInfo> existingSDIOpt = serviceDeploymentInfoRepository.findByInstanceId(instanceId);
-                if (!existingSDIOpt.isPresent()) {
-                    // Instance does not exist
-                    throw new MicoServiceNotFoundException(serviceShortName, serviceVersion, instanceId);
-                }
-                sdi = existingSDIOpt.get();
-                if (!sdi.getService().getShortName().equals(serviceShortName) || !sdi.getService().getVersion().equals(serviceVersion)) {
-                    // Provided instance id is used for a different MicoService or a different version of it
-                    throw new MicoServiceNotFoundException(serviceShortName, serviceVersion, instanceId);
-                }
+            if (instanceIdOptional.isPresent()) {
+                // Instance ID provided -> reuse the existing instance.
+                instanceId = instanceIdOptional.get();
+                sdi = existingServiceDeploymentInfoOptional.get();
             } else {
                 // No instance ID provided -> create a new one
                 instanceId = UIDUtils.uidFor(micoService);
@@ -269,15 +266,18 @@ public class MicoApplicationBroker {
             // ... before the application can be saved.
             applicationRepository.save(micoApplication);
 
+            log.debug("Added MicoService '{}' in version '{}' in instance '{}' to MicoApplication '{}' '{}'.",
+                serviceShortName, serviceVersion, instanceId, applicationShortName, applicationVersion);
+
+            // If a new service deployment information was created,
+            // set default deployment information (environment variables, topics) for this instance.
             if (setDefaultDeploymentInfos) {
-                // Set default deployment information (environment variables, topics)
+                log.debug("Set default deployment information for added MicoService '{}' '{}' in instance '{}'.",
+                    serviceShortName, serviceVersion, instanceId);
                 micoServiceDeploymentInfoBroker.setDefaultDeploymentInformationForKafkaEnabledService(sdi);
                 micoServiceDeploymentInfoBroker.updateMicoServiceDeploymentInformation(applicationShortName, applicationVersion, serviceShortName,
                     new MicoServiceDeploymentInfoRequestDTO(sdi));
             }
-
-            log.debug("Added MicoService '{}' in version '{}' in instance '{}' to MicoApplication '{}' '{}'.",
-                serviceShortName, serviceVersion, instanceId, applicationShortName, applicationVersion);
         } else {
             // Service already included, replace it with its newer version if it differs from the current version.
             MicoService existingMicoService = micoServices.get(0);
@@ -307,6 +307,35 @@ public class MicoApplicationBroker {
         }
 
         return micoServiceDeploymentInfoBroker.getExistingServiceDeploymentInfo(micoApplication, micoService);
+    }
+
+    /**
+     * Checks if an instance for the provided {@code instanceId} exists
+     * and if it is used by the provided MicoService ({@code shortName} or {@code version}).
+     * If that's the case the corresponding {@link MicoServiceDeploymentInfo} will be returned.
+     *
+     * @param serviceShortName the short name of the {@link MicoService}
+     * @param serviceVersion   the version of the {@link MicoService}
+     * @param instanceId       the instance id of the {@link MicoServiceDeploymentInfo}
+     * @return the {@link MicoServiceDeploymentInfo} corresponding to the provided {@code instanceId}
+     * @throws MicoServiceNotFoundException if the instance does not exist or the instance does not match the provided MicoService {@code shortName} or {@code version}
+     */
+    private MicoServiceDeploymentInfo getServiceDeploymentInfoByInstanceId(
+        String serviceShortName, String serviceVersion, String instanceId) throws MicoServiceNotFoundException {
+
+        // Check if the instance exists and it is the right one for the requested service.
+        Optional<MicoServiceDeploymentInfo> serviceDeploymentInfoOptional = serviceDeploymentInfoRepository.findByInstanceId(instanceId);
+        if (!serviceDeploymentInfoOptional.isPresent()) {
+            // Instance does not exist
+            throw new MicoServiceNotFoundException(serviceShortName, serviceVersion, instanceId);
+        }
+        MicoServiceDeploymentInfo serviceDeploymentInfo = serviceDeploymentInfoOptional.get();
+        if (!serviceDeploymentInfo.getService().getShortName().equals(serviceShortName) ||
+            !serviceDeploymentInfo.getService().getVersion().equals(serviceVersion)) {
+            // Provided instance id is used for a different MicoService or a different version of it
+            throw new MicoServiceNotFoundException(serviceShortName, serviceVersion, instanceId);
+        }
+        return serviceDeploymentInfo;
     }
 
     public MicoApplication removeMicoServiceFromMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException, MicoApplicationIsNotUndeployedException {
