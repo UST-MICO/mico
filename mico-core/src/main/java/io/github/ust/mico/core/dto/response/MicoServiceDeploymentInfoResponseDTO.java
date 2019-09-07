@@ -31,6 +31,7 @@ import io.swagger.annotations.ExtensionProperty;
 import lombok.*;
 import lombok.experimental.Accessors;
 
+import javax.validation.constraints.NotNull;
 import java.util.stream.Collectors;
 
 /**
@@ -43,6 +44,20 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Accessors(chain = true)
 public class MicoServiceDeploymentInfoResponseDTO extends MicoServiceDeploymentInfoRequestDTO {
+
+    /**
+     * Instance ID.
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "InstanceId"),
+            @ExtensionProperty(name = "x-order", value = "1"),
+            @ExtensionProperty(name = "description", value = "ID of the instance.")
+        }
+    )})
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private String instanceId;
 
     /**
      * Information about the actual Kubernetes resources created by a deployment. Contains details about the used
@@ -74,6 +89,9 @@ public class MicoServiceDeploymentInfoResponseDTO extends MicoServiceDeploymentI
      */
     public MicoServiceDeploymentInfoResponseDTO(MicoServiceDeploymentInfo serviceDeploymentInfo) {
         super(serviceDeploymentInfo);
+
+        // Set instance ID.
+        setInstanceId(serviceDeploymentInfo.getInstanceId());
 
         // Labels need to be set explicitly to have a list of MicoLabelResponseDTOs
         // and not a list of MicoLabelRequestDTOs, since the list is declared
