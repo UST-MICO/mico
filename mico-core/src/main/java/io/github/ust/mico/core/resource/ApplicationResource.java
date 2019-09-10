@@ -210,7 +210,7 @@ public class ApplicationResource {
         try {
             serviceDeploymentInfo = broker.addMicoServiceToMicoApplicationByShortNameAndVersion(
                 applicationShortName, applicationVersion, serviceShortName, serviceVersion, Optional.empty());
-        } catch (MicoApplicationNotFoundException | MicoServiceNotFoundException | MicoServiceDeploymentInformationNotFoundException | KubernetesResourceException e) {
+        } catch (MicoApplicationNotFoundException | MicoServiceNotFoundException | MicoServiceDeploymentInformationNotFoundException | KubernetesResourceException | MicoServiceInstanceNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoServiceAddedMoreThanOnceToMicoApplicationException | MicoApplicationIsNotUndeployedException | MicoApplicationDoesNotIncludeMicoServiceException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
@@ -232,7 +232,7 @@ public class ApplicationResource {
         try {
             serviceDeploymentInfo = broker.addMicoServiceToMicoApplicationByShortNameAndVersion(
                 applicationShortName, applicationVersion, serviceShortName, serviceVersion, Optional.ofNullable(instanceId));
-        } catch (MicoApplicationNotFoundException | MicoServiceNotFoundException | MicoServiceDeploymentInformationNotFoundException | KubernetesResourceException e) {
+        } catch (MicoApplicationNotFoundException | MicoServiceNotFoundException | MicoServiceDeploymentInformationNotFoundException | KubernetesResourceException | MicoServiceInstanceNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoServiceAddedMoreThanOnceToMicoApplicationException | MicoApplicationIsNotUndeployedException | MicoApplicationDoesNotIncludeMicoServiceException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
