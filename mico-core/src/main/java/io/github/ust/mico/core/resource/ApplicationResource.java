@@ -43,6 +43,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import springfox.documentation.annotations.ApiIgnore;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -221,6 +222,12 @@ public class ApplicationResource {
         return ResponseEntity.ok(new Resource<>(new MicoServiceDeploymentInfoResponseDTO(serviceDeploymentInfo)));
     }
 
+    /**
+     * Currently we don't support multiple instance deployment for normal MICO services.
+     * Covered by MICO#743.
+     * Therefore this API endpoint is not required at the moment.
+     */
+    @ApiIgnore
     @ApiOperation(value = "Reuses an existing service deployment information instance and adds it to the application.")
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES + "/{" + PATH_VARIABLE_SERVICE_SHORT_NAME + "}/{" + PATH_VARIABLE_SERVICE_VERSION + "}/{" + PATH_VARIABLE_INSTANCE_ID + "}")
     public ResponseEntity<Resource<MicoServiceDeploymentInfoResponseDTO>> addServiceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
