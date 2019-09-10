@@ -45,7 +45,7 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
      * @return the list of {@link MicoServiceDeploymentInfo MicoServiceDeploymentInfos}
      * @throws MicoApplicationNotFoundException if there is no such micoApplication
      */
-    public List<MicoServiceDeploymentInfo> getKafkaFaasConnectorDeploymentInformations(
+    public List<MicoServiceDeploymentInfo> getKafkaFaasConnectorDeploymentInformation(
         String micoApplicationShortName, String micoApplicationVersion) throws MicoApplicationNotFoundException {
 
         MicoApplication micoApplication = applicationBroker.getMicoApplicationByShortNameAndVersion(micoApplicationShortName, micoApplicationVersion);
@@ -57,7 +57,7 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
 
     /**
      * Filters the list of {@link MicoServiceDeploymentInfo} from
-     * {@link KafkaFaasConnectorDeploymentInfoBroker#getKafkaFaasConnectorDeploymentInformations(String, String)}
+     * {@link KafkaFaasConnectorDeploymentInfoBroker#getKafkaFaasConnectorDeploymentInformation(String, String)}
      * for a specific {@code instanceId}.
      *
      * @param micoApplicationShortName the short name of the {@link MicoApplication}
@@ -66,9 +66,9 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
      * @return a single {@link MicoServiceDeploymentInfo} with an instance ID equal to the give one.
      * @throws MicoApplicationNotFoundException if the {@link MicoApplication} does not exist.
      */
-    public Optional<MicoServiceDeploymentInfo> getKafkaFaasConnectorDeploymentInformationInstance(
+    public Optional<MicoServiceDeploymentInfo> getKafkaFaasConnectorDeploymentInformation(
         String micoApplicationShortName, String micoApplicationVersion, String instanceId) throws MicoApplicationNotFoundException {
-        List<MicoServiceDeploymentInfo> micoServiceDeploymentInfos = getKafkaFaasConnectorDeploymentInformations(micoApplicationShortName, micoApplicationVersion);
+        List<MicoServiceDeploymentInfo> micoServiceDeploymentInfos = getKafkaFaasConnectorDeploymentInformation(micoApplicationShortName, micoApplicationVersion);
         Optional<MicoServiceDeploymentInfo> micoServiceDeploymentInfoOptional = micoServiceDeploymentInfos.stream()
             .filter(sdi -> sdi.getInstanceId().equals(instanceId))
             .reduce((a, b) -> {

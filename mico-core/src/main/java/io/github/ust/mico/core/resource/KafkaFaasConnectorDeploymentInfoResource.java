@@ -61,7 +61,7 @@ public class KafkaFaasConnectorDeploymentInfoResource {
         log.debug("Get the KafkaFaasConnector deployment information of the MicoApplication '{}' '{}'.", shortName, version);
         List<MicoServiceDeploymentInfo> micoServiceDeploymentInfos;
         try {
-            micoServiceDeploymentInfos = kafkaFaasConnectorDeploymentInfoBroker.getKafkaFaasConnectorDeploymentInformations(shortName, version);
+            micoServiceDeploymentInfos = kafkaFaasConnectorDeploymentInfoBroker.getKafkaFaasConnectorDeploymentInformation(shortName, version);
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
@@ -76,7 +76,7 @@ public class KafkaFaasConnectorDeploymentInfoResource {
         log.debug("Get the KafkaFaasConnector deployment information of the MicoApplication '{}' '{}' with the instance id '{}'.", shortName, version, instanceId);
         Optional<MicoServiceDeploymentInfo> micoServiceDeploymentInfoOptional;
         try {
-            micoServiceDeploymentInfoOptional = kafkaFaasConnectorDeploymentInfoBroker.getKafkaFaasConnectorDeploymentInformationInstance(shortName, version, instanceId);
+            micoServiceDeploymentInfoOptional = kafkaFaasConnectorDeploymentInfoBroker.getKafkaFaasConnectorDeploymentInformation(shortName, version, instanceId);
             micoServiceDeploymentInfoOptional.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                 "There is no KafkaFaasConnector with the instance id '" + instanceId + "'!"));
         } catch (MicoApplicationNotFoundException e) {
