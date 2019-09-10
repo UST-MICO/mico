@@ -73,6 +73,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
     private serviceNodeMap: Map<string, ServiceNode>;
     private serviceInterfaceNodeMap: Map<string, ServiceInterfaceNode>;
     private kafkaTopicNodes: Set<string>;
+    private kafkaFaasConnectorNodes: Set<string>;
 
     private versionChangedFor: { node: Node, newVersion: ApiObject };
 
@@ -117,13 +118,13 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         };
         graph.calculateLinkHandlesForEdge = (edge, sourceHandles, source, targetHandles, target) => {
             if (edge.type === 'topic') {
-                if (edge.role === 'INPUT') {
+                if (edge.role === 'INPUT' || (edge.role === 'OUTPUT' && this.kafkaFaasConnectorNodes.has(edge.source.toString()))) {
                     return {
                         sourceHandles: sourceHandles.filter(handle => handle.x > 0),
                         targetHandles: targetHandles,
                     };
                 }
-                if (edge.role === 'OUTPUT') {
+                if (edge.role === 'OUTPUT' || (edge.role === 'INPUT' && this.kafkaFaasConnectorNodes.has(edge.target.toString()))) {
                     return {
                         sourceHandles: sourceHandles,
                         targetHandles: targetHandles.filter(handle => handle.x < 0),
@@ -211,6 +212,10 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             return;
         }
         if (event.detail.key === 'version') {  // user clicked on service version
+            if (event.detail.node.type !== 'service') {
+                // TODO show version change dialog and handle version change for 'kafka-faas-connector'
+                return;
+            }
             event.preventDefault();
 
             const dialogRef = this.dialog.open(ChangeServiceVersionComponent, {
@@ -228,7 +233,12 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             return;
         }
         if (event.detail.key === 'title') {
-            this.router.navigate(['service-detail', event.detail.node.shortName, event.detail.node.version]);
+            if (event.detail.node.type === 'service') {
+                this.router.navigate(['service-detail', event.detail.node.shortName, event.detail.node.version]);
+            }
+            if (event.detail.node.type === 'kafka-faas-connector') {
+                // TODO show dialog to change faas function
+            }
         }
     }
 
@@ -329,9 +339,8 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             outgoingEdges.forEach(e => e.target != null && edge.validTargets.delete(e.target.toString()));
         }
         const sourceNode: Node = graph.getNode(edge.source);
-        if (sourceNode.type === 'kafka-topic') {
+        if (sourceNode.type === 'kafka-topic' || sourceNode.type === 'kafka-faas-connector') {
             edge.type = 'topic';
-            edge.role = 'INPUT';
             delete edge.markerEnd;
             edge.markers = [{
                 template: 'arrow',
@@ -343,10 +352,12 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 width: 40,
                 positionOnLine: 0.65,
                 offsetX: 5,
-                offsetY: 3,
-                value: 'INPUT',
             }];
             edge.validTargets.clear();
+        }
+        if (sourceNode.type === 'kafka-topic') {
+            edge.role = 'INPUT';
+            edge.texts[0].value = 'INPUT';
             this.serviceNodeMap.forEach((node, key) => {
                 if (node.service.kafkaEnabled) {
                     const inputEdges: Set<Edge> = graph.getEdgesByTarget(node.id);
@@ -360,6 +371,20 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                         edge.validTargets.add(node.id.toString());
                     }
                 }
+            });
+            this.kafkaFaasConnectorNodes.forEach(instanceId => {
+                const incoming = graph.getEdgesByTarget(instanceId);
+                if (incoming == null || incoming.size === 0) {
+                    // only consider connectors without input topic as targets
+                    edge.validTargets.add(instanceId);
+                }
+            });
+        }
+        if  (sourceNode.type === 'kafka-faas-connector') {
+            edge.role = 'OUTPUT';
+            edge.texts[0].value = 'OUTPUT';
+            this.kafkaTopicNodes.forEach(topicId => {
+                edge.validTargets.add(topicId);
             });
         }
         return edge;
@@ -425,9 +450,13 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 console.warn("Only INPUT and OUTPUT topics should be shown in the grapheditor.");
                 return;
             }
+            if (this.kafkaFaasConnectorNodes.has(serviceId)) {
+                // TODO handle cases for kafka-faas-connector nodes!!
+                return;
+            }
             const service = this.serviceNodeMap.get(serviceId);
             const topic = graph.getNode(topicId);
-            // TODO add topic to deployment information
+
             const depl = this.deploymentInformations.get(serviceId);
             // deepcopy since depl is readonly
             const deplCopy = JSON.parse(JSON.stringify(depl));
@@ -480,7 +509,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 // do not handle edges that were created from an existing edge here
                 return;
             }
-            // TODO create new topic edge
+
             const serviceNode: ServiceNode = event.detail.sourceNode;
             if (!serviceNode.service.kafkaEnabled) {
                 // not kafka enabled nodes don't need topics
@@ -517,6 +546,40 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 });
             });
         }
+        if (event.detail.sourceNode.type === 'kafka-faas-connector') {
+            const edge: Edge = event.detail.edge;
+            if (edge.createdFrom != null && edge.createdFrom !== '') {
+                // do not handle edges that were created from an existing edge here
+                return;
+            }
+            const connector = this.application.kfConnectorDeploymentInfos.filter(conn => conn.instanceId === edge.source)[0];
+            if (connector == null) {
+                // connector info was not found, cannot create new edges...
+                return;
+            }
+
+            const dialogRef = this.dialog.open(GraphAddKafkaTopicComponent, {
+                data: {
+                    serviceShortName: connector.instanceId,
+                    existingRoles: ['INPUT'],
+                }
+            });
+
+            const subTopicDialog = dialogRef.afterClosed().subscribe(result => {
+                safeUnsubscribe(subTopicDialog);
+
+                if (result === '') {
+                    return;
+                }
+
+                const connCopy = JSON.parse(JSON.stringify(connector));
+                connCopy.outputTopicName = result.kafkaTopicName;
+                const putSub = this.api.putApplicationKafkaFaasConnector(this.application.shortName, this.application.version, connector.instanceId, connCopy).subscribe(() => {
+                    safeUnsubscribe(putSub);
+                });
+            });
+        }
+        // todo drop from topic node
     }
 
     /**
@@ -1035,7 +1098,10 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         }
         */
 
+        const kafkaFaasConnectorNodes = new Set<string>();
+
         kafkaFaasConnectors.forEach(connector => {
+            kafkaFaasConnectorNodes.add(connector.instanceId)
             let existing = graph.getNode(connector.instanceId);
             if (existing == null) {
                 const connectorNode = {
@@ -1086,7 +1152,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             if (connector.openFaaSFunctionName != null && connector.openFaaSFunctionName !== '') {
                 existing.title = connector.openFaaSFunctionName;
             } else {
-                existing.title = 'KF-Connector';
+                existing.title = connector.shortName;
             }
             toRemove.delete(connector.instanceId);
             // update edges...
@@ -1128,6 +1194,8 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 graph.removeEdge(edge, false);
             });
         });
+
+        this.kafkaFaasConnectorNodes = kafkaFaasConnectorNodes;
 
         toRemove.forEach(nodeId => {
             graph.removeNode(nodeId, false);
