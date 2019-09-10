@@ -43,9 +43,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import springfox.documentation.annotations.ApiIgnore;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
@@ -208,8 +210,36 @@ public class ApplicationResource {
         MicoServiceDeploymentInfo serviceDeploymentInfo;
         try {
             serviceDeploymentInfo = broker.addMicoServiceToMicoApplicationByShortNameAndVersion(
-                applicationShortName, applicationVersion, serviceShortName, serviceVersion);
-        } catch (MicoApplicationNotFoundException | MicoServiceNotFoundException | MicoServiceDeploymentInformationNotFoundException | KubernetesResourceException e) {
+                applicationShortName, applicationVersion, serviceShortName, serviceVersion, Optional.empty());
+        } catch (MicoApplicationNotFoundException | MicoServiceNotFoundException | MicoServiceDeploymentInformationNotFoundException | KubernetesResourceException | MicoServiceInstanceNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (MicoServiceAddedMoreThanOnceToMicoApplicationException | MicoApplicationIsNotUndeployedException | MicoApplicationDoesNotIncludeMicoServiceException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        } catch (MicoTopicRoleUsedMultipleTimesException | KafkaFaasConnectorNotAllowedHereException e) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+        }
+
+        return ResponseEntity.ok(new Resource<>(new MicoServiceDeploymentInfoResponseDTO(serviceDeploymentInfo)));
+    }
+
+    /**
+     * Currently we don't support multiple instance deployment for normal MICO services.
+     * Covered by MICO#743.
+     * Therefore this API endpoint is not required at the moment.
+     */
+    @ApiIgnore
+    @ApiOperation(value = "Reuses an existing service deployment information instance and adds it to the application.")
+    @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_SERVICES + "/{" + PATH_VARIABLE_SERVICE_SHORT_NAME + "}/{" + PATH_VARIABLE_SERVICE_VERSION + "}/{" + PATH_VARIABLE_INSTANCE_ID + "}")
+    public ResponseEntity<Resource<MicoServiceDeploymentInfoResponseDTO>> addServiceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
+                                                                                                  @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
+                                                                                                  @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName,
+                                                                                                  @PathVariable(PATH_VARIABLE_SERVICE_VERSION) String serviceVersion,
+                                                                                                  @PathVariable(PATH_VARIABLE_INSTANCE_ID) String instanceId) {
+        MicoServiceDeploymentInfo serviceDeploymentInfo;
+        try {
+            serviceDeploymentInfo = broker.addMicoServiceToMicoApplicationByShortNameAndVersion(
+                applicationShortName, applicationVersion, serviceShortName, serviceVersion, Optional.ofNullable(instanceId));
+        } catch (MicoApplicationNotFoundException | MicoServiceNotFoundException | MicoServiceDeploymentInformationNotFoundException | KubernetesResourceException | MicoServiceInstanceNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoServiceAddedMoreThanOnceToMicoApplicationException | MicoApplicationIsNotUndeployedException | MicoApplicationDoesNotIncludeMicoServiceException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());

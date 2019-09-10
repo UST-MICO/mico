@@ -124,6 +124,30 @@ public class ApplicationResourceEndToEndTests extends Neo4jTestClass {
     }
 
     @Test
+    public void addServiceToApplicationByReusingExistingInstance() throws Exception {
+        MicoApplication application = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
+        applicationRepository.save(application);
+        MicoService service = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
+        serviceRepository.save(service);
+        MicoServiceDeploymentInfo sdi = new MicoServiceDeploymentInfo().setService(service).setInstanceId(INSTANCE_ID);
+        serviceDeploymentInfoRepository.save(sdi);
+
+        given(micoKubernetesClient.isApplicationUndeployed(application)).willReturn(true);
+
+        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + SERVICE_VERSION + "/" + INSTANCE_ID))
+            .andDo(print())
+            .andExpect(status().isOk());
+
+        Optional<MicoApplication> result = applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion());
+        assertTrue(result.isPresent());
+        assertThat(result.get().getServices().size(), is(1));
+        assertThat(result.get().getServices().get(0), is(service));
+        assertThat(result.get().getServiceDeploymentInfos().size(), is(1));
+        assertThat(result.get().getServiceDeploymentInfos().get(0).getService(), is(service));
+        assertThat(result.get().getServiceDeploymentInfos().get(0).getInstanceId(), is(INSTANCE_ID));
+    }
+
+    @Test
     public void deleteServiceFromApplication() throws Exception {
         MicoApplication application1 = new MicoApplication().setShortName(SHORT_NAME_1).setVersion(VERSION);
         MicoApplication application2 = new MicoApplication().setShortName(SHORT_NAME_2).setVersion(VERSION);
