@@ -450,38 +450,39 @@ export class ApiService {
         const resource = 'applications/' + applicationShortName + '/' + applicationVersion +
             '/kafka-faas-connector/' + instanceId;
 
-            const stream = this.getStreamSource<ApiObject>(resource);
+        const stream = this.getStreamSource<ApiObject>(resource);
 
-            this.rest.get<ApiObject>(resource).subscribe(val => {
-                stream.next(val);
-            });
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+            stream.next(val);
+        });
 
-            return stream.asObservable().pipe(
-                filter(val => val !== undefined)
-            );
+        return stream.asObservable().pipe(
+            filter(val => val !== undefined)
+        );
     }
 
 
     /**
-     * Updates the deployment information of an applications service
-     * uses: PUT applications/{applicationShortName}/{applicationVersion}/deploymentInformation/{serviceShortName}
+     * Updates the deployment information of a kafka faas connector instance.
+     * uses: PUT applications/{applicationShortName}/{applicationVersion}/kafka-faas-connector/{instanceId}
      *
      * @param applicationShortName shortName of the application
      * @param applicationVersion version of the application
-     * @param serviceShortName shortName of the service
+     * @param instanceId instance id of the kafka faas connector
      * @param data object holding the updated deployment information
      */
-    putApplicationKafkaFaasConnector(applicationShortName: string, applicationVersion: string, serviceShortName, data) {
+    putApplicationKafkaFaasConnector(applicationShortName: string, applicationVersion: string, instanceId: string, data) {
         if (data == null) {
             return;
         }
 
-        const resource = 'applications/' + applicationShortName + '/' + applicationVersion + '/deploymentInformation/' + serviceShortName;
+        const resource = 'applications/' + applicationShortName + '/' + applicationVersion + '/kafka-faas-connector/' + instanceId;
 
         return this.rest.put<ApiObject>(resource, data).pipe(flatMap(val => {
 
             const stream = this.getStreamSource<ApiObject>(val._links.self.href);
             stream.next(val);
+            this.getApplication(applicationShortName, applicationVersion);
 
             return stream.asObservable().pipe(
                 filter(application => application !== undefined)
