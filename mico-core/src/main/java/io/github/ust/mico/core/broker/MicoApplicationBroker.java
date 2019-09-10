@@ -55,9 +55,6 @@ public class MicoApplicationBroker {
     @Autowired
     private MicoStatusService micoStatusService;
 
-    @Autowired
-    private MicoServiceDeploymentInfoBroker serviceDeploymentInfoBroker;
-
     public MicoApplication getMicoApplicationByShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException {
         Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
         if (!micoApplicationOptional.isPresent()) {
@@ -158,45 +155,6 @@ public class MicoApplicationBroker {
         return createMicoApplication(micoApplication);
     }
 
-    /**
-     * Retrieves the list of {@code KFConnectorDeploymentInfos} that are part of the {@code MicoApplication}.
-     * They are used for the deployment of KafkaFaasConnector instances.
-     *
-     * @param existingMicoApplication the {@link MicoApplication}
-     * @return the list of {@link MicoServiceDeploymentInfo MicoServiceDeploymentInfos}
-     */
-    private List<MicoServiceDeploymentInfo> getKfConnectorDeploymentInfos(MicoApplication existingMicoApplication) {
-        List<String> instanceIds = existingMicoApplication.getKafkaFaasConnectorDeploymentInfos().stream()
-            .map(MicoServiceDeploymentInfo::getInstanceId).collect(Collectors.toList());
-        List<MicoServiceDeploymentInfo> existingKafkaFaasConnectorSDIs = new ArrayList<>();
-        for (String instanceId : instanceIds) {
-            Optional<MicoServiceDeploymentInfo> kafkaFaasConnectorSDIOptional = serviceDeploymentInfoRepository.findByInstanceId(instanceId);
-            kafkaFaasConnectorSDIOptional.ifPresent(existingKafkaFaasConnectorSDIs::add);
-        }
-        return existingKafkaFaasConnectorSDIs;
-    }
-
-    /**
-     * Sets all IDs of the included entities of the service deployment infos to null,
-     * so it's possible to make a copy.
-     * The included {@link KubernetesDeploymentInfo} is deleted completely,
-     * so the new application is considered to be not deployed.
-     *
-     * @param serviceDeploymentInfos the {@link MicoServiceDeploymentInfo MicoServiceDeploymentInfos}
-     */
-    private void prepareServiceDeploymentInfosForCopying(List<MicoServiceDeploymentInfo> serviceDeploymentInfos) {
-        for (MicoServiceDeploymentInfo sdi : serviceDeploymentInfos) {
-            sdi.setId(null);
-            sdi.getLabels().forEach(label -> label.setId(null));
-            sdi.getEnvironmentVariables().forEach(envVar -> envVar.setId(null));
-            sdi.getTopics().forEach(topic -> topic.setId(null));
-            sdi.getInterfaceConnections().forEach(ic -> ic.setId(null));
-            // The actual Kubernetes deployment information must not be copied, because the new application
-            // is considered to be not deployed yet.
-            sdi.setKubernetesDeploymentInfo(null);
-        }
-    }
-
     public List<MicoService> getMicoServicesOfMicoApplicationByShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException {
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(shortName, version);
         return serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion());
@@ -206,10 +164,31 @@ public class MicoApplicationBroker {
         return applicationRepository.findAllByUsedService(serviceShortName, serviceVersion);
     }
 
-    public MicoServiceDeploymentInfo addMicoServiceToMicoApplicationByShortNameAndVersion(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion)
+    /**
+     * Adds a {@link MicoService} to a {@link MicoApplication}.
+     * If an instance id is provided, the existing {@link MicoServiceDeploymentInfo} will be reused.
+     *
+     * @param applicationShortName the short name of the {@link MicoApplication}
+     * @param applicationVersion   the version of the {@link MicoApplication}
+     * @param serviceShortName     the short name of the {@link MicoService}
+     * @param serviceVersion       the version of the {@link MicoService}
+     * @param instanceIdOptional   the optional instance if of the {@link MicoServiceDeploymentInfo}
+     * @return the {@link MicoServiceDeploymentInfo} that was created or reused
+     * @throws MicoApplicationNotFoundException                       if the {@link MicoApplication} does not exist
+     * @throws MicoServiceNotFoundException                           if the {@link MicoService} does not exist
+     * @throws MicoServiceAddedMoreThanOnceToMicoApplicationException if the {@link MicoService} is added more than once to the {@link MicoApplication}
+     * @throws MicoApplicationIsNotUndeployedException                if the {@link MicoApplication} is not undeployed
+     * @throws MicoTopicRoleUsedMultipleTimesException                if a role of a {@link MicoTopicRole} is used multiple times
+     * @throws MicoServiceDeploymentInformationNotFoundException      if the {@link MicoServiceDeploymentInfo} does not exist
+     * @throws KubernetesResourceException                            if there is an error with Kubernetes
+     * @throws MicoApplicationDoesNotIncludeMicoServiceException      if the {@link MicoApplication} does not include the {@link MicoService}, if it is expected
+     * @throws KafkaFaasConnectorNotAllowedHereException              if a KafkaFaasConnector is provided instead of a normal {@link MicoService}
+     */
+    public MicoServiceDeploymentInfo addMicoServiceToMicoApplicationByShortNameAndVersion(
+        String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion, Optional<String> instanceIdOptional)
         throws MicoApplicationNotFoundException, MicoServiceNotFoundException, MicoServiceAddedMoreThanOnceToMicoApplicationException,
         MicoApplicationIsNotUndeployedException, MicoTopicRoleUsedMultipleTimesException, MicoServiceDeploymentInformationNotFoundException,
-        KubernetesResourceException, MicoApplicationDoesNotIncludeMicoServiceException, KafkaFaasConnectorNotAllowedHereException {
+        KubernetesResourceException, MicoApplicationDoesNotIncludeMicoServiceException, KafkaFaasConnectorNotAllowedHereException, MicoServiceInstanceNotFoundException {
 
         // KafkaFaasConnector is not allowed here, because it should be handled differently.
         // See method `addKafkaFaasConnectorInstanceToMicoApplicationByVersion`
@@ -225,8 +204,15 @@ public class MicoApplicationBroker {
 
         MicoService micoService = micoServiceBroker.getServiceFromDatabase(serviceShortName, serviceVersion);
 
+        Optional<MicoServiceDeploymentInfo> existingServiceDeploymentInfoOptional = Optional.empty();
+        if (instanceIdOptional.isPresent()) {
+            existingServiceDeploymentInfoOptional = Optional.of(getServiceDeploymentInfoByInstanceId(
+                serviceShortName, serviceVersion, instanceIdOptional.get()));
+        }
+
         // Find all services with identical short name within this application
-        List<MicoService> micoServices = micoApplication.getServices().stream().filter(s -> s.getShortName().equals(serviceShortName)).collect(Collectors.toList());
+        List<MicoService> micoServices = micoApplication.getServices().stream()
+            .filter(s -> s.getShortName().equals(serviceShortName)).collect(Collectors.toList());
         log.debug("Found {} MicoService(s) with short name '{}' within application '{}' '{}'.",
             micoServices.size(), serviceShortName, applicationShortName, applicationVersion);
 
@@ -234,20 +220,42 @@ public class MicoApplicationBroker {
             // Illegal state, each service is allowed only once in every application
             throw new MicoServiceAddedMoreThanOnceToMicoApplicationException(micoApplication.getShortName(), micoApplication.getVersion());
         } else if (micoServices.size() == 0) {
-            // Service not included yet, simply add it
-            MicoServiceDeploymentInfo micoServiceDeploymentInfo = new MicoServiceDeploymentInfo().setService(micoService);
+            // Service not included yet, add it to the service list and create the required deployment information.
+            MicoServiceDeploymentInfo sdi;
+            String instanceId;
+            boolean setDefaultDeploymentInfos = false;
+            if (instanceIdOptional.isPresent()) {
+                // Instance ID provided -> reuse the existing instance.
+                instanceId = instanceIdOptional.get();
+                sdi = existingServiceDeploymentInfoOptional.get();
+            } else {
+                // No instance ID provided -> create a new one
+                instanceId = UIDUtils.uidFor(micoService);
+                sdi = new MicoServiceDeploymentInfo()
+                    .setService(micoService)
+                    .setInstanceId(instanceId);
+                setDefaultDeploymentInfos = true;
+            }
 
             // Both the service list and the service deployment info list of the application need to be updated ...
             micoApplication.getServices().add(micoService);
-            micoApplication.getServiceDeploymentInfos().add(micoServiceDeploymentInfo);
+            micoApplication.getServiceDeploymentInfos().add(sdi);
 
             // ... before the application can be saved.
             applicationRepository.save(micoApplication);
 
-            // Set default deployment information (environment variables, topics)
-            serviceDeploymentInfoBroker.setDefaultDeploymentInformationForKafkaEnabledService(micoServiceDeploymentInfo);
-            serviceDeploymentInfoBroker.updateMicoServiceDeploymentInformation(applicationShortName, applicationVersion, serviceShortName,
-                new MicoServiceDeploymentInfoRequestDTO(micoServiceDeploymentInfo));
+            log.debug("Added MicoService '{}' in version '{}' in instance '{}' to MicoApplication '{}' '{}'.",
+                serviceShortName, serviceVersion, instanceId, applicationShortName, applicationVersion);
+
+            // If a new service deployment information was created,
+            // set default deployment information (environment variables, topics) for this instance.
+            if (setDefaultDeploymentInfos) {
+                log.debug("Set default deployment information for added MicoService '{}' '{}' in instance '{}'.",
+                    serviceShortName, serviceVersion, instanceId);
+                micoServiceDeploymentInfoBroker.setDefaultDeploymentInformationForKafkaEnabledService(sdi);
+                micoServiceDeploymentInfoBroker.updateMicoServiceDeploymentInformation(applicationShortName, applicationVersion, serviceShortName,
+                    new MicoServiceDeploymentInfoRequestDTO(sdi));
+            }
         } else {
             // Service already included, replace it with its newer version if it differs from the current version.
             MicoService existingMicoService = micoServices.get(0);
@@ -531,6 +539,74 @@ public class MicoApplicationBroker {
             throw new MicoApplicationDoesNotIncludeMicoServiceException(applicationShortName, applicationVersion, serviceShortName);
         }
         return micoApplication;
+    }
+
+    /**
+     * Retrieves the list of {@code KFConnectorDeploymentInfos} that are part of the {@code MicoApplication}.
+     * They are used for the deployment of KafkaFaasConnector instances.
+     *
+     * @param existingMicoApplication the {@link MicoApplication}
+     * @return the list of {@link MicoServiceDeploymentInfo MicoServiceDeploymentInfos}
+     */
+    private List<MicoServiceDeploymentInfo> getKfConnectorDeploymentInfos(MicoApplication existingMicoApplication) {
+        List<String> instanceIds = existingMicoApplication.getKafkaFaasConnectorDeploymentInfos().stream()
+            .map(MicoServiceDeploymentInfo::getInstanceId).collect(Collectors.toList());
+        List<MicoServiceDeploymentInfo> existingKafkaFaasConnectorSDIs = new ArrayList<>();
+        for (String instanceId : instanceIds) {
+            Optional<MicoServiceDeploymentInfo> kafkaFaasConnectorSDIOptional = serviceDeploymentInfoRepository.findByInstanceId(instanceId);
+            kafkaFaasConnectorSDIOptional.ifPresent(existingKafkaFaasConnectorSDIs::add);
+        }
+        return existingKafkaFaasConnectorSDIs;
+    }
+
+    /**
+     * Sets all IDs of the included entities of the service deployment infos to null,
+     * so it's possible to make a copy.
+     * The included {@link KubernetesDeploymentInfo} is deleted completely,
+     * so the new application is considered to be not deployed.
+     *
+     * @param serviceDeploymentInfos the {@link MicoServiceDeploymentInfo MicoServiceDeploymentInfos}
+     */
+    private void prepareServiceDeploymentInfosForCopying(List<MicoServiceDeploymentInfo> serviceDeploymentInfos) {
+        for (MicoServiceDeploymentInfo sdi : serviceDeploymentInfos) {
+            sdi.setId(null);
+            sdi.getLabels().forEach(label -> label.setId(null));
+            sdi.getEnvironmentVariables().forEach(envVar -> envVar.setId(null));
+            sdi.getTopics().forEach(topic -> topic.setId(null));
+            sdi.getInterfaceConnections().forEach(ic -> ic.setId(null));
+            // The actual Kubernetes deployment information must not be copied, because the new application
+            // is considered to be not deployed yet.
+            sdi.setKubernetesDeploymentInfo(null);
+        }
+    }
+
+    /**
+     * Checks if an instance for the provided {@code instanceId} exists
+     * and if it is used by the provided MicoService ({@code shortName} or {@code version}).
+     * If that's the case the corresponding {@link MicoServiceDeploymentInfo} will be returned.
+     *
+     * @param serviceShortName the short name of the {@link MicoService}
+     * @param serviceVersion   the version of the {@link MicoService}
+     * @param instanceId       the instance id of the {@link MicoServiceDeploymentInfo}
+     * @return the {@link MicoServiceDeploymentInfo} corresponding to the provided {@code instanceId}
+     * @throws MicoServiceInstanceNotFoundException if the instance does not exist or the instance does not match the provided MicoService {@code shortName} or {@code version}
+     */
+    private MicoServiceDeploymentInfo getServiceDeploymentInfoByInstanceId(
+        String serviceShortName, String serviceVersion, String instanceId) throws MicoServiceInstanceNotFoundException {
+
+        // Check if the instance exists and it is the right one for the requested service.
+        Optional<MicoServiceDeploymentInfo> serviceDeploymentInfoOptional = serviceDeploymentInfoRepository.findByInstanceId(instanceId);
+        if (!serviceDeploymentInfoOptional.isPresent()) {
+            // Instance does not exist
+            throw new MicoServiceInstanceNotFoundException(serviceShortName, serviceVersion, instanceId);
+        }
+        MicoServiceDeploymentInfo serviceDeploymentInfo = serviceDeploymentInfoOptional.get();
+        if (!serviceDeploymentInfo.getService().getShortName().equals(serviceShortName) ||
+            !serviceDeploymentInfo.getService().getVersion().equals(serviceVersion)) {
+            // Provided instance id is used for a different MicoService or a different version of it
+            throw new MicoServiceInstanceNotFoundException(serviceShortName, serviceVersion, instanceId);
+        }
+        return serviceDeploymentInfo;
     }
 
     /**

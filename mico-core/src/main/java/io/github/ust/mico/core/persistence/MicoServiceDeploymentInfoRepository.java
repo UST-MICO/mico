@@ -19,16 +19,15 @@
 
 package io.github.ust.mico.core.persistence;
 
-import java.util.List;
-import java.util.Optional;
-
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import java.util.List;
+import java.util.Optional;
 
 public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<MicoServiceDeploymentInfo, Long> {
 
@@ -135,30 +134,43 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
      * Deletes all deployment information for all versions of an application including the ones for the KafkaFaasConnectors.
      * All additional properties of a {@link MicoServiceDeploymentInfo} that
      * are stored as a separate node entity and connected to it via a {@code [:HAS]}
-     * relationship will be deleted, too.
+     * relationship will be deleted too, if they are used exclusively by this deployment information.
+     * Exclusively means that there must only be one single edge connected to the particular property
+     * ({@code relatedNode}, see {@code size} operator in {@code WHERE} clause).
+     * If that's the case, it's possible to delete this related node safely.
+     * <p>
+     * Also works with a KafkaFaasConnector instance.
      *
      * @param applicationShortName the short name of the {@link MicoApplication}.
      */
     @Query("MATCH (a:MicoApplication)-[:PROVIDES|:PROVIDES_KF_CONNECTOR]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
         + "WHERE a.shortName = {applicationShortName} "
-        + "WITH a, sdi OPTIONAL MATCH (sdi)-[:HAS]->(additionalProperty) "
-        + "WHERE a.shortName = {applicationShortName} "
-        + "DETACH DELETE sdi, additionalProperty")
+        + "WITH a, sdi "
+        + "OPTIONAL MATCH (sdi)-[:HAS]->(allRelatedNodes) "
+        + "WHERE size((allRelatedNodes)--()) = 1 "
+        + "DETACH DELETE sdi, allRelatedNodes")
     void deleteAllByApplication(@Param("applicationShortName") String applicationShortName);
 
     /**
      * Deletes all deployment information for a particular application including the ones for the KafkaFaasConnectors.
      * All additional properties of a {@link MicoServiceDeploymentInfo} that
      * are stored as a separate node entity and connected to it via a {@code [:HAS]}
-     * relationship will be deleted, too.
+     * relationship will be deleted too, if they are used exclusively by this deployment information.
+     * Exclusively means that there must only be one single edge connected to the particular property
+     * ({@code relatedNode}, see {@code size} operator in {@code WHERE} clause).
+     * If that's the case, it's possible to delete this related node safely.
+     * <p>
+     * Also works with a KafkaFaasConnector instance.
      *
      * @param applicationShortName the short name of the {@link MicoApplication}.
      * @param applicationVersion   the version of the {@link MicoApplication}.
      */
     @Query("MATCH (a:MicoApplication)-[:PROVIDES|:PROVIDES_KF_CONNECTOR]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
         + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
-        + "WITH a, sdi OPTIONAL MATCH (sdi)-[:HAS]->(additionalProperty) "
-        + "DETACH DELETE sdi, additionalProperty")
+        + "WITH a, sdi "
+        + "OPTIONAL MATCH (sdi)-[:HAS]->(allRelatedNodes) "
+        + "WHERE size((allRelatedNodes)--()) = 1 "
+        + "DETACH DELETE sdi, allRelatedNodes")
     void deleteAllByApplication(
         @Param("applicationShortName") String applicationShortName,
         @Param("applicationVersion") String applicationVersion);
@@ -167,7 +179,11 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
      * Deletes the deployment information for a particular application and service.
      * All additional properties of a {@link MicoServiceDeploymentInfo} that
      * are stored as a separate node entity and connected to it via a {@code [:HAS]}
-     * relationship will be deleted, too.
+     * relationship will be deleted too, if they are used exclusively by this deployment information.
+     * Exclusively means that there must only be one single edge connected to the particular property
+     * ({@code relatedNode}, see {@code size} operator in {@code WHERE} clause).
+     * If that's the case, it's possible to delete this related node safely.
+     * <p>
      * Also works with a KafkaFaasConnector instance.
      *
      * @param applicationShortName the short name of the {@link MicoApplication}.
@@ -177,8 +193,10 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
     @Query("MATCH (a:MicoApplication)-[:PROVIDES|:PROVIDES_KF_CONNECTOR]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
         + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
         + "AND s.shortName = {serviceShortName} "
-        + "WITH a, sdi, s OPTIONAL MATCH (sdi)-[:HAS]->(additionalProperty) "
-        + "DETACH DELETE sdi, additionalProperty")
+        + "WITH a, sdi, s "
+        + "OPTIONAL MATCH (sdi)-[:HAS]->(allRelatedNodes) "
+        + "WHERE size((allRelatedNodes)--()) = 1 "
+        + "DETACH DELETE sdi, allRelatedNodes")
     void deleteByApplicationAndService(
         @Param("applicationShortName") String applicationShortName,
         @Param("applicationVersion") String applicationVersion,
@@ -188,7 +206,11 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
      * Deletes the deployment information for a particular application and service.
      * All additional properties of a {@link MicoServiceDeploymentInfo} that
      * are stored as a separate node entity and connected to it via a {@code [:HAS]}
-     * relationship will be deleted, too.
+     * relationship will be deleted too, if they are used exclusively by this deployment information.
+     * Exclusively means that there must only be one single edge connected to the particular property
+     * ({@code relatedNode}, see {@code size} operator in {@code WHERE} clause).
+     * If that's the case, it's possible to delete this related node safely.
+     * <p>
      * Also works with a KafkaFaasConnector instance.
      *
      * @param applicationShortName the short name of the {@link MicoApplication}.
@@ -199,8 +221,10 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
     @Query("MATCH (a:MicoApplication)-[:PROVIDES|:PROVIDES_KF_CONNECTOR]->(sdi:MicoServiceDeploymentInfo)-[:FOR]->(s:MicoService) "
         + "WHERE a.shortName = {applicationShortName} AND a.version = {applicationVersion} "
         + "AND s.shortName = {serviceShortName} AND s.version = {serviceVersion} "
-        + "WITH a, sdi, s OPTIONAL MATCH (sdi)-[:HAS]->(additionalProperty) "
-        + "DETACH DELETE sdi, additionalProperty")
+        + "WITH a, sdi, s "
+        + "OPTIONAL MATCH (sdi)-[:HAS]->(allRelatedNodes) "
+        + "WHERE size((allRelatedNodes)--()) = 1 "
+        + "DETACH DELETE sdi, allRelatedNodes")
     void deleteByApplicationAndService(
         @Param("applicationShortName") String applicationShortName,
         @Param("applicationVersion") String applicationVersion,

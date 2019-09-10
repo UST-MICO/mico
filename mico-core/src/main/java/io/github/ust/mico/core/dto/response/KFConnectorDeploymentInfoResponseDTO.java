@@ -24,6 +24,7 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.dto.request.KFConnectorDeploymentInfoRequestDTO;
+import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
@@ -45,6 +46,33 @@ import lombok.experimental.Accessors;
 public class KFConnectorDeploymentInfoResponseDTO extends KFConnectorDeploymentInfoRequestDTO {
 
     /**
+     * The short name of the associated KafkaFaasConnector {@link MicoService}.
+     */
+    @ApiModelProperty(required = true, extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Short Name"),
+            @ExtensionProperty(name = "x-order", value = "100"),
+            @ExtensionProperty(name = "description", value = "The short name of the KafkaFaasConnector MicoService.")
+        }
+    )})
+    private String shortName;
+
+    /**
+     * The version of the associated KafkaFaasConnector {@link MicoService}.
+     */
+    @ApiModelProperty(required = true, extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Version"),
+            @ExtensionProperty(name = "x-order", value = "110"),
+            @ExtensionProperty(name = "description", value = "The version of the associated KafkaFaasConnector MicoService. " +
+                "Refers to GitHub release tag.")
+        }
+    )})
+    private String version;
+
+    /**
      * Information about the actual Kubernetes resources created by a deployment.
      * Contains details about the used Kubernetes {@link Deployment} and {@link Service Services}.
      * Is read only.
@@ -54,7 +82,7 @@ public class KFConnectorDeploymentInfoResponseDTO extends KFConnectorDeploymentI
         properties = {
             @ExtensionProperty(name = "title", value = "Kubernetes Deployment Information"),
             @ExtensionProperty(name = "readOnly", value = "true"),
-            @ExtensionProperty(name = "x-order", value = "100"),
+            @ExtensionProperty(name = "x-order", value = "200"),
             @ExtensionProperty(name = "description", value = "Information about the actual Kubernetes resources " +
                 "created by a deployment. Contains details about the used Kubernetes Deployment and Services.")
         }
@@ -75,6 +103,11 @@ public class KFConnectorDeploymentInfoResponseDTO extends KFConnectorDeploymentI
      */
     public KFConnectorDeploymentInfoResponseDTO(MicoServiceDeploymentInfo kfConnectorDeploymentInfo) {
         super(kfConnectorDeploymentInfo);
+
+        if (kfConnectorDeploymentInfo.getService() != null) {
+            setShortName(kfConnectorDeploymentInfo.getService().getShortName());
+            setVersion(kfConnectorDeploymentInfo.getService().getVersion());
+        }
 
         // Kubernetes deployment info could be null if not available
         if (kfConnectorDeploymentInfo.getKubernetesDeploymentInfo() != null) {

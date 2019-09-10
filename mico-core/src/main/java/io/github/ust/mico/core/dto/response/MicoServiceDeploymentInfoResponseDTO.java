@@ -45,6 +45,20 @@ import java.util.stream.Collectors;
 public class MicoServiceDeploymentInfoResponseDTO extends MicoServiceDeploymentInfoRequestDTO {
 
     /**
+     * Instance ID.
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "InstanceId"),
+            @ExtensionProperty(name = "x-order", value = "1"),
+            @ExtensionProperty(name = "description", value = "ID of the instance.")
+        }
+    )})
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private String instanceId;
+
+    /**
      * Information about the actual Kubernetes resources created by a deployment. Contains details about the used
      * Kubernetes {@link Deployment} and {@link Service Services}. Is read only.
      */
@@ -74,6 +88,9 @@ public class MicoServiceDeploymentInfoResponseDTO extends MicoServiceDeploymentI
      */
     public MicoServiceDeploymentInfoResponseDTO(MicoServiceDeploymentInfo serviceDeploymentInfo) {
         super(serviceDeploymentInfo);
+
+        // Set instance ID.
+        setInstanceId(serviceDeploymentInfo.getInstanceId());
 
         // Labels need to be set explicitly to have a list of MicoLabelResponseDTOs
         // and not a list of MicoLabelRequestDTOs, since the list is declared

@@ -124,6 +124,97 @@ public class ApplicationResourceEndToEndTests extends Neo4jTestClass {
     }
 
     @Test
+    public void addServiceToApplicationByReusingExistingInstance() throws Exception {
+        MicoApplication application = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
+        applicationRepository.save(application);
+        MicoService service = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
+        serviceRepository.save(service);
+        MicoServiceDeploymentInfo sdi = new MicoServiceDeploymentInfo().setService(service).setInstanceId(INSTANCE_ID);
+        serviceDeploymentInfoRepository.save(sdi);
+
+        given(micoKubernetesClient.isApplicationUndeployed(application)).willReturn(true);
+
+        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME + "/" + SERVICE_VERSION + "/" + INSTANCE_ID))
+            .andDo(print())
+            .andExpect(status().isOk());
+
+        Optional<MicoApplication> result = applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion());
+        assertTrue(result.isPresent());
+        assertThat(result.get().getServices().size(), is(1));
+        assertThat(result.get().getServices().get(0), is(service));
+        assertThat(result.get().getServiceDeploymentInfos().size(), is(1));
+        assertThat(result.get().getServiceDeploymentInfos().get(0).getService(), is(service));
+        assertThat(result.get().getServiceDeploymentInfos().get(0).getInstanceId(), is(INSTANCE_ID));
+    }
+
+    @Test
+    public void deleteServiceFromApplication() throws Exception {
+        MicoApplication application1 = new MicoApplication().setShortName(SHORT_NAME_1).setVersion(VERSION);
+        MicoApplication application2 = new MicoApplication().setShortName(SHORT_NAME_2).setVersion(VERSION);
+        MicoService service = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
+        serviceRepository.save(service);
+
+        MicoTopic micoTopic = new MicoTopic().setName("topic-name");
+        MicoServiceDeploymentInfo sdi1 = new MicoServiceDeploymentInfo()
+            .setService(service)
+            .setInstanceId(INSTANCE_ID_1);
+        MicoTopicRole topicRole1 = new MicoTopicRole()
+            .setServiceDeploymentInfo(sdi1)
+            .setRole(MicoTopicRole.Role.INPUT)
+            .setTopic(micoTopic);
+        sdi1.getTopics().add(topicRole1);
+        MicoServiceDeploymentInfo savedSDI1 = serviceDeploymentInfoRepository.save(sdi1);
+        // Save it twice to ensure topic is created correctly
+        savedSDI1 = serviceDeploymentInfoRepository.save(savedSDI1);
+
+        MicoServiceDeploymentInfo sdi2 = new MicoServiceDeploymentInfo()
+            .setService(service)
+            .setInstanceId(INSTANCE_ID_2);
+        MicoTopicRole topicRole2 = new MicoTopicRole()
+            .setServiceDeploymentInfo(sdi2)
+            .setRole(MicoTopicRole.Role.INPUT)
+            .setTopic(micoTopic);
+        sdi2.getTopics().add(topicRole2);
+        MicoServiceDeploymentInfo savedSDI2 = serviceDeploymentInfoRepository.save(sdi2);
+        // Save it twice to ensure topic is created correctly
+        savedSDI2 = serviceDeploymentInfoRepository.save(savedSDI2);
+
+        application1.getServices().add(service);
+        application1.getServiceDeploymentInfos().add(savedSDI1);
+        applicationRepository.save(application1);
+
+        application2.getServices().add(service);
+        application2.getServiceDeploymentInfos().add(savedSDI2);
+        applicationRepository.save(application2);
+
+        given(micoKubernetesClient.isApplicationUndeployed(application1)).willReturn(true);
+        given(micoKubernetesClient.isApplicationUndeployed(application2)).willReturn(true);
+
+        mvc.perform(delete(PATH_APPLICATIONS + "/" + SHORT_NAME_2 + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME))
+            .andDo(print())
+            .andExpect(status().isNoContent());
+
+        Optional<MicoService> resultingService = serviceRepository.findByShortNameAndVersion(service.getShortName(), service.getVersion());
+        assertTrue(resultingService.isPresent());
+        assertThat(resultingService.get(), is(service));
+
+        Optional<MicoApplication> resultingApplication2 = applicationRepository.findByShortNameAndVersion(application2.getShortName(), application2.getVersion());
+        assertTrue(resultingApplication2.isPresent());
+        assertThat(resultingApplication2.get().getServices().size(), is(0));
+        assertThat(resultingApplication2.get().getServiceDeploymentInfos().size(), is(0));
+
+        Optional<MicoApplication> resultingApplication1 = applicationRepository.findByShortNameAndVersion(application1.getShortName(), application1.getVersion());
+        assertTrue(resultingApplication1.isPresent());
+        assertThat(resultingApplication1.get().getServices().size(), is(1));
+        assertThat(resultingApplication1.get().getServices().get(0), is(service));
+        assertThat(resultingApplication1.get().getServiceDeploymentInfos().size(), is(1));
+        assertThat(resultingApplication1.get().getServiceDeploymentInfos().get(0).getService(), is(service));
+        assertThat(resultingApplication1.get().getServiceDeploymentInfos().get(0).getTopics().size(), is(1));
+        assertThat(resultingApplication1.get().getServiceDeploymentInfos().get(0).getTopics().get(0), is(topicRole1));
+        assertThat(resultingApplication1.get().getServiceDeploymentInfos().get(0), is(sdi1));
+    }
+
+    @Test
     public void addKafkaFaasConnectorInstanceOfApplication() throws Exception {
         MicoApplication application = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
         applicationRepository.save(application);
