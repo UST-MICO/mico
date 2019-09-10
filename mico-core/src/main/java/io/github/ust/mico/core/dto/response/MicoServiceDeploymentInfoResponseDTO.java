@@ -31,7 +31,6 @@ import io.swagger.annotations.ExtensionProperty;
 import lombok.*;
 import lombok.experimental.Accessors;
 
-import javax.validation.constraints.NotNull;
 import java.util.stream.Collectors;
 
 /**
