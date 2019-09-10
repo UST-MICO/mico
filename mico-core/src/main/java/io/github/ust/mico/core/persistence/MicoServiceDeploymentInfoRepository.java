@@ -135,6 +135,11 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
      * All additional properties of a {@link MicoServiceDeploymentInfo} that
      * are stored as a separate node entity and connected to it via a {@code [:HAS]}
      * relationship will be deleted too, if they are used exclusively by this deployment information.
+     * Exclusively means that there must only be one single edge connected to the particular property
+     * ({@code relatedNode}, see {@code size} operator in {@code WHERE} clause).
+     * If that's the case, it's possible to delete this related node safely.
+     * <p>
+     * Also works with a KafkaFaasConnector instance.
      *
      * @param applicationShortName the short name of the {@link MicoApplication}.
      */
@@ -151,6 +156,11 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
      * All additional properties of a {@link MicoServiceDeploymentInfo} that
      * are stored as a separate node entity and connected to it via a {@code [:HAS]}
      * relationship will be deleted too, if they are used exclusively by this deployment information.
+     * Exclusively means that there must only be one single edge connected to the particular property
+     * ({@code relatedNode}, see {@code size} operator in {@code WHERE} clause).
+     * If that's the case, it's possible to delete this related node safely.
+     * <p>
+     * Also works with a KafkaFaasConnector instance.
      *
      * @param applicationShortName the short name of the {@link MicoApplication}.
      * @param applicationVersion   the version of the {@link MicoApplication}.
@@ -170,6 +180,10 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
      * All additional properties of a {@link MicoServiceDeploymentInfo} that
      * are stored as a separate node entity and connected to it via a {@code [:HAS]}
      * relationship will be deleted too, if they are used exclusively by this deployment information.
+     * Exclusively means that there must only be one single edge connected to the particular property
+     * ({@code relatedNode}, see {@code size} operator in {@code WHERE} clause).
+     * If that's the case, it's possible to delete this related node safely.
+     * <p>
      * Also works with a KafkaFaasConnector instance.
      *
      * @param applicationShortName the short name of the {@link MicoApplication}.
@@ -193,6 +207,10 @@ public interface MicoServiceDeploymentInfoRepository extends Neo4jRepository<Mic
      * All additional properties of a {@link MicoServiceDeploymentInfo} that
      * are stored as a separate node entity and connected to it via a {@code [:HAS]}
      * relationship will be deleted too, if they are used exclusively by this deployment information.
+     * Exclusively means that there must only be one single edge connected to the particular property
+     * ({@code relatedNode}, see {@code size} operator in {@code WHERE} clause).
+     * If that's the case, it's possible to delete this related node safely.
+     * <p>
      * Also works with a KafkaFaasConnector instance.
      *
      * @param applicationShortName the short name of the {@link MicoApplication}.
