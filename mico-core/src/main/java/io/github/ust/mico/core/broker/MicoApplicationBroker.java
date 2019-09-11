@@ -55,9 +55,6 @@ public class MicoApplicationBroker {
     @Autowired
     private MicoStatusService micoStatusService;
 
-    @Autowired
-    private MicoServiceDeploymentInfoBroker serviceDeploymentInfoBroker;
-
     public MicoApplication getMicoApplicationByShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException {
         Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
         if (!micoApplicationOptional.isPresent()) {
@@ -245,8 +242,8 @@ public class MicoApplicationBroker {
             applicationRepository.save(micoApplication);
 
             // Set default deployment information (environment variables, topics)
-            serviceDeploymentInfoBroker.setDefaultDeploymentInformationForKafkaEnabledService(micoServiceDeploymentInfo);
-            serviceDeploymentInfoBroker.updateMicoServiceDeploymentInformation(applicationShortName, applicationVersion, serviceShortName,
+            micoServiceDeploymentInfoBroker.setDefaultDeploymentInformationForKafkaEnabledService(micoServiceDeploymentInfo);
+            micoServiceDeploymentInfoBroker.updateMicoServiceDeploymentInformation(applicationShortName, applicationVersion, serviceShortName,
                 new MicoServiceDeploymentInfoRequestDTO(micoServiceDeploymentInfo));
         } else {
             // Service already included, replace it with its newer version if it differs from the current version.
