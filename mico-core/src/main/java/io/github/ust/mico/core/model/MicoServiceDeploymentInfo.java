@@ -143,6 +143,11 @@ public class MicoServiceDeploymentInfo {
     @Relationship(type = "HAS")
     private KubernetesDeploymentInfo kubernetesDeploymentInfo;
 
+    /**
+     * TODO  documentation
+     */
+    @Relationship(type = "HAS")
+    private OpenFaaSFunction openFaaSFunction;
 
     /**
      * Enumeration for the different policies specifying
