@@ -91,6 +91,11 @@ class TestConstants {
     static final String INSTANCE_ID_1 = "instance-id-1";
     static final String INSTANCE_ID_2 = "instance-id-2";
 
+    static final String INPUT_TOPIC = "input-topic";
+    static final String OUTPUT_TOPIC = "output-topic";
+
+    static final String OPEN_FAAS_FUNCTION_NAME = "open-faas-function-name";
+
     /*
      * For tests in ApplicationResourceIntegrationTests, one service is added to the list of MicoServiceStatusDTOs in MicoApplicationStatusDTO.
      * All paths are build on the path for the status of this service.
