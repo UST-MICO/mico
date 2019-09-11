@@ -19,11 +19,11 @@
 
 package io.github.ust.mico.core;
 
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceCrawlingOrigin;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.ust.mico.core.dto.request.KFConnectorDeploymentInfoRequestDTO;
+import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.util.UIDUtils;
 import org.junit.Test;
@@ -32,18 +32,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.hateoas.MediaTypes;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-
+import java.util.Arrays;
 import static io.github.ust.mico.core.JsonPathBuilder.EMBEDDED;
 import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
-import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
-import static io.github.ust.mico.core.TestConstants.VERSION;
+import static io.github.ust.mico.core.TestConstants.*;
 import static io.github.ust.mico.core.resource.ApplicationResource.PATH_APPLICATIONS;
 import static io.github.ust.mico.core.resource.KafkaFaasConnectorDeploymentInfoResource.PATH_KAFKA_FAAS_CONNECTOR_DEPLOYMENT_INFORMATION;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -66,6 +67,13 @@ public class KafkaFaasConnectorDeploymentInfoResourceEndToEndTests extends Neo4j
     @Autowired
     MicoServiceRepository micoServiceRepository;
 
+    @Autowired
+    MicoServiceDeploymentInfoRepository deploymentInfoRepository;
+
+    @Autowired
+    private ObjectMapper mapper;
+
+    // get requests
     @Test
     public void getKafkaFaasConnectorDeploymentInfoEmptyList() throws Exception {
         MicoApplication application = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
@@ -112,6 +120,71 @@ public class KafkaFaasConnectorDeploymentInfoResourceEndToEndTests extends Neo4j
         mvc.perform(get(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR_DEPLOYMENT_INFORMATION))
             .andDo(print())
             .andExpect(status().isNotFound());
+    }
+
+
+    @Test
+    public void updateKafkaFaasConnectorDeploymentInfo_1() throws Exception {
+
+        // Test for updating MicoServiceDeploymentInfo with the following properties:
+        //  - OpenFaas function is set: no
+        //  - Input topic is set: no
+        //  - output topic is set: no
+        //
+
+        // create the deployment info, that shall be updated
+        MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo()
+                .setInstanceId(INSTANCE_ID);
+        deploymentInfoRepository.save(deploymentInfo);
+
+        // create the request for updating the deployment info
+        KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO = getKFConnectorDeploymentInfoRequestDTO(deploymentInfo);
+
+        // send the request to the endpoint
+        mvc.perform(put(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR_DEPLOYMENT_INFORMATION + "/" + INSTANCE_ID)
+                    .content(mapper.writeValueAsBytes(kfConnectorDeploymentInfoRequestDTO))
+                    .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print())
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void updateKafkaFaasConnectorDeploymentInfo_2() throws Exception {
+
+        // Test for updating MicoServiceDeploymentInfo with the following properties:
+        //  - OpenFaas function is set: yes
+        //  - Input topic is set: yes
+        //  - output topic is set: yes
+        //
+
+        // create the deployment info, that shall be updated
+        MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo();
+        deploymentInfo
+                .setInstanceId(INSTANCE_ID)
+                .setOpenFaaSFunction(new OpenFaaSFunction(ID, OPEN_FAAS_FUNCTION_NAME))
+                .setTopics(Arrays.asList(
+                        new MicoTopicRole(ID_1, deploymentInfo, new MicoTopic(ID_1, INPUT_TOPIC), MicoTopicRole.Role.INPUT),
+                        new MicoTopicRole(ID_2, deploymentInfo, new MicoTopic(ID_2, OUTPUT_TOPIC), MicoTopicRole.Role.OUTPUT)));
+        deploymentInfoRepository.save(deploymentInfo);
+
+        // create the request for updating the deployment info
+        KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO = getKFConnectorDeploymentInfoRequestDTO(deploymentInfo);
+
+        // send the request to the endpoint
+        mvc.perform(put(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR_DEPLOYMENT_INFORMATION + "/" + INSTANCE_ID)
+                .content(mapper.writeValueAsBytes(kfConnectorDeploymentInfoRequestDTO))
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andDo(print())
+                .andExpect(status().isOk());
+    }
+
+    private KFConnectorDeploymentInfoRequestDTO getKFConnectorDeploymentInfoRequestDTO(MicoServiceDeploymentInfo deploymentInfo) {
+        KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO = new KFConnectorDeploymentInfoRequestDTO(deploymentInfo);
+        kfConnectorDeploymentInfoRequestDTO.setInputTopicName(INPUT_TOPIC);
+        kfConnectorDeploymentInfoRequestDTO.setOutputTopicName(OUTPUT_TOPIC);
+        kfConnectorDeploymentInfoRequestDTO.setOpenFaaSFunctionName(OPEN_FAAS_FUNCTION_NAME);
+        return kfConnectorDeploymentInfoRequestDTO;
+
     }
 
     private void addKafkaFaasConnectorToApplication(MicoApplication application, MicoService kafkaFaasConnectorMicoService) {
