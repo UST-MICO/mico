@@ -144,7 +144,7 @@ public class MicoServiceDeploymentInfo {
     private KubernetesDeploymentInfo kubernetesDeploymentInfo;
 
     /**
-     * TODO  documentation
+     * Contains information about the OpenFaaS function used by the KafkaFaaSConnect
      */
     @Relationship(type = "HAS")
     private OpenFaaSFunction openFaaSFunction;
