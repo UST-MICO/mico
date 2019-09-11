@@ -64,16 +64,12 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
 
     /**
      * Updates an existing {@link MicoServiceDeploymentInfo} in the database
-     * based on the values of a {@link MicoServiceDeploymentInfoRequestDTO} object.
+     * based on the values of a {@link KFConnectorDeploymentInfoRequestDTO} object.
      *
-     * @param instanceID               the instance id of the deployment {@link MicoApplication}
-     * @param serviceDeploymentInfoDTO the {@link MicoServiceDeploymentInfoRequestDTO}
+     * @param instanceId                          the instance id of the deployment {@link MicoApplication}
+     * @param kfConnectorDeploymentInfoRequestDTO the {@link KFConnectorDeploymentInfoRequestDTO}
      * @return the new {@link MicoServiceDeploymentInfo} stored in the database
-     * @throws MicoApplicationNotFoundException                  if there is no {@code MicoApplication} with the specified short name and version
-     * @throws MicoApplicationDoesNotIncludeMicoServiceException if there is no service included in the specified {@code MicoApplication} with the particular short name
      * @throws MicoServiceDeploymentInformationNotFoundException if there is no {@code MicoServiceDeploymentInfo} stored in the database
-     * @throws KubernetesResourceException                       if there are problems with retrieving Kubernetes resource information
-     * @throws MicoTopicRoleUsedMultipleTimesException           if a {@link MicoTopicRole} is used multiple times
      */
     public MicoServiceDeploymentInfo updateKafkaFaasConnectorDeploymentInformation(String instanceId, KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO)
             throws MicoServiceDeploymentInformationNotFoundException {
