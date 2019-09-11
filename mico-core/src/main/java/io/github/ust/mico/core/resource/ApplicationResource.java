@@ -68,10 +68,10 @@ public class ApplicationResource {
 
     static final String PATH_VARIABLE_SHORT_NAME = "micoApplicationShortName";
     static final String PATH_VARIABLE_VERSION = "micoApplicationVersion";
+    static final String PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID = "kafkaFaasConnectorInstanceId";
     private static final String PATH_VARIABLE_SERVICE_SHORT_NAME = "micoServiceShortName";
     private static final String PATH_VARIABLE_SERVICE_VERSION = "micoServiceVersion";
     private static final String PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION = "kafkaFaasConnectorVersion";
-    private static final String PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID = "kafkaFaasConnectorInstanceId";
     private static final String PATH_VARIABLE_INSTANCE_ID = "instanceId";
 
     @Autowired
