@@ -23,6 +23,7 @@ import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPl
 import io.github.ust.mico.core.model.MicoEnvironmentVariable;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.model.MicoTopicRole;
+import io.github.ust.mico.core.model.OpenFaaSFunction;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -118,8 +119,7 @@ public class KFConnectorDeploymentInfoRequestDTO {
         Optional<MicoTopicRole> outputTopicRoleOpt = kfConnectorDeploymentInfo.getTopics().stream()
             .filter(t -> t.getRole().equals(MicoTopicRole.Role.OUTPUT)).findFirst();
         outputTopicRoleOpt.ifPresent(micoTopicRole -> this.outputTopicName = micoTopicRole.getTopic().getName());
-        kfConnectorDeploymentInfo.getEnvironmentVariables().stream()
-            .filter(env -> env.getName().equals(MicoEnvironmentVariable.DefaultNames.OPENFAAS_FUNCTION_NAME))
-            .findFirst().ifPresent(micoEnvironmentVariable -> this.openFaaSFunctionName = micoEnvironmentVariable.getValue());
+        OpenFaaSFunction openFaaSFunction = kfConnectorDeploymentInfo.getOpenFaaSFunction();
+        if(openFaaSFunction != null) this.openFaaSFunctionName = openFaaSFunction.getName();
     }
 }
