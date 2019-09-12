@@ -20,15 +20,12 @@
 package io.github.ust.mico.core.broker;
 
 import io.github.ust.mico.core.dto.request.KFConnectorDeploymentInfoRequestDTO;
-import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.exception.*;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 

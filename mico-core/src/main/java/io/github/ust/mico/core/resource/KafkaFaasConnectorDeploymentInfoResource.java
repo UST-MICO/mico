@@ -21,9 +21,7 @@ package io.github.ust.mico.core.resource;
 
 import io.github.ust.mico.core.broker.KafkaFaasConnectorDeploymentInfoBroker;
 import io.github.ust.mico.core.dto.request.KFConnectorDeploymentInfoRequestDTO;
-import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.dto.response.KFConnectorDeploymentInfoResponseDTO;
-import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO;
 import io.github.ust.mico.core.exception.*;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
