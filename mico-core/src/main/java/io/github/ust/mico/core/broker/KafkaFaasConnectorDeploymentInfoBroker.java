@@ -28,6 +28,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import static io.github.ust.mico.core.model.MicoTopicRole.Role.*;
+
 
 @Slf4j
 @Service
@@ -83,18 +86,51 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
 
     private MicoServiceDeploymentInfo saveValuesToDatabase(KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO,
                                                            MicoServiceDeploymentInfo storedServiceDeploymentInfo) {
-        // Eventually set new topic names
+
+        eventuallyUpdateTopics(kfConnectorDeploymentInfoRequestDTO, storedServiceDeploymentInfo);
+        eventuallyUpdateOpenFaaSFunction(kfConnectorDeploymentInfoRequestDTO, storedServiceDeploymentInfo);
+        deploymentInfoRepository.save(storedServiceDeploymentInfo);
+        return storedServiceDeploymentInfo;
+    }
+
+    private void eventuallyUpdateTopics(KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO,
+                                                   MicoServiceDeploymentInfo storedServiceDeploymentInfo) {
+        // update existing topics
         List<MicoTopicRole> topics = storedServiceDeploymentInfo.getTopics();
         for (MicoTopicRole role: topics) {
             MicoTopic topic = role.getTopic();
-            if(role.getRole() == MicoTopicRole.Role.INPUT) {
-                topic.setName(kfConnectorDeploymentInfoRequestDTO.getInputTopicName());
-            }
-            else if(role.getRole() == MicoTopicRole.Role.OUTPUT) {
-                topic.setName((kfConnectorDeploymentInfoRequestDTO.getOutputTopicName()));
+            switch (role.getRole()) {
+                case INPUT: topic.setName(kfConnectorDeploymentInfoRequestDTO.getInputTopicName()); break;
+                case OUTPUT: topic.setName(kfConnectorDeploymentInfoRequestDTO.getOutputTopicName()); break;
+                    case DEAD_LETTER: //TODO
+                case INVALID_MESSAGE: //TODO
+                case TEST_MESSAGE_OUTPUT: //TODO
             }
         }
-        // Eventually set the OpenFaaS function name
+        // add topics, if they do not exist, yet
+        List<MicoTopicRole.Role> storedTopicRoles = storedServiceDeploymentInfo.getTopics().stream().map(
+                topic -> topic.getRole()).collect(Collectors.toList());
+
+        for(MicoTopicRole.Role role: MicoTopicRole.Role.values()) {
+            // TODO, currently the the KFConnectorDeploymentInfoRequestDTO only provides INPUT and OUTPUT.
+            //  As soon as it also provides DEAD_LETTER, INVALID_MESSAGE and TEST_MESSAGE_OUTPUT this should be
+            //  handled here as well
+
+            if(!storedTopicRoles.contains(role) && (role == INPUT | role == OUTPUT)) {
+                storedServiceDeploymentInfo.getTopics().add(
+                        new MicoTopicRole()
+                                .setRole(role)
+                                .setServiceDeploymentInfo(storedServiceDeploymentInfo)
+                                .setTopic(new MicoTopic().setName(
+                                        (role == INPUT) ? kfConnectorDeploymentInfoRequestDTO.getInputTopicName()
+                                                        : kfConnectorDeploymentInfoRequestDTO.getOutputTopicName()
+                                )));
+            }
+        }
+    }
+
+    private void eventuallyUpdateOpenFaaSFunction(KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO,
+                                                  MicoServiceDeploymentInfo storedServiceDeploymentInfo) {
         OpenFaaSFunction openFaaSFunction = storedServiceDeploymentInfo.getOpenFaaSFunction();
         if(openFaaSFunction == null) {
             storedServiceDeploymentInfo.setOpenFaaSFunction(
@@ -103,8 +139,5 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
         else {
             openFaaSFunction.setName(kfConnectorDeploymentInfoRequestDTO.getOpenFaaSFunctionName());
         }
-        deploymentInfoRepository.save(storedServiceDeploymentInfo);
-        return storedServiceDeploymentInfo;
     }
-
 }
