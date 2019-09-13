@@ -37,7 +37,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static io.github.ust.mico.core.JsonPathBuilder.EMBEDDED;
@@ -46,8 +48,7 @@ import static io.github.ust.mico.core.TestConstants.*;
 import static io.github.ust.mico.core.resource.ApplicationResource.PATH_APPLICATIONS;
 import static io.github.ust.mico.core.resource.KafkaFaasConnectorDeploymentInfoResource.PATH_KAFKA_FAAS_CONNECTOR_DEPLOYMENT_INFORMATION;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -140,7 +141,15 @@ public class KafkaFaasConnectorDeploymentInfoResourceEndToEndTests extends Neo4j
         // create the deployment info, that shall be updated
         MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo()
                 .setInstanceId(INSTANCE_ID);
-        updateKafkaFaasConnectorDeploymentInfoTestProcedure(deploymentInfo);
+        deploymentInfoRepository.save(deploymentInfo);
+
+        // create the request for updating the deployment info
+        KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO = getKFConnectorDeploymentInfoRequestDTO(deploymentInfo)
+                .setInputTopicName(INPUT_TOPIC_1)
+                .setOutputTopicName(OUTPUT_TOPIC_1)
+                .setOpenFaaSFunctionName(OPEN_FAAS_FUNCTION_NAME_1);
+
+        updateKafkaFaasConnectorDeploymentInfoTestProcedure(kfConnectorDeploymentInfoRequestDTO, deploymentInfo);
     }
 
     @Test
@@ -160,7 +169,15 @@ public class KafkaFaasConnectorDeploymentInfoResourceEndToEndTests extends Neo4j
                 .setTopics(Arrays.asList(
                         new MicoTopicRole(ID_1, deploymentInfo, new MicoTopic(ID_1, INPUT_TOPIC), MicoTopicRole.Role.INPUT),
                         new MicoTopicRole(ID_2, deploymentInfo, new MicoTopic(ID_2, OUTPUT_TOPIC), MicoTopicRole.Role.OUTPUT)));
-        updateKafkaFaasConnectorDeploymentInfoTestProcedure(deploymentInfo);
+        deploymentInfoRepository.save(deploymentInfo);
+
+        // create the request for updating the deployment info
+        KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO = getKFConnectorDeploymentInfoRequestDTO(deploymentInfo)
+                .setInputTopicName(INPUT_TOPIC_1)
+                .setOutputTopicName(OUTPUT_TOPIC_1)
+                .setOpenFaaSFunctionName(OPEN_FAAS_FUNCTION_NAME_1);
+
+        updateKafkaFaasConnectorDeploymentInfoTestProcedure(kfConnectorDeploymentInfoRequestDTO, deploymentInfo);
     }
 
     private KFConnectorDeploymentInfoRequestDTO getKFConnectorDeploymentInfoRequestDTO(MicoServiceDeploymentInfo deploymentInfo) {
@@ -172,11 +189,9 @@ public class KafkaFaasConnectorDeploymentInfoResourceEndToEndTests extends Neo4j
 
     }
 
-    private void updateKafkaFaasConnectorDeploymentInfoTestProcedure(MicoServiceDeploymentInfo deploymentInfo) throws Exception {
-        deploymentInfoRepository.save(deploymentInfo);
+    private void updateKafkaFaasConnectorDeploymentInfoTestProcedure(
+            KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO, MicoServiceDeploymentInfo deploymentInfo) throws Exception {
 
-        // create the request for updating the deployment info
-        KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO = getKFConnectorDeploymentInfoRequestDTO(deploymentInfo);
 
         // send the request to the endpoint
         mvc.perform(put(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR_DEPLOYMENT_INFORMATION + "/" + INSTANCE_ID)
@@ -187,9 +202,10 @@ public class KafkaFaasConnectorDeploymentInfoResourceEndToEndTests extends Neo4j
 
         // check if the deploymentInfo was acutally updated in the database
         MicoServiceDeploymentInfo deploymentInfoCheck = deploymentInfoRepository.findByInstanceId(INSTANCE_ID).get();
-        assertEquals(OPEN_FAAS_FUNCTION_NAME, deploymentInfo.getOpenFaaSFunction().getName());
-        List<String> topicNames = deploymentInfoCheck.getTopics().stream().map(topicRole -> topicRole.getTopic().getName()).collect(Collectors.toList());
-        assertArrayEquals(Arrays.asList(INPUT_TOPIC, OUTPUT_TOPIC).toArray(), topicNames.toArray());
+        Set<String> topicNames = deploymentInfoCheck.getTopics().stream().map(topicRole -> topicRole.getTopic().getName()).collect(Collectors.toSet());
+        Set<String> expectedNames = new HashSet<>(Arrays.asList(INPUT_TOPIC_1, OUTPUT_TOPIC_1));
+        assertEquals(expectedNames, topicNames);
+        assertEquals(OPEN_FAAS_FUNCTION_NAME_1, deploymentInfo.getOpenFaaSFunction().getName());
     }
 
     private void addKafkaFaasConnectorToApplication(MicoApplication application, MicoService kafkaFaasConnectorMicoService) {
