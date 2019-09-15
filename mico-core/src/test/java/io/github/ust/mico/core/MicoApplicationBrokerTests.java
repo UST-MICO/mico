@@ -1,7 +1,7 @@
 package io.github.ust.mico.core;
 
 import io.github.ust.mico.core.broker.MicoApplicationBroker;
-import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
+import io.github.ust.mico.core.exception.*;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.util.CollectionUtils;
@@ -19,7 +19,9 @@ import java.util.Optional;
 
 import static io.github.ust.mico.core.TestConstants.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -62,8 +64,24 @@ public class MicoApplicationBrokerTests {
     }
 
     @Test
-    public void updateApplication() {
+    public void updateApplicationVersion() throws MicoApplicationNotFoundException, MicoApplicationAlreadyExistsException {
+        MicoApplication micoApplication = new MicoApplication()
+            .setName(NAME_2)
+            .setShortName(SHORT_NAME_2)
+            .setVersion(VERSION_1_0_2)
+            .setDescription(DESCRIPTION_2);
 
+        given(micoApplicationRepository.findByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion())
+        ).willReturn(Optional.of(micoApplication));
+        given(micoApplicationRepository.save(any(MicoApplication.class))).willReturn(micoApplication);
+
+        MicoApplication updatedMicoApplication = micoApplicationBroker.copyAndUpgradeMicoApplicationByShortNameAndVersion(
+            micoApplication.getShortName(), micoApplication.getVersion(), VERSION_1_0_3);
+
+        assertThat(updatedMicoApplication.getShortName()).isEqualTo(SHORT_NAME_2);
+        assertThat(updatedMicoApplication.getVersion()).isEqualTo(VERSION_1_0_3);
+        assertThat(updatedMicoApplication.getName()).isEqualTo(NAME_2);
+        assertThat(updatedMicoApplication.getDescription()).isEqualTo(DESCRIPTION_2);
     }
 
     @Test
