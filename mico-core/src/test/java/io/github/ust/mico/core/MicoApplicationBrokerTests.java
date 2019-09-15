@@ -58,9 +58,9 @@ public class MicoApplicationBrokerTests {
 
         given(micoApplicationRepository.findByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion())).willReturn(Optional.of(micoApplication));
 
-        MicoApplication application = micoApplicationBroker.getMicoApplicationByShortNameAndVersion(SHORT_NAME, VERSION);
-        assertThat(application.getShortName()).isEqualTo(SHORT_NAME);
-        assertThat(application.getVersion()).isEqualTo(VERSION);
+        MicoApplication application = micoApplicationBroker.getMicoApplicationByShortNameAndVersion(SHORT_NAME_1, VERSION_1_0_1);
+        assertThat(application.getShortName()).isEqualTo(SHORT_NAME_1);
+        assertThat(application.getVersion()).isEqualTo(VERSION_1_0_1);
     }
 
     @Test
@@ -85,24 +85,18 @@ public class MicoApplicationBrokerTests {
     }
 
     @Test
-    public void getApplicationById() {
+    public void deleteApplication() throws MicoApplicationIsNotUndeployedException, MicoApplicationNotFoundException {
+        MicoApplication micoApplication = new MicoApplication()
+            .setShortName(SHORT_NAME_1)
+            .setVersion(VERSION_1_0_1)
+            .setName(NAME_1)
+            .setDescription(DESCRIPTION_1);
 
+        given(micoApplicationRepository.findByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion()))
+            .willReturn(Optional.of(micoApplication));
 
-    }
-
-    @Test
-    public void deleteApplication() {
-
-    }
-
-    @Test
-    public void deleteAllVersionsOfAnApplication() {
-
+        micoApplicationBroker.deleteMicoApplicationByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion());
 
     }
 
-    @Test
-    public void getAllServicesFromApplication() {
 
-    }
-}
