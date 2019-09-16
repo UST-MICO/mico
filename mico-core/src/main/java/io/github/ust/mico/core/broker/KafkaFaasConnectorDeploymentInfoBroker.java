@@ -20,16 +20,20 @@
 package io.github.ust.mico.core.broker;
 
 import io.github.ust.mico.core.dto.request.KFConnectorDeploymentInfoRequestDTO;
-import io.github.ust.mico.core.exception.*;
+import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
+import io.github.ust.mico.core.exception.MicoServiceDeploymentInformationNotFoundException;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import static io.github.ust.mico.core.model.MicoTopicRole.Role.*;
+
+import static io.github.ust.mico.core.model.MicoTopicRole.Role.INPUT;
+import static io.github.ust.mico.core.model.MicoTopicRole.Role.OUTPUT;
 
 
 @Slf4j
@@ -57,8 +61,36 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
         MicoApplication micoApplication = applicationBroker.getMicoApplicationByShortNameAndVersion(micoApplicationShortName, micoApplicationVersion);
         List<MicoServiceDeploymentInfo> micoServiceDeploymentInfos = micoApplication.getKafkaFaasConnectorDeploymentInfos();
         log.debug("There are {} KafkaFaasConnector deployment information for MicoApplication '{}' in version '{}'.",
-                micoServiceDeploymentInfos.size(), micoApplicationShortName, micoApplicationVersion);
+            micoServiceDeploymentInfos.size(), micoApplicationShortName, micoApplicationVersion);
         return micoApplication.getKafkaFaasConnectorDeploymentInfos();
+    }
+
+    /**
+     * Filters the list of {@link MicoServiceDeploymentInfo} from
+     * {@link KafkaFaasConnectorDeploymentInfoBroker#getKafkaFaasConnectorDeploymentInformation(String, String)}
+     * for a specific {@code instanceId}.
+     *
+     * @param micoApplicationShortName the short name of the {@link MicoApplication}
+     * @param micoApplicationVersion   the version of the {@link MicoApplication}
+     * @param instanceId               the instance ID of the {@link MicoServiceDeploymentInfo}
+     * @return a single {@link MicoServiceDeploymentInfo} with an instance ID equal to the give one.
+     * @throws MicoApplicationNotFoundException if the {@link MicoApplication} does not exist.
+     */
+    public Optional<MicoServiceDeploymentInfo> getKafkaFaasConnectorDeploymentInformation(
+        String micoApplicationShortName, String micoApplicationVersion, String instanceId) throws MicoApplicationNotFoundException {
+        List<MicoServiceDeploymentInfo> micoServiceDeploymentInfos = getKafkaFaasConnectorDeploymentInformation(micoApplicationShortName, micoApplicationVersion);
+        Optional<MicoServiceDeploymentInfo> micoServiceDeploymentInfoOptional = micoServiceDeploymentInfos.stream()
+            .filter(sdi -> sdi.getInstanceId().equals(instanceId))
+            .reduce((a, b) -> {
+                    throw new IllegalStateException("There are multiple KafkaFaasConnectors with the same instance id: " + a + ", " + b);
+                }
+            );
+        if (micoServiceDeploymentInfoOptional.isPresent()) {
+            log.debug("There is a micoServiceDeploymentInfo for MicoApplication '{}' in version '{}' with the instanceId '{}'.", micoApplicationShortName, micoApplicationVersion, instanceId);
+        } else {
+            log.debug("There is no micoServiceDeploymentInfo for MicoApplication '{}' in version '{}' with the instanceId '{}'.", micoApplicationShortName, micoApplicationVersion, instanceId);
+        }
+        return micoServiceDeploymentInfoOptional;
     }
 
 
@@ -72,11 +104,11 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
      * @throws MicoServiceDeploymentInformationNotFoundException if there is no {@code MicoServiceDeploymentInfo} stored in the database
      */
     public MicoServiceDeploymentInfo updateKafkaFaasConnectorDeploymentInformation(String instanceId, KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO)
-            throws MicoServiceDeploymentInformationNotFoundException {
+        throws MicoServiceDeploymentInformationNotFoundException {
 
         Optional<MicoServiceDeploymentInfo> storedServiceDeploymentInfoOptional = deploymentInfoRepository.findByInstanceId(instanceId);
 
-        if(!storedServiceDeploymentInfoOptional.isPresent()) {
+        if (!storedServiceDeploymentInfoOptional.isPresent()) {
             throw new MicoServiceDeploymentInformationNotFoundException(instanceId);
         }
         MicoServiceDeploymentInfo storedServiceDeploymentInfo = storedServiceDeploymentInfoOptional.get();
@@ -94,37 +126,41 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
     }
 
     private void eventuallyUpdateTopics(KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO,
-                                                   MicoServiceDeploymentInfo storedServiceDeploymentInfo) {
+                                        MicoServiceDeploymentInfo storedServiceDeploymentInfo) {
         // update existing topics
         List<MicoTopicRole> topics = storedServiceDeploymentInfo.getTopics();
-        for (MicoTopicRole role: topics) {
+        for (MicoTopicRole role : topics) {
             MicoTopic topic = role.getTopic();
             switch (role.getRole()) {
-                case INPUT: topic.setName(kfConnectorDeploymentInfoRequestDTO.getInputTopicName()); break;
-                case OUTPUT: topic.setName(kfConnectorDeploymentInfoRequestDTO.getOutputTopicName()); break;
-                    case DEAD_LETTER: //TODO
+                case INPUT:
+                    topic.setName(kfConnectorDeploymentInfoRequestDTO.getInputTopicName());
+                    break;
+                case OUTPUT:
+                    topic.setName(kfConnectorDeploymentInfoRequestDTO.getOutputTopicName());
+                    break;
+                case DEAD_LETTER: //TODO
                 case INVALID_MESSAGE: //TODO
                 case TEST_MESSAGE_OUTPUT: //TODO
             }
         }
         // add topics, if they do not exist, yet
         List<MicoTopicRole.Role> storedTopicRoles = storedServiceDeploymentInfo.getTopics().stream().map(
-                topic -> topic.getRole()).collect(Collectors.toList());
+            topic -> topic.getRole()).collect(Collectors.toList());
 
-        for(MicoTopicRole.Role role: MicoTopicRole.Role.values()) {
+        for (MicoTopicRole.Role role : MicoTopicRole.Role.values()) {
             // TODO, currently the the KFConnectorDeploymentInfoRequestDTO only provides INPUT and OUTPUT.
             //  As soon as it also provides DEAD_LETTER, INVALID_MESSAGE and TEST_MESSAGE_OUTPUT this should be
             //  handled here as well
 
-            if(!storedTopicRoles.contains(role) && (role == INPUT | role == OUTPUT)) {
+            if (!storedTopicRoles.contains(role) && (role == INPUT | role == OUTPUT)) {
                 storedServiceDeploymentInfo.getTopics().add(
-                        new MicoTopicRole()
-                                .setRole(role)
-                                .setServiceDeploymentInfo(storedServiceDeploymentInfo)
-                                .setTopic(new MicoTopic().setName(
-                                        (role == INPUT) ? kfConnectorDeploymentInfoRequestDTO.getInputTopicName()
-                                                        : kfConnectorDeploymentInfoRequestDTO.getOutputTopicName()
-                                )));
+                    new MicoTopicRole()
+                        .setRole(role)
+                        .setServiceDeploymentInfo(storedServiceDeploymentInfo)
+                        .setTopic(new MicoTopic().setName(
+                            (role == INPUT) ? kfConnectorDeploymentInfoRequestDTO.getInputTopicName()
+                                : kfConnectorDeploymentInfoRequestDTO.getOutputTopicName()
+                        )));
             }
         }
     }
@@ -132,11 +168,10 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
     private void eventuallyUpdateOpenFaaSFunction(KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO,
                                                   MicoServiceDeploymentInfo storedServiceDeploymentInfo) {
         OpenFaaSFunction openFaaSFunction = storedServiceDeploymentInfo.getOpenFaaSFunction();
-        if(openFaaSFunction == null) {
+        if (openFaaSFunction == null) {
             storedServiceDeploymentInfo.setOpenFaaSFunction(
-                    new OpenFaaSFunction().setName(kfConnectorDeploymentInfoRequestDTO.getOpenFaaSFunctionName()));
-        }
-        else {
+                new OpenFaaSFunction().setName(kfConnectorDeploymentInfoRequestDTO.getOpenFaaSFunctionName()));
+        } else {
             openFaaSFunction.setName(kfConnectorDeploymentInfoRequestDTO.getOpenFaaSFunctionName());
         }
     }
