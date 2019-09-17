@@ -137,9 +137,7 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
         eventuallyUpdateTopics(kfConnectorDeploymentInfoRequestDTO, storedServiceDeploymentInfo);
         eventuallyUpdateOpenFaaSFunction(kfConnectorDeploymentInfoRequestDTO, storedServiceDeploymentInfo);
         MicoServiceDeploymentInfo updatedServiceDeploymentInfo = deploymentInfoRepository.save(storedServiceDeploymentInfo);
-        Iterable<MicoTopic> all = topicRepository.findAll();
         topicRepository.cleanUp();
-        Iterable<MicoTopic> all2 = topicRepository.findAll();
 
         return updatedServiceDeploymentInfo;
     }
