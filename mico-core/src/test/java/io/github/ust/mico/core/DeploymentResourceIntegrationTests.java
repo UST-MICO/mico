@@ -21,9 +21,12 @@ package io.github.ust.mico.core;
 
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.github.ust.mico.core.broker.MicoApplicationBroker;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
+import io.github.ust.mico.core.persistence.MicoTopicRepository;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.EmbeddedRedisServer;
@@ -40,7 +43,11 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import static io.github.ust.mico.core.resource.ApplicationResource.PATH_APPLICATIONS;
 import static org.junit.Assert.assertNotNull;
@@ -59,7 +66,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @ActiveProfiles("dev")
-public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
+public class DeploymentResourceIntegrationTests {
 
     @ClassRule
     public static RuleChain rules = RuleChain.outerRule(EmbeddedRedisServer.runningAt(6379).suppressExceptions());
@@ -75,6 +82,15 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
 
     @Autowired
     private MicoApplicationRepository applicationRepository;
+
+    @Autowired
+    private MicoTopicRepository micoTopicRepository;
+
+    @Autowired
+    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
+
+    @Autowired
+    private MicoApplicationBroker micoApplicationBroker;
 
     @Autowired
     private ImageBuilder imageBuilder;
@@ -101,7 +117,9 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
 
         // Set timeout to 60 seconds.
         micoKubernetesBuildBotConfig.setBuildTimeout(60);
+    }
 
+    private MicoApplication createApplicationWithOneService() {
         application = getTestApplication();
         service = getTestService();
         serviceDeploymentInfo = new MicoServiceDeploymentInfo()
@@ -110,8 +128,7 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
 
         application.getServices().add(service);
         application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
-
-        applicationRepository.save(application);
+        return application;
     }
 
     /**
@@ -124,6 +141,8 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
 
     @Test
     public void deployApplicationWithOneService() throws Exception {
+        createApplicationWithOneService();
+        applicationRepository.save(application);
 
         // Manual initialization is necessary so it will use the provided namespace (see setup method).
         imageBuilder.init();
@@ -135,22 +154,11 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
             .andDo(print())
             .andExpect(status().isAccepted());
 
-        // Wait until all pods (inclusive build pod) are running or succeeded
-        CompletableFuture<Boolean> allPodsInNamespaceAreRunning = integrationTestsUtils.waitUntilAllPodsInNamespaceAreRunning(
-            namespace, 10, 1, 60);
-        assertTrue("Deployment failed!", allPodsInNamespaceAreRunning.get());
-
-        // Wait until the deployment is created
-        CompletableFuture<Deployment> createdDeployment = integrationTestsUtils.waitUntilDeploymentIsCreated(
-            serviceDeploymentInfo, 1, 1, 10);
-        assertNotNull("Kubernetes Deployment was not created!", createdDeployment.get());
-        log.debug("Created Kubernetes Deployment: {}", createdDeployment.get().toString());
+        waitForAllPodsInNamespace();
+        CompletableFuture<Deployment> createdDeployment = waitForDeploymentCreation(serviceDeploymentInfo);
 
         // Wait until the service is created
-        CompletableFuture<Service> createdService = integrationTestsUtils.waitUntilServiceIsCreated(
-            service, 1, 1, 10);
-        assertNotNull("Kubernetes Service was not created!", createdService.get());
-        log.debug("Created Kubernetes Service: {}", createdService.get().toString());
+        CompletableFuture<Service> createdService = waitForServiceCreation();
 
         // Assert deployment
         assertNotNull("Expected deployment does not exist", createdDeployment.get());
@@ -160,6 +168,96 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
         log.info("ClusterIP: {}", createdService.get().getSpec().getClusterIP());
         log.info("LoadBalancerIP: {}", createdService.get().getSpec().getLoadBalancerIP());
         log.info("ExternalIPs: {}", createdService.get().getSpec().getExternalIPs());
+    }
+
+    private CompletableFuture<Service> waitForServiceCreation() throws InterruptedException, ExecutionException, TimeoutException {
+        CompletableFuture<Service> createdService = integrationTestsUtils.waitUntilServiceIsCreated(
+            service, 1, 1, 10);
+        assertNotNull("Kubernetes Service was not created!", createdService.get());
+        log.debug("Created Kubernetes Service: {}", createdService.get().toString());
+        return createdService;
+    }
+
+    private CompletableFuture<Deployment> waitForDeploymentCreation(MicoServiceDeploymentInfo micoServiceDeploymentInfo) throws InterruptedException, ExecutionException, TimeoutException {
+        // Wait until the deployment is created
+        CompletableFuture<Deployment> createdDeployment = integrationTestsUtils.waitUntilDeploymentIsCreated(
+            micoServiceDeploymentInfo, 1, 1, 10);
+        assertNotNull("Kubernetes Deployment was not created!", createdDeployment.get());
+        log.debug("Created Kubernetes Deployment: {}", createdDeployment.get().toString());
+        return createdDeployment;
+    }
+
+    /**
+     * Wait until all pods (inclusive build pod) are running or succeeded
+     *
+     * @throws InterruptedException
+     * @throws ExecutionException
+     * @throws TimeoutException
+     */
+    private void waitForAllPodsInNamespace() throws InterruptedException, ExecutionException, TimeoutException {
+        CompletableFuture<Boolean> allPodsInNamespaceAreRunning = integrationTestsUtils.waitUntilAllPodsInNamespaceAreRunning(
+            namespace, 10, 1, 60);
+        assertTrue("Deployment failed!", allPodsInNamespaceAreRunning.get());
+    }
+
+    /**
+     * Not finished
+     *
+     * @throws Exception
+     */
+    @Test
+    @Ignore
+    public void deployApplicationWithMultipleKafkaFaasConnectorInstances() throws Exception {
+        createApplicationWithOneService();
+        applicationRepository.save(application);
+        MicoTopic micoInputTopic = new MicoTopic().setName("TestInputTopic");
+        micoInputTopic.setId(micoTopicRepository.save(micoInputTopic).getId());
+
+        MicoTopic micoOutputTopic = new MicoTopic().setName("TestOutputTopic");
+        micoOutputTopic.setId(micoTopicRepository.save(micoOutputTopic).getId());
+
+
+        MicoServiceDeploymentInfo kafkaFaasConnectorMicoServiceDeploymentInfo1 = micoApplicationBroker.addKafkaFaasConnectorInstanceToMicoApplicationByVersion(application.getShortName(), application.getVersion(), "v1.0.1");
+        MicoServiceDeploymentInfo kafkaFaasConnectorMicoServiceDeploymentInfo2 = micoApplicationBroker.addKafkaFaasConnectorInstanceToMicoApplicationByVersion(application.getShortName(), application.getVersion(), "v1.0.1");
+
+        MicoTopicRole micoTopicInputRole = new MicoTopicRole().setServiceDeploymentInfo(kafkaFaasConnectorMicoServiceDeploymentInfo1).setTopic(micoInputTopic).setRole(MicoTopicRole.Role.INPUT);
+        MicoTopicRole micoTopicOutputRole = new MicoTopicRole().setServiceDeploymentInfo(kafkaFaasConnectorMicoServiceDeploymentInfo1).setTopic(micoOutputTopic).setRole(MicoTopicRole.Role.OUTPUT);
+
+        MicoTopicRole micoTopicInputRole2 = new MicoTopicRole().setServiceDeploymentInfo(kafkaFaasConnectorMicoServiceDeploymentInfo2).setTopic(micoInputTopic).setRole(MicoTopicRole.Role.INPUT);
+        MicoTopicRole micoTopicOutputRole2 = new MicoTopicRole().setServiceDeploymentInfo(kafkaFaasConnectorMicoServiceDeploymentInfo2).setTopic(micoOutputTopic).setRole(MicoTopicRole.Role.OUTPUT);
+
+        List<MicoTopicRole> micoTopicRoles1 = new LinkedList<>();
+        micoTopicRoles1.add(micoTopicInputRole);
+        micoTopicRoles1.add(micoTopicOutputRole);
+
+        List<MicoTopicRole> micoTopicRoles2 = new LinkedList<>();
+        micoTopicRoles2.add(micoTopicInputRole2);
+        micoTopicRoles2.add(micoTopicOutputRole2);
+
+
+        kafkaFaasConnectorMicoServiceDeploymentInfo1.setTopics(micoTopicRoles1);
+        kafkaFaasConnectorMicoServiceDeploymentInfo2.setTopics(micoTopicRoles2);
+
+
+        serviceDeploymentInfoRepository.save(kafkaFaasConnectorMicoServiceDeploymentInfo1);
+        serviceDeploymentInfoRepository.save(kafkaFaasConnectorMicoServiceDeploymentInfo2);
+
+        imageBuilder.init();
+
+        String applicationShortName = application.getShortName();
+        String applicationVersion = application.getVersion();
+
+        mvc.perform(post(PATH_APPLICATIONS + "/" + applicationShortName + "/" + applicationVersion + "/deploy"))
+            .andDo(print())
+            .andExpect(status().isAccepted());
+
+        waitForAllPodsInNamespace();
+        CompletableFuture<Deployment> createdDeployment1 = waitForDeploymentCreation(kafkaFaasConnectorMicoServiceDeploymentInfo1);
+        CompletableFuture<Deployment> createdDeployment2 = waitForDeploymentCreation(kafkaFaasConnectorMicoServiceDeploymentInfo2);
+        CompletableFuture<Service> createdService = waitForServiceCreation();
+
+        //assertThat(createdDeployment.get().getMetadata().getName(), isTrue());
+
     }
 
     private MicoApplication getTestApplication() {
