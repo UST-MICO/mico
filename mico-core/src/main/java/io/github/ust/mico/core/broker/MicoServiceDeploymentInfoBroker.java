@@ -214,7 +214,7 @@ public class MicoServiceDeploymentInfoBroker {
                 serviceDeploymentInfoDTO.getTopics().stream().map(t -> MicoTopicRole.valueOf(t, updatedServiceDeploymentInfoWithoutTopics)).collect(Collectors.toList()));
 
             // Check if topics with the same names already exist, if so reuse them.
-            MicoServiceDeploymentInfo sdiWithReusedTopics = createOrReuseTopics(sdiWithTopics);
+            MicoServiceDeploymentInfo sdiWithReusedTopics = createOrReuseTopicsInDatabase(sdiWithTopics);
             finalUpdatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(sdiWithReusedTopics);
         }
 
@@ -250,13 +250,13 @@ public class MicoServiceDeploymentInfoBroker {
     }
 
     /**
-     * Checks if topics with the same name already exists.
+     * Checks if topics with the same name already exists in the database.
      * If so reuse them by setting the id of the existing Neo4j node and save them.
      * If not create them in the database.
      *
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo} containing topics
      */
-    private MicoServiceDeploymentInfo createOrReuseTopics(MicoServiceDeploymentInfo serviceDeploymentInfo) {
+    MicoServiceDeploymentInfo createOrReuseTopicsInDatabase(MicoServiceDeploymentInfo serviceDeploymentInfo) {
         List<MicoTopicRole> topicRoles = serviceDeploymentInfo.getTopics();
 
         for (MicoTopicRole topicRole : topicRoles) {
@@ -271,7 +271,6 @@ public class MicoServiceDeploymentInfoBroker {
         }
         return serviceDeploymentInfo;
     }
-
 
     /**
      * Sets the default environment variables for Kafka-enabled MicoServices. See {@link MicoEnvironmentVariable.DefaultNames}

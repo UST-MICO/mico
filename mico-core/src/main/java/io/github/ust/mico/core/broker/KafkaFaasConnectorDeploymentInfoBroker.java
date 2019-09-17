@@ -24,6 +24,7 @@ import io.github.ust.mico.core.exception.KafkaFaasConnectorInstanceNotFoundExcep
 import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
+import io.github.ust.mico.core.persistence.MicoTopicRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -45,6 +46,12 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
 
     @Autowired
     private MicoServiceDeploymentInfoRepository deploymentInfoRepository;
+
+    @Autowired
+    private MicoServiceDeploymentInfoBroker serviceDeploymentInfoBroker;
+
+    @Autowired
+    private MicoTopicRepository topicRepository;
 
     /**
      * Fetches a list of {@link MicoServiceDeploymentInfo MicoServiceDeploymentInfos} of all KafkaFaasConnector instances
@@ -129,27 +136,42 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
 
         eventuallyUpdateTopics(kfConnectorDeploymentInfoRequestDTO, storedServiceDeploymentInfo);
         eventuallyUpdateOpenFaaSFunction(kfConnectorDeploymentInfoRequestDTO, storedServiceDeploymentInfo);
-        return deploymentInfoRepository.save(storedServiceDeploymentInfo);
+        MicoServiceDeploymentInfo updatedServiceDeploymentInfo = deploymentInfoRepository.save(storedServiceDeploymentInfo);
+        topicRepository.cleanUp();
+        return updatedServiceDeploymentInfo;
     }
 
+    /**
+     * Stores or updates the input and output topics in the database
+     * based on the values of a {@link KFConnectorDeploymentInfoRequestDTO}.
+     *
+     * @param kfConnectorDeploymentInfoRequestDTO the {@link KFConnectorDeploymentInfoRequestDTO} that includes the topics
+     * @param storedServiceDeploymentInfo         the {@link MicoServiceDeploymentInfo} that is already stored in the database
+     */
     private void eventuallyUpdateTopics(KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO,
                                         MicoServiceDeploymentInfo storedServiceDeploymentInfo) {
         // update existing topics
         List<MicoTopicRole> topics = storedServiceDeploymentInfo.getTopics();
         for (MicoTopicRole role : topics) {
             MicoTopic topic = role.getTopic();
+            // Set the name depending on the role.
+            // The Neo4j ID will be reseted, so that the existing topic that could be already in use by other deployments
+            // is not affected by this change.
             switch (role.getRole()) {
                 case INPUT:
                     topic.setName(kfConnectorDeploymentInfoRequestDTO.getInputTopicName());
+                    topic.setId(null);
                     break;
                 case OUTPUT:
                     topic.setName(kfConnectorDeploymentInfoRequestDTO.getOutputTopicName());
+                    topic.setId(null);
                     break;
-                case DEAD_LETTER: //TODO
-                case INVALID_MESSAGE: //TODO
-                case TEST_MESSAGE_OUTPUT: //TODO
+                case DEAD_LETTER:
+                case INVALID_MESSAGE:
+                case TEST_MESSAGE_OUTPUT:
             }
         }
+
         // add topics, if they do not exist, yet
         List<MicoTopicRole.Role> storedTopicRoles = storedServiceDeploymentInfo.getTopics().stream().map(
             MicoTopicRole::getRole).collect(Collectors.toList());
@@ -170,8 +192,16 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
                         )));
             }
         }
+        serviceDeploymentInfoBroker.createOrReuseTopicsInDatabase(storedServiceDeploymentInfo);
     }
 
+    /**
+     * Stores or updates the OpenFaaS function name in the database
+     * based on the value of a {@link KFConnectorDeploymentInfoRequestDTO}.
+     *
+     * @param kfConnectorDeploymentInfoRequestDTO the {@link KFConnectorDeploymentInfoRequestDTO} that includes the topics
+     * @param storedServiceDeploymentInfo         the {@link MicoServiceDeploymentInfo} that is already stored in the database
+     */
     private void eventuallyUpdateOpenFaaSFunction(KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO,
                                                   MicoServiceDeploymentInfo storedServiceDeploymentInfo) {
         OpenFaaSFunction openFaaSFunction = storedServiceDeploymentInfo.getOpenFaaSFunction();
