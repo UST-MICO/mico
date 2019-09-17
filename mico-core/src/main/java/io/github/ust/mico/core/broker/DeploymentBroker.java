@@ -191,9 +191,10 @@ public class DeploymentBroker {
             if (!micoService.isKafkaEnabled() &&
                 (micoService.getServiceInterfaces() == null || micoService.getServiceInterfaces().isEmpty())) {
                 throw new MicoServiceInterfaceNotFoundException(micoService.getShortName(), micoService.getVersion());
-            } else if (micoService.isKafkaEnabled()) {
-                checkIfKafkaEnabledServiceIsDeployable(micoApplication.getServiceDeploymentInfos().stream()
-                    .filter(micoServiceDeploymentInfo -> micoServiceDeploymentInfo.getService().getShortName().equals(micoService.getShortName())).findFirst().get());
+            } else if (micoService.isKafkaEnabled() &&
+                !checkIfKafkaEnabledServiceIsDeployable(micoApplication.getServiceDeploymentInfos().stream()
+                    .filter(micoServiceDeploymentInfo -> micoServiceDeploymentInfo.getService().getShortName().equals(micoService.getShortName())).findFirst().get())) {
+                throw new DeploymentException("The topics of the kafka enabled service " + micoService.getShortName() + " are not set correctly");
             }
             if (!micoService.getDependencies().isEmpty()) {
                 // TODO: Check if dependencies are valid. Covered by mico#583
