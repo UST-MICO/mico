@@ -191,6 +191,9 @@ public class DeploymentBroker {
             if (!micoService.isKafkaEnabled() &&
                 (micoService.getServiceInterfaces() == null || micoService.getServiceInterfaces().isEmpty())) {
                 throw new MicoServiceInterfaceNotFoundException(micoService.getShortName(), micoService.getVersion());
+            } else {
+                checkIfKafkaEnabledServiceIsDeployable(micoApplication.getServiceDeploymentInfos().stream()
+                    .filter(micoServiceDeploymentInfo -> micoServiceDeploymentInfo.getService().getShortName().equals(micoService.getShortName())).findFirst().get());
             }
             if (!micoService.getDependencies().isEmpty()) {
                 // TODO: Check if dependencies are valid. Covered by mico#583
@@ -198,6 +201,26 @@ public class DeploymentBroker {
                     "See https://github.com/UST-MICO/mico/issues/583");
             }
         }
+    }
+
+
+    private boolean checkIfKafkaEnabledServiceIsDeployable(MicoServiceDeploymentInfo micoServiceDeploymentInfo) {
+        MicoEnvironmentVariable inputTopic = findFirstEnvironmentVariable(micoServiceDeploymentInfo.getEnvironmentVariables(), MicoEnvironmentVariable.DefaultNames.KAFKA_TOPIC_INPUT.name());
+        MicoEnvironmentVariable outputTopic = findFirstEnvironmentVariable(micoServiceDeploymentInfo.getEnvironmentVariables(), MicoEnvironmentVariable.DefaultNames.KAFKA_TOPIC_OUTPUT.name());
+        MicoEnvironmentVariable openfaasFunctionName = findFirstEnvironmentVariable(micoServiceDeploymentInfo.getEnvironmentVariables(), MicoEnvironmentVariable.DefaultNames.OPENFAAS_FUNCTION_NAME.name());
+        if (inputTopic.getValue() == null) {
+            return false;
+        }
+        if (outputTopic.getValue() == null) {
+            if (openfaasFunctionName.getValue() == null) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private MicoEnvironmentVariable findFirstEnvironmentVariable(List<MicoEnvironmentVariable> micoEnvironmentVariables, String name) {
+        return micoEnvironmentVariables.stream().filter(micoEnvironmentVariable -> micoEnvironmentVariable.getName().equals(name)).findFirst().get();
     }
 
     private MicoServiceDeploymentInfo buildMicoService(MicoServiceDeploymentInfo serviceDeploymentInfo) {
