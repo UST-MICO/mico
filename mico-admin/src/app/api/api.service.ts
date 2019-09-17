@@ -412,27 +412,39 @@ export class ApiService {
      *
      * @param applicationShortName the applications shortName
      * @param applicationVersion the applications version
-     * @param connectorVersion the kafka faas connector version
+     * @param connectorVersion the kafka faas connector version if omitted latest version is used
      * @param instanceId the kafka faas connector instance id if present this updates a specific
      *          instance to this version instead of adding a new instance
      */
-    postApplicationKafkaFaasConnector(applicationShortName: string, applicationVersion: string, connectorVersion: string, instanceId?: string) {
+    postApplicationKafkaFaasConnector(applicationShortName: string, applicationVersion: string, connectorVersion?: string, instanceId?: string) {
 
-        let resource = 'applications/' + applicationShortName + '/' + applicationVersion +
-            '/kafka-faas-connector/';
+        const baseResource = 'applications/' + applicationShortName + '/' + applicationVersion +
+            '/kafka-faas-connector';
+
+        let resource = baseResource;
 
         if (instanceId != null && instanceId !== '') {
             resource += '/' + instanceId;
         }
 
-        resource += '?version=' + connectorVersion;
+        if (connectorVersion != null && connectorVersion !== '') {
+            resource += '?version=' + connectorVersion;
+        }
 
-        return this.rest.post<ApiObject>(resource, null).pipe(map(val => {
+        return this.rest.post<ApiObject>(resource, null).pipe(flatMap(val => {
 
             this.getApplicationVersions(applicationShortName);
             this.getApplication(applicationShortName, applicationVersion);
 
-            return true;
+            const streamResource = baseResource + '/' + val.instanceId;
+
+            const stream = this.getStreamSource<ApiObject>(streamResource);
+
+            stream.next(val);
+
+            return stream.asObservable().pipe(
+                filter(val => val !== undefined)
+            );
         }));
     }
 
