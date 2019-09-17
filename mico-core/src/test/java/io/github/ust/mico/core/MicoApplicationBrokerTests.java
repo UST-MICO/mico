@@ -120,13 +120,14 @@ public class MicoApplicationBrokerTests {
 
 
     @Test
-    public void getAllServicesFromApplication() {
+    public void getAllServicesFromApplication() throws MicoApplicationNotFoundException {
         MicoApplication micoApplication = new MicoApplication()
             .setShortName(SHORT_NAME_1)
             .setVersion(VERSION_1_0_1)
             .setName(NAME_1)
             .setDescription(DESCRIPTION_1);
 
-        List<MicoApplication> listOfMicoApplications = micoApplicationBroker.getMicoServicesOfMicoApplicationByShortNameAndVersion();
+        List<MicoService> listOfMicoServices = micoApplicationBroker.getMicoServicesOfMicoApplicationByShortNameAndVersion(SHORT_NAME_1, VERSION_1_0_1);
+        
     }
 }
