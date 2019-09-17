@@ -191,7 +191,7 @@ public class DeploymentBroker {
             if (!micoService.isKafkaEnabled() &&
                 (micoService.getServiceInterfaces() == null || micoService.getServiceInterfaces().isEmpty())) {
                 throw new MicoServiceInterfaceNotFoundException(micoService.getShortName(), micoService.getVersion());
-            } else {
+            } else if (micoService.isKafkaEnabled()) {
                 checkIfKafkaEnabledServiceIsDeployable(micoApplication.getServiceDeploymentInfos().stream()
                     .filter(micoServiceDeploymentInfo -> micoServiceDeploymentInfo.getService().getShortName().equals(micoService.getShortName())).findFirst().get());
             }
@@ -208,19 +208,19 @@ public class DeploymentBroker {
         MicoEnvironmentVariable inputTopic = findFirstEnvironmentVariable(micoServiceDeploymentInfo.getEnvironmentVariables(), MicoEnvironmentVariable.DefaultNames.KAFKA_TOPIC_INPUT.name());
         MicoEnvironmentVariable outputTopic = findFirstEnvironmentVariable(micoServiceDeploymentInfo.getEnvironmentVariables(), MicoEnvironmentVariable.DefaultNames.KAFKA_TOPIC_OUTPUT.name());
         MicoEnvironmentVariable openfaasFunctionName = findFirstEnvironmentVariable(micoServiceDeploymentInfo.getEnvironmentVariables(), MicoEnvironmentVariable.DefaultNames.OPENFAAS_FUNCTION_NAME.name());
-        if (inputTopic.getValue() == null) {
+        if (inputTopic == null || inputTopic.getValue() == null) {
             return false;
         }
-        if (outputTopic.getValue() == null) {
-            if (openfaasFunctionName.getValue() == null) {
-                return false;
-            }
+        if (outputTopic == null || outputTopic.getValue() == null) {
+            return openfaasFunctionName.getValue() != null;
         }
         return true;
     }
 
     private MicoEnvironmentVariable findFirstEnvironmentVariable(List<MicoEnvironmentVariable> micoEnvironmentVariables, String name) {
-        return micoEnvironmentVariables.stream().filter(micoEnvironmentVariable -> micoEnvironmentVariable.getName().equals(name)).findFirst().get();
+        log.debug(name);
+        Optional<MicoEnvironmentVariable> optionalMicoEnvironmentVariable = micoEnvironmentVariables.stream().filter(micoEnvironmentVariable -> micoEnvironmentVariable.getName().equals(name)).findFirst();
+        return optionalMicoEnvironmentVariable.orElse(null);
     }
 
     private MicoServiceDeploymentInfo buildMicoService(MicoServiceDeploymentInfo serviceDeploymentInfo) {
