@@ -30,12 +30,26 @@ public class Patterns {
     public static final String NOT_EMPTY_REGEX = ".*\\S.*";
 
     /**
-     * Kubernetes resource names must be a valid DNS-1123 subdomain.
-     * The original regex is: [a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*
-     * We use a slightly different regex for the validation. We don't allow ot start with a digit (must be a letter).
-     * Furthermore we don't allow to use dots.
+     * (DNS_LABEL): An alphanumeric (a-z, and 0-9) string, with a maximum length of 63 characters, with the '-'
+     * character allowed anywhere except the first or last character, suitable for use as a hostname or segment in a domain name.
      */
-    public static final String KUBERNETES_NAMING_REGEX = "^[a-z]([-a-z0-9]*[a-z0-9])?$";
+    private static final String DNS_SUBDOMAIN_REGEX = "^[a-z]([-a-z0-9]*[a-z0-9])?$";
+
+    /**
+     * OpenFaaS function names must be a valid DNS-1123 subdomain.
+     */
+    public static final String OPEN_FAAS_FUNCTION_NAME_REGEX = DNS_SUBDOMAIN_REGEX;
+
+    /**
+     * Message is used if a match with the {@link Patterns#OPEN_FAAS_FUNCTION_NAME_REGEX} fails.
+     */
+    public static final String OPEN_FAAS_FUNCTION_NAME_MESSAGE = "must be a valid OpenFaaS function name: " +
+        "Consist of lower case alphanumeric characters and '-', and must start with a letter";
+
+    /**
+     * Kubernetes resource names must be a valid DNS-1123 subdomain.
+     */
+    public static final String KUBERNETES_NAMING_REGEX = DNS_SUBDOMAIN_REGEX;
 
     /**
      * Message is used if a match with the {@link Patterns#KUBERNETES_NAMING_REGEX} fails.
