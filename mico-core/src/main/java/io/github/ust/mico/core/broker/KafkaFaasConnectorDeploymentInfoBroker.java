@@ -20,8 +20,8 @@
 package io.github.ust.mico.core.broker;
 
 import io.github.ust.mico.core.dto.request.KFConnectorDeploymentInfoRequestDTO;
+import io.github.ust.mico.core.exception.KafkaFaasConnectorInstanceNotFoundException;
 import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
-import io.github.ust.mico.core.exception.MicoServiceDeploymentInformationNotFoundException;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -101,18 +101,19 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
      * @param instanceId                          the instance ID of the {@link MicoServiceDeploymentInfo}
      * @param kfConnectorDeploymentInfoRequestDTO the {@link KFConnectorDeploymentInfoRequestDTO}
      * @return the new {@link MicoServiceDeploymentInfo} stored in the database
-     * @throws MicoServiceDeploymentInformationNotFoundException if there is no {@code MicoServiceDeploymentInfo} stored in the database
+     * @throws KafkaFaasConnectorInstanceNotFoundException if there is no {@code MicoServiceDeploymentInfo} for the requested {@code instanceId} stored in the database
      */
     public MicoServiceDeploymentInfo updateKafkaFaasConnectorDeploymentInformation(String instanceId, KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO)
-        throws MicoServiceDeploymentInformationNotFoundException {
+        throws KafkaFaasConnectorInstanceNotFoundException {
 
         Optional<MicoServiceDeploymentInfo> storedServiceDeploymentInfoOptional = deploymentInfoRepository.findByInstanceId(instanceId);
 
         if (!storedServiceDeploymentInfoOptional.isPresent()) {
-            throw new MicoServiceDeploymentInformationNotFoundException(instanceId);
+            throw new KafkaFaasConnectorInstanceNotFoundException(instanceId);
         }
         MicoServiceDeploymentInfo storedServiceDeploymentInfo = storedServiceDeploymentInfoOptional.get();
-        // TODO Deployed services should also be updated.
+        // Updates the deployment information in the database.
+        // The new values will be applied to the deployed services as soon as a new deployment is triggered.
         return saveValuesToDatabase(kfConnectorDeploymentInfoRequestDTO, storedServiceDeploymentInfo);
     }
 

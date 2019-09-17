@@ -22,8 +22,8 @@ package io.github.ust.mico.core.resource;
 import io.github.ust.mico.core.broker.KafkaFaasConnectorDeploymentInfoBroker;
 import io.github.ust.mico.core.dto.request.KFConnectorDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.dto.response.KFConnectorDeploymentInfoResponseDTO;
+import io.github.ust.mico.core.exception.KafkaFaasConnectorInstanceNotFoundException;
 import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
-import io.github.ust.mico.core.exception.MicoServiceDeploymentInformationNotFoundException;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
@@ -93,7 +93,7 @@ public class KafkaFaasConnectorDeploymentInfoResource {
         try {
             updatedServiceDeploymentInfo = kafkaFaasConnectorDeploymentInfoBroker.updateKafkaFaasConnectorDeploymentInformation(
                 instanceID, kfConnectorDeploymentInfoRequestDTO);
-        } catch (MicoServiceDeploymentInformationNotFoundException e) {
+        } catch (KafkaFaasConnectorInstanceNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
         // Convert to service deployment info DTO and return it

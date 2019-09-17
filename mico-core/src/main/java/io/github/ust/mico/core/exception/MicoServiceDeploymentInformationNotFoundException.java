@@ -4,10 +4,6 @@ public class MicoServiceDeploymentInformationNotFoundException extends Exception
 
     private static final long serialVersionUID = -3445327578348019034L;
 
-    public MicoServiceDeploymentInformationNotFoundException(String instanceId) {
-        super("Service deployment information for service '" + instanceId + "' could not be found.");
-    }
-
     public MicoServiceDeploymentInformationNotFoundException(String applicationShortName, String applicationVersion, String serviceShortName) {
         super("Service deployment information for service '" + serviceShortName + "' in application '" + applicationShortName + "' '" + applicationVersion + "' could not be found.");
     }
