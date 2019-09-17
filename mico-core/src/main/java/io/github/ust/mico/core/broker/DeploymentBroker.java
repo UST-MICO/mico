@@ -219,7 +219,6 @@ public class DeploymentBroker {
     }
 
     private MicoEnvironmentVariable findFirstEnvironmentVariable(List<MicoEnvironmentVariable> micoEnvironmentVariables, String name) {
-        log.debug(name);
         Optional<MicoEnvironmentVariable> optionalMicoEnvironmentVariable = micoEnvironmentVariables.stream().filter(micoEnvironmentVariable -> micoEnvironmentVariable.getName().equals(name)).findFirst();
         return optionalMicoEnvironmentVariable.orElse(null);
     }
