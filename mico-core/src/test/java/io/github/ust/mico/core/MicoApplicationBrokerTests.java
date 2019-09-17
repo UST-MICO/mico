@@ -3,6 +3,7 @@ package io.github.ust.mico.core;
 import io.github.ust.mico.core.broker.MicoApplicationBroker;
 import io.github.ust.mico.core.exception.*;
 import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.util.CollectionUtils;
 import org.junit.Test;
@@ -96,7 +97,36 @@ public class MicoApplicationBrokerTests {
             .willReturn(Optional.of(micoApplication));
 
         micoApplicationBroker.deleteMicoApplicationByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion());
+    }
+
+    @Test
+    public void addMicoServiceToMicoApplication() {
+        MicoApplication micoApplication = new MicoApplication()
+            .setShortName(SHORT_NAME_1)
+            .setVersion(VERSION_1_0_1)
+            .setName(NAME_1)
+            .setDescription(DESCRIPTION_1);
+
+        MicoService micoService = new MicoService()
+            .setShortName(SHORT_NAME_2)
+            .setVersion(VERSION_1_0_2)
+            .setDescription(DESCRIPTION_2);
+
+        given(micoApplicationRepository.findByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion()))
+            .willReturn(Optional.of(micoApplication));
+
 
     }
 
 
+    @Test
+    public void getAllServicesFromApplication() {
+        MicoApplication micoApplication = new MicoApplication()
+            .setShortName(SHORT_NAME_1)
+            .setVersion(VERSION_1_0_1)
+            .setName(NAME_1)
+            .setDescription(DESCRIPTION_1);
+
+        List<MicoApplication> listOfMicoApplications = micoApplicationBroker.getMicoServicesOfMicoApplicationByShortNameAndVersion();
+    }
+}
