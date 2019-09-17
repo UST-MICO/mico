@@ -54,6 +54,9 @@ public class MicoServiceDeploymentInfoBroker {
     private MicoTopicRepository micoTopicRepository;
 
     @Autowired
+    private OpenFaaSFunctionRepository openFaaSFunctionRepository;
+
+    @Autowired
     private MicoEnvironmentVariableRepository micoEnvironmentVariableRepository;
 
     @Autowired
@@ -206,6 +209,7 @@ public class MicoServiceDeploymentInfoBroker {
         final MicoServiceDeploymentInfo updatedServiceDeploymentInfoWithoutTopics = serviceDeploymentInfoRepository.save(sdiWithAppliedValues);
 
         final MicoServiceDeploymentInfo finalUpdatedServiceDeploymentInfo;
+
         if (serviceDeploymentInfoDTO.getTopics().isEmpty()) {
             finalUpdatedServiceDeploymentInfo = updatedServiceDeploymentInfoWithoutTopics;
         } else {
@@ -227,6 +231,7 @@ public class MicoServiceDeploymentInfoBroker {
         micoEnvironmentVariableRepository.cleanUp();
         kubernetesDeploymentInfoRepository.cleanUp();
         micoInterfaceConnectionRepository.cleanUp();
+        openFaaSFunctionRepository.cleanUp();
 
         return finalUpdatedServiceDeploymentInfo;
     }
@@ -268,6 +273,19 @@ public class MicoServiceDeploymentInfoBroker {
                 MicoTopic savedTopic = micoTopicRepository.save(topicRole.getTopic());
                 topicRole.setTopic(savedTopic);
             }
+        }
+        return serviceDeploymentInfo;
+    }
+
+    MicoServiceDeploymentInfo createOrReuseOpenFaaSFunctionsInDatabase(MicoServiceDeploymentInfo serviceDeploymentInfo) {
+        OpenFaaSFunction openFaaSFunction = serviceDeploymentInfo.getOpenFaaSFunction();
+        Optional<OpenFaaSFunction> existingOpenFaaSFunction = openFaaSFunctionRepository.findByName(openFaaSFunction.getName());
+        if (existingOpenFaaSFunction.isPresent()) {
+            serviceDeploymentInfo.setOpenFaaSFunction(existingOpenFaaSFunction.get());
+        }
+        else {
+            OpenFaaSFunction savedOpenFaaSFunction = openFaaSFunctionRepository.save(openFaaSFunction);
+            serviceDeploymentInfo.setOpenFaaSFunction(savedOpenFaaSFunction);
         }
         return serviceDeploymentInfo;
     }

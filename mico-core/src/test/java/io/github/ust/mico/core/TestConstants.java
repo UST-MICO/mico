@@ -35,6 +35,7 @@ class TestConstants {
     static final Long ID_1 = 1001L;
     static final Long ID_2 = 1002L;
     static final Long ID_3 = 1003L;
+    static final Long ID_4 = 1004L;
 
     static final String VERSION = MicoVersion.forIntegers(1, 0, 0).toString();
     static final String VERSION_1_0_1 = MicoVersion.forIntegers(1, 0, 1).toString();

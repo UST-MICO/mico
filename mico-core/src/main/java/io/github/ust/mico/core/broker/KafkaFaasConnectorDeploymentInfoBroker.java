@@ -137,7 +137,10 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
         eventuallyUpdateTopics(kfConnectorDeploymentInfoRequestDTO, storedServiceDeploymentInfo);
         eventuallyUpdateOpenFaaSFunction(kfConnectorDeploymentInfoRequestDTO, storedServiceDeploymentInfo);
         MicoServiceDeploymentInfo updatedServiceDeploymentInfo = deploymentInfoRepository.save(storedServiceDeploymentInfo);
+        Iterable<MicoTopic> all = topicRepository.findAll();
         topicRepository.cleanUp();
+        Iterable<MicoTopic> all2 = topicRepository.findAll();
+
         return updatedServiceDeploymentInfo;
     }
 
@@ -155,7 +158,7 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
         for (MicoTopicRole role : topics) {
             MicoTopic topic = role.getTopic();
             // Set the name depending on the role.
-            // The Neo4j ID will be reseted, so that the existing topic that could be already in use by other deployments
+            // The Neo4j ID will be reset, so that the existing topic that could be already in use by other deployments
             // is not affected by this change.
             switch (role.getRole()) {
                 case INPUT:
@@ -210,6 +213,10 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
                 new OpenFaaSFunction().setName(kfConnectorDeploymentInfoRequestDTO.getOpenFaaSFunctionName()));
         } else {
             openFaaSFunction.setName(kfConnectorDeploymentInfoRequestDTO.getOpenFaaSFunctionName());
+            openFaaSFunction.setId(null);
         }
+
+        serviceDeploymentInfoBroker.createOrReuseOpenFaaSFunctionsInDatabase(storedServiceDeploymentInfo);
+
     }
 }

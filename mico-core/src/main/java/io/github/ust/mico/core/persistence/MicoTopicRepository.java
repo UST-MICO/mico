@@ -23,6 +23,7 @@ import io.github.ust.mico.core.model.MicoTopic;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface MicoTopicRepository extends Neo4jRepository<MicoTopic, Long> {
@@ -33,4 +34,5 @@ public interface MicoTopicRepository extends Neo4jRepository<MicoTopic, Long> {
     void cleanUp();
 
     Optional<MicoTopic> findByName(String name);
+    List<MicoTopic> findAllByName(String name);
 }
