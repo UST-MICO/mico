@@ -34,6 +34,7 @@ import { GraphAddEnvironmentVariableComponent } from 'src/app/dialogs/graph-add-
 import { GraphAddKafkaTopicComponent } from 'src/app/dialogs/graph-add-kafka-topic/graph-add-kafka-topic.component';
 import { Router } from '@angular/router';
 import { ServicePickerComponent } from 'src/app/dialogs/service-picker/service-picker.component';
+import { GraphUpdateFaasFunctionComponent } from 'src/app/dialogs/graph-update-faas-function/graph-update-faas-function.component';
 
 
 const ROOT_NODE_ID = 'APPLICATION';
@@ -212,11 +213,11 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             return;
         }
         if (event.detail.key === 'version') {  // user clicked on service version
+            event.preventDefault();
             if (event.detail.node.type !== 'service') {
                 // TODO show version change dialog and handle version change for 'kafka-faas-connector'
                 return;
             }
-            event.preventDefault();
 
             const dialogRef = this.dialog.open(ChangeServiceVersionComponent, {
                 data: {
@@ -233,12 +234,34 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             return;
         }
         if (event.detail.key === 'title') {
-            if (event.detail.node.type === 'service') {
-                this.router.navigate(['service-detail', event.detail.node.shortName, event.detail.node.version]);
-            }
-            if (event.detail.node.type === 'kafka-faas-connector') {
-                // TODO show dialog to change faas function
-            }
+            event.preventDefault();
+            this.router.navigate(['service-detail', event.detail.node.shortName, event.detail.node.version]);
+        }
+        if (event.detail.key === 'faas-function') {
+            event.preventDefault();
+
+            const dialogRef = this.dialog.open(GraphUpdateFaasFunctionComponent, {
+                data: {
+                    kfConnectorInfo: event.detail.node.data,
+                }
+            });
+
+            const subTopicDialog = dialogRef.afterClosed().subscribe(result => {
+                safeUnsubscribe(subTopicDialog);
+
+                if (result === '') {
+                    return;
+                }
+
+                const depl = event.detail.node.data;
+                // deepcopy since depl is readonly
+                const deplCopy = JSON.parse(JSON.stringify(depl));
+                deplCopy.openFaaSFunctionName = result.openFaaSFunctionName;
+                console.log(deplCopy);
+                const putSub = this.api.putApplicationKafkaFaasConnector(this.application.shortName, this.application.version, depl.instanceId, deplCopy).subscribe(() => {
+                    safeUnsubscribe(putSub);
+                });
+            });
         }
     }
 
