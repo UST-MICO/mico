@@ -3,19 +3,17 @@ package io.github.ust.mico.core;
 import io.github.ust.mico.core.broker.MicoApplicationBroker;
 import io.github.ust.mico.core.broker.MicoServiceBroker;
 import io.github.ust.mico.core.broker.MicoServiceDeploymentInfoBroker;
+import io.github.ust.mico.core.configuration.KafkaFaasConnectorConfig;
 import io.github.ust.mico.core.exception.*;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.util.CollectionUtils;
-import lombok.var;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -23,14 +21,12 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import static io.github.ust.mico.core.TestConstants.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 
 
@@ -47,6 +43,9 @@ public class MicoApplicationBrokerTests {
 
     @MockBean
     private MicoServiceDeploymentInfoBroker micoServiceDeploymentInfoBroker;
+
+    @MockBean
+    private KafkaFaasConnectorConfig kafkaFaasConnectorConfig;
 
     @Autowired
     private MicoServiceRepository micoServiceRepository;
@@ -158,4 +157,67 @@ public class MicoApplicationBrokerTests {
         assertThat(micoApplication.getServices().get(0).equals(micoService));
     }
 
+    @Test
+    public void removeMicoServiceFromMicoApplicationByShortNameAndVersion()
+        throws MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException, MicoApplicationIsNotUndeployedException {
+        MicoService micoService1 = new MicoService()
+            .setShortName(SHORT_NAME_2)
+            .setVersion(VERSION_1_0_2)
+            .setDescription(DESCRIPTION_2);
+
+        MicoService micoService2 = new MicoService()
+            .setShortName(SHORT_NAME_3)
+            .setVersion(VERSION_1_0_3)
+            .setDescription(DESCRIPTION_3);
+
+        ArrayList<MicoService> listOfServices = new ArrayList<>();
+        listOfServices.add(micoService1);
+        listOfServices.add(micoService2);
+
+        MicoApplication micoApplication = new MicoApplication()
+            .setShortName(SHORT_NAME_1)
+            .setVersion(VERSION_1_0_1)
+            .setName(NAME_1)
+            .setDescription(DESCRIPTION_1)
+            .setServices(listOfServices);
+
+        given(micoApplicationRepository.findByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion()))
+            .willReturn(Optional.of(micoApplication));
+        given(micoApplicationRepository.save(micoApplication)).willReturn(micoApplication);
+
+        MicoApplication updatedMicoApplication = micoApplicationBroker.removeMicoServiceFromMicoApplicationByShortNameAndVersion(
+            micoApplication.getShortName(), micoApplication.getVersion(), micoService1.getShortName());
+
+        assert (updatedMicoApplication.getServices().size() == 1);
+        assert (updatedMicoApplication.getServices().get(0).equals(micoService2));
+    }
+
+    @Test
+    public void getServiceDeploymentInfoByInstanceId() {
+
+    }
+
+
+    @Test
+    public void addKafkaFaasConnectorInstanceToMicoApplicationByVersion() throws MicoServiceNotFoundException,
+        MicoApplicationNotFoundException, KafkaFaasConnectorVersionNotFoundException, MicoApplicationIsNotUndeployedException {
+        MicoApplication micoApplication = new MicoApplication()
+            .setShortName(SHORT_NAME_1)
+            .setVersion(VERSION_1_0_1)
+            .setName(NAME_1)
+            .setDescription(DESCRIPTION_1);
+
+        MicoService kfConnector = new MicoService()
+            .setShortName(SHORT_NAME_2)
+            .setVersion(VERSION_1_0_2);
+
+        given(micoServiceBroker.getServiceFromDatabase(kfConnector.getShortName(), kfConnector.getVersion())).willReturn(kfConnector);
+        given(micoApplicationRepository.findByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion())).willReturn(Optional.of(micoApplication));
+        given(kafkaFaasConnectorConfig.getServiceName()).willReturn(kfConnector.getShortName());
+
+        MicoServiceDeploymentInfo sdi = micoApplicationBroker.addKafkaFaasConnectorInstanceToMicoApplicationByVersion(
+            micoApplication.getShortName(), micoApplication.getVersion(), kfConnector.getVersion());
+
+        assert (sdi.getService().equals(kfConnector));
+    }
 }
