@@ -187,40 +187,54 @@ public class DeploymentBroker {
             throw new MicoApplicationDoesNotIncludeMicoServiceException(micoApplication.getShortName(), micoApplication.getVersion());
         }
         for (MicoService micoService : micoApplication.getServices()) {
-            // If the service is not Kafka enabled, there must be at least one interface.
+            // If the service is not Kafka-enabled, there must be at least one interface.
             if (!micoService.isKafkaEnabled() &&
                 (micoService.getServiceInterfaces() == null || micoService.getServiceInterfaces().isEmpty())) {
                 throw new MicoServiceInterfaceNotFoundException(micoService.getShortName(), micoService.getVersion());
-            } else if (micoService.isKafkaEnabled() &&
-                !checkIfKafkaEnabledServiceIsDeployable(micoApplication.getServiceDeploymentInfos().stream()
-                    .filter(micoServiceDeploymentInfo -> micoServiceDeploymentInfo.getService().getShortName().equals(micoService.getShortName())).findFirst().get())) {
-                throw new DeploymentException("The topics of the kafka enabled service " + micoService.getShortName() + " are not set correctly");
             }
+
             if (!micoService.getDependencies().isEmpty()) {
                 // TODO: Check if dependencies are valid. Covered by mico#583
                 throw new DeploymentException("The deployment of service dependencies is currently not implemented. " +
                     "See https://github.com/UST-MICO/mico/issues/583");
             }
         }
+
+        for (MicoServiceDeploymentInfo serviceDeploymentInfo : micoApplication.getServiceDeploymentInfos()) {
+            // If the service is Kafka-enabled check if the required properties are valid
+            if (serviceDeploymentInfo.getService().isKafkaEnabled() && !checkIfKafkaEnabledServiceIsDeployable(serviceDeploymentInfo)) {
+                throw new DeploymentException("The topics of the kafka enabled service '" +
+                    serviceDeploymentInfo.getService().getShortName() + "' with instance ID '" + serviceDeploymentInfo.getInstanceId() +
+                    "' are not set correctly");
+            }
+        }
     }
 
-
+    /**
+     * Checks if the properties of the {@link MicoServiceDeploymentInfo} are valid
+     * so the corresponding {@link MicoService} is considered deployable.
+     *
+     * @param micoServiceDeploymentInfo the {@link MicoServiceDeploymentInfo}
+     * @return {@code true} if the the Kafka-enabled service is considered deployable
+     */
     private boolean checkIfKafkaEnabledServiceIsDeployable(MicoServiceDeploymentInfo micoServiceDeploymentInfo) {
-        MicoEnvironmentVariable inputTopic = findFirstEnvironmentVariable(micoServiceDeploymentInfo.getEnvironmentVariables(), MicoEnvironmentVariable.DefaultNames.KAFKA_TOPIC_INPUT.name());
-        MicoEnvironmentVariable outputTopic = findFirstEnvironmentVariable(micoServiceDeploymentInfo.getEnvironmentVariables(), MicoEnvironmentVariable.DefaultNames.KAFKA_TOPIC_OUTPUT.name());
-        MicoEnvironmentVariable openfaasFunctionName = findFirstEnvironmentVariable(micoServiceDeploymentInfo.getEnvironmentVariables(), MicoEnvironmentVariable.DefaultNames.OPENFAAS_FUNCTION_NAME.name());
-        if (inputTopic == null || inputTopic.getValue() == null) {
+        Optional<MicoEnvironmentVariable> inputTopic = findEnvironmentVariable(micoServiceDeploymentInfo.getEnvironmentVariables(), MicoEnvironmentVariable.DefaultNames.KAFKA_TOPIC_INPUT.name());
+        Optional<MicoEnvironmentVariable> outputTopic = findEnvironmentVariable(micoServiceDeploymentInfo.getEnvironmentVariables(), MicoEnvironmentVariable.DefaultNames.KAFKA_TOPIC_OUTPUT.name());
+        Optional<MicoEnvironmentVariable> openfaasFunctionName = findEnvironmentVariable(micoServiceDeploymentInfo.getEnvironmentVariables(), MicoEnvironmentVariable.DefaultNames.OPENFAAS_FUNCTION_NAME.name());
+        if (!inputTopic.isPresent() || inputTopic.get().getValue() == null) {
             return false;
         }
-        if (outputTopic == null || outputTopic.getValue() == null) {
-            return openfaasFunctionName.getValue() != null;
+        if (openfaasFunctionName.isPresent() &&
+            (!outputTopic.isPresent() || outputTopic.get().getValue() == null)) {
+            return openfaasFunctionName.get().getValue() != null;
         }
         return true;
     }
 
-    private MicoEnvironmentVariable findFirstEnvironmentVariable(List<MicoEnvironmentVariable> micoEnvironmentVariables, String name) {
-        Optional<MicoEnvironmentVariable> optionalMicoEnvironmentVariable = micoEnvironmentVariables.stream().filter(micoEnvironmentVariable -> micoEnvironmentVariable.getName().equals(name)).findFirst();
-        return optionalMicoEnvironmentVariable.orElse(null);
+    private Optional<MicoEnvironmentVariable> findEnvironmentVariable(List<MicoEnvironmentVariable> micoEnvironmentVariables, String name) {
+        Optional<MicoEnvironmentVariable> optionalMicoEnvironmentVariable = micoEnvironmentVariables.stream()
+            .filter(micoEnvironmentVariable -> micoEnvironmentVariable.getName().equals(name)).findFirst();
+        return optionalMicoEnvironmentVariable;
     }
 
     private MicoServiceDeploymentInfo buildMicoService(MicoServiceDeploymentInfo serviceDeploymentInfo) {
