@@ -1,26 +1,36 @@
 package io.github.ust.mico.core;
 
 import io.github.ust.mico.core.broker.MicoApplicationBroker;
+import io.github.ust.mico.core.broker.MicoServiceBroker;
+import io.github.ust.mico.core.broker.MicoServiceDeploymentInfoBroker;
 import io.github.ust.mico.core.exception.*;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.util.CollectionUtils;
+import lombok.var;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import static io.github.ust.mico.core.TestConstants.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 
 
@@ -31,6 +41,15 @@ public class MicoApplicationBrokerTests {
 
     @MockBean
     private MicoApplicationRepository micoApplicationRepository;
+
+    @MockBean
+    private MicoServiceBroker micoServiceBroker;
+
+    @MockBean
+    private MicoServiceDeploymentInfoBroker micoServiceDeploymentInfoBroker;
+
+    @Autowired
+    private MicoServiceRepository micoServiceRepository;
 
     @Autowired
     private MicoApplicationBroker micoApplicationBroker;
@@ -100,7 +119,17 @@ public class MicoApplicationBrokerTests {
     }
 
     @Test
-    public void addMicoServiceToMicoApplication() {
+    public void addKFConnectorToMicoApplication() {
+        //TODO: Wait for final implementation
+    }
+
+    @Test
+    public void addMicoServiceToMicoApplication()
+        throws KafkaFaasConnectorNotAllowedHereException, MicoApplicationNotFoundException,
+        MicoServiceInstanceNotFoundException, MicoApplicationIsNotUndeployedException, MicoTopicRoleUsedMultipleTimesException,
+        KubernetesResourceException, MicoServiceAddedMoreThanOnceToMicoApplicationException, MicoServiceNotFoundException,
+        MicoServiceDeploymentInformationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException {
+
         MicoApplication micoApplication = new MicoApplication()
             .setShortName(SHORT_NAME_1)
             .setVersion(VERSION_1_0_1)
@@ -112,22 +141,21 @@ public class MicoApplicationBrokerTests {
             .setVersion(VERSION_1_0_2)
             .setDescription(DESCRIPTION_2);
 
+        MicoServiceDeploymentInfo micoServiceDeploymentInfo = new MicoServiceDeploymentInfo()
+            .setService(micoService)
+            .setId(ID)
+            .setInstanceId(INSTANCE_ID);
+
         given(micoApplicationRepository.findByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion()))
             .willReturn(Optional.of(micoApplication));
+        given(micoServiceBroker.getServiceFromDatabase(micoService.getShortName(), micoService.getVersion()))
+            .willReturn(micoService);
+        given(micoServiceDeploymentInfoBroker.getMicoServiceDeploymentInformation(micoApplication.getShortName(), micoApplication.getVersion(), micoService.getShortName()))
+            .willReturn(micoServiceDeploymentInfo);
 
 
+        micoApplicationBroker.addMicoServiceToMicoApplicationByShortNameAndVersion(SHORT_NAME_1, VERSION_1_0_1, micoService.getShortName(), micoService.getVersion(), Optional.empty());
+        assertThat(micoApplication.getServices().get(0).equals(micoService));
     }
 
-
-    @Test
-    public void getAllServicesFromApplication() throws MicoApplicationNotFoundException {
-        MicoApplication micoApplication = new MicoApplication()
-            .setShortName(SHORT_NAME_1)
-            .setVersion(VERSION_1_0_1)
-            .setName(NAME_1)
-            .setDescription(DESCRIPTION_1);
-
-        List<MicoService> listOfMicoServices = micoApplicationBroker.getMicoServicesOfMicoApplicationByShortNameAndVersion(SHORT_NAME_1, VERSION_1_0_1);
-        
-    }
 }
