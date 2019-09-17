@@ -98,7 +98,7 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
      * Updates an existing {@link MicoServiceDeploymentInfo} in the database
      * based on the values of a {@link KFConnectorDeploymentInfoRequestDTO} object.
      *
-     * @param instanceId                          the instance id of the deployment {@link MicoApplication}
+     * @param instanceId                          the instance ID of the {@link MicoServiceDeploymentInfo}
      * @param kfConnectorDeploymentInfoRequestDTO the {@link KFConnectorDeploymentInfoRequestDTO}
      * @return the new {@link MicoServiceDeploymentInfo} stored in the database
      * @throws MicoServiceDeploymentInformationNotFoundException if there is no {@code MicoServiceDeploymentInfo} stored in the database
@@ -116,13 +116,19 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
         return saveValuesToDatabase(kfConnectorDeploymentInfoRequestDTO, storedServiceDeploymentInfo);
     }
 
+    /**
+     * Saves the values of a {@link KFConnectorDeploymentInfoRequestDTO} to the database.
+     *
+     * @param kfConnectorDeploymentInfoRequestDTO the {@link KFConnectorDeploymentInfoRequestDTO} that includes the new values
+     * @param storedServiceDeploymentInfo         the {@link MicoServiceDeploymentInfo} that is already stored in the database
+     * @return the new {@link MicoServiceDeploymentInfo} stored in the database
+     */
     private MicoServiceDeploymentInfo saveValuesToDatabase(KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO,
                                                            MicoServiceDeploymentInfo storedServiceDeploymentInfo) {
 
         eventuallyUpdateTopics(kfConnectorDeploymentInfoRequestDTO, storedServiceDeploymentInfo);
         eventuallyUpdateOpenFaaSFunction(kfConnectorDeploymentInfoRequestDTO, storedServiceDeploymentInfo);
-        deploymentInfoRepository.save(storedServiceDeploymentInfo);
-        return storedServiceDeploymentInfo;
+        return deploymentInfoRepository.save(storedServiceDeploymentInfo);
     }
 
     private void eventuallyUpdateTopics(KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO,
@@ -145,14 +151,14 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
         }
         // add topics, if they do not exist, yet
         List<MicoTopicRole.Role> storedTopicRoles = storedServiceDeploymentInfo.getTopics().stream().map(
-            topic -> topic.getRole()).collect(Collectors.toList());
+            MicoTopicRole::getRole).collect(Collectors.toList());
 
         for (MicoTopicRole.Role role : MicoTopicRole.Role.values()) {
             // TODO, currently the the KFConnectorDeploymentInfoRequestDTO only provides INPUT and OUTPUT.
             //  As soon as it also provides DEAD_LETTER, INVALID_MESSAGE and TEST_MESSAGE_OUTPUT this should be
             //  handled here as well
 
-            if (!storedTopicRoles.contains(role) && (role == INPUT | role == OUTPUT)) {
+            if (!storedTopicRoles.contains(role) && (role == INPUT || role == OUTPUT)) {
                 storedServiceDeploymentInfo.getTopics().add(
                     new MicoTopicRole()
                         .setRole(role)
