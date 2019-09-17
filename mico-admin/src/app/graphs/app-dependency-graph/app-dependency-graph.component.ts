@@ -215,7 +215,19 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         if (event.detail.key === 'version') {  // user clicked on service version
             event.preventDefault();
             if (event.detail.node.type !== 'service') {
-                // TODO show version change dialog and handle version change for 'kafka-faas-connector'
+
+                const dialogRef = this.dialog.open(ChangeServiceVersionComponent, {
+                    data: {
+                        service: event.detail.node.data,
+                    }
+                });
+                dialogRef.afterClosed().subscribe((selected) => {
+                    dialogSub.unsubscribe();
+                    if (selected == null || selected === '' || event.detail.node.data.version === selected.version) {
+                        return;
+                    }
+                    // TODO show version change dialog and handle version change for 'kafka-faas-connector'
+                });
                 return;
             }
 
@@ -225,7 +237,8 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 }
             });
 
-            dialogRef.afterClosed().subscribe((selected) => {
+            const dialogSub = dialogRef.afterClosed().subscribe((selected) => {
+                dialogSub.unsubscribe();
                 if (selected == null || selected === '' || event.detail.node.service.version === selected.version) {
                     return;
                 }
