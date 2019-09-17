@@ -119,18 +119,21 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         };
         graph.calculateLinkHandlesForEdge = (edge, sourceHandles, source, targetHandles, target) => {
             if (edge.type === 'topic') {
-                if (edge.role === 'INPUT' || (edge.role === 'OUTPUT' && this.kafkaFaasConnectorNodes.has(edge.source.toString()))) {
-                    return {
-                        sourceHandles: sourceHandles.filter(handle => handle.x > 0),
-                        targetHandles: targetHandles,
-                    };
+                let newSourceHandles = sourceHandles;
+                let newTargetHandles = targetHandles;
+                if ((edge.role === 'INPUT' && this.kafkaTopicNodes.has(edge.source.toString())) ||
+                    (edge.role === 'OUTPUT' && this.kafkaFaasConnectorNodes.has(edge.source.toString()))) {
+                    newSourceHandles = sourceHandles.filter(handle => handle.x > 0);
                 }
-                if (edge.role === 'OUTPUT' || (edge.role === 'INPUT' && this.kafkaFaasConnectorNodes.has(edge.target.toString()))) {
-                    return {
-                        sourceHandles: sourceHandles,
-                        targetHandles: targetHandles.filter(handle => handle.x < 0),
-                    };
+                if (edge.target != null &&
+                    ((edge.role === 'OUTPUT' && this.kafkaTopicNodes.has(edge.target.toString())) ||
+                    (edge.role === 'INPUT' && this.kafkaFaasConnectorNodes.has(edge.target.toString())))) {
+                    newTargetHandles = targetHandles.filter(handle => handle.x < 0);
                 }
+                return {
+                    sourceHandles: newSourceHandles,
+                    targetHandles: newTargetHandles,
+                };
             }
             return null;
         };
@@ -487,22 +490,36 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 return;
             }
             if (this.kafkaFaasConnectorNodes.has(serviceId)) {
-                // TODO handle cases for kafka-faas-connector nodes!!
+                // target is a kafka-faas-connector node
+                const node = graph.getNode(serviceId);
+                const topic = graph.getNode(topicId);
+
+                const depl = node.data;
+                // deepcopy since depl is readonly
+                const deplCopy = JSON.parse(JSON.stringify(depl));
+                deplCopy.inputTopicName = topic.data.topicName;
+                const putSub = this.api.putApplicationKafkaFaasConnector(this.application.shortName, this.application.version, depl.instanceId, deplCopy).subscribe(() => {
+                    safeUnsubscribe(putSub);
+                });
                 return;
             }
-            const service = this.serviceNodeMap.get(serviceId);
-            const topic = graph.getNode(topicId);
+            if (this.serviceNodeMap.has(serviceId)) {
+                // target is a normal service node
+                const service = this.serviceNodeMap.get(serviceId);
+                const topic = graph.getNode(topicId);
 
-            const depl = this.deploymentInformations.get(serviceId);
-            // deepcopy since depl is readonly
-            const deplCopy = JSON.parse(JSON.stringify(depl));
-            deplCopy.topics.push({
-                role: edge.role,
-                name: topic.data.topicName,
-            });
-            const putSub = this.api.putServiceDeploymentInformation(this.application.shortName, this.application.version, service.shortName, deplCopy).subscribe(() => {
-                safeUnsubscribe(putSub);
-            });
+                const depl = this.deploymentInformations.get(serviceId);
+                // deepcopy since depl is readonly
+                const deplCopy = JSON.parse(JSON.stringify(depl));
+                deplCopy.topics.push({
+                    role: edge.role,
+                    name: topic.data.topicName,
+                });
+                const putSub = this.api.putServiceDeploymentInformation(this.application.shortName, this.application.version, service.shortName, deplCopy).subscribe(() => {
+                    safeUnsubscribe(putSub);
+                });
+                return;
+            }
         }
     }
 
