@@ -224,12 +224,15 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                         service: event.detail.node.data,
                     }
                 });
-                dialogRef.afterClosed().subscribe((selected) => {
+
+                const dialogSub = dialogRef.afterClosed().subscribe((selected) => {
                     dialogSub.unsubscribe();
                     if (selected == null || selected === '' || event.detail.node.data.version === selected.version) {
                         return;
                     }
-                    // TODO show version change dialog and handle version change for 'kafka-faas-connector'
+                    const apiSub = this.api.postApplicationKafkaFaasConnector(this.shortName, this.version, selected.version, event.detail.node.data.instanceId).subscribe(connector => {
+                        apiSub.unsubscribe();
+                    });
                 });
                 return;
             }
@@ -273,7 +276,6 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 // deepcopy since depl is readonly
                 const deplCopy = JSON.parse(JSON.stringify(depl));
                 deplCopy.openFaaSFunctionName = result.openFaaSFunctionName;
-                console.log(deplCopy);
                 const putSub = this.api.putApplicationKafkaFaasConnector(this.application.shortName, this.application.version, depl.instanceId, deplCopy).subscribe(() => {
                     safeUnsubscribe(putSub);
                 });
@@ -632,7 +634,16 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 });
             });
         }
-        // todo drop from topic node
+        if (event.detail.sourceNode.type === 'kafka-topic') {
+            const apiSub = this.api.postApplicationKafkaFaasConnector(this.shortName, this.version).subscribe(connector => {
+                apiSub.unsubscribe();
+                const connCopy = JSON.parse(JSON.stringify(connector));
+                connCopy.inputTopicName = event.detail.sourceNode.data.topicName;
+                const apiSub2 = this.api.putApplicationKafkaFaasConnector(this.shortName, this.version, connector.instanceId, connCopy).subscribe(conn => {
+                    apiSub2.unsubscribe();
+                });
+            });
+        }
     }
 
     /**
@@ -684,14 +695,40 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 console.warn("Only INPUT and OUTPUT topics should be shown in the grapheditor.");
                 return;
             }
-            const service = this.serviceNodeMap.get(serviceId);
-            const depl = this.deploymentInformations.get(serviceId);
-            // deepcopy since depl is readonly
-            const deplCopy = JSON.parse(JSON.stringify(depl));
-            deplCopy.topics = depl.topics.filter(t => t.role !== edge.role);
-            const putSub = this.api.putServiceDeploymentInformation(this.application.shortName, this.application.version, service.shortName, deplCopy).subscribe(() => {
-                safeUnsubscribe(putSub);
-            });
+            if (this.kafkaFaasConnectorNodes.has(serviceId)) {
+                // handle kafka-faas-connector nodes
+                const node = graph.getNode(serviceId);
+                const connector = node.data;
+                const connCopy = JSON.parse(JSON.stringify(connector));
+                if (edge.role === 'INPUT') {
+                    connCopy.inputTopicName = null;
+                }
+                if (edge.role === 'OUTPUT') {
+                    connCopy.outputTopicName = null;
+                }
+                if (connCopy.inputTopicName == null && connCopy.outputTopicName == null) {
+                    // no topic attached -> delete node
+                    const apiSub = this.api.deleteApplicationKafkaFaasConnector(this.shortName, this.version, connector.instanceId).subscribe(() => {
+                        safeUnsubscribe(apiSub);
+                    });
+                } else {
+                    const apiSub = this.api.putApplicationKafkaFaasConnector(this.shortName, this.version, connector.instanceId, connCopy).subscribe(conn => {
+                        safeUnsubscribe(apiSub);
+                    });
+                }
+                return;
+            }
+            if (this.serviceNodeMap.has(serviceId)) {
+                // handle  normal service nodes
+                const service = this.serviceNodeMap.get(serviceId);
+                const depl = this.deploymentInformations.get(serviceId);
+                // deepcopy since depl is readonly
+                const deplCopy = JSON.parse(JSON.stringify(depl));
+                deplCopy.topics = depl.topics.filter(t => t.role !== edge.role);
+                const putSub = this.api.putServiceDeploymentInformation(this.application.shortName, this.application.version, service.shortName, deplCopy).subscribe(() => {
+                    safeUnsubscribe(putSub);
+                });
+            }
         }
     }
 
