@@ -88,4 +88,7 @@ public class KafkaConfig {
             .setRole(MicoTopicRole.Role.TEST_MESSAGE_OUTPUT).setTopic(new MicoTopic().setName(testMessageOutputTopic)));
         return micoEnvironmentVariables;
     }
+
+    @NotBlank
+    private String metricsUrl;
 }
