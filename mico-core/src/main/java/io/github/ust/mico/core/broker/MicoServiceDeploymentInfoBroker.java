@@ -277,13 +277,19 @@ public class MicoServiceDeploymentInfoBroker {
         return serviceDeploymentInfo;
     }
 
+    /**
+     * Checks if the given OpenFaaS function name is already present in the database.
+     * If so it will be reused. Otherwise a new node will be created.
+     *
+     * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}
+     * @return the updated {@link MicoServiceDeploymentInfo}
+     */
     MicoServiceDeploymentInfo createOrReuseOpenFaaSFunctionsInDatabase(MicoServiceDeploymentInfo serviceDeploymentInfo) {
         OpenFaaSFunction openFaaSFunction = serviceDeploymentInfo.getOpenFaaSFunction();
         Optional<OpenFaaSFunction> existingOpenFaaSFunction = openFaaSFunctionRepository.findByName(openFaaSFunction.getName());
         if (existingOpenFaaSFunction.isPresent()) {
             serviceDeploymentInfo.setOpenFaaSFunction(existingOpenFaaSFunction.get());
-        }
-        else {
+        } else {
             OpenFaaSFunction savedOpenFaaSFunction = openFaaSFunctionRepository.save(openFaaSFunction);
             serviceDeploymentInfo.setOpenFaaSFunction(savedOpenFaaSFunction);
         }
