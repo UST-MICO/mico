@@ -25,6 +25,7 @@ import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoTopicRepository;
+import io.github.ust.mico.core.persistence.OpenFaaSFunctionRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -52,6 +53,9 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
 
     @Autowired
     private MicoTopicRepository topicRepository;
+
+    @Autowired
+    private OpenFaaSFunctionRepository openFaaSFunctionRepository;
 
     /**
      * Fetches a list of {@link MicoServiceDeploymentInfo MicoServiceDeploymentInfos} of all KafkaFaasConnector instances
@@ -138,6 +142,7 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
         eventuallyUpdateOpenFaaSFunction(kfConnectorDeploymentInfoRequestDTO, storedServiceDeploymentInfo);
         MicoServiceDeploymentInfo updatedServiceDeploymentInfo = deploymentInfoRepository.save(storedServiceDeploymentInfo);
         topicRepository.cleanUp();
+        openFaaSFunctionRepository.cleanUp();
 
         return updatedServiceDeploymentInfo;
     }
@@ -151,29 +156,26 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
      */
     private void eventuallyUpdateTopics(KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO,
                                         MicoServiceDeploymentInfo storedServiceDeploymentInfo) {
-        // update existing topics
-        List<MicoTopicRole> topics = storedServiceDeploymentInfo.getTopics();
-        for (MicoTopicRole role : topics) {
-            MicoTopic topic = role.getTopic();
-            // Set the name depending on the role.
-            // The Neo4j ID will be reset, so that the existing topic that could be already in use by other deployments
-            // is not affected by this change.
-            switch (role.getRole()) {
-                case INPUT:
-                    topic.setName(kfConnectorDeploymentInfoRequestDTO.getInputTopicName());
-                    topic.setId(null);
-                    break;
-                case OUTPUT:
-                    topic.setName(kfConnectorDeploymentInfoRequestDTO.getOutputTopicName());
-                    topic.setId(null);
-                    break;
-                case DEAD_LETTER:
-                case INVALID_MESSAGE:
-                case TEST_MESSAGE_OUTPUT:
+        // Update existing topics
+        String newInputTopicName = kfConnectorDeploymentInfoRequestDTO.getInputTopicName();
+        String newOutputTopicName = kfConnectorDeploymentInfoRequestDTO.getOutputTopicName();
+        List<MicoTopicRole> existingTopics = storedServiceDeploymentInfo.getTopics();
+        for (MicoTopicRole existingTopicRole : existingTopics) {
+            MicoTopic existingTopic = existingTopicRole.getTopic();
+            MicoTopic newTopic = null;
+
+            // Recreate topic if the topic name differs
+            if (existingTopicRole.getRole().equals(INPUT) && !existingTopic.getName().equals(newInputTopicName)) {
+                newTopic = new MicoTopic().setName(newInputTopicName);
+            } else if (existingTopicRole.getRole().equals(OUTPUT) && !existingTopic.getName().equals(newOutputTopicName)) {
+                newTopic = new MicoTopic().setName(newOutputTopicName);
+            }
+            if (newTopic != null) {
+                existingTopicRole.setTopic(newTopic);
             }
         }
 
-        // add topics, if they do not exist, yet
+        // add existingTopics, if they do not exist, yet
         List<MicoTopicRole.Role> storedTopicRoles = storedServiceDeploymentInfo.getTopics().stream().map(
             MicoTopicRole::getRole).collect(Collectors.toList());
 
@@ -188,12 +190,15 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
                         .setRole(role)
                         .setServiceDeploymentInfo(storedServiceDeploymentInfo)
                         .setTopic(new MicoTopic().setName(
-                            (role == INPUT) ? kfConnectorDeploymentInfoRequestDTO.getInputTopicName()
+                            (role == INPUT) ? newInputTopicName
                                 : kfConnectorDeploymentInfoRequestDTO.getOutputTopicName()
                         )));
             }
         }
+        // If a topic node in the database with the same name already exists it will be reused.
         serviceDeploymentInfoBroker.createOrReuseTopicsInDatabase(storedServiceDeploymentInfo);
+        // Save the deployment information with a depth of 1 to the database -> topic roles will be created
+        deploymentInfoRepository.save(storedServiceDeploymentInfo, 1);
     }
 
     /**
@@ -206,15 +211,12 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
     private void eventuallyUpdateOpenFaaSFunction(KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO,
                                                   MicoServiceDeploymentInfo storedServiceDeploymentInfo) {
         OpenFaaSFunction openFaaSFunction = storedServiceDeploymentInfo.getOpenFaaSFunction();
-        if (openFaaSFunction == null) {
-            storedServiceDeploymentInfo.setOpenFaaSFunction(
-                new OpenFaaSFunction().setName(kfConnectorDeploymentInfoRequestDTO.getOpenFaaSFunctionName()));
-        } else {
-            openFaaSFunction.setName(kfConnectorDeploymentInfoRequestDTO.getOpenFaaSFunctionName());
-            openFaaSFunction.setId(null);
+        // Create new node if does not exist yet or the name has changed
+        if (openFaaSFunction == null || !openFaaSFunction.getName().equals(kfConnectorDeploymentInfoRequestDTO.getOpenFaaSFunctionName())) {
+            OpenFaaSFunction newOpenFaaSFunction = new OpenFaaSFunction().setName(kfConnectorDeploymentInfoRequestDTO.getOpenFaaSFunctionName());
+            storedServiceDeploymentInfo.setOpenFaaSFunction(newOpenFaaSFunction);
         }
-
+        // If a OpenFaasFunction node in the database with the same name already exists, reuse it.
         serviceDeploymentInfoBroker.createOrReuseOpenFaaSFunctionsInDatabase(storedServiceDeploymentInfo);
-
     }
 }

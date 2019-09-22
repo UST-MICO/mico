@@ -265,12 +265,15 @@ public class MicoServiceDeploymentInfoBroker {
         List<MicoTopicRole> topicRoles = serviceDeploymentInfo.getTopics();
 
         for (MicoTopicRole topicRole : topicRoles) {
-            String topicName = topicRole.getTopic().getName();
-            Optional<MicoTopic> existingTopic = micoTopicRepository.findByName(topicName);
-            if (existingTopic.isPresent()) {
-                topicRole.setTopic(existingTopic.get());
+            MicoTopic topic = topicRole.getTopic();
+            Optional<MicoTopic> existingTopicOptional = micoTopicRepository.findByName(topic.getName());
+            if (existingTopicOptional.isPresent()) {
+                // Topic node with same name already exists -> Reuse it
+                topicRole.setTopic(existingTopicOptional.get());
             } else {
-                MicoTopic savedTopic = micoTopicRepository.save(topicRole.getTopic());
+                // Topic node with requested name does not exist yet -> Create it
+                topic.setId(null);
+                MicoTopic savedTopic = micoTopicRepository.save(topic);
                 topicRole.setTopic(savedTopic);
             }
         }
@@ -286,10 +289,13 @@ public class MicoServiceDeploymentInfoBroker {
      */
     MicoServiceDeploymentInfo createOrReuseOpenFaaSFunctionsInDatabase(MicoServiceDeploymentInfo serviceDeploymentInfo) {
         OpenFaaSFunction openFaaSFunction = serviceDeploymentInfo.getOpenFaaSFunction();
-        Optional<OpenFaaSFunction> existingOpenFaaSFunction = openFaaSFunctionRepository.findByName(openFaaSFunction.getName());
-        if (existingOpenFaaSFunction.isPresent()) {
-            serviceDeploymentInfo.setOpenFaaSFunction(existingOpenFaaSFunction.get());
+        Optional<OpenFaaSFunction> existingOpenFaaSFunctionOptional = openFaaSFunctionRepository.findByName(openFaaSFunction.getName());
+        if (existingOpenFaaSFunctionOptional.isPresent()) {
+            // OpenFaasFunction node with same name already exists -> Reuse it
+            serviceDeploymentInfo.setOpenFaaSFunction(existingOpenFaaSFunctionOptional.get());
         } else {
+            // OpenFaasFunction node with requested name does not exist yet -> Create it
+            openFaaSFunction.setId(null);
             OpenFaaSFunction savedOpenFaaSFunction = openFaaSFunctionRepository.save(openFaaSFunction);
             serviceDeploymentInfo.setOpenFaaSFunction(savedOpenFaaSFunction);
         }
