@@ -38,6 +38,9 @@ import org.springframework.web.server.ResponseStatusException;
 import javax.management.*;
 import java.io.IOException;
 
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+
 @Slf4j
 @RestController
 @RequestMapping(value = KafkaMetricsResource.KAFKA_METRICS_BASE_PATH, produces = MediaTypes.HAL_JSON_VALUE)
@@ -45,12 +48,13 @@ public class KafkaMetricsResource {
 
     public static final String KAFKA_METRICS_BASE_PATH = "/kafkaMetrics";
     public static final String TOPIC_NAME = "TopicName";
+    public static final String PER_TOPIC_PATH = "/perTopic/";
 
     @Autowired
     KafkaMetricsBroker kafkaMetricsBroker;
 
     @ApiOperation(value = "Returns per topic metrics like the total message count and the average message per min rate")
-    @GetMapping("/perTopic/" + "{" + TOPIC_NAME + "}")
+    @GetMapping(PER_TOPIC_PATH + "{" + TOPIC_NAME + "}")
     public ResponseEntity<Resource<KafkaTopicMetricsDTO>> getTopicMetrics(@PathVariable(TOPIC_NAME) String topicName) {
         try {
             long totalMessageCount = kafkaMetricsBroker.getTotalMessageCount(topicName);
@@ -59,7 +63,7 @@ public class KafkaMetricsResource {
                 .setTopicName(topicName)
                 .setMinuteAverageSinceStart(minuteAverage)
                 .setTotalMessageCount(totalMessageCount);
-            return ResponseEntity.ok(new Resource<>(kafkaTopicMetricsDTO));
+            return ResponseEntity.ok(new Resource<>(kafkaTopicMetricsDTO, linkTo(methodOn(KafkaMetricsResource.class).getTopicMetrics(topicName)).withSelfRel()));
         } catch (InstanceNotFoundException e) {
             log.error("No such topic", e);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());

@@ -20,6 +20,7 @@
 package io.github.ust.mico.core;
 
 import io.github.ust.mico.core.broker.MicoServiceBroker;
+import io.github.ust.mico.core.configuration.KafkaConfig;
 import io.github.ust.mico.core.configuration.KafkaFaasConnectorConfig;
 import io.github.ust.mico.core.exception.MicoServiceAlreadyExistsException;
 import io.github.ust.mico.core.exception.VersionNotSupportedException;
@@ -41,6 +42,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
 import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
+import org.springframework.jmx.support.MBeanServerConnectionFactoryBean;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
 
@@ -138,4 +140,15 @@ public class MicoCoreApplication implements ApplicationListener<ApplicationReady
             log.error("Error while trying to add KafkaFaasConnector to the database. Caused by: {}", e.getMessage(), e);
         }
     }
+
+    @Autowired
+    KafkaConfig kafkaConfig;
+
+    @Bean
+    public MBeanServerConnectionFactoryBean jmxConnector() throws Exception {
+        MBeanServerConnectionFactoryBean jmx = new MBeanServerConnectionFactoryBean();
+        jmx.setServiceUrl(kafkaConfig.getMetricsUrl());
+        return jmx;
+    }
+
 }
