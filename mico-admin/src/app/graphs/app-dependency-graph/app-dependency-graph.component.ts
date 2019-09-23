@@ -613,10 +613,16 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 return;
             }
 
+            const existingRoles = [];
+
+            if (connector.inputTopicName != null && connector.inputTopicName !== '') {
+                existingRoles.push('INPUT');
+            }
+
             const dialogRef = this.dialog.open(GraphAddKafkaTopicComponent, {
                 data: {
                     serviceShortName: connector.instanceId,
-                    existingRoles: ['INPUT'],
+                    existingRoles: existingRoles,
                 }
             });
 
@@ -628,7 +634,12 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 }
 
                 const connCopy = JSON.parse(JSON.stringify(connector));
-                connCopy.outputTopicName = result.kafkaTopicName;
+                if (result.role === 'OUTPUT') {
+                    connCopy.outputTopicName = result.kafkaTopicName;
+                }
+                if (result.role === 'INPUT') {
+                    connCopy.inputTopicName = result.kafkaTopicName;
+                }
                 const putSub = this.api.putApplicationKafkaFaasConnector(this.application.shortName, this.application.version, connector.instanceId, connCopy).subscribe(() => {
                     safeUnsubscribe(putSub);
                 });
@@ -1177,16 +1188,6 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 }
             }
         });
-        /*
-        {
-            "inputTopicName": "string",
-            "instanceId": "string",
-            "kubernetesDeploymentInfo": {            },
-            "outputTopicName": "string",
-            "shortName": "string",
-            "version": "string"
-        }
-        */
 
         const kafkaFaasConnectorNodes = new Set<string>();
 
