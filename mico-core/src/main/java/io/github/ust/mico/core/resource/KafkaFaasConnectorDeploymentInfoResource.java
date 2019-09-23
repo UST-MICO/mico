@@ -87,8 +87,10 @@ public class KafkaFaasConnectorDeploymentInfoResource {
     }
 
     @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR + "/{" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID + "}")
-    public ResponseEntity<Resource<KFConnectorDeploymentInfoRequestDTO>> updateKafkaFaasConnectorDeploymentInfo(@PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID) String instanceId,
-                                                                                                                @Valid @RequestBody KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO) {
+    public ResponseEntity<Resource<KFConnectorDeploymentInfoResponseDTO>> updateKafkaFaasConnectorDeploymentInfo(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                                                                 @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                                                                                 @PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID) String instanceId,
+                                                                                                                 @Valid @RequestBody KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO) {
         if (!kfConnectorDeploymentInfoRequestDTO.getInstanceId().equals(instanceId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "InstanceId in the request body does not match the request parameter");
@@ -102,9 +104,8 @@ public class KafkaFaasConnectorDeploymentInfoResource {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
         // Convert to service deployment info DTO and return it
-
-        KFConnectorDeploymentInfoResponseDTO updatedKFConnectorDeploymentInfoResponseDto = new KFConnectorDeploymentInfoResponseDTO(updatedServiceDeploymentInfo);
-        return ResponseEntity.ok(new Resource<>(updatedKFConnectorDeploymentInfoResponseDto));
+        Resource<KFConnectorDeploymentInfoResponseDTO> responseDTOResource = getKfConnectorDeploymentInfoResponseDTOResource(shortName, version, updatedServiceDeploymentInfo);
+        return ResponseEntity.ok(responseDTOResource);
     }
 
 
