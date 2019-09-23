@@ -44,7 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @ActiveProfiles("unit-testing")
-public class TopicResourceEndToEndTests extends Neo4jTestClass {
+public class TopicResourceNeo4jTests extends Neo4jTestClass {
 
     @Autowired
     private MockMvc mvc;
