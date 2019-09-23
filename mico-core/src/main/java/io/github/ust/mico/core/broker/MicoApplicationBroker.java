@@ -340,8 +340,8 @@ public class MicoApplicationBroker {
         micoApplication.getKafkaFaasConnectorDeploymentInfos().add(sdi);
         applicationRepository.save(micoApplication);
 
-        log.debug("Added KafkaFaasConnector in version '{}' with instance ID '{}' to MicoApplication '{}' '{}'." +
-                "This application now uses {} KF connector instances.",
+        log.debug("Added KafkaFaasConnector in version '{}' with instance ID '{}' to MicoApplication '{}' '{}'. " +
+                "This application now uses {} KafkaFaasConnector instance(s).",
             kfConnectorVersion, instanceId, applicationShortName, applicationVersion,
             micoApplication.getKafkaFaasConnectorDeploymentInfos().size());
 

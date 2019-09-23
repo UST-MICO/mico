@@ -22,9 +22,11 @@ package io.github.ust.mico.core;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.github.ust.mico.core.broker.MicoApplicationBroker;
+import io.github.ust.mico.core.configuration.KafkaFaasConnectorConfig;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoBackgroundJobRepository;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoTopicRepository;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
@@ -50,15 +52,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import static io.github.ust.mico.core.resource.ApplicationResource.PATH_APPLICATIONS;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 // Is ignored because Jenkins currently can't connect to Kubernetes.
 @Ignore
-// TODO: Upgrade to JUnit5
 @Category(IntegrationTests.class)
 @Slf4j
 @RunWith(SpringRunner.class)
@@ -66,7 +66,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @ActiveProfiles("dev")
-public class DeploymentResourceIntegrationTests {
+public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
 
     @ClassRule
     public static RuleChain rules = RuleChain.outerRule(EmbeddedRedisServer.runningAt(6379).suppressExceptions());
@@ -90,7 +90,13 @@ public class DeploymentResourceIntegrationTests {
     private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
 
     @Autowired
+    private MicoBackgroundJobRepository jobRepository;
+
+    @Autowired
     private MicoApplicationBroker micoApplicationBroker;
+
+    @Autowired
+    KafkaFaasConnectorConfig kafkaFaasConnectorConfig;
 
     @Autowired
     private ImageBuilder imageBuilder;
@@ -119,30 +125,20 @@ public class DeploymentResourceIntegrationTests {
         micoKubernetesBuildBotConfig.setBuildTimeout(60);
     }
 
-    private MicoApplication createApplicationWithOneService() {
-        application = getTestApplication();
-        service = getTestService();
-        serviceDeploymentInfo = new MicoServiceDeploymentInfo()
-            .setService(service)
-            .setInstanceId(TestConstants.IntegrationTest.INSTANCE_ID);
-
-        application.getServices().add(service);
-        application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
-        return application;
-    }
-
     /**
-     * Delete namespace cleans up everything.
+     * Deletion of namespace cleans up everything.
      */
     @After
     public void tearDown() {
         integrationTestsUtils.cleanUpEnvironment(namespace);
+
+        // Delete all jobs in Redis.
+        jobRepository.deleteAll();
     }
 
     @Test
     public void deployApplicationWithOneService() throws Exception {
-        createApplicationWithOneService();
-        applicationRepository.save(application);
+        createApplicationWithOneServiceInDatabase();
 
         // Manual initialization is necessary so it will use the provided namespace (see setup method).
         imageBuilder.init();
@@ -170,61 +166,32 @@ public class DeploymentResourceIntegrationTests {
         log.info("ExternalIPs: {}", createdService.get().getSpec().getExternalIPs());
     }
 
-    private CompletableFuture<Service> waitForServiceCreation() throws InterruptedException, ExecutionException, TimeoutException {
-        CompletableFuture<Service> createdService = integrationTestsUtils.waitUntilServiceIsCreated(
-            service, 1, 1, 10);
-        assertNotNull("Kubernetes Service was not created!", createdService.get());
-        log.debug("Created Kubernetes Service: {}", createdService.get().toString());
-        return createdService;
-    }
-
-    private CompletableFuture<Deployment> waitForDeploymentCreation(MicoServiceDeploymentInfo micoServiceDeploymentInfo) throws InterruptedException, ExecutionException, TimeoutException {
-        // Wait until the deployment is created
-        CompletableFuture<Deployment> createdDeployment = integrationTestsUtils.waitUntilDeploymentIsCreated(
-            micoServiceDeploymentInfo, 1, 1, 10);
-        assertNotNull("Kubernetes Deployment was not created!", createdDeployment.get());
-        log.debug("Created Kubernetes Deployment: {}", createdDeployment.get().toString());
-        return createdDeployment;
-    }
-
-    /**
-     * Wait until all pods (inclusive build pod) are running or succeeded
-     *
-     * @throws InterruptedException
-     * @throws ExecutionException
-     * @throws TimeoutException
-     */
-    private void waitForAllPodsInNamespace() throws InterruptedException, ExecutionException, TimeoutException {
-        CompletableFuture<Boolean> allPodsInNamespaceAreRunning = integrationTestsUtils.waitUntilAllPodsInNamespaceAreRunning(
-            namespace, 10, 1, 60);
-        assertTrue("Deployment failed!", allPodsInNamespaceAreRunning.get());
-    }
-
-    /**
-     * Not finished
-     *
-     * @throws Exception
-     */
     @Test
-    @Ignore
     public void deployApplicationWithMultipleKafkaFaasConnectorInstances() throws Exception {
-        createApplicationWithOneService();
-        applicationRepository.save(application);
+        createApplicationWithOneServiceInDatabase();
+
+        // TODO: Get latest KafkaFaasConnector that is stored in database
+        String kfConnectorVersion = "v1.0.1";
+        MicoServiceDeploymentInfo kafkaFaasConnectorMicoServiceDeploymentInfo1 = micoApplicationBroker
+            .addKafkaFaasConnectorInstanceToMicoApplicationByVersion(application.getShortName(), application.getVersion(), kfConnectorVersion);
+        MicoServiceDeploymentInfo kafkaFaasConnectorMicoServiceDeploymentInfo2 = micoApplicationBroker
+            .addKafkaFaasConnectorInstanceToMicoApplicationByVersion(application.getShortName(), application.getVersion(), kfConnectorVersion);
+
         MicoTopic micoInputTopic = new MicoTopic().setName("TestInputTopic");
         micoInputTopic.setId(micoTopicRepository.save(micoInputTopic).getId());
 
         MicoTopic micoOutputTopic = new MicoTopic().setName("TestOutputTopic");
         micoOutputTopic.setId(micoTopicRepository.save(micoOutputTopic).getId());
 
+        MicoTopicRole micoTopicInputRole = new MicoTopicRole().setServiceDeploymentInfo(
+            kafkaFaasConnectorMicoServiceDeploymentInfo1).setTopic(micoInputTopic).setRole(MicoTopicRole.Role.INPUT);
+        MicoTopicRole micoTopicOutputRole = new MicoTopicRole().setServiceDeploymentInfo(
+            kafkaFaasConnectorMicoServiceDeploymentInfo1).setTopic(micoOutputTopic).setRole(MicoTopicRole.Role.OUTPUT);
 
-        MicoServiceDeploymentInfo kafkaFaasConnectorMicoServiceDeploymentInfo1 = micoApplicationBroker.addKafkaFaasConnectorInstanceToMicoApplicationByVersion(application.getShortName(), application.getVersion(), "v1.0.1");
-        MicoServiceDeploymentInfo kafkaFaasConnectorMicoServiceDeploymentInfo2 = micoApplicationBroker.addKafkaFaasConnectorInstanceToMicoApplicationByVersion(application.getShortName(), application.getVersion(), "v1.0.1");
-
-        MicoTopicRole micoTopicInputRole = new MicoTopicRole().setServiceDeploymentInfo(kafkaFaasConnectorMicoServiceDeploymentInfo1).setTopic(micoInputTopic).setRole(MicoTopicRole.Role.INPUT);
-        MicoTopicRole micoTopicOutputRole = new MicoTopicRole().setServiceDeploymentInfo(kafkaFaasConnectorMicoServiceDeploymentInfo1).setTopic(micoOutputTopic).setRole(MicoTopicRole.Role.OUTPUT);
-
-        MicoTopicRole micoTopicInputRole2 = new MicoTopicRole().setServiceDeploymentInfo(kafkaFaasConnectorMicoServiceDeploymentInfo2).setTopic(micoInputTopic).setRole(MicoTopicRole.Role.INPUT);
-        MicoTopicRole micoTopicOutputRole2 = new MicoTopicRole().setServiceDeploymentInfo(kafkaFaasConnectorMicoServiceDeploymentInfo2).setTopic(micoOutputTopic).setRole(MicoTopicRole.Role.OUTPUT);
+        MicoTopicRole micoTopicInputRole2 = new MicoTopicRole().setServiceDeploymentInfo(
+            kafkaFaasConnectorMicoServiceDeploymentInfo2).setTopic(micoInputTopic).setRole(MicoTopicRole.Role.INPUT);
+        MicoTopicRole micoTopicOutputRole2 = new MicoTopicRole().setServiceDeploymentInfo(
+            kafkaFaasConnectorMicoServiceDeploymentInfo2).setTopic(micoOutputTopic).setRole(MicoTopicRole.Role.OUTPUT);
 
         List<MicoTopicRole> micoTopicRoles1 = new LinkedList<>();
         micoTopicRoles1.add(micoTopicInputRole);
@@ -234,10 +201,8 @@ public class DeploymentResourceIntegrationTests {
         micoTopicRoles2.add(micoTopicInputRole2);
         micoTopicRoles2.add(micoTopicOutputRole2);
 
-
         kafkaFaasConnectorMicoServiceDeploymentInfo1.setTopics(micoTopicRoles1);
         kafkaFaasConnectorMicoServiceDeploymentInfo2.setTopics(micoTopicRoles2);
-
 
         serviceDeploymentInfoRepository.save(kafkaFaasConnectorMicoServiceDeploymentInfo1);
         serviceDeploymentInfoRepository.save(kafkaFaasConnectorMicoServiceDeploymentInfo2);
@@ -256,8 +221,57 @@ public class DeploymentResourceIntegrationTests {
         CompletableFuture<Deployment> createdDeployment2 = waitForDeploymentCreation(kafkaFaasConnectorMicoServiceDeploymentInfo2);
         CompletableFuture<Service> createdService = waitForServiceCreation();
 
-        //assertThat(createdDeployment.get().getMetadata().getName(), isTrue());
+        // Assert deployment
+        assertNotNull("Expected deployment of KafkaFaasConnector 1 does not exist", createdDeployment1.get());
+        assertNotNull("Expected deployment of KafkaFaasConnector 2 does not exist", createdDeployment2.get());
+        assertEquals(kafkaFaasConnectorMicoServiceDeploymentInfo1.getInstanceId(), createdDeployment1.get().getMetadata().getName());
+        assertEquals(kafkaFaasConnectorMicoServiceDeploymentInfo2.getInstanceId(), createdDeployment2.get().getMetadata().getName());
 
+        // Assert service
+        assertNotNull("Expected service does not exist", createdService.get());
+    }
+
+    /**
+     * Wait until all pods (inclusive build pod) are running or succeeded
+     *
+     * @throws InterruptedException if the background task is aborted
+     * @throws ExecutionException   if the background task has thrown an exception
+     * @throws TimeoutException     if the timeout is reached
+     */
+    private void waitForAllPodsInNamespace() throws InterruptedException, ExecutionException, TimeoutException {
+        CompletableFuture<Boolean> allPodsInNamespaceAreRunning = integrationTestsUtils.waitUntilAllPodsInNamespaceAreRunning(
+            namespace, 10, 1, 60);
+        assertTrue("Deployment failed!", allPodsInNamespaceAreRunning.get());
+    }
+
+    private CompletableFuture<Service> waitForServiceCreation() throws InterruptedException, ExecutionException, TimeoutException {
+        CompletableFuture<Service> createdService = integrationTestsUtils.waitUntilServiceIsCreated(
+            service, 1, 1, 10);
+        assertNotNull("Kubernetes Service was not created!", createdService.get());
+        log.debug("Created Kubernetes Service: {}", createdService.get().toString());
+        return createdService;
+    }
+
+    private CompletableFuture<Deployment> waitForDeploymentCreation(MicoServiceDeploymentInfo micoServiceDeploymentInfo) throws InterruptedException, ExecutionException, TimeoutException {
+        // Wait until the deployment is created
+        CompletableFuture<Deployment> createdDeployment = integrationTestsUtils.waitUntilDeploymentIsCreated(
+            micoServiceDeploymentInfo, 1, 1, 10);
+        assertNotNull("Kubernetes Deployment was not created!", createdDeployment.get());
+        log.debug("Created Kubernetes Deployment: {}", createdDeployment.get().toString());
+        return createdDeployment;
+    }
+
+    private void createApplicationWithOneServiceInDatabase() {
+        application = getTestApplication();
+        service = getTestService();
+        serviceDeploymentInfo = new MicoServiceDeploymentInfo()
+            .setService(service)
+            .setInstanceId(TestConstants.IntegrationTest.INSTANCE_ID);
+
+        application.getServices().add(service);
+        application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
+
+        applicationRepository.save(application);
     }
 
     private MicoApplication getTestApplication() {

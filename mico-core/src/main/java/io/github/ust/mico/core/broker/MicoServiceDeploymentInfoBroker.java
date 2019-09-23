@@ -116,7 +116,8 @@ public class MicoServiceDeploymentInfoBroker {
         if (serviceDeploymentInfos.size() > 1) {
             String errorMessage = "There are " + serviceDeploymentInfos.size() + " service deployment information stored for service '" +
                 micoService.getShortName() + "' '" + micoService.getVersion() + "' used by application '" + micoApplication.getShortName() + "' '" +
-                micoApplication.getVersion() + "'. However, there must be only one.";
+                micoApplication.getVersion() + "': '" + serviceDeploymentInfos.stream().map(MicoServiceDeploymentInfo::getInstanceId).collect(Collectors.toList()) +
+                "'. However, there must be only one.";
             log.error(errorMessage);
             throw new IllegalStateException(errorMessage);
         }
