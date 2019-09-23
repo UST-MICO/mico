@@ -20,7 +20,9 @@
 package io.github.ust.mico.core.resource;
 
 import io.github.ust.mico.core.broker.KafkaFaasConnectorDeploymentInfoBroker;
+import io.github.ust.mico.core.dto.request.KFConnectorDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.dto.response.KFConnectorDeploymentInfoResponseDTO;
+import io.github.ust.mico.core.exception.KafkaFaasConnectorInstanceNotFoundException;
 import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
@@ -33,12 +35,10 @@ import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.validation.Valid;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -69,10 +69,10 @@ public class KafkaFaasConnectorDeploymentInfoResource {
         return ResponseEntity.ok(new Resources<>(micoServiceDeploymentInfoResources, linkTo(methodOn(KafkaFaasConnectorDeploymentInfoResource.class).getKafkaFaasConnectorDeploymentInformation(shortName, version)).withSelfRel()));
     }
 
-    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR + "/{" + PATH_VARIABLE_INSTANCE_ID + "}")
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR + "/{" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID + "}")
     public ResponseEntity<Resource<KFConnectorDeploymentInfoResponseDTO>> getKafkaFaasConnectorDeploymentInformationInstance(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                                                              @PathVariable(PATH_VARIABLE_VERSION) String version,
-                                                                                                                             @PathVariable(PATH_VARIABLE_INSTANCE_ID) String instanceId) {
+                                                                                                                             @PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID) String instanceId) {
         log.debug("Get the KafkaFaasConnector deployment information of the MicoApplication '{}' '{}' with the instance id '{}'.", shortName, version, instanceId);
         Optional<MicoServiceDeploymentInfo> micoServiceDeploymentInfoOptional;
         try {
@@ -85,6 +85,28 @@ public class KafkaFaasConnectorDeploymentInfoResource {
         Resource<KFConnectorDeploymentInfoResponseDTO> kfConnectorDeploymentInfoResponseDTOResource = getKfConnectorDeploymentInfoResponseDTOResource(shortName, version, micoServiceDeploymentInfoOptional.get());
         return ResponseEntity.ok(kfConnectorDeploymentInfoResponseDTOResource);
     }
+
+    @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR + "/{" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID + "}")
+    public ResponseEntity<Resource<KFConnectorDeploymentInfoRequestDTO>> updateKafkaFaasConnectorDeploymentInfo(@PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID) String instanceId,
+                                                                                                                @Valid @RequestBody KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO) {
+        if (!kfConnectorDeploymentInfoRequestDTO.getInstanceId().equals(instanceId)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "InstanceId in the request body does not match the request parameter");
+        }
+
+        MicoServiceDeploymentInfo updatedServiceDeploymentInfo;
+        try {
+            updatedServiceDeploymentInfo = kafkaFaasConnectorDeploymentInfoBroker.updateKafkaFaasConnectorDeploymentInformation(
+                instanceId, kfConnectorDeploymentInfoRequestDTO);
+        } catch (KafkaFaasConnectorInstanceNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+        // Convert to service deployment info DTO and return it
+
+        KFConnectorDeploymentInfoResponseDTO updatedKFConnectorDeploymentInfoResponseDto = new KFConnectorDeploymentInfoResponseDTO(updatedServiceDeploymentInfo);
+        return ResponseEntity.ok(new Resource<>(updatedKFConnectorDeploymentInfoResponseDto));
+    }
+
 
     /**
      * Wraps a list of {@link MicoServiceDeploymentInfo MicoServiceDeploymentInfos} into a list of {@link KFConnectorDeploymentInfoResponseDTO} resources.

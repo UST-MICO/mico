@@ -35,6 +35,7 @@ class TestConstants {
     static final Long ID_1 = 1001L;
     static final Long ID_2 = 1002L;
     static final Long ID_3 = 1003L;
+    static final Long ID_4 = 1004L;
 
     static final String VERSION = MicoVersion.forIntegers(1, 0, 0).toString();
     static final String VERSION_1_0_1 = MicoVersion.forIntegers(1, 0, 1).toString();
@@ -90,6 +91,14 @@ class TestConstants {
     static final String INSTANCE_ID = "instance-id";
     static final String INSTANCE_ID_1 = "instance-id-1";
     static final String INSTANCE_ID_2 = "instance-id-2";
+
+    static final String INPUT_TOPIC = "input-topic";
+    static final String INPUT_TOPIC_1 = "input-topic-1";
+    static final String OUTPUT_TOPIC = "output-topic";
+    static final String OUTPUT_TOPIC_1 = "output-topic-1";
+
+    static final String OPEN_FAAS_FUNCTION_NAME = "open-faas-function-name";
+    static final String OPEN_FAAS_FUNCTION_NAME_1 = "open-faas-function-name-1";
 
     /*
      * For tests in ApplicationResourceIntegrationTests, one service is added to the list of MicoServiceStatusDTOs in MicoApplicationStatusDTO.

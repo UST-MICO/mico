@@ -143,6 +143,11 @@ public class MicoServiceDeploymentInfo {
     @Relationship(type = "HAS")
     private KubernetesDeploymentInfo kubernetesDeploymentInfo;
 
+    /**
+     * Contains information about the OpenFaaS function used by the KafkaFaaSConnect
+     */
+    @Relationship(type = "HAS")
+    private OpenFaaSFunction openFaaSFunction;
 
     /**
      * Enumeration for the different policies specifying

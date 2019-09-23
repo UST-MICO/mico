@@ -20,9 +20,10 @@
 package io.github.ust.mico.core.dto.request;
 
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
-import io.github.ust.mico.core.model.MicoEnvironmentVariable;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.model.MicoTopicRole;
+import io.github.ust.mico.core.model.OpenFaaSFunction;
+import io.github.ust.mico.core.util.Patterns;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -32,6 +33,8 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 import java.util.Optional;
 
 /**
@@ -93,10 +96,14 @@ public class KFConnectorDeploymentInfoRequestDTO {
         properties = {
             @ExtensionProperty(name = "title", value = "OpenFaaSFunctionName"),
             @ExtensionProperty(name = "x-order", value = "40"),
+            @ExtensionProperty(name = "pattern", value = Patterns.OPEN_FAAS_FUNCTION_NAME_REGEX),
+            @ExtensionProperty(name = "minLength", value = "0"),
+            @ExtensionProperty(name = "maxLength", value = "63"),
             @ExtensionProperty(name = "description", value = "Name of the OpenFaaS function.")
         }
     )})
-    @NotNull
+    @Size(max = 63, message = "must be 63 characters or less")
+    @Pattern(regexp = Patterns.OPEN_FAAS_FUNCTION_NAME_REGEX, message = Patterns.OPEN_FAAS_FUNCTION_NAME_MESSAGE)
     private String openFaaSFunctionName;
 
 
@@ -118,8 +125,7 @@ public class KFConnectorDeploymentInfoRequestDTO {
         Optional<MicoTopicRole> outputTopicRoleOpt = kfConnectorDeploymentInfo.getTopics().stream()
             .filter(t -> t.getRole().equals(MicoTopicRole.Role.OUTPUT)).findFirst();
         outputTopicRoleOpt.ifPresent(micoTopicRole -> this.outputTopicName = micoTopicRole.getTopic().getName());
-        kfConnectorDeploymentInfo.getEnvironmentVariables().stream()
-            .filter(env -> env.getName().equals(MicoEnvironmentVariable.DefaultNames.OPENFAAS_FUNCTION_NAME))
-            .findFirst().ifPresent(micoEnvironmentVariable -> this.openFaaSFunctionName = micoEnvironmentVariable.getValue());
+        OpenFaaSFunction openFaaSFunction = kfConnectorDeploymentInfo.getOpenFaaSFunction();
+        if (openFaaSFunction != null) this.openFaaSFunctionName = openFaaSFunction.getName();
     }
 }
