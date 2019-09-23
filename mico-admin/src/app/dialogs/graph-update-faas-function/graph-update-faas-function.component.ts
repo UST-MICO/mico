@@ -17,27 +17,52 @@
  * under the License.
  */
 
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
+import { ApiService } from 'src/app/api/api.service';
+import { safeUnsubscribe } from 'src/app/util/utils';
 
 @Component({
     selector: 'mico-graph-update-faas-function',
     templateUrl: './graph-update-faas-function.component.html',
     styleUrls: ['./graph-update-faas-function.component.css']
 })
-export class GraphUpdateFaasFunctionComponent {
+export class GraphUpdateFaasFunctionComponent implements OnInit, OnDestroy {
 
-
-    constructor(public dialogRef: MatDialogRef<GraphUpdateFaasFunctionComponent>,
+    constructor(private api: ApiService, public dialogRef: MatDialogRef<GraphUpdateFaasFunctionComponent>,
         @Inject(MAT_DIALOG_DATA) public data: any,
     ) {
         this.kfConnectorInfo = data.kfConnectorInfo;
         this.faasFunction = this.kfConnectorInfo.openFaaSFunctionName;
     }
 
+    apiSub;
+    faasFunctionList: Readonly<any[]> = [];
+    filteredList: Readonly<any[]> = [];
+
     kfConnectorInfo;
 
     faasFunction;
+
+    ngOnInit(): void {
+        this.apiSub = this.api.getOpenFaaSFunctions().subscribe(functions => {
+            this.faasFunctionList = functions;
+            this.updateFilter();
+        });
+    }
+
+    ngOnDestroy() {
+        safeUnsubscribe(this.apiSub);
+    }
+
+    updateFilter() {
+        const filter = this.faasFunction ? this.faasFunction.toLowerCase() : '';
+        if (filter === '') {
+            this.filteredList = this.faasFunctionList;
+        } else {
+            this.filteredList = this.faasFunctionList.filter(option => option.name.toLowerCase().includes(filter));
+        }
+    }
 
     isValid() {
         if (this.faasFunction == null || this.faasFunction === '') {
