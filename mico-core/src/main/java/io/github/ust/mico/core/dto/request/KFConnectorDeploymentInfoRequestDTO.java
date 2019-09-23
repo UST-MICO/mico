@@ -71,7 +71,6 @@ public class KFConnectorDeploymentInfoRequestDTO {
             @ExtensionProperty(name = "description", value = "Name of the input topic.")
         }
     )})
-    @NotNull
     private String inputTopicName;
 
     /**
@@ -85,7 +84,6 @@ public class KFConnectorDeploymentInfoRequestDTO {
             @ExtensionProperty(name = "description", value = "Name of the output topic.")
         }
     )})
-    @NotNull
     private String outputTopicName;
 
     /**
