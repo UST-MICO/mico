@@ -422,11 +422,22 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             });
         }
         if  (sourceNode.type === 'kafka-faas-connector') {
-            edge.role = 'OUTPUT';
-            edge.texts[0].value = 'OUTPUT';
-            this.kafkaTopicNodes.forEach(topicId => {
-                edge.validTargets.add(topicId);
-            });
+            if (sourceNode.data.outputTopicName == null || sourceNode.data.outputTopicName === '') {
+                edge.role = 'OUTPUT';
+                edge.texts[0].value = 'OUTPUT';
+                this.kafkaTopicNodes.forEach(topicId => {
+                    edge.validTargets.add(topicId);
+                });
+            } else if (sourceNode.data.inputTopicName == null || sourceNode.data.inputTopicName === '') {
+                edge.role = 'INPUT';
+                edge.texts[0].value = 'INPUT';
+                edge.texts[0].positionOnLine = 0.45;
+                edge.markers[0].positionOnLine = 0.45;
+                edge.markers[0].rotate = { relativeAngle: 180 };
+            } else {
+                // all topic edges present
+                return null;
+            }
         }
         return edge;
     }
@@ -619,6 +630,10 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 existingRoles.push('INPUT');
             }
 
+            if (connector.outputTopicName != null && connector.outputTopicName !== '') {
+                existingRoles.push('OUTPUT');
+            }
+
             const dialogRef = this.dialog.open(GraphAddKafkaTopicComponent, {
                 data: {
                     serviceShortName: connector.instanceId,
@@ -646,6 +661,13 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             });
         }
         if (event.detail.sourceNode.type === 'kafka-topic') {
+            const edge: Edge = event.detail.edge;
+            if (edge.createdFrom != null && edge.createdFrom !== '') {
+                // do not handle edges that were created from an existing edge here
+                return;
+            }
+
+            // create new connector
             const apiSub = this.api.postApplicationKafkaFaasConnector(this.shortName, this.version).subscribe(connector => {
                 apiSub.unsubscribe();
                 const connCopy = JSON.parse(JSON.stringify(connector));
@@ -1273,11 +1295,21 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 }
             });
             if (needInputTopicEdge) {
-                const edge = this.newTopicEdge('INPUT', `TOPIC/${connector.inputTopicName}`, connector.instanceId);
+                const topicId = `TOPIC/${connector.inputTopicName}`;
+                const existingTopic = graph.getNode(topicId);
+                if (existingTopic == null) {
+                    this.addTopicNode(topicId, existing, connector.inputTopicName, 'INPUT', graph);
+                }
+                const edge = this.newTopicEdge('INPUT', topicId, connector.instanceId);
                 graph.addEdge(edge, false);
             }
             if (needOutputTopicEdge) {
-                const edge = this.newTopicEdge('OUTPUT', `TOPIC/${connector.outputTopicName}`, connector.instanceId);
+                const topicId = `TOPIC/${connector.outputTopicName}`;
+                const existingTopic = graph.getNode(topicId);
+                if (existingTopic == null) {
+                    this.addTopicNode(topicId, existing, connector.outputTopicName, 'OUTPUT', graph);
+                }
+                const edge = this.newTopicEdge('OUTPUT', topicId, connector.instanceId);
                 graph.addEdge(edge, false);
             }
 
