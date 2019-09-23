@@ -450,12 +450,11 @@ export class ApiService {
 
     /**
      * Get an existing kafka faas connector deployment info
-     * uses: POST applications/{applicationShortName}/{applicationVersion}/kafka-faas-connector/{instanceId}
+     * uses: GET applications/{applicationShortName}/{applicationVersion}/kafka-faas-connector/{instanceId}
      *
      * @param applicationShortName the applications shortName
      * @param applicationVersion the applications version
-     * @param instanceId the kafka faas connector instance id if present this updates a specific
-     *          instance to this version instead of adding a new instance
+     * @param instanceId the kafka faas connector instance id this gets a specific instance
      */
     getApplicationKafkaFaasConnector(applicationShortName: string, applicationVersion: string, instanceId: string) {
 
