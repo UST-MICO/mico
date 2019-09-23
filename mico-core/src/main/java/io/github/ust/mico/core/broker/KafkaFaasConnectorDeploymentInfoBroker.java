@@ -19,6 +19,7 @@
 
 package io.github.ust.mico.core.broker;
 
+import com.google.common.base.Strings;
 import io.github.ust.mico.core.dto.request.KFConnectorDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.exception.KafkaFaasConnectorInstanceNotFoundException;
 import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
@@ -157,48 +158,58 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
     private void eventuallyUpdateTopics(KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO,
                                         MicoServiceDeploymentInfo storedServiceDeploymentInfo) {
         // Update existing topics
-        String newInputTopicName = kfConnectorDeploymentInfoRequestDTO.getInputTopicName();
-        String newOutputTopicName = kfConnectorDeploymentInfoRequestDTO.getOutputTopicName();
-        List<MicoTopicRole> existingTopics = storedServiceDeploymentInfo.getTopics();
-        for (MicoTopicRole existingTopicRole : existingTopics) {
-            MicoTopic existingTopic = existingTopicRole.getTopic();
-            MicoTopic newTopic = null;
-
-            // Recreate topic if the topic name differs
-            if (existingTopicRole.getRole().equals(INPUT) && !existingTopic.getName().equals(newInputTopicName)) {
-                newTopic = new MicoTopic().setName(newInputTopicName);
-            } else if (existingTopicRole.getRole().equals(OUTPUT) && !existingTopic.getName().equals(newOutputTopicName)) {
-                newTopic = new MicoTopic().setName(newOutputTopicName);
-            }
-            if (newTopic != null) {
-                existingTopicRole.setTopic(newTopic);
+        List<MicoTopicRole> existingTopicRoles = storedServiceDeploymentInfo.getTopics();
+        for (MicoTopicRole existingTopicRole : existingTopicRoles) {
+            if (existingTopicRole.getRole().equals(INPUT)) {
+                updateTopicIfRequired(existingTopicRole, kfConnectorDeploymentInfoRequestDTO.getInputTopicName());
+            } else if (existingTopicRole.getRole().equals(OUTPUT)) {
+                updateTopicIfRequired(existingTopicRole, kfConnectorDeploymentInfoRequestDTO.getOutputTopicName());
             }
         }
+        // Remove all topic roles that are referenced to a null topic.
+        storedServiceDeploymentInfo.getTopics().removeIf(t -> t.getTopic() == null);
 
-        // add existingTopics, if they do not exist, yet
-        List<MicoTopicRole.Role> storedTopicRoles = storedServiceDeploymentInfo.getTopics().stream().map(
+        // Add new topics, if they do not exist, yet
+        List<MicoTopicRole.Role> usedRoles = existingTopicRoles.stream().map(
             MicoTopicRole::getRole).collect(Collectors.toList());
-
-        for (MicoTopicRole.Role role : MicoTopicRole.Role.values()) {
-            // TODO, currently the the KFConnectorDeploymentInfoRequestDTO only provides INPUT and OUTPUT.
-            //  As soon as it also provides DEAD_LETTER, INVALID_MESSAGE and TEST_MESSAGE_OUTPUT this should be
-            //  handled here as well
-
-            if (!storedTopicRoles.contains(role) && (role == INPUT || role == OUTPUT)) {
-                storedServiceDeploymentInfo.getTopics().add(
-                    new MicoTopicRole()
-                        .setRole(role)
-                        .setServiceDeploymentInfo(storedServiceDeploymentInfo)
-                        .setTopic(new MicoTopic().setName(
-                            (role == INPUT) ? newInputTopicName
-                                : kfConnectorDeploymentInfoRequestDTO.getOutputTopicName()
-                        )));
-            }
+        if (!Strings.isNullOrEmpty(kfConnectorDeploymentInfoRequestDTO.getInputTopicName()) && !usedRoles.contains(INPUT)) {
+            existingTopicRoles.add(
+                new MicoTopicRole()
+                    .setRole(INPUT)
+                    .setServiceDeploymentInfo(storedServiceDeploymentInfo)
+                    .setTopic(new MicoTopic().setName(kfConnectorDeploymentInfoRequestDTO.getInputTopicName())));
         }
+        if (!Strings.isNullOrEmpty(kfConnectorDeploymentInfoRequestDTO.getOutputTopicName()) && !usedRoles.contains(OUTPUT)) {
+            existingTopicRoles.add(
+                new MicoTopicRole()
+                    .setRole(OUTPUT)
+                    .setServiceDeploymentInfo(storedServiceDeploymentInfo)
+                    .setTopic(new MicoTopic().setName(kfConnectorDeploymentInfoRequestDTO.getOutputTopicName())));
+        }
+
         // If a topic node in the database with the same name already exists it will be reused.
         serviceDeploymentInfoBroker.createOrReuseTopicsInDatabase(storedServiceDeploymentInfo);
         // Save the deployment information with a depth of 1 to the database -> topic roles will be created
         deploymentInfoRepository.save(storedServiceDeploymentInfo, 1);
+    }
+
+    /**
+     * Updates the {@code topicRole} with the provided name.
+     * If the name is {@code null} the topic will be deleted.
+     *
+     * @param topicRole    the {@link MicoTopicRole}
+     * @param newTopicName the new topic name
+     */
+    private void updateTopicIfRequired(MicoTopicRole topicRole, String newTopicName) {
+        MicoTopic existingTopic = topicRole.getTopic();
+
+        if (Strings.isNullOrEmpty(newTopicName)) {
+            // Topic name is null or empty -> delete the whole topic
+            topicRole.setTopic(null);
+        } else if (!existingTopic.getName().equals(newTopicName)) {
+            // Name differs -> recreate the topic (new id, possibly reusing existing topic)
+            topicRole.setTopic(new MicoTopic().setName(newTopicName));
+        }
     }
 
     /**
@@ -210,12 +221,23 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
      */
     private void eventuallyUpdateOpenFaaSFunction(KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO,
                                                   MicoServiceDeploymentInfo storedServiceDeploymentInfo) {
-        OpenFaaSFunction openFaaSFunction = storedServiceDeploymentInfo.getOpenFaaSFunction();
-        // Create new node if does not exist yet or the name has changed
-        if (openFaaSFunction == null || !openFaaSFunction.getName().equals(kfConnectorDeploymentInfoRequestDTO.getOpenFaaSFunctionName())) {
-            OpenFaaSFunction newOpenFaaSFunction = new OpenFaaSFunction().setName(kfConnectorDeploymentInfoRequestDTO.getOpenFaaSFunctionName());
-            storedServiceDeploymentInfo.setOpenFaaSFunction(newOpenFaaSFunction);
+        OpenFaaSFunction existingOpenFaaSFunction = storedServiceDeploymentInfo.getOpenFaaSFunction();
+        String newOpenFaasFunctionName = kfConnectorDeploymentInfoRequestDTO.getOpenFaaSFunctionName();
+
+        if (existingOpenFaaSFunction == null && newOpenFaasFunctionName != null) {
+            // Function does not exist in database yet -> create it
+            storedServiceDeploymentInfo.setOpenFaaSFunction(new OpenFaaSFunction().setName(newOpenFaasFunctionName));
+        } else if (existingOpenFaaSFunction != null) {
+            // Function node already exists, check if it should be updated or deleted
+            if (Strings.isNullOrEmpty(newOpenFaasFunctionName)) {
+                // Function node should be deleted
+                storedServiceDeploymentInfo.setOpenFaaSFunction(null);
+            } else if (!existingOpenFaaSFunction.getName().equals(newOpenFaasFunctionName)) {
+                // Function name has changed -> recreate the function node (new id, possibly reusing existing function node)
+                storedServiceDeploymentInfo.setOpenFaaSFunction(new OpenFaaSFunction().setName(newOpenFaasFunctionName));
+            }
         }
+
         // If a OpenFaasFunction node in the database with the same name already exists, reuse it.
         serviceDeploymentInfoBroker.createOrReuseOpenFaaSFunctionsInDatabase(storedServiceDeploymentInfo);
     }

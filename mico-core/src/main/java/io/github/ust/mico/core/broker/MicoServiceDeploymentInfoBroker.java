@@ -289,6 +289,11 @@ public class MicoServiceDeploymentInfoBroker {
      */
     MicoServiceDeploymentInfo createOrReuseOpenFaaSFunctionsInDatabase(MicoServiceDeploymentInfo serviceDeploymentInfo) {
         OpenFaaSFunction openFaaSFunction = serviceDeploymentInfo.getOpenFaaSFunction();
+        if (openFaaSFunction == null) {
+            // There is no OpenFaaS function -> nothing to do.
+            return serviceDeploymentInfo;
+        }
+
         Optional<OpenFaaSFunction> existingOpenFaaSFunctionOptional = openFaaSFunctionRepository.findByName(openFaaSFunction.getName());
         if (existingOpenFaaSFunctionOptional.isPresent()) {
             // OpenFaasFunction node with same name already exists -> Reuse it
