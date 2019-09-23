@@ -19,15 +19,25 @@
 
 package io.github.ust.mico.core.broker;
 
+import com.google.common.base.Strings;
+import io.github.ust.mico.core.dto.request.KFConnectorDeploymentInfoRequestDTO;
+import io.github.ust.mico.core.exception.KafkaFaasConnectorInstanceNotFoundException;
 import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
+import io.github.ust.mico.core.persistence.MicoTopicRepository;
+import io.github.ust.mico.core.persistence.OpenFaaSFunctionRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static io.github.ust.mico.core.model.MicoTopicRole.Role.INPUT;
+import static io.github.ust.mico.core.model.MicoTopicRole.Role.OUTPUT;
+
 
 @Slf4j
 @Service
@@ -35,6 +45,18 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
 
     @Autowired
     private MicoApplicationBroker applicationBroker;
+
+    @Autowired
+    private MicoServiceDeploymentInfoRepository deploymentInfoRepository;
+
+    @Autowired
+    private MicoServiceDeploymentInfoBroker serviceDeploymentInfoBroker;
+
+    @Autowired
+    private MicoTopicRepository topicRepository;
+
+    @Autowired
+    private OpenFaaSFunctionRepository openFaaSFunctionRepository;
 
     /**
      * Fetches a list of {@link MicoServiceDeploymentInfo MicoServiceDeploymentInfos} of all KafkaFaasConnector instances
@@ -83,4 +105,140 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
         return micoServiceDeploymentInfoOptional;
     }
 
+
+    /**
+     * Updates an existing {@link MicoServiceDeploymentInfo} in the database
+     * based on the values of a {@link KFConnectorDeploymentInfoRequestDTO} object.
+     *
+     * @param instanceId                          the instance ID of the {@link MicoServiceDeploymentInfo}
+     * @param kfConnectorDeploymentInfoRequestDTO the {@link KFConnectorDeploymentInfoRequestDTO}
+     * @return the new {@link MicoServiceDeploymentInfo} stored in the database
+     * @throws KafkaFaasConnectorInstanceNotFoundException if there is no {@code MicoServiceDeploymentInfo} for the requested {@code instanceId} stored in the database
+     */
+    public MicoServiceDeploymentInfo updateKafkaFaasConnectorDeploymentInformation(String instanceId, KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO)
+        throws KafkaFaasConnectorInstanceNotFoundException {
+
+        Optional<MicoServiceDeploymentInfo> storedServiceDeploymentInfoOptional = deploymentInfoRepository.findByInstanceId(instanceId);
+
+        if (!storedServiceDeploymentInfoOptional.isPresent()) {
+            throw new KafkaFaasConnectorInstanceNotFoundException(instanceId);
+        }
+        MicoServiceDeploymentInfo storedServiceDeploymentInfo = storedServiceDeploymentInfoOptional.get();
+        // Updates the deployment information in the database.
+        // The new values will be applied to the deployed services as soon as a new deployment is triggered.
+        return saveValuesToDatabase(kfConnectorDeploymentInfoRequestDTO, storedServiceDeploymentInfo);
+    }
+
+    /**
+     * Saves the values of a {@link KFConnectorDeploymentInfoRequestDTO} to the database.
+     *
+     * @param kfConnectorDeploymentInfoRequestDTO the {@link KFConnectorDeploymentInfoRequestDTO} that includes the new values
+     * @param storedServiceDeploymentInfo         the {@link MicoServiceDeploymentInfo} that is already stored in the database
+     * @return the new {@link MicoServiceDeploymentInfo} stored in the database
+     */
+    private MicoServiceDeploymentInfo saveValuesToDatabase(KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO,
+                                                           MicoServiceDeploymentInfo storedServiceDeploymentInfo) {
+
+        eventuallyUpdateTopics(kfConnectorDeploymentInfoRequestDTO, storedServiceDeploymentInfo);
+        eventuallyUpdateOpenFaaSFunction(kfConnectorDeploymentInfoRequestDTO, storedServiceDeploymentInfo);
+        MicoServiceDeploymentInfo updatedServiceDeploymentInfo = deploymentInfoRepository.save(storedServiceDeploymentInfo);
+        topicRepository.cleanUp();
+        openFaaSFunctionRepository.cleanUp();
+
+        return updatedServiceDeploymentInfo;
+    }
+
+    /**
+     * Stores or updates the input and output topics in the database
+     * based on the values of a {@link KFConnectorDeploymentInfoRequestDTO}.
+     *
+     * @param kfConnectorDeploymentInfoRequestDTO the {@link KFConnectorDeploymentInfoRequestDTO} that includes the topics
+     * @param storedServiceDeploymentInfo         the {@link MicoServiceDeploymentInfo} that is already stored in the database
+     */
+    private void eventuallyUpdateTopics(KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO,
+                                        MicoServiceDeploymentInfo storedServiceDeploymentInfo) {
+        // Update existing topics
+        List<MicoTopicRole> existingTopicRoles = storedServiceDeploymentInfo.getTopics();
+        for (MicoTopicRole existingTopicRole : existingTopicRoles) {
+            if (existingTopicRole.getRole().equals(INPUT)) {
+                updateTopicIfRequired(existingTopicRole, kfConnectorDeploymentInfoRequestDTO.getInputTopicName());
+            } else if (existingTopicRole.getRole().equals(OUTPUT)) {
+                updateTopicIfRequired(existingTopicRole, kfConnectorDeploymentInfoRequestDTO.getOutputTopicName());
+            }
+        }
+        // Remove all topic roles that are referenced to a null topic.
+        storedServiceDeploymentInfo.getTopics().removeIf(t -> t.getTopic() == null);
+
+        // Add new topics, if they do not exist, yet
+        List<MicoTopicRole.Role> usedRoles = existingTopicRoles.stream().map(
+            MicoTopicRole::getRole).collect(Collectors.toList());
+        if (!Strings.isNullOrEmpty(kfConnectorDeploymentInfoRequestDTO.getInputTopicName()) && !usedRoles.contains(INPUT)) {
+            existingTopicRoles.add(
+                new MicoTopicRole()
+                    .setRole(INPUT)
+                    .setServiceDeploymentInfo(storedServiceDeploymentInfo)
+                    .setTopic(new MicoTopic().setName(kfConnectorDeploymentInfoRequestDTO.getInputTopicName())));
+        }
+        if (!Strings.isNullOrEmpty(kfConnectorDeploymentInfoRequestDTO.getOutputTopicName()) && !usedRoles.contains(OUTPUT)) {
+            existingTopicRoles.add(
+                new MicoTopicRole()
+                    .setRole(OUTPUT)
+                    .setServiceDeploymentInfo(storedServiceDeploymentInfo)
+                    .setTopic(new MicoTopic().setName(kfConnectorDeploymentInfoRequestDTO.getOutputTopicName())));
+        }
+
+        // If a topic node in the database with the same name already exists it will be reused.
+        serviceDeploymentInfoBroker.createOrReuseTopicsInDatabase(storedServiceDeploymentInfo);
+        // Save the deployment information with a depth of 1 to the database -> topic roles will be created
+        deploymentInfoRepository.save(storedServiceDeploymentInfo, 1);
+    }
+
+    /**
+     * Updates the {@code topicRole} with the provided name.
+     * If the name is {@code null} the topic will be deleted.
+     *
+     * @param topicRole    the {@link MicoTopicRole}
+     * @param newTopicName the new topic name
+     */
+    private void updateTopicIfRequired(MicoTopicRole topicRole, String newTopicName) {
+        MicoTopic existingTopic = topicRole.getTopic();
+
+        if (Strings.isNullOrEmpty(newTopicName)) {
+            // Topic name is null or empty -> delete the whole topic
+            topicRole.setTopic(null);
+        } else if (!existingTopic.getName().equals(newTopicName)) {
+            // Name differs -> recreate the topic (new id, possibly reusing existing topic)
+            topicRole.setTopic(new MicoTopic().setName(newTopicName));
+        }
+    }
+
+    /**
+     * Stores or updates the OpenFaaS function name in the database
+     * based on the value of a {@link KFConnectorDeploymentInfoRequestDTO}.
+     *
+     * @param kfConnectorDeploymentInfoRequestDTO the {@link KFConnectorDeploymentInfoRequestDTO} that includes the topics
+     * @param storedServiceDeploymentInfo         the {@link MicoServiceDeploymentInfo} that is already stored in the database
+     */
+    private void eventuallyUpdateOpenFaaSFunction(KFConnectorDeploymentInfoRequestDTO kfConnectorDeploymentInfoRequestDTO,
+                                                  MicoServiceDeploymentInfo storedServiceDeploymentInfo) {
+        OpenFaaSFunction existingOpenFaaSFunction = storedServiceDeploymentInfo.getOpenFaaSFunction();
+        String newOpenFaasFunctionName = kfConnectorDeploymentInfoRequestDTO.getOpenFaaSFunctionName();
+
+        if (existingOpenFaaSFunction == null && newOpenFaasFunctionName != null) {
+            // Function does not exist in database yet -> create it
+            storedServiceDeploymentInfo.setOpenFaaSFunction(new OpenFaaSFunction().setName(newOpenFaasFunctionName));
+        } else if (existingOpenFaaSFunction != null) {
+            // Function node already exists, check if it should be updated or deleted
+            if (Strings.isNullOrEmpty(newOpenFaasFunctionName)) {
+                // Function node should be deleted
+                storedServiceDeploymentInfo.setOpenFaaSFunction(null);
+            } else if (!existingOpenFaaSFunction.getName().equals(newOpenFaasFunctionName)) {
+                // Function name has changed -> recreate the function node (new id, possibly reusing existing function node)
+                storedServiceDeploymentInfo.setOpenFaaSFunction(new OpenFaaSFunction().setName(newOpenFaasFunctionName));
+            }
+        }
+
+        // If a OpenFaasFunction node in the database with the same name already exists, reuse it.
+        serviceDeploymentInfoBroker.createOrReuseOpenFaaSFunctionsInDatabase(storedServiceDeploymentInfo);
+    }
 }

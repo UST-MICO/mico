@@ -54,6 +54,9 @@ public class MicoServiceDeploymentInfoBroker {
     private MicoTopicRepository micoTopicRepository;
 
     @Autowired
+    private OpenFaaSFunctionRepository openFaaSFunctionRepository;
+
+    @Autowired
     private MicoEnvironmentVariableRepository micoEnvironmentVariableRepository;
 
     @Autowired
@@ -206,6 +209,7 @@ public class MicoServiceDeploymentInfoBroker {
         final MicoServiceDeploymentInfo updatedServiceDeploymentInfoWithoutTopics = serviceDeploymentInfoRepository.save(sdiWithAppliedValues);
 
         final MicoServiceDeploymentInfo finalUpdatedServiceDeploymentInfo;
+
         if (serviceDeploymentInfoDTO.getTopics().isEmpty()) {
             finalUpdatedServiceDeploymentInfo = updatedServiceDeploymentInfoWithoutTopics;
         } else {
@@ -214,7 +218,7 @@ public class MicoServiceDeploymentInfoBroker {
                 serviceDeploymentInfoDTO.getTopics().stream().map(t -> MicoTopicRole.valueOf(t, updatedServiceDeploymentInfoWithoutTopics)).collect(Collectors.toList()));
 
             // Check if topics with the same names already exist, if so reuse them.
-            MicoServiceDeploymentInfo sdiWithReusedTopics = createOrReuseTopics(sdiWithTopics);
+            MicoServiceDeploymentInfo sdiWithReusedTopics = createOrReuseTopicsInDatabase(sdiWithTopics);
             finalUpdatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(sdiWithReusedTopics);
         }
 
@@ -227,6 +231,7 @@ public class MicoServiceDeploymentInfoBroker {
         micoEnvironmentVariableRepository.cleanUp();
         kubernetesDeploymentInfoRepository.cleanUp();
         micoInterfaceConnectionRepository.cleanUp();
+        openFaaSFunctionRepository.cleanUp();
 
         return finalUpdatedServiceDeploymentInfo;
     }
@@ -250,28 +255,57 @@ public class MicoServiceDeploymentInfoBroker {
     }
 
     /**
-     * Checks if topics with the same name already exists.
+     * Checks if topics with the same name already exists in the database.
      * If so reuse them by setting the id of the existing Neo4j node and save them.
      * If not create them in the database.
      *
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo} containing topics
      */
-    private MicoServiceDeploymentInfo createOrReuseTopics(MicoServiceDeploymentInfo serviceDeploymentInfo) {
+    MicoServiceDeploymentInfo createOrReuseTopicsInDatabase(MicoServiceDeploymentInfo serviceDeploymentInfo) {
         List<MicoTopicRole> topicRoles = serviceDeploymentInfo.getTopics();
 
         for (MicoTopicRole topicRole : topicRoles) {
-            String topicName = topicRole.getTopic().getName();
-            Optional<MicoTopic> existingTopic = micoTopicRepository.findByName(topicName);
-            if (existingTopic.isPresent()) {
-                topicRole.setTopic(existingTopic.get());
+            MicoTopic topic = topicRole.getTopic();
+            Optional<MicoTopic> existingTopicOptional = micoTopicRepository.findByName(topic.getName());
+            if (existingTopicOptional.isPresent()) {
+                // Topic node with same name already exists -> Reuse it
+                topicRole.setTopic(existingTopicOptional.get());
             } else {
-                MicoTopic savedTopic = micoTopicRepository.save(topicRole.getTopic());
+                // Topic node with requested name does not exist yet -> Create it
+                topic.setId(null);
+                MicoTopic savedTopic = micoTopicRepository.save(topic);
                 topicRole.setTopic(savedTopic);
             }
         }
         return serviceDeploymentInfo;
     }
 
+    /**
+     * Checks if the given OpenFaaS function name is already present in the database.
+     * If so it will be reused. Otherwise a new node will be created.
+     *
+     * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}
+     * @return the updated {@link MicoServiceDeploymentInfo}
+     */
+    MicoServiceDeploymentInfo createOrReuseOpenFaaSFunctionsInDatabase(MicoServiceDeploymentInfo serviceDeploymentInfo) {
+        OpenFaaSFunction openFaaSFunction = serviceDeploymentInfo.getOpenFaaSFunction();
+        if (openFaaSFunction == null) {
+            // There is no OpenFaaS function -> nothing to do.
+            return serviceDeploymentInfo;
+        }
+
+        Optional<OpenFaaSFunction> existingOpenFaaSFunctionOptional = openFaaSFunctionRepository.findByName(openFaaSFunction.getName());
+        if (existingOpenFaaSFunctionOptional.isPresent()) {
+            // OpenFaasFunction node with same name already exists -> Reuse it
+            serviceDeploymentInfo.setOpenFaaSFunction(existingOpenFaaSFunctionOptional.get());
+        } else {
+            // OpenFaasFunction node with requested name does not exist yet -> Create it
+            openFaaSFunction.setId(null);
+            OpenFaaSFunction savedOpenFaaSFunction = openFaaSFunctionRepository.save(openFaaSFunction);
+            serviceDeploymentInfo.setOpenFaaSFunction(savedOpenFaaSFunction);
+        }
+        return serviceDeploymentInfo;
+    }
 
     /**
      * Sets the default environment variables for Kafka-enabled MicoServices. See {@link MicoEnvironmentVariable.DefaultNames}

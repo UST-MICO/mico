@@ -46,6 +46,7 @@ import java.util.stream.Collectors;
 
 import static io.github.ust.mico.core.TestConstants.*;
 import static io.github.ust.mico.core.resource.ApplicationResource.PATH_APPLICATIONS;
+import static io.github.ust.mico.core.resource.ApplicationResource.PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
@@ -225,7 +226,7 @@ public class ApplicationResourceEndToEndTests extends Neo4jTestClass {
 
         given(micoKubernetesClient.isApplicationUndeployed(application)).willReturn(true);
 
-        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR + "/" + SERVICE_VERSION))
+        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR + "?" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION + "=" + SERVICE_VERSION))
             .andDo(print())
             .andExpect(status().isOk());
 
@@ -248,7 +249,7 @@ public class ApplicationResourceEndToEndTests extends Neo4jTestClass {
 
         given(micoKubernetesClient.isApplicationUndeployed(application)).willReturn(true);
 
-        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR + "/" + SERVICE_VERSION))
+        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR + "?" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION + "=" + SERVICE_VERSION))
             .andDo(print())
             .andExpect(status().isOk());
 
@@ -258,7 +259,7 @@ public class ApplicationResourceEndToEndTests extends Neo4jTestClass {
         assertThat(result.get().getKafkaFaasConnectorDeploymentInfos().get(0).getService(), is(kfConnectorService));
         String instanceId = result.get().getKafkaFaasConnectorDeploymentInfos().get(0).getInstanceId();
 
-        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR + "/" + SERVICE_VERSION + "/" + instanceId))
+        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR + "/" + instanceId + "?" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION + "=" + SERVICE_VERSION))
             .andDo(print())
             .andExpect(status().isOk());
 
@@ -268,7 +269,7 @@ public class ApplicationResourceEndToEndTests extends Neo4jTestClass {
         assertThat(result2.get().getKafkaFaasConnectorDeploymentInfos().get(0).getService(), is(kfConnectorService));
         assertThat(result2.get().getKafkaFaasConnectorDeploymentInfos().get(0).getInstanceId(), is(instanceId));
 
-        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR + "/" + SERVICE_VERSION + "/" + instanceId))
+        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR + "/" + instanceId + "?" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION + "=" + SERVICE_VERSION))
             .andDo(print())
             .andExpect(status().isOk());
 
@@ -318,44 +319,6 @@ public class ApplicationResourceEndToEndTests extends Neo4jTestClass {
     }
 
     @Test
-    public void deleteKafkaFaasConnectorInstancesFromApplicationByVersion() throws Exception {
-        MicoApplication application = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
-
-        String kafkaFaasConnectorServiceName = kafkaFaasConnectorConfig.getServiceName();
-        MicoService kfConnectorService = new MicoService().setShortName(kafkaFaasConnectorServiceName).setVersion(SERVICE_VERSION).setKafkaEnabled(true);
-        MicoServiceDeploymentInfo sdi1 = new MicoServiceDeploymentInfo()
-            .setService(kfConnectorService)
-            .setInstanceId(INSTANCE_ID_1);
-        MicoServiceDeploymentInfo sdi2 = new MicoServiceDeploymentInfo()
-            .setService(kfConnectorService)
-            .setInstanceId(INSTANCE_ID_2);
-        application.getKafkaFaasConnectorDeploymentInfos().add(sdi1);
-        application.getKafkaFaasConnectorDeploymentInfos().add(sdi2);
-        serviceRepository.save(kfConnectorService);
-        applicationRepository.save(application);
-
-        given(micoKubernetesClient.isApplicationUndeployed(application)).willReturn(true);
-
-        List<MicoServiceDeploymentInfo> sdiBefore = serviceDeploymentInfoRepository.findByApplicationAndService(
-            application.getShortName(), application.getVersion(), kafkaFaasConnectorServiceName);
-        assertThat(sdiBefore.size(), is(2));
-        Optional<MicoApplication> appBefore = applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion());
-        assertTrue(appBefore.isPresent());
-        assertThat(appBefore.get().getKafkaFaasConnectorDeploymentInfos().size(), is(2));
-
-        mvc.perform(delete(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR + "/" + SERVICE_VERSION))
-            .andDo(print())
-            .andExpect(status().isNoContent());
-
-        List<MicoServiceDeploymentInfo> sdiAfter = serviceDeploymentInfoRepository.findByApplicationAndService(
-            application.getShortName(), application.getVersion(), kafkaFaasConnectorServiceName);
-        assertThat(sdiAfter.size(), is(0));
-        Optional<MicoApplication> appAfter = applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion());
-        assertTrue(appAfter.isPresent());
-        assertThat(appAfter.get().getKafkaFaasConnectorDeploymentInfos().size(), is(0));
-    }
-
-    @Test
     public void deleteKafkaFaasConnectorInstanceFromApplicationByInstanceId() throws Exception {
         MicoApplication application = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
 
@@ -381,7 +344,7 @@ public class ApplicationResourceEndToEndTests extends Neo4jTestClass {
         assertTrue(appBefore.isPresent());
         assertThat(appBefore.get().getKafkaFaasConnectorDeploymentInfos().size(), is(2));
 
-        mvc.perform(delete(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR + "/" + SERVICE_VERSION + "/" + INSTANCE_ID_1))
+        mvc.perform(delete(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR + "/" + INSTANCE_ID_1 + "?" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION + "=" + SERVICE_VERSION))
             .andDo(print())
             .andExpect(status().isNoContent());
 

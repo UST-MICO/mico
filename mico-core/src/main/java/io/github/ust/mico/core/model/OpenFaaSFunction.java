@@ -17,22 +17,37 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.persistence;
+package io.github.ust.mico.core.model;
 
-import io.github.ust.mico.core.model.MicoTopic;
-import org.springframework.data.neo4j.annotation.Query;
-import org.springframework.data.neo4j.repository.Neo4jRepository;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.github.ust.mico.core.dto.request.MicoEnvironmentVariableRequestDTO;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
 
-import java.util.List;
-import java.util.Optional;
+/**
+ * Represents an OpenFaaS function as used by the KafkaFaaSConnector
+ * <p>
+ * Instances of this class are persisted as nodes in the Neo4j database.
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Accessors(chain = true)
+@NodeEntity
+public class OpenFaaSFunction {
 
-public interface MicoTopicRepository extends Neo4jRepository<MicoTopic, Long> {
+    @Id
+    @GeneratedValue
+    private Long id;
+
     /**
-     * Deletes all topics that do <b>not</b> have any relationship to another node.
+     * Name of the OpenFaaS Function
      */
-    @Query("MATCH (topic:MicoTopic) WHERE size((topic)--()) = 0 DELETE topic")
-    void cleanUp();
+    private String name;
 
-    Optional<MicoTopic> findByName(String name);
-    List<MicoTopic> findAllByName(String name);
 }
