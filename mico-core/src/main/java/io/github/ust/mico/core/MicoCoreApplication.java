@@ -35,9 +35,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.ApplicationListener;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.*;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
 import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
@@ -45,6 +43,7 @@ import org.springframework.data.redis.repository.configuration.EnableRedisReposi
 import org.springframework.jmx.support.MBeanServerConnectionFactoryBean;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.context.WebApplicationContext;
 
 import java.io.IOException;
 import java.util.List;
@@ -145,6 +144,7 @@ public class MicoCoreApplication implements ApplicationListener<ApplicationReady
     KafkaConfig kafkaConfig;
 
     @Bean
+    @Scope(value = WebApplicationContext.SCOPE_APPLICATION, proxyMode = ScopedProxyMode.TARGET_CLASS)
     public MBeanServerConnectionFactoryBean jmxConnector() throws Exception {
         MBeanServerConnectionFactoryBean jmx = new MBeanServerConnectionFactoryBean();
         jmx.setServiceUrl(kafkaConfig.getMetricsUrl());
