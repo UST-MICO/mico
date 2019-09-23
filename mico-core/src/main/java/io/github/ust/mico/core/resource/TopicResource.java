@@ -50,7 +50,9 @@ public class TopicResource {
 
     @GetMapping()
     public ResponseEntity<Resources<Resource<TopicDTO>>> getAllTopics() {
+        log.debug("Request to get all topics");
         List<String> topics = topicBroker.getAllTopics();
+        log.info("Request got '{}' topics", topics.size());
         List<Resource<TopicDTO>> resourceList = new LinkedList<>();
         topics.forEach(topic -> resourceList.add(new Resource<>(new TopicDTO().setName(topic))));
         Resources<Resource<TopicDTO>> responseResourcesList = new Resources<>(resourceList);

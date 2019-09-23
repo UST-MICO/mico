@@ -35,6 +35,11 @@ public class TopicBroker {
     @Autowired
     private MicoTopicRepository micoTopicRepository;
 
+    /**
+     * Reads all topics from the topic repository
+     *
+     * @return
+     */
     public List<String> getAllTopics() {
         List<String> topics = new LinkedList<>();
         micoTopicRepository.findAll().forEach(topic -> topics.add(topic.getName()));
