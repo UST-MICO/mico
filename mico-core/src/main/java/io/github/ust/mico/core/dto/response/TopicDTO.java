@@ -17,22 +17,22 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.persistence;
+package io.github.ust.mico.core.dto.response;
 
-import io.github.ust.mico.core.model.MicoTopic;
-import org.springframework.data.neo4j.annotation.Query;
-import org.springframework.data.neo4j.repository.Neo4jRepository;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
-import java.util.List;
-import java.util.Optional;
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Accessors(chain = true)
+public class TopicDTO {
 
-public interface MicoTopicRepository extends Neo4jRepository<MicoTopic, Long> {
     /**
-     * Deletes all topics that do <b>not</b> have any relationship to another node.
+     * The name of the topic
      */
-    @Query("MATCH (topic:MicoTopic) WHERE size((topic)--()) = 0 DELETE topic")
-    void cleanUp();
+    String name;
 
-    Optional<MicoTopic> findByName(String name);
-    List<MicoTopic> findAllByName(String name);
 }

@@ -20,6 +20,7 @@
 package io.github.ust.mico.core.resource;
 
 import io.github.ust.mico.core.broker.MicoApplicationBroker;
+import io.github.ust.mico.core.broker.MicoServiceBroker;
 import io.github.ust.mico.core.dto.request.MicoApplicationRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
 import io.github.ust.mico.core.dto.response.KFConnectorDeploymentInfoResponseDTO;
@@ -64,22 +65,25 @@ public class ApplicationResource {
     private static final String PATH_PROMOTE = "promote";
     private static final String PATH_DEPLOYMENT_STATUS = "deploymentStatus";
     private static final String PATH_STATUS = "status";
-    private static final String PATH_KAFKA_FAAS_CONNECTOR = "kafka-faas-connector";
+    public static final String PATH_KAFKA_FAAS_CONNECTOR = "kafka-faas-connector";
 
     static final String PATH_VARIABLE_SHORT_NAME = "micoApplicationShortName";
     static final String PATH_VARIABLE_VERSION = "micoApplicationVersion";
+    private static final String PATH_VARIABLE_INSTANCE_ID = "instanceId";
     private static final String PATH_VARIABLE_SERVICE_SHORT_NAME = "micoServiceShortName";
     private static final String PATH_VARIABLE_SERVICE_VERSION = "micoServiceVersion";
-    private static final String PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION = "kafkaFaasConnectorVersion";
-    private static final String PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID = "kafkaFaasConnectorInstanceId";
-    private static final String PATH_VARIABLE_INSTANCE_ID = "instanceId";
+    public static final String PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION = "version";
+    static final String PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID = "kafkaFaasConnectorInstanceId";
 
     @Autowired
-    private MicoApplicationBroker broker;
+    private MicoApplicationBroker applicationBroker;
+
+    @Autowired
+    private MicoServiceBroker serviceBroker;
 
     @GetMapping()
     public ResponseEntity<Resources<Resource<MicoApplicationWithServicesResponseDTO>>> getAllApplications() {
-        List<MicoApplication> applications = broker.getMicoApplications();
+        List<MicoApplication> applications = applicationBroker.getMicoApplications();
 
         return ResponseEntity.ok(
             new Resources<>(getApplicationWithServicesResponseDTOResourceList(applications),
@@ -88,7 +92,7 @@ public class ApplicationResource {
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
     public ResponseEntity<Resources<Resource<MicoApplicationWithServicesResponseDTO>>> getApplicationsByShortName(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
-        List<MicoApplication> applications = broker.getMicoApplicationsByShortName(shortName);
+        List<MicoApplication> applications = applicationBroker.getMicoApplicationsByShortName(shortName);
 
         return ResponseEntity.ok(
             new Resources<>(getApplicationWithServicesResponseDTOResourceList(applications),
@@ -100,7 +104,7 @@ public class ApplicationResource {
                                                                                                                 @PathVariable(PATH_VARIABLE_VERSION) String version) {
         MicoApplication application;
         try {
-            application = broker.getMicoApplicationByShortNameAndVersion(shortName, version);
+            application = applicationBroker.getMicoApplicationByShortNameAndVersion(shortName, version);
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
@@ -113,7 +117,7 @@ public class ApplicationResource {
     public ResponseEntity<Resource<MicoApplicationWithServicesResponseDTO>> createApplication(@Valid @RequestBody MicoApplicationRequestDTO applicationDto) {
         MicoApplication application;
         try {
-            application = broker.createMicoApplication(MicoApplication.valueOf(applicationDto));
+            application = applicationBroker.createMicoApplication(MicoApplication.valueOf(applicationDto));
         } catch (MicoApplicationAlreadyExistsException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
@@ -123,7 +127,7 @@ public class ApplicationResource {
         return ResponseEntity
             .created(linkTo(methodOn(ApplicationResource.class)
                 .getApplicationByShortNameAndVersion(application.getShortName(), application.getVersion())).toUri())
-            .body(new Resource<>(dto, broker.getLinksOfMicoApplication(application)));
+            .body(new Resource<>(dto, applicationBroker.getLinksOfMicoApplication(application)));
     }
 
     @PutMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}")
@@ -132,7 +136,7 @@ public class ApplicationResource {
                                                                                               @Valid @RequestBody MicoApplicationRequestDTO applicationRequestDto) {
         MicoApplication application;
         try {
-            application = broker.updateMicoApplication(shortName, version, MicoApplication.valueOf(applicationRequestDto));
+            application = applicationBroker.updateMicoApplication(shortName, version, MicoApplication.valueOf(applicationRequestDto));
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (ShortNameOfMicoApplicationDoesNotMatchException | VersionOfMicoApplicationDoesNotMatchException | MicoApplicationIsNotUndeployedException e) {
@@ -149,7 +153,7 @@ public class ApplicationResource {
                                                                                                @Valid @RequestBody MicoVersionRequestDTO newVersionDto) {
         MicoApplication application;
         try {
-            application = broker.copyAndUpgradeMicoApplicationByShortNameAndVersion(shortName, version, newVersionDto.getVersion());
+            application = applicationBroker.copyAndUpgradeMicoApplicationByShortNameAndVersion(shortName, version, newVersionDto.getVersion());
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoApplicationAlreadyExistsException e) {
@@ -163,7 +167,7 @@ public class ApplicationResource {
     public ResponseEntity<Void> deleteApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                   @PathVariable(PATH_VARIABLE_VERSION) String version) {
         try {
-            broker.deleteMicoApplicationByShortNameAndVersion(shortName, version);
+            applicationBroker.deleteMicoApplicationByShortNameAndVersion(shortName, version);
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoApplicationIsNotUndeployedException e) {
@@ -176,7 +180,7 @@ public class ApplicationResource {
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}")
     public ResponseEntity<Void> deleteAllVersionsOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName) {
         try {
-            broker.deleteMicoApplicationsByShortName(shortName);
+            applicationBroker.deleteMicoApplicationsByShortName(shortName);
         } catch (MicoApplicationIsNotUndeployedException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
@@ -189,7 +193,7 @@ public class ApplicationResource {
                                                                                                 @PathVariable(PATH_VARIABLE_VERSION) String version) {
         List<MicoService> micoServices;
         try {
-            micoServices = broker.getMicoServicesOfMicoApplicationByShortNameAndVersion(shortName, version);
+            micoServices = applicationBroker.getMicoServicesOfMicoApplicationByShortNameAndVersion(shortName, version);
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
@@ -209,7 +213,7 @@ public class ApplicationResource {
                                                                                                   @PathVariable(PATH_VARIABLE_SERVICE_VERSION) String serviceVersion) {
         MicoServiceDeploymentInfo serviceDeploymentInfo;
         try {
-            serviceDeploymentInfo = broker.addMicoServiceToMicoApplicationByShortNameAndVersion(
+            serviceDeploymentInfo = applicationBroker.addMicoServiceToMicoApplicationByShortNameAndVersion(
                 applicationShortName, applicationVersion, serviceShortName, serviceVersion, Optional.empty());
         } catch (MicoApplicationNotFoundException | MicoServiceNotFoundException | MicoServiceDeploymentInformationNotFoundException | KubernetesResourceException | MicoServiceInstanceNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
@@ -237,7 +241,7 @@ public class ApplicationResource {
                                                                                                   @PathVariable(PATH_VARIABLE_INSTANCE_ID) String instanceId) {
         MicoServiceDeploymentInfo serviceDeploymentInfo;
         try {
-            serviceDeploymentInfo = broker.addMicoServiceToMicoApplicationByShortNameAndVersion(
+            serviceDeploymentInfo = applicationBroker.addMicoServiceToMicoApplicationByShortNameAndVersion(
                 applicationShortName, applicationVersion, serviceShortName, serviceVersion, Optional.ofNullable(instanceId));
         } catch (MicoApplicationNotFoundException | MicoServiceNotFoundException | MicoServiceDeploymentInformationNotFoundException | KubernetesResourceException | MicoServiceInstanceNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
@@ -255,7 +259,7 @@ public class ApplicationResource {
                                                              @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                              @PathVariable(PATH_VARIABLE_SERVICE_SHORT_NAME) String serviceShortName) {
         try {
-            broker.removeMicoServiceFromMicoApplicationByShortNameAndVersion(shortName, version, serviceShortName);
+            applicationBroker.removeMicoServiceFromMicoApplicationByShortNameAndVersion(shortName, version, serviceShortName);
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoApplicationDoesNotIncludeMicoServiceException | MicoApplicationIsNotUndeployedException e) {
@@ -267,15 +271,18 @@ public class ApplicationResource {
 
     @ApiOperation(value = "Adds a new association between a MicoApplication and a KafkaFaasConnector (MicoService). " +
         "Multiple instances of a KafkaFaasConnector are allowed per MicoApplication.")
-    @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR + "/{" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION + "}")
+    @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR)
     public ResponseEntity<Resource<KFConnectorDeploymentInfoResponseDTO>> addKafkaFaasConnectorInstanceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
                                                                                                                      @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
-                                                                                                                     @PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION) String kfConnectorVersion) {
+                                                                                                                     @RequestParam(name = PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION, required=false) String kfConnectorVersion) {
         MicoServiceDeploymentInfo kafkaFaasConnectorSDI;
         try {
-            kafkaFaasConnectorSDI = broker.addKafkaFaasConnectorInstanceToMicoApplicationByVersion(
+            if(kfConnectorVersion == null)
+                kfConnectorVersion = serviceBroker.getLatestKFConnectorVersion();
+            kafkaFaasConnectorSDI = applicationBroker.addKafkaFaasConnectorInstanceToMicoApplicationByVersion(
                 applicationShortName, applicationVersion, kfConnectorVersion);
-        } catch (MicoApplicationNotFoundException | KafkaFaasConnectorVersionNotFoundException e) {
+        } catch (MicoApplicationNotFoundException | KafkaFaasConnectorVersionNotFoundException
+                | KafkaFaasConnectorInstanceNotFoundException | KafkaFaasConnectorLatestVersionNotFound e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoApplicationIsNotUndeployedException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
@@ -285,14 +292,15 @@ public class ApplicationResource {
     }
 
     @ApiOperation(value = "Updates an existing KafkaFaasConnector deployment information instance with a new version.")
-    @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR + "/{" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION + "}/{" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID + "}")
+    @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR + "/{" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID + "}")
     public ResponseEntity<Resource<KFConnectorDeploymentInfoResponseDTO>> updateKafkaFaasConnectorInstanceOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
                                                                                                                         @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
-                                                                                                                        @PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION) String kfConnectorVersion,
-                                                                                                                        @PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID) String instanceId) {
+                                                                                                                        @PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID) String instanceId,
+                                                                                                                        @RequestParam(name = PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION, required=false) String kfConnectorVersion) {
+
         MicoServiceDeploymentInfo kafkaFaasConnectorSDI;
         try {
-            kafkaFaasConnectorSDI = broker.updateKafkaFaasConnectorInstanceOfMicoApplicationByVersionAndInstanceId(
+            kafkaFaasConnectorSDI = applicationBroker.updateKafkaFaasConnectorInstanceOfMicoApplicationByVersionAndInstanceId(
                 applicationShortName, applicationVersion, kfConnectorVersion, instanceId);
         } catch (MicoApplicationNotFoundException | KafkaFaasConnectorVersionNotFoundException | KafkaFaasConnectorInstanceNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
@@ -304,25 +312,10 @@ public class ApplicationResource {
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR)
-    public ResponseEntity<Void> deleteAllKafkaFaasConnectorInstancesFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                                    @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        try {
-            broker.removeAllKafkaFaasConnectorInstancesFromMicoApplication(shortName, version);
-        } catch (MicoApplicationNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        } catch (MicoApplicationIsNotUndeployedException e) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
-        }
-
-        return ResponseEntity.noContent().build();
-    }
-
-    @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR + "/{" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION + "}")
     public ResponseEntity<Void> deleteKafkaFaasConnectorInstancesFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                                 @PathVariable(PATH_VARIABLE_VERSION) String version,
-                                                                                 @PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION) String kfConnectorVersion) {
+                                                                                 @PathVariable(PATH_VARIABLE_VERSION) String version) {
         try {
-            broker.removeKafkaFaasConnectorInstancesFromMicoApplicationByVersion(shortName, version, kfConnectorVersion);
+            applicationBroker.removeAllKafkaFaasConnectorInstancesFromMicoApplication(shortName, version);
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoApplicationIsNotUndeployedException e) {
@@ -332,13 +325,12 @@ public class ApplicationResource {
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR + "/{" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION + "}/{" + PATH_VARIABLE_INSTANCE_ID + "}")
+    @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR + "/{" + PATH_VARIABLE_INSTANCE_ID + "}")
     public ResponseEntity<Void> deleteKafkaFaasConnectorInstanceFromApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                 @PathVariable(PATH_VARIABLE_VERSION) String version,
-                                                                                @PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION) String kfConnectorVersion,
                                                                                 @PathVariable(PATH_VARIABLE_INSTANCE_ID) String instanceId) {
         try {
-            broker.removeKafkaFaasConnectorInstanceFromMicoApplicationByVersionAndInstanceId(shortName, version, kfConnectorVersion, instanceId);
+            applicationBroker.removeKafkaFaasConnectorInstanceFromMicoApplicationByInstanceId(shortName, version, instanceId);
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoApplicationDoesNotIncludeKFConnectorInstanceException | MicoApplicationIsNotUndeployedException | KafkaFaasConnectorInstanceNotFoundException e) {
@@ -353,7 +345,7 @@ public class ApplicationResource {
                                                                                                                @PathVariable(PATH_VARIABLE_VERSION) String version) {
         MicoApplicationDeploymentStatus applicationDeploymentStatus;
         try {
-            applicationDeploymentStatus = broker.getApplicationDeploymentStatus(shortName, version);
+            applicationDeploymentStatus = applicationBroker.getApplicationDeploymentStatus(shortName, version);
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
@@ -365,7 +357,7 @@ public class ApplicationResource {
                                                                                              @PathVariable(PATH_VARIABLE_VERSION) String version) {
         MicoApplicationStatusResponseDTO applicationStatus;
         try {
-            applicationStatus = broker.getApplicationStatus(shortName, version);
+            applicationStatus = applicationBroker.getApplicationStatus(shortName, version);
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
@@ -380,12 +372,12 @@ public class ApplicationResource {
         MicoApplicationWithServicesResponseDTO dto = new MicoApplicationWithServicesResponseDTO(application);
         try {
             dto.setDeploymentStatus(new MicoApplicationDeploymentStatusResponseDTO(
-                broker.getApplicationDeploymentStatus(application.getShortName(), application.getVersion())));
+                applicationBroker.getApplicationDeploymentStatus(application.getShortName(), application.getVersion())));
         } catch (MicoApplicationNotFoundException e) {
             // Application was already checked -> it's safe to not throw an exception.
             // Don't throw an exception because it would make the code way more complex.
             log.error(e.getMessage());
         }
-        return new Resource<>(dto, broker.getLinksOfMicoApplication(application));
+        return new Resource<>(dto, applicationBroker.getLinksOfMicoApplication(application));
     }
 }

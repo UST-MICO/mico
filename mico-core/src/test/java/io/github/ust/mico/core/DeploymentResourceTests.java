@@ -53,9 +53,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -86,6 +84,9 @@ public class DeploymentResourceTests {
     private static final String DEPLOYMENT_NAME = "deployment-name";
     private static final String SERVICE_NAME = "service-name";
     private static final String NAMESPACE_NAME = "namespace-name";
+    private static final String OPENFAAS_FUNCTION_NAME = "test-function";
+    private static final String KAFKA_TOPIC_INPUT_NAME = "input-topic";
+    private static final String KAFKA_TOPIC_OUTPUT_NAME = "output-topic";
 
     @Captor
     private ArgumentCaptor<MicoService> micoServiceArgumentCaptor;
@@ -220,12 +221,19 @@ public class DeploymentResourceTests {
 
     @Test
     public void deployApplicationWithKafkaEnabledServiceWithoutServiceInterface() throws Exception {
+        List<MicoTopicRole> micoTopicRoles =Arrays.asList(
+            new MicoTopicRole().setTopic(new MicoTopic().setName("inputTopic")).setRole(MicoTopicRole.Role.INPUT),
+            new MicoTopicRole().setRole(MicoTopicRole.Role.OUTPUT).setTopic(new MicoTopic().setName("outputTopic")));
         MicoService service = getTestService();
         service.setServiceInterfaces(new ArrayList<>()); // There are no interfaces
         service.setKafkaEnabled(true); // Service is Kafka enabled
+        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
+            .setService(service)
+            .setInstanceId(INSTANCE_ID)
+            .setTopics(micoTopicRoles);
         MicoApplication application = getTestApplication();
         application.getServices().add(service);
-        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(service));
+        application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
 
         setupDeploymentResources(application, service);
 

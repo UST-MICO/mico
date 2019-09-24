@@ -9,6 +9,7 @@ import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.util.FutureUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -50,7 +51,7 @@ public class DeploymentBroker {
     @Autowired
     private MicoServiceRepository serviceRepository;
 
-    public MicoApplicationJobStatus deployApplication(String shortName, String version) throws MicoApplicationNotFoundException, MicoServiceInterfaceNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException, DeploymentException {
+    public MicoApplicationJobStatus deployApplication(String shortName, String version) throws MicoApplicationNotFoundException, MicoServiceInterfaceNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException, DeploymentRequirementsNotMetException {
 
         MicoApplication micoApplication = micoApplicationBroker.getMicoApplicationByShortNameAndVersion(shortName, version);
 
@@ -182,21 +183,55 @@ public class DeploymentBroker {
         }
     }
 
-    private void checkIfMicoApplicationIsDeployable(MicoApplication micoApplication) throws MicoApplicationDoesNotIncludeMicoServiceException, MicoServiceInterfaceNotFoundException, DeploymentException {
+    private void checkIfMicoApplicationIsDeployable(MicoApplication micoApplication) throws MicoApplicationDoesNotIncludeMicoServiceException, MicoServiceInterfaceNotFoundException, DeploymentRequirementsNotMetException {
         if (micoApplication.getServices() == null || micoApplication.getServices().isEmpty()) {
             throw new MicoApplicationDoesNotIncludeMicoServiceException(micoApplication.getShortName(), micoApplication.getVersion());
         }
         for (MicoService micoService : micoApplication.getServices()) {
-            // If the service is not Kafka enabled, there must be at least one interface.
+            // If the service is not Kafka-enabled, there must be at least one interface.
             if (!micoService.isKafkaEnabled() &&
                 (micoService.getServiceInterfaces() == null || micoService.getServiceInterfaces().isEmpty())) {
                 throw new MicoServiceInterfaceNotFoundException(micoService.getShortName(), micoService.getVersion());
             }
+
             if (!micoService.getDependencies().isEmpty()) {
                 // TODO: Check if dependencies are valid. Covered by mico#583
-                throw new DeploymentException("The deployment of service dependencies is currently not implemented. " +
+                throw new NotImplementedException("The deployment of service dependencies is currently not implemented. " +
                     "See https://github.com/UST-MICO/mico/issues/583");
             }
+        }
+
+        for (MicoServiceDeploymentInfo serviceDeploymentInfo : micoApplication.getServiceDeploymentInfos()) {
+            // If the service is Kafka-enabled check if the deployment information met the requirements
+            if (serviceDeploymentInfo.getService().isKafkaEnabled()) {
+                checkIfKafkaEnabledServiceIsDeployable(serviceDeploymentInfo);
+            }
+        }
+        for (MicoServiceDeploymentInfo kfConnectorDeploymentInfo : micoApplication.getKafkaFaasConnectorDeploymentInfos()) {
+            // Check if the KafkaFaasConnector deployment information met the requirements
+            checkIfKafkaEnabledServiceIsDeployable(kfConnectorDeploymentInfo);
+        }
+    }
+
+    /**
+     * Checks if the properties of the {@link MicoServiceDeploymentInfo} are valid
+     * so the corresponding {@link MicoService} is considered deployable.
+     *
+     * @param micoServiceDeploymentInfo the {@link MicoServiceDeploymentInfo}
+     * @throws DeploymentRequirementsNotMetException if the requirements are not met
+     */
+    public void checkIfKafkaEnabledServiceIsDeployable(MicoServiceDeploymentInfo micoServiceDeploymentInfo) throws DeploymentRequirementsNotMetException {
+        // The input topic must be set for a Kafka-enabled service
+        if (micoServiceDeploymentInfo.getTopics().stream().noneMatch(t -> t.getRole().equals(MicoTopicRole.Role.INPUT))) {
+            throw new DeploymentRequirementsNotMetException(micoServiceDeploymentInfo,
+                "The input topic of the kafka enabled service is not set.");
+        }
+        // If there is no output topic, a OpenFaaS function name must be set for a Kafka-enabled service
+        if (micoServiceDeploymentInfo.getTopics().stream().noneMatch(t -> t.getRole().equals(MicoTopicRole.Role.OUTPUT)) &&
+            (micoServiceDeploymentInfo.getOpenFaaSFunction() == null || micoServiceDeploymentInfo.getOpenFaaSFunction().getName() == null)) {
+            throw new DeploymentRequirementsNotMetException(micoServiceDeploymentInfo,
+                "The requirements for the deployment of the kafka enabled service are not met. " +
+                    "Deployment information: " + micoServiceDeploymentInfo);
         }
     }
 

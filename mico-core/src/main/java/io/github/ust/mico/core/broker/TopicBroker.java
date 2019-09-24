@@ -17,22 +17,32 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.persistence;
+package io.github.ust.mico.core.broker;
 
-import io.github.ust.mico.core.model.MicoTopic;
-import org.springframework.data.neo4j.annotation.Query;
-import org.springframework.data.neo4j.repository.Neo4jRepository;
 
+import io.github.ust.mico.core.persistence.MicoTopicRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 
-public interface MicoTopicRepository extends Neo4jRepository<MicoTopic, Long> {
+@Slf4j
+@Service
+public class TopicBroker {
+
+    @Autowired
+    private MicoTopicRepository micoTopicRepository;
+
     /**
-     * Deletes all topics that do <b>not</b> have any relationship to another node.
+     * Reads all topics from the topic repository
+     *
+     * @return
      */
-    @Query("MATCH (topic:MicoTopic) WHERE size((topic)--()) = 0 DELETE topic")
-    void cleanUp();
-
-    Optional<MicoTopic> findByName(String name);
-    List<MicoTopic> findAllByName(String name);
+    public List<String> getAllTopics() {
+        List<String> topics = new LinkedList<>();
+        micoTopicRepository.findAll().forEach(topic -> topics.add(topic.getName()));
+        return topics;
+    }
 }

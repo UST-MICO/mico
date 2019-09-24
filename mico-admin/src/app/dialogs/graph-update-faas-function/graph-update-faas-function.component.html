@@ -1,29 +1,17 @@
-<h2 mat-dialog-title>Add Kafka-Topic</h2>
+<h2 mat-dialog-title>Update FaaS-Function</h2>
 <mat-dialog-content style="min-width: 48rem">
 
-    Add
+    Set FaaS-function
 
-    <mat-form-field>
-        <input matInput placeholder="kafka topic" [(ngModel)]="topic" (ngModelChange)="updateFilter()" [pattern]="'[a-zA-Z0-9\\._\\-]+'" [matAutocomplete]="auto">
+    <mat-form-field style="min-width: 20em;">
+        <input matInput placeholder="FaaS-function" [(ngModel)]="faasFunction" (ngModelChange)="updateFilter()" [pattern]="'[a-z0-9\\-]+'" maxLength="63" [matAutocomplete]="auto">
         <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete">
             <mat-option *ngFor="let option of filteredList" [value]="option.name">
                 {{option.name}}
             </mat-option>
         </mat-autocomplete>
     </mat-form-field>
-
-    as
-
-    <mat-form-field>
-        <mat-label>role</mat-label>
-        <mat-select [(ngModel)]="role">
-            <mat-option *ngFor="let role of possibleRoles" [value]="role">
-                {{role.toLowerCase()}}
-            </mat-option>
-        </mat-select>
-    </mat-form-field>
-
-    to <b>{{serviceShortName}}</b>.
+    for <b>{{kfConnectorInfo.instanceId}}</b>.
 
 </mat-dialog-content>
 <mat-dialog-actions>
