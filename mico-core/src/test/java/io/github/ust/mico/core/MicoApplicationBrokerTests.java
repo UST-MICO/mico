@@ -102,7 +102,7 @@ public class MicoApplicationBrokerTests {
         assertThat(updatedMicoApplication.getDescription()).isEqualTo(DESCRIPTION_2);
     }
 
-    @Test
+    @Test(expected = MicoApplicationNotFoundException.class)
     public void deleteApplication() throws MicoApplicationIsNotUndeployedException, MicoApplicationNotFoundException {
         MicoApplication micoApplication = new MicoApplication()
             .setShortName(SHORT_NAME_1)
@@ -110,10 +110,12 @@ public class MicoApplicationBrokerTests {
             .setName(NAME_1)
             .setDescription(DESCRIPTION_1);
 
-        given(micoApplicationRepository.findByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion()))
-            .willReturn(Optional.of(micoApplication));
+
+        micoApplicationRepository.save(micoApplication);
 
         micoApplicationBroker.deleteMicoApplicationByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion());
+
+        micoApplicationBroker.getMicoApplicationByShortNameAndVersion(micoApplication.getShortName(),micoApplication.getVersion());
     }
 
 
