@@ -1,15 +1,16 @@
 package io.github.ust.mico.core;
 
+import io.github.ust.mico.core.broker.KafkaFaasConnectorDeploymentInfoBroker;
 import io.github.ust.mico.core.broker.MicoApplicationBroker;
 import io.github.ust.mico.core.broker.MicoServiceBroker;
 import io.github.ust.mico.core.broker.MicoServiceDeploymentInfoBroker;
 import io.github.ust.mico.core.configuration.KafkaFaasConnectorConfig;
+import io.github.ust.mico.core.dto.request.KFConnectorDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.exception.*;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.util.CollectionUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,6 +38,9 @@ public class MicoApplicationBrokerTests {
 
     @MockBean
     private MicoApplicationRepository micoApplicationRepository;
+
+    @MockBean
+    private KafkaFaasConnectorDeploymentInfoBroker kafkaFaasConnectorDeploymentInfoBroker;
 
     @MockBean
     private MicoServiceBroker micoServiceBroker;
@@ -85,8 +89,8 @@ public class MicoApplicationBrokerTests {
             .setVersion(VERSION_1_0_2)
             .setDescription(DESCRIPTION_2);
 
-        given(micoApplicationRepository.findByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion())
-        ).willReturn(Optional.of(micoApplication));
+        given(micoApplicationRepository.findByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion()))
+            .willReturn(Optional.of(micoApplication));
         given(micoApplicationRepository.save(any(MicoApplication.class))).willReturn(micoApplication);
 
         MicoApplication updatedMicoApplication = micoApplicationBroker.copyAndUpgradeMicoApplicationByShortNameAndVersion(
@@ -186,7 +190,7 @@ public class MicoApplicationBrokerTests {
 
     @Test
     public void addKafkaFaasConnectorInstanceToMicoApplicationByVersion() throws MicoServiceNotFoundException,
-        MicoApplicationNotFoundException, KafkaFaasConnectorVersionNotFoundException, MicoApplicationIsNotUndeployedException {
+        MicoApplicationNotFoundException, KafkaFaasConnectorVersionNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorInstanceNotFoundException {
         MicoApplication micoApplication = new MicoApplication()
             .setShortName(SHORT_NAME_1)
             .setVersion(VERSION_1_0_1)
@@ -197,9 +201,13 @@ public class MicoApplicationBrokerTests {
             .setShortName(SHORT_NAME_2)
             .setVersion(VERSION_1_0_2);
 
+        MicoServiceDeploymentInfo sdiTest = new MicoServiceDeploymentInfo();
+
         given(micoServiceBroker.getServiceFromDatabase(kfConnector.getShortName(), kfConnector.getVersion())).willReturn(kfConnector);
         given(micoApplicationRepository.findByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion())).willReturn(Optional.of(micoApplication));
         given(kafkaFaasConnectorConfig.getServiceName()).willReturn(kfConnector.getShortName());
+        given(kafkaFaasConnectorDeploymentInfoBroker.updateKafkaFaasConnectorDeploymentInformation(any(String.class), any(KFConnectorDeploymentInfoRequestDTO.class)))
+            .willReturn(sdiTest);
 
         MicoServiceDeploymentInfo sdi = micoApplicationBroker.addKafkaFaasConnectorInstanceToMicoApplicationByVersion(
             micoApplication.getShortName(), micoApplication.getVersion(), kfConnector.getVersion());
