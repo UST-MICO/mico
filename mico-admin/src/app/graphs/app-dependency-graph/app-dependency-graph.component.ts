@@ -1220,7 +1220,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 const connectorNode = {
                     id: connector.instanceId,
                     x: lastX + 80,
-                    y: 200,
+                    y: 210,
                     type: `kafka-faas-connector`,
                     title: 'kafka-faas-connector',
                     data: {
@@ -1272,28 +1272,32 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             const edgesToRemove = new Set<Edge>();
             const inputEdges = graph.getEdgesByTarget(connector.instanceId);
             let needInputTopicEdge = connector.inputTopicName != null && connector.inputTopicName !== '';
-            inputEdges.forEach(e => {
-                if (connector.inputTopicName != null && connector.inputTopicName !== '') {
-                    edgesToRemove.add(e);
-                    return;
-                }
-                if (e.source === `TOPIC/${connector.inputTopicName}`) {
-                    edgesToRemove.add(e);
-                    needInputTopicEdge =  false;
-                }
-            });
+            if (!needInputTopicEdge) {
+                // delete all input topics
+                inputEdges.forEach(e => edgesToRemove.add(e));
+            } else {
+                // search for existing input topic edge
+                inputEdges.forEach(e => {
+                    if (e.source === `TOPIC/${connector.inputTopicName}`) {
+                        // topic edge already in graph
+                        needInputTopicEdge = false;
+                    }
+                });
+            }
             const outputEdges = graph.getEdgesBySource(connector.instanceId);
             let needOutputTopicEdge = connector.outputTopicName != null && connector.outputTopicName !== '';
-            outputEdges.forEach(e => {
-                if (connector.outputTopicName != null && connector.outputTopicName !== '') {
-                    edgesToRemove.add(e);
-                    return;
-                }
-                if (e.source === `TOPIC/${connector.outputTopicName}`) {
-                    edgesToRemove.add(e);
-                    needOutputTopicEdge =  false;
-                }
-            });
+            if (!needOutputTopicEdge) {
+                // delete all output topics
+                outputEdges.forEach(e => edgesToRemove.add(e));
+            } else {
+                // search for existing output topic edge
+                outputEdges.forEach(e => {
+                    if (e.target === `TOPIC/${connector.outputTopicName}`) {
+                        // topic edge already in graph
+                        needOutputTopicEdge = false;
+                    }
+                });
+            }
             if (needInputTopicEdge) {
                 const topicId = `TOPIC/${connector.inputTopicName}`;
                 const existingTopic = graph.getNode(topicId);
