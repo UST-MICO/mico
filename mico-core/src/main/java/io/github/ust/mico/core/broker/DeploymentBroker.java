@@ -221,25 +221,18 @@ public class DeploymentBroker {
      * @throws DeploymentRequirementsNotMetException if the requirements are not met
      */
     public void checkIfKafkaEnabledServiceIsDeployable(MicoServiceDeploymentInfo micoServiceDeploymentInfo) throws DeploymentRequirementsNotMetException {
-        Optional<MicoEnvironmentVariable> inputTopic = findEnvironmentVariable(micoServiceDeploymentInfo.getEnvironmentVariables(), MicoEnvironmentVariable.DefaultNames.KAFKA_TOPIC_INPUT.name());
-        Optional<MicoEnvironmentVariable> outputTopic = findEnvironmentVariable(micoServiceDeploymentInfo.getEnvironmentVariables(), MicoEnvironmentVariable.DefaultNames.KAFKA_TOPIC_OUTPUT.name());
-        Optional<MicoEnvironmentVariable> openfaasFunctionName = findEnvironmentVariable(micoServiceDeploymentInfo.getEnvironmentVariables(), MicoEnvironmentVariable.DefaultNames.OPENFAAS_FUNCTION_NAME.name());
-        if (!inputTopic.isPresent() || inputTopic.get().getValue() == null) {
+        // The input topic must be set for a Kafka-enabled service
+        if (micoServiceDeploymentInfo.getTopics().stream().noneMatch(t -> t.getRole().equals(MicoTopicRole.Role.INPUT))) {
             throw new DeploymentRequirementsNotMetException(micoServiceDeploymentInfo,
                 "The input topic of the kafka enabled service is not set.");
         }
-        // If there is no output topic, a OpenFaaS function name must be set
-        if ((!outputTopic.isPresent() || outputTopic.get().getValue() == null) &&
-            (!openfaasFunctionName.isPresent() || openfaasFunctionName.get().getValue() == null)) {
+        // If there is no output topic, a OpenFaaS function name must be set for a Kafka-enabled service
+        if (micoServiceDeploymentInfo.getTopics().stream().noneMatch(t -> t.getRole().equals(MicoTopicRole.Role.OUTPUT)) &&
+            (micoServiceDeploymentInfo.getOpenFaaSFunction() == null || micoServiceDeploymentInfo.getOpenFaaSFunction().getName() == null)) {
             throw new DeploymentRequirementsNotMetException(micoServiceDeploymentInfo,
-                "The requirements for the deployment of the kafka enabled service are not met. Deployment information: " + micoServiceDeploymentInfo);
+                "The requirements for the deployment of the kafka enabled service are not met. " +
+                    "Deployment information: " + micoServiceDeploymentInfo);
         }
-    }
-
-    private Optional<MicoEnvironmentVariable> findEnvironmentVariable(List<MicoEnvironmentVariable> micoEnvironmentVariables, String name) {
-        Optional<MicoEnvironmentVariable> optionalMicoEnvironmentVariable = micoEnvironmentVariables.stream()
-            .filter(micoEnvironmentVariable -> micoEnvironmentVariable.getName().equals(name)).findFirst();
-        return optionalMicoEnvironmentVariable;
     }
 
     private MicoServiceDeploymentInfo buildMicoService(MicoServiceDeploymentInfo serviceDeploymentInfo) {
