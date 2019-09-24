@@ -352,7 +352,6 @@ public class MicoApplicationBroker {
             kfConnectorVersion, instanceId, applicationShortName, applicationVersion,
             micoApplication.getKafkaFaasConnectorDeploymentInfos().size());
 
-        // TODO: Set default deployment information (covered in epic mico#750)
         // Set default deployment information (environment variables, topics)
         serviceDeploymentInfoBroker.setDefaultDeploymentInformationForKafkaEnabledService(sdi);
         kafkaFaasConnectorDeploymentInfoBroker.updateKafkaFaasConnectorDeploymentInformation(instanceId, new KFConnectorDeploymentInfoRequestDTO(sdi));
