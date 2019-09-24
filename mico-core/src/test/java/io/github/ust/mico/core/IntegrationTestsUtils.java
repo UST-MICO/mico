@@ -240,13 +240,15 @@ public class IntegrationTestsUtils {
      * @throws TimeoutException     if the build does not finish or fail in the expected time
      * @throws ExecutionException   if the build process fails unexpectedly
      */
-    CompletableFuture<Deployment> waitUntilDeploymentIsCreated(MicoServiceDeploymentInfo serviceDeploymentInfo, int initialDelay, int period, int timeout) throws InterruptedException, ExecutionException, TimeoutException {
+    CompletableFuture<Deployment> waitUntilDeploymentIsCreated(MicoServiceDeploymentInfo serviceDeploymentInfo, int initialDelay, int period, int timeout)
+        throws InterruptedException, ExecutionException, TimeoutException {
+
         CompletableFuture<Deployment> completionFuture = new CompletableFuture<>();
 
         MicoService micoService = serviceDeploymentInfo.getService();
-        log.info("Wait until deployment of MicoService '{}' '{}' is created", micoService.getShortName(), micoService.getVersion());
+        log.info("Wait until deployment of MicoService '{}' '{}' with instance id '{}' is created",
+            micoService.getShortName(), micoService.getVersion(), serviceDeploymentInfo.getInstanceId());
         executorService.scheduleAtFixedRate(() -> {
-
             Optional<Deployment> deployment = micoKubernetesClient.getDeploymentOfMicoServiceInstance(serviceDeploymentInfo);
             deployment.ifPresent(completionFuture::complete);
         }, initialDelay, period, TimeUnit.SECONDS);

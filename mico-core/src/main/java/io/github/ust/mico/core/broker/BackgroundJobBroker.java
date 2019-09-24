@@ -193,7 +193,7 @@ public class BackgroundJobBroker {
                 log.info("Job of '{}' '{}' with type '{}' changed its status: {} → {}.",
                     micoServiceShortName, micoServiceVersion, type, job.getStatus(), newStatus);
                 if (newStatus.equals(MicoServiceBackgroundJob.Status.ERROR) && !StringUtils.isEmpty(errorMessage)) {
-                    log.warn("Job of '{}' '{}' with type '{}' failed. Reason: {}.",
+                    log.warn("Job of '{}' '{}' with type '{}' failed. Reason: {}",
                         micoServiceShortName, micoServiceVersion, type, errorMessage);
                 }
                 job.setStatus(newStatus);

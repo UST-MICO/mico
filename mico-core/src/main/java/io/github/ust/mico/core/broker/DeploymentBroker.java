@@ -104,8 +104,8 @@ public class DeploymentBroker {
             serviceDeploymentInfos.addAll(micoApplication.getServiceDeploymentInfos());
 
             log.info("All {} build job(s) for the deployment of MicoApplication '{}' '{}' finished successfully. " +
-                    "Start creating or updating Kubernetes resources ({} Kubernetes Deployments are affected).", servicesWithSuccessfulBuild.size(),
-                micoApplication.getShortName(), micoApplication.getVersion(), serviceDeploymentInfos.size());
+                    "Start creating or updating Kubernetes resources ({} Kubernetes Deployments are affected).",
+                servicesWithSuccessfulBuild.size(), micoApplication.getShortName(), micoApplication.getVersion(), serviceDeploymentInfos.size());
 
             // Create the Kubernetes resources based on all service deployment information
             for (MicoServiceDeploymentInfo serviceDeploymentInfo : serviceDeploymentInfos) {

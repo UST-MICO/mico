@@ -33,7 +33,10 @@ import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.EmbeddedRedisServer;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
@@ -67,6 +70,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("dev")
 public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
+
+    // Build timeout in seconds.
+    private static int TIMEOUT_BUILD = 60;
+    // Waiting timeout for pods in seconds.
+    private static final int TIMEOUT_WAITING_FOR_PODS = 60;
+    // Deployment timeout in seconds.
+    private static final int TIMEOUT_DEPLOYMENT = 10;
 
     @ClassRule
     public static RuleChain rules = RuleChain.outerRule(EmbeddedRedisServer.runningAt(6379).suppressExceptions());
@@ -121,8 +131,7 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
             throw e;
         }
 
-        // Set timeout to 60 seconds.
-        micoKubernetesBuildBotConfig.setBuildTimeout(60);
+        micoKubernetesBuildBotConfig.setBuildTimeout(TIMEOUT_BUILD);
     }
 
     /**
@@ -168,6 +177,8 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
 
     @Test
     public void deployApplicationWithMultipleKafkaFaasConnectorInstances() throws Exception {
+        TIMEOUT_BUILD = 600;
+        micoKubernetesBuildBotConfig.setBuildTimeout(TIMEOUT_BUILD);
         createApplicationWithOneServiceInDatabase();
 
         // TODO: Get latest KafkaFaasConnector that is stored in database
@@ -240,7 +251,7 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
      */
     private void waitForAllPodsInNamespace() throws InterruptedException, ExecutionException, TimeoutException {
         CompletableFuture<Boolean> allPodsInNamespaceAreRunning = integrationTestsUtils.waitUntilAllPodsInNamespaceAreRunning(
-            namespace, 10, 1, 60);
+            namespace, 10, 1, TIMEOUT_WAITING_FOR_PODS);
         assertTrue("Deployment failed!", allPodsInNamespaceAreRunning.get());
     }
 
@@ -255,7 +266,7 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
     private CompletableFuture<Deployment> waitForDeploymentCreation(MicoServiceDeploymentInfo micoServiceDeploymentInfo) throws InterruptedException, ExecutionException, TimeoutException {
         // Wait until the deployment is created
         CompletableFuture<Deployment> createdDeployment = integrationTestsUtils.waitUntilDeploymentIsCreated(
-            micoServiceDeploymentInfo, 1, 1, 10);
+            micoServiceDeploymentInfo, 1, 1, TIMEOUT_DEPLOYMENT);
         assertNotNull("Kubernetes Deployment was not created!", createdDeployment.get());
         log.debug("Created Kubernetes Deployment: {}", createdDeployment.get().toString());
         return createdDeployment;
