@@ -293,6 +293,14 @@ public class DeploymentBroker {
         }
     }
 
+    /**
+     * Builds a {@link MicoService} and sets the resulting Docker image URI to the {@link MicoService} object.
+     * This method does not save the changes to the database immediately,
+     * because it would lead to deadlock problems (Neo4j multi-threading problems).
+     *
+     * @param micoService the {@link MicoService}
+     * @return the {@link MicoService} with the updated Docker image URI
+     */
     private MicoService buildMicoService(MicoService micoService) {
         try {
             // Blocks this thread until build is finished, failed or TimeoutException is thrown
