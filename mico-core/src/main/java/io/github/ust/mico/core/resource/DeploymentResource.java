@@ -53,12 +53,8 @@ public class DeploymentResource {
             micoApplicationJobStatus = deploymentBroker.deployApplication(shortName, version);
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        } catch (MicoServiceInterfaceNotFoundException e) {
+        } catch (MicoServiceInterfaceNotFoundException | MicoApplicationDoesNotIncludeMicoServiceException | DeploymentRequirementsNotMetException e) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
-        } catch (MicoApplicationDoesNotIncludeMicoServiceException e) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
-        } catch (DeploymentException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, e.getMessage());
         }
 
         return ResponseEntity.accepted()

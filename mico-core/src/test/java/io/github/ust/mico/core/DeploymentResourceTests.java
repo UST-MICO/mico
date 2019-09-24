@@ -227,9 +227,13 @@ public class DeploymentResourceTests {
         MicoService service = getTestService();
         service.setServiceInterfaces(new ArrayList<>()); // There are no interfaces
         service.setKafkaEnabled(true); // Service is Kafka enabled
+        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
+            .setService(service)
+            .setInstanceId(INSTANCE_ID)
+            .setEnvironmentVariables(kafkaEnvironmentVariables);
         MicoApplication application = getTestApplication();
         application.getServices().add(service);
-        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(service).setEnvironmentVariables(kafkaEnvironmentVariables));
+        application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
 
         setupDeploymentResources(application, service);
 
