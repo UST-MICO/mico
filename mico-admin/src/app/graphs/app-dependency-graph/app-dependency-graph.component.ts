@@ -24,7 +24,7 @@ import { Node } from '@ustutt/grapheditor-webcomponent/lib/node';
 import { ApiObject } from 'src/app/api/apiobject';
 import { ApiService } from 'src/app/api/api.service';
 import { Subscription, Subject } from 'rxjs';
-import { STYLE_TEMPLATE, APPLICATION_NODE_TEMPLATE, SERVICE_NODE_TEMPLATE, ARROW_TEMPLATE, ServiceNode, ApplicationNode, ServiceInterfaceNode, SERVICE_INTERFACE_NODE_TEMPLATE, KAFKA_TOPIC_NODE_TEMPLATE } from './app-dependency-graph-constants';
+import { STYLE_TEMPLATE, APPLICATION_NODE_TEMPLATE, SERVICE_NODE_TEMPLATE, ARROW_TEMPLATE, ServiceNode, ApplicationNode, ServiceInterfaceNode, SERVICE_INTERFACE_NODE_TEMPLATE, KAFKA_TOPIC_NODE_TEMPLATE, KAFKA_FAAS_CONNECTOR_NODE_TEMPLATE } from './app-dependency-graph-constants';
 import { MatDialog } from '@angular/material';
 import { ChangeServiceVersionComponent } from 'src/app/dialogs/change-service-version/change-service-version.component';
 import { debounceTime, take, takeLast } from 'rxjs/operators';
@@ -34,6 +34,7 @@ import { GraphAddEnvironmentVariableComponent } from 'src/app/dialogs/graph-add-
 import { GraphAddKafkaTopicComponent } from 'src/app/dialogs/graph-add-kafka-topic/graph-add-kafka-topic.component';
 import { Router } from '@angular/router';
 import { ServicePickerComponent } from 'src/app/dialogs/service-picker/service-picker.component';
+import { GraphUpdateFaasFunctionComponent } from 'src/app/dialogs/graph-update-faas-function/graph-update-faas-function.component';
 
 
 const ROOT_NODE_ID = 'APPLICATION';
@@ -59,7 +60,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
     private applicationStatus: ApiObject;
     // map all included service shortNames to their graph ids
     private includedServicesMap: Map<string, string> = new Map();
-    private serviceInterfaces: Map<string, ApiObject[]> = new Map();
+    private serviceInterfaces: Map<string, Readonly<ApiObject[]>> = new Map();
     private deploymentInformations: Map<string, ApiObject> = new Map();
 
     // subject to batch all update requests when anything changes
@@ -73,6 +74,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
     private serviceNodeMap: Map<string, ServiceNode>;
     private serviceInterfaceNodeMap: Map<string, ServiceInterfaceNode>;
     private kafkaTopicNodes: Set<string>;
+    private kafkaFaasConnectorNodes: Set<string>;
 
     private versionChangedFor: { node: Node, newVersion: ApiObject };
 
@@ -107,6 +109,19 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                     return true;
                 }
             }
+            if (className === 'error') {
+                if (node.type === 'kafka-faas-connector') {
+                    if (node.data.inputTopicName == null || node.data.inputTopicName === '') {
+                        // node has no input
+                        return true;
+                    }
+                    if ((node.data.outputTopicName == null || node.data.outputTopicName === '') &&
+                        (node.data.openFaaSFunctionName == null || node.data.openFaaSFunctionName === '')) {
+                        // node has no possible output
+                        return true;
+                    }
+                }
+            }
             return false;
         };
         graph.setEdgeClass = (className, edge) => {
@@ -117,18 +132,21 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         };
         graph.calculateLinkHandlesForEdge = (edge, sourceHandles, source, targetHandles, target) => {
             if (edge.type === 'topic') {
-                if (edge.role === 'INPUT') {
-                    return {
-                        sourceHandles: sourceHandles.filter(handle => handle.x > 0),
-                        targetHandles: targetHandles,
-                    };
+                let newSourceHandles = sourceHandles;
+                let newTargetHandles = targetHandles;
+                if ((edge.role === 'INPUT' && this.kafkaTopicNodes.has(edge.source.toString())) ||
+                    (edge.role === 'OUTPUT' && this.kafkaFaasConnectorNodes.has(edge.source.toString()))) {
+                    newSourceHandles = sourceHandles.filter(handle => handle.x > 0);
                 }
-                if (edge.role === 'OUTPUT') {
-                    return {
-                        sourceHandles: sourceHandles,
-                        targetHandles: targetHandles.filter(handle => handle.x < 0),
-                    };
+                if (edge.target != null &&
+                    ((edge.role === 'OUTPUT' && this.kafkaTopicNodes.has(edge.target.toString())) ||
+                    (edge.role === 'INPUT' && this.kafkaFaasConnectorNodes.has(edge.target.toString())))) {
+                    newTargetHandles = targetHandles.filter(handle => handle.x < 0);
                 }
+                return {
+                    sourceHandles: newSourceHandles,
+                    targetHandles: newTargetHandles,
+                };
             }
             return null;
         };
@@ -140,7 +158,13 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         graph.onCreateDraggedEdge = this.onCreateDraggedEdge;
         graph.onDraggedEdgeTargetChange = this.onDraggedEdgeTargetChange;
         graph.updateTemplates(
-            [SERVICE_NODE_TEMPLATE, SERVICE_INTERFACE_NODE_TEMPLATE, KAFKA_TOPIC_NODE_TEMPLATE, APPLICATION_NODE_TEMPLATE],
+            [
+                SERVICE_NODE_TEMPLATE,
+                SERVICE_INTERFACE_NODE_TEMPLATE,
+                KAFKA_TOPIC_NODE_TEMPLATE,
+                KAFKA_FAAS_CONNECTOR_NODE_TEMPLATE,
+                APPLICATION_NODE_TEMPLATE
+            ],
             [STYLE_TEMPLATE],
             [ARROW_TEMPLATE]
         );
@@ -206,6 +230,25 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         }
         if (event.detail.key === 'version') {  // user clicked on service version
             event.preventDefault();
+            if (event.detail.node.type !== 'service') {
+
+                const dialogRef = this.dialog.open(ChangeServiceVersionComponent, {
+                    data: {
+                        service: event.detail.node.data,
+                    }
+                });
+
+                const dialogSub = dialogRef.afterClosed().subscribe((selected) => {
+                    dialogSub.unsubscribe();
+                    if (selected == null || selected === '' || event.detail.node.data.version === selected.version) {
+                        return;
+                    }
+                    const apiSub = this.api.postApplicationKafkaFaasConnector(this.shortName, this.version, selected.version, event.detail.node.data.instanceId).subscribe(connector => {
+                        apiSub.unsubscribe();
+                    });
+                });
+                return;
+            }
 
             const dialogRef = this.dialog.open(ChangeServiceVersionComponent, {
                 data: {
@@ -213,7 +256,8 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 }
             });
 
-            dialogRef.afterClosed().subscribe((selected) => {
+            const dialogSub = dialogRef.afterClosed().subscribe((selected) => {
+                dialogSub.unsubscribe();
                 if (selected == null || selected === '' || event.detail.node.service.version === selected.version) {
                     return;
                 }
@@ -222,7 +266,33 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             return;
         }
         if (event.detail.key === 'title') {
+            event.preventDefault();
             this.router.navigate(['service-detail', event.detail.node.shortName, event.detail.node.version]);
+        }
+        if (event.detail.key === 'faas-function') {
+            event.preventDefault();
+
+            const dialogRef = this.dialog.open(GraphUpdateFaasFunctionComponent, {
+                data: {
+                    kfConnectorInfo: event.detail.node.data,
+                }
+            });
+
+            const subTopicDialog = dialogRef.afterClosed().subscribe(result => {
+                safeUnsubscribe(subTopicDialog);
+
+                if (result === '') {
+                    return;
+                }
+
+                const depl = event.detail.node.data;
+                // deepcopy since depl is readonly
+                const deplCopy = JSON.parse(JSON.stringify(depl));
+                deplCopy.openFaaSFunctionName = result.openFaaSFunctionName;
+                const putSub = this.api.putApplicationKafkaFaasConnector(this.application.shortName, this.application.version, depl.instanceId, deplCopy).subscribe(() => {
+                    safeUnsubscribe(putSub);
+                });
+            });
         }
     }
 
@@ -323,9 +393,8 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             outgoingEdges.forEach(e => e.target != null && edge.validTargets.delete(e.target.toString()));
         }
         const sourceNode: Node = graph.getNode(edge.source);
-        if (sourceNode.type === 'kafka-topic') {
+        if (sourceNode.type === 'kafka-topic' || sourceNode.type === 'kafka-faas-connector') {
             edge.type = 'topic';
-            edge.role = 'INPUT';
             delete edge.markerEnd;
             edge.markers = [{
                 template: 'arrow',
@@ -337,10 +406,12 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 width: 40,
                 positionOnLine: 0.65,
                 offsetX: 5,
-                offsetY: 3,
-                value: 'INPUT',
             }];
             edge.validTargets.clear();
+        }
+        if (sourceNode.type === 'kafka-topic') {
+            edge.role = 'INPUT';
+            edge.texts[0].value = 'INPUT';
             this.serviceNodeMap.forEach((node, key) => {
                 if (node.service.kafkaEnabled) {
                     const inputEdges: Set<Edge> = graph.getEdgesByTarget(node.id);
@@ -355,6 +426,31 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                     }
                 }
             });
+            this.kafkaFaasConnectorNodes.forEach(instanceId => {
+                const incoming = graph.getEdgesByTarget(instanceId);
+                if (incoming == null || incoming.size === 0) {
+                    // only consider connectors without input topic as targets
+                    edge.validTargets.add(instanceId);
+                }
+            });
+        }
+        if  (sourceNode.type === 'kafka-faas-connector') {
+            if (sourceNode.data.outputTopicName == null || sourceNode.data.outputTopicName === '') {
+                edge.role = 'OUTPUT';
+                edge.texts[0].value = 'OUTPUT';
+                this.kafkaTopicNodes.forEach(topicId => {
+                    edge.validTargets.add(topicId);
+                });
+            } else if (sourceNode.data.inputTopicName == null || sourceNode.data.inputTopicName === '') {
+                edge.role = 'INPUT';
+                edge.texts[0].value = 'INPUT';
+                edge.texts[0].positionOnLine = 0.45;
+                edge.markers[0].positionOnLine = 0.45;
+                edge.markers[0].rotate = { relativeAngle: 180 };
+            } else {
+                // all topic edges present
+                return null;
+            }
         }
         return edge;
     }
@@ -419,19 +515,37 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 console.warn("Only INPUT and OUTPUT topics should be shown in the grapheditor.");
                 return;
             }
-            const service = this.serviceNodeMap.get(serviceId);
-            const topic = graph.getNode(topicId);
-            // TODO add topic to deployment information
-            const depl = this.deploymentInformations.get(serviceId);
-            // deepcopy since depl is readonly
-            const deplCopy = JSON.parse(JSON.stringify(depl));
-            deplCopy.topics.push({
-                role: edge.role,
-                name: topic.data.topicName,
-            });
-            const putSub = this.api.putServiceDeploymentInformation(this.application.shortName, this.application.version, service.shortName, deplCopy).subscribe(() => {
-                safeUnsubscribe(putSub);
-            });
+            if (this.kafkaFaasConnectorNodes.has(serviceId)) {
+                // target is a kafka-faas-connector node
+                const node = graph.getNode(serviceId);
+                const topic = graph.getNode(topicId);
+
+                const depl = node.data;
+                // deepcopy since depl is readonly
+                const deplCopy = JSON.parse(JSON.stringify(depl));
+                deplCopy.inputTopicName = topic.data.topicName;
+                const putSub = this.api.putApplicationKafkaFaasConnector(this.application.shortName, this.application.version, depl.instanceId, deplCopy).subscribe(() => {
+                    safeUnsubscribe(putSub);
+                });
+                return;
+            }
+            if (this.serviceNodeMap.has(serviceId)) {
+                // target is a normal service node
+                const service = this.serviceNodeMap.get(serviceId);
+                const topic = graph.getNode(topicId);
+
+                const depl = this.deploymentInformations.get(serviceId);
+                // deepcopy since depl is readonly
+                const deplCopy = JSON.parse(JSON.stringify(depl));
+                deplCopy.topics.push({
+                    role: edge.role,
+                    name: topic.data.topicName,
+                });
+                const putSub = this.api.putServiceDeploymentInformation(this.application.shortName, this.application.version, service.shortName, deplCopy).subscribe(() => {
+                    safeUnsubscribe(putSub);
+                });
+                return;
+            }
         }
     }
 
@@ -474,7 +588,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 // do not handle edges that were created from an existing edge here
                 return;
             }
-            // TODO create new topic edge
+
             const serviceNode: ServiceNode = event.detail.sourceNode;
             if (!serviceNode.service.kafkaEnabled) {
                 // not kafka enabled nodes don't need topics
@@ -496,7 +610,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             const subTopicDialog = dialogRef.afterClosed().subscribe(result => {
                 safeUnsubscribe(subTopicDialog);
 
-                if (result === '') {
+                if (result === '' || result == null) {
                     return;
                 }
 
@@ -508,6 +622,71 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 });
                 const putSub = this.api.putServiceDeploymentInformation(this.application.shortName, this.application.version, serviceNode.service.shortName, deplCopy).subscribe(() => {
                     safeUnsubscribe(putSub);
+                });
+            });
+        }
+        if (event.detail.sourceNode.type === 'kafka-faas-connector') {
+            const edge: Edge = event.detail.edge;
+            if (edge.createdFrom != null && edge.createdFrom !== '') {
+                // do not handle edges that were created from an existing edge here
+                return;
+            }
+            const connector = this.application.kfConnectorDeploymentInfos.filter(conn => conn.instanceId === edge.source)[0];
+            if (connector == null) {
+                // connector info was not found, cannot create new edges...
+                return;
+            }
+
+            const existingRoles = [];
+
+            if (connector.inputTopicName != null && connector.inputTopicName !== '') {
+                existingRoles.push('INPUT');
+            }
+
+            if (connector.outputTopicName != null && connector.outputTopicName !== '') {
+                existingRoles.push('OUTPUT');
+            }
+
+            const dialogRef = this.dialog.open(GraphAddKafkaTopicComponent, {
+                data: {
+                    serviceShortName: connector.instanceId,
+                    existingRoles: existingRoles,
+                }
+            });
+
+            const subTopicDialog = dialogRef.afterClosed().subscribe(result => {
+                safeUnsubscribe(subTopicDialog);
+
+                if (result === '') {
+                    return;
+                }
+
+                const connCopy = JSON.parse(JSON.stringify(connector));
+                if (result.role === 'OUTPUT') {
+                    connCopy.outputTopicName = result.kafkaTopicName;
+                }
+                if (result.role === 'INPUT') {
+                    connCopy.inputTopicName = result.kafkaTopicName;
+                }
+                const putSub = this.api.putApplicationKafkaFaasConnector(this.application.shortName, this.application.version, connector.instanceId, connCopy).subscribe(() => {
+                    safeUnsubscribe(putSub);
+                });
+            });
+        }
+        if (event.detail.sourceNode.type === 'kafka-topic') {
+            const edge: Edge = event.detail.edge;
+            if (edge.createdFrom != null && edge.createdFrom !== '') {
+                // do not handle edges that were created from an existing edge here
+                return;
+            }
+
+            // create new connector
+            const apiSub = this.api.postApplicationKafkaFaasConnector(this.shortName, this.version).subscribe(connector => {
+                apiSub.unsubscribe();
+                const connCopy = JSON.parse(JSON.stringify(connector));
+                connCopy.inputTopicName = event.detail.sourceNode.data.topicName;
+                const apiSub2 = this.api.putApplicationKafkaFaasConnector(this.shortName, this.version, connector.instanceId, connCopy).subscribe(conn => {
+                    apiSub2.unsubscribe();
                 });
             });
         }
@@ -562,14 +741,40 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 console.warn("Only INPUT and OUTPUT topics should be shown in the grapheditor.");
                 return;
             }
-            const service = this.serviceNodeMap.get(serviceId);
-            const depl = this.deploymentInformations.get(serviceId);
-            // deepcopy since depl is readonly
-            const deplCopy = JSON.parse(JSON.stringify(depl));
-            deplCopy.topics = depl.topics.filter(t => t.role !== edge.role);
-            const putSub = this.api.putServiceDeploymentInformation(this.application.shortName, this.application.version, service.shortName, deplCopy).subscribe(() => {
-                safeUnsubscribe(putSub);
-            });
+            if (this.kafkaFaasConnectorNodes.has(serviceId)) {
+                // handle kafka-faas-connector nodes
+                const node = graph.getNode(serviceId);
+                const connector = node.data;
+                const connCopy = JSON.parse(JSON.stringify(connector));
+                if (edge.role === 'INPUT') {
+                    connCopy.inputTopicName = null;
+                }
+                if (edge.role === 'OUTPUT') {
+                    connCopy.outputTopicName = null;
+                }
+                if (connCopy.inputTopicName == null && connCopy.outputTopicName == null) {
+                    // no topic attached -> delete node
+                    const apiSub = this.api.deleteApplicationKafkaFaasConnector(this.shortName, this.version, connector.instanceId).subscribe(() => {
+                        safeUnsubscribe(apiSub);
+                    });
+                } else {
+                    const apiSub = this.api.putApplicationKafkaFaasConnector(this.shortName, this.version, connector.instanceId, connCopy).subscribe(conn => {
+                        safeUnsubscribe(apiSub);
+                    });
+                }
+                return;
+            }
+            if (this.serviceNodeMap.has(serviceId)) {
+                // handle  normal service nodes
+                const service = this.serviceNodeMap.get(serviceId);
+                const depl = this.deploymentInformations.get(serviceId);
+                // deepcopy since depl is readonly
+                const deplCopy = JSON.parse(JSON.stringify(depl));
+                deplCopy.topics = depl.topics.filter(t => t.role !== edge.role);
+                const putSub = this.api.putServiceDeploymentInformation(this.application.shortName, this.application.version, service.shortName, deplCopy).subscribe(() => {
+                    safeUnsubscribe(putSub);
+                });
+            }
         }
     }
 
@@ -696,7 +901,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         // local cache that is not affected by subsequent updates from observables
         const application = this.application;
         const applicationStatus = this.applicationStatus;
-        const serviceInterfaces = new Map<string, ApiObject[]>();
+        const serviceInterfaces = new Map<string, Readonly<ApiObject[]>>();
         const deployInfo = new Map<string, ApiObject>();
 
         application.services.forEach(service => {
@@ -718,6 +923,8 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         serviceInterfaces.forEach((interfaces, serviceId) => this.updateServiceInterfaceData(serviceId, interfaces));
         deployInfo.forEach((deplInfo, serviceId) => this.updateInterfaceConnectionEdgesFromDeploymentInformation(serviceId, deplInfo));
         deployInfo.forEach((deplInfo, serviceId) => this.updateTopicsFromDeploymentInformation(serviceId, deplInfo));
+
+        this.updateKFConnectors(application.kfConnectorDeploymentInfos);
 
         // render changes
         graph.completeRender();
@@ -847,7 +1054,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
      * @param serviceId the graph id of the service the interface corresponds to
      * @param interfaces the interface list of the service
      */
-    private updateServiceInterfaceData(serviceId: string, interfaces: ApiObject[]) {
+    private updateServiceInterfaceData(serviceId: string, interfaces: Readonly<ApiObject[]>) {
         const graph: GraphEditor = this.graph.nativeElement;
         const nodeMap = this.serviceInterfaceNodeMap;
 
@@ -984,61 +1191,10 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             const topicId = `TOPIC/${connection.name}`;
             let topicNode: Node = graph.getNode(topicId);
             if (topicNode == null) {
-                topicNode = {
-                    id: topicId,
-                    x: serviceNode.x,
-                    y: 170,
-                    type: `kafka-topic`,
-                    title: connection.name,
-                    data: {
-                        topicName: connection.name,
-                    }
-                };
-                if (connection.role === 'INPUT') {
-                    topicNode.x -= 30;
-                }
-                if (connection.role === 'OUTPUT') {
-                    topicNode.x += 30;
-                }
-                graph.addNode(topicNode, false);
-                this.kafkaTopicNodes.add(topicId);
+                topicNode = this.addTopicNode(topicId, serviceNode, connection.name, connection.role, graph);
             }
 
-            const isInput = (connection.role === 'INPUT');
-            const isOutput = (connection.role === 'OUTPUT');
-
-            const textComponent: TextComponent = {
-                width: 40,
-                positionOnLine: 0.65,
-                offsetX: 5,
-                value: connection.role,
-            };
-
-            const newEdge: Edge = {
-                source: null,
-                target: null,
-                type: 'topic',
-                role: connection.role,
-                markers: [{
-                    template: 'arrow',
-                    positionOnLine: 0.65,
-                    scale: 0.5,
-                    rotate: { relativeAngle: 0 }
-                }],
-                texts: [textComponent],
-            };
-
-            if (isInput) {
-                newEdge.source = topicId;
-                newEdge.target = serviceId;
-                textComponent.offsetY = 3;
-            }
-
-            if (isOutput) {
-                newEdge.source = serviceId;
-                newEdge.target = topicId;
-                textComponent.offsetX = 9;
-            }
+            const newEdge: Edge = this.newTopicEdge(connection.role, topicId, serviceId);
 
             if (graph.getEdge(edgeId(newEdge)) == null) {
                 graph.addEdge(newEdge, false);
@@ -1050,6 +1206,209 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         toRemove.forEach((edge) => {
             graph.removeEdge(edge, false);
         });
+    }
+
+    updateKFConnectors(kafkaFaasConnectors) {
+        const graph: GraphEditor = this.graph.nativeElement;
+
+        const toRemove = new Set<string>();
+
+        let lastX = 0;
+
+        graph.nodeList.forEach(node => {
+            if (node.type === 'kafka-faas-connector') {
+                toRemove.add(node.id.toString());
+                if (node.x > lastX) {
+                    lastX = node.x;
+                }
+            }
+        });
+
+        const kafkaFaasConnectorNodes = new Set<string>();
+
+        kafkaFaasConnectors.forEach(connector => {
+            kafkaFaasConnectorNodes.add(connector.instanceId)
+            let existing = graph.getNode(connector.instanceId);
+            if (existing == null) {
+                const connectorNode = {
+                    id: connector.instanceId,
+                    x: lastX + 80,
+                    y: 210,
+                    type: `kafka-faas-connector`,
+                    title: 'kafka-faas-connector',
+                    data: {
+                        instanceId: connector.instanceId,
+                        shortName: connector.shortName,
+                        version: connector.version,
+                        inputTopicName: connector.inputTopicName,
+                        outputTopicName: connector.outputTopicName,
+                        openFaaSFunctionName: connector.openFaaSFunctionName,
+                    }
+                };
+                if (connector.outputTopicName != null && connector.outputTopicName !== '') {
+                    const topicId = `TOPIC/${connector.outputTopicName}`;
+                    const existingTopic = graph.getNode(topicId);
+                    if (existingTopic != null) {
+                        connectorNode.x = existingTopic.x - 40;
+                    } else {
+                        this.addTopicNode(topicId, connectorNode, connector.outputTopicName, 'OUTPUT', graph);
+                    }
+                }
+                if (connector.inputTopicName != null && connector.inputTopicName !== '') {
+                    const topicId = `TOPIC/${connector.inputTopicName}`;
+                    const existingTopic = graph.getNode(topicId);
+                    if (existingTopic != null) {
+                        connectorNode.x = existingTopic.x + 40;
+                    } else {
+                        this.addTopicNode(topicId, connectorNode, connector.inputTopicName, 'INPUT', graph);
+                    }
+                }
+                graph.addNode(connectorNode, false);
+                existing = connectorNode;
+            } else {
+                existing.data = {
+                    instanceId: connector.instanceId,
+                    shortName: connector.shortName,
+                    version: connector.version,
+                    inputTopicName: connector.inputTopicName,
+                    outputTopicName: connector.outputTopicName,
+                    openFaaSFunctionName: connector.openFaaSFunctionName,
+                };
+            }
+            existing.error = '';
+            if (connector.inputTopicName == null || connector.inputTopicName === '') {
+                existing.error = 'No input topic specified!\n';
+            }
+            if ((connector.outputTopicName == null || connector.outputTopicName === '') &&
+                (connector.openFaaSFunctionName == null || connector.openFaaSFunctionName === '')) {
+                existing.error += 'Either a FaaS function or an output topic need to be specified!';
+            }
+            if (connector.openFaaSFunctionName != null && connector.openFaaSFunctionName !== '') {
+                existing.title = connector.openFaaSFunctionName;
+            } else {
+                existing.title = connector.shortName;
+            }
+            toRemove.delete(connector.instanceId);
+            // update edges...
+            const edgesToRemove = new Set<Edge>();
+            const inputEdges = graph.getEdgesByTarget(connector.instanceId);
+            let needInputTopicEdge = connector.inputTopicName != null && connector.inputTopicName !== '';
+            if (!needInputTopicEdge) {
+                // delete all input topics
+                inputEdges.forEach(e => edgesToRemove.add(e));
+            } else {
+                // search for existing input topic edge
+                inputEdges.forEach(e => {
+                    if (e.source === `TOPIC/${connector.inputTopicName}`) {
+                        // topic edge already in graph
+                        needInputTopicEdge = false;
+                    }
+                });
+            }
+            const outputEdges = graph.getEdgesBySource(connector.instanceId);
+            let needOutputTopicEdge = connector.outputTopicName != null && connector.outputTopicName !== '';
+            if (!needOutputTopicEdge) {
+                // delete all output topics
+                outputEdges.forEach(e => edgesToRemove.add(e));
+            } else {
+                // search for existing output topic edge
+                outputEdges.forEach(e => {
+                    if (e.target === `TOPIC/${connector.outputTopicName}`) {
+                        // topic edge already in graph
+                        needOutputTopicEdge = false;
+                    }
+                });
+            }
+            if (needInputTopicEdge) {
+                const topicId = `TOPIC/${connector.inputTopicName}`;
+                const existingTopic = graph.getNode(topicId);
+                if (existingTopic == null) {
+                    this.addTopicNode(topicId, existing, connector.inputTopicName, 'INPUT', graph);
+                }
+                const edge = this.newTopicEdge('INPUT', topicId, connector.instanceId);
+                edge.texts[0].offsetX = -20;
+                edge.texts[0].offsetY = -3;
+                graph.addEdge(edge, false);
+            }
+            if (needOutputTopicEdge) {
+                const topicId = `TOPIC/${connector.outputTopicName}`;
+                const existingTopic = graph.getNode(topicId);
+                if (existingTopic == null) {
+                    this.addTopicNode(topicId, existing, connector.outputTopicName, 'OUTPUT', graph);
+                }
+                const edge = this.newTopicEdge('OUTPUT', topicId, connector.instanceId);
+                edge.texts[0].offsetY = 5;
+                graph.addEdge(edge, false);
+            }
+
+            edgesToRemove.forEach((edge) => {
+                graph.removeEdge(edge, false);
+            });
+        });
+
+        this.kafkaFaasConnectorNodes = kafkaFaasConnectorNodes;
+
+        toRemove.forEach(nodeId => {
+            graph.removeNode(nodeId, false);
+        });
+    }
+
+    private newTopicEdge(role: string, topicId: string, serviceId: string) {
+        const isInput = (role === 'INPUT');
+        const isOutput = (role === 'OUTPUT');
+
+        const textComponent: TextComponent = {
+            width: 40,
+            positionOnLine: 0.65,
+            offsetX: 5,
+            value: role,
+        };
+        const newEdge: Edge = {
+            source: null,
+            target: null,
+            type: 'topic',
+            role: role,
+            markers: [{
+                template: 'arrow',
+                positionOnLine: 0.65,
+                scale: 0.5,
+                rotate: { relativeAngle: 0 }
+            }],
+            texts: [textComponent],
+        };
+        if (isInput) {
+            newEdge.source = topicId;
+            newEdge.target = serviceId;
+            textComponent.offsetY = 3;
+        }
+        if (isOutput) {
+            newEdge.source = serviceId;
+            newEdge.target = topicId;
+            textComponent.offsetX = 9;
+        }
+        return newEdge;
+    }
+
+    private addTopicNode(topicId: string, serviceNode: Node, name: string, role: string, graph: GraphEditor) {
+        const topicNode: Node = {
+            id: topicId,
+            x: serviceNode.x,
+            y: 170,
+            type: `kafka-topic`,
+            title: name,
+            data: {
+                topicName: name,
+            }
+        };
+        if (role === 'INPUT') {
+            topicNode.x -= 30;
+        }
+        if (role === 'OUTPUT') {
+            topicNode.x += 30;
+        }
+        graph.addNode(topicNode, false);
+        this.kafkaTopicNodes.add(topicId);
+        return topicNode;
     }
 
     autozoom() {

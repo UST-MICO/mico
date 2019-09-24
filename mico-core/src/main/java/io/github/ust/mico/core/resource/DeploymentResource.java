@@ -21,7 +21,7 @@ package io.github.ust.mico.core.resource;
 
 import io.github.ust.mico.core.broker.DeploymentBroker;
 import io.github.ust.mico.core.dto.response.MicoApplicationJobStatusResponseDTO;
-import io.github.ust.mico.core.exception.DeploymentException;
+import io.github.ust.mico.core.exception.DeploymentRequirementsNotMetException;
 import io.github.ust.mico.core.exception.MicoApplicationIsDeployingException;
 import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
 import io.github.ust.mico.core.exception.MicoServiceInterfaceNotFoundException;
@@ -56,10 +56,8 @@ public class DeploymentResource {
             micoApplicationJobStatus = deploymentBroker.deployApplication(shortName, version);
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        } catch (MicoServiceInterfaceNotFoundException e) {
+        } catch (MicoServiceInterfaceNotFoundException | DeploymentRequirementsNotMetException e) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
-        } catch (DeploymentException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, e.getMessage());
         }
 
         return ResponseEntity.accepted()

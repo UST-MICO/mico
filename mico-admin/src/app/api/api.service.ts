@@ -407,6 +407,120 @@ export class ApiService {
     }
 
     /**
+     * Adds a new kafka faas connector to the application or update an existing one
+     * uses: POST applications/{applicationShortName}/{applicationVersion}/kafka-faas-connector[/{instanceId}]?version={kafkaFaasConnectorVersion}
+     *
+     * @param applicationShortName the applications shortName
+     * @param applicationVersion the applications version
+     * @param connectorVersion the kafka faas connector version if omitted latest version is used
+     * @param instanceId the kafka faas connector instance id if present this updates a specific
+     *          instance to this version instead of adding a new instance
+     */
+    postApplicationKafkaFaasConnector(applicationShortName: string, applicationVersion: string, connectorVersion?: string, instanceId?: string) {
+
+        const baseResource = 'applications/' + applicationShortName + '/' + applicationVersion +
+            '/kafka-faas-connector';
+
+        let resource = baseResource;
+
+        if (instanceId != null && instanceId !== '') {
+            resource += '/' + instanceId;
+        }
+
+        if (connectorVersion != null && connectorVersion !== '') {
+            resource += '?version=' + connectorVersion;
+        }
+
+        return this.rest.post<ApiObject>(resource, null).pipe(flatMap(val => {
+
+            this.getApplicationVersions(applicationShortName);
+            this.getApplication(applicationShortName, applicationVersion);
+
+            const stream = this.getStreamSource<ApiObject>(val._links.self.href);
+
+            stream.next(val);
+
+            return stream.asObservable().pipe(
+                filter(val => val !== undefined)
+            );
+        }));
+    }
+
+    /**
+     * Get an existing kafka faas connector deployment info
+     * uses: GET applications/{applicationShortName}/{applicationVersion}/kafka-faas-connector/{instanceId}
+     *
+     * @param applicationShortName the applications shortName
+     * @param applicationVersion the applications version
+     * @param instanceId the kafka faas connector instance id this gets a specific instance
+     */
+    getApplicationKafkaFaasConnector(applicationShortName: string, applicationVersion: string, instanceId: string) {
+
+        const resource = 'applications/' + applicationShortName + '/' + applicationVersion +
+            '/kafka-faas-connector/' + instanceId;
+
+        const stream = this.getStreamSource<ApiObject>(resource);
+
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+            stream.next(val);
+        });
+
+        return stream.asObservable().pipe(
+            filter(val => val !== undefined)
+        );
+    }
+
+
+    /**
+     * Updates the deployment information of a kafka faas connector instance.
+     * uses: PUT applications/{applicationShortName}/{applicationVersion}/kafka-faas-connector/{instanceId}
+     *
+     * @param applicationShortName shortName of the application
+     * @param applicationVersion version of the application
+     * @param instanceId instance id of the kafka faas connector
+     * @param data object holding the updated deployment information
+     */
+    putApplicationKafkaFaasConnector(applicationShortName: string, applicationVersion: string, instanceId: string, data) {
+        if (data == null) {
+            return;
+        }
+
+        const resource = 'applications/' + applicationShortName + '/' + applicationVersion + '/kafka-faas-connector/' + instanceId;
+
+        return this.rest.put<ApiObject>(resource, data).pipe(flatMap(val => {
+
+            const stream = this.getStreamSource<ApiObject>(val._links.self.href);
+            stream.next(val);
+            this.getApplication(applicationShortName, applicationVersion);
+
+            return stream.asObservable().pipe(
+                filter(application => application !== undefined)
+            );
+        }));
+    }
+
+    /**
+     * Deletes an includes relationship from an application to a service
+     * uses: DELETE applications/{applicationShortName}/{applicationVersion}/kafka-faas-connector/{instanceId}
+     *
+     * @param applicationShortName the applications shortName
+     * @param applicationVersion the applications version
+     * @param instanceId the kafka faas connector instance id
+     */
+    deleteApplicationKafkaFaasConnector(applicationShortName: string, applicationVersion: string, instanceId: string) {
+
+        return this.rest.delete<ApiObject>('applications/' + applicationShortName + '/' + applicationVersion
+            + '/kafka-faas-connector/' + instanceId)
+            .pipe(map(val => {
+
+                this.getApplicationVersions(applicationShortName);
+                this.getApplication(applicationShortName, applicationVersion);
+
+                return true;
+            }));
+    }
+
+    /**
      * Returns the deployment status of a specified application
      * uses: GET applications/{applicationShortName}/{applicationVersion}/deploymentStatus
      *
@@ -563,7 +677,7 @@ export class ApiService {
      *
      * @param shortName the serices shortName
      */
-    getServiceVersions(shortName): Observable<ApiObject[]> {
+    getServiceVersions(shortName): Observable<Readonly<ApiObject[]>> {
 
         const resource = 'services/' + shortName + '/';
         const stream = this.getStreamSource<ApiObject[]>(resource);
@@ -771,7 +885,7 @@ export class ApiService {
      * @param shortName unique short name of the service
      * @param version service version to be returned
      */
-    getServiceDependees(shortName, version): Observable<ApiObject[]> {
+    getServiceDependees(shortName, version): Observable<Readonly<ApiObject[]>> {
 
         const resource = 'services/' + shortName + '/' + version + '/dependees';
         const stream = this.getStreamSource<ApiObject[]>(resource);
@@ -846,7 +960,7 @@ export class ApiService {
      * @param shortName unique short name of the service
      * @param version service version to be returned
      */
-    getServiceDependers(shortName, version): Observable<ApiObject[]> {
+    getServiceDependers(shortName, version): Observable<Readonly<ApiObject[]>> {
 
         const resource = 'services/' + shortName + '/' + version + '/dependers';
         const stream = this.getStreamSource<ApiObject[]>(resource);
@@ -871,7 +985,7 @@ export class ApiService {
      * @param shortName unique short name of the service
      * @param version service version to be returned
      */
-    getServiceDependencyGraph(shortName, version): Observable<ApiObject> {
+    getServiceDependencyGraph(shortName, version): Observable<Readonly<ApiObject>> {
 
         const resource = 'services/' + shortName + '/' + version + '/dependencyGraph';
         const stream = this.getStreamSource<ApiObject>(resource);
@@ -892,7 +1006,7 @@ export class ApiService {
      * @param shortName unique short name of the service
      * @param version service version
      */
-    getServiceYamlConfig(shortName: string, version: string) {
+    getServiceYamlConfig(shortName: string, version: string): Observable<Readonly<ApiObject>> {
         const resource = 'services/' + shortName + '/' + version + '/yaml';
         const stream = this.getStreamSource<ApiObject>(resource);
 
@@ -916,7 +1030,7 @@ export class ApiService {
      * @param shortName shortName of the service
      * @param version version of the service
      */
-    getServiceInterfaces(shortName, version): Observable<ApiObject[]> {
+    getServiceInterfaces(shortName, version): Observable<Readonly<ApiObject[]>> {
         const resource = 'services/' + shortName + '/' + version + '/interfaces';
         const stream = this.getStreamSource<ApiObject[]>(resource);
 
@@ -1004,6 +1118,69 @@ export class ApiService {
 
                 return true;
             }));
+    }
+
+
+    // ============
+    // KAFKA TOPICS
+    // ============
+
+    /**
+     * Get all known used kafka topics from the backend.
+     */
+    getTopics() {
+        const resource = '/topics/';
+        const stream = this.getStreamSource<ApiObject[]>(resource);
+
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+            if (val.hasOwnProperty('_embedded')) {
+                stream.next(freezeObject(val._embedded.topicDTOList));
+            } else {
+                stream.next(freezeObject([]));
+            }
+        });
+
+        return stream.asObservable().pipe(
+            filter(service => service !== undefined)
+        );
+    }
+
+
+    // =========
+    // OPEN FAAS
+    // =========
+
+    /**
+     * Retrieves the IP address of the OpenFaaS Portal from the backend.
+     */
+    getOpenFaaSIp() {
+        const resource = '/openfaas/';
+        const stream = this.getStreamSource<string>(resource, () => new AsyncSubject<Readonly<string>>());
+
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+            stream.next(val.externalUrl);
+            if (val.externalUrl != null && val.externalUrl !== '') {
+                stream.complete();
+            }
+        });
+
+        return stream.asObservable();
+    }
+
+    /**
+     * Retrieves the function list of the OpenFaaS Portal from the backend.
+     */
+    getOpenFaaSFunctions() {
+        const resource = '/openfaas/functions';
+        const stream = this.getStreamSource<ApiObject[]>(resource);
+
+        this.rest.get<ApiObject[]>(resource).subscribe(val => {
+            stream.next(val);
+        });
+
+        return stream.asObservable().pipe(
+            filter(service => service !== undefined)
+        );
     }
 
     // ===============
@@ -1187,20 +1364,5 @@ export class ApiService {
 
             return subPolling;
         }
-    }
-
-    /**
-     * Retrieves the IP address of the OpenFaaS Portal from the backend.
-     */
-    getOpenFaaSIp() {
-        const resource = '/openfaas/';
-        const stream = this.getStreamSource<ApiObject>(resource);
-
-        this.rest.get<ApiObject>(resource).subscribe(val => {
-            stream.next(val.externalUrl);
-        });
-
-        return stream.asObservable().pipe(
-            filter(data => data !== undefined));
     }
 }

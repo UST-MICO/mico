@@ -239,6 +239,27 @@ public class ApplicationResourceEndToEndTests extends Neo4jTestClass {
     }
 
     @Test
+    public void addKafkaFaasConnectorInstanceOfApplicationWithoutSpecifyingVersion() throws Exception {
+        MicoApplication application = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
+        applicationRepository.save(application);
+
+        String kafkaFaasConnectorServiceName = kafkaFaasConnectorConfig.getServiceName();
+        MicoService kfConnectorService1 = new MicoService().setShortName(kafkaFaasConnectorServiceName).setVersion(VERSION_1_0_1).setKafkaEnabled(true);
+        MicoService kfConnectorService2 = new MicoService().setShortName(kafkaFaasConnectorServiceName).setVersion(VERSION_1_0_2).setKafkaEnabled(true);
+        serviceRepository.save(kfConnectorService1);
+        serviceRepository.save(kfConnectorService2);
+
+        given(micoKubernetesClient.isApplicationUndeployed(application)).willReturn(true);
+
+        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR))
+                .andDo(print())
+                .andExpect(status().isOk());
+        Optional<MicoApplication> result = applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion());
+        assertThat(result.get().getKafkaFaasConnectorDeploymentInfos().size(), is(1));
+        assertThat(result.get().getKafkaFaasConnectorDeploymentInfos().get(0).getService().getVersion(), is(kfConnectorService2.getVersion()));
+    }
+
+    @Test
     public void updateKafkaFaasConnectorInstanceOfApplicationShouldBeIdempotent() throws Exception {
         MicoApplication application = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
         applicationRepository.save(application);

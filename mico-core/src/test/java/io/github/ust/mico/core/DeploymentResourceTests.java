@@ -214,18 +214,19 @@ public class DeploymentResourceTests {
 
     @Test
     public void deployApplicationWithKafkaEnabledServiceWithoutServiceInterface() throws Exception {
-        List<MicoEnvironmentVariable> kafkaEnvironmentVariables = Arrays.asList(
-            new MicoEnvironmentVariable().setName(MicoEnvironmentVariable.DefaultNames.KAFKA_TOPIC_INPUT.name()).setValue(KAFKA_TOPIC_INPUT_NAME),
-            new MicoEnvironmentVariable().setName(MicoEnvironmentVariable.DefaultNames.OPENFAAS_FUNCTION_NAME.name()).setValue(OPENFAAS_FUNCTION_NAME));
+        List<MicoTopicRole> micoTopicRoles =Arrays.asList(
+            new MicoTopicRole().setTopic(new MicoTopic().setName("inputTopic")).setRole(MicoTopicRole.Role.INPUT),
+            new MicoTopicRole().setRole(MicoTopicRole.Role.OUTPUT).setTopic(new MicoTopic().setName("outputTopic")));
         MicoService service = getTestService();
         service.setServiceInterfaces(new ArrayList<>()); // There are no interfaces
         service.setKafkaEnabled(true); // Service is Kafka enabled
-        MicoApplication application = getTestApplication();
-        application.getServices().add(service);
-        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
+        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
             .setService(service)
             .setInstanceId(INSTANCE_ID)
-            .setEnvironmentVariables(kafkaEnvironmentVariables));
+            .setTopics(micoTopicRoles);
+        MicoApplication application = getTestApplication();
+        application.getServices().add(service);
+        application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
 
         setupDeploymentResources(application, service);
 

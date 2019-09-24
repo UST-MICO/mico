@@ -1,6 +1,7 @@
 package io.github.ust.mico.core.broker;
 
 import io.github.ust.mico.core.configuration.KafkaFaasConnectorConfig;
+import io.github.ust.mico.core.dto.request.KFConnectorDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationDeploymentStatusResponseDTO;
 import io.github.ust.mico.core.dto.response.status.MicoApplicationStatusResponseDTO;
@@ -54,6 +55,12 @@ public class MicoApplicationBroker {
 
     @Autowired
     private MicoStatusService micoStatusService;
+
+    @Autowired
+    private KafkaFaasConnectorDeploymentInfoBroker kafkaFaasConnectorDeploymentInfoBroker;
+
+    @Autowired
+    private MicoServiceDeploymentInfoBroker serviceDeploymentInfoBroker;
 
     public MicoApplication getMicoApplicationByShortNameAndVersion(String shortName, String version) throws MicoApplicationNotFoundException {
         Optional<MicoApplication> micoApplicationOptional = applicationRepository.findByShortNameAndVersion(shortName, version);
@@ -323,7 +330,7 @@ public class MicoApplicationBroker {
      */
     public MicoServiceDeploymentInfo addKafkaFaasConnectorInstanceToMicoApplicationByVersion(
         String applicationShortName, String applicationVersion, String kfConnectorVersion)
-        throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorVersionNotFoundException {
+        throws MicoApplicationNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorVersionNotFoundException, KafkaFaasConnectorInstanceNotFoundException {
 
         // Retrieve application and service from database (checks whether they exist)
         MicoApplication micoApplication = getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
@@ -345,11 +352,9 @@ public class MicoApplicationBroker {
             kfConnectorVersion, instanceId, applicationShortName, applicationVersion,
             micoApplication.getKafkaFaasConnectorDeploymentInfos().size());
 
-        // TODO: Set default deployment information (covered in epic mico#750)
         // Set default deployment information (environment variables, topics)
-        //serviceDeploymentInfoBroker.setDefaultDeploymentInformationForKafkaEnabledService(sdi);
-        //serviceDeploymentInfoBroker.updateKafkaFaasConnectorDeploymentInformation(applicationShortName, applicationVersion, instanceId,
-        //    new KFConnectorDeploymentInfoRequestDTO(sdi));
+        serviceDeploymentInfoBroker.setDefaultDeploymentInformationForKafkaEnabledService(sdi);
+        kafkaFaasConnectorDeploymentInfoBroker.updateKafkaFaasConnectorDeploymentInformation(instanceId, new KFConnectorDeploymentInfoRequestDTO(sdi));
         return sdi;
     }
 

@@ -48,6 +48,7 @@ import static io.github.ust.mico.core.JsonPathBuilder.ROOT;
 import static io.github.ust.mico.core.TestConstants.*;
 import static io.github.ust.mico.core.resource.ApplicationResource.PATH_APPLICATIONS;
 import static io.github.ust.mico.core.resource.ApplicationResource.PATH_KAFKA_FAAS_CONNECTOR;
+import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
@@ -169,6 +170,7 @@ public class KafkaFaasConnectorDeploymentInfoResourceEndToEndTests extends Neo4j
         // create the deployment info, that shall be updated
         MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo()
             .setInstanceId(INSTANCE_ID);
+        deploymentInfo.setService(new MicoService().setShortName(SHORT_NAME).setVersion(VERSION));
         deploymentInfoRepository.save(deploymentInfo);
 
         // create the request for updating the deployment info
@@ -205,6 +207,7 @@ public class KafkaFaasConnectorDeploymentInfoResourceEndToEndTests extends Neo4j
                 new MicoTopicRole()
                     .setServiceDeploymentInfo(deploymentInfo).setTopic(new MicoTopic()
                     .setName(OUTPUT_TOPIC)).setRole(MicoTopicRole.Role.OUTPUT)));
+        deploymentInfo.setService(new MicoService().setShortName(SHORT_NAME).setVersion(VERSION));
         deploymentInfoRepository.save(deploymentInfo);
 
         // create the request for updating the deployment info
@@ -241,6 +244,7 @@ public class KafkaFaasConnectorDeploymentInfoResourceEndToEndTests extends Neo4j
                 new MicoTopicRole()
                     .setServiceDeploymentInfo(deploymentInfo).setTopic(new MicoTopic()
                     .setName(OUTPUT_TOPIC)).setRole(MicoTopicRole.Role.OUTPUT)));
+        deploymentInfo.setService(new MicoService().setShortName(SHORT_NAME).setVersion(VERSION));
         deploymentInfoRepository.save(deploymentInfo);
 
         // create the request for updating the deployment info
@@ -274,6 +278,7 @@ public class KafkaFaasConnectorDeploymentInfoResourceEndToEndTests extends Neo4j
                 new MicoTopicRole()
                     .setServiceDeploymentInfo(deploymentInfo).setTopic(new MicoTopic()
                     .setName(OUTPUT_TOPIC)).setRole(MicoTopicRole.Role.OUTPUT)));
+        deploymentInfo.setService(new MicoService().setShortName(SHORT_NAME).setVersion(VERSION));
         deploymentInfoRepository.save(deploymentInfo);
 
         // create the request for updating the deployment info
@@ -319,6 +324,7 @@ public class KafkaFaasConnectorDeploymentInfoResourceEndToEndTests extends Neo4j
                 new MicoTopicRole().setServiceDeploymentInfo(deploymentInfo2).setTopic(inputTopic2).setRole(MicoTopicRole.Role.INPUT),
                 new MicoTopicRole().setServiceDeploymentInfo(deploymentInfo2).setTopic(outputTopic).setRole(MicoTopicRole.Role.OUTPUT)));
         MicoServiceDeploymentInfo savedDeploymentInfo2 = deploymentInfoRepository.save(deploymentInfo2);
+        deploymentInfo2.setService(new MicoService().setShortName(SHORT_NAME).setVersion(VERSION));
         deploymentInfoRepository.save(savedDeploymentInfo2);
 
         Iterable<MicoTopic> topicsAll = topicRepository.findAll();
@@ -351,7 +357,10 @@ public class KafkaFaasConnectorDeploymentInfoResourceEndToEndTests extends Neo4j
             .content(mapper.writeValueAsBytes(kfConnectorDeploymentInfoRequestDTO))
             .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
             .andDo(print())
-            .andExpect(status().isOk());
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(JsonPathBuilder.buildPath(JsonPathBuilder.ROOT, JsonPathBuilder.LINKS, "application", JsonPathBuilder.HREF), endsWith("/applications/" + SHORT_NAME + "/" + VERSION)))
+            .andExpect(jsonPath(JsonPathBuilder.buildPath(JsonPathBuilder.ROOT, JsonPathBuilder.LINKS, "kafkaFaasConnector", JsonPathBuilder.HREF), endsWith("/services/" + SHORT_NAME + "/" + VERSION)))
+            .andExpect(jsonPath(JsonPathBuilder.buildPath(JsonPathBuilder.ROOT, JsonPathBuilder.LINKS_SELF_HREF), endsWith("/applications/" + SHORT_NAME + "/" + VERSION + "/kafka-faas-connector/" + kfConnectorDeploymentInfoRequestDTO.getInstanceId())));
     }
 
 

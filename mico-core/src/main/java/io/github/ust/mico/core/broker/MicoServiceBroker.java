@@ -1,10 +1,13 @@
 package io.github.ust.mico.core.broker;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Iterables;
+import io.github.ust.mico.core.configuration.KafkaFaasConnectorConfig;
 import io.github.ust.mico.core.model.MicoApplication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,6 +41,9 @@ public class MicoServiceBroker {
 
     @Autowired
     private MicoStatusService micoStatusService;
+
+    @Autowired
+    private KafkaFaasConnectorConfig kafkaFaasConnectorConfig;
 
     public List<MicoService> getAllServicesAsList() {
         return serviceRepository.findAll(2);
@@ -265,5 +271,19 @@ public class MicoServiceBroker {
      */
     public String getServiceYamlByShortNameAndVersion(String shortName, String version) throws MicoServiceNotFoundException, JsonProcessingException {
         return micoKubernetesClient.getYaml(getServiceFromDatabase(shortName, version));
+    }
+
+    /**
+     * Returns the latest version of the KafkaFaaSConnector (according to the database)
+     * @return the latest version of the KafkaFaaSConnector
+     * @throws KafkaFaasConnectorLatestVersionNotFound
+     */
+    public String getLatestKFConnectorVersion() throws KafkaFaasConnectorLatestVersionNotFound {
+        List<String> kfConnectorVersions = serviceRepository.findByShortName(kafkaFaasConnectorConfig.getServiceName()).stream()
+                .map(kfConnector -> kfConnector.getVersion()).sorted().collect(Collectors.toList());
+        if(kfConnectorVersions.isEmpty()) {
+            throw new KafkaFaasConnectorLatestVersionNotFound();
+        }
+        return Iterables.getLast(kfConnectorVersions);
     }
 }
