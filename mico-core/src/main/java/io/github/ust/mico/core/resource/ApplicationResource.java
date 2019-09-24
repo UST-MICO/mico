@@ -275,7 +275,7 @@ public class ApplicationResource {
         try {
             kafkaFaasConnectorSDI = broker.addKafkaFaasConnectorInstanceToMicoApplicationByVersion(
                 applicationShortName, applicationVersion, kfConnectorVersion);
-        } catch (MicoApplicationNotFoundException | KafkaFaasConnectorVersionNotFoundException e) {
+        } catch (MicoApplicationNotFoundException | KafkaFaasConnectorVersionNotFoundException | KafkaFaasConnectorInstanceNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoApplicationIsNotUndeployedException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
