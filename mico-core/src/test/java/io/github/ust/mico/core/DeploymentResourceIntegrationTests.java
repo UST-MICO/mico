@@ -22,6 +22,7 @@ package io.github.ust.mico.core;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.github.ust.mico.core.broker.MicoApplicationBroker;
+import io.github.ust.mico.core.broker.MicoServiceBroker;
 import io.github.ust.mico.core.configuration.KafkaFaasConnectorConfig;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.model.*;
@@ -103,6 +104,9 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
     private MicoApplicationBroker micoApplicationBroker;
 
     @Autowired
+    private MicoServiceBroker serviceBroker;
+
+    @Autowired
     KafkaFaasConnectorConfig kafkaFaasConnectorConfig;
 
     @Autowired
@@ -178,8 +182,7 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
         micoKubernetesBuildBotConfig.setBuildTimeout(TIMEOUT_BUILD);
         createApplicationWithOneServiceInDatabase();
 
-        // TODO: Get latest KafkaFaasConnector that is stored in database
-        String kfConnectorVersion = "v1.0.1";
+        String kfConnectorVersion = serviceBroker.getLatestKFConnectorVersion();
         MicoServiceDeploymentInfo kafkaFaasConnectorMicoServiceDeploymentInfo1 = micoApplicationBroker
             .addKafkaFaasConnectorInstanceToMicoApplicationByVersion(application.getShortName(), application.getVersion(), kfConnectorVersion);
         MicoServiceDeploymentInfo kafkaFaasConnectorMicoServiceDeploymentInfo2 = micoApplicationBroker
