@@ -274,21 +274,21 @@ public class ApplicationResource {
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR)
     public ResponseEntity<Resource<KFConnectorDeploymentInfoResponseDTO>> addKafkaFaasConnectorInstanceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
                                                                                                                      @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
-                                                                                                                     @RequestParam(name = PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION, required=false) String kfConnectorVersion) {
+                                                                                                                     @RequestParam(name = PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION, required = false) String kfConnectorVersion) {
         MicoServiceDeploymentInfo kafkaFaasConnectorSDI;
         try {
-            if(kfConnectorVersion == null)
+            if (kfConnectorVersion == null)
                 kfConnectorVersion = serviceBroker.getLatestKFConnectorVersion();
             kafkaFaasConnectorSDI = applicationBroker.addKafkaFaasConnectorInstanceToMicoApplicationByVersion(
                 applicationShortName, applicationVersion, kfConnectorVersion);
         } catch (MicoApplicationNotFoundException | KafkaFaasConnectorVersionNotFoundException
-                | KafkaFaasConnectorInstanceNotFoundException | KafkaFaasConnectorLatestVersionNotFound e) {
+            | KafkaFaasConnectorInstanceNotFoundException | KafkaFaasConnectorLatestVersionNotFound e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoApplicationIsNotUndeployedException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
 
-        return ResponseEntity.ok(new Resource<>(new KFConnectorDeploymentInfoResponseDTO(kafkaFaasConnectorSDI)));
+        return ResponseEntity.ok(KafkaFaasConnectorDeploymentInfoResource.getKfConnectorDeploymentInfoResponseDTOResource(applicationShortName, applicationVersion, kafkaFaasConnectorSDI));
     }
 
     @ApiOperation(value = "Updates an existing KafkaFaasConnector deployment information instance with a new version.")
@@ -296,7 +296,7 @@ public class ApplicationResource {
     public ResponseEntity<Resource<KFConnectorDeploymentInfoResponseDTO>> updateKafkaFaasConnectorInstanceOfApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
                                                                                                                         @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
                                                                                                                         @PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID) String instanceId,
-                                                                                                                        @RequestParam(name = PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION, required=false) String kfConnectorVersion) {
+                                                                                                                        @RequestParam(name = PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION, required = false) String kfConnectorVersion) {
 
         MicoServiceDeploymentInfo kafkaFaasConnectorSDI;
         try {
@@ -308,7 +308,7 @@ public class ApplicationResource {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
 
-        return ResponseEntity.ok(new Resource<>(new KFConnectorDeploymentInfoResponseDTO(kafkaFaasConnectorSDI)));
+        return ResponseEntity.ok(KafkaFaasConnectorDeploymentInfoResource.getKfConnectorDeploymentInfoResponseDTOResource(applicationShortName, applicationVersion, kafkaFaasConnectorSDI));
     }
 
     @DeleteMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR)

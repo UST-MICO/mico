@@ -136,7 +136,7 @@ public class KafkaFaasConnectorDeploymentInfoResource {
      * @param micoServiceDeploymentInfo the {@link MicoServiceDeploymentInfo}
      * @return The resource containing the {@link KFConnectorDeploymentInfoResponseDTO}.
      */
-    private Resource<KFConnectorDeploymentInfoResponseDTO> getKfConnectorDeploymentInfoResponseDTOResource(
+    protected static Resource<KFConnectorDeploymentInfoResponseDTO> getKfConnectorDeploymentInfoResponseDTOResource(
         String applicationShortName, String applicationVersion, MicoServiceDeploymentInfo micoServiceDeploymentInfo) {
 
         KFConnectorDeploymentInfoResponseDTO kfConnectorDeploymentInfoResponseDTO = new KFConnectorDeploymentInfoResponseDTO(micoServiceDeploymentInfo);
