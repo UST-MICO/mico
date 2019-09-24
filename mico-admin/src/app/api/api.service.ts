@@ -436,9 +436,7 @@ export class ApiService {
             this.getApplicationVersions(applicationShortName);
             this.getApplication(applicationShortName, applicationVersion);
 
-            const streamResource = baseResource + '/' + val.instanceId;
-
-            const stream = this.getStreamSource<ApiObject>(streamResource); // FIXME use self url when available: val._links.self.href
+            const stream = this.getStreamSource<ApiObject>(val._links.self.href);
 
             stream.next(val);
 
@@ -491,7 +489,7 @@ export class ApiService {
 
         return this.rest.put<ApiObject>(resource, data).pipe(flatMap(val => {
 
-            const stream = this.getStreamSource<ApiObject>(resource); // FIXME use self url when available: val._links.self.href
+            const stream = this.getStreamSource<ApiObject>(val._links.self.href);
             stream.next(val);
             this.getApplication(applicationShortName, applicationVersion);
 
