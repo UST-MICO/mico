@@ -244,8 +244,8 @@ public class ApplicationResourceEndToEndTests extends Neo4jTestClass {
         applicationRepository.save(application);
 
         String kafkaFaasConnectorServiceName = kafkaFaasConnectorConfig.getServiceName();
-        MicoService kfConnectorService1 = new MicoService().setShortName(kafkaFaasConnectorServiceName).setVersion(SERVICE_VERSION_1).setKafkaEnabled(true);
-        MicoService kfConnectorService2 = new MicoService().setShortName(kafkaFaasConnectorServiceName).setVersion(SERVICE_VERSION_2).setKafkaEnabled(true);
+        MicoService kfConnectorService1 = new MicoService().setShortName(kafkaFaasConnectorServiceName).setVersion(VERSION_1_0_1).setKafkaEnabled(true);
+        MicoService kfConnectorService2 = new MicoService().setShortName(kafkaFaasConnectorServiceName).setVersion(VERSION_1_0_2).setKafkaEnabled(true);
         serviceRepository.save(kfConnectorService1);
         serviceRepository.save(kfConnectorService2);
 
