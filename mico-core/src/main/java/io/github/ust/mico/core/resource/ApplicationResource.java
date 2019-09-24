@@ -281,8 +281,8 @@ public class ApplicationResource {
                 kfConnectorVersion = serviceBroker.getLatestKFConnectorVersion();
             kafkaFaasConnectorSDI = applicationBroker.addKafkaFaasConnectorInstanceToMicoApplicationByVersion(
                 applicationShortName, applicationVersion, kfConnectorVersion);
-                | KafkaFaasConnectorLatestVersionNotFound e) {
-        } catch (MicoApplicationNotFoundException | KafkaFaasConnectorVersionNotFoundException | KafkaFaasConnectorInstanceNotFoundException e) {
+        } catch (MicoApplicationNotFoundException | KafkaFaasConnectorVersionNotFoundException
+                | KafkaFaasConnectorInstanceNotFoundException | KafkaFaasConnectorLatestVersionNotFound e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoApplicationIsNotUndeployedException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
