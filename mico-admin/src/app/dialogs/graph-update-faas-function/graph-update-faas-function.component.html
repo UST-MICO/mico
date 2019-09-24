@@ -1,0 +1,21 @@
+<h2 mat-dialog-title>Update FaaS-Function</h2>
+<mat-dialog-content style="min-width: 48rem">
+
+    Set FaaS-function
+
+    <mat-form-field style="min-width: 20em;">
+        <input matInput placeholder="FaaS-function" [(ngModel)]="faasFunction" (ngModelChange)="updateFilter()" [pattern]="'[a-z0-9\\-]+'" maxLength="63" [matAutocomplete]="auto">
+        <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete">
+            <mat-option *ngFor="let option of filteredList" [value]="option.name">
+                {{option.name}}
+            </mat-option>
+        </mat-autocomplete>
+    </mat-form-field>
+    for <b>{{kfConnectorInfo.instanceId}}</b>.
+
+</mat-dialog-content>
+<mat-dialog-actions>
+    <button mat-button mat-dialog-close>Cancel</button>
+    <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
+    <button mat-button [mat-dialog-close]="response()" [disabled]="!isValid()">Ok</button>
+</mat-dialog-actions>

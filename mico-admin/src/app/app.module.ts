@@ -100,6 +100,7 @@ import { AppDetailPublicIpComponent } from './app-detail-public-ip/app-detail-pu
 import { ServiceDetailKubeconfigComponent } from './service-detail-kubeconfig/service-detail-kubeconfig.component';
 import { GraphAddEnvironmentVariableComponent } from './dialogs/graph-add-environment-variable/graph-add-environment-variable.component';
 import { GraphAddKafkaTopicComponent } from './dialogs/graph-add-kafka-topic/graph-add-kafka-topic.component';
+import { GraphUpdateFaasFunctionComponent } from './dialogs/graph-update-faas-function/graph-update-faas-function.component';
 
 @NgModule({
     declarations: [
@@ -143,6 +144,7 @@ import { GraphAddKafkaTopicComponent } from './dialogs/graph-add-kafka-topic/gra
         ServiceDetailKubeconfigComponent,
         GraphAddEnvironmentVariableComponent,
         GraphAddKafkaTopicComponent,
+        GraphUpdateFaasFunctionComponent,
     ],
     entryComponents: [
         // dialogs
@@ -157,6 +159,7 @@ import { GraphAddKafkaTopicComponent } from './dialogs/graph-add-kafka-topic/gra
         DeploymentInformationDialogComponent,
         GraphAddEnvironmentVariableComponent,
         GraphAddKafkaTopicComponent,
+        GraphUpdateFaasFunctionComponent,
     ],
     imports: [
         BrowserModule,
