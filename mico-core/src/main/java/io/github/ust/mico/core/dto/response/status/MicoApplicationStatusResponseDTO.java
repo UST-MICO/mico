@@ -69,6 +69,19 @@ public class MicoApplicationStatusResponseDTO {
     private int totalNumberOfMicoServices;
 
     /**
+     * Number of KafkaFaasConnector instances used by a {@link MicoApplication}.
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "Total Number Of KafkaFaasConnector Instances"),
+            @ExtensionProperty(name = "x-order", value = "25"),
+            @ExtensionProperty(name = "description", value = "Number of KafkaFaasConnector Instances of a MicoApplication.")
+        }
+    )})
+    private int totalNumberOfKafkaFaasConnectors;
+
+    /**
      * Total number of replicas of all services that are available in a {@link MicoApplication}.
      */
     @ApiModelProperty(extensions = {@Extension(

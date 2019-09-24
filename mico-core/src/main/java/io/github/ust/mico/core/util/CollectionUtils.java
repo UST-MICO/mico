@@ -19,10 +19,10 @@
 
 package io.github.ust.mico.core.util;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import lombok.experimental.UtilityClass;
 
@@ -70,6 +70,15 @@ public class CollectionUtils {
         map.put(k4, v4);
         return map;
 
+    }
+
+    /**
+     * Inspired by Stuart Marks
+     * https://stackoverflow.com/a/27872852/9556565
+     */
+    public static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
+        Set<Object> seen = ConcurrentHashMap.newKeySet();
+        return t -> seen.add(keyExtractor.apply(t));
     }
 
 }

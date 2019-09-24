@@ -94,7 +94,7 @@ public class MicoServiceDeploymentInfoBroker {
 
     /**
      * Retrieves the {@link MicoServiceDeploymentInfo} that is used for the deployment
-     * of the requested {link MicoService} as part of a {@link MicoApplication}.
+     * of the requested {@link MicoService} as part of a {@link MicoApplication}.
      * There must not be zero or more than one service deployment information stored.
      * If that's the case, an {@link IllegalStateException} will be thrown.
      *
@@ -114,9 +114,10 @@ public class MicoServiceDeploymentInfoBroker {
             throw new IllegalStateException(errorMessage);
         }
         if (serviceDeploymentInfos.size() > 1) {
+            List<String> instanceIds = serviceDeploymentInfos.stream().map(MicoServiceDeploymentInfo::getInstanceId).collect(Collectors.toList());
             String errorMessage = "There are " + serviceDeploymentInfos.size() + " service deployment information stored for service '" +
                 micoService.getShortName() + "' '" + micoService.getVersion() + "' used by application '" + micoApplication.getShortName() + "' '" +
-                micoApplication.getVersion() + "'. However, there must be only one.";
+                micoApplication.getVersion() + "': '" + instanceIds + "'. However, there must be only one.";
             log.error(errorMessage);
             throw new IllegalStateException(errorMessage);
         }

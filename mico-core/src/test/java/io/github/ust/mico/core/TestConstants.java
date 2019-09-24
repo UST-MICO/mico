@@ -174,6 +174,8 @@ class TestConstants {
         static final String SERVICE_NAME = "UST-MICO/hello";
         static final String SERVICE_DESCRIPTION = "Hello World Service for integration testing";
 
+        static final String INSTANCE_ID = SERVICE_SHORT_NAME + "-12345678";
+
         static final String SERVICE_INTERFACE_NAME = "hello-interface";
 
         /**

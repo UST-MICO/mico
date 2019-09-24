@@ -202,7 +202,9 @@ public class ApplicationResourceIntegrationTests {
             .setShortName(SHORT_NAME).setVersion(VERSION)
             .setName(NAME).setDescription(DESCRIPTION).setOwner(OWNER);
 
-        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo().setService(service);
+        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
+            .setService(service)
+            .setInstanceId(INSTANCE_ID);
 
         application.getServices().add(service);
         application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
@@ -277,8 +279,12 @@ public class ApplicationResourceIntegrationTests {
 
         application.getServices().add(service1);
         application.getServices().add(service2);
-        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(service1));
-        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(service2));
+        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
+            .setService(service1)
+            .setInstanceId(INSTANCE_ID_1));
+        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
+            .setService(service2)
+            .setInstanceId(INSTANCE_ID_2));
 
         given(applicationRepository.save(any(MicoApplication.class))).willReturn(application);
         given(serviceRepository.findByShortNameAndVersion(eq(service1.getShortName()), eq(service1.getVersion())))
@@ -286,7 +292,7 @@ public class ApplicationResourceIntegrationTests {
         given(serviceRepository.findByShortNameAndVersion(eq(service2.getShortName()), eq(service2.getVersion())))
             .willReturn(Optional.of(service2));
 
-        MicoApplicationResponseDTO newApplicationDto = (MicoApplicationResponseDTO) new MicoApplicationResponseDTO()
+        MicoApplicationRequestDTO newApplicationDto = new MicoApplicationRequestDTO()
             .setShortName(SHORT_NAME).setVersion(VERSION)
             .setName(NAME).setDescription(DESCRIPTION);
 
@@ -313,7 +319,9 @@ public class ApplicationResourceIntegrationTests {
             .setName(NAME).setDescription(DESCRIPTION);
 
         application.getServices().add(invalidMicoService);
-        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(invalidMicoService));
+        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
+            .setService(invalidMicoService)
+            .setInstanceId(INSTANCE_ID));
 
         // MicoService exists with different data
         given(applicationRepository.findByShortNameAndVersion(eq(application.getShortName()),
@@ -447,7 +455,9 @@ public class ApplicationResourceIntegrationTests {
             .setName(updatedApplication.getName()).setDescription(updatedApplication.getDescription());
 
         expectedApplication.getServices().add(existingService);
-        expectedApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(existingService));
+        expectedApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
+            .setService(existingService)
+            .setInstanceId(INSTANCE_ID));
 
         MicoApplicationDeploymentStatus expectedApplicationDeploymentStatus =
             MicoApplicationDeploymentStatus.undeployed("MicoApplication is currently not deployed.");
@@ -485,6 +495,7 @@ public class ApplicationResourceIntegrationTests {
         MicoServiceDeploymentInfo deploymentInfo = new MicoServiceDeploymentInfo()
             .setId(2000L)
             .setService(service)
+            .setInstanceId(INSTANCE_ID)
             .setReplicas(5)
             .setLabels(CollectionUtils.listOf(new MicoLabel(3000L, "key", "value")))
             .setEnvironmentVariables(CollectionUtils.listOf(new MicoEnvironmentVariable(4000L, "name", "key")))
@@ -513,7 +524,7 @@ public class ApplicationResourceIntegrationTests {
         updatedApplication.getServices().add(service);
         // Service deployment information is copied without the actual Kubernetes deployment information.
         MicoServiceDeploymentInfo updatedDeploymentInfo = new MicoServiceDeploymentInfo()
-            .setId(null).setService(service).setReplicas(5).setKubernetesDeploymentInfo(null);
+            .setId(null).setService(service).setInstanceId(INSTANCE_ID).setReplicas(5).setKubernetesDeploymentInfo(null);
         updatedApplication.getServiceDeploymentInfos().add(updatedDeploymentInfo);
 
         MicoApplication expectedApplication = new MicoApplication()
@@ -523,7 +534,7 @@ public class ApplicationResourceIntegrationTests {
             .setName(NAME);
         expectedApplication.getServices().add(service);
         MicoServiceDeploymentInfo expectedDeploymentInfo = new MicoServiceDeploymentInfo()
-            .setId(ID_2).setService(service).setReplicas(5).setKubernetesDeploymentInfo(null);
+            .setId(ID_2).setService(service).setInstanceId(INSTANCE_ID).setReplicas(5).setKubernetesDeploymentInfo(null);
         expectedApplication.getServiceDeploymentInfos().add(expectedDeploymentInfo);
 
         MicoApplicationDeploymentStatus expectedApplicationDeploymentStatus =
@@ -561,6 +572,7 @@ public class ApplicationResourceIntegrationTests {
         assertEquals("MicoService does not match expected", service, savedMicoApplication.getServices().get(0));
         assertEquals("Expected that new application includes 1 service deployment information", 1, savedMicoApplication.getServiceDeploymentInfos().size());
         assertEquals("MicoService in service deployment information does not match expected", service, savedMicoApplication.getServiceDeploymentInfos().get(0).getService());
+        assertEquals("InstanceId do not match expected", INSTANCE_ID, savedMicoApplication.getServiceDeploymentInfos().get(0).getInstanceId());
         assertEquals("Replicas do not match expected", 5, savedMicoApplication.getServiceDeploymentInfos().get(0).getReplicas());
         assertEquals("Expected one Kubernetes label", 1, savedMicoApplication.getServiceDeploymentInfos().get(0).getLabels().size());
         assertEquals("Expected one Kubernetes environment variable", 1, savedMicoApplication.getServiceDeploymentInfos().get(0).getEnvironmentVariables().size());
@@ -883,17 +895,18 @@ public class ApplicationResourceIntegrationTests {
         MicoService service = new MicoService()
             .setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
 
-        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
-            .setService(service);
+        MicoServiceDeploymentInfo newSDI = new MicoServiceDeploymentInfo()
+            .setService(service)
+            .setInstanceId("new-instance-id");
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(serviceRepository.findByShortNameAndVersion(SERVICE_SHORT_NAME, SERVICE_VERSION)).willReturn(Optional.of(service));
         given(serviceRepository.findAllByApplication(SHORT_NAME, VERSION)).willReturn(CollectionUtils.listOf(service));
         given(micoServiceDeploymentInfoBroker.getExistingServiceDeploymentInfo(application, service))
-            .willReturn(serviceDeploymentInfo);
+            .willReturn(newSDI);
         given(micoKubernetesClient.isApplicationUndeployed(application)).willReturn(true);
         given(micoServiceDeploymentInfoBroker.updateMicoServiceDeploymentInformation(
-            eq(SHORT_NAME), eq(VERSION), eq(SERVICE_SHORT_NAME), any(MicoServiceDeploymentInfoRequestDTO.class))).willReturn(serviceDeploymentInfo);
+            eq(SHORT_NAME), eq(VERSION), eq(SERVICE_SHORT_NAME), any(MicoServiceDeploymentInfoRequestDTO.class))).willReturn(newSDI);
 
         ArgumentCaptor<MicoApplication> micoApplicationCaptor = ArgumentCaptor.forClass(MicoApplication.class);
 
@@ -905,6 +918,7 @@ public class ApplicationResourceIntegrationTests {
         MicoApplication savedMicoApplication = micoApplicationCaptor.getValue();
         assertEquals("Expected one service deployment information", 1, savedMicoApplication.getServiceDeploymentInfos().size());
         assertEquals(service, savedMicoApplication.getServiceDeploymentInfos().get(0).getService());
+        assertNotNull(savedMicoApplication.getServiceDeploymentInfos().get(0).getInstanceId());
     }
 
     @Test
@@ -917,7 +931,9 @@ public class ApplicationResourceIntegrationTests {
             .setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
 
         application.getServices().add(service);
-        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo().setService(service));
+        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
+            .setService(service)
+            .setInstanceId(INSTANCE_ID));
 
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(serviceRepository.findByShortNameAndVersion(SERVICE_SHORT_NAME, SERVICE_VERSION)).willReturn(Optional.of(service));
@@ -979,9 +995,12 @@ public class ApplicationResourceIntegrationTests {
         MicoApplication application = new MicoApplication().setShortName(SHORT_NAME).setVersion(VERSION);
         MicoService serviceOld = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(VERSION_1_0_1);
         MicoService serviceNew = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(VERSION_1_0_2);
-        MicoServiceDeploymentInfo serviceDeploymentInfoOld = new MicoServiceDeploymentInfo().setService(serviceOld);
+        MicoServiceDeploymentInfo serviceDeploymentInfoOld = new MicoServiceDeploymentInfo()
+            .setService(serviceOld)
+            .setInstanceId(INSTANCE_ID);
         MicoServiceDeploymentInfo serviceDeploymentInfoNew = new MicoServiceDeploymentInfo()
-            .setService(serviceNew);
+            .setService(serviceNew)
+            .setInstanceId(INSTANCE_ID);
 
         application.getServices().add(serviceOld);
         application.getServiceDeploymentInfos().add(serviceDeploymentInfoOld);
@@ -1005,6 +1024,7 @@ public class ApplicationResourceIntegrationTests {
         MicoApplication savedApplication = applicationCaptor.getValue();
         assertEquals("Expected one service", 1, savedApplication.getServices().size());
         assertEquals("Expected one serviceDeploymentInfo", 1, savedApplication.getServiceDeploymentInfos().size());
+        assertEquals(INSTANCE_ID, savedApplication.getServiceDeploymentInfos().get(0).getInstanceId());
         assertEquals(serviceNew, savedApplication.getServiceDeploymentInfos().get(0).getService());
         assertEquals(serviceNew, savedApplication.getServices().get(0));
     }
