@@ -62,8 +62,7 @@ import static io.github.ust.mico.core.TestConstants.*;
 import static io.github.ust.mico.core.resource.ApplicationResource.PATH_APPLICATIONS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -84,9 +83,6 @@ public class DeploymentResourceTests {
     private static final String DEPLOYMENT_NAME = "deployment-name";
     private static final String SERVICE_NAME = "service-name";
     private static final String NAMESPACE_NAME = "namespace-name";
-    private static final String OPENFAAS_FUNCTION_NAME = "test-function";
-    private static final String KAFKA_TOPIC_INPUT_NAME = "input-topic";
-    private static final String KAFKA_TOPIC_OUTPUT_NAME = "output-topic";
 
     @Captor
     private ArgumentCaptor<MicoService> micoServiceArgumentCaptor;
@@ -214,7 +210,7 @@ public class DeploymentResourceTests {
 
     @Test
     public void deployApplicationWithKafkaEnabledServiceWithoutServiceInterface() throws Exception {
-        List<MicoTopicRole> micoTopicRoles =Arrays.asList(
+        List<MicoTopicRole> micoTopicRoles = Arrays.asList(
             new MicoTopicRole().setTopic(new MicoTopic().setName("inputTopic")).setRole(MicoTopicRole.Role.INPUT),
             new MicoTopicRole().setRole(MicoTopicRole.Role.OUTPUT).setTopic(new MicoTopic().setName("outputTopic")));
         MicoService service = getTestService();
@@ -242,7 +238,7 @@ public class DeploymentResourceTests {
             .willReturn(CollectionUtils.listOf(new MicoServiceDeploymentInfo()
                 .setService(service)
                 .setInstanceId(INSTANCE_ID)));
-        given(serviceRepository.save(any(MicoService.class))).willReturn(service);
+        given(serviceRepository.save(any(MicoService.class), anyInt())).willReturn(service);
         given(serviceDeploymentInfoRepository.save(any(MicoServiceDeploymentInfo.class)))
             .willReturn(new MicoServiceDeploymentInfo()
                 .setService(service)
