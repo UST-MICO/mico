@@ -281,7 +281,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             const subTopicDialog = dialogRef.afterClosed().subscribe(result => {
                 safeUnsubscribe(subTopicDialog);
 
-                if (result === '') {
+                if (result === '' || result == null) {
                     return;
                 }
 
@@ -571,7 +571,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             const subDependeesDialog = dialogRef.afterClosed().subscribe(result => {
                 safeUnsubscribe(subDependeesDialog);
 
-                if (result === '') {
+                if (result === '' || result == null) {
                     return;
                 }
 
@@ -657,7 +657,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             const subTopicDialog = dialogRef.afterClosed().subscribe(result => {
                 safeUnsubscribe(subTopicDialog);
 
-                if (result === '') {
+                if (result === '' || result == null) {
                     return;
                 }
 
