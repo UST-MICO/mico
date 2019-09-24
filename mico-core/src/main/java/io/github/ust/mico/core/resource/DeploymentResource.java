@@ -21,7 +21,7 @@ package io.github.ust.mico.core.resource;
 
 import io.github.ust.mico.core.broker.DeploymentBroker;
 import io.github.ust.mico.core.dto.response.MicoApplicationJobStatusResponseDTO;
-import io.github.ust.mico.core.exception.DeploymentRequirementsNotMetException;
+import io.github.ust.mico.core.exception.DeploymentRequirementsOfKafkaFaasConnectorNotMetException;
 import io.github.ust.mico.core.exception.MicoApplicationIsDeployingException;
 import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
 import io.github.ust.mico.core.exception.MicoServiceInterfaceNotFoundException;
@@ -56,7 +56,7 @@ public class DeploymentResource {
             micoApplicationJobStatus = deploymentBroker.deployApplication(shortName, version);
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        } catch (MicoServiceInterfaceNotFoundException | DeploymentRequirementsNotMetException e) {
+        } catch (MicoServiceInterfaceNotFoundException | DeploymentRequirementsOfKafkaFaasConnectorNotMetException e) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
         }
 

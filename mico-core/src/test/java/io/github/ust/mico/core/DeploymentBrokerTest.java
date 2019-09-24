@@ -1,8 +1,11 @@
 package io.github.ust.mico.core;
 
 import io.github.ust.mico.core.broker.DeploymentBroker;
-import io.github.ust.mico.core.exception.DeploymentRequirementsNotMetException;
-import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.exception.DeploymentRequirementsOfKafkaFaasConnectorNotMetException;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.model.MicoTopic;
+import io.github.ust.mico.core.model.MicoTopicRole;
+import io.github.ust.mico.core.model.OpenFaaSFunction;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,15 +24,15 @@ public class DeploymentBrokerTest {
     DeploymentBroker deploymentBroker;
 
     @Test
-    public void checkIfKafkaEnabledServiceIsDeployable() throws DeploymentRequirementsNotMetException {
+    public void checkIfKafkaFaasConnectorIsDeployable() throws DeploymentRequirementsOfKafkaFaasConnectorNotMetException {
         MicoServiceDeploymentInfo micoServiceDeploymentInfo = new MicoServiceDeploymentInfo().setTopics(Arrays.asList(
-            new MicoTopicRole().setTopic(new MicoTopic().setName("inputTopic")).setRole(MicoTopicRole.Role.INPUT),
+            new MicoTopicRole().setRole(MicoTopicRole.Role.INPUT).setTopic(new MicoTopic().setName("inputTopic")),
             new MicoTopicRole().setRole(MicoTopicRole.Role.OUTPUT).setTopic(new MicoTopic().setName("outputTopic"))));
-        deploymentBroker.checkIfKafkaEnabledServiceIsDeployable(micoServiceDeploymentInfo);
+        deploymentBroker.checkIfKafkaFaasConnectorIsDeployable(micoServiceDeploymentInfo);
 
         micoServiceDeploymentInfo = new MicoServiceDeploymentInfo().setTopics(Arrays.asList(
-            new MicoTopicRole().setTopic(new MicoTopic().setName("inputTopic")).setRole(MicoTopicRole.Role.INPUT)))
+            new MicoTopicRole().setRole(MicoTopicRole.Role.INPUT).setTopic(new MicoTopic().setName("inputTopic"))))
             .setOpenFaaSFunction(new OpenFaaSFunction().setName("faas-function"));
-        deploymentBroker.checkIfKafkaEnabledServiceIsDeployable(micoServiceDeploymentInfo);
+        deploymentBroker.checkIfKafkaFaasConnectorIsDeployable(micoServiceDeploymentInfo);
     }
 }

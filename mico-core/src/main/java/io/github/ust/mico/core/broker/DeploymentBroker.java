@@ -59,7 +59,7 @@ public class DeploymentBroker {
      * @throws MicoServiceInterfaceNotFoundException if the {@link MicoServiceInterface} does not exist
      */
     public MicoApplicationJobStatus deployApplication(String shortName, String version)
-        throws MicoApplicationNotFoundException, MicoServiceInterfaceNotFoundException, DeploymentRequirementsNotMetException {
+        throws MicoApplicationNotFoundException, MicoServiceInterfaceNotFoundException, DeploymentRequirementsOfKafkaFaasConnectorNotMetException {
 
         MicoApplication micoApplication = micoApplicationBroker.getMicoApplicationByShortNameAndVersion(shortName, version);
 
@@ -244,7 +244,7 @@ public class DeploymentBroker {
         backgroundJobBroker.saveFutureOfJob(micoService.getShortName(), micoService.getVersion(), MicoServiceBackgroundJob.Type.BUILD, buildJob);
     }
 
-    private void checkIfMicoApplicationIsDeployable(MicoApplication micoApplication) throws MicoServiceInterfaceNotFoundException, DeploymentRequirementsNotMetException {
+    private void checkIfMicoApplicationIsDeployable(MicoApplication micoApplication) throws MicoServiceInterfaceNotFoundException, DeploymentRequirementsOfKafkaFaasConnectorNotMetException {
         for (MicoService micoService : micoApplication.getServices()) {
             // If the service is not Kafka-enabled, there must be at least one interface.
             if (!micoService.isKafkaEnabled() &&
@@ -259,37 +259,31 @@ public class DeploymentBroker {
             }
         }
 
-        for (MicoServiceDeploymentInfo serviceDeploymentInfo : micoApplication.getServiceDeploymentInfos()) {
-            // If the service is Kafka-enabled check if the deployment information met the requirements
-            if (serviceDeploymentInfo.getService().isKafkaEnabled()) {
-                checkIfKafkaEnabledServiceIsDeployable(serviceDeploymentInfo);
-            }
-        }
+        // Check if the KafkaFaasConnector deployment information met the requirements
         for (MicoServiceDeploymentInfo kfConnectorDeploymentInfo : micoApplication.getKafkaFaasConnectorDeploymentInfos()) {
-            // Check if the KafkaFaasConnector deployment information met the requirements
-            checkIfKafkaEnabledServiceIsDeployable(kfConnectorDeploymentInfo);
+            checkIfKafkaFaasConnectorIsDeployable(kfConnectorDeploymentInfo);
         }
     }
 
     /**
      * Checks if the properties of the {@link MicoServiceDeploymentInfo} are valid
-     * so the corresponding {@link MicoService} is considered deployable.
+     * so the corresponding KafkaFaasConnector is considered deployable.
      *
-     * @param micoServiceDeploymentInfo the {@link MicoServiceDeploymentInfo}
-     * @throws DeploymentRequirementsNotMetException if the requirements are not met
+     * @param kfConnectorDeploymentInfo the {@link MicoServiceDeploymentInfo}
+     * @throws DeploymentRequirementsOfKafkaFaasConnectorNotMetException if the requirements are not met
      */
-    public void checkIfKafkaEnabledServiceIsDeployable(MicoServiceDeploymentInfo micoServiceDeploymentInfo) throws DeploymentRequirementsNotMetException {
-        // The input topic must be set for a Kafka-enabled service
-        if (micoServiceDeploymentInfo.getTopics().stream().noneMatch(t -> t.getRole().equals(MicoTopicRole.Role.INPUT))) {
-            throw new DeploymentRequirementsNotMetException(micoServiceDeploymentInfo,
-                "The input topic of the kafka enabled service is not set.");
+    public void checkIfKafkaFaasConnectorIsDeployable(MicoServiceDeploymentInfo kfConnectorDeploymentInfo) throws DeploymentRequirementsOfKafkaFaasConnectorNotMetException {
+        // The input topic must be set for a KafkaFaasConnector
+        if (kfConnectorDeploymentInfo.getTopics().stream().noneMatch(t -> t.getRole().equals(MicoTopicRole.Role.INPUT))) {
+            throw new DeploymentRequirementsOfKafkaFaasConnectorNotMetException(kfConnectorDeploymentInfo,
+                "The input topic is missing.");
         }
-        // If there is no output topic, a OpenFaaS function name must be set for a Kafka-enabled service
-        if (micoServiceDeploymentInfo.getTopics().stream().noneMatch(t -> t.getRole().equals(MicoTopicRole.Role.OUTPUT)) &&
-            (micoServiceDeploymentInfo.getOpenFaaSFunction() == null || micoServiceDeploymentInfo.getOpenFaaSFunction().getName() == null)) {
-            throw new DeploymentRequirementsNotMetException(micoServiceDeploymentInfo,
-                "The requirements for the deployment of the kafka enabled service are not met. " +
-                    "Deployment information: " + micoServiceDeploymentInfo);
+        // If there is no output topic, a OpenFaaS function name must be set for a KafkaFaasConnector
+        if (kfConnectorDeploymentInfo.getTopics().stream().noneMatch(t -> t.getRole().equals(MicoTopicRole.Role.OUTPUT)) &&
+            (kfConnectorDeploymentInfo.getOpenFaaSFunction() == null || kfConnectorDeploymentInfo.getOpenFaaSFunction().getName() == null)) {
+            throw new DeploymentRequirementsOfKafkaFaasConnectorNotMetException(kfConnectorDeploymentInfo,
+                "The requirements for the deployment of the KafkaFaasConnector are not met. " +
+                    "Deployment information: " + kfConnectorDeploymentInfo);
         }
     }
 
