@@ -274,13 +274,14 @@ public class ApplicationResource {
     @PostMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_KAFKA_FAAS_CONNECTOR)
     public ResponseEntity<Resource<KFConnectorDeploymentInfoResponseDTO>> addKafkaFaasConnectorInstanceToApplication(@PathVariable(PATH_VARIABLE_SHORT_NAME) String applicationShortName,
                                                                                                                      @PathVariable(PATH_VARIABLE_VERSION) String applicationVersion,
-                                                                                                                     @RequestParam(name = PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION, required=false) String kfConnectorVersion) throws KafkaFaasConnectorLatestVersionNotFound {
+                                                                                                                     @RequestParam(name = PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION, required=false) String kfConnectorVersion) {
         MicoServiceDeploymentInfo kafkaFaasConnectorSDI;
-        if(kfConnectorVersion == null)
-            kfConnectorVersion = serviceBroker.getLatestKFConnectorVersion();
         try {
+            if(kfConnectorVersion == null)
+                kfConnectorVersion = serviceBroker.getLatestKFConnectorVersion();
             kafkaFaasConnectorSDI = applicationBroker.addKafkaFaasConnectorInstanceToMicoApplicationByVersion(
                 applicationShortName, applicationVersion, kfConnectorVersion);
+                | KafkaFaasConnectorLatestVersionNotFound e) {
         } catch (MicoApplicationNotFoundException | KafkaFaasConnectorVersionNotFoundException | KafkaFaasConnectorInstanceNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoApplicationIsNotUndeployedException e) {
