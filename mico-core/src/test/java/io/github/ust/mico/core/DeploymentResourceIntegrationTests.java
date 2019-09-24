@@ -67,12 +67,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @ActiveProfiles("dev")
-public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
+// Only works with local Neo4j database (embedded database has threading problems)
+public class DeploymentResourceIntegrationTests {
 
     // Build timeout in seconds.
     private static int TIMEOUT_BUILD = 60;
-    // Waiting timeout for pods in seconds.
-    private static final int TIMEOUT_WAITING_FOR_PODS = 60;
     // Deployment timeout in seconds.
     private static final int TIMEOUT_DEPLOYMENT = 10;
 
@@ -136,7 +135,10 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
     }
 
     /**
-     * Deletion of namespace cleans up everything.
+     * Deletion of namespace cleans up everything in Kubernetes.
+     * However not in the local Neo4j database.
+     * To delete everything in the database use Cypher:
+     * {@code MATCH (n) DETACH DELETE n;}
      */
     @After
     public void tearDown() {
@@ -215,8 +217,10 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
         kafkaFaasConnectorMicoServiceDeploymentInfo1.setTopics(micoTopicRoles1);
         kafkaFaasConnectorMicoServiceDeploymentInfo2.setTopics(micoTopicRoles2);
 
-        serviceDeploymentInfoRepository.save(kafkaFaasConnectorMicoServiceDeploymentInfo1);
-        serviceDeploymentInfoRepository.save(kafkaFaasConnectorMicoServiceDeploymentInfo2);
+        MicoServiceDeploymentInfo savedServiceDeploymentInfo1 = serviceDeploymentInfoRepository.save(kafkaFaasConnectorMicoServiceDeploymentInfo1);
+        serviceDeploymentInfoRepository.save(savedServiceDeploymentInfo1);
+        MicoServiceDeploymentInfo savedServiceDeploymentInfo2 = serviceDeploymentInfoRepository.save(kafkaFaasConnectorMicoServiceDeploymentInfo2);
+        serviceDeploymentInfoRepository.save(savedServiceDeploymentInfo2);
 
         imageBuilder.init();
 
@@ -251,7 +255,7 @@ public class DeploymentResourceIntegrationTests extends Neo4jTestClass {
      */
     private void waitForAllPodsInNamespace() throws InterruptedException, ExecutionException, TimeoutException {
         CompletableFuture<Boolean> allPodsInNamespaceAreRunning = integrationTestsUtils.waitUntilAllPodsInNamespaceAreRunning(
-            namespace, 10, 1, TIMEOUT_WAITING_FOR_PODS);
+            namespace, 10, 1, TIMEOUT_BUILD);
         assertTrue("Deployment failed!", allPodsInNamespaceAreRunning.get());
     }
 

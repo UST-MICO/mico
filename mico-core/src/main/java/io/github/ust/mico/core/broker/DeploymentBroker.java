@@ -85,7 +85,10 @@ public class DeploymentBroker {
 
         // When all build jobs are finished, create the Kubernetes resources for the deployment of a MicoService
         CompletableFuture<List<MicoService>> allBuildJobs = FutureUtils.all(buildJobs);
+        log.info("Wait for completion of all build jobs...");
         allBuildJobs.whenComplete((servicesWithNullValues, throwable) -> {
+            log.info("All build jobs are completed.");
+
             // All failed builds lead to a null in the service deployment list.
             long failedJobs = servicesWithNullValues.stream().filter(Objects::isNull).count();
             if (failedJobs > 0) {
@@ -95,6 +98,16 @@ public class DeploymentBroker {
 
             List<MicoService> servicesWithSuccessfulBuild = servicesWithNullValues.stream()
                 .filter(Objects::nonNull).collect(toList());
+
+            // Save updated Docker Image URI to database.
+            // TODO: Move save operation to main thread (avoid Neo4j threading problems) -> issue mico#842
+            for (MicoService service : servicesWithSuccessfulBuild) {
+                // Save the MicoService with a depth of 0 to the database.
+                // Only the properties of this MicoService entity will be stored to the database.
+                MicoService updatedService = serviceRepository.save(service, 0);
+                log.debug("Saved docker image uri of MicoService '{}' '{}' to database successfully: {}",
+                    updatedService.getShortName(), updatedService.getVersion(), updatedService.getDockerImageUri());
+            }
 
             List<MicoServiceDeploymentInfo> serviceDeploymentInfos = new ArrayList<>();
             serviceDeploymentInfos.addAll(micoApplication.getKafkaFaasConnectorDeploymentInfos());
@@ -289,9 +302,7 @@ public class DeploymentBroker {
                 log.info("Build of service '{}' in version '{}' finished with image '{}'.",
                     micoService.getShortName(), micoService.getVersion(), dockerImageUri);
                 micoService.setDockerImageUri(dockerImageUri);
-                // Save the MicoService with a depth of 0 to the database.
-                // Only the properties of this MicoService entity will be stored to the database.
-                serviceRepository.save(micoService, 0);
+                return micoService;
             } else {
                 String errorMessage = "Build of service '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' didn't return a Docker image URI.";
                 throw new CompletionException(new RuntimeException(errorMessage));
@@ -299,7 +310,6 @@ public class DeploymentBroker {
         } catch (InterruptedException | ExecutionException | NotInitializedException | TimeoutException e) {
             throw new RuntimeException(e);
         }
-        return micoService;
     }
 
     /**
