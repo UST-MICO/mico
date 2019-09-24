@@ -21,7 +21,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,9 +46,6 @@ public class MicoApplicationBrokerTests {
 
     @MockBean
     private KafkaFaasConnectorConfig kafkaFaasConnectorConfig;
-
-    @MockBean
-    private MicoServiceRepository micoServiceRepository;
 
     @Autowired
     private MicoApplicationBroker micoApplicationBroker;
@@ -239,8 +235,6 @@ public class MicoApplicationBrokerTests {
 
         given(micoServiceBroker.getServiceFromDatabase(kfConnector.getShortName(), kfConnector.getVersion())).willReturn(kfConnector);
         given(micoServiceBroker.getServiceFromDatabase(kfConnectorNew.getShortName(), kfConnectorNew.getVersion())).willReturn(kfConnectorNew);
-
-        given(micoServiceRepository.findByShortNameAndVersion(kfConnector.getShortName(), kfConnector.getVersion())).willReturn(Optional.of(kfConnector));
         given(kafkaFaasConnectorConfig.getServiceName()).willReturn(kfConnectorNew.getShortName());
         given(micoApplicationRepository.findByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion())).willReturn(Optional.of(micoApplication));
 
