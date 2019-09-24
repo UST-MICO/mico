@@ -21,6 +21,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,7 +48,7 @@ public class MicoApplicationBrokerTests {
     @MockBean
     private KafkaFaasConnectorConfig kafkaFaasConnectorConfig;
 
-    @Autowired
+    @MockBean
     private MicoServiceRepository micoServiceRepository;
 
     @Autowired
@@ -62,9 +63,7 @@ public class MicoApplicationBrokerTests {
 
         List<MicoApplication> listOfMicoApplications = micoApplicationBroker.getMicoApplications();
         assertThat(listOfMicoApplications.get(0).getShortName()).isEqualTo(SHORT_NAME_1);
-        /*
 
-         */
     }
 
     @Test
@@ -117,10 +116,6 @@ public class MicoApplicationBrokerTests {
         micoApplicationBroker.deleteMicoApplicationByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion());
     }
 
-    @Test
-    public void addKFConnectorToMicoApplication() {
-        //TODO: Wait for final implementation
-    }
 
     @Test
     public void addMicoServiceToMicoApplication()
@@ -154,7 +149,7 @@ public class MicoApplicationBrokerTests {
 
 
         micoApplicationBroker.addMicoServiceToMicoApplicationByShortNameAndVersion(SHORT_NAME_1, VERSION_1_0_1, micoService.getShortName(), micoService.getVersion(), Optional.empty());
-        assertThat(micoApplication.getServices().get(0).equals(micoService));
+        assert (micoApplication.getServices().get(0).equals(micoService));
     }
 
     @Test
@@ -192,11 +187,6 @@ public class MicoApplicationBrokerTests {
         assert (updatedMicoApplication.getServices().get(0).equals(micoService2));
     }
 
-    @Test
-    public void getServiceDeploymentInfoByInstanceId() {
-
-    }
-
 
     @Test
     public void addKafkaFaasConnectorInstanceToMicoApplicationByVersion() throws MicoServiceNotFoundException,
@@ -220,4 +210,46 @@ public class MicoApplicationBrokerTests {
 
         assert (sdi.getService().equals(kfConnector));
     }
+
+    @Test
+    public void updateKafkaFaasConnectorInstanceOfMicoApplicationByVersionAndInstanceId() throws MicoServiceNotFoundException,
+        KafkaFaasConnectorInstanceNotFoundException, MicoApplicationIsNotUndeployedException, KafkaFaasConnectorVersionNotFoundException, MicoApplicationNotFoundException {
+        MicoService kfConnector = new MicoService()
+            .setShortName(SHORT_NAME_2)
+            .setVersion(VERSION_1_0_2);
+
+        MicoService kfConnectorNew = new MicoService()
+            .setShortName(SHORT_NAME_3)
+            .setVersion(VERSION_1_0_3);
+
+        MicoServiceDeploymentInfo micoServiceDeploymentInfo = new MicoServiceDeploymentInfo()
+            .setInstanceId(INSTANCE_ID_1)
+            .setService(kfConnector);
+
+        ArrayList<MicoServiceDeploymentInfo> listOfMicoServiceDeploymentInfos = new ArrayList<>();
+        listOfMicoServiceDeploymentInfos.add(micoServiceDeploymentInfo);
+
+        MicoApplication micoApplication = new MicoApplication()
+            .setShortName(SHORT_NAME_1)
+            .setVersion(VERSION_1_0_1)
+            .setName(NAME_1)
+            .setDescription(DESCRIPTION_1)
+            .setKafkaFaasConnectorDeploymentInfos(listOfMicoServiceDeploymentInfos);
+
+
+        given(micoServiceBroker.getServiceFromDatabase(kfConnector.getShortName(), kfConnector.getVersion())).willReturn(kfConnector);
+        given(micoServiceBroker.getServiceFromDatabase(kfConnectorNew.getShortName(), kfConnectorNew.getVersion())).willReturn(kfConnectorNew);
+
+        given(micoServiceRepository.findByShortNameAndVersion(kfConnector.getShortName(), kfConnector.getVersion())).willReturn(Optional.of(kfConnector));
+        given(kafkaFaasConnectorConfig.getServiceName()).willReturn(kfConnectorNew.getShortName());
+        given(micoApplicationRepository.findByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion())).willReturn(Optional.of(micoApplication));
+
+
+        MicoServiceDeploymentInfo sdi = micoApplicationBroker.updateKafkaFaasConnectorInstanceOfMicoApplicationByVersionAndInstanceId(
+            micoApplication.getShortName(), micoApplication.getVersion(), VERSION_1_0_3, micoServiceDeploymentInfo.getInstanceId());
+
+        assert (sdi.getService().getVersion().equals(kfConnectorNew.getVersion()));
+    }
+
+
 }
