@@ -273,6 +273,11 @@ public class MicoServiceBroker {
         return micoKubernetesClient.getYaml(getServiceFromDatabase(shortName, version));
     }
 
+    /**
+     * Returns the latest version of the KafkaFaaSConnector (according to the database)
+     * @return the latest version of the KafkaFaaSConnector
+     * @throws KafkaFaasConnectorLatestVersionNotFound
+     */
     public String getLatestKFConnectorVersion() throws KafkaFaasConnectorLatestVersionNotFound {
         List<String> kfConnectorVersions = serviceRepository.findByShortName(kafkaFaasConnectorConfig.getServiceName()).stream()
                 .map(kfConnector -> kfConnector.getVersion()).sorted().collect(Collectors.toList());
