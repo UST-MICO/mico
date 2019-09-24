@@ -116,6 +116,18 @@ export const STYLE_TEMPLATE = {
         .text.clickable:hover {
             text-decoration: underline dashed;
         }
+        .node .warning-label {
+            display: none;
+        }
+        .node.error .warning-label {
+            display: initial;
+        }
+        .warning-background {
+            fill: white;
+        }
+        .warning-foreground {
+            fill: red;
+        }
         .node:not(.application):not(.selected).hovered {
             fill: #dfdfdf;
         }
@@ -208,6 +220,11 @@ export const KAFKA_FAAS_CONNECTOR_NODE_TEMPLATE = {
     <g>
         <text class="text instance-id small" data-content="data.instanceId" width="24" x="0" y="10"></text>
         <title data-content="data.instanceId"></title>
+    </g>
+    <g class="warning-label" transform="scale(0.4) translate(55,-35)">
+        <circle class="warning-background" cx="12" cy="12" r="11.5"></circle>
+        <path class="warning-foreground" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path>
+        <title data-content="error"></title>
     </g>`
 };
 
