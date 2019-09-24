@@ -109,6 +109,19 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                     return true;
                 }
             }
+            if (className === 'error') {
+                if (node.type === 'kafka-faas-connector') {
+                    if (node.data.inputTopicName == null || node.data.inputTopicName === '') {
+                        // node has no input
+                        return true;
+                    }
+                    if ((node.data.outputTopicName == null || node.data.outputTopicName === '') &&
+                        (node.data.openFaaSFunctionName == null || node.data.openFaaSFunctionName === '')) {
+                        // node has no possible output
+                        return true;
+                    }
+                }
+            }
             return false;
         };
         graph.setEdgeClass = (className, edge) => {
@@ -1261,6 +1274,14 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                     outputTopicName: connector.outputTopicName,
                     openFaaSFunctionName: connector.openFaaSFunctionName,
                 };
+            }
+            existing.error = '';
+            if (connector.inputTopicName == null || connector.inputTopicName === '') {
+                existing.error = 'No input topic specified!\n';
+            }
+            if ((connector.outputTopicName == null || connector.outputTopicName === '') &&
+                (connector.openFaaSFunctionName == null || connector.openFaaSFunctionName === '')) {
+                existing.error += 'Either a FaaS function or an output topic need to be specified!';
             }
             if (connector.openFaaSFunctionName != null && connector.openFaaSFunctionName !== '') {
                 existing.title = connector.openFaaSFunctionName;
