@@ -1123,6 +1123,31 @@ export class ApiService {
     }
 
 
+    // ============
+    // KAFKA TOPICS
+    // ============
+
+    /**
+     * Get all known used kafka topics from the backend.
+     */
+    getTopics() {
+        const resource = '/topics/';
+        const stream = this.getStreamSource<ApiObject[]>(resource);
+
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+            if (val.hasOwnProperty('_embedded')) {
+                stream.next(freezeObject(val._embedded.topicDTOList));
+            } else {
+                stream.next(freezeObject([]));
+            }
+        });
+
+        return stream.asObservable().pipe(
+            filter(service => service !== undefined)
+        );
+    }
+
+
     // =========
     // OPEN FAAS
     // =========
