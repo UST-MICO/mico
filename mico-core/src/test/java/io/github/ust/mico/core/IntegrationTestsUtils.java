@@ -151,8 +151,7 @@ public class IntegrationTestsUtils {
     CompletableFuture<Boolean> waitUntilAllPodsInNamespaceAreRunning(String namespace, int initialDelay, int period, int timeout) throws InterruptedException, ExecutionException, TimeoutException {
         CompletableFuture<Boolean> completionFuture = new CompletableFuture<>();
 
-        executorService.scheduleAtFixedRate(() -> {
-
+        final ScheduledFuture<?> pollingFuture = executorService.scheduleAtFixedRate(() -> {
             PodList podList = kubernetesClient.pods().inNamespace(namespace).list();
             List<Pod> pods = podList.getItems();
             int numberOfPodsInNamespace = pods.size();
@@ -189,6 +188,7 @@ public class IntegrationTestsUtils {
         completionFuture.get(timeout, TimeUnit.SECONDS);
 
         log.info("Finished with build.");
+        pollingFuture.cancel(true);
 
         return completionFuture;
     }
@@ -210,7 +210,7 @@ public class IntegrationTestsUtils {
         CompletableFuture<Boolean> completionFuture = new CompletableFuture<>();
 
         log.info("Wait until pod '{}' is running", podName);
-        executorService.scheduleAtFixedRate(() -> {
+        final ScheduledFuture<?> scheduledFuture = executorService.scheduleAtFixedRate(() -> {
             try {
                 Boolean running = checkIfPodIsRunning(podName, namespace);
                 if (running) {
@@ -224,6 +224,7 @@ public class IntegrationTestsUtils {
 
         // Waits until timeout is reached or the future completes.
         completionFuture.get(timeout, TimeUnit.SECONDS);
+        scheduledFuture.cancel(true);
 
         return completionFuture;
     }
@@ -248,13 +249,14 @@ public class IntegrationTestsUtils {
         MicoService micoService = serviceDeploymentInfo.getService();
         log.info("Wait until deployment of MicoService '{}' '{}' with instance id '{}' is created",
             micoService.getShortName(), micoService.getVersion(), serviceDeploymentInfo.getInstanceId());
-        executorService.scheduleAtFixedRate(() -> {
+        ScheduledFuture<?> scheduledFuture = executorService.scheduleAtFixedRate(() -> {
             Optional<Deployment> deployment = micoKubernetesClient.getDeploymentOfMicoServiceInstance(serviceDeploymentInfo);
             deployment.ifPresent(completionFuture::complete);
         }, initialDelay, period, TimeUnit.SECONDS);
 
         // Waits until timeout is reached or the future completes.
         completionFuture.get(timeout, TimeUnit.SECONDS);
+        scheduledFuture.cancel(true);
 
         return completionFuture;
     }
@@ -275,7 +277,7 @@ public class IntegrationTestsUtils {
         CompletableFuture<Service> completionFuture = new CompletableFuture<>();
 
         log.info("Wait until Kubernetes Service for MicoService '{}' '{}' is created", micoService.getShortName(), micoService.getVersion());
-        executorService.scheduleAtFixedRate(() -> {
+        ScheduledFuture<?> scheduledFuture = executorService.scheduleAtFixedRate(() -> {
             List<Service> services = micoKubernetesClient.getInterfacesOfMicoService(micoService);
             if (!services.isEmpty()) {
                 completionFuture.complete(services.get(0));
@@ -284,6 +286,7 @@ public class IntegrationTestsUtils {
 
         // Waits until timeout is reached or the future completes.
         completionFuture.get(timeout, TimeUnit.SECONDS);
+        scheduledFuture.cancel(true);
 
         return completionFuture;
     }
