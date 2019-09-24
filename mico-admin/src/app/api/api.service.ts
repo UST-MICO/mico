@@ -436,9 +436,7 @@ export class ApiService {
             this.getApplicationVersions(applicationShortName);
             this.getApplication(applicationShortName, applicationVersion);
 
-            const streamResource = baseResource + '/' + val.instanceId;
-
-            const stream = this.getStreamSource<ApiObject>(streamResource); // FIXME use self url when available: val._links.self.href
+            const stream = this.getStreamSource<ApiObject>(val._links.self.href);
 
             stream.next(val);
 
@@ -491,7 +489,7 @@ export class ApiService {
 
         return this.rest.put<ApiObject>(resource, data).pipe(flatMap(val => {
 
-            const stream = this.getStreamSource<ApiObject>(resource); // FIXME use self url when available: val._links.self.href
+            const stream = this.getStreamSource<ApiObject>(val._links.self.href);
             stream.next(val);
             this.getApplication(applicationShortName, applicationVersion);
 
@@ -1120,6 +1118,31 @@ export class ApiService {
 
                 return true;
             }));
+    }
+
+
+    // ============
+    // KAFKA TOPICS
+    // ============
+
+    /**
+     * Get all known used kafka topics from the backend.
+     */
+    getTopics() {
+        const resource = '/topics/';
+        const stream = this.getStreamSource<ApiObject[]>(resource);
+
+        this.rest.get<ApiObject>(resource).subscribe(val => {
+            if (val.hasOwnProperty('_embedded')) {
+                stream.next(freezeObject(val._embedded.topicDTOList));
+            } else {
+                stream.next(freezeObject([]));
+            }
+        });
+
+        return stream.asObservable().pipe(
+            filter(service => service !== undefined)
+        );
     }
 
 

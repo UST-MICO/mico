@@ -17,18 +17,19 @@
  * under the License.
  */
 
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
+import { ApiService } from 'src/app/api/api.service';
+import { safeUnsubscribe } from 'src/app/util/utils';
 
 @Component({
     selector: 'mico-graph-add-kafka-topic',
     templateUrl: './graph-add-kafka-topic.component.html',
     styleUrls: ['./graph-add-kafka-topic.component.css']
 })
-export class GraphAddKafkaTopicComponent {
+export class GraphAddKafkaTopicComponent implements OnInit, OnDestroy {
 
-
-    constructor(public dialogRef: MatDialogRef<GraphAddKafkaTopicComponent>,
+    constructor(private api: ApiService, public dialogRef: MatDialogRef<GraphAddKafkaTopicComponent>,
         @Inject(MAT_DIALOG_DATA) public data: any,
     ) {
         this.serviceShortName = data.serviceShortName;
@@ -40,17 +41,41 @@ export class GraphAddKafkaTopicComponent {
         }
     }
 
+    topicSub;
+    topicList: Readonly<any[]> = [];
+    filteredList: Readonly<any[]> = [];
+
     serviceShortName;
     possibleRoles;
 
     topic;
     role;
 
+    ngOnInit(): void {
+        this.topicSub = this.api.getTopics().subscribe(topics => {
+            this.topicList = topics;
+            this.updateFilter();
+        });
+    }
+
+    ngOnDestroy(): void {
+        safeUnsubscribe(this.topicSub);
+    }
+
     isValid() {
         if (this.topic == null || this.topic === '') {
             return false;
         }
         return /^[a-zA-Z0-9\._\-]+$/.test(this.topic);
+    }
+
+    updateFilter() {
+        const filter = this.topic ? this.topic.toLowerCase() : '';
+        if (filter === '') {
+            this.filteredList = this.topicList;
+        } else {
+            this.filteredList = this.topicList.filter(option => option.name.toLowerCase().includes(filter));
+        }
     }
 
     /**

@@ -4,7 +4,12 @@
     Add
 
     <mat-form-field>
-        <input matInput placeholder="kafka topic" [(ngModel)]="topic" [pattern]="'[a-zA-Z0-9\\._\\-]+'">
+        <input matInput placeholder="kafka topic" [(ngModel)]="topic" (ngModelChange)="updateFilter()" [pattern]="'[a-zA-Z0-9\\._\\-]+'" [matAutocomplete]="auto">
+        <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete">
+            <mat-option *ngFor="let option of filteredList" [value]="option.name">
+                {{option.name}}
+            </mat-option>
+        </mat-autocomplete>
     </mat-form-field>
 
     as
