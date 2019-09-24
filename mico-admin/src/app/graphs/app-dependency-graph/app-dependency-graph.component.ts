@@ -597,7 +597,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             const subTopicDialog = dialogRef.afterClosed().subscribe(result => {
                 safeUnsubscribe(subTopicDialog);
 
-                if (result === '') {
+                if (result === '' || result == null) {
                     return;
                 }
 
@@ -1305,6 +1305,8 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                     this.addTopicNode(topicId, existing, connector.inputTopicName, 'INPUT', graph);
                 }
                 const edge = this.newTopicEdge('INPUT', topicId, connector.instanceId);
+                edge.texts[0].offsetX = -20;
+                edge.texts[0].offsetY = -3;
                 graph.addEdge(edge, false);
             }
             if (needOutputTopicEdge) {
@@ -1314,6 +1316,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                     this.addTopicNode(topicId, existing, connector.outputTopicName, 'OUTPUT', graph);
                 }
                 const edge = this.newTopicEdge('OUTPUT', topicId, connector.instanceId);
+                edge.texts[0].offsetY = 5;
                 graph.addEdge(edge, false);
             }
 
