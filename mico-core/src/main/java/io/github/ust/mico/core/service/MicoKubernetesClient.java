@@ -1041,7 +1041,6 @@ public class MicoKubernetesClient {
             // Delete build jobs to ensure that they are not set to failed (would be influence the application status).
             Optional<MicoServiceBackgroundJob> buildJobOfServiceInstance = backgroundJobBroker
                 .getJobByMicoServiceInstanceId(instanceId, MicoServiceBackgroundJob.Type.BUILD);
-            // TODO: Ensure that there no concurrent applications that use the same job (covered by mico#702)
             buildJobOfServiceInstance.ifPresent(micoServiceBackgroundJob -> backgroundJobBroker.deleteJob(micoServiceBackgroundJob.getId()));
 
             log.debug("Check MicoService '{}' '{}' with instance id '{}' whether it should be scaled in or completely undeployed...",
