@@ -170,7 +170,14 @@ public class MicoKubernetesClient {
         }
 
         ArrayList<MicoEnvironmentVariable> micoEnvironmentVariables = new ArrayList<>(serviceDeploymentInfo.getEnvironmentVariables());
+        // Add topics as environment variables
         micoEnvironmentVariables.addAll(serviceDeploymentInfo.getTopics().stream().map(this::createEnvVarBasedOnTopic).collect(Collectors.toList()));
+        // Add OpenFaas function name as environment variable if it is defined
+        if (serviceDeploymentInfo.getOpenFaaSFunction() != null && serviceDeploymentInfo.getOpenFaaSFunction().getName() != null) {
+            micoEnvironmentVariables.add(new MicoEnvironmentVariable()
+                .setName(MicoEnvironmentVariable.DefaultNames.OPENFAAS_FUNCTION_NAME.name())
+                .setValue(serviceDeploymentInfo.getOpenFaaSFunction().getName()));
+        }
 
         Deployment deployment = new DeploymentBuilder()
             .withNewMetadata()
