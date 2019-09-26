@@ -33,6 +33,10 @@ public interface MicoBackgroundJobRepository extends CrudRepository<MicoServiceB
 
     List<MicoServiceBackgroundJob> findByServiceShortNameAndServiceVersion(String micoServiceShortName, String micoServiceVersion);
 
-    Optional<MicoServiceBackgroundJob> findByServiceShortNameAndServiceVersionAndType(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundJob.Type type);
+    List<MicoServiceBackgroundJob> findByServiceShortNameAndServiceVersionAndType(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundJob.Type type);
+
+    List<MicoServiceBackgroundJob> findByInstanceId(String instanceId);
+
+    Optional<MicoServiceBackgroundJob> findByInstanceIdAndType(String instanceId, MicoServiceBackgroundJob.Type type);
 
 }

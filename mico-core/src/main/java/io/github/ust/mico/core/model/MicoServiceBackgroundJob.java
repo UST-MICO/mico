@@ -65,6 +65,12 @@ public class MicoServiceBackgroundJob implements Serializable {
     private String serviceVersion;
 
     /**
+     * The instance id of the corresponding {@link MicoServiceDeploymentInfo}.
+     */
+    @Indexed
+    private String instanceId;
+
+    /**
      * The {@link Type} of this job.
      */
     @Indexed

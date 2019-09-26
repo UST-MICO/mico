@@ -95,8 +95,9 @@ public class BackgroundJobBroker {
             MicoServiceBackgroundJob job = jobOptional.get();
             if (job.getFuture() != null && !job.getFuture().isCancelled()
                 && !job.getFuture().isCompletedExceptionally() && !job.getFuture().isDone()) {
-                log.warn("Job of type '{}' and current status '{}' of MicoService '{}' '{}' is going to be deleted, " +
-                    "but it's future is still running -> Cancel it.", job.getType(), job.getStatus(), job.getServiceShortName(), job.getServiceVersion());
+                log.warn("Job of type '{}' and current status '{}' of MicoService '{}' '{}' with instanceId '{}' is going to be deleted, " +
+                        "but it's future is still running -> Cancel it.",
+                    job.getType(), job.getStatus(), job.getServiceShortName(), job.getServiceVersion(), job.getInstanceId());
                 job.getFuture().cancel(true);
             }
             jobRepository.delete(job);
@@ -133,79 +134,93 @@ public class BackgroundJobBroker {
     }
 
     /**
-     * Return a {@code MicoServiceBackgroundJob} for a given {@code MicoService} and {@code MicoServiceBackgroundJob.Type}.
+     * Return a {@code MicoServiceBackgroundJob} for a given {@code instanceId} and {@code MicoServiceBackgroundJob.Type}.
+     *
+     * @param instanceId instance id of a {@link MicoServiceDeploymentInfo}
+     * @param type       the {@link MicoServiceBackgroundJob.Type}
+     * @return the optional job. Is empty if no job exists for the given {@code instanceId}
+     */
+    public Optional<MicoServiceBackgroundJob> getJobByMicoServiceInstanceId(String instanceId, MicoServiceBackgroundJob.Type type) {
+        return jobRepository.findByInstanceIdAndType(instanceId, type);
+    }
+
+    /**
+     * Return {@code MicoServiceBackgroundJob}s for a given {@code MicoService} and {@code MicoServiceBackgroundJob.Type}.
      *
      * @param micoServiceShortName the short name of a {@link MicoService}
      * @param micoServiceVersion   the version of a {@link MicoService}
      * @param type                 the {@link MicoServiceBackgroundJob.Type}
-     * @return the optional Job. Is empty if no Job exist for the given {@link MicoService}
+     * @return the job list. Is empty if no job exists for the given {@link MicoService}
      */
-    public Optional<MicoServiceBackgroundJob> getJobByMicoService(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundJob.Type type) {
+    public List<MicoServiceBackgroundJob> getJobsByMicoService(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundJob.Type type) {
         return jobRepository.findByServiceShortNameAndServiceVersionAndType(micoServiceShortName, micoServiceVersion, type);
     }
 
     /**
      * Saves a future of a job to the database.
      *
-     * @param micoServiceShortName the short name of a {@link MicoService}
-     * @param micoServiceVersion   the version of a {@link MicoService}
-     * @param future               the future as a {@link CompletableFuture}
-     * @param type                 the {@link MicoServiceBackgroundJob.Type}
+     * @param micoServiceDeploymentInfo the {@link MicoServiceDeploymentInfo}
+     * @param future                    the future as a {@link CompletableFuture}
+     * @param type                      the {@link MicoServiceBackgroundJob.Type}
      */
-    public void saveFutureOfJob(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundJob.Type type,
-                                CompletableFuture<?> future) {
-        Optional<MicoServiceBackgroundJob> jobOptional = getJobByMicoService(micoServiceShortName, micoServiceVersion, type);
+    void saveFutureOfJob(MicoServiceDeploymentInfo micoServiceDeploymentInfo, MicoServiceBackgroundJob.Type type,
+                         CompletableFuture<?> future) {
+        String micoServiceInstanceId = micoServiceDeploymentInfo.getInstanceId();
+        MicoService micoService = micoServiceDeploymentInfo.getService();
+        Optional<MicoServiceBackgroundJob> jobOptional = getJobByMicoServiceInstanceId(micoServiceInstanceId, type);
         if (jobOptional.isPresent()) {
             MicoServiceBackgroundJob job = jobOptional.get();
             job.setFuture(future);
             saveJob(job);
-            log.debug("Saved new future of job '{}' with type '{}' for MicoService '{}' '{}'.",
-                job.getId(), type, micoServiceShortName, micoServiceVersion);
+            log.debug("Saved new future of job '{}' with type '{}' for MicoService '{}' '{}' with instance id '{}'.",
+                job.getId(), type, micoService.getShortName(), micoService.getVersion(), micoServiceInstanceId);
         } else {
-            log.warn("No job of type '{}' exists for '{}' '{}'.", type, micoServiceShortName, micoServiceVersion);
+            log.warn("No job of type '{}' exists for '{}' '{}' with instance id '{}'.",
+                type, micoService.getShortName(), micoService.getVersion(), micoServiceInstanceId);
         }
     }
 
     /**
      * Saves a new status of a job to the database.
      *
-     * @param micoServiceShortName the short name of a {@link MicoService}
-     * @param micoServiceVersion   the version of a {@link MicoService}
-     * @param type                 the {@link MicoServiceBackgroundJob.Type}
-     * @param newStatus            the new {@link MicoServiceBackgroundJob.Status}
+     * @param micoServiceDeploymentInfo the {@link MicoServiceDeploymentInfo}
+     * @param type                      the {@link MicoServiceBackgroundJob.Type}
+     * @param newStatus                 the new {@link MicoServiceBackgroundJob.Status}
      */
-    public void saveNewStatus(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundJob.Type type,
-                              MicoServiceBackgroundJob.Status newStatus) {
-        saveNewStatus(micoServiceShortName, micoServiceVersion, type, newStatus, null);
+    void saveNewStatus(MicoServiceDeploymentInfo micoServiceDeploymentInfo, MicoServiceBackgroundJob.Type type,
+                       MicoServiceBackgroundJob.Status newStatus) {
+        saveNewStatus(micoServiceDeploymentInfo, type, newStatus, null);
     }
 
     /**
      * Saves a new status of a job to the database.
      *
-     * @param micoServiceShortName the short name of a {@link MicoService}
-     * @param micoServiceVersion   the version of a {@link MicoService}
-     * @param type                 the {@link MicoServiceBackgroundJob.Type}
-     * @param newStatus            the new {@link MicoServiceBackgroundJob.Status}
-     * @param errorMessage         the optional error message if the job has failed
+     * @param micoServiceDeploymentInfo the {@link MicoServiceDeploymentInfo}
+     * @param type                      the {@link MicoServiceBackgroundJob.Type}
+     * @param newStatus                 the new {@link MicoServiceBackgroundJob.Status}
+     * @param errorMessage              the optional error message if the job has failed
      */
-    public void saveNewStatus(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundJob.Type type,
-                              MicoServiceBackgroundJob.Status newStatus, @Nullable String errorMessage) {
-        Optional<MicoServiceBackgroundJob> jobOptional = getJobByMicoService(micoServiceShortName, micoServiceVersion, type);
+    void saveNewStatus(MicoServiceDeploymentInfo micoServiceDeploymentInfo, MicoServiceBackgroundJob.Type type,
+                       MicoServiceBackgroundJob.Status newStatus, @Nullable String errorMessage) {
+        String micoServiceInstanceId = micoServiceDeploymentInfo.getInstanceId();
+        MicoService micoService = micoServiceDeploymentInfo.getService();
+        Optional<MicoServiceBackgroundJob> jobOptional = getJobByMicoServiceInstanceId(micoServiceInstanceId, type);
         if (jobOptional.isPresent()) {
             MicoServiceBackgroundJob job = jobOptional.get();
             if (!job.getStatus().equals(newStatus)) {
-                log.info("Job of '{}' '{}' with type '{}' changed its status: {} → {}.",
-                    micoServiceShortName, micoServiceVersion, type, job.getStatus(), newStatus);
+                log.info("Job of '{}' '{}' with instance id '{}' with type '{}' changed its status: {} → {}.",
+                    micoService.getShortName(), micoService.getVersion(), micoServiceInstanceId, type, job.getStatus(), newStatus);
                 if (newStatus.equals(MicoServiceBackgroundJob.Status.ERROR) && !StringUtils.isEmpty(errorMessage)) {
-                    log.warn("Job of '{}' '{}' with type '{}' failed. Reason: {}",
-                        micoServiceShortName, micoServiceVersion, type, errorMessage);
+                    log.warn("Job of '{}' '{}' with instance id '{}' with type '{}' failed. Reason: {}",
+                        micoService.getShortName(), micoService.getVersion(), micoServiceInstanceId, type, errorMessage);
                 }
                 job.setStatus(newStatus);
                 job.setErrorMessage(errorMessage);
                 saveJob(job);
             }
         } else {
-            log.warn("No job of type '{}' exists for '{}' '{}'.", type, micoServiceShortName, micoServiceVersion);
+            log.warn("No job of type '{}' exists for '{}' '{}' with instance id '{}'.",
+                type, micoService.getShortName(), micoService.getVersion(), micoServiceInstanceId);
         }
     }
 

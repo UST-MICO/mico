@@ -25,6 +25,7 @@ import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceBackgroundJob;
 import io.github.ust.mico.core.model.MicoServiceBackgroundJob.Status;
 import io.github.ust.mico.core.model.MicoServiceBackgroundJob.Type;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -85,6 +86,20 @@ public class MicoServiceBackgroundJobResponseDTO {
     private String serviceVersion;
 
     /**
+     * The instance id of the corresponding {@link MicoServiceDeploymentInfo}.
+     */
+    @ApiModelProperty(extensions = {
+        @Extension(name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION, properties = {
+            @ExtensionProperty(name = "title", value = "Instance ID"),
+            @ExtensionProperty(name = "x-order", value = "30"),
+            @ExtensionProperty(name = "readOnly", value = "true"),
+            @ExtensionProperty(name = "description", value = "The instance id of the corresponding service deployment info.")
+        })
+    })
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private String instanceId;
+
+    /**
      * The {@link Type} of job.
      */
     @ApiModelProperty(extensions = {
@@ -143,6 +158,7 @@ public class MicoServiceBackgroundJobResponseDTO {
         this.id = serviceBackgroundJob.getId();
         this.serviceShortName = serviceBackgroundJob.getServiceShortName();
         this.serviceVersion = serviceBackgroundJob.getServiceVersion();
+        this.instanceId = serviceBackgroundJob.getInstanceId();
         this.type = serviceBackgroundJob.getType();
         this.status = serviceBackgroundJob.getStatus();
         this.errorMessage = serviceBackgroundJob.getErrorMessage();

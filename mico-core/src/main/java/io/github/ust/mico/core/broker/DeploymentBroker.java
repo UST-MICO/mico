@@ -7,7 +7,6 @@ import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
-import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.FutureUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
@@ -70,17 +69,14 @@ public class DeploymentBroker {
 
         // Add the included MicoServices and KafkaFaasConnector instances (distinct by version)
         // to a list of services that should be build.
-        List<MicoService> servicesToBuild = new ArrayList<>();
-        servicesToBuild.addAll(micoApplication.getServices());
-        servicesToBuild.addAll(micoApplication.getKafkaFaasConnectorDeploymentInfos().stream()
-            .map(MicoServiceDeploymentInfo::getService)
-            .filter(CollectionUtils.distinctByKey(MicoService::getVersion))
-            .collect(Collectors.toList()));
+        List<MicoServiceDeploymentInfo> serviceInstancesToBuild = new ArrayList<>();
+        serviceInstancesToBuild.addAll(micoApplication.getServiceDeploymentInfos());
+        serviceInstancesToBuild.addAll(micoApplication.getKafkaFaasConnectorDeploymentInfos());
 
-        // Create the build jobs for each MicoService and start them immediately.
+        // Create the build jobs for each MicoService instance and start them immediately.
         List<CompletableFuture<MicoService>> buildJobs = new ArrayList<>();
-        for (MicoService micoService : servicesToBuild) {
-            createBuildJobForMicoService(micoApplication, micoService, buildJobs);
+        for (MicoServiceDeploymentInfo serviceDeploymentInfo : serviceInstancesToBuild) {
+            createBuildJobForMicoServiceInstance(micoApplication, serviceDeploymentInfo, buildJobs);
         }
 
         // When all build jobs are finished, create the Kubernetes resources for the deployment of a MicoService
@@ -123,10 +119,10 @@ public class DeploymentBroker {
                 try {
                     KubernetesDeploymentInfo kubernetesDeploymentInfo = createOrUpdateKubernetesResources(serviceDeploymentInfo);
                     serviceDeploymentInfo.setKubernetesDeploymentInfo(kubernetesDeploymentInfo);
-                    backgroundJobBroker.saveNewStatus(micoService.getShortName(), micoService.getVersion(),
+                    backgroundJobBroker.saveNewStatus(serviceDeploymentInfo,
                         MicoServiceBackgroundJob.Type.BUILD, MicoServiceBackgroundJob.Status.DONE);
                 } catch (Exception e) {
-                    backgroundJobBroker.saveNewStatus(micoService.getShortName(), micoService.getVersion(),
+                    backgroundJobBroker.saveNewStatus(serviceDeploymentInfo,
                         MicoServiceBackgroundJob.Type.BUILD, MicoServiceBackgroundJob.Status.ERROR, e.getMessage());
                     log.error(e.getMessage(), e);
                 }
@@ -196,31 +192,36 @@ public class DeploymentBroker {
      * The build jobs are started immediately
      * and will be stored into the database.
      *
-     * @param micoApplication the {@link MicoApplication}
-     * @param micoService     the {@link MicoService}
-     * @param buildJobs       the list of build jobs.
+     * @param micoApplication           the {@link MicoApplication}
+     * @param micoServiceDeploymentInfo the {@link MicoServiceDeploymentInfo}
+     * @param buildJobs                 the list of build jobs.
      */
-    private void createBuildJobForMicoService(MicoApplication micoApplication, MicoService micoService,
-                                              List<CompletableFuture<MicoService>> buildJobs) {
+    private void createBuildJobForMicoServiceInstance(MicoApplication micoApplication, MicoServiceDeploymentInfo micoServiceDeploymentInfo,
+                                                      List<CompletableFuture<MicoService>> buildJobs) {
 
-        log.debug("Creating build job for service '{}' '{}' ...", micoService.getShortName(), micoService.getVersion());
+        MicoService micoService = micoServiceDeploymentInfo.getService();
+
+        log.debug("Creating build job for service '{}' '{}' with instance id '{}'...",
+            micoService.getShortName(), micoService.getVersion(), micoServiceDeploymentInfo.getInstanceId());
+
         // Check if a build for this MicoService is already running.
         // If yes no build is required, lock changes to running jobs.
         // If the current job status is done, error or cancel delete it and create a new job to get a new id.
-        Optional<MicoServiceBackgroundJob> jobOptional = backgroundJobBroker.getJobByMicoService(
-            micoService.getShortName(), micoService.getVersion(), MicoServiceBackgroundJob.Type.BUILD);
+        Optional<MicoServiceBackgroundJob> jobOptional = backgroundJobBroker
+            .getJobByMicoServiceInstanceId(micoServiceDeploymentInfo.getInstanceId(), MicoServiceBackgroundJob.Type.BUILD);
         if (jobOptional.isPresent()) {
             if (jobOptional.get().getStatus() != MicoServiceBackgroundJob.Status.RUNNING) {
                 backgroundJobBroker.deleteJob(jobOptional.get().getId());
             } else {
-                log.info("Build job for service '{}' '{}' is already running.",
-                    micoService.getShortName(), micoService.getVersion());
+                log.info("Build job for service '{}' '{}' with instance id '{}' is already running.",
+                    micoService.getShortName(), micoService.getVersion(), micoServiceDeploymentInfo.getInstanceId());
                 return;
             }
         }
         MicoServiceBackgroundJob job = new MicoServiceBackgroundJob()
             .setServiceShortName(micoService.getShortName())
             .setServiceVersion(micoService.getVersion())
+            .setInstanceId(micoServiceDeploymentInfo.getInstanceId())
             .setType(MicoServiceBackgroundJob.Type.BUILD)
             .setStatus(MicoServiceBackgroundJob.Status.RUNNING);
         backgroundJobBroker.saveJob(job);
@@ -229,8 +230,8 @@ public class DeploymentBroker {
         CompletableFuture<MicoService> buildJob = CompletableFuture.supplyAsync(() -> buildMicoService(micoService))
             .exceptionally(ex -> {
                 // Build failed
-                backgroundJobBroker.saveNewStatus(micoService.getShortName(), micoService.getVersion(),
-                    MicoServiceBackgroundJob.Type.BUILD, MicoServiceBackgroundJob.Status.ERROR, ExceptionUtils.getRootCauseMessage(ex));
+                backgroundJobBroker.saveNewStatus(micoServiceDeploymentInfo, MicoServiceBackgroundJob.Type.BUILD,
+                    MicoServiceBackgroundJob.Status.ERROR, ExceptionUtils.getRootCauseMessage(ex));
                 List<CompletableFuture<MicoService>> runningBuildJobs = buildJobs.stream()
                     .filter(j -> !j.isDone() && !j.isCancelled() && !j.isCompletedExceptionally()).collect(Collectors.toList());
                 if (runningBuildJobs.size() > 1) {
@@ -241,7 +242,7 @@ public class DeploymentBroker {
             });
         log.debug("Started build of service '{}' in version '{}'.", micoService.getShortName(), micoService.getVersion());
         buildJobs.add(buildJob);
-        backgroundJobBroker.saveFutureOfJob(micoService.getShortName(), micoService.getVersion(), MicoServiceBackgroundJob.Type.BUILD, buildJob);
+        backgroundJobBroker.saveFutureOfJob(micoServiceDeploymentInfo, MicoServiceBackgroundJob.Type.BUILD, buildJob);
     }
 
     private void checkIfMicoApplicationIsDeployable(MicoApplication micoApplication) throws MicoServiceInterfaceNotFoundException, DeploymentRequirementsOfKafkaFaasConnectorNotMetException {

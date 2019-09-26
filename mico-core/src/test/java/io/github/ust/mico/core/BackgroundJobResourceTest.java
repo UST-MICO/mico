@@ -84,9 +84,10 @@ public class BackgroundJobResourceTest {
 
     @Test
     public void getAllJobs() throws Exception {
-        List<MicoServiceBackgroundJob> jobList = CollectionUtils.listOf(new MicoServiceBackgroundJob().setFuture(CompletableFuture.completedFuture(true)).setServiceShortName(SHORT_NAME).setServiceVersion(VERSION).setType(MicoServiceBackgroundJob.Type.BUILD),
-            new MicoServiceBackgroundJob().setFuture(CompletableFuture.completedFuture(true)).setServiceShortName(SHORT_NAME_1).setServiceVersion(VERSION).setType(MicoServiceBackgroundJob.Type.BUILD),
-            new MicoServiceBackgroundJob().setFuture(CompletableFuture.completedFuture(true)).setServiceShortName(SHORT_NAME_2).setServiceVersion(VERSION).setType(MicoServiceBackgroundJob.Type.BUILD));
+        List<MicoServiceBackgroundJob> jobList = CollectionUtils.listOf(
+            new MicoServiceBackgroundJob().setFuture(CompletableFuture.completedFuture(true)).setServiceShortName(SHORT_NAME).setServiceVersion(VERSION).setInstanceId(INSTANCE_ID).setType(MicoServiceBackgroundJob.Type.BUILD),
+            new MicoServiceBackgroundJob().setFuture(CompletableFuture.completedFuture(true)).setServiceShortName(SHORT_NAME_1).setServiceVersion(VERSION).setInstanceId(INSTANCE_ID_1).setType(MicoServiceBackgroundJob.Type.BUILD),
+            new MicoServiceBackgroundJob().setFuture(CompletableFuture.completedFuture(true)).setServiceShortName(SHORT_NAME_2).setServiceVersion(VERSION).setInstanceId(INSTANCE_ID_2).setType(MicoServiceBackgroundJob.Type.BUILD));
 
         given(backgroundJobBroker.getAllJobs()).willReturn(jobList);
 
@@ -95,9 +96,9 @@ public class BackgroundJobResourceTest {
             .andExpect(status().isOk())
             .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
             .andExpect(jsonPath(BACKGROUND_JOBS_LIST + "[*]", hasSize(3)))
-            .andExpect(jsonPath(BACKGROUND_JOBS_LIST + "[?(@.serviceShortName=='" + SHORT_NAME + "' && @.serviceVersion=='" + VERSION + "')]", hasSize(1)))
-            .andExpect(jsonPath(BACKGROUND_JOBS_LIST + "[?(@.serviceShortName=='" + SHORT_NAME_1 + "' && @.serviceVersion=='" + VERSION + "')]", hasSize(1)))
-            .andExpect(jsonPath(BACKGROUND_JOBS_LIST + "[?(@.serviceShortName=='" + SHORT_NAME_2 + "' && @.serviceVersion=='" + VERSION + "')]", hasSize(1)))
+            .andExpect(jsonPath(BACKGROUND_JOBS_LIST + "[?(@.serviceShortName=='" + SHORT_NAME + "' && @.serviceVersion=='" + VERSION + "' && @.instanceId=='" + INSTANCE_ID + "')]", hasSize(1)))
+            .andExpect(jsonPath(BACKGROUND_JOBS_LIST + "[?(@.serviceShortName=='" + SHORT_NAME_1 + "' && @.serviceVersion=='" + VERSION + "' && @.instanceId=='" + INSTANCE_ID_1 + "')]", hasSize(1)))
+            .andExpect(jsonPath(BACKGROUND_JOBS_LIST + "[?(@.serviceShortName=='" + SHORT_NAME_2 + "' && @.serviceVersion=='" + VERSION + "' && @.instanceId=='" + INSTANCE_ID_2 + "')]", hasSize(1)))
             .andExpect(jsonPath(JSON_PATH_LINKS_SECTION + SELF_HREF, is("http://localhost/jobs")))
             .andReturn();
     }
@@ -134,12 +135,14 @@ public class BackgroundJobResourceTest {
             .setFuture(CompletableFuture.completedFuture(true))
             .setServiceShortName(SHORT_NAME)
             .setServiceVersion(VERSION)
+            .setInstanceId(INSTANCE_ID)
             .setType(MicoServiceBackgroundJob.Type.BUILD);
 
         MicoServiceBackgroundJob runningJob = new MicoServiceBackgroundJob()
             .setFuture(CompletableFuture.completedFuture(true))
             .setServiceShortName(SHORT_NAME)
             .setServiceVersion(VERSION)
+            .setInstanceId(INSTANCE_ID)
             .setType(MicoServiceBackgroundJob.Type.BUILD)
             .setStatus(MicoServiceBackgroundJob.Status.RUNNING);
 
@@ -163,6 +166,7 @@ public class BackgroundJobResourceTest {
             .setFuture(CompletableFuture.completedFuture(true))
             .setServiceShortName(SHORT_NAME)
             .setServiceVersion(VERSION)
+            .setInstanceId(INSTANCE_ID)
             .setType(MicoServiceBackgroundJob.Type.BUILD)
             .setStatus(MicoServiceBackgroundJob.Status.DONE);
 
@@ -178,6 +182,7 @@ public class BackgroundJobResourceTest {
             .setFuture(CompletableFuture.completedFuture(true))
             .setServiceShortName(SHORT_NAME)
             .setServiceVersion(VERSION)
+            .setInstanceId(INSTANCE_ID)
             .setType(MicoServiceBackgroundJob.Type.BUILD);
         pendingJob.setId(STRING_ID);
 
@@ -197,6 +202,7 @@ public class BackgroundJobResourceTest {
             .setFuture(CompletableFuture.completedFuture(true))
             .setServiceShortName(SHORT_NAME)
             .setServiceVersion(VERSION)
+            .setInstanceId(INSTANCE_ID)
             .setType(MicoServiceBackgroundJob.Type.BUILD)
             .setStatus(MicoServiceBackgroundJob.Status.RUNNING);
 
@@ -221,6 +227,7 @@ public class BackgroundJobResourceTest {
             .setFuture(CompletableFuture.completedFuture(true))
             .setServiceShortName(SHORT_NAME)
             .setServiceVersion(VERSION)
+            .setInstanceId(INSTANCE_ID)
             .setType(MicoServiceBackgroundJob.Type.BUILD);
 
         given(backgroundJobBroker.getJobById(STRING_ID)).willReturn(Optional.of(pendingJob));
