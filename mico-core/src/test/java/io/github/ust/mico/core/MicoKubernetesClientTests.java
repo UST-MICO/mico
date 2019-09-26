@@ -159,6 +159,7 @@ public class MicoKubernetesClientTests {
         MicoLabel label = new MicoLabel().setKey("some-label-key").setValue("some-label-value");
         MicoEnvironmentVariable environmentVariable = new MicoEnvironmentVariable().setName("some-env-name").setValue("some-env-value");
         MicoTopicRole topicRole = new MicoTopicRole().setRole(MicoTopicRole.Role.INPUT).setTopic(new MicoTopic().setName("input-topic"));
+        OpenFaaSFunction openFaaSFunction = new OpenFaaSFunction().setName("open-faas-function");
         MicoInterfaceConnection interfaceConnection = new MicoInterfaceConnection()
             .setEnvironmentVariableName("ENV_VAR")
             .setMicoServiceInterfaceName("INTERFACE_NAME")
@@ -171,6 +172,7 @@ public class MicoKubernetesClientTests {
             .setLabels(CollectionUtils.listOf(label))
             .setEnvironmentVariables(CollectionUtils.listOf(environmentVariable))
             .setTopics(CollectionUtils.listOf(topicRole))
+            .setOpenFaaSFunction(openFaaSFunction)
             .setInterfaceConnections(CollectionUtils.listOf(interfaceConnection));
 
         micoKubernetesClient.createMicoService(serviceDeploymentInfo);
@@ -192,6 +194,9 @@ public class MicoKubernetesClientTests {
         assertTrue("Custom environment variable is not present", actualCustomEnvVar.isPresent());
         Optional<EnvVar> actualTopicEnvVar = actualEnvVarList.stream().filter(envVar -> envVar.getName().equals(MicoEnvironmentVariable.DefaultNames.KAFKA_TOPIC_INPUT.name()) && envVar.getValue().equals(topicRole.getTopic().getName())).findFirst();
         assertTrue("Topic environment variable is not present", actualTopicEnvVar.isPresent());
+        Optional<EnvVar> actualOpenFaasFunctionNameEnvVar = actualEnvVarList.stream().filter(envVar -> envVar.getName().equals(MicoEnvironmentVariable.DefaultNames.OPENFAAS_FUNCTION_NAME.name())).findFirst();
+        assertTrue("OpenFaaS function name environment variable is not present", actualOpenFaasFunctionNameEnvVar.isPresent());
+        assertEquals("OpenFaaS function name environment variable does not match expected", serviceDeploymentInfo.getOpenFaaSFunction().getName(), actualOpenFaasFunctionNameEnvVar.get().getValue());
     }
 
     @Test
