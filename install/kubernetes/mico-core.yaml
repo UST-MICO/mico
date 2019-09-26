@@ -12,7 +12,8 @@ data:
     spring.redis.host=redis.mico-system
     spring.redis.port=6379
     kafka.bootstrap-servers=bootstrap.kafka:9092
-    openfaas.gateway=http://gateway.openfaas:8080
+    openfaas.gateway-uri-used-for-kafka-faas-connectors=http://gateway.openfaas:8080
+    openfaas.gateway-uri-used-for-functions-endpoint=http://gateway.openfaas:8080
     openfaas.gateway-external-service-name=gateway-external
 ---
 apiVersion: v1

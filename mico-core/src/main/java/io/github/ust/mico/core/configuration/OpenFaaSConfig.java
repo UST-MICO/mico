@@ -41,17 +41,29 @@ import java.util.List;
 public class OpenFaaSConfig {
 
     /**
-     * The URL of the OpenFaaS gateway.
+     * The URL of the OpenFaaS gateway used as environment variable for KafkaFaasConnectors.
      */
     @NotBlank
-    private String gateway;
+    private String gatewayUriUsedForKafkaFaasConnectors;
 
+    /**
+     * The URL of the OpenFaaS gateway used for the endpoint `GET /functions`.
+     * It must be accessible by mico-core.
+     */
+    @NotBlank
+    private String gatewayUriUsedForFunctionsEndpoint;
+
+    /**
+     * The name of the Kubernetes service of the OpenFaaS gateway.
+     */
     @NotBlank
     private String gatewayExternalServiceName;
 
     public List<MicoEnvironmentVariable> getDefaultEnvironmentVariablesForOpenFaaS() {
         LinkedList<MicoEnvironmentVariable> micoEnvironmentVariables = new LinkedList<>();
-        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(MicoEnvironmentVariable.DefaultNames.OPENFAAS_GATEWAY.name()).setValue(gateway));
+        micoEnvironmentVariables.add(new MicoEnvironmentVariable()
+            .setName(MicoEnvironmentVariable.DefaultNames.OPENFAAS_GATEWAY.name())
+            .setValue(gatewayUriUsedForKafkaFaasConnectors));
         return micoEnvironmentVariables;
     }
 }

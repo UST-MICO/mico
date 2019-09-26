@@ -78,7 +78,7 @@ public class OpenFaasResource {
     @GetMapping(FUNCTIONS_PATH)
     public ResponseEntity<String> getOpenFaasFunctions() {
         try {
-            String openFaasFunctionListURI = openFaaSConfig.getGateway() + OPEN_FAAS_FUNCTION_LIST_PATH;
+            String openFaasFunctionListURI = openFaaSConfig.getGatewayUriUsedForFunctionsEndpoint() + OPEN_FAAS_FUNCTION_LIST_PATH;
             log.debug("OpenFaaS function list uri {}", openFaasFunctionListURI);
             return restTemplate.getForEntity(openFaasFunctionListURI, String.class);
         } catch (ResourceAccessException e) {
