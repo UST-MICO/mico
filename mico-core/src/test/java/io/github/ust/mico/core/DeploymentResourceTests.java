@@ -256,9 +256,10 @@ public class DeploymentResourceTests {
             .setFuture(futureOfBuildJob)
             .setServiceShortName(service.getShortName())
             .setServiceVersion(service.getVersion())
+            .setInstanceId(INSTANCE_ID)
             .setType(MicoServiceBackgroundJob.Type.BUILD);
 
-        given(backgroundJobBroker.getJobByMicoService(service.getShortName(), service.getVersion(), MicoServiceBackgroundJob.Type.BUILD))
+        given(backgroundJobBroker.getJobByMicoServiceInstanceId(INSTANCE_ID, MicoServiceBackgroundJob.Type.BUILD))
             .willReturn(Optional.of(mockJob));
         given(backgroundJobBroker.saveJob(mockJob)).willReturn(mockJob);
 
