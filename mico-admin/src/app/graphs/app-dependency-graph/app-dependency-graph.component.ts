@@ -523,7 +523,15 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 const depl = node.data;
                 // deepcopy since depl is readonly
                 const deplCopy = JSON.parse(JSON.stringify(depl));
-                deplCopy.inputTopicName = topic.data.topicName;
+
+                if (edge.role === 'INPUT') {
+                    deplCopy.inputTopicName = topic.data.topicName;
+                } else if (edge.role === 'OUTPUT') {
+                    deplCopy.outputTopicName = topic.data.topicName;
+                } else {
+                    return;
+                }
+
                 const putSub = this.api.putApplicationKafkaFaasConnector(this.application.shortName, this.application.version, depl.instanceId, deplCopy).subscribe(() => {
                     safeUnsubscribe(putSub);
                 });
