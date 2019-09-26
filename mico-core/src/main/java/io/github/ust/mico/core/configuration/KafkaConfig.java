@@ -50,8 +50,9 @@ public class KafkaConfig {
     private String bootstrapServers;
 
     /**
-     * The group id is a string that uniquely identifies the group
-     * of consumer processes to which this consumer belongs.
+     * The group id used by mico core when directly connecting to kafka.
+     * <p>
+     * Currently unused.
      */
     @NotBlank
     private String groupId;
@@ -74,7 +75,6 @@ public class KafkaConfig {
     public List<MicoEnvironmentVariable> getDefaultEnvironmentVariablesForKafka() {
         LinkedList<MicoEnvironmentVariable> micoEnvironmentVariables = new LinkedList<>();
         micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultNames.KAFKA_BOOTSTRAP_SERVERS.name()).setValue(bootstrapServers));
-        micoEnvironmentVariables.add(new MicoEnvironmentVariable().setName(DefaultNames.KAFKA_GROUP_ID.name()).setValue(groupId));
         return micoEnvironmentVariables;
     }
 

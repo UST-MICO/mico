@@ -328,6 +328,10 @@ public class MicoServiceDeploymentInfoBroker {
             micoService.getShortName(), micoService.getVersion());
         List<MicoEnvironmentVariable> micoEnvironmentVariables = micoServiceDeploymentInfo.getEnvironmentVariables();
         micoEnvironmentVariables.addAll(kafkaConfig.getDefaultEnvironmentVariablesForKafka());
+        // set a unique group id for each service instance
+        micoEnvironmentVariables.add(new MicoEnvironmentVariable()
+            .setName(MicoEnvironmentVariable.DefaultNames.KAFKA_GROUP_ID.name())
+            .setValue(micoServiceDeploymentInfo.getInstanceId()));
         micoEnvironmentVariables.addAll(openFaaSConfig.getDefaultEnvironmentVariablesForOpenFaaS());
         List<MicoTopicRole> topics = micoServiceDeploymentInfo.getTopics();
         topics.addAll(kafkaConfig.getDefaultTopics(micoServiceDeploymentInfo));
