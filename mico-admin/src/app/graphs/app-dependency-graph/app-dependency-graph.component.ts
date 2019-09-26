@@ -384,7 +384,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             if (graph.getNode(edge.source).service.kafkaEnabled) {
                 // kafka enabled nodes can target kafka topics
                 const depl = this.deploymentInformations.get(edge.source.toString());
-                if (!depl.topics.some(t => t.role === 'OUTPUT')) {
+                if (depl == null && !depl.topics.some(t => t.role === 'OUTPUT')) {
                     // only nodes that don't have an output topic set
                     this.kafkaTopicNodes.forEach(e => edge.validTargets.add(e));
                 }
@@ -523,7 +523,15 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 const depl = node.data;
                 // deepcopy since depl is readonly
                 const deplCopy = JSON.parse(JSON.stringify(depl));
-                deplCopy.inputTopicName = topic.data.topicName;
+
+                if (edge.role === 'INPUT') {
+                    deplCopy.inputTopicName = topic.data.topicName;
+                } else if (edge.role === 'OUTPUT') {
+                    deplCopy.outputTopicName = topic.data.topicName;
+                } else {
+                    return;
+                }
+
                 const putSub = this.api.putApplicationKafkaFaasConnector(this.application.shortName, this.application.version, depl.instanceId, deplCopy).subscribe(() => {
                     safeUnsubscribe(putSub);
                 });
@@ -595,7 +603,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 return;
             }
             const depl = this.deploymentInformations.get(serviceNode.id.toString());
-            const existingRoles: string[] = depl.topics.map(t => t.role);
+            const existingRoles: string[] = depl.topics.map(t => t.role).filter(t => t === 'INPUT' || t === 'OUTPUT');
             if (existingRoles.length >= 2) {
                 // both roleas already used.
                 return;
