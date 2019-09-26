@@ -402,6 +402,9 @@ public class ApplicationResourceEndToEndTests extends Neo4jTestClass {
         LinkedList<MicoEnvironmentVariable> expectedMicoEnvironmentVariables = new LinkedList<>();
         expectedMicoEnvironmentVariables.addAll(openFaaSConfig.getDefaultEnvironmentVariablesForOpenFaaS());
         expectedMicoEnvironmentVariables.addAll(kafkaConfig.getDefaultEnvironmentVariablesForKafka());
+        expectedMicoEnvironmentVariables.add(new MicoEnvironmentVariable()
+            .setName(MicoEnvironmentVariable.DefaultNames.KAFKA_GROUP_ID.name())
+            .setValue(actualServiceDeploymentInfo.getInstanceId()));
         List<MicoEnvironmentVariable> actualEnvironmentVariables = actualServiceDeploymentInfo.getEnvironmentVariables();
         assertEquals(3, actualEnvironmentVariables.size());
         assertThat(actualEnvironmentVariables.stream().map(MicoEnvironmentVariable::getName).collect(Collectors.toList()),

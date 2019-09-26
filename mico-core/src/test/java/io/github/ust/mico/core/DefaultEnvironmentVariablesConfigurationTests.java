@@ -64,10 +64,9 @@ public class DefaultEnvironmentVariablesConfigurationTests {
     public void testKafkaConfigForEnvironmentVariables() {
         List<MicoEnvironmentVariable> expectedEnvironmentVariables = new LinkedList<>();
         expectedEnvironmentVariables.add(new MicoEnvironmentVariable().setName(KAFKA_BOOTSTRAP_SERVERS.name()).setValue(kafkaConfig.getBootstrapServers()));
-        expectedEnvironmentVariables.add(new MicoEnvironmentVariable().setName(KAFKA_GROUP_ID.name()).setValue(kafkaConfig.getGroupId()));
 
         List<MicoEnvironmentVariable> actualEnvVars = kafkaConfig.getDefaultEnvironmentVariablesForKafka();
-        assertThat(actualEnvVars, hasSize(2));
+        assertThat(actualEnvVars, hasSize(1));
         assertThat(actualEnvVars, containsInAnyOrder(expectedEnvironmentVariables.toArray()));
     }
 
