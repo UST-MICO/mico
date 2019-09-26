@@ -54,7 +54,7 @@ public class DefaultEnvironmentVariablesConfigurationTests {
     @Test
     public void testOpenFaaSConfigForEnvironmentVariables() {
         List<MicoEnvironmentVariable> expectedEnvironmentVariables = new LinkedList<>();
-        expectedEnvironmentVariables.add(new MicoEnvironmentVariable().setName(OPENFAAS_GATEWAY.name()).setValue(openFaaSConfig.getGateway()));
+        expectedEnvironmentVariables.add(new MicoEnvironmentVariable().setName(OPENFAAS_GATEWAY.name()).setValue(openFaaSConfig.getGatewayUriUsedForKafkaFaasConnectors()));
 
         assertThat(openFaaSConfig.getDefaultEnvironmentVariablesForOpenFaaS(), hasSize(1));
         assertThat(openFaaSConfig.getDefaultEnvironmentVariablesForOpenFaaS(), containsInAnyOrder(expectedEnvironmentVariables.toArray()));

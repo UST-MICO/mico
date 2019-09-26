@@ -86,8 +86,8 @@ public class OpenFaasResourceTests {
 
     @Test
     public void getFunctionsListNotReachable() throws Exception {
-        given(openFaaSConfig.getGateway()).willReturn("http://notReachableHost.test");
-        given(restTemplate.getForEntity(openFaaSConfig.getGateway() + OPEN_FAAS_FUNCTION_LIST_PATH, String.class)).willThrow(new ResourceAccessException(" I/O error"));
+        given(openFaaSConfig.getGatewayUriUsedForFunctionsEndpoint()).willReturn("http://notReachableHost.test");
+        given(restTemplate.getForEntity(openFaaSConfig.getGatewayUriUsedForFunctionsEndpoint() + OPEN_FAAS_FUNCTION_LIST_PATH, String.class)).willThrow(new ResourceAccessException(" I/O error"));
 
         mvc.perform(get(OPEN_FAAS_BASE_PATH + FUNCTIONS_PATH).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
@@ -97,10 +97,10 @@ public class OpenFaasResourceTests {
 
     @Test
     public void getFunctionsListReachable() throws Exception {
-        given(openFaaSConfig.getGateway()).willReturn("http://reachableHost.test");
+        given(openFaaSConfig.getGatewayUriUsedForFunctionsEndpoint()).willReturn("http://reachableHost.test");
         String testBody = "TestBody";
         ResponseEntity<String> responseEntity = new ResponseEntity<>("TestBody", HttpStatus.OK);
-        given(restTemplate.getForEntity(openFaaSConfig.getGateway() + OPEN_FAAS_FUNCTION_LIST_PATH, String.class)).willReturn(responseEntity);
+        given(restTemplate.getForEntity(openFaaSConfig.getGatewayUriUsedForFunctionsEndpoint() + OPEN_FAAS_FUNCTION_LIST_PATH, String.class)).willReturn(responseEntity);
         mvc.perform(get(OPEN_FAAS_BASE_PATH + FUNCTIONS_PATH).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
