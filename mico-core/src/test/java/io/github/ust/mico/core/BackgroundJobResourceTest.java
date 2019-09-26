@@ -238,4 +238,28 @@ public class BackgroundJobResourceTest {
             .andReturn();
     }
 
+    @Test
+    public void deleteAllJobs() throws Exception {
+        MicoServiceBackgroundJob pendingJob1 = new MicoServiceBackgroundJob()
+            .setFuture(CompletableFuture.completedFuture(true))
+            .setServiceShortName(SHORT_NAME)
+            .setServiceVersion(VERSION)
+            .setInstanceId(INSTANCE_ID_1)
+            .setType(MicoServiceBackgroundJob.Type.BUILD);
+
+        MicoServiceBackgroundJob pendingJob2 = new MicoServiceBackgroundJob()
+            .setFuture(CompletableFuture.completedFuture(true))
+            .setServiceShortName(SHORT_NAME)
+            .setServiceVersion(VERSION)
+            .setInstanceId(INSTANCE_ID_2)
+            .setType(MicoServiceBackgroundJob.Type.BUILD);
+
+        given(backgroundJobBroker.getAllJobs()).willReturn(CollectionUtils.listOf(pendingJob1, pendingJob2));
+
+        mvc.perform(delete("/jobs/").accept(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isNoContent())
+            .andReturn();
+    }
+
 }

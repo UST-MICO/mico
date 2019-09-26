@@ -93,14 +93,18 @@ public class BackgroundJobBroker {
         Optional<MicoServiceBackgroundJob> jobOptional = getJobById(id);
         if (jobOptional.isPresent()) {
             MicoServiceBackgroundJob job = jobOptional.get();
-            if (job.getFuture() != null && !job.getFuture().isCancelled()
-                && !job.getFuture().isCompletedExceptionally() && !job.getFuture().isDone()) {
-                log.warn("Job of type '{}' and current status '{}' of MicoService '{}' '{}' with instanceId '{}' is going to be deleted, " +
-                        "but it's future is still running -> Cancel it.",
-                    job.getType(), job.getStatus(), job.getServiceShortName(), job.getServiceVersion(), job.getInstanceId());
-                job.getFuture().cancel(true);
-            }
-            jobRepository.delete(job);
+            deleteJob(job);
+        }
+    }
+
+    /**
+     * Delete all jobs in the database.
+     * If a future of a job is still running, it will be cancelled.
+     */
+    public void deleteAllJobs() {
+        List<MicoServiceBackgroundJob> jobs = getAllJobs();
+        for (MicoServiceBackgroundJob job : jobs) {
+            deleteJob(job);
         }
     }
 
@@ -222,6 +226,23 @@ public class BackgroundJobBroker {
             log.warn("No job of type '{}' exists for '{}' '{}' with instance id '{}'.",
                 type, micoService.getShortName(), micoService.getVersion(), micoServiceInstanceId);
         }
+    }
+
+    /**
+     * Deletes the specified job.
+     * If the included future is still running, it will be cancelled.
+     *
+     * @param job the {@link MicoServiceBackgroundJob}
+     */
+    private void deleteJob(MicoServiceBackgroundJob job) {
+        if (job.getFuture() != null && !job.getFuture().isCancelled()
+            && !job.getFuture().isCompletedExceptionally() && !job.getFuture().isDone()) {
+            log.warn("Job of type '{}' and current status '{}' of MicoService '{}' '{}' with instanceId '{}' is going to be deleted, " +
+                    "but it's future is still running -> Cancel it.",
+                job.getType(), job.getStatus(), job.getServiceShortName(), job.getServiceVersion(), job.getInstanceId());
+            job.getFuture().cancel(true);
+        }
+        jobRepository.delete(job);
     }
 
     /**

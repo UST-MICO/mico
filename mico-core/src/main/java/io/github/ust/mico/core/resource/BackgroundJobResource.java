@@ -100,6 +100,12 @@ public class BackgroundJobResource {
         }
     }
 
+    @DeleteMapping
+    public ResponseEntity<Void> deleteAllJobs() {
+        backgroundJobBroker.deleteAllJobs();
+        return ResponseEntity.noContent().build();
+    }
+
     @DeleteMapping("/{" + PATH_VARIABLE_ID + "}")
     public ResponseEntity<Void> deleteJob(@PathVariable(PATH_VARIABLE_ID) String id) {
         backgroundJobBroker.deleteJob(id);
