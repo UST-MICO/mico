@@ -123,12 +123,11 @@ public class BackgroundJobBroker {
         MicoApplication micoApplication = existingApplicationOptional.get();
 
         List<MicoServiceBackgroundJob> jobList = new ArrayList<>();
-        for (MicoService micoService : micoApplication.getServices()) {
-            jobList.addAll(jobRepository.findByServiceShortNameAndServiceVersion(micoService.getShortName(), micoService.getVersion()));
+        for (MicoServiceDeploymentInfo micoServiceDeploymentInfo : micoApplication.getServiceDeploymentInfos()) {
+            jobList.addAll(jobRepository.findByInstanceId(micoServiceDeploymentInfo.getInstanceId()));
         }
         for (MicoServiceDeploymentInfo kfConnectorDeploymentInfo : micoApplication.getKafkaFaasConnectorDeploymentInfos()) {
-            MicoService kfConnectorService = kfConnectorDeploymentInfo.getService();
-            jobList.addAll(jobRepository.findByServiceShortNameAndServiceVersion(kfConnectorService.getShortName(), kfConnectorService.getVersion()));
+            jobList.addAll(jobRepository.findByInstanceId(kfConnectorDeploymentInfo.getInstanceId()));
         }
 
         List<MicoServiceBackgroundJob.Status> statusList = jobList.stream().map(MicoServiceBackgroundJob::getStatus).distinct().collect(Collectors.toList());
