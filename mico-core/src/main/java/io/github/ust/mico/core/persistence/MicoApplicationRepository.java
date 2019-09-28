@@ -19,15 +19,16 @@
 
 package io.github.ust.mico.core.persistence;
 
-import java.util.List;
-import java.util.Optional;
-
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import org.springframework.data.neo4j.annotation.Depth;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
+
+import java.util.List;
+import java.util.Optional;
 
 public interface MicoApplicationRepository extends Neo4jRepository<MicoApplication, Long> {
 
@@ -52,9 +53,21 @@ public interface MicoApplicationRepository extends Neo4jRepository<MicoApplicati
      */
     @Query("MATCH (a:MicoApplication)-[i:INCLUDES]-(s:MicoService) "
         + "WHERE s.shortName = {shortName} AND s.version = {version} "
-        + "RETURN COLLECT((a)-[:INCLUDES|:PROVIDES]->()) AS applications")
+        + "RETURN COLLECT((a)-[:INCLUDES|:PROVIDES|:PROVIDES_KF_CONNECTOR]->()) AS applications")
     List<MicoApplication> findAllByUsedService(
         @Param("shortName") String shortName,
         @Param("version") String version);
+
+    /**
+     * Find all applications that are using the given service.
+     *
+     * @param instanceId the instance ID of the {@link MicoServiceDeploymentInfo}
+     * @return a list of {@link MicoApplication}
+     */
+    @Query("MATCH (a:MicoApplication)-[i:PROVIDES]-(sdi:MicoServiceDeploymentInfo) "
+        + "WHERE sdi.instanceId = {instanceId} "
+        + "RETURN COLLECT((a)-[:INCLUDES|:PROVIDES|:PROVIDES_KF_CONNECTOR]->()) AS applications")
+    List<MicoApplication> findAllByUsedServiceInstance(
+        @Param("instanceId") String instanceId);
 
 }

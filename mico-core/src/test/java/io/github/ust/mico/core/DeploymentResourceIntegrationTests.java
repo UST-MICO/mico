@@ -261,7 +261,7 @@ public class DeploymentResourceIntegrationTests {
 
     private CompletableFuture<Service> waitForServiceCreation() throws InterruptedException, ExecutionException, TimeoutException {
         CompletableFuture<Service> createdService = integrationTestsUtils.waitUntilServiceIsCreated(
-            service, 1, 1, 10);
+            serviceDeploymentInfo, 1, 1, 10);
         assertNotNull("Kubernetes Service was not created!", createdService.get());
         log.debug("Created Kubernetes Service: {}", createdService.get().toString());
         return createdService;

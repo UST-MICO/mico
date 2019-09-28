@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
 public class MicoServiceDeploymentInfoResponseDTO extends MicoServiceDeploymentInfoRequestDTO {
 
     /**
-     * Instance ID.
+     * instance ID.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,

@@ -201,7 +201,7 @@ public class DeploymentBroker {
 
         MicoService micoService = micoServiceDeploymentInfo.getService();
 
-        log.debug("Creating build job for service '{}' '{}' with instance id '{}'...",
+        log.debug("Creating build job for service '{}' '{}' with instance ID '{}'...",
             micoService.getShortName(), micoService.getVersion(), micoServiceDeploymentInfo.getInstanceId());
 
         // Check if a build for this MicoService is already running.
@@ -213,7 +213,7 @@ public class DeploymentBroker {
             if (jobOptional.get().getStatus() != MicoServiceBackgroundJob.Status.RUNNING) {
                 backgroundJobBroker.deleteJob(jobOptional.get().getId());
             } else {
-                log.info("Build job for service '{}' '{}' with instance id '{}' is already running.",
+                log.info("Build job for service '{}' '{}' with instance ID '{}' is already running.",
                     micoService.getShortName(), micoService.getVersion(), micoServiceDeploymentInfo.getInstanceId());
                 return;
             }
@@ -343,7 +343,7 @@ public class DeploymentBroker {
         if (!micoServiceInstanceIsDeployed) {
             log.info("MicoService '{}' '{}' in instance '{}' is not deployed yet. Create the required Kubernetes resources.",
                 micoService.getShortName(), micoService.getVersion(), instanceId);
-            deployment = micoKubernetesClient.createMicoService(serviceDeploymentInfo);
+            deployment = micoKubernetesClient.createMicoServiceInstance(serviceDeploymentInfo);
         } else {
             // MICO service was deployed by another MICO application.
             // Get information about the actual deployment to be able to perform the scaling.
@@ -379,7 +379,8 @@ public class DeploymentBroker {
         // Create / update the Kubernetes services that corresponds to the interfaces of the MICO services.
         List<io.fabric8.kubernetes.api.model.Service> createdServices = new ArrayList<>();
         for (MicoServiceInterface serviceInterface : micoService.getServiceInterfaces()) {
-            io.fabric8.kubernetes.api.model.Service createdService = micoKubernetesClient.createMicoServiceInterface(serviceInterface, micoService);
+            io.fabric8.kubernetes.api.model.Service createdService = micoKubernetesClient
+                .createMicoServiceInterface(serviceInterface, serviceDeploymentInfo);
             createdServices.add(createdService);
         }
 

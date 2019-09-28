@@ -1,30 +1,27 @@
 package io.github.ust.mico.core.broker;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Iterables;
 import io.github.ust.mico.core.configuration.KafkaFaasConnectorConfig;
-import io.github.ust.mico.core.model.MicoApplication;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphEdgeResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceDependencyGraphResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceResponseDTO;
-import io.github.ust.mico.core.dto.response.status.MicoServiceStatusResponseDTO;
 import io.github.ust.mico.core.exception.*;
+import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.MicoStatusService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -37,10 +34,10 @@ public class MicoServiceBroker {
     private MicoServiceRepository serviceRepository;
 
     @Autowired
-    private MicoKubernetesClient micoKubernetesClient;
+    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
 
     @Autowired
-    private MicoStatusService micoStatusService;
+    private MicoKubernetesClient micoKubernetesClient;
 
     @Autowired
     private KafkaFaasConnectorConfig kafkaFaasConnectorConfig;
@@ -55,6 +52,20 @@ public class MicoServiceBroker {
             throw new MicoServiceNotFoundException(shortName, version);
         }
         return serviceOptional.get();
+    }
+
+    public MicoServiceDeploymentInfo getServiceInstanceFromDatabase(String shortName, String version, String instanceId) throws MicoServiceInstanceNotFoundException, MicoServiceInstanceDoesNotMatchShortNameAndVersionException {
+        Optional<MicoServiceDeploymentInfo> serviceDeploymentInfoOptional = serviceDeploymentInfoRepository.findByInstanceId(instanceId);
+        if (!serviceDeploymentInfoOptional.isPresent()) {
+            throw new MicoServiceInstanceNotFoundException(shortName, version, instanceId);
+        }
+        MicoServiceDeploymentInfo serviceDeploymentInfo = serviceDeploymentInfoOptional.get();
+        if (!serviceDeploymentInfo.getService().getShortName().equals(shortName) ||
+            !serviceDeploymentInfo.getService().getVersion().equals(version)) {
+            throw new MicoServiceInstanceDoesNotMatchShortNameAndVersionException(instanceId, shortName, version,
+                serviceDeploymentInfo.getService().getShortName(), serviceDeploymentInfo.getService().getVersion());
+        }
+        return serviceDeploymentInfo;
     }
 
     public MicoService updateExistingService(MicoService service) throws MicoServiceIsDeployedException {
@@ -150,14 +161,6 @@ public class MicoServiceBroker {
         return serviceRepository.findDependers(service.getShortName(), service.getVersion());
     }
 
-    //TODO: Update return from micoStatusRepository from DTO to model object
-    public MicoServiceStatusResponseDTO getStatusOfService(String shortName, String version) throws MicoServiceNotFoundException {
-        MicoServiceStatusResponseDTO serviceStatus;
-        MicoService micoService = getServiceFromDatabase(shortName, version);
-        serviceStatus = micoStatusService.getServiceStatus(micoService);
-        return serviceStatus;
-    }
-
     public MicoService persistService(MicoService newService) throws MicoServiceAlreadyExistsException {
         Optional<MicoService> micoServiceOptional = serviceRepository.findByShortNameAndVersion(newService.getShortName(), newService.getVersion());
         if (micoServiceOptional.isPresent()) {
@@ -240,7 +243,7 @@ public class MicoServiceBroker {
     }
 
     //TODO: Create test
-    //TODO: We shoud not use DTOs here, improve
+    //TODO: We should not use DTOs here, improve
     public MicoServiceDependencyGraphResponseDTO getDependencyGraph(MicoService micoServiceRoot) throws MicoServiceNotFoundException {
         List<MicoService> micoServices = serviceRepository.findDependeesIncludeDepender(micoServiceRoot.getShortName(),
             micoServiceRoot.getVersion());
@@ -275,13 +278,14 @@ public class MicoServiceBroker {
 
     /**
      * Returns the latest version of the KafkaFaaSConnector (according to the database)
+     *
      * @return the latest version of the KafkaFaaSConnector
-     * @throws KafkaFaasConnectorLatestVersionNotFound
+     * @throws KafkaFaasConnectorLatestVersionNotFound if no KafkaFaasConnector can be found
      */
     public String getLatestKFConnectorVersion() throws KafkaFaasConnectorLatestVersionNotFound {
         List<String> kfConnectorVersions = serviceRepository.findByShortName(kafkaFaasConnectorConfig.getServiceName()).stream()
-                .map(kfConnector -> kfConnector.getVersion()).sorted().collect(Collectors.toList());
-        if(kfConnectorVersions.isEmpty()) {
+            .map(MicoService::getVersion).sorted().collect(Collectors.toList());
+        if (kfConnectorVersions.isEmpty()) {
             throw new KafkaFaasConnectorLatestVersionNotFound();
         }
         return Iterables.getLast(kfConnectorVersions);

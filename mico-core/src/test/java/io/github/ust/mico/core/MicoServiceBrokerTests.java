@@ -5,8 +5,9 @@ import io.github.ust.mico.core.exception.MicoServiceAlreadyExistsException;
 import io.github.ust.mico.core.exception.MicoServiceIsDeployedException;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.util.CollectionUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,11 +36,11 @@ public class MicoServiceBrokerTests {
     @MockBean
     private MicoServiceRepository serviceRepository;
 
+    @MockBean
+    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
+
     @Autowired
     private MicoServiceBroker micoServiceBroker;
-
-    @MockBean
-    private MicoKubernetesClient micoKubernetesClient;
 
     @Test
     public void getAllServicesAsList() {
@@ -69,6 +70,25 @@ public class MicoServiceBrokerTests {
         MicoService micoService = micoServiceBroker.getServiceFromDatabase(SHORT_NAME_1, VERSION_1_0_1);
         assertThat(micoService.getShortName()).isEqualTo(SHORT_NAME_1);
         assertThat(micoService.getVersion()).isEqualTo(VERSION_1_0_1);
+    }
+
+    @Test
+    public void getServiceInstanceFromDatabase() throws Exception {
+        MicoService service = new MicoService()
+            .setShortName(SHORT_NAME_1)
+            .setVersion(VERSION_1_0_1)
+            .setName(NAME_2)
+            .setDescription(DESCRIPTION_2);
+
+        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
+            .setInstanceId(INSTANCE_ID)
+            .setService(service);
+
+        given(serviceDeploymentInfoRepository.findByInstanceId(serviceDeploymentInfo.getInstanceId())).willReturn(Optional.of(serviceDeploymentInfo));
+
+        MicoServiceDeploymentInfo micoServiceDeploymentInfo = micoServiceBroker.getServiceInstanceFromDatabase(SHORT_NAME_1, VERSION_1_0_1, INSTANCE_ID);
+        assertThat(micoServiceDeploymentInfo.getInstanceId()).isEqualTo(INSTANCE_ID);
+        assertThat(micoServiceDeploymentInfo.getService()).isEqualTo(service);
     }
 
     @Test

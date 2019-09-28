@@ -22,6 +22,7 @@ package io.github.ust.mico.core;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import io.github.ust.mico.core.broker.MicoServiceBroker;
 import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
 import io.github.ust.mico.core.dto.response.status.*;
@@ -100,7 +101,11 @@ public class ServiceResourceIntegrationTests {
     private MicoServiceRepository serviceRepository;
 
     @MockBean
+    private MicoServiceBroker micoServiceBroker;
+
+    @MockBean
     private MicoCoreApplication micoCoreApplication;
+
     @MockBean
     private GitHubCrawler crawler;
 
@@ -125,6 +130,9 @@ public class ServiceResourceIntegrationTests {
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
             .setDescription(DESCRIPTION_1);
+        MicoServiceDeploymentInfo micoServiceDeploymentInfo = new MicoServiceDeploymentInfo()
+            .setService(micoService)
+            .setInstanceId(INSTANCE_ID);
 
         String nodeName = "testNode";
         String podPhase = "Running";
@@ -173,10 +181,10 @@ public class ServiceResourceIntegrationTests {
             .setInterfacesInformation(CollectionUtils.listOf(new MicoServiceInterfaceStatusResponseDTO().setName(SERVICE_INTERFACE_NAME)))
             .setPodsInformation(Arrays.asList(kubernetesPodInfo1, kubernetesPodInfo2));
 
-        given(micoStatusService.getServiceStatus(any(MicoService.class))).willReturn(micoServiceStatus);
-        given(serviceRepository.findByShortNameAndVersion(ArgumentMatchers.anyString(), ArgumentMatchers.any())).willReturn(Optional.of(micoService));
+        given(micoStatusService.getServiceInstanceStatus(any(MicoServiceDeploymentInfo.class))).willReturn(micoServiceStatus);
+        given(micoServiceBroker.getServiceInstanceFromDatabase(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).willReturn(micoServiceDeploymentInfo);
 
-        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/status"))
+        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + INSTANCE_ID + "/status"))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath(SERVICE_DTO_SERVICE_NAME, is(NAME)))

@@ -19,13 +19,11 @@
 
 package io.github.ust.mico.core.dto.response.status;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import io.fabric8.kubernetes.api.model.Pod;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
 import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -33,6 +31,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * DTO for the status information of a {@link MicoService} intended to use with responses only..
@@ -81,6 +82,19 @@ public class MicoServiceStatusResponseDTO {
         }
     )})
     private String name;
+
+    /**
+     * instance ID of the {@link MicoServiceDeploymentInfo}.
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "instance ID"),
+            @ExtensionProperty(name = "x-order", value = "35"),
+            @ExtensionProperty(name = "description", value = "instance ID of the MicoServiceDeploymentInfo.")
+        }
+    )})
+    private String instanceId;
 
     /**
      * Counter for the number of replicas the corresponding that should be available.

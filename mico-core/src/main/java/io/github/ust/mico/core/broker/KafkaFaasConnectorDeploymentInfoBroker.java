@@ -94,7 +94,7 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
         Optional<MicoServiceDeploymentInfo> micoServiceDeploymentInfoOptional = micoServiceDeploymentInfos.stream()
             .filter(sdi -> sdi.getInstanceId().equals(instanceId))
             .reduce((a, b) -> {
-                    throw new IllegalStateException("There are multiple KafkaFaasConnectors with the same instance id: " + a + ", " + b);
+                    throw new IllegalStateException("There are multiple KafkaFaasConnectors with the same instance ID: " + a + ", " + b);
                 }
             );
         if (micoServiceDeploymentInfoOptional.isPresent()) {

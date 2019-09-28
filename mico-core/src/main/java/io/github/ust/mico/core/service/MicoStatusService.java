@@ -29,12 +29,9 @@ import io.github.ust.mico.core.dto.response.internal.PrometheusResponseDTO;
 import io.github.ust.mico.core.dto.response.status.*;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.PrometheusRequestFailedException;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoMessage;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.util.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,17 +60,17 @@ public class MicoStatusService {
     private final PrometheusConfig prometheusConfig;
     private final MicoKubernetesClient micoKubernetesClient;
     private final RestTemplate restTemplate;
-    private final MicoServiceRepository serviceRepository;
+    private final MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
     private final MicoApplicationRepository micoApplicationRepository;
 
     @Autowired
     public MicoStatusService(PrometheusConfig prometheusConfig, MicoKubernetesClient micoKubernetesClient,
-                             RestTemplate restTemplate, MicoServiceRepository serviceRepository,
+                             RestTemplate restTemplate, MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository,
                              MicoApplicationRepository micoApplicationRepository) {
         this.prometheusConfig = prometheusConfig;
         this.micoKubernetesClient = micoKubernetesClient;
         this.restTemplate = restTemplate;
-        this.serviceRepository = serviceRepository;
+        this.serviceDeploymentInfoRepository = serviceDeploymentInfoRepository;
         this.micoApplicationRepository = micoApplicationRepository;
     }
 
@@ -86,13 +83,16 @@ public class MicoStatusService {
      */
     public MicoApplicationStatusResponseDTO getApplicationStatus(MicoApplication micoApplication) {
         MicoApplicationStatusResponseDTO applicationStatus = new MicoApplicationStatusResponseDTO();
-        List<MicoService> micoServices = serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion());
+        List<MicoServiceDeploymentInfo> serviceDeploymentInfos = new ArrayList<>();
+        serviceDeploymentInfos.addAll(micoApplication.getServiceDeploymentInfos());
+        serviceDeploymentInfos.addAll(micoApplication.getKafkaFaasConnectorDeploymentInfos());
+
         int podCount = 0;
         int requestedReplicasCount = 0;
         int availableReplicasCount = 0;
 
-        for (MicoService micoService : micoServices) {
-            MicoServiceStatusResponseDTO micoServiceStatus = getServiceStatus(micoService);
+        for (MicoServiceDeploymentInfo serviceDeploymentInfo : serviceDeploymentInfos) {
+            MicoServiceStatusResponseDTO micoServiceStatus = getServiceInstanceStatus(serviceDeploymentInfo);
             podCount += micoServiceStatus.getPodsInformation().size();
             requestedReplicasCount += micoServiceStatus.getRequestedReplicas();
             availableReplicasCount += micoServiceStatus.getAvailableReplicas();
@@ -103,7 +103,7 @@ public class MicoStatusService {
             applicationStatus.getServiceStatuses().add(micoServiceStatus);
         }
         applicationStatus
-            .setTotalNumberOfMicoServices(micoServices.size())
+            .setTotalNumberOfMicoServices(micoApplication.getServiceDeploymentInfos().size())
             .setTotalNumberOfKafkaFaasConnectors(micoApplication.getKafkaFaasConnectorDeploymentInfos().size())
             .setTotalNumberOfPods(podCount)
             .setTotalNumberOfAvailableReplicas(availableReplicasCount)
@@ -112,42 +112,45 @@ public class MicoStatusService {
     }
 
     /**
-     * Get status information for a single {@link MicoService}: # available replicas, # requested replicas, pod metrics
+     * Get status information for a single {@link MicoServiceDeploymentInfo}: # available replicas, # requested replicas, pod metrics
      * (CPU load, memory usage).
      *
-     * @param micoService is a {@link MicoService}.
+     * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.
      * @return {@link MicoServiceStatusResponseDTO} which contains status information for a specific {@link
      * MicoService}.
      */
-    public MicoServiceStatusResponseDTO getServiceStatus(MicoService micoService) {
+    public MicoServiceStatusResponseDTO getServiceInstanceStatus(MicoServiceDeploymentInfo serviceDeploymentInfo) {
+        MicoService micoService = serviceDeploymentInfo.getService();
+        String instanceId = serviceDeploymentInfo.getInstanceId();
         MicoServiceStatusResponseDTO serviceStatus = new MicoServiceStatusResponseDTO()
             .setShortName(micoService.getShortName())
             .setVersion(micoService.getVersion())
-            .setName(micoService.getName());
+            .setName(micoService.getName())
+            .setInstanceId(instanceId);
 
         String message;
-        List<Deployment> deployments = micoKubernetesClient.getDeploymentsOfMicoService(micoService);
-        if (deployments.size() > 1) {
-            throw new IllegalStateException("Currently MICO doesn't support multiple instance deployments.");
-        } else if (deployments.size() == 1) {
-            Deployment deployment = deployments.get(0);
+        Optional<Deployment> deploymentOptional = micoKubernetesClient.getDeploymentOfMicoServiceInstance(serviceDeploymentInfo);
+        if (deploymentOptional.isPresent()) {
+            Deployment deployment = deploymentOptional.get();
             serviceStatus.setRequestedReplicas(deployment.getSpec().getReplicas());
             // Check if there are no replicas available of the deployment of a MicoService.
             if (deployment.getStatus().getUnavailableReplicas() == null) {
-                log.info("The MicoService '{}' with version '{}' has '{}' available replicas.",
-                    micoService.getShortName(), micoService.getVersion(), deployment.getStatus().getAvailableReplicas());
+                log.info("The MicoService '{}' '{}' with instance ID '{}' has '{}' available replicas.",
+                    micoService.getShortName(), micoService.getVersion(), instanceId, deployment.getStatus().getAvailableReplicas());
                 serviceStatus.setAvailableReplicas(deployment.getStatus().getAvailableReplicas());
             } else if ((deployment.getStatus().getUnavailableReplicas() != null) &&
                 deployment.getStatus().getUnavailableReplicas() < deployment.getSpec().getReplicas()) {
-                log.info("The MicoService '{}' with version '{}' has '{}' available replicas.",
-                    micoService.getShortName(), micoService.getVersion(), deployment.getStatus().getAvailableReplicas());
+                log.info("The MicoService '{}' '{}' with instance ID '{}' has '{}' available replicas.",
+                    micoService.getShortName(), micoService.getVersion(), instanceId, deployment.getStatus().getAvailableReplicas());
                 serviceStatus.setAvailableReplicas(deployment.getStatus().getAvailableReplicas());
             } else {
-                log.info("The MicoService '{}' with version '{}' has no available replicas.", micoService.getShortName(), micoService.getVersion());
+                log.info("The MicoService '{}' '{}' with instance ID '{}' has no available replicas.",
+                    micoService.getShortName(), micoService.getVersion(), instanceId);
                 serviceStatus.setAvailableReplicas(0);
             }
         } else {
-            message = "No deployment of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' is available.";
+            message = "No deployment of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() +
+                "' with instance ID '" + instanceId + "' is available.";
             log.warn(message);
             MicoMessage errorMessage = MicoMessage.error(message);
             return serviceStatus.setErrorMessages(CollectionUtils.listOf(new MicoMessageResponseDTO(errorMessage)));
@@ -156,14 +159,14 @@ public class MicoStatusService {
         // Get status information for the service interfaces of this service,
         // if there are any errors, add them to the service status
         List<MicoMessageResponseDTO> errorMessages = new ArrayList<>();
-        List<MicoServiceInterfaceStatusResponseDTO> interfacesInformation = getServiceInterfaceStatus(micoService, errorMessages);
+        List<MicoServiceInterfaceStatusResponseDTO> interfacesInformation = getServiceInterfaceStatus(serviceDeploymentInfo, errorMessages);
         serviceStatus.setInterfacesInformation(interfacesInformation);
         if (!errorMessages.isEmpty()) {
             serviceStatus.getErrorMessages().addAll(errorMessages);
         }
 
         // Return all applications that are using this service and are actually deployed
-        List<MicoApplication> usingApplications = micoApplicationRepository.findAllByUsedService(micoService.getShortName(), micoService.getVersion());
+        List<MicoApplication> usingApplications = micoApplicationRepository.findAllByUsedServiceInstance(instanceId);
         for (MicoApplication application : usingApplications) {
             if (micoKubernetesClient.isApplicationDeployed(application)) {
                 serviceStatus.getApplicationsUsingThisService().add(new MicoApplicationResponseDTO(application));
@@ -171,7 +174,7 @@ public class MicoStatusService {
         }
 
         // Get status information for all pods of a service
-        List<Pod> podList = micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(micoService);
+        List<Pod> podList = micoKubernetesClient.getPodsCreatedByDeploymentOfMicoServiceInstance(serviceDeploymentInfo);
         List<KubernetesPodInformationResponseDTO> podInfos = new ArrayList<>();
         // Get all the nodes on which the pods of a deployment of a MicoService are running
         Map<String, List<Pod>> podsPerNode = new HashMap<>();
@@ -209,7 +212,7 @@ public class MicoStatusService {
                 averageMemoryUsage = sumMemoryUsageOnNode / sumRunningPods;
             } else {
                 message = "There are no Pods running on node '" + nodeName + "' for MICO service '"
-                    + micoService.getShortName() + "' '" + micoService.getVersion() + "'.";
+                    + micoService.getShortName() + "' '" + micoService.getVersion() + "' with instance ID '" + instanceId + "'.";
                 log.warn(message);
                 MicoMessage warning = MicoMessage.warning(message);
                 serviceStatus.getErrorMessages().add(new MicoMessageResponseDTO(warning));
@@ -229,18 +232,18 @@ public class MicoStatusService {
      * Get the status information for all {@link MicoServiceInterface MicoServiceInterfaces} of the {@link
      * MicoService}.
      *
-     * @param micoService   is the {@link MicoService} for which the status information of the MicoServiceInterfaces is
-     *                      requested.
-     * @param errorMessages is the list of error messages, which is empty if no error occurs.
+     * @param serviceDeploymentInfo is the {@link MicoServiceDeploymentInfo} that includes the service
+     *                              for which the status information of the MicoServiceInterfaces is requested.
+     * @param errorMessages         is the list of error messages, which is empty if no error occurs.
      * @return a list of {@link MicoServiceInterfaceStatusResponseDTO}, one DTO per MicoServiceInterface.
      */
-    public List<MicoServiceInterfaceStatusResponseDTO> getServiceInterfaceStatus(@NotNull MicoService micoService,
+    public List<MicoServiceInterfaceStatusResponseDTO> getServiceInterfaceStatus(@NotNull MicoServiceDeploymentInfo serviceDeploymentInfo,
                                                                                  @NotNull List<MicoMessageResponseDTO> errorMessages) {
         List<MicoServiceInterfaceStatusResponseDTO> interfacesInformation = new ArrayList<>();
-        for (MicoServiceInterface serviceInterface : micoService.getServiceInterfaces()) {
+        for (MicoServiceInterface serviceInterface : serviceDeploymentInfo.getService().getServiceInterfaces()) {
             String serviceInterfaceName = serviceInterface.getServiceInterfaceName();
             try {
-                MicoServiceInterfaceStatusResponseDTO interfaceStatusResponseDTO = getPublicIpOfKubernetesService(micoService, serviceInterface);
+                MicoServiceInterfaceStatusResponseDTO interfaceStatusResponseDTO = getPublicIpOfKubernetesService(serviceDeploymentInfo, serviceInterface);
                 interfacesInformation.add(interfaceStatusResponseDTO);
             } catch (KubernetesResourceException e) {
                 interfacesInformation.add(new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName));
@@ -253,16 +256,17 @@ public class MicoStatusService {
     /**
      * Get the public IP of a {@link MicoServiceInterface} by providing the corresponding Kubernetes {@link Service}.
      *
-     * @param micoService      is the {@link MicoService}, that has a {@link MicoServiceInterface}, which is
-     *                         deployed on Kubernetes
-     * @param serviceInterface the {@link MicoServiceInterface}, that is deployed as a Kubernetes service
+     * @param serviceDeploymentInfo is the {@link MicoServiceDeploymentInfo}, that has a {@link MicoServiceInterface}, which is
+     *                              deployed on Kubernetes
+     * @param serviceInterface      the {@link MicoServiceInterface}, that is deployed as a Kubernetes service
      * @return the  public IP of the provided Kubernetes Service
      * @throws KubernetesResourceException if it's not possible to get the Kubernetes service
      */
-    public MicoServiceInterfaceStatusResponseDTO getPublicIpOfKubernetesService(MicoService micoService, MicoServiceInterface serviceInterface) throws KubernetesResourceException {
+    public MicoServiceInterfaceStatusResponseDTO getPublicIpOfKubernetesService(MicoServiceDeploymentInfo serviceDeploymentInfo, MicoServiceInterface serviceInterface) throws KubernetesResourceException {
+        MicoService micoService = serviceDeploymentInfo.getService();
         String serviceInterfaceName = serviceInterface.getServiceInterfaceName();
 
-        Optional<Service> kubernetesServiceOptional = micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, serviceInterfaceName);
+        Optional<Service> kubernetesServiceOptional = micoKubernetesClient.getInterfaceByNameOfMicoServiceInstance(serviceDeploymentInfo, serviceInterfaceName);
         if (!kubernetesServiceOptional.isPresent()) {
             log.warn("There is no Kubernetes service deployed for MicoServiceInterface with name '{}' of MicoService '{}' in version '{}'.",
                 serviceInterfaceName, micoService.getShortName(), micoService.getVersion());

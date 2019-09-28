@@ -73,12 +73,12 @@ public class KafkaFaasConnectorDeploymentInfoResource {
     public ResponseEntity<Resource<KFConnectorDeploymentInfoResponseDTO>> getKafkaFaasConnectorDeploymentInformationInstance(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                                                              @PathVariable(PATH_VARIABLE_VERSION) String version,
                                                                                                                              @PathVariable(PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID) String instanceId) {
-        log.debug("Get the KafkaFaasConnector deployment information of the MicoApplication '{}' '{}' with the instance id '{}'.", shortName, version, instanceId);
+        log.debug("Get the KafkaFaasConnector deployment information of the MicoApplication '{}' '{}' with the instance ID '{}'.", shortName, version, instanceId);
         Optional<MicoServiceDeploymentInfo> micoServiceDeploymentInfoOptional;
         try {
             micoServiceDeploymentInfoOptional = kafkaFaasConnectorDeploymentInfoBroker.getKafkaFaasConnectorDeploymentInformation(shortName, version, instanceId);
             micoServiceDeploymentInfoOptional.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "There is no KafkaFaasConnector with the instance id '" + instanceId + "'!"));
+                "There is no KafkaFaasConnector with the instance ID '" + instanceId + "'!"));
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }

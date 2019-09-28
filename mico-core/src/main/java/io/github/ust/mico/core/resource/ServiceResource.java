@@ -19,28 +19,7 @@
 
 package io.github.ust.mico.core.resource;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
-
-import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.validation.Valid;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Link;
-import org.springframework.hateoas.MediaTypes;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.Resources;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
-
 import io.github.ust.mico.core.broker.MicoServiceBroker;
 import io.github.ust.mico.core.dto.request.CrawlingInfoRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
@@ -52,9 +31,28 @@ import io.github.ust.mico.core.dto.response.status.MicoServiceStatusResponseDTO;
 import io.github.ust.mico.core.exception.*;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.service.GitHubCrawler;
 import io.github.ust.mico.core.service.MicoStatusService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.Resources;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import javax.validation.Valid;
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @Slf4j
 @RestController
@@ -63,6 +61,7 @@ public class ServiceResource {
 
     static final String PATH_VARIABLE_SHORT_NAME = "shortName";
     static final String PATH_VARIABLE_VERSION = "version";
+    static final String PATH_VARIABLE_INSTANCE_ID = "instanceId";
     private static final String PATH_VARIABLE_DEPENDEE_SHORT_NAME = "dependeeShortName";
     private static final String PATH_VARIABLE_DEPENDEE_VERSION = "dependeeVersion";
     private static final String PATH_VARIABLE_IMPORT = "import";
@@ -154,12 +153,13 @@ public class ServiceResource {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")
-    public ResponseEntity<Resource<MicoServiceStatusResponseDTO>> getStatusOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version) {
-        MicoService micoService = getServiceFromMicoServiceBroker(shortName, version);
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/{" + PATH_VARIABLE_INSTANCE_ID + "}" + "/status")
+    public ResponseEntity<Resource<MicoServiceStatusResponseDTO>> getStatusOfServiceInstance(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                                                     @PathVariable(PATH_VARIABLE_INSTANCE_ID) String instanceId) {
+        MicoServiceDeploymentInfo micoServiceDeploymentInfo = getServiceInstanceFromMicoServiceBroker(shortName, version, instanceId);
 
-        MicoServiceStatusResponseDTO serviceStatus = micoStatusService.getServiceStatus(micoService);
+        MicoServiceStatusResponseDTO serviceStatus = micoStatusService.getServiceInstanceStatus(micoServiceDeploymentInfo);
 
         return ResponseEntity.ok(new Resource<>(serviceStatus));
     }
@@ -402,6 +402,27 @@ public class ServiceResource {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
         return service;
+    }
+
+    /**
+     * Returns the existing {@link MicoServiceDeploymentInfo} object from the database for the given shortName, version and instanceId.
+     *
+     * @param shortName  the short name of a {@link MicoService}
+     * @param version    the version of a {@link MicoService}
+     * @param instanceId the instanceId of a {@link MicoServiceDeploymentInfo}
+     * @return the existing {@link MicoServiceDeploymentInfo} from the database
+     * @throws ResponseStatusException if a {@link MicoServiceDeploymentInfo} for the given shortName, version and instanceId does not exist
+     */
+    private MicoServiceDeploymentInfo getServiceInstanceFromMicoServiceBroker(String shortName, String version, String instanceId) throws ResponseStatusException {
+        MicoServiceDeploymentInfo serviceDeploymentInfo;
+        try {
+            serviceDeploymentInfo = micoServiceBroker.getServiceInstanceFromDatabase(shortName, version, instanceId);
+        } catch (MicoServiceInstanceDoesNotMatchShortNameAndVersionException e) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+        } catch (MicoServiceInstanceNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+        return serviceDeploymentInfo;
     }
 
     /**

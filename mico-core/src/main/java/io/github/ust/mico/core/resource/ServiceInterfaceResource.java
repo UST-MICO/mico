@@ -26,6 +26,7 @@ import io.github.ust.mico.core.dto.response.MicoServiceInterfaceResponseDTO;
 import io.github.ust.mico.core.dto.response.status.MicoServiceInterfaceStatusResponseDTO;
 import io.github.ust.mico.core.exception.*;
 import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.service.MicoStatusService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,8 +44,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.github.ust.mico.core.resource.ServiceResource.PATH_VARIABLE_SHORT_NAME;
-import static io.github.ust.mico.core.resource.ServiceResource.PATH_VARIABLE_VERSION;
+import static io.github.ust.mico.core.resource.ServiceResource.*;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
@@ -56,7 +56,7 @@ public class ServiceInterfaceResource {
     private static final String PATH_PART_INTERFACES = "interfaces";
     private static final String PATH_PART_PUBLIC_IP = "publicIP";
     private static final String SERVICE_INTERFACE_PATH = "/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/" + PATH_PART_INTERFACES;
-    private static final String SERVICE_INTERFACE_PUBLIC_IP_PATH = SERVICE_INTERFACE_PATH + "/{" + PATH_VARIABLE_SERVICE_INTERFACE_NAME + "}/" + PATH_PART_PUBLIC_IP;
+    private static final String SERVICE_INTERFACE_PUBLIC_IP_PATH = SERVICE_INTERFACE_PATH + "/{" + PATH_VARIABLE_SERVICE_INTERFACE_NAME + "}/" + PATH_PART_PUBLIC_IP + "/{" + PATH_VARIABLE_INSTANCE_ID + "}";
 
     @Autowired
     private MicoServiceInterfaceBroker micoServiceInterfaceBroker;
@@ -91,13 +91,14 @@ public class ServiceInterfaceResource {
     @GetMapping(SERVICE_INTERFACE_PUBLIC_IP_PATH)
     public ResponseEntity<MicoServiceInterfaceStatusResponseDTO> getInterfacePublicIpByName(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
                                                                                             @PathVariable(PATH_VARIABLE_VERSION) String version,
-                                                                                            @PathVariable(PATH_VARIABLE_SERVICE_INTERFACE_NAME) String serviceInterfaceName) {
-        MicoService micoService = getServiceFromServiceBroker(shortName, version);
+                                                                                            @PathVariable(PATH_VARIABLE_SERVICE_INTERFACE_NAME) String serviceInterfaceName,
+                                                                                            @PathVariable(PATH_VARIABLE_INSTANCE_ID) String instanceId) {
+        MicoServiceDeploymentInfo micoServiceDeploymentInfo = getServiceInstanceFromServiceBroker(shortName, version, instanceId);
         MicoServiceInterface serviceInterface = getServiceInterfaceFromServiceInterfaceBroker(shortName, version, serviceInterfaceName);
 
         MicoServiceInterfaceStatusResponseDTO serviceInterfaceStatusResponseDTO;
         try {
-            serviceInterfaceStatusResponseDTO = micoStatusService.getPublicIpOfKubernetesService(micoService, serviceInterface);
+            serviceInterfaceStatusResponseDTO = micoStatusService.getPublicIpOfKubernetesService(micoServiceDeploymentInfo, serviceInterface);
         } catch (KubernetesResourceException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
@@ -197,6 +198,28 @@ public class ServiceInterfaceResource {
         }
 
         return micoService;
+    }
+
+    /**
+     * Retrieves a {@code MicoServiceDeploymentInfo} from the database for a given short name, version and instance ID.
+     *
+     * @param shortName  the short name of the {@link MicoService}.
+     * @param version    the version of the {@link MicoService}.
+     * @param instanceId the instance ID of the {@link MicoServiceDeploymentInfo}.
+     * @return the {@link MicoServiceDeploymentInfo} if it exists.
+     * @throws ResponseStatusException if the {@code MicoServiceDeploymentInfo} does not exist in the database.
+     */
+    private MicoServiceDeploymentInfo getServiceInstanceFromServiceBroker(String shortName, String version, String instanceId) throws ResponseStatusException {
+        MicoServiceDeploymentInfo micoServiceDeploymentInfo;
+        try {
+            micoServiceDeploymentInfo = micoServiceBroker.getServiceInstanceFromDatabase(shortName, version, instanceId);
+        } catch (MicoServiceInstanceNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (MicoServiceInstanceDoesNotMatchShortNameAndVersionException e) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+        }
+
+        return micoServiceDeploymentInfo;
     }
 
     /**

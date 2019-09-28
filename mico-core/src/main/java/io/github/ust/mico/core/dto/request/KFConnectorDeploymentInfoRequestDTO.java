@@ -47,7 +47,7 @@ import java.util.Optional;
 public class KFConnectorDeploymentInfoRequestDTO {
 
     /**
-     * Instance ID.
+     * instance ID.
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
