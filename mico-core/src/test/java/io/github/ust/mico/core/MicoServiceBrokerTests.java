@@ -8,9 +8,11 @@ import io.github.ust.mico.core.model.MicoServiceDependency;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.util.CollectionUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -26,7 +28,10 @@ import java.util.Optional;
 import static io.github.ust.mico.core.TestConstants.*;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -38,6 +43,9 @@ public class MicoServiceBrokerTests {
 
     @MockBean
     private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
+
+    @MockBean
+    private MicoKubernetesClient micoKubernetesClient;
 
     @Autowired
     private MicoServiceBroker micoServiceBroker;
@@ -105,6 +113,8 @@ public class MicoServiceBrokerTests {
             .setName(NAME_2)
             .setDescription(DESCRIPTION_2);
 
+        given(micoKubernetesClient.isMicoServiceDeployed(micoServiceTwo)).willReturn(false);
+
         given(serviceRepository.findByShortNameAndVersion(resultUpdatedService.getShortName(), resultUpdatedService.getVersion())).willReturn(Optional.of(resultUpdatedService));
         given(serviceRepository.save(any(MicoService.class))).willReturn(resultUpdatedService);
 
@@ -138,14 +148,22 @@ public class MicoServiceBrokerTests {
 
     @Test
     public void deleteService() throws Exception {
-        //TODO: Implementation haha
         MicoService micoServiceOne = new MicoService()
             .setShortName(SHORT_NAME_1)
             .setVersion(VERSION_1_0_1)
             .setName(NAME_1)
             .setDescription(DESCRIPTION_1);
 
+        given(micoKubernetesClient.isMicoServiceDeployed(micoServiceOne)).willReturn(false);
+
         micoServiceBroker.deleteService(micoServiceOne);
+
+        ArgumentCaptor<String> shortNameArgumentCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> versionArgumentCaptor = ArgumentCaptor.forClass(String.class);
+        verify(serviceRepository, times(1)).deleteServiceByShortNameAndVersion(
+            shortNameArgumentCaptor.capture(), versionArgumentCaptor.capture());
+        assertThat(shortNameArgumentCaptor.getValue()).isEqualTo(micoServiceOne.getShortName());
+        assertThat(versionArgumentCaptor.getValue()).isEqualTo(micoServiceOne.getVersion());
     }
 
     @Test
@@ -174,6 +192,7 @@ public class MicoServiceBrokerTests {
             .setName(NAME_1)
             .setDescription(DESCRIPTION_1);
 
+        given(micoKubernetesClient.isMicoServiceDeployed(micoServiceOne)).willReturn(false);
         given(serviceRepository.findByShortName(SHORT_NAME_1)).willReturn(CollectionUtils.listOf(micoServiceOne));
 
         micoServiceBroker.deleteAllVersionsOfService(SHORT_NAME_1);
@@ -370,6 +389,9 @@ public class MicoServiceBrokerTests {
             .setName(NAME_2)
             .setDescription(DESCRIPTION_2);
 
+        given(micoKubernetesClient.isMicoServiceDeployed(service1)).willReturn(false);
+        given(micoKubernetesClient.isMicoServiceDeployed(service2)).willReturn(false);
+
         MicoServiceDependency dependency = new MicoServiceDependency().setService(service1).setDependedService(service2);
 
         MicoService expectedService = new MicoService()
@@ -402,6 +424,9 @@ public class MicoServiceBrokerTests {
             .setVersion(VERSION_1_0_2)
             .setName(NAME_2)
             .setDescription(DESCRIPTION_2);
+
+        given(micoKubernetesClient.isMicoServiceDeployed(service1)).willReturn(false);
+        given(micoKubernetesClient.isMicoServiceDeployed(service2)).willReturn(false);
 
         MicoServiceDependency dependency = new MicoServiceDependency().setService(service1).setDependedService(service2);
 
@@ -437,6 +462,10 @@ public class MicoServiceBrokerTests {
             .setName(NAME)
             .setVersion(VERSION)
             .setDescription(DESCRIPTION);
+
+        given(micoKubernetesClient.isMicoServiceDeployed(service1)).willReturn(false);
+        given(micoKubernetesClient.isMicoServiceDeployed(service2)).willReturn(false);
+        given(micoKubernetesClient.isMicoServiceDeployed(service)).willReturn(false);
 
         MicoServiceDependency dependency1 = new MicoServiceDependency().setService(service).setDependedService(service1);
         MicoServiceDependency dependency2 = new MicoServiceDependency().setService(service).setDependedService(service2);
