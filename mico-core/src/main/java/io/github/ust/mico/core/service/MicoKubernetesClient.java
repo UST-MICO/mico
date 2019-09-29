@@ -1118,8 +1118,9 @@ public class MicoKubernetesClient {
                 micoService.getShortName(), micoService.getVersion(), micoServiceInstanceId);
 
             // Check which applications are deployed and are actually using this micoService
-            List<MicoApplication> applicationsUsingThisService = applicationRepository.findAllByUsedService(micoService.getShortName(), micoService.getVersion());
-            List<MicoApplication> otherDeployedApplicationsUsingThisService = applicationsUsingThisService.stream()
+            List<MicoApplication> applicationsUsingThisServiceInstance = applicationRepository
+                .findAllByUsedServiceInstance(serviceDeploymentInfo.getInstanceId());
+            List<MicoApplication> otherDeployedApplicationsUsingThisServiceInstance = applicationsUsingThisServiceInstance.stream()
                 .filter(app -> !(app.getShortName().equals(application.getShortName()) && app.getVersion().equals(application.getVersion()))
                     && isApplicationDeployed(app)).collect(Collectors.toList());
 
@@ -1129,13 +1130,13 @@ public class MicoKubernetesClient {
 
                 // Nevertheless check if the micoService is used by other applications.
                 // If not clean up the build resources that was maybe already created.
-                if (otherDeployedApplicationsUsingThisService.isEmpty()) {
+                if (otherDeployedApplicationsUsingThisServiceInstance.isEmpty()) {
                     cleanUpBuildResources(micoService);
                 }
                 continue;
             }
 
-            if (otherDeployedApplicationsUsingThisService.isEmpty()) {
+            if (otherDeployedApplicationsUsingThisServiceInstance.isEmpty()) {
                 // Service is not used by other deployed applications -> simply undeploy it
                 log.debug("MicoService '{}' in version '{}' with instance ID '{}' is not used by other MicoApplications.",
                     micoService.getShortName(), micoService.getVersion(), micoServiceInstanceId);
@@ -1144,8 +1145,8 @@ public class MicoKubernetesClient {
                 // Service used by multiple applications -> scale in
                 log.debug("MicoService '{}' in version '{}' with instance ID '{}' is also used by {} other deployed MicoApplication(s): {}",
                     micoService.getShortName(), micoService.getVersion(), micoServiceInstanceId,
-                    otherDeployedApplicationsUsingThisService.size(),
-                    otherDeployedApplicationsUsingThisService.stream()
+                    otherDeployedApplicationsUsingThisServiceInstance.size(),
+                    otherDeployedApplicationsUsingThisServiceInstance.stream()
                         .map(app -> "'" + app.getShortName() + "' '" + app.getVersion() + "'").collect(Collectors.toList())
                 );
 
@@ -1154,7 +1155,7 @@ public class MicoKubernetesClient {
                 // replicas of all applications that are using the current micoService
                 // and are actually deployed.
                 int currentTotalRequestedReplicas = serviceDeploymentInfo.getReplicas();
-                for (MicoApplication otherApplicationUsingThisService : otherDeployedApplicationsUsingThisService) {
+                for (MicoApplication otherApplicationUsingThisService : otherDeployedApplicationsUsingThisServiceInstance) {
                     List<MicoServiceDeploymentInfo> otherSDIs = getExistingServiceDeploymentInfos(otherApplicationUsingThisService, micoService);
                     currentTotalRequestedReplicas += otherSDIs.stream().map(MicoServiceDeploymentInfo::getReplicas).reduce(0, Integer::sum);
                 }
