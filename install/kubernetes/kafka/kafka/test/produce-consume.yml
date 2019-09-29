@@ -120,7 +120,7 @@ spec:
         resources:
           limits:
             cpu: 100m
-            memory: 120Mi
+            memory: 200Mi
         volumeMounts:
         - name: config
           mountPath: /test
