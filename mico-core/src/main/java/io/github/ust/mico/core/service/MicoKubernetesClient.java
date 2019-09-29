@@ -575,7 +575,7 @@ public class MicoKubernetesClient {
                 message = "The Kubernetes deployment information for MicoService '"
                     + micoService.getShortName() + "' '" + micoService.getVersion()
                     + "' with instance ID '" + micoServiceInstanceId + "' is not available.";
-                log.warn(message);
+                log.debug(message);
                 messages.add(MicoMessage.error(message));
                 applicationDeploymentStatus = Value.INCOMPLETE;
             } else {
