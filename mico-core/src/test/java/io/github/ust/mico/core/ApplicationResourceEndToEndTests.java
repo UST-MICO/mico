@@ -23,9 +23,7 @@ import io.github.ust.mico.core.configuration.KafkaConfig;
 import io.github.ust.mico.core.configuration.KafkaFaasConnectorConfig;
 import io.github.ust.mico.core.configuration.OpenFaaSConfig;
 import io.github.ust.mico.core.model.*;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.persistence.*;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -48,8 +46,7 @@ import static io.github.ust.mico.core.TestConstants.*;
 import static io.github.ust.mico.core.resource.ApplicationResource.PATH_APPLICATIONS;
 import static io.github.ust.mico.core.resource.ApplicationResource.PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -75,6 +72,12 @@ public class ApplicationResourceEndToEndTests extends Neo4jTestClass {
 
     @Autowired
     MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
+
+    @Autowired
+    MicoTopicRepository micoTopicRepository;
+
+    @Autowired
+    MicoEnvironmentVariableRepository micoEnvironmentVariableRepository;
 
     @Autowired
     private MockMvc mvc;
@@ -122,6 +125,7 @@ public class ApplicationResourceEndToEndTests extends Neo4jTestClass {
         assertThat(result2.get().getServices().get(0), is(service));
         assertThat(result2.get().getServiceDeploymentInfos().size(), is(1));
         assertThat(result2.get().getServiceDeploymentInfos().get(0).getService(), is(service));
+
     }
 
     @Test
@@ -155,14 +159,15 @@ public class ApplicationResourceEndToEndTests extends Neo4jTestClass {
         MicoService service = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
         serviceRepository.save(service);
 
-        MicoTopic micoTopic = new MicoTopic().setName("topic-name");
+        MicoTopic micoTopic1 = new MicoTopic().setName("topic-name-1");
+        MicoTopic micoTopic2 = new MicoTopic().setName("topic-name-2");
         MicoServiceDeploymentInfo sdi1 = new MicoServiceDeploymentInfo()
             .setService(service)
             .setInstanceId(INSTANCE_ID_1);
         MicoTopicRole topicRole1 = new MicoTopicRole()
             .setServiceDeploymentInfo(sdi1)
             .setRole(MicoTopicRole.Role.INPUT)
-            .setTopic(micoTopic);
+            .setTopic(micoTopic1);
         sdi1.getTopics().add(topicRole1);
         MicoServiceDeploymentInfo savedSDI1 = serviceDeploymentInfoRepository.save(sdi1);
         // Save it twice to ensure topic is created correctly
@@ -174,8 +179,15 @@ public class ApplicationResourceEndToEndTests extends Neo4jTestClass {
         MicoTopicRole topicRole2 = new MicoTopicRole()
             .setServiceDeploymentInfo(sdi2)
             .setRole(MicoTopicRole.Role.INPUT)
-            .setTopic(micoTopic);
+            .setTopic(micoTopic1);
+        MicoTopicRole topicRole3 = new MicoTopicRole()
+            .setServiceDeploymentInfo(sdi2)
+            .setRole(MicoTopicRole.Role.OUTPUT)
+            .setTopic(micoTopic2);
         sdi2.getTopics().add(topicRole2);
+        sdi2.getTopics().add(topicRole3);
+        MicoEnvironmentVariable envVar1 = new MicoEnvironmentVariable().setName("envVarName").setValue("envVarValue");
+        sdi2.getEnvironmentVariables().add(envVar1);
         MicoServiceDeploymentInfo savedSDI2 = serviceDeploymentInfoRepository.save(sdi2);
         // Save it twice to ensure topic is created correctly
         savedSDI2 = serviceDeploymentInfoRepository.save(savedSDI2);
@@ -190,6 +202,14 @@ public class ApplicationResourceEndToEndTests extends Neo4jTestClass {
 
         given(micoKubernetesClient.isApplicationUndeployed(application1)).willReturn(true);
         given(micoKubernetesClient.isApplicationUndeployed(application2)).willReturn(true);
+
+        List<MicoServiceDeploymentInfo> sdiBefore = serviceDeploymentInfoRepository.findByApplicationAndService(
+            application2.getShortName(), application2.getVersion(), service.getShortName());
+        assertThat(sdiBefore.size(), is(1));
+        assertThat(sdiBefore.get(0).getTopics().size(), greaterThan(0));
+        assertThat(sdiBefore.get(0).getEnvironmentVariables().size(), greaterThan(0));
+        assertThat(micoTopicRepository.findByName(topicRole3.getTopic().getName()).isPresent(), is(true));
+        assertThat(micoEnvironmentVariableRepository.findAll(), containsInAnyOrder(envVar1));
 
         mvc.perform(delete(PATH_APPLICATIONS + "/" + SHORT_NAME_2 + "/" + VERSION + "/" + PATH_SERVICES + "/" + SERVICE_SHORT_NAME))
             .andDo(print())
@@ -213,6 +233,9 @@ public class ApplicationResourceEndToEndTests extends Neo4jTestClass {
         assertThat(resultingApplication1.get().getServiceDeploymentInfos().get(0).getTopics().size(), is(1));
         assertThat(resultingApplication1.get().getServiceDeploymentInfos().get(0).getTopics().get(0), is(topicRole1));
         assertThat(resultingApplication1.get().getServiceDeploymentInfos().get(0), is(sdi1));
+
+        assertThat("Topic was not deleted", micoTopicRepository.findByName(topicRole3.getTopic().getName()).isPresent(), is(false));
+        assertThat("Environment variable was not deleted", micoEnvironmentVariableRepository.findAll(), not(containsInAnyOrder(envVar1)));
     }
 
     @Test
@@ -252,8 +275,8 @@ public class ApplicationResourceEndToEndTests extends Neo4jTestClass {
         given(micoKubernetesClient.isApplicationUndeployed(application)).willReturn(true);
 
         mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR))
-                .andDo(print())
-                .andExpect(status().isOk());
+            .andDo(print())
+            .andExpect(status().isOk());
         Optional<MicoApplication> result = applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion());
         assertThat(result.get().getKafkaFaasConnectorDeploymentInfos().size(), is(1));
         assertThat(result.get().getKafkaFaasConnectorDeploymentInfos().get(0).getService().getVersion(), is(kfConnectorService2.getVersion()));
@@ -348,6 +371,12 @@ public class ApplicationResourceEndToEndTests extends Neo4jTestClass {
         MicoServiceDeploymentInfo sdi1 = new MicoServiceDeploymentInfo()
             .setService(kfConnectorService)
             .setInstanceId(INSTANCE_ID_1);
+        MicoTopic micoTopic = new MicoTopic().setName("input-topic");
+        micoTopic.setId(micoTopicRepository.save(micoTopic).getId());
+        MicoTopicRole topicRole1 = new MicoTopicRole().setRole(MicoTopicRole.Role.INPUT).setTopic(micoTopic).setServiceDeploymentInfo(sdi1);
+        sdi1.getTopics().add(topicRole1);
+        MicoEnvironmentVariable envVar1 = new MicoEnvironmentVariable().setName("envVarName").setValue("envVarValue");
+        sdi1.getEnvironmentVariables().add(envVar1);
         MicoServiceDeploymentInfo sdi2 = new MicoServiceDeploymentInfo()
             .setService(kfConnectorService)
             .setInstanceId(INSTANCE_ID_2);
@@ -361,9 +390,15 @@ public class ApplicationResourceEndToEndTests extends Neo4jTestClass {
         List<MicoServiceDeploymentInfo> sdiBefore = serviceDeploymentInfoRepository.findByApplicationAndService(
             application.getShortName(), application.getVersion(), kafkaFaasConnectorServiceName);
         assertThat(sdiBefore.size(), is(2));
+        Optional<MicoServiceDeploymentInfo> sdiFirstOptional = sdiBefore.stream().filter(sdi -> sdi.getInstanceId().equals(INSTANCE_ID_1)).findFirst();
+        assertTrue(sdiFirstOptional.isPresent());
+        assertThat(sdiFirstOptional.get().getTopics().size(), greaterThan(0));
+        assertThat(sdiFirstOptional.get().getEnvironmentVariables().size(), greaterThan(0));
         Optional<MicoApplication> appBefore = applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion());
         assertTrue(appBefore.isPresent());
         assertThat(appBefore.get().getKafkaFaasConnectorDeploymentInfos().size(), is(2));
+        assertThat(micoTopicRepository.findByName(topicRole1.getTopic().getName()).isPresent(), is(true));
+        assertThat(micoEnvironmentVariableRepository.findAll(), containsInAnyOrder(envVar1));
 
         mvc.perform(delete(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/" + PATH_KAFKA_FAAS_CONNECTOR + "/" + INSTANCE_ID_1 + "?" + PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION + "=" + SERVICE_VERSION))
             .andDo(print())
@@ -377,6 +412,8 @@ public class ApplicationResourceEndToEndTests extends Neo4jTestClass {
         assertTrue(appAfter.isPresent());
         assertThat(appAfter.get().getKafkaFaasConnectorDeploymentInfos().size(), is(1));
         assertThat(appAfter.get().getKafkaFaasConnectorDeploymentInfos().get(0).getInstanceId(), is(INSTANCE_ID_2));
+        assertThat("Topic was not deleted", micoTopicRepository.findByName(topicRole1.getTopic().getName()).isPresent(), is(false));
+        assertThat("Environment variable was not deleted", micoEnvironmentVariableRepository.findAll(), not(containsInAnyOrder(envVar1)));
     }
 
     @Test
