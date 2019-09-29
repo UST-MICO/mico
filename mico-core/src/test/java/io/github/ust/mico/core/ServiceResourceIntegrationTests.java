@@ -27,6 +27,7 @@ import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
 import io.github.ust.mico.core.dto.response.status.*;
 import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.GitHubCrawler;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
@@ -101,7 +102,7 @@ public class ServiceResourceIntegrationTests {
     private MicoServiceRepository serviceRepository;
 
     @MockBean
-    private MicoServiceBroker micoServiceBroker;
+    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
 
     @MockBean
     private MicoCoreApplication micoCoreApplication;
@@ -182,7 +183,7 @@ public class ServiceResourceIntegrationTests {
             .setPodsInformation(Arrays.asList(kubernetesPodInfo1, kubernetesPodInfo2));
 
         given(micoStatusService.getServiceInstanceStatus(any(MicoServiceDeploymentInfo.class))).willReturn(micoServiceStatus);
-        given(micoServiceBroker.getServiceInstanceFromDatabase(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).willReturn(micoServiceDeploymentInfo);
+        given(serviceDeploymentInfoRepository.findByInstanceId(INSTANCE_ID)).willReturn(Optional.of(micoServiceDeploymentInfo));
 
         mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + INSTANCE_ID + "/status"))
             .andDo(print())
