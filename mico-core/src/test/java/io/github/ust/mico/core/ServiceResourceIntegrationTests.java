@@ -22,7 +22,6 @@ package io.github.ust.mico.core;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import io.github.ust.mico.core.broker.MicoServiceBroker;
 import io.github.ust.mico.core.dto.request.MicoServiceRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoVersionRequestDTO;
 import io.github.ust.mico.core.dto.response.status.*;
@@ -125,7 +124,7 @@ public class ServiceResourceIntegrationTests {
     }
 
     @Test
-    public void getStatusOfService() throws Exception {
+    public void getStatusOfServiceInstance() throws Exception {
         MicoService micoService = new MicoService()
             .setName(NAME)
             .setShortName(SHORT_NAME)
@@ -208,6 +207,96 @@ public class ServiceResourceIntegrationTests {
             .andExpect(jsonPath(SERVICE_DTO_POD_INFO_METRICS_MEMORY_USAGE_2, is(memoryUsagePod2)))
             .andExpect(jsonPath(SERVICE_DTO_POD_INFO_METRICS_CPU_LOAD_2, is(cpuLoadPod2)))
             .andExpect(jsonPath(SERVICE_DTO_ERROR_MESSAGES, is(CollectionUtils.listOf())));
+    }
+
+    @Test
+    public void getStatusListOfService() throws Exception {
+        MicoService micoService = new MicoService()
+            .setName(NAME)
+            .setShortName(SHORT_NAME)
+            .setVersion(VERSION)
+            .setDescription(DESCRIPTION_1);
+        MicoServiceDeploymentInfo micoServiceDeploymentInfo1 = new MicoServiceDeploymentInfo()
+            .setService(micoService)
+            .setInstanceId(INSTANCE_ID_1);
+        MicoServiceDeploymentInfo micoServiceDeploymentInfo2 = new MicoServiceDeploymentInfo()
+            .setService(micoService)
+            .setInstanceId(INSTANCE_ID_2);
+
+        String nodeName = "testNode";
+        String podPhase = "Running";
+        String hostIp = "192.168.0.0";
+        String podName1 = "pod1";
+        String podName2 = "pod2";
+        int availableReplicas = 1;
+        int requestedReplicas = 2;
+        int memoryUsagePod1 = 50;
+        int cpuLoadPod1 = 10;
+        int memoryUsagePod2 = 70;
+        int cpuLoadPod2 = 40;
+
+        KubernetesPodInformationResponseDTO kubernetesPodInfo1 = new KubernetesPodInformationResponseDTO();
+        kubernetesPodInfo1
+            .setHostIp(hostIp)
+            .setNodeName(nodeName)
+            .setPhase(podPhase)
+            .setPodName(podName1)
+            .setMetrics(new KubernetesPodMetricsResponseDTO()
+                .setCpuLoad(cpuLoadPod1)
+                .setMemoryUsage(memoryUsagePod1));
+        KubernetesPodInformationResponseDTO kubernetesPodInfo2 = new KubernetesPodInformationResponseDTO();
+        kubernetesPodInfo2
+            .setHostIp(hostIp)
+            .setNodeName(nodeName)
+            .setPhase(podPhase)
+            .setPodName(podName2)
+            .setMetrics(new KubernetesPodMetricsResponseDTO()
+                .setCpuLoad(cpuLoadPod2)
+                .setMemoryUsage(memoryUsagePod2));
+
+        MicoServiceStatusResponseDTO micoServiceStatus1 = new MicoServiceStatusResponseDTO()
+            .setVersion(micoService.getVersion())
+            .setName(micoService.getName())
+            .setShortName(micoService.getShortName())
+            .setInstanceId(micoServiceDeploymentInfo1.getInstanceId())
+            .setAvailableReplicas(availableReplicas)
+            .setRequestedReplicas(requestedReplicas)
+            .setNodeMetrics(CollectionUtils.listOf(new KubernetesNodeMetricsResponseDTO()
+                .setNodeName(nodeName)
+                .setAverageCpuLoad(25)
+                .setAverageMemoryUsage(60)
+            ))
+            .setInterfacesInformation(CollectionUtils.listOf(new MicoServiceInterfaceStatusResponseDTO().setName(SERVICE_INTERFACE_NAME)))
+            .setPodsInformation(Collections.singletonList(kubernetesPodInfo1));
+
+        MicoServiceStatusResponseDTO micoServiceStatus2 = new MicoServiceStatusResponseDTO()
+            .setVersion(micoService.getVersion())
+            .setName(micoService.getName())
+            .setShortName(micoService.getShortName())
+            .setInstanceId(micoServiceDeploymentInfo2.getInstanceId())
+            .setAvailableReplicas(availableReplicas)
+            .setRequestedReplicas(requestedReplicas)
+            .setNodeMetrics(CollectionUtils.listOf(new KubernetesNodeMetricsResponseDTO()
+                .setNodeName(nodeName)
+                .setAverageCpuLoad(25)
+                .setAverageMemoryUsage(60)
+            ))
+            .setInterfacesInformation(CollectionUtils.listOf(new MicoServiceInterfaceStatusResponseDTO().setName(SERVICE_INTERFACE_NAME)))
+            .setPodsInformation(Collections.singletonList(kubernetesPodInfo2));
+
+        given(micoStatusService.getServiceStatus(micoService)).willReturn(CollectionUtils.listOf(micoServiceStatus1, micoServiceStatus2));
+        given(serviceDeploymentInfoRepository.findAllByService(micoService.getShortName(), micoService.getVersion()))
+            .willReturn(CollectionUtils.listOf(micoServiceDeploymentInfo1, micoServiceDeploymentInfo2));
+        given(serviceRepository.findByShortNameAndVersion(micoService.getShortName(), micoService.getVersion())).willReturn(Optional.of(micoService));
+
+        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/status"))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath(SERVICE_STATUS_LIST_PATH, hasSize(2)))
+            .andExpect(jsonPath(SERVICE_STATUS_LIST_PATH + "[0].name", is(NAME)))
+            .andExpect(jsonPath(SERVICE_STATUS_LIST_PATH + "[0].instanceId", is(INSTANCE_ID_1)))
+            .andExpect(jsonPath(SERVICE_STATUS_LIST_PATH + "[1].name", is(NAME)))
+            .andExpect(jsonPath(SERVICE_STATUS_LIST_PATH + "[1].instanceId", is(INSTANCE_ID_2)));
     }
 
     @Test
@@ -444,7 +533,7 @@ public class ServiceResourceIntegrationTests {
     @Test
     public void corsPolicy() throws Exception {
         mvc.perform(get(SERVICES_PATH).accept(MediaTypes.HAL_JSON_VALUE)
-            .header("Origin", (Object[]) allowedOrigins))
+            .header("Origin", allowedOrigins))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath(SELF_HREF, endsWith(SERVICES_PATH))).andReturn();

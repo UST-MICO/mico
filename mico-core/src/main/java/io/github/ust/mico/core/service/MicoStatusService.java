@@ -112,12 +112,31 @@ public class MicoStatusService {
     }
 
     /**
+     * Get status information for all instances of a {@link MicoService} and return them as a list:
+     * # available replicas, # requested replicas, pod metrics (CPU load, memory usage).
+     *
+     * @param micoService the {@link MicoService}.
+     * @return the list of {@link MicoServiceStatusResponseDTO MicoServiceStatusResponseDTOs}
+     * which contains status information for all instances of a {@link MicoService}.
+     */
+    public List<MicoServiceStatusResponseDTO> getServiceStatus(MicoService micoService) {
+        List<MicoServiceDeploymentInfo> serviceDeploymentInfos = serviceDeploymentInfoRepository.findAllByService(
+            micoService.getShortName(), micoService.getVersion());
+        List<MicoServiceStatusResponseDTO> responseDTOList = new ArrayList<>();
+        for (MicoServiceDeploymentInfo serviceDeploymentInfo : serviceDeploymentInfos) {
+            MicoServiceStatusResponseDTO serviceInstanceStatus = getServiceInstanceStatus(serviceDeploymentInfo);
+            responseDTOList.add(serviceInstanceStatus);
+        }
+        return responseDTOList;
+    }
+
+    /**
      * Get status information for a single {@link MicoServiceDeploymentInfo}: # available replicas, # requested replicas, pod metrics
      * (CPU load, memory usage).
      *
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.
-     * @return {@link MicoServiceStatusResponseDTO} which contains status information for a specific {@link
-     * MicoService}.
+     * @return the {@link MicoServiceStatusResponseDTO} which contains status information
+     * for a specific instance of a {@link MicoService}.
      */
     public MicoServiceStatusResponseDTO getServiceInstanceStatus(MicoServiceDeploymentInfo serviceDeploymentInfo) {
         MicoService micoService = serviceDeploymentInfo.getService();

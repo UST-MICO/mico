@@ -105,6 +105,7 @@ class TestConstants {
      * All paths are build on the path for the status of this service.
      */
     static final String SERVICE_STATUS_PATH = buildPath(ROOT, "serviceStatuses[0]");
+    static final String SERVICE_STATUS_LIST_PATH = buildPath(ROOT, EMBEDDED, "micoServiceStatusResponseDTOList");
     static final String SERVICE_INFORMATION_NAME = buildPath(SERVICE_STATUS_PATH, "name");
     static final String REQUESTED_REPLICAS = buildPath(SERVICE_STATUS_PATH, "requestedReplicas");
     static final String AVAILABLE_REPLICAS = buildPath(SERVICE_STATUS_PATH, "availableReplicas");

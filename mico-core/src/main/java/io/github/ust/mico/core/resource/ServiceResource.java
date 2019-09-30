@@ -153,10 +153,21 @@ public class ServiceResource {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")
+    public ResponseEntity<Resources<Resource<MicoServiceStatusResponseDTO>>> getStatusOfServiceInstance(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                                                        @PathVariable(PATH_VARIABLE_VERSION) String version) {
+        MicoService micoService = getServiceFromMicoServiceBroker(shortName, version);
+
+        List<MicoServiceStatusResponseDTO> micoServiceStatusList = micoStatusService.getServiceStatus(micoService);
+        List<Resource<MicoServiceStatusResponseDTO>> micoServiceStatusResourceList = getMicoServiceStatusResourceList(micoServiceStatusList, micoService);
+
+        return ResponseEntity.ok(new Resources<>(micoServiceStatusResourceList));
+    }
+
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}/{" + PATH_VARIABLE_INSTANCE_ID + "}" + "/status")
     public ResponseEntity<Resource<MicoServiceStatusResponseDTO>> getStatusOfServiceInstance(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                                     @PathVariable(PATH_VARIABLE_VERSION) String version,
-                                                                                     @PathVariable(PATH_VARIABLE_INSTANCE_ID) String instanceId) {
+                                                                                             @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                                                             @PathVariable(PATH_VARIABLE_INSTANCE_ID) String instanceId) {
         MicoServiceDeploymentInfo micoServiceDeploymentInfo = getServiceInstanceFromMicoServiceBroker(shortName, version, instanceId);
 
         MicoServiceStatusResponseDTO serviceStatus = micoStatusService.getServiceInstanceStatus(micoServiceDeploymentInfo);
@@ -446,6 +457,10 @@ public class ServiceResource {
 
     private List<MicoService> getAllVersionsOfServiceFromMicoServiceBroker(String shortName) throws ResponseStatusException {
         return micoServiceBroker.getAllVersionsOfServiceFromDatabase(shortName);
+    }
+
+    private List<Resource<MicoServiceStatusResponseDTO>> getMicoServiceStatusResourceList(List<MicoServiceStatusResponseDTO> statusList, MicoService micoService) {
+        return statusList.stream().map(status -> new Resource<>(status, getServiceLinks(micoService))).collect(Collectors.toList());
     }
 
 }
