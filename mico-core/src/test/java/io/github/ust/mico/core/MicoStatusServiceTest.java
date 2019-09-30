@@ -260,12 +260,14 @@ public class MicoStatusServiceTest {
             .setTotalNumberOfKafkaFaasConnectors(1)
             .setServiceStatuses(CollectionUtils.listOf(
                 new MicoServiceStatusResponseDTO()
-                    .setName(NAME)
-                    .setShortName(SHORT_NAME)
-                    .setVersion(VERSION)
-                    .setAvailableReplicas(1)
-                    .setRequestedReplicas(1)
-                    .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication)))
+                    .setName(micoService.getName())
+                    .setShortName(micoService.getShortName())
+                    .setVersion(micoService.getVersion())
+                    .setInstanceId(micoServiceDeploymentInfo.getInstanceId())
+                    .setAvailableReplicas(micoServiceDeploymentInfo.getReplicas())
+                    .setRequestedReplicas(micoServiceDeploymentInfo.getReplicas())
+                    .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication,
+                        new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.DEPLOYED))))
                     .setNodeMetrics(CollectionUtils.listOf(
                         new KubernetesNodeMetricsResponseDTO()
                             .setNodeName(nodeName1)
@@ -513,12 +515,14 @@ public class MicoStatusServiceTest {
     public void getServiceStatus() throws Exception {
         MicoServiceStatusResponseDTO micoServiceStatus = new MicoServiceStatusResponseDTO();
         micoServiceStatus
-            .setName(NAME)
-            .setShortName(SHORT_NAME)
-            .setVersion(VERSION)
-            .setAvailableReplicas(1)
-            .setRequestedReplicas(1)
-            .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication)))
+            .setName(micoService.getName())
+            .setShortName(micoService.getShortName())
+            .setVersion(micoService.getVersion())
+            .setInstanceId(micoServiceDeploymentInfo.getInstanceId())
+            .setAvailableReplicas(micoServiceDeploymentInfo.getReplicas())
+            .setRequestedReplicas(micoServiceDeploymentInfo.getReplicas())
+            .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication,
+                new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.DEPLOYED))))
             .setNodeMetrics(CollectionUtils.listOf(
                 new KubernetesNodeMetricsResponseDTO()
                     .setNodeName(nodeName1)
