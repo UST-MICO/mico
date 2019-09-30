@@ -77,6 +77,12 @@ export class AppDetailOverviewComponent implements OnDestroy {
 
     }
 
+    addKafkaFaasConnector() {
+        const apiSub = this.apiService.postApplicationKafkaFaasConnector(this.application.shortName, this.application.version).subscribe(() => {
+            safeUnsubscribe(apiSub);
+        });
+    }
+
     deleteService(serviceShortName: string) {
 
         const dialogRef = this.dialog.open(YesNoDialogComponent, {
