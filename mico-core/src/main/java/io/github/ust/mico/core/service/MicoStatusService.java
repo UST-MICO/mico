@@ -29,10 +29,7 @@ import io.github.ust.mico.core.dto.response.internal.PrometheusResponseDTO;
 import io.github.ust.mico.core.dto.response.status.*;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.PrometheusRequestFailedException;
-import io.github.ust.mico.core.model.MicoApplication;
-import io.github.ust.mico.core.model.MicoMessage;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.util.CollectionUtils;
@@ -166,7 +163,8 @@ public class MicoStatusService {
         List<MicoApplication> usingApplications = micoApplicationRepository.findAllByUsedService(micoService.getShortName(), micoService.getVersion());
         for (MicoApplication application : usingApplications) {
             if (micoKubernetesClient.isApplicationDeployed(application)) {
-                serviceStatus.getApplicationsUsingThisService().add(new MicoApplicationResponseDTO(application));
+                MicoApplicationDeploymentStatus applicationDeploymentStatus = micoKubernetesClient.getApplicationDeploymentStatus(application);
+                serviceStatus.getApplicationsUsingThisService().add(new MicoApplicationResponseDTO(application, applicationDeploymentStatus));
             }
         }
 
