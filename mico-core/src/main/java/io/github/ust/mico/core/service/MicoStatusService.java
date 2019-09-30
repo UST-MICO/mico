@@ -169,7 +169,8 @@ public class MicoStatusService {
         List<MicoApplication> usingApplications = micoApplicationRepository.findAllByUsedServiceInstance(instanceId);
         for (MicoApplication application : usingApplications) {
             if (micoKubernetesClient.isApplicationDeployed(application)) {
-                serviceStatus.getApplicationsUsingThisService().add(new MicoApplicationResponseDTO(application));
+                MicoApplicationDeploymentStatus applicationDeploymentStatus = micoKubernetesClient.getApplicationDeploymentStatus(application);
+                serviceStatus.getApplicationsUsingThisService().add(new MicoApplicationResponseDTO(application, applicationDeploymentStatus));
             }
         }
 

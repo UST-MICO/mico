@@ -263,9 +263,8 @@ public class MicoStatusServiceTest {
                     .setName(NAME)
                     .setShortName(SHORT_NAME)
                     .setVersion(VERSION)
-                    .setInstanceId(INSTANCE_ID)
-                    .setAvailableReplicas(4)
-                    .setRequestedReplicas(4)
+                    .setAvailableReplicas(1)
+                    .setRequestedReplicas(1)
                     .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication)))
                     .setNodeMetrics(CollectionUtils.listOf(
                         new KubernetesNodeMetricsResponseDTO()
@@ -367,6 +366,7 @@ public class MicoStatusServiceTest {
         given(micoKubernetesClient.getDeploymentOfMicoServiceInstance(eq(kfConnectorDeploymentInfo))).willReturn(Optional.of(deploymentKfConnector));
         given(micoKubernetesClient.getInterfaceByNameOfMicoServiceInstance(eq(micoServiceDeploymentInfo), anyString())).willReturn(Optional.ofNullable(kubernetesService));
         given(micoKubernetesClient.isApplicationDeployed(otherMicoApplication)).willReturn(true);
+        given(micoKubernetesClient.getApplicationDeploymentStatus(otherMicoApplication)).willReturn(new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.DEPLOYED));
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
         given(applicationRepository.findAllByUsedServiceInstance(INSTANCE_ID)).willReturn(CollectionUtils.listOf(otherMicoApplication, micoApplication));
         given(serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion())).willReturn(CollectionUtils.listOf(micoService));
@@ -421,7 +421,8 @@ public class MicoStatusServiceTest {
                     .setInstanceId(INSTANCE_ID)
                     .setAvailableReplicas(1)
                     .setRequestedReplicas(1)
-                    .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication)))
+                    .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication,
+                        new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.DEPLOYED))))
                     .setNodeMetrics(CollectionUtils.listOf(
                         new KubernetesNodeMetricsResponseDTO()
                             .setNodeName(nodeName1)
@@ -455,6 +456,7 @@ public class MicoStatusServiceTest {
         given(serviceInterfaceRepository.findByServiceAndName(micoService.getShortName(), micoService.getVersion(), SERVICE_INTERFACE_NAME)).willReturn(Optional.of(micoServiceInterface));
         given(micoKubernetesClient.getInterfaceByNameOfMicoServiceInstance(any(MicoServiceDeploymentInfo.class), anyString())).willReturn(Optional.empty());
         given(micoKubernetesClient.isApplicationDeployed(otherMicoApplication)).willReturn(true);
+        given(micoKubernetesClient.getApplicationDeploymentStatus(otherMicoApplication)).willReturn(new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.DEPLOYED));
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
         given(applicationRepository.findAllByUsedServiceInstance(INSTANCE_ID)).willReturn(CollectionUtils.listOf(otherMicoApplication, micoApplication));
         given(serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion())).willReturn(CollectionUtils.listOf(micoService));
@@ -514,9 +516,8 @@ public class MicoStatusServiceTest {
             .setName(NAME)
             .setShortName(SHORT_NAME)
             .setVersion(VERSION)
-            .setInstanceId(INSTANCE_ID)
-            .setAvailableReplicas(4)
-            .setRequestedReplicas(4)
+            .setAvailableReplicas(1)
+            .setRequestedReplicas(1)
             .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication)))
             .setNodeMetrics(CollectionUtils.listOf(
                 new KubernetesNodeMetricsResponseDTO()
@@ -583,6 +584,7 @@ public class MicoStatusServiceTest {
         given(micoKubernetesClient.getDeploymentOfMicoServiceInstance(any(MicoServiceDeploymentInfo.class))).willReturn(Optional.of(deployment));
         given(micoKubernetesClient.getInterfaceByNameOfMicoServiceInstance(any(MicoServiceDeploymentInfo.class), anyString())).willReturn(Optional.ofNullable(kubernetesService));
         given(micoKubernetesClient.isApplicationDeployed(otherMicoApplication)).willReturn(true);
+        given(micoKubernetesClient.getApplicationDeploymentStatus(otherMicoApplication)).willReturn(new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.DEPLOYED));
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
         given(applicationRepository.findAllByUsedServiceInstance(INSTANCE_ID)).willReturn(CollectionUtils.listOf(otherMicoApplication));
 

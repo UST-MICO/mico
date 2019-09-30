@@ -222,19 +222,27 @@ public class MicoServiceDeploymentInfoBroker {
             MicoServiceDeploymentInfo sdiWithReusedTopics = createOrReuseTopicsInDatabase(sdiWithTopics);
             finalUpdatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(sdiWithReusedTopics);
         }
+        cleanUpTanglingNodes();
 
-        // In case addition properties (stored as separate node entity) such as labels, environment variables
-        // have been removed from this service deployment information,
-        // the standard save() function of the service deployment information repository will not delete those
-        // "tangling" (without relationships) labels (nodes), hence the manual clean up.
+        return finalUpdatedServiceDeploymentInfo;
+    }
+
+    /**
+     * Cleans up tangling nodes related to a {@link MicoServiceDeploymentInfo} in the database.
+     *
+     * In case addition properties (stored as separate node entity) such as labels, environment variables
+     * have been removed from a service deployment information,
+     * the standard {@code save()} function of the service deployment information repository will not delete those
+     * "tangling" (without relationships) labels (nodes), hence the manual clean up.
+     */
+    void cleanUpTanglingNodes() {
+
         micoLabelRepository.cleanUp();
         micoTopicRepository.cleanUp();
         micoEnvironmentVariableRepository.cleanUp();
         kubernetesDeploymentInfoRepository.cleanUp();
         micoInterfaceConnectionRepository.cleanUp();
         openFaaSFunctionRepository.cleanUp();
-
-        return finalUpdatedServiceDeploymentInfo;
     }
 
     /**

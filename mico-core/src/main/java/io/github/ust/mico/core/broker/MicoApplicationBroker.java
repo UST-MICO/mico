@@ -311,7 +311,9 @@ public class MicoApplicationBroker {
         serviceDeploymentInfoRepository.deleteByApplicationAndService(applicationShortName, applicationVersion, serviceShortName);
         // 2. Remove the service from the application
         micoApplication.getServices().removeIf(s -> s.getShortName().equals(serviceShortName));
-        return applicationRepository.save(micoApplication);
+        MicoApplication updatedApplication = applicationRepository.save(micoApplication);
+        serviceDeploymentInfoBroker.cleanUpTanglingNodes();
+        return updatedApplication;
 
         // TODO: Update Kubernetes deployment (see issue mico#627)
     }
@@ -624,6 +626,7 @@ public class MicoApplicationBroker {
             application.getKafkaFaasConnectorDeploymentInfos().remove(kafkaFaasConnectorSDI);
         }
         applicationRepository.save(application);
+        micoServiceDeploymentInfoBroker.cleanUpTanglingNodes();
     }
 
     /**
