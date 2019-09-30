@@ -606,11 +606,12 @@ export class ApiService {
      *
      * @param serviceShortName shortName of the service
      * @param serviceVersion version of the service
+     * @param instanceId the instance id  of the service deployment information
      * @param interfaceShortName name of the serviceInterface
      */
-    getServiceInterfacePublicIp(serviceShortName: string, serviceVersion: string, interfaceShortName: string) {
+    getServiceInterfacePublicIp(serviceShortName: string, serviceVersion: string, instanceId: string, interfaceShortName: string) {
 
-        const resource = 'services/' + serviceShortName + '/' + serviceVersion + '/interfaces/' + interfaceShortName + '/publicIP';
+        const resource = 'services/' + serviceShortName + '/' + serviceVersion + '/interfaces/' + interfaceShortName + '/publicIP/' + instanceId;
         const stream = this.getStreamSource<ApiObject>(resource);
 
         this.rest.get<ApiObject>(resource).subscribe(val => {
@@ -1285,10 +1286,11 @@ export class ApiService {
      *
      * @param serviceShortName serviceShortName of the interface to be polled
      * @param serviceVersion serviceVersion of the interface to be polled
+     * @param instanceId the instance id  of the service deployment information
      * @param interfaceName interfaceName of the interface to be polled
      */
-    pollServiceInterfacePublicIp(serviceShortName: string, serviceVersion: string, interfaceName: string) {
-        const resource = 'poll/services/' + serviceShortName + '/' + serviceVersion + '/interfaces/' + interfaceName + '/publicIp';
+    pollServiceInterfacePublicIp(serviceShortName: string, serviceVersion: string, instanceId: string, interfaceName: string) {
+        const resource = 'poll/services/' + serviceShortName + '/' + serviceVersion + '/interfaces/' + interfaceName + '/publicIp/' + instanceId;
         const stream = this.getStreamSource<any>(resource);
 
         /**
@@ -1303,7 +1305,7 @@ export class ApiService {
 
         // poll status
         const subPolling = interval(5 * 1000).subscribe(() => {
-            this.getServiceInterfacePublicIp(serviceShortName, serviceVersion, interfaceName);
+            this.getServiceInterfacePublicIp(serviceShortName, serviceVersion, instanceId, interfaceName);
 
             // early exit
             if (subPublicIp.closed) {
@@ -1318,7 +1320,7 @@ export class ApiService {
             });
 
         // handle incomming publicIpDTOs
-        const subPublicIp = this.getServiceInterfacePublicIp(serviceShortName, serviceVersion, interfaceName)
+        const subPublicIp = this.getServiceInterfacePublicIp(serviceShortName, serviceVersion, instanceId, interfaceName)
             .subscribe(publicIpDTO => {
 
                 if (publicIpDTO.externalIpIsAvailable) {
