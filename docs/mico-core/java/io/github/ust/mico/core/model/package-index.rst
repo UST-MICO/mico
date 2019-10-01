@@ -32,4 +32,5 @@ io.github.ust.mico.core.model
    MicoTopicRole
    MicoTopicRole-Role
    MicoVersion
+   OpenFaaSFunction
 

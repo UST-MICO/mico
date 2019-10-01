@@ -46,6 +46,14 @@ BackgroundJobBroker
 
 Methods
 -------
+deleteAllJobs
+^^^^^^^^^^^^^
+
+.. java:method:: public void deleteAllJobs()
+   :outertype: BackgroundJobBroker
+
+   Delete all jobs in the database. If a future of a job is still running, it will be cancelled.
+
 deleteJob
 ^^^^^^^^^
 
@@ -77,18 +85,17 @@ getJobById
    :param id: the id of the job.
    :return: a \ :java:ref:`MicoServiceBackgroundJob`\ .
 
-getJobByMicoService
-^^^^^^^^^^^^^^^^^^^
+getJobByMicoServiceInstanceId
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public Optional<MicoServiceBackgroundJob> getJobByMicoService(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundJob.Type type)
+.. java:method:: public Optional<MicoServiceBackgroundJob> getJobByMicoServiceInstanceId(String instanceId, MicoServiceBackgroundJob.Type type)
    :outertype: BackgroundJobBroker
 
-   Return a \ ``MicoServiceBackgroundJob``\  for a given \ ``MicoService``\  and \ ``MicoServiceBackgroundJob.Type``\ .
+   Return a \ ``MicoServiceBackgroundJob``\  for a given \ ``instanceId``\  and \ ``MicoServiceBackgroundJob.Type``\ .
 
-   :param micoServiceShortName: the short name of a \ :java:ref:`MicoService`\
-   :param micoServiceVersion: the version of a \ :java:ref:`MicoService`\
+   :param instanceId: instance ID of a \ :java:ref:`MicoServiceDeploymentInfo`\
    :param type: the \ :java:ref:`MicoServiceBackgroundJob.Type`\
-   :return: the optional Job. Is empty if no Job exist for the given \ :java:ref:`MicoService`\
+   :return: the optional job. Is empty if no job exists for the given \ ``instanceId``\
 
 getJobStatusByApplicationShortNameAndVersion
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -102,16 +109,28 @@ getJobStatusByApplicationShortNameAndVersion
    :param version: the version of the \ :java:ref:`MicoApplication`\ .
    :return: the \ :java:ref:`MicoApplicationJobStatus`\  with the status and jobs.
 
+getJobsByMicoService
+^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public List<MicoServiceBackgroundJob> getJobsByMicoService(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundJob.Type type)
+   :outertype: BackgroundJobBroker
+
+   Return \ ``MicoServiceBackgroundJob``\ s for a given \ ``MicoService``\  and \ ``MicoServiceBackgroundJob.Type``\ .
+
+   :param micoServiceShortName: the short name of a \ :java:ref:`MicoService`\
+   :param micoServiceVersion: the version of a \ :java:ref:`MicoService`\
+   :param type: the \ :java:ref:`MicoServiceBackgroundJob.Type`\
+   :return: the job list. Is empty if no job exists for the given \ :java:ref:`MicoService`\
+
 saveFutureOfJob
 ^^^^^^^^^^^^^^^
 
-.. java:method:: public void saveFutureOfJob(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundJob.Type type, CompletableFuture<?> future)
+.. java:method::  void saveFutureOfJob(MicoServiceDeploymentInfo micoServiceDeploymentInfo, MicoServiceBackgroundJob.Type type, CompletableFuture<?> future)
    :outertype: BackgroundJobBroker
 
    Saves a future of a job to the database.
 
-   :param micoServiceShortName: the short name of a \ :java:ref:`MicoService`\
-   :param micoServiceVersion: the version of a \ :java:ref:`MicoService`\
+   :param micoServiceDeploymentInfo: the \ :java:ref:`MicoServiceDeploymentInfo`\
    :param future: the future as a \ :java:ref:`CompletableFuture`\
    :param type: the \ :java:ref:`MicoServiceBackgroundJob.Type`\
 
@@ -129,26 +148,24 @@ saveJob
 saveNewStatus
 ^^^^^^^^^^^^^
 
-.. java:method:: public void saveNewStatus(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundJob.Type type, MicoServiceBackgroundJob.Status newStatus)
+.. java:method::  void saveNewStatus(MicoServiceDeploymentInfo micoServiceDeploymentInfo, MicoServiceBackgroundJob.Type type, MicoServiceBackgroundJob.Status newStatus)
    :outertype: BackgroundJobBroker
 
    Saves a new status of a job to the database.
 
-   :param micoServiceShortName: the short name of a \ :java:ref:`MicoService`\
-   :param micoServiceVersion: the version of a \ :java:ref:`MicoService`\
+   :param micoServiceDeploymentInfo: the \ :java:ref:`MicoServiceDeploymentInfo`\
    :param type: the \ :java:ref:`MicoServiceBackgroundJob.Type`\
    :param newStatus: the new \ :java:ref:`MicoServiceBackgroundJob.Status`\
 
 saveNewStatus
 ^^^^^^^^^^^^^
 
-.. java:method:: public void saveNewStatus(String micoServiceShortName, String micoServiceVersion, MicoServiceBackgroundJob.Type type, MicoServiceBackgroundJob.Status newStatus, String errorMessage)
+.. java:method::  void saveNewStatus(MicoServiceDeploymentInfo micoServiceDeploymentInfo, MicoServiceBackgroundJob.Type type, MicoServiceBackgroundJob.Status newStatus, String errorMessage)
    :outertype: BackgroundJobBroker
 
    Saves a new status of a job to the database.
 
-   :param micoServiceShortName: the short name of a \ :java:ref:`MicoService`\
-   :param micoServiceVersion: the version of a \ :java:ref:`MicoService`\
+   :param micoServiceDeploymentInfo: the \ :java:ref:`MicoServiceDeploymentInfo`\
    :param type: the \ :java:ref:`MicoServiceBackgroundJob.Type`\
    :param newStatus: the new \ :java:ref:`MicoServiceBackgroundJob.Status`\
    :param errorMessage: the optional error message if the job has failed

@@ -16,17 +16,9 @@
 
 .. java:import:: io.github.ust.mico.core.exception PrometheusRequestFailedException
 
-.. java:import:: io.github.ust.mico.core.model MicoApplication
-
-.. java:import:: io.github.ust.mico.core.model MicoMessage
-
-.. java:import:: io.github.ust.mico.core.model MicoService
-
-.. java:import:: io.github.ust.mico.core.model MicoServiceInterface
-
 .. java:import:: io.github.ust.mico.core.persistence MicoApplicationRepository
 
-.. java:import:: io.github.ust.mico.core.persistence MicoServiceRepository
+.. java:import:: io.github.ust.mico.core.persistence MicoServiceDeploymentInfoRepository
 
 .. java:import:: io.github.ust.mico.core.util CollectionUtils
 
@@ -63,7 +55,7 @@ Constructors
 MicoStatusService
 ^^^^^^^^^^^^^^^^^
 
-.. java:constructor:: @Autowired public MicoStatusService(PrometheusConfig prometheusConfig, MicoKubernetesClient micoKubernetesClient, RestTemplate restTemplate, MicoServiceRepository serviceRepository, MicoApplicationRepository micoApplicationRepository)
+.. java:constructor:: @Autowired public MicoStatusService(PrometheusConfig prometheusConfig, MicoKubernetesClient micoKubernetesClient, RestTemplate restTemplate, MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository, MicoApplicationRepository micoApplicationRepository)
    :outertype: MicoStatusService
 
 Methods
@@ -82,36 +74,47 @@ getApplicationStatus
 getPublicIpOfKubernetesService
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public MicoServiceInterfaceStatusResponseDTO getPublicIpOfKubernetesService(MicoService micoService, MicoServiceInterface serviceInterface) throws KubernetesResourceException
+.. java:method:: public MicoServiceInterfaceStatusResponseDTO getPublicIpOfKubernetesService(MicoServiceDeploymentInfo serviceDeploymentInfo, MicoServiceInterface serviceInterface) throws KubernetesResourceException
    :outertype: MicoStatusService
 
    Get the public IP of a \ :java:ref:`MicoServiceInterface`\  by providing the corresponding Kubernetes \ :java:ref:`Service`\ .
 
-   :param micoService: is the \ :java:ref:`MicoService`\ , that has a \ :java:ref:`MicoServiceInterface`\ , which is deployed on Kubernetes
+   :param serviceDeploymentInfo: is the \ :java:ref:`MicoServiceDeploymentInfo`\ , that has a \ :java:ref:`MicoServiceInterface`\ , which is deployed on Kubernetes
    :param serviceInterface: the \ :java:ref:`MicoServiceInterface`\ , that is deployed as a Kubernetes service
    :throws KubernetesResourceException: if it's not possible to get the Kubernetes service
    :return: the public IP of the provided Kubernetes Service
 
+getServiceInstanceStatus
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public MicoServiceStatusResponseDTO getServiceInstanceStatus(MicoServiceDeploymentInfo serviceDeploymentInfo)
+   :outertype: MicoStatusService
+
+   Get status information for a single \ :java:ref:`MicoServiceDeploymentInfo`\ : # available replicas, # requested replicas, pod metrics (CPU load, memory usage).
+
+   :param serviceDeploymentInfo: the \ :java:ref:`MicoServiceDeploymentInfo`\ .
+   :return: the \ :java:ref:`MicoServiceStatusResponseDTO`\  which contains status information for a specific instance of a \ :java:ref:`MicoService`\ .
+
 getServiceInterfaceStatus
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: public List<MicoServiceInterfaceStatusResponseDTO> getServiceInterfaceStatus(MicoService micoService, List<MicoMessageResponseDTO> errorMessages)
+.. java:method:: public List<MicoServiceInterfaceStatusResponseDTO> getServiceInterfaceStatus(MicoServiceDeploymentInfo serviceDeploymentInfo, List<MicoMessageResponseDTO> errorMessages)
    :outertype: MicoStatusService
 
    Get the status information for all \ :java:ref:`MicoServiceInterfaces <MicoServiceInterface>`\  of the \ :java:ref:`MicoService`\ .
 
-   :param micoService: is the \ :java:ref:`MicoService`\  for which the status information of the MicoServiceInterfaces is requested.
+   :param serviceDeploymentInfo: is the \ :java:ref:`MicoServiceDeploymentInfo`\  that includes the service for which the status information of the MicoServiceInterfaces is requested.
    :param errorMessages: is the list of error messages, which is empty if no error occurs.
    :return: a list of \ :java:ref:`MicoServiceInterfaceStatusResponseDTO`\ , one DTO per MicoServiceInterface.
 
 getServiceStatus
 ^^^^^^^^^^^^^^^^
 
-.. java:method:: public MicoServiceStatusResponseDTO getServiceStatus(MicoService micoService)
+.. java:method:: public List<MicoServiceStatusResponseDTO> getServiceStatus(MicoService micoService)
    :outertype: MicoStatusService
 
-   Get status information for a single \ :java:ref:`MicoService`\ : # available replicas, # requested replicas, pod metrics (CPU load, memory usage).
+   Get status information for all instances of a \ :java:ref:`MicoService`\  and return them as a list: # available replicas, # requested replicas, pod metrics (CPU load, memory usage).
 
-   :param micoService: is a \ :java:ref:`MicoService`\ .
-   :return: \ :java:ref:`MicoServiceStatusResponseDTO`\  which contains status information for a specific \ :java:ref:`MicoService`\ .
+   :param micoService: the \ :java:ref:`MicoService`\ .
+   :return: the list of \ :java:ref:`MicoServiceStatusResponseDTOs <MicoServiceStatusResponseDTO>`\  which contains status information for all instances of a \ :java:ref:`MicoService`\ .
 

@@ -1,29 +1,3 @@
-.. java:import:: java.io IOException
-
-.. java:import:: java.util LinkedList
-
-.. java:import:: java.util List
-
-.. java:import:: java.util.stream Collectors
-
-.. java:import:: javax.validation Valid
-
-.. java:import:: org.springframework.beans.factory.annotation Autowired
-
-.. java:import:: org.springframework.hateoas Link
-
-.. java:import:: org.springframework.hateoas MediaTypes
-
-.. java:import:: org.springframework.hateoas Resource
-
-.. java:import:: org.springframework.hateoas Resources
-
-.. java:import:: org.springframework.http HttpStatus
-
-.. java:import:: org.springframework.http ResponseEntity
-
-.. java:import:: org.springframework.web.server ResponseStatusException
-
 .. java:import:: com.fasterxml.jackson.core JsonProcessingException
 
 .. java:import:: io.github.ust.mico.core.broker MicoServiceBroker
@@ -46,11 +20,39 @@
 
 .. java:import:: io.github.ust.mico.core.model MicoServiceDependency
 
+.. java:import:: io.github.ust.mico.core.model MicoServiceDeploymentInfo
+
 .. java:import:: io.github.ust.mico.core.service GitHubCrawler
 
 .. java:import:: io.github.ust.mico.core.service MicoStatusService
 
 .. java:import:: lombok.extern.slf4j Slf4j
+
+.. java:import:: org.springframework.beans.factory.annotation Autowired
+
+.. java:import:: org.springframework.hateoas Link
+
+.. java:import:: org.springframework.hateoas MediaTypes
+
+.. java:import:: org.springframework.hateoas Resource
+
+.. java:import:: org.springframework.hateoas Resources
+
+.. java:import:: org.springframework.http HttpStatus
+
+.. java:import:: org.springframework.http ResponseEntity
+
+.. java:import:: org.springframework.web.server ResponseStatusException
+
+.. java:import:: javax.validation Valid
+
+.. java:import:: java.io IOException
+
+.. java:import:: java.util LinkedList
+
+.. java:import:: java.util List
+
+.. java:import:: java.util.stream Collectors
 
 ServiceResource
 ===============
@@ -62,6 +64,12 @@ ServiceResource
 
 Fields
 ------
+PATH_VARIABLE_INSTANCE_ID
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:field:: static final String PATH_VARIABLE_INSTANCE_ID
+   :outertype: ServiceResource
+
 PATH_VARIABLE_SHORT_NAME
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -174,10 +182,16 @@ getServiceYamlByShortNameAndVersion
    :param version: version the version of the \ :java:ref:`MicoService`\ .
    :return: the kubernetes YAML for the \ :java:ref:`MicoService`\ .
 
-getStatusOfService
-^^^^^^^^^^^^^^^^^^
+getStatusListOfService
+^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: @GetMapping public ResponseEntity<Resource<MicoServiceStatusResponseDTO>> getStatusOfService(String shortName, String version)
+.. java:method:: @GetMapping public ResponseEntity<Resources<Resource<MicoServiceStatusResponseDTO>>> getStatusListOfService(String shortName, String version)
+   :outertype: ServiceResource
+
+getStatusOfServiceInstance
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: @GetMapping public ResponseEntity<Resource<MicoServiceStatusResponseDTO>> getStatusOfServiceInstance(String shortName, String version, String instanceId)
    :outertype: ServiceResource
 
 getVersionsFromGitHub

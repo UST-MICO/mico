@@ -1,10 +1,8 @@
-.. java:import:: java.util Arrays
+.. java:import:: java.util.concurrent ConcurrentHashMap
 
-.. java:import:: java.util HashMap
+.. java:import:: java.util.function Function
 
-.. java:import:: java.util List
-
-.. java:import:: java.util Map
+.. java:import:: java.util.function Predicate
 
 .. java:import:: lombok.experimental UtilityClass
 
@@ -20,6 +18,14 @@ CollectionUtils
 
 Methods
 -------
+distinctByKey
+^^^^^^^^^^^^^
+
+.. java:method:: public static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor)
+   :outertype: CollectionUtils
+
+   Inspired by Stuart Marks https://stackoverflow.com/a/27872852/9556565
+
 listOf
 ^^^^^^
 

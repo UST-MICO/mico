@@ -10,6 +10,8 @@
 
 .. java:import:: io.github.ust.mico.core.model MicoService
 
+.. java:import:: io.github.ust.mico.core.model MicoServiceDeploymentInfo
+
 .. java:import:: io.github.ust.mico.core.model MicoServiceInterface
 
 .. java:import:: io.github.ust.mico.core.service MicoStatusService
@@ -76,7 +78,7 @@ getInterfaceByName
 getInterfacePublicIpByName
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: @GetMapping public ResponseEntity<MicoServiceInterfaceStatusResponseDTO> getInterfacePublicIpByName(String shortName, String version, String serviceInterfaceName)
+.. java:method:: @GetMapping public ResponseEntity<MicoServiceInterfaceStatusResponseDTO> getInterfacePublicIpByName(String shortName, String version, String serviceInterfaceName, String instanceId)
    :outertype: ServiceInterfaceResource
 
 getInterfacesOfService

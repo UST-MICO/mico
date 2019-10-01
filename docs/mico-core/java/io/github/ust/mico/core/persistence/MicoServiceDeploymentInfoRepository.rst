@@ -1,6 +1,8 @@
-.. java:import:: java.util List
+.. java:import:: io.github.ust.mico.core.model MicoApplication
 
-.. java:import:: java.util Optional
+.. java:import:: io.github.ust.mico.core.model MicoService
+
+.. java:import:: io.github.ust.mico.core.model MicoServiceDeploymentInfo
 
 .. java:import:: org.springframework.data.neo4j.annotation Query
 
@@ -8,11 +10,9 @@
 
 .. java:import:: org.springframework.data.repository.query Param
 
-.. java:import:: io.github.ust.mico.core.model MicoApplication
+.. java:import:: java.util List
 
-.. java:import:: io.github.ust.mico.core.model MicoService
-
-.. java:import:: io.github.ust.mico.core.model MicoServiceDeploymentInfo
+.. java:import:: java.util Optional
 
 MicoServiceDeploymentInfoRepository
 ===================================
@@ -30,7 +30,9 @@ deleteAllByApplication
 .. java:method:: @Query  void deleteAllByApplication(String applicationShortName)
    :outertype: MicoServiceDeploymentInfoRepository
 
-   Deletes all deployment information for all versions of an application including the ones for the KafkaFaasConnectors. All additional properties of a \ :java:ref:`MicoServiceDeploymentInfo`\  that are stored as a separate node entity and connected to it via a \ ``[:HAS]``\  relationship will be deleted, too.
+   Deletes all deployment information for all versions of an application including the ones for the KafkaFaasConnectors. All additional properties of a \ :java:ref:`MicoServiceDeploymentInfo`\  that are stored as a separate node entity and connected to it via a \ ``[:HAS]``\  relationship will be deleted too, if they are used exclusively by this deployment information. Exclusively means that there must only be one single edge connected to the particular property (\ ``relatedNode``\ , see \ ``size``\  operator in \ ``WHERE``\  clause). If that's the case, it's possible to delete this related node safely.
+
+   Also works with a KafkaFaasConnector instance.
 
    :param applicationShortName: the short name of the \ :java:ref:`MicoApplication`\ .
 
@@ -40,7 +42,9 @@ deleteAllByApplication
 .. java:method:: @Query  void deleteAllByApplication(String applicationShortName, String applicationVersion)
    :outertype: MicoServiceDeploymentInfoRepository
 
-   Deletes all deployment information for a particular application including the ones for the KafkaFaasConnectors. All additional properties of a \ :java:ref:`MicoServiceDeploymentInfo`\  that are stored as a separate node entity and connected to it via a \ ``[:HAS]``\  relationship will be deleted, too.
+   Deletes all deployment information for a particular application including the ones for the KafkaFaasConnectors. All additional properties of a \ :java:ref:`MicoServiceDeploymentInfo`\  that are stored as a separate node entity and connected to it via a \ ``[:HAS]``\  relationship will be deleted too, if they are used exclusively by this deployment information. Exclusively means that there must only be one single edge connected to the particular property (\ ``relatedNode``\ , see \ ``size``\  operator in \ ``WHERE``\  clause). If that's the case, it's possible to delete this related node safely.
+
+   Also works with a KafkaFaasConnector instance.
 
    :param applicationShortName: the short name of the \ :java:ref:`MicoApplication`\ .
    :param applicationVersion: the version of the \ :java:ref:`MicoApplication`\ .
@@ -51,7 +55,9 @@ deleteByApplicationAndService
 .. java:method:: @Query  void deleteByApplicationAndService(String applicationShortName, String applicationVersion, String serviceShortName)
    :outertype: MicoServiceDeploymentInfoRepository
 
-   Deletes the deployment information for a particular application and service. All additional properties of a \ :java:ref:`MicoServiceDeploymentInfo`\  that are stored as a separate node entity and connected to it via a \ ``[:HAS]``\  relationship will be deleted, too. Also works with a KafkaFaasConnector instance.
+   Deletes the deployment information for a particular application and service. All additional properties of a \ :java:ref:`MicoServiceDeploymentInfo`\  that are stored as a separate node entity and connected to it via a \ ``[:HAS]``\  relationship will be deleted too, if they are used exclusively by this deployment information. Exclusively means that there must only be one single edge connected to the particular property (\ ``relatedNode``\ , see \ ``size``\  operator in \ ``WHERE``\  clause). If that's the case, it's possible to delete this related node safely.
+
+   Also works with a KafkaFaasConnector instance.
 
    :param applicationShortName: the short name of the \ :java:ref:`MicoApplication`\ .
    :param applicationVersion: the version of the \ :java:ref:`MicoApplication`\ .
@@ -63,7 +69,9 @@ deleteByApplicationAndService
 .. java:method:: @Query  void deleteByApplicationAndService(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion)
    :outertype: MicoServiceDeploymentInfoRepository
 
-   Deletes the deployment information for a particular application and service. All additional properties of a \ :java:ref:`MicoServiceDeploymentInfo`\  that are stored as a separate node entity and connected to it via a \ ``[:HAS]``\  relationship will be deleted, too. Also works with a KafkaFaasConnector instance.
+   Deletes the deployment information for a particular application and service. All additional properties of a \ :java:ref:`MicoServiceDeploymentInfo`\  that are stored as a separate node entity and connected to it via a \ ``[:HAS]``\  relationship will be deleted too, if they are used exclusively by this deployment information. Exclusively means that there must only be one single edge connected to the particular property (\ ``relatedNode``\ , see \ ``size``\  operator in \ ``WHERE``\  clause). If that's the case, it's possible to delete this related node safely.
+
+   Also works with a KafkaFaasConnector instance.
 
    :param applicationShortName: the short name of the \ :java:ref:`MicoApplication`\ .
    :param applicationVersion: the version of the \ :java:ref:`MicoApplication`\ .

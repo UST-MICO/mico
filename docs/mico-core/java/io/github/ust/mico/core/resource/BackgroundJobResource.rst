@@ -50,6 +50,12 @@ BackgroundJobResource
 
 Methods
 -------
+deleteAllJobs
+^^^^^^^^^^^^^
+
+.. java:method:: @DeleteMapping public ResponseEntity<Void> deleteAllJobs()
+   :outertype: BackgroundJobResource
+
 deleteJob
 ^^^^^^^^^
 

@@ -9,8 +9,10 @@ io.github.ust.mico.core.resource
    ApplicationResource
    BackgroundJobResource
    DeploymentResource
+   KafkaFaasConnectorDeploymentInfoResource
    OpenFaasResource
    ServiceDeploymentInfoResource
    ServiceInterfaceResource
    ServiceResource
+   TopicResource
 
