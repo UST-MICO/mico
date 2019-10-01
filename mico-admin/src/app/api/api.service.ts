@@ -634,13 +634,18 @@ export class ApiService {
      */
     getServiceStatus(shortName: string, version: string) {
         const resource = 'services/' + shortName + '/' + version + '/status';
-        const stream = this.getStreamSource(resource);
+        const stream = this.getStreamSource<ApiObject[]>(resource);
 
         this.rest.get<ApiObject>(resource).subscribe(val => {
-            stream.next(freezeObject(val));
+            // return actual statusDTO list
+            if (val.hasOwnProperty('_embedded')) {
+                stream.next(freezeObject(val._embedded.micoServiceStatusResponseDTOList));
+            } else {
+                stream.next(freezeObject([]));
+            }
         });
 
-        return (stream.asObservable() as Observable<Readonly<ApiObject>>).pipe(
+        return (stream.asObservable() as Observable<Readonly<ApiObject[]>>).pipe(
             filter(data => data !== undefined)
         );
     }

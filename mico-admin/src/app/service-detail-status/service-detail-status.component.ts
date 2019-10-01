@@ -21,6 +21,7 @@ import { Component, OnChanges, Input, OnDestroy } from '@angular/core';
 import { ApiService } from '../api/api.service';
 import { Subscription } from 'rxjs';
 import { safeUnsubscribe } from '../util/utils';
+import { ApiObject } from '../api/apiobject';
 
 @Component({
     selector: 'mico-service-detail-status',
@@ -34,7 +35,7 @@ export class ServiceDetailStatusComponent implements OnChanges, OnDestroy {
 
     subServiceStatus: Subscription;
 
-    serviceStatus;
+    serviceStatusList: ApiObject[];
     blackList = ['shortName', 'version', 'name'];
 
     constructor(
@@ -48,7 +49,7 @@ export class ServiceDetailStatusComponent implements OnChanges, OnDestroy {
 
         // get and set serviceStatus
         this.apiService.getServiceStatus(this.shortName, this.version).subscribe(val => {
-            this.serviceStatus = JSON.parse(JSON.stringify(val));
+            this.serviceStatusList = JSON.parse(JSON.stringify(val));
         });
     }
 
