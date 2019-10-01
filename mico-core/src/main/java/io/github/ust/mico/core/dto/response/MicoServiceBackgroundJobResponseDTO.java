@@ -86,14 +86,14 @@ public class MicoServiceBackgroundJobResponseDTO {
     private String serviceVersion;
 
     /**
-     * The instance id of the corresponding {@link MicoServiceDeploymentInfo}.
+     * The instance ID of the corresponding {@link MicoServiceDeploymentInfo}.
      */
     @ApiModelProperty(extensions = {
         @Extension(name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION, properties = {
-            @ExtensionProperty(name = "title", value = "Instance ID"),
+            @ExtensionProperty(name = "title", value = "instance ID"),
             @ExtensionProperty(name = "x-order", value = "30"),
             @ExtensionProperty(name = "readOnly", value = "true"),
-            @ExtensionProperty(name = "description", value = "The instance id of the corresponding service deployment info.")
+            @ExtensionProperty(name = "description", value = "The instance ID of the corresponding service deployment info.")
         })
     })
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)

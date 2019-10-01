@@ -25,10 +25,8 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.github.ust.mico.core.dto.request.MicoServiceInterfaceRequestDTO;
 import io.github.ust.mico.core.dto.response.status.MicoServiceInterfaceStatusResponseDTO;
-import io.github.ust.mico.core.model.MicoPortType;
-import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.model.MicoServicePort;
+import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceInterfaceRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
@@ -56,6 +54,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static io.github.ust.mico.core.JsonPathBuilder.*;
+import static io.github.ust.mico.core.TestConstants.IntegrationTest.INSTANCE_ID;
 import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
 import static io.github.ust.mico.core.TestConstants.VERSION;
 import static org.hamcrest.CoreMatchers.*;
@@ -98,6 +97,9 @@ public class ServiceInterfaceResourceIntegrationTests {
 
     @MockBean
     private MicoServiceInterfaceRepository serviceInterfaceRepository;
+
+    @MockBean
+    MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
 
     @MockBean
     private MicoKubernetesClient micoKubernetesClient;
@@ -208,19 +210,21 @@ public class ServiceInterfaceResourceIntegrationTests {
     @Test
     public void getInterfacePublicIpByName() throws Exception {
         String externalIP = "1.2.3.4";
+        String instanceId = INSTANCE_ID;
         MicoService micoService = new MicoService().setShortName(SHORT_NAME).setVersion(VERSION);
+        MicoServiceDeploymentInfo micoServiceDeploymentInfo = new MicoServiceDeploymentInfo().setInstanceId(instanceId).setService(micoService);
         MicoServiceInterface micoServiceInterface = getTestServiceInterface();
         String serviceInterfaceName = micoServiceInterface.getServiceInterfaceName();
 
         Optional<Service> kubernetesService = Optional.of(getKubernetesService(micoServiceInterface.getServiceInterfaceName(), externalIP));
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoService));
+        given(serviceDeploymentInfoRepository.findByInstanceId(instanceId)).willReturn(Optional.of(micoServiceDeploymentInfo));
         given(serviceInterfaceRepository.findByServiceAndName(SHORT_NAME, VERSION, serviceInterfaceName)).willReturn(Optional.of(micoServiceInterface));
-        given(micoKubernetesClient.getInterfaceByNameOfMicoService(eq(micoService), eq(serviceInterfaceName))).willReturn(kubernetesService);
-        given(micoStatusService.getPublicIpOfKubernetesService(micoService, micoServiceInterface))
+        given(micoKubernetesClient.getInterfaceByNameOfMicoServiceInstance(eq(micoServiceDeploymentInfo), eq(serviceInterfaceName))).willReturn(kubernetesService);
+        given(micoStatusService.getPublicIpOfKubernetesService(micoServiceDeploymentInfo, micoServiceInterface))
             .willReturn(new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName).setExternalIp(externalIP).setPort(INTERFACE_PORT));
 
-        mvc.perform(get(INTERFACES_URL + "/" + serviceInterfaceName + "/" + PATH_PART_PUBLIC_IP).accept(MediaTypes.HAL_JSON_VALUE))
+        mvc.perform(get(INTERFACES_URL + "/" + serviceInterfaceName + "/" + PATH_PART_PUBLIC_IP + "/" + instanceId).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.name", is(serviceInterfaceName)))
@@ -230,19 +234,21 @@ public class ServiceInterfaceResourceIntegrationTests {
 
     @Test
     public void getInterfacePublicIpByNameWithPendingIP() throws Exception {
+        String instanceId = INSTANCE_ID;
         MicoService micoService = new MicoService().setShortName(SHORT_NAME).setVersion(VERSION);
+        MicoServiceDeploymentInfo micoServiceDeploymentInfo = new MicoServiceDeploymentInfo().setInstanceId(instanceId).setService(micoService);
         MicoServiceInterface micoServiceInterface = getTestServiceInterface();
         String serviceInterfaceName = micoServiceInterface.getServiceInterfaceName();
         MicoServiceInterfaceStatusResponseDTO interfaceStatusResponseDTO = new MicoServiceInterfaceStatusResponseDTO().setName(serviceInterfaceName);
 
         Optional<Service> kubernetesService = Optional.of(getKubernetesService(micoServiceInterface.getServiceInterfaceName(), ""));
 
-        given(serviceRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoService));
+        given(serviceDeploymentInfoRepository.findByInstanceId(instanceId)).willReturn(Optional.of(micoServiceDeploymentInfo));
         given(serviceInterfaceRepository.findByServiceAndName(SHORT_NAME, VERSION, serviceInterfaceName)).willReturn(Optional.of(micoServiceInterface));
-        given(micoKubernetesClient.getInterfaceByNameOfMicoService(eq(micoService), eq(serviceInterfaceName))).willReturn(kubernetesService);
-        given(micoStatusService.getPublicIpOfKubernetesService(micoService, micoServiceInterface)).willReturn(interfaceStatusResponseDTO);
+        given(micoKubernetesClient.getInterfaceByNameOfMicoServiceInstance(eq(micoServiceDeploymentInfo), eq(serviceInterfaceName))).willReturn(kubernetesService);
+        given(micoStatusService.getPublicIpOfKubernetesService(micoServiceDeploymentInfo, micoServiceInterface)).willReturn(interfaceStatusResponseDTO);
 
-        mvc.perform(get(INTERFACES_URL + "/" + serviceInterfaceName + "/" + PATH_PART_PUBLIC_IP).accept(MediaTypes.HAL_JSON_VALUE))
+        mvc.perform(get(INTERFACES_URL + "/" + serviceInterfaceName + "/" + PATH_PART_PUBLIC_IP + "/" + instanceId).accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().is2xxSuccessful())
             .andExpect(jsonPath("$.name", is(serviceInterfaceName)))

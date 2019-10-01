@@ -23,13 +23,11 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.github.ust.mico.core.broker.MicoApplicationBroker;
 import io.github.ust.mico.core.broker.MicoServiceBroker;
+import io.github.ust.mico.core.broker.MicoServiceDeploymentInfoBroker;
 import io.github.ust.mico.core.configuration.KafkaFaasConnectorConfig;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.model.*;
-import io.github.ust.mico.core.persistence.MicoApplicationRepository;
-import io.github.ust.mico.core.persistence.MicoBackgroundJobRepository;
-import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
-import io.github.ust.mico.core.persistence.MicoTopicRepository;
+import io.github.ust.mico.core.persistence.*;
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.EmbeddedRedisServer;
@@ -91,10 +89,13 @@ public class DeploymentResourceIntegrationTests {
     private MicoApplicationRepository applicationRepository;
 
     @Autowired
-    private MicoTopicRepository micoTopicRepository;
+    private MicoServiceRepository serviceRepository;
 
     @Autowired
     private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
+
+    @Autowired
+    private MicoTopicRepository micoTopicRepository;
 
     @Autowired
     private MicoBackgroundJobRepository jobRepository;
@@ -104,6 +105,9 @@ public class DeploymentResourceIntegrationTests {
 
     @Autowired
     private MicoServiceBroker serviceBroker;
+
+    @Autowired
+    private MicoServiceDeploymentInfoBroker serviceDeploymentInfoBroker;
 
     @Autowired
     KafkaFaasConnectorConfig kafkaFaasConnectorConfig;
@@ -146,6 +150,11 @@ public class DeploymentResourceIntegrationTests {
 
         // Delete all jobs in Redis.
         jobRepository.deleteAll();
+        // Delete all entities that were added during the test execution
+        serviceDeploymentInfoRepository.deleteAllByApplication(application.getShortName(), application.getVersion());
+        serviceDeploymentInfoBroker.cleanUpTanglingNodes();
+        serviceRepository.deleteServiceByShortNameAndVersion(service.getShortName(), service.getVersion());
+        applicationRepository.delete(application);
     }
 
     @Test
@@ -261,7 +270,7 @@ public class DeploymentResourceIntegrationTests {
 
     private CompletableFuture<Service> waitForServiceCreation() throws InterruptedException, ExecutionException, TimeoutException {
         CompletableFuture<Service> createdService = integrationTestsUtils.waitUntilServiceIsCreated(
-            service, 1, 1, 10);
+            serviceDeploymentInfo, 1, 1, 10);
         assertNotNull("Kubernetes Service was not created!", createdService.get());
         log.debug("Created Kubernetes Service: {}", createdService.get().toString());
         return createdService;

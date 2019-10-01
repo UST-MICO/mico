@@ -1,2 +1,2 @@
-<mico-data [modelUrl]="'remote/MicoServiceStatusResponseDTO'" [startData]="serviceStatus" [isBlacklist]="true"
+<mico-data *ngFor="let serviceStatus of serviceStatusList" [modelUrl]="'remote/MicoServiceStatusResponseDTO'" [startData]="serviceStatus" [isBlacklist]="true"
     [filter]="blackList"></mico-data>

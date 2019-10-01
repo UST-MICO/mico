@@ -247,7 +247,7 @@ public class IntegrationTestsUtils {
         CompletableFuture<Deployment> completionFuture = new CompletableFuture<>();
 
         MicoService micoService = serviceDeploymentInfo.getService();
-        log.info("Wait until deployment of MicoService '{}' '{}' with instance id '{}' is created",
+        log.info("Wait until deployment of MicoService '{}' '{}' with instance ID '{}' is created",
             micoService.getShortName(), micoService.getVersion(), serviceDeploymentInfo.getInstanceId());
         ScheduledFuture<?> scheduledFuture = executorService.scheduleAtFixedRate(() -> {
             Optional<Deployment> deployment = micoKubernetesClient.getDeploymentOfMicoServiceInstance(serviceDeploymentInfo);
@@ -264,7 +264,7 @@ public class IntegrationTestsUtils {
     /**
      * Create a future that polls the deployment until it is created.
      *
-     * @param micoService  the {@link MicoService}
+     * @param serviceDeploymentInfo  the {@link MicoServiceDeploymentInfo}
      * @param initialDelay the initial delay in seconds
      * @param period       the period in seconds
      * @param timeout      the timeout in seconds
@@ -273,12 +273,16 @@ public class IntegrationTestsUtils {
      * @throws TimeoutException     if the build does not finish or fail in the expected time
      * @throws ExecutionException   if the build process fails unexpectedly
      */
-    CompletableFuture<Service> waitUntilServiceIsCreated(MicoService micoService, int initialDelay, int period, int timeout) throws InterruptedException, ExecutionException, TimeoutException {
+    CompletableFuture<Service> waitUntilServiceIsCreated(MicoServiceDeploymentInfo serviceDeploymentInfo, int initialDelay, int period, int timeout) throws InterruptedException, ExecutionException, TimeoutException {
+        String instanceId = serviceDeploymentInfo.getInstanceId();
+        MicoService micoService = serviceDeploymentInfo.getService();
+
         CompletableFuture<Service> completionFuture = new CompletableFuture<>();
 
-        log.info("Wait until Kubernetes Service for MicoService '{}' '{}' is created", micoService.getShortName(), micoService.getVersion());
+        log.info("Wait until Kubernetes Service for MicoService '{}' '{}' with instanceId  '{}' is created.",
+            micoService.getShortName(), micoService.getVersion(), instanceId);
         ScheduledFuture<?> scheduledFuture = executorService.scheduleAtFixedRate(() -> {
-            List<Service> services = micoKubernetesClient.getInterfacesOfMicoService(micoService);
+            List<Service> services = micoKubernetesClient.getInterfacesOfMicoServiceInstance(serviceDeploymentInfo);
             if (!services.isEmpty()) {
                 completionFuture.complete(services.get(0));
             }

@@ -21,7 +21,7 @@ import { Component, Input, OnChanges, OnInit, OnDestroy, ChangeDetectionStrategy
 import { ApiService } from '../api/api.service';
 import { Subscription } from 'rxjs';
 import { safeUnsubscribeList, safeUnsubscribe } from '../util/utils';
-import { take } from 'rxjs/operators';
+import { take, map } from 'rxjs/operators';
 
 @Component({
     selector: 'mico-app-detail-public-ip',
@@ -99,28 +99,36 @@ export class AppDetailPublicIpComponent implements OnInit, OnChanges, OnDestroy 
                             .pipe(take(1))
                             .subscribe(serviceInterfaces => {
 
-                                serviceInterfaces.forEach(micoInterface => {
-                                    this.subPublicIps.push(this.apiService
-                                        .getServiceInterfacePublicIp(service.shortName, service.version, micoInterface.serviceInterfaceName)
-                                        .subscribe(publicIpDTO => {
+                                this.apiService.getServiceDeploymentInformation(application.shortName, application.version, service.shortName)
+                                    .pipe(
+                                        map(deplInfo => deplInfo.instanceId),
+                                        take(1),
+                                    ).subscribe(instanceId => {
+                                        serviceInterfaces.forEach(micoInterface => {
+                                            this.subPublicIps.push(this.apiService
+                                                .getServiceInterfacePublicIp(service.shortName, service.version, instanceId, micoInterface.serviceInterfaceName)
+                                                .subscribe(publicIpDTO => {
 
-                                            if (publicIpDTO.externalIpIsAvailable) {
-                                                // public ip is already present
+                                                    if (publicIpDTO.externalIpIsAvailable) {
+                                                        // public ip is already present
 
-                                                this.publicIps.set(service.shortName + '#' + publicIpDTO.name, publicIpDTO);
-                                                this.changeDedection.markForCheck();
+                                                        this.publicIps.set(service.shortName + '#' + publicIpDTO.name, publicIpDTO);
+                                                        this.changeDedection.markForCheck();
 
-                                                // end polling;
-                                                safeUnsubscribe(tempSubPolling);
-                                            }
+                                                        // end polling;
+                                                        safeUnsubscribe(tempSubPolling);
+                                                    }
 
-                                        }));
+                                                }));
 
-                                    // start polling
-                                    const tempSubPolling = this.apiService.pollServiceInterfacePublicIp(service.shortName,
-                                        service.version, micoInterface.serviceInterfaceName);
-                                    this.subPolling.push(tempSubPolling);
-                                });
+                                            // start polling
+                                            const tempSubPolling = this.apiService.pollServiceInterfacePublicIp(service.shortName,
+                                                service.version, instanceId, micoInterface.serviceInterfaceName);
+                                            this.subPolling.push(tempSubPolling);
+                                        });
+                                    });
+
+
                             }));
 
                     });

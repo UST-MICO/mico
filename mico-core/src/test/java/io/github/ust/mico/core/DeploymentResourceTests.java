@@ -119,12 +119,12 @@ public class DeploymentResourceTests {
         Deployment deployment = new DeploymentBuilder()
             .withNewMetadata().withName(DEPLOYMENT_NAME).withNamespace(NAMESPACE_NAME).endMetadata()
             .build();
-        given(micoKubernetesClient.createMicoService(any(MicoServiceDeploymentInfo.class)))
+        given(micoKubernetesClient.createMicoServiceInstance(any(MicoServiceDeploymentInfo.class)))
             .willReturn(deployment);
         Service service = new ServiceBuilder()
             .withNewMetadata().withName(SERVICE_NAME).withNamespace(NAMESPACE_NAME).endMetadata()
             .build();
-        given(micoKubernetesClient.createMicoServiceInterface(any(MicoServiceInterface.class), any(MicoService.class)))
+        given(micoKubernetesClient.createMicoServiceInterface(any(MicoServiceInterface.class), any(MicoServiceDeploymentInfo.class)))
             .willReturn(service);
     }
 
@@ -132,12 +132,12 @@ public class DeploymentResourceTests {
     public void deployApplicationWithOneServiceAndOneServiceInterface() throws Exception {
         MicoService service = getTestService();
         service.setDockerImageUri(TestConstants.IntegrationTest.DOCKER_IMAGE_URI);
-
+        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
+            .setService(service)
+            .setInstanceId(INSTANCE_ID);
         MicoApplication application = getTestApplication();
         application.getServices().add(service);
-        application.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
-            .setService(service)
-            .setInstanceId(INSTANCE_ID));
+        application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
 
         setupDeploymentResources(application, service);
 
@@ -155,31 +155,34 @@ public class DeploymentResourceTests {
         assertNotNull("DockerImageUri was not set", storedMicoService.getDockerImageUri());
         assertEquals(service.getDockerImageUri(), storedMicoService.getDockerImageUri());
 
-        verify(micoKubernetesClient, times(1)).createMicoService(serviceDeploymentInfoArgumentCaptor.capture());
+        verify(micoKubernetesClient, times(1)).createMicoServiceInstance(
+            serviceDeploymentInfoArgumentCaptor.capture());
 
-        MicoService micoServiceToCreate = micoServiceArgumentCaptor.getValue();
-        assertNotNull(micoServiceToCreate);
-        assertEquals("MicoService that will be created as Kubernetes resources does not match", service, micoServiceToCreate);
+        MicoServiceDeploymentInfo micoServiceInstanceToCreate = serviceDeploymentInfoArgumentCaptor.getValue();
+        assertNotNull(micoServiceInstanceToCreate);
+        assertEquals("MicoService instance that will be created as Kubernetes resources does not match",
+            serviceDeploymentInfo, micoServiceInstanceToCreate);
 
         MicoServiceDeploymentInfo deploymentInfo = serviceDeploymentInfoArgumentCaptor.getValue();
         assertNotNull(deploymentInfo);
         int actualReplicas = deploymentInfo.getReplicas();
         int expectedReplicas = application.getServiceDeploymentInfos().get(0).getReplicas();
-        assertEquals("Replicas does not match the definition in the deployment info", expectedReplicas, actualReplicas);
+        assertEquals("Replicas does not match the definition in the deployment info",
+            expectedReplicas, actualReplicas);
 
         verify(micoKubernetesClient, times(1)).createMicoServiceInterface(
             micoServiceInterfaceArgumentCaptor.capture(),
-            micoServiceArgumentCaptor.capture());
+            serviceDeploymentInfoArgumentCaptor.capture());
 
         MicoServiceInterface micoServiceInterfaceToCreate = micoServiceInterfaceArgumentCaptor.getValue();
         assertNotNull(micoServiceInterfaceToCreate);
         assertEquals("MicoServiceInterface that will be created as Kubernetes resources does not match",
             service.getServiceInterfaces().get(0), micoServiceInterfaceToCreate);
 
-        MicoService micoServiceThatIsUsedForInterfaceCreation = micoServiceArgumentCaptor.getValue();
-        assertNotNull(micoServiceThatIsUsedForInterfaceCreation);
-        assertEquals("MicoService that will be used to create a MicoServiceInterface does not match",
-            service, micoServiceThatIsUsedForInterfaceCreation);
+        MicoServiceDeploymentInfo micoServiceInstanceThatIsUsedForInterfaceCreation = serviceDeploymentInfoArgumentCaptor.getValue();
+        assertNotNull(micoServiceInstanceThatIsUsedForInterfaceCreation);
+        assertEquals("MicoService instance that will be used to create a MicoServiceInterface does not match",
+            serviceDeploymentInfo, micoServiceInstanceThatIsUsedForInterfaceCreation);
 
         verify(serviceDeploymentInfoRepository, times(1)).save(serviceDeploymentInfoArgumentCaptor.capture(), eq(1));
         MicoServiceDeploymentInfo storedServiceDeploymentInfo = serviceDeploymentInfoArgumentCaptor.getValue();

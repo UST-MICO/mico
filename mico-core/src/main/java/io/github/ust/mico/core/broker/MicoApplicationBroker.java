@@ -173,7 +173,7 @@ public class MicoApplicationBroker {
 
     /**
      * Adds a {@link MicoService} to a {@link MicoApplication}.
-     * If an instance id is provided, the existing {@link MicoServiceDeploymentInfo} will be reused.
+     * If an instance ID is provided, the existing {@link MicoServiceDeploymentInfo} will be reused.
      *
      * @param applicationShortName the short name of the {@link MicoApplication}
      * @param applicationVersion   the version of the {@link MicoApplication}
@@ -232,7 +232,7 @@ public class MicoApplicationBroker {
             String instanceId;
             boolean setDefaultDeploymentInfos = false;
             if (instanceIdOptional.isPresent()) {
-                // Instance ID provided -> reuse the existing instance.
+                // instance ID provided -> reuse the existing instance.
                 instanceId = instanceIdOptional.get();
                 sdi = existingServiceDeploymentInfoOptional.get();
             } else {
@@ -371,7 +371,7 @@ public class MicoApplicationBroker {
      * @throws MicoApplicationNotFoundException            if the {@code MicoApplication} does not exist
      * @throws MicoApplicationIsNotUndeployedException     if the {@code MicoApplication} is not undeployed
      * @throws KafkaFaasConnectorVersionNotFoundException  if the version of the KafkaFaasConnector does not exist in MICO
-     * @throws KafkaFaasConnectorInstanceNotFoundException if there is no instance for the provided instance id
+     * @throws KafkaFaasConnectorInstanceNotFoundException if there is no instance for the provided instance ID
      */
     public MicoServiceDeploymentInfo updateKafkaFaasConnectorInstanceOfMicoApplicationByVersionAndInstanceId(
         String applicationShortName, String applicationVersion, String kfConnectorVersion, String instanceId)
@@ -395,7 +395,7 @@ public class MicoApplicationBroker {
             throw new KafkaFaasConnectorInstanceNotFoundException(instanceId);
         }
         if (kfConnectorsWithSameInstanceId.size() > 1) {
-            // Illegal state, an instance id must be unique
+            // Illegal state, an instance ID must be unique
             String errorMessage = "There are " + kfConnectorsWithSameInstanceId.size() +
                 " service deployment information stored for KafkaFaasConnector in version with the same instance ID '"
                 + instanceId + "' used by the application '" + micoApplication.getShortName() +
@@ -429,7 +429,7 @@ public class MicoApplicationBroker {
     }
 
     /**
-     * Removes a KafkaFaasConnector instance that has the requested instance id from the {@link MicoApplication}.
+     * Removes a KafkaFaasConnector instance that has the requested instance ID from the {@link MicoApplication}.
      *
      * @param applicationShortName the short name of the {@link MicoApplication}
      * @param applicationVersion   the version of the {@link MicoApplication}
@@ -558,7 +558,7 @@ public class MicoApplicationBroker {
      *
      * @param serviceShortName the short name of the {@link MicoService}
      * @param serviceVersion   the version of the {@link MicoService}
-     * @param instanceId       the instance id of the {@link MicoServiceDeploymentInfo}
+     * @param instanceId       the instance ID of the {@link MicoServiceDeploymentInfo}
      * @return the {@link MicoServiceDeploymentInfo} corresponding to the provided {@code instanceId}
      * @throws MicoServiceInstanceNotFoundException if the instance does not exist or the instance does not match the provided MicoService {@code shortName} or {@code version}
      */
@@ -574,7 +574,7 @@ public class MicoApplicationBroker {
         MicoServiceDeploymentInfo serviceDeploymentInfo = serviceDeploymentInfoOptional.get();
         if (!serviceDeploymentInfo.getService().getShortName().equals(serviceShortName) ||
             !serviceDeploymentInfo.getService().getVersion().equals(serviceVersion)) {
-            // Provided instance id is used for a different MicoService or a different version of it
+            // Provided instance ID is used for a different MicoService or a different version of it
             throw new MicoServiceInstanceNotFoundException(serviceShortName, serviceVersion, instanceId);
         }
         return serviceDeploymentInfo;
@@ -631,7 +631,7 @@ public class MicoApplicationBroker {
 
     /**
      * Returns the {@link MicoApplication} for the provided short name and version if it exists
-     * and if it refers to the KafkaFaasConnector deployment with the provided instance id.
+     * and if it refers to the KafkaFaasConnector deployment with the provided instance ID.
      *
      * @param applicationShortName the short name of the {@link MicoApplication}
      * @param applicationVersion   the version of the {@link MicoApplication}

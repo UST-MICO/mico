@@ -835,7 +835,7 @@ public class ApplicationResourceIntegrationTests {
             .setVersion(SERVICE_VERSION)
             .setAvailableReplicas(availableReplicas)
             .setRequestedReplicas(replicas)
-            .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication)))
+            .setOtherApplicationsUsingThisServiceInstance(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication)))
             .setInterfacesInformation(CollectionUtils.listOf(new MicoServiceInterfaceStatusResponseDTO().setName(SERVICE_INTERFACE_NAME)))
             .setPodsInformation(Arrays.asList(kubernetesPodInfo1, kubernetesPodInfo2))
             .setNodeMetrics(CollectionUtils.listOf(

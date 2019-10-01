@@ -85,9 +85,8 @@ public class MicoStatusServiceTest {
     private MicoApplication micoApplication;
     private MicoApplication otherMicoApplication;
     private MicoService micoService;
-    private MicoService kfConnectorService;
+    private MicoServiceDeploymentInfo micoServiceDeploymentInfo;
     private MicoServiceInterface micoServiceInterface;
-    private Deployment deployment;
     private Service kubernetesService;
     private PodList podList;
     private PodList podListWithOnePod;
@@ -122,7 +121,15 @@ public class MicoStatusServiceTest {
     private String startTimePod4 = new Date().toString();
     private int restartsPod4 = 0;
 
-    private String kfConnectorName = "kafka-faas-connector";
+    // KafkaFaasConnector
+    private MicoService kfConnectorService;
+    private MicoServiceDeploymentInfo kfConnectorDeploymentInfo;
+    private PodList kfConnectorPodList;
+    private String podName5 = "pod5";
+    private String startTimePod5 = new Date().toString();
+    private int restartsPod5 = 0;
+    private int memoryUsagePod5 = 5;
+    private int cpuLoadPod5 = 5;
 
     @Before
     public void setupMicoApplication() {
@@ -147,30 +154,15 @@ public class MicoStatusServiceTest {
                 .setTargetPort(8080)
                 .setType(MicoPortType.TCP)));
         micoService.setServiceInterfaces(CollectionUtils.listOf(micoServiceInterface));
-        kfConnectorService = new MicoService()
-            .setName(kfConnectorName)
-            .setShortName(kfConnectorName)
-            .setVersion(VERSION);
         micoApplication.getServices().add(micoService);
-        micoApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
+        micoServiceDeploymentInfo = new MicoServiceDeploymentInfo()
             .setService(micoService)
-            .setInstanceId(INSTANCE_ID));
-        micoApplication.getKafkaFaasConnectorDeploymentInfos().add(new MicoServiceDeploymentInfo()
-            .setService(kfConnectorService)
-            .setInstanceId(INSTANCE_ID_1));
+            .setInstanceId(INSTANCE_ID)
+            .setReplicas(4);
+        micoApplication.getServiceDeploymentInfos().add(micoServiceDeploymentInfo);
+
         otherMicoApplication.getServices().add(micoService);
-        otherMicoApplication.getServiceDeploymentInfos().add(new MicoServiceDeploymentInfo()
-            .setService(micoService)
-            .setInstanceId(INSTANCE_ID_2));
-
-        int availableReplicas = 1;
-        int replicas = 1;
-
-        String deploymentName = "deployment1";
-        deployment = new DeploymentBuilder()
-            .withNewMetadata().withName(deploymentName).endMetadata()
-            .withNewSpec().withReplicas(replicas).endSpec().withNewStatus().withAvailableReplicas(availableReplicas).endStatus()
-            .build();
+        otherMicoApplication.getServiceDeploymentInfos().add(micoServiceDeploymentInfo);
 
         kubernetesService = new ServiceBuilder()
             .withNewMetadata().withName(SERVICE_INTERFACE_NAME).withNamespace(testNamespace).endMetadata()
@@ -229,25 +221,52 @@ public class MicoStatusServiceTest {
             .withNewStatus().withStartTime(startTimePod1).addNewContainerStatus().withRestartCount(restartsPod1).endContainerStatus().withPhase(POD_PHASE_RUNNING).withHostIP(hostIp).endStatus()
             .endItem()
             .build();
+
+        String kfConnectorName = "kafka-faas-connector";
+        kfConnectorService = new MicoService()
+            .setName(kfConnectorName)
+            .setShortName(kfConnectorName)
+            .setVersion(VERSION);
+        kfConnectorDeploymentInfo = new MicoServiceDeploymentInfo()
+            .setService(kfConnectorService)
+            .setInstanceId(INSTANCE_ID_1)
+            .setReplicas(1);
+        kfConnectorPodList = new PodListBuilder()
+            .addNewItem()
+            .withNewMetadata().withName(podName5).endMetadata()
+            .withNewSpec().withNodeName(nodeName1).endSpec()
+            .withNewStatus().withStartTime(startTimePod5)
+            .addNewContainerStatus().withRestartCount(restartsPod5).endContainerStatus()
+            .withPhase(POD_PHASE_RUNNING)
+            .withHostIP(hostIp)
+            .endStatus()
+            .endItem()
+            .build();
+
     }
 
     @Test
     @SuppressWarnings({"rawtypes", "unchecked"})
     public void getApplicationStatus() throws Exception {
+
+        // With KafkaFaasConnector
+        micoApplication.getKafkaFaasConnectorDeploymentInfos().add(kfConnectorDeploymentInfo);
+
         MicoApplicationStatusResponseDTO micoApplicationStatus = new MicoApplicationStatusResponseDTO()
-            .setTotalNumberOfRequestedReplicas(1)
-            .setTotalNumberOfAvailableReplicas(1)
-            .setTotalNumberOfPods(4)
+            .setTotalNumberOfRequestedReplicas(5)
+            .setTotalNumberOfAvailableReplicas(5)
+            .setTotalNumberOfPods(5)
             .setTotalNumberOfMicoServices(1)
             .setTotalNumberOfKafkaFaasConnectors(1)
             .setServiceStatuses(CollectionUtils.listOf(
                 new MicoServiceStatusResponseDTO()
-                    .setName(NAME)
-                    .setShortName(SHORT_NAME)
-                    .setVersion(VERSION)
-                    .setAvailableReplicas(1)
-                    .setRequestedReplicas(1)
-                    .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication,
+                    .setName(micoService.getName())
+                    .setShortName(micoService.getShortName())
+                    .setVersion(micoService.getVersion())
+                    .setInstanceId(micoServiceDeploymentInfo.getInstanceId())
+                    .setAvailableReplicas(micoServiceDeploymentInfo.getReplicas())
+                    .setRequestedReplicas(micoServiceDeploymentInfo.getReplicas())
+                    .setOtherApplicationsUsingThisServiceInstance(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication,
                         new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.DEPLOYED))))
                     .setNodeMetrics(CollectionUtils.listOf(
                         new KubernetesNodeMetricsResponseDTO()
@@ -304,14 +323,54 @@ public class MicoStatusServiceTest {
                             .setName(SERVICE_INTERFACE_NAME)
                             .setExternalIpIsAvailable(true)
                             .setExternalIp("192.168.2.112")
-                            .setPort(8080)))));
-        given(micoKubernetesClient.getDeploymentsOfMicoService(any(MicoService.class))).willReturn(CollectionUtils.listOf(deployment));
-        given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(Optional.ofNullable(kubernetesService));
-        given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(any(MicoService.class))).willReturn(podList.getItems());
+                            .setPort(8080))),
+                new MicoServiceStatusResponseDTO()
+                    .setName(kfConnectorService.getName())
+                    .setShortName(kfConnectorService.getShortName())
+                    .setVersion(kfConnectorService.getVersion())
+                    .setInstanceId(kfConnectorDeploymentInfo.getInstanceId())
+                    .setAvailableReplicas(1)
+                    .setRequestedReplicas(1)
+                    .setOtherApplicationsUsingThisServiceInstance(new ArrayList<>())
+                    .setNodeMetrics(CollectionUtils.listOf(
+                        new KubernetesNodeMetricsResponseDTO()
+                            .setNodeName(nodeName1)
+                            .setAverageCpuLoad(5)
+                            .setAverageMemoryUsage(5)
+                    ))
+                    // Add four pods (on two different nodes)
+                    .setPodsInformation(Collections.singletonList(
+                        new KubernetesPodInformationResponseDTO()
+                            .setPodName(podName5)
+                            .setHostIp(hostIp)
+                            .setNodeName(nodeName1)
+                            .setPhase(POD_PHASE_RUNNING)
+                            .setStartTime(startTimePod5)
+                            .setRestarts(restartsPod5)
+                            .setMetrics(new KubernetesPodMetricsResponseDTO()
+                                .setMemoryUsage(memoryUsagePod5)
+                                .setCpuLoad(cpuLoadPod5))))
+                    .setErrorMessages(CollectionUtils.listOf())
+                    .setInterfacesInformation(new ArrayList<>())));
+        given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoServiceInstance(eq(micoServiceDeploymentInfo))).willReturn(podList.getItems());
+        given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoServiceInstance(eq(kfConnectorDeploymentInfo))).willReturn(kfConnectorPodList.getItems());
+        Deployment deployment = new DeploymentBuilder()
+            .withNewMetadata().withName("deployment1").endMetadata()
+            .withNewSpec().withReplicas(podList.getItems().size()).endSpec()
+            .withNewStatus().withAvailableReplicas(podList.getItems().size()).endStatus()
+            .build();
+        Deployment deploymentKfConnector = new DeploymentBuilder()
+            .withNewMetadata().withName("kf-connector-deployment").endMetadata()
+            .withNewSpec().withReplicas(kfConnectorPodList.getItems().size()).endSpec()
+            .withNewStatus().withAvailableReplicas(kfConnectorPodList.getItems().size()).endStatus()
+            .build();
+        given(micoKubernetesClient.getDeploymentOfMicoServiceInstance(eq(micoServiceDeploymentInfo))).willReturn(Optional.of(deployment));
+        given(micoKubernetesClient.getDeploymentOfMicoServiceInstance(eq(kfConnectorDeploymentInfo))).willReturn(Optional.of(deploymentKfConnector));
+        given(micoKubernetesClient.getInterfaceByNameOfMicoServiceInstance(eq(micoServiceDeploymentInfo), anyString())).willReturn(Optional.ofNullable(kubernetesService));
         given(micoKubernetesClient.isApplicationDeployed(otherMicoApplication)).willReturn(true);
         given(micoKubernetesClient.getApplicationDeploymentStatus(otherMicoApplication)).willReturn(new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.DEPLOYED));
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
-        given(applicationRepository.findAllByUsedService(any(), any())).willReturn(CollectionUtils.listOf(otherMicoApplication, micoApplication));
+        given(applicationRepository.findAllByUsedServiceInstance(INSTANCE_ID)).willReturn(CollectionUtils.listOf(otherMicoApplication, micoApplication));
         given(serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion())).willReturn(CollectionUtils.listOf(micoService));
         given(prometheusConfig.getUri()).willReturn("http://localhost:9090/api/v1/query");
         given(serviceInterfaceRepository.findByServiceAndName(micoService.getShortName(), micoService.getVersion(), SERVICE_INTERFACE_NAME)).willReturn(Optional.of(micoServiceInterface));
@@ -330,6 +389,8 @@ public class MicoStatusServiceTest {
         ResponseEntity responseEntityCpuLoadPod3 = getPrometheusResponseEntity(cpuLoadPod3);
         ResponseEntity responseEntityMemoryUsagePod4 = getPrometheusResponseEntity(memoryUsagePod4);
         ResponseEntity responseEntityCpuLoadPod4 = getPrometheusResponseEntity(cpuLoadPod4);
+        ResponseEntity responseEntityMemoryUsagePod5 = getPrometheusResponseEntity(memoryUsagePod5);
+        ResponseEntity responseEntityCpuLoadPod5 = getPrometheusResponseEntity(cpuLoadPod5);
         given(restTemplate.getForEntity(any(), eq(PrometheusResponseDTO.class))).
             willReturn(responseEntityMemoryUsagePod1)
             .willReturn(responseEntityCpuLoadPod1)
@@ -338,7 +399,9 @@ public class MicoStatusServiceTest {
             .willReturn(responseEntityMemoryUsagePod3)
             .willReturn(responseEntityCpuLoadPod3)
             .willReturn(responseEntityMemoryUsagePod4)
-            .willReturn(responseEntityCpuLoadPod4);
+            .willReturn(responseEntityCpuLoadPod4)
+            .willReturn(responseEntityMemoryUsagePod5)
+            .willReturn(responseEntityCpuLoadPod5);
         assertEquals(micoApplicationStatus, micoStatusService.getApplicationStatus(micoApplication));
     }
 
@@ -351,15 +414,16 @@ public class MicoStatusServiceTest {
             .setTotalNumberOfAvailableReplicas(1)
             .setTotalNumberOfPods(1)
             .setTotalNumberOfMicoServices(1)
-            .setTotalNumberOfKafkaFaasConnectors(1)
+            .setTotalNumberOfKafkaFaasConnectors(0)
             .setServiceStatuses(CollectionUtils.listOf(
                 new MicoServiceStatusResponseDTO()
                     .setName(NAME)
                     .setShortName(SHORT_NAME)
                     .setVersion(VERSION)
+                    .setInstanceId(INSTANCE_ID)
                     .setAvailableReplicas(1)
                     .setRequestedReplicas(1)
-                    .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication,
+                    .setOtherApplicationsUsingThisServiceInstance(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication,
                         new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.DEPLOYED))))
                     .setNodeMetrics(CollectionUtils.listOf(
                         new KubernetesNodeMetricsResponseDTO()
@@ -384,14 +448,19 @@ public class MicoStatusServiceTest {
                     .setInterfacesInformation(CollectionUtils.listOf(
                         new MicoServiceInterfaceStatusResponseDTO()
                             .setName(SERVICE_INTERFACE_NAME))))); // No IPs
-        given(micoKubernetesClient.getDeploymentsOfMicoService(any(MicoService.class))).willReturn(CollectionUtils.listOf(deployment));
+        given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoServiceInstance(any(MicoServiceDeploymentInfo.class))).willReturn(podListWithOnePod.getItems());
+        Deployment deployment = new DeploymentBuilder()
+            .withNewMetadata().withName("deployment1").endMetadata()
+            .withNewSpec().withReplicas(podListWithOnePod.getItems().size()).endSpec()
+            .withNewStatus().withAvailableReplicas(podListWithOnePod.getItems().size()).endStatus()
+            .build();
+        given(micoKubernetesClient.getDeploymentOfMicoServiceInstance(any(MicoServiceDeploymentInfo.class))).willReturn(Optional.of(deployment));
         given(serviceInterfaceRepository.findByServiceAndName(micoService.getShortName(), micoService.getVersion(), SERVICE_INTERFACE_NAME)).willReturn(Optional.of(micoServiceInterface));
-        given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(Optional.empty());
-        given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(any(MicoService.class))).willReturn(podListWithOnePod.getItems());
+        given(micoKubernetesClient.getInterfaceByNameOfMicoServiceInstance(any(MicoServiceDeploymentInfo.class), anyString())).willReturn(Optional.empty());
         given(micoKubernetesClient.isApplicationDeployed(otherMicoApplication)).willReturn(true);
         given(micoKubernetesClient.getApplicationDeploymentStatus(otherMicoApplication)).willReturn(new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.DEPLOYED));
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
-        given(applicationRepository.findAllByUsedService(any(), any())).willReturn(CollectionUtils.listOf(otherMicoApplication, micoApplication));
+        given(applicationRepository.findAllByUsedServiceInstance(INSTANCE_ID)).willReturn(CollectionUtils.listOf(otherMicoApplication, micoApplication));
         given(serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion())).willReturn(CollectionUtils.listOf(micoService));
         given(prometheusConfig.getUri()).willReturn("http://localhost:9090/api/v1/query");
         ResponseEntity responseEntityMemoryUsagePod1 = getPrometheusResponseEntity(memoryUsagePod1);
@@ -410,18 +479,20 @@ public class MicoStatusServiceTest {
             .setTotalNumberOfAvailableReplicas(0)
             .setTotalNumberOfPods(0)
             .setTotalNumberOfMicoServices(1)
-            .setTotalNumberOfKafkaFaasConnectors(1)
+            .setTotalNumberOfKafkaFaasConnectors(0)
             .setServiceStatuses(CollectionUtils.listOf(
                 new MicoServiceStatusResponseDTO()
                     .setShortName(micoApplication.getServices().get(0).getShortName())
                     .setVersion(micoApplication.getServices().get(0).getVersion())
                     .setName(micoApplication.getServices().get(0).getName())
+                    .setInstanceId(micoApplication.getServiceDeploymentInfos().get(0).getInstanceId())
                     .setErrorMessages(CollectionUtils
                         .listOf(new MicoMessageResponseDTO().setContent("No deployment of MicoService '" + micoService.getShortName()
-                            + "' '" + micoService.getVersion() + "' is available.").setType(Type.ERROR)))));
-        given(micoKubernetesClient.getDeploymentsOfMicoService(any(MicoService.class))).willReturn(new ArrayList<>());
-        given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(Optional.ofNullable(kubernetesService));
-        given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(any(MicoService.class))).willReturn(podList.getItems());
+                            + "' '" + micoService.getVersion() + "' with instance ID '" + micoServiceDeploymentInfo.getInstanceId()
+                            + "' is available.").setType(Type.ERROR)))));
+        given(micoKubernetesClient.getDeploymentOfMicoServiceInstance(any(MicoServiceDeploymentInfo.class))).willReturn(Optional.empty());
+        given(micoKubernetesClient.getInterfaceByNameOfMicoServiceInstance(any(MicoServiceDeploymentInfo.class), anyString())).willReturn(Optional.ofNullable(kubernetesService));
+        given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoServiceInstance(any(MicoServiceDeploymentInfo.class))).willReturn(podListWithOnePod.getItems());
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
         given(serviceRepository.findAllByApplication(micoApplication.getShortName(), micoApplication.getVersion())).willReturn(CollectionUtils.listOf(micoService));
         assertEquals(micoApplicationStatus, micoStatusService.getApplicationStatus(micoApplication));
@@ -444,12 +515,13 @@ public class MicoStatusServiceTest {
     public void getServiceStatus() throws Exception {
         MicoServiceStatusResponseDTO micoServiceStatus = new MicoServiceStatusResponseDTO();
         micoServiceStatus
-            .setName(NAME)
-            .setShortName(SHORT_NAME)
-            .setVersion(VERSION)
-            .setAvailableReplicas(1)
-            .setRequestedReplicas(1)
-            .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication,
+            .setName(micoService.getName())
+            .setShortName(micoService.getShortName())
+            .setVersion(micoService.getVersion())
+            .setInstanceId(micoServiceDeploymentInfo.getInstanceId())
+            .setAvailableReplicas(micoServiceDeploymentInfo.getReplicas())
+            .setRequestedReplicas(micoServiceDeploymentInfo.getReplicas())
+            .setOtherApplicationsUsingThisServiceInstance(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication,
                 new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.DEPLOYED))))
             .setNodeMetrics(CollectionUtils.listOf(
                 new KubernetesNodeMetricsResponseDTO()
@@ -507,13 +579,19 @@ public class MicoStatusServiceTest {
                 .setExternalIp("192.168.2.112")
                 .setPort(8080)));
 
-        given(micoKubernetesClient.getDeploymentsOfMicoService(any(MicoService.class))).willReturn(CollectionUtils.listOf(deployment));
-        given(micoKubernetesClient.getInterfaceByNameOfMicoService(any(MicoService.class), anyString())).willReturn(Optional.ofNullable(kubernetesService));
-        given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoService(any(MicoService.class))).willReturn(podList.getItems());
+        given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoServiceInstance(any(MicoServiceDeploymentInfo.class))).willReturn(podList.getItems());
+        Deployment deployment = new DeploymentBuilder()
+            .withNewMetadata().withName("deployment1").endMetadata()
+            .withNewSpec().withReplicas(podList.getItems().size()).endSpec()
+            .withNewStatus().withAvailableReplicas(podList.getItems().size()).endStatus()
+            .build();
+        given(micoKubernetesClient.getDeploymentOfMicoServiceInstance(any(MicoServiceDeploymentInfo.class))).willReturn(Optional.of(deployment));
+        given(micoKubernetesClient.getInterfaceByNameOfMicoServiceInstance(any(MicoServiceDeploymentInfo.class), anyString())).willReturn(Optional.ofNullable(kubernetesService));
         given(micoKubernetesClient.isApplicationDeployed(otherMicoApplication)).willReturn(true);
         given(micoKubernetesClient.getApplicationDeploymentStatus(otherMicoApplication)).willReturn(new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.DEPLOYED));
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
-        given(applicationRepository.findAllByUsedService(any(), any())).willReturn(CollectionUtils.listOf(otherMicoApplication));
+        given(applicationRepository.findAllByUsedServiceInstance(INSTANCE_ID)).willReturn(CollectionUtils.listOf(otherMicoApplication));
+
         given(prometheusConfig.getUri()).willReturn("http://localhost:9090/api/v1/query");
         given(serviceInterfaceRepository.findByServiceAndName(micoService.getShortName(), micoService.getVersion(), SERVICE_INTERFACE_NAME)).willReturn(Optional.of(micoServiceInterface));
 
@@ -539,13 +617,13 @@ public class MicoStatusServiceTest {
             .willReturn(responseEntityCpuLoadPod3)
             .willReturn(responseEntityMemoryUsagePod4)
             .willReturn(responseEntityCpuLoadPod4);
-        assertEquals(micoServiceStatus, micoStatusService.getServiceStatus(micoService));
+        assertEquals(micoServiceStatus, micoStatusService.getServiceInstanceStatus(micoServiceDeploymentInfo));
     }
 
     @Test
     public void getServiceInterfaceStatus() throws Exception {
 
-        given(micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, SERVICE_INTERFACE_NAME))
+        given(micoKubernetesClient.getInterfaceByNameOfMicoServiceInstance(micoServiceDeploymentInfo, SERVICE_INTERFACE_NAME))
             .willReturn(Optional.ofNullable(kubernetesService));
 
         given(micoKubernetesClient.getPublicIpOfKubernetesService(kubernetesService.getMetadata().getName(),
@@ -562,7 +640,7 @@ public class MicoStatusServiceTest {
         expectedInterfaceStatusDTO.add(expectedServiceInterface);
         List<MicoMessageResponseDTO> errorMessages = new ArrayList<>();
 
-        List<MicoServiceInterfaceStatusResponseDTO> actualInterfaceStatusDTO = micoStatusService.getServiceInterfaceStatus(micoService, errorMessages);
+        List<MicoServiceInterfaceStatusResponseDTO> actualInterfaceStatusDTO = micoStatusService.getServiceInterfaceStatus(micoServiceDeploymentInfo, errorMessages);
 
         assertTrue("Expected there are no errors", errorMessages.isEmpty());
         assertEquals(expectedInterfaceStatusDTO, actualInterfaceStatusDTO);
@@ -572,7 +650,7 @@ public class MicoStatusServiceTest {
     public void getServiceInterfaceStatusWithErrors() {
 
         given(serviceInterfaceRepository.findByServiceAndName(micoService.getShortName(), micoService.getVersion(), SERVICE_INTERFACE_NAME)).willReturn(Optional.empty());
-        given(micoKubernetesClient.getInterfaceByNameOfMicoService(micoService, SERVICE_INTERFACE_NAME))
+        given(micoKubernetesClient.getInterfaceByNameOfMicoServiceInstance(micoServiceDeploymentInfo, SERVICE_INTERFACE_NAME))
             .willReturn(Optional.empty());
 
         MicoServiceInterfaceStatusResponseDTO expectedServiceInterface = new MicoServiceInterfaceStatusResponseDTO()
@@ -582,7 +660,7 @@ public class MicoStatusServiceTest {
 
         List<MicoMessageResponseDTO> errorMessages = new ArrayList<>();
 
-        List<MicoServiceInterfaceStatusResponseDTO> actualInterfaceStatusDTO = micoStatusService.getServiceInterfaceStatus(micoService, errorMessages);
+        List<MicoServiceInterfaceStatusResponseDTO> actualInterfaceStatusDTO = micoStatusService.getServiceInterfaceStatus(micoServiceDeploymentInfo, errorMessages);
 
         assertEquals("Expected one error", 1, errorMessages.size());
         assertEquals(expectedInterfaceStatusDTO, actualInterfaceStatusDTO);

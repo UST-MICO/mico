@@ -30,6 +30,7 @@ import io.github.ust.mico.core.exception.MicoServiceHasDependersException;
 import io.github.ust.mico.core.exception.MicoServiceIsDeployedException;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDependency;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.model.MicoServiceInterface;
 import io.github.ust.mico.core.service.GitHubCrawler;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
@@ -125,6 +126,10 @@ public class ServiceResourceUnitTests {
             .setVersion(VERSION)
             .setDescription(DESCRIPTION_1);
 
+        MicoServiceDeploymentInfo micoServiceDeploymentInfo = new MicoServiceDeploymentInfo()
+            .setService(micoService)
+            .setInstanceId(INSTANCE_ID);
+
         String nodeName = "testNode";
         String podPhase = "Running";
         String hostIp = "192.168.0.0";
@@ -172,10 +177,11 @@ public class ServiceResourceUnitTests {
             .setInterfacesInformation(CollectionUtils.listOf(new MicoServiceInterfaceStatusResponseDTO().setName(SERVICE_INTERFACE_NAME)))
             .setPodsInformation(Arrays.asList(kubernetesPodInfo1, kubernetesPodInfo2));
 
-        given(micoStatusService.getServiceStatus(any(MicoService.class))).willReturn(micoServiceStatus);
-        given(micoServiceBroker.getServiceFromDatabase(ArgumentMatchers.anyString(), ArgumentMatchers.any())).willReturn(micoService);
+        given(micoStatusService.getServiceInstanceStatus(any(MicoServiceDeploymentInfo.class))).willReturn(micoServiceStatus);
+        given(micoServiceBroker.getServiceInstanceFromDatabase(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString()))
+            .willReturn(micoServiceDeploymentInfo);
 
-        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/status"))
+        mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/" + INSTANCE_ID + "/status"))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath(SERVICE_DTO_SERVICE_NAME, is(NAME)))

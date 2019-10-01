@@ -139,7 +139,7 @@ public class BackgroundJobBroker {
     /**
      * Return a {@code MicoServiceBackgroundJob} for a given {@code instanceId} and {@code MicoServiceBackgroundJob.Type}.
      *
-     * @param instanceId instance id of a {@link MicoServiceDeploymentInfo}
+     * @param instanceId instance ID of a {@link MicoServiceDeploymentInfo}
      * @param type       the {@link MicoServiceBackgroundJob.Type}
      * @return the optional job. Is empty if no job exists for the given {@code instanceId}
      */
@@ -175,10 +175,10 @@ public class BackgroundJobBroker {
             MicoServiceBackgroundJob job = jobOptional.get();
             job.setFuture(future);
             saveJob(job);
-            log.debug("Saved new future of job '{}' with type '{}' for MicoService '{}' '{}' with instance id '{}'.",
+            log.debug("Saved new future of job '{}' with type '{}' for MicoService '{}' '{}' with instance ID '{}'.",
                 job.getId(), type, micoService.getShortName(), micoService.getVersion(), micoServiceInstanceId);
         } else {
-            log.warn("No job of type '{}' exists for '{}' '{}' with instance id '{}'.",
+            log.warn("No job of type '{}' exists for '{}' '{}' with instance ID '{}'.",
                 type, micoService.getShortName(), micoService.getVersion(), micoServiceInstanceId);
         }
     }
@@ -211,10 +211,10 @@ public class BackgroundJobBroker {
         if (jobOptional.isPresent()) {
             MicoServiceBackgroundJob job = jobOptional.get();
             if (!job.getStatus().equals(newStatus)) {
-                log.info("Job of '{}' '{}' with instance id '{}' with type '{}' changed its status: {} → {}.",
+                log.info("Job of '{}' '{}' with instance ID '{}' with type '{}' changed its status: {} → {}.",
                     micoService.getShortName(), micoService.getVersion(), micoServiceInstanceId, type, job.getStatus(), newStatus);
                 if (newStatus.equals(MicoServiceBackgroundJob.Status.ERROR) && !StringUtils.isEmpty(errorMessage)) {
-                    log.warn("Job of '{}' '{}' with instance id '{}' with type '{}' failed. Reason: {}",
+                    log.warn("Job of '{}' '{}' with instance ID '{}' with type '{}' failed. Reason: {}",
                         micoService.getShortName(), micoService.getVersion(), micoServiceInstanceId, type, errorMessage);
                 }
                 job.setStatus(newStatus);
@@ -222,7 +222,7 @@ public class BackgroundJobBroker {
                 saveJob(job);
             }
         } else {
-            log.warn("No job of type '{}' exists for '{}' '{}' with instance id '{}'.",
+            log.warn("No job of type '{}' exists for '{}' '{}' with instance ID '{}'.",
                 type, micoService.getShortName(), micoService.getVersion(), micoServiceInstanceId);
         }
     }

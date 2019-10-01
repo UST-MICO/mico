@@ -19,13 +19,11 @@
 
 package io.github.ust.mico.core.dto.response.status;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import io.fabric8.kubernetes.api.model.Pod;
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.dto.response.MicoApplicationResponseDTO;
 import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.Extension;
 import io.swagger.annotations.ExtensionProperty;
@@ -33,6 +31,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * DTO for the status information of a {@link MicoService} intended to use with responses only..
@@ -83,6 +84,19 @@ public class MicoServiceStatusResponseDTO {
     private String name;
 
     /**
+     * instance ID of the {@link MicoServiceDeploymentInfo}.
+     */
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "instance ID"),
+            @ExtensionProperty(name = "x-order", value = "35"),
+            @ExtensionProperty(name = "description", value = "instance ID of the MicoServiceDeploymentInfo.")
+        }
+    )})
+    private String instanceId;
+
+    /**
      * Counter for the number of replicas the corresponding that should be available.
      */
     @ApiModelProperty(extensions = {@Extension(
@@ -127,18 +141,18 @@ public class MicoServiceStatusResponseDTO {
 
     /**
      * List of {@link MicoApplicationResponseDTO MicoApplicationResponseDTOs} representing all applications that share
-     * the MicoService.
+     * the MicoService instance ({@link MicoServiceDeploymentInfo}).
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Applications Using This Service"),
+            @ExtensionProperty(name = "title", value = "Other Applications Using This Service Instance"),
             @ExtensionProperty(name = "x-order", value = "70"),
             @ExtensionProperty(name = "description", value = "List of MicoApplicationDTOs " +
-                "representing all applications that share the MicoService.")
+                "representing all applications that share the MicoService instance.")
         }
     )})
-    private List<MicoApplicationResponseDTO> applicationsUsingThisService = new ArrayList<>();
+    private List<MicoApplicationResponseDTO> otherApplicationsUsingThisServiceInstance = new ArrayList<>();
 
     /**
      * List of all {@link Pod Pods} of all replicas of a deployment of the {@link MicoService}.
