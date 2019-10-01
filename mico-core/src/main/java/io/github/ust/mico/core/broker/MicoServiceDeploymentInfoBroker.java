@@ -235,7 +235,7 @@ public class MicoServiceDeploymentInfoBroker {
      * the standard {@code save()} function of the service deployment information repository will not delete those
      * "tangling" (without relationships) labels (nodes), hence the manual clean up.
      */
-    void cleanUpTanglingNodes() {
+    public void cleanUpTanglingNodes() {
 
         micoLabelRepository.cleanUp();
         micoTopicRepository.cleanUp();
