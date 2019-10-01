@@ -141,18 +141,18 @@ public class MicoServiceStatusResponseDTO {
 
     /**
      * List of {@link MicoApplicationResponseDTO MicoApplicationResponseDTOs} representing all applications that share
-     * the MicoService.
+     * the MicoService instance ({@link MicoServiceDeploymentInfo}).
      */
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Applications Using This Service"),
+            @ExtensionProperty(name = "title", value = "Other Applications Using This Service Instance"),
             @ExtensionProperty(name = "x-order", value = "70"),
             @ExtensionProperty(name = "description", value = "List of MicoApplicationDTOs " +
-                "representing all applications that share the MicoService.")
+                "representing all applications that share the MicoService instance.")
         }
     )})
-    private List<MicoApplicationResponseDTO> applicationsUsingThisService = new ArrayList<>();
+    private List<MicoApplicationResponseDTO> otherApplicationsUsingThisServiceInstance = new ArrayList<>();
 
     /**
      * List of all {@link Pod Pods} of all replicas of a deployment of the {@link MicoService}.

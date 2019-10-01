@@ -266,7 +266,7 @@ public class MicoStatusServiceTest {
                     .setInstanceId(micoServiceDeploymentInfo.getInstanceId())
                     .setAvailableReplicas(micoServiceDeploymentInfo.getReplicas())
                     .setRequestedReplicas(micoServiceDeploymentInfo.getReplicas())
-                    .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication,
+                    .setOtherApplicationsUsingThisServiceInstance(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication,
                         new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.DEPLOYED))))
                     .setNodeMetrics(CollectionUtils.listOf(
                         new KubernetesNodeMetricsResponseDTO()
@@ -331,7 +331,7 @@ public class MicoStatusServiceTest {
                     .setInstanceId(kfConnectorDeploymentInfo.getInstanceId())
                     .setAvailableReplicas(1)
                     .setRequestedReplicas(1)
-                    .setApplicationsUsingThisService(new ArrayList<>())
+                    .setOtherApplicationsUsingThisServiceInstance(new ArrayList<>())
                     .setNodeMetrics(CollectionUtils.listOf(
                         new KubernetesNodeMetricsResponseDTO()
                             .setNodeName(nodeName1)
@@ -423,7 +423,7 @@ public class MicoStatusServiceTest {
                     .setInstanceId(INSTANCE_ID)
                     .setAvailableReplicas(1)
                     .setRequestedReplicas(1)
-                    .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication,
+                    .setOtherApplicationsUsingThisServiceInstance(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication,
                         new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.DEPLOYED))))
                     .setNodeMetrics(CollectionUtils.listOf(
                         new KubernetesNodeMetricsResponseDTO()
@@ -521,7 +521,7 @@ public class MicoStatusServiceTest {
             .setInstanceId(micoServiceDeploymentInfo.getInstanceId())
             .setAvailableReplicas(micoServiceDeploymentInfo.getReplicas())
             .setRequestedReplicas(micoServiceDeploymentInfo.getReplicas())
-            .setApplicationsUsingThisService(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication,
+            .setOtherApplicationsUsingThisServiceInstance(CollectionUtils.listOf(new MicoApplicationResponseDTO(otherMicoApplication,
                 new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.DEPLOYED))))
             .setNodeMetrics(CollectionUtils.listOf(
                 new KubernetesNodeMetricsResponseDTO()

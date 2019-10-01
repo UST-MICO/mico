@@ -97,7 +97,7 @@ public class MicoStatusService {
             requestedReplicasCount += micoServiceStatus.getRequestedReplicas();
             availableReplicasCount += micoServiceStatus.getAvailableReplicas();
             // Remove the current application's name to retrieve a list with only the names of other applications that are sharing a service
-            micoServiceStatus.getApplicationsUsingThisService().removeIf(a ->
+            micoServiceStatus.getOtherApplicationsUsingThisServiceInstance().removeIf(a ->
                 a.getShortName().equals(micoApplication.getShortName()) &&
                     a.getVersion().equals(micoApplication.getVersion()));
             applicationStatus.getServiceStatuses().add(micoServiceStatus);
@@ -189,7 +189,7 @@ public class MicoStatusService {
         for (MicoApplication application : usingApplications) {
             if (micoKubernetesClient.isApplicationDeployed(application)) {
                 MicoApplicationDeploymentStatus applicationDeploymentStatus = micoKubernetesClient.getApplicationDeploymentStatus(application);
-                serviceStatus.getApplicationsUsingThisService().add(new MicoApplicationResponseDTO(application, applicationDeploymentStatus));
+                serviceStatus.getOtherApplicationsUsingThisServiceInstance().add(new MicoApplicationResponseDTO(application, applicationDeploymentStatus));
             }
         }
 
