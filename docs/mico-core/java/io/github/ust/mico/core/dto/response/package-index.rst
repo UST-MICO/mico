@@ -24,5 +24,6 @@ io.github.ust.mico.core.dto.response
    MicoServiceResponseDTO
    MicoTopicResponseDTO
    MicoYamlResponseDTO
+   TopicDTO
    ValidationErrorResponseDTO
 

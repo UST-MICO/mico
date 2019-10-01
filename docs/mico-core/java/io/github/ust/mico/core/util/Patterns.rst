@@ -88,7 +88,7 @@ KUBERNETES_NAMING_REGEX
 .. java:field:: public static final String KUBERNETES_NAMING_REGEX
    :outertype: Patterns
 
-   Kubernetes resource names must be a valid DNS-1123 subdomain. The original regex is: [a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)* We use a slightly different regex for the validation. We don't allow ot start with a digit (must be a letter). Furthermore we don't allow to use dots.
+   Kubernetes resource names must be a valid DNS-1123 subdomain.
 
 NOT_EMPTY_REGEX
 ^^^^^^^^^^^^^^^
@@ -105,6 +105,22 @@ ONLY_LETTERS_OR_EMPTY_REGEX
    :outertype: Patterns
 
    Regex to ensure to only use letters (may be empty).
+
+OPEN_FAAS_FUNCTION_NAME_MESSAGE
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:field:: public static final String OPEN_FAAS_FUNCTION_NAME_MESSAGE
+   :outertype: Patterns
+
+   Message is used if a match with the \ :java:ref:`Patterns.OPEN_FAAS_FUNCTION_NAME_REGEX`\  fails.
+
+OPEN_FAAS_FUNCTION_NAME_REGEX
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:field:: public static final String OPEN_FAAS_FUNCTION_NAME_REGEX
+   :outertype: Patterns
+
+   OpenFaaS function names must be a valid DNS-1123 subdomain.
 
 RELATIVE_PATH_REGEX
 ^^^^^^^^^^^^^^^^^^^

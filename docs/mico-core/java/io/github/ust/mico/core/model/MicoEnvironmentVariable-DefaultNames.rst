@@ -71,6 +71,12 @@ KAFKA_TOPIC_TEST_MESSAGE_OUTPUT
 .. java:field:: public static final MicoEnvironmentVariable.DefaultNames KAFKA_TOPIC_TEST_MESSAGE_OUTPUT
    :outertype: MicoEnvironmentVariable.DefaultNames
 
+OPENFAAS_FUNCTION_NAME
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:field:: public static final MicoEnvironmentVariable.DefaultNames OPENFAAS_FUNCTION_NAME
+   :outertype: MicoEnvironmentVariable.DefaultNames
+
 OPENFAAS_GATEWAY
 ^^^^^^^^^^^^^^^^
 

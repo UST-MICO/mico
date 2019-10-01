@@ -4,6 +4,8 @@
 
 .. java:import:: org.springframework.data.neo4j.repository Neo4jRepository
 
+.. java:import:: java.util List
+
 .. java:import:: java.util Optional
 
 MicoTopicRepository
@@ -23,6 +25,12 @@ cleanUp
    :outertype: MicoTopicRepository
 
    Deletes all topics that do \ **not**\  have any relationship to another node.
+
+findAllByName
+^^^^^^^^^^^^^
+
+.. java:method::  List<MicoTopic> findAllByName(String name)
+   :outertype: MicoTopicRepository
 
 findByName
 ^^^^^^^^^^

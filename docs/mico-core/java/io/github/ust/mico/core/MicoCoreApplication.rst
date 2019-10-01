@@ -98,7 +98,7 @@ onApplicationEvent
 .. java:method:: public void onApplicationEvent(ApplicationReadyEvent event)
    :outertype: MicoCoreApplication
 
-   Runs when application is ready.
+   Runs when application is ready. Add KafkaFaasConnector in latest version to the database, if the current profile is not 'unit-testing' (e.g. Travis CI).
 
    :param event: the \ :java:ref:`ApplicationReadyEvent`\
 

@@ -18,4 +18,5 @@ io.github.ust.mico.core.persistence
    MicoServicePortRepository
    MicoServiceRepository
    MicoTopicRepository
+   OpenFaaSFunctionRepository
 

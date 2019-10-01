@@ -26,13 +26,42 @@ MicoServiceDeploymentInfoBroker
 
 Methods
 -------
+cleanUpTanglingNodes
+^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public void cleanUpTanglingNodes()
+   :outertype: MicoServiceDeploymentInfoBroker
+
+   Cleans up tangling nodes related to a \ :java:ref:`MicoServiceDeploymentInfo`\  in the database. In case addition properties (stored as separate node entity) such as labels, environment variables have been removed from a service deployment information, the standard \ ``save()``\  function of the service deployment information repository will not delete those "tangling" (without relationships) labels (nodes), hence the manual clean up.
+
+createOrReuseOpenFaaSFunctionsInDatabase
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method::  MicoServiceDeploymentInfo createOrReuseOpenFaaSFunctionsInDatabase(MicoServiceDeploymentInfo serviceDeploymentInfo)
+   :outertype: MicoServiceDeploymentInfoBroker
+
+   Checks if the given OpenFaaS function name is already present in the database. If so it will be reused. Otherwise a new node will be created.
+
+   :param serviceDeploymentInfo: the \ :java:ref:`MicoServiceDeploymentInfo`\
+   :return: the updated \ :java:ref:`MicoServiceDeploymentInfo`\
+
+createOrReuseTopicsInDatabase
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method::  MicoServiceDeploymentInfo createOrReuseTopicsInDatabase(MicoServiceDeploymentInfo serviceDeploymentInfo)
+   :outertype: MicoServiceDeploymentInfoBroker
+
+   Checks if topics with the same name already exists in the database. If so reuse them by setting the id of the existing Neo4j node and save them. If not create them in the database.
+
+   :param serviceDeploymentInfo: the \ :java:ref:`MicoServiceDeploymentInfo`\  containing topics
+
 getExistingServiceDeploymentInfo
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. java:method:: public MicoServiceDeploymentInfo getExistingServiceDeploymentInfo(MicoApplication micoApplication, MicoService micoService) throws IllegalStateException
    :outertype: MicoServiceDeploymentInfoBroker
 
-   Retrieves the \ :java:ref:`MicoServiceDeploymentInfo`\  that is used for the deployment of the requested {link MicoService} as part of a \ :java:ref:`MicoApplication`\ . There must not be zero or more than one service deployment information stored. If that's the case, an \ :java:ref:`IllegalStateException`\  will be thrown.
+   Retrieves the \ :java:ref:`MicoServiceDeploymentInfo`\  that is used for the deployment of the requested \ :java:ref:`MicoService`\  as part of a \ :java:ref:`MicoApplication`\ . There must not be zero or more than one service deployment information stored. If that's the case, an \ :java:ref:`IllegalStateException`\  will be thrown.
 
    :param micoApplication: the \ :java:ref:`MicoApplication`\
    :param micoService: the \ :java:ref:`MicoService`\

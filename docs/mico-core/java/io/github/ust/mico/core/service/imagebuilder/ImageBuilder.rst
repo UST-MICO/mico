@@ -48,6 +48,8 @@
 
 .. java:import:: org.springframework.util StringUtils
 
+.. java:import:: java.util Arrays
+
 .. java:import:: java.util List
 
 .. java:import:: java.util Optional

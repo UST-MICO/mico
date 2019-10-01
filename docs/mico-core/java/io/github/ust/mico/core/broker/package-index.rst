@@ -8,9 +8,11 @@ io.github.ust.mico.core.broker
 
    BackgroundJobBroker
    DeploymentBroker
+   KafkaFaasConnectorDeploymentInfoBroker
    MicoApplicationBroker
    MicoServiceBroker
    MicoServiceDeploymentInfoBroker
    MicoServiceInterfaceBroker
    OpenFaasBroker
+   TopicBroker
 

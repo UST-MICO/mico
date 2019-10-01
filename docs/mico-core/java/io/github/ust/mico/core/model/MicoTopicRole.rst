@@ -14,7 +14,7 @@ MicoTopicRole
 
    Represents a role of a \ :java:ref:`MicoTopic`\ .
 
-   An instance of this class is persisted as a relationship between between a \ :java:ref:`MicoServiceDeploymentInfo`\  and a \ :java:ref:`MicoTopic`\  node in the Neo4j database.
+   An instance of this class is persisted as a relationship between a \ :java:ref:`MicoServiceDeploymentInfo`\  and a \ :java:ref:`MicoTopic`\  node in the Neo4j database.
 
 Methods
 -------

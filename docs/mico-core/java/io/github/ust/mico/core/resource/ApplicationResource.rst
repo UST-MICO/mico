@@ -1,5 +1,7 @@
 .. java:import:: io.github.ust.mico.core.broker MicoApplicationBroker
 
+.. java:import:: io.github.ust.mico.core.broker MicoServiceBroker
+
 .. java:import:: io.github.ust.mico.core.dto.request MicoApplicationRequestDTO
 
 .. java:import:: io.github.ust.mico.core.dto.request MicoVersionRequestDTO
@@ -42,9 +44,13 @@
 
 .. java:import:: org.springframework.web.server ResponseStatusException
 
+.. java:import:: springfox.documentation.annotations ApiIgnore
+
 .. java:import:: javax.validation Valid
 
 .. java:import:: java.util List
+
+.. java:import:: java.util Optional
 
 .. java:import:: java.util.stream Collectors
 
@@ -55,6 +61,44 @@ ApplicationResource
    :noindex:
 
 .. java:type:: @Slf4j @RestController @RequestMapping public class ApplicationResource
+
+Fields
+------
+PATH_APPLICATIONS
+^^^^^^^^^^^^^^^^^
+
+.. java:field:: public static final String PATH_APPLICATIONS
+   :outertype: ApplicationResource
+
+PATH_KAFKA_FAAS_CONNECTOR
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:field:: public static final String PATH_KAFKA_FAAS_CONNECTOR
+   :outertype: ApplicationResource
+
+PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:field:: static final String PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_INSTANCE_ID
+   :outertype: ApplicationResource
+
+PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:field:: public static final String PATH_VARIABLE_KAFKA_FAAS_CONNECTOR_VERSION
+   :outertype: ApplicationResource
+
+PATH_VARIABLE_SHORT_NAME
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:field:: static final String PATH_VARIABLE_SHORT_NAME
+   :outertype: ApplicationResource
+
+PATH_VARIABLE_VERSION
+^^^^^^^^^^^^^^^^^^^^^
+
+.. java:field:: static final String PATH_VARIABLE_VERSION
+   :outertype: ApplicationResource
 
 Methods
 -------
@@ -70,16 +114,18 @@ addServiceToApplication
 .. java:method:: @ApiOperation @PostMapping public ResponseEntity<Resource<MicoServiceDeploymentInfoResponseDTO>> addServiceToApplication(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion)
    :outertype: ApplicationResource
 
+addServiceToApplication
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: @ApiIgnore @ApiOperation @PostMapping public ResponseEntity<Resource<MicoServiceDeploymentInfoResponseDTO>> addServiceToApplication(String applicationShortName, String applicationVersion, String serviceShortName, String serviceVersion, String instanceId)
+   :outertype: ApplicationResource
+
+   Currently we don't support multiple instance deployment for normal MICO services. Covered by MICO#743. Therefore this API endpoint is not required at the moment.
+
 createApplication
 ^^^^^^^^^^^^^^^^^
 
 .. java:method:: @PostMapping public ResponseEntity<Resource<MicoApplicationWithServicesResponseDTO>> createApplication(MicoApplicationRequestDTO applicationDto)
-   :outertype: ApplicationResource
-
-deleteAllKafkaFaasConnectorInstancesFromApplication
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. java:method:: @DeleteMapping public ResponseEntity<Void> deleteAllKafkaFaasConnectorInstancesFromApplication(String shortName, String version)
    :outertype: ApplicationResource
 
 deleteAllVersionsOfApplication
@@ -97,13 +143,13 @@ deleteApplication
 deleteKafkaFaasConnectorInstanceFromApplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: @DeleteMapping public ResponseEntity<Void> deleteKafkaFaasConnectorInstanceFromApplication(String shortName, String version, String kfConnectorVersion, String instanceId)
+.. java:method:: @DeleteMapping public ResponseEntity<Void> deleteKafkaFaasConnectorInstanceFromApplication(String shortName, String version, String instanceId)
    :outertype: ApplicationResource
 
 deleteKafkaFaasConnectorInstancesFromApplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: @DeleteMapping public ResponseEntity<Void> deleteKafkaFaasConnectorInstancesFromApplication(String shortName, String version, String kfConnectorVersion)
+.. java:method:: @DeleteMapping public ResponseEntity<Void> deleteKafkaFaasConnectorInstancesFromApplication(String shortName, String version)
    :outertype: ApplicationResource
 
 deleteServiceFromApplication
@@ -163,6 +209,6 @@ updateApplication
 updateKafkaFaasConnectorInstanceOfApplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:method:: @ApiOperation @PostMapping public ResponseEntity<Resource<KFConnectorDeploymentInfoResponseDTO>> updateKafkaFaasConnectorInstanceOfApplication(String applicationShortName, String applicationVersion, String kfConnectorVersion, String instanceId)
+.. java:method:: @ApiOperation @PostMapping public ResponseEntity<Resource<KFConnectorDeploymentInfoResponseDTO>> updateKafkaFaasConnectorInstanceOfApplication(String applicationShortName, String applicationVersion, String instanceId, String kfConnectorVersion)
    :outertype: ApplicationResource
 

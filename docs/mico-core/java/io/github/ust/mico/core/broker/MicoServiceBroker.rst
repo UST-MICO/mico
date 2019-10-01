@@ -1,18 +1,8 @@
-.. java:import:: java.util ArrayList
-
-.. java:import:: java.util List
-
-.. java:import:: java.util Optional
-
-.. java:import:: java.util.stream Collectors
-
-.. java:import:: io.github.ust.mico.core.model MicoApplication
-
-.. java:import:: org.springframework.beans.factory.annotation Autowired
-
-.. java:import:: org.springframework.stereotype Service
-
 .. java:import:: com.fasterxml.jackson.core JsonProcessingException
+
+.. java:import:: com.google.common.collect Iterables
+
+.. java:import:: io.github.ust.mico.core.configuration KafkaFaasConnectorConfig
 
 .. java:import:: io.github.ust.mico.core.dto.response MicoServiceDependencyGraphEdgeResponseDTO
 
@@ -20,19 +10,33 @@
 
 .. java:import:: io.github.ust.mico.core.dto.response MicoServiceResponseDTO
 
-.. java:import:: io.github.ust.mico.core.dto.response.status MicoServiceStatusResponseDTO
+.. java:import:: io.github.ust.mico.core.model MicoApplication
 
 .. java:import:: io.github.ust.mico.core.model MicoService
 
 .. java:import:: io.github.ust.mico.core.model MicoServiceDependency
 
+.. java:import:: io.github.ust.mico.core.model MicoServiceDeploymentInfo
+
+.. java:import:: io.github.ust.mico.core.persistence MicoServiceDeploymentInfoRepository
+
 .. java:import:: io.github.ust.mico.core.persistence MicoServiceRepository
 
 .. java:import:: io.github.ust.mico.core.service MicoKubernetesClient
 
-.. java:import:: io.github.ust.mico.core.service MicoStatusService
-
 .. java:import:: lombok.extern.slf4j Slf4j
+
+.. java:import:: org.springframework.beans.factory.annotation Autowired
+
+.. java:import:: org.springframework.stereotype Service
+
+.. java:import:: java.util ArrayList
+
+.. java:import:: java.util List
+
+.. java:import:: java.util Optional
+
+.. java:import:: java.util.stream Collectors
 
 MicoServiceBroker
 =================
@@ -110,6 +114,17 @@ getDependers
 .. java:method:: public List<MicoService> getDependers(MicoService serviceToLookFor)
    :outertype: MicoServiceBroker
 
+getLatestKFConnectorVersion
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public String getLatestKFConnectorVersion() throws KafkaFaasConnectorLatestVersionNotFound
+   :outertype: MicoServiceBroker
+
+   Returns the latest version of the KafkaFaaSConnector (according to the database)
+
+   :throws KafkaFaasConnectorLatestVersionNotFound: if no KafkaFaasConnector can be found
+   :return: the latest version of the KafkaFaaSConnector
+
 getServiceById
 ^^^^^^^^^^^^^^
 
@@ -120,6 +135,12 @@ getServiceFromDatabase
 ^^^^^^^^^^^^^^^^^^^^^^
 
 .. java:method:: public MicoService getServiceFromDatabase(String shortName, String version) throws MicoServiceNotFoundException
+   :outertype: MicoServiceBroker
+
+getServiceInstanceFromDatabase
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public MicoServiceDeploymentInfo getServiceInstanceFromDatabase(String shortName, String version, String instanceId) throws MicoServiceInstanceNotFoundException, MicoServiceInstanceDoesNotMatchShortNameAndVersionException
    :outertype: MicoServiceBroker
 
 getServiceYamlByShortNameAndVersion
@@ -133,12 +154,6 @@ getServiceYamlByShortNameAndVersion
    :param shortName: the short name of the \ :java:ref:`MicoService`\ .
    :param version: version the version of the \ :java:ref:`MicoService`\ .
    :return: the kubernetes YAML for the \ :java:ref:`MicoService`\ .
-
-getStatusOfService
-^^^^^^^^^^^^^^^^^^
-
-.. java:method:: public MicoServiceStatusResponseDTO getStatusOfService(String shortName, String version) throws MicoServiceNotFoundException
-   :outertype: MicoServiceBroker
 
 persistNewDependencyBetweenServices
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

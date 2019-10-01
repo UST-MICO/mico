@@ -8,6 +8,8 @@
 
 .. java:import:: io.github.ust.mico.core.dto.request KFConnectorDeploymentInfoRequestDTO
 
+.. java:import:: io.github.ust.mico.core.model MicoService
+
 .. java:import:: io.github.ust.mico.core.model MicoServiceDeploymentInfo
 
 .. java:import:: io.swagger.annotations ApiModelProperty

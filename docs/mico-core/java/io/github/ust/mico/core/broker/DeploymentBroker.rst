@@ -12,6 +12,8 @@
 
 .. java:import:: lombok.extern.slf4j Slf4j
 
+.. java:import:: org.apache.commons.lang3 NotImplementedException
+
 .. java:import:: org.apache.commons.lang3.exception ExceptionUtils
 
 .. java:import:: org.springframework.beans.factory.annotation Autowired
@@ -46,15 +48,41 @@ DeploymentBroker
 
 Methods
 -------
+checkIfKafkaFaasConnectorIsDeployable
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. java:method:: public void checkIfKafkaFaasConnectorIsDeployable(MicoServiceDeploymentInfo kfConnectorDeploymentInfo) throws DeploymentRequirementsOfKafkaFaasConnectorNotMetException
+   :outertype: DeploymentBroker
+
+   Checks if the properties of the \ :java:ref:`MicoServiceDeploymentInfo`\  are valid so the corresponding KafkaFaasConnector is considered deployable.
+
+   :param kfConnectorDeploymentInfo: the \ :java:ref:`MicoServiceDeploymentInfo`\
+   :throws DeploymentRequirementsOfKafkaFaasConnectorNotMetException: if the requirements are not met
+
 deployApplication
 ^^^^^^^^^^^^^^^^^
 
-.. java:method:: public MicoApplicationJobStatus deployApplication(String shortName, String version) throws MicoApplicationNotFoundException, MicoServiceInterfaceNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException, DeploymentException
+.. java:method:: public MicoApplicationJobStatus deployApplication(String shortName, String version) throws MicoApplicationNotFoundException, MicoServiceInterfaceNotFoundException, DeploymentRequirementsOfKafkaFaasConnectorNotMetException
    :outertype: DeploymentBroker
+
+   Deploys an application with all its included services and KafkaFaasConnector instances.
+
+   :param shortName: the short name of the \ :java:ref:`MicoApplication`\
+   :param version: the version of the \ :java:ref:`MicoApplication`\
+   :throws MicoApplicationNotFoundException: if the \ :java:ref:`MicoApplication`\  does not exist
+   :throws MicoServiceInterfaceNotFoundException: if the \ :java:ref:`MicoServiceInterface`\  does not exist
+   :return: the \ :java:ref:`MicoApplicationJobStatus`\
 
 undeployApplication
 ^^^^^^^^^^^^^^^^^^^
 
 .. java:method:: public void undeployApplication(String shortName, String version) throws MicoApplicationNotFoundException, MicoApplicationIsDeployingException
    :outertype: DeploymentBroker
+
+   Undeploys an application with all its included services and KafkaFaasConnector instances.
+
+   :param shortName: the short name of the \ :java:ref:`MicoApplication`\
+   :param version: the version of the \ :java:ref:`MicoApplication`\
+   :throws MicoApplicationNotFoundException: if the \ :java:ref:`MicoApplication`\  does not exist
+   :throws MicoApplicationIsDeployingException: if the \ :java:ref:`MicoApplication`\  is currently deploying
 

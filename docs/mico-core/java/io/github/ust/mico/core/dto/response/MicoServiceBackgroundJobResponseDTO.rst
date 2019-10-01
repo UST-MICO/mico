@@ -12,6 +12,8 @@
 
 .. java:import:: io.github.ust.mico.core.model MicoServiceBackgroundJob.Type
 
+.. java:import:: io.github.ust.mico.core.model MicoServiceDeploymentInfo
+
 .. java:import:: io.swagger.annotations ApiModelProperty
 
 .. java:import:: io.swagger.annotations Extension

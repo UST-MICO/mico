@@ -1,7 +1,3 @@
-.. java:import:: java.util ArrayList
-
-.. java:import:: java.util List
-
 .. java:import:: io.fabric8.kubernetes.api.model Pod
 
 .. java:import:: io.github.ust.mico.core.configuration.extension CustomOpenApiExtentionsPlugin
@@ -9,6 +5,8 @@
 .. java:import:: io.github.ust.mico.core.dto.response MicoApplicationResponseDTO
 
 .. java:import:: io.github.ust.mico.core.model MicoService
+
+.. java:import:: io.github.ust.mico.core.model MicoServiceDeploymentInfo
 
 .. java:import:: io.swagger.annotations ApiModelProperty
 
@@ -23,6 +21,10 @@
 .. java:import:: lombok NoArgsConstructor
 
 .. java:import:: lombok.experimental Accessors
+
+.. java:import:: java.util ArrayList
+
+.. java:import:: java.util List
 
 MicoServiceStatusResponseDTO
 ============================

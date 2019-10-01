@@ -4,6 +4,10 @@
 
 .. java:import:: io.github.ust.mico.core.model MicoTopicRole
 
+.. java:import:: io.github.ust.mico.core.model OpenFaaSFunction
+
+.. java:import:: io.github.ust.mico.core.util Patterns
+
 .. java:import:: io.swagger.annotations ApiModelProperty
 
 .. java:import:: io.swagger.annotations Extension
@@ -19,6 +23,10 @@
 .. java:import:: lombok.experimental Accessors
 
 .. java:import:: javax.validation.constraints NotNull
+
+.. java:import:: javax.validation.constraints Pattern
+
+.. java:import:: javax.validation.constraints Size
 
 .. java:import:: java.util Optional
 

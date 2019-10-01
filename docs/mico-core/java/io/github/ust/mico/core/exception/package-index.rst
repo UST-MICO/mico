@@ -7,9 +7,11 @@ io.github.ust.mico.core.exception
    :maxdepth: 1
 
    DeploymentException
+   DeploymentRequirementsOfKafkaFaasConnectorNotMetException
    GlobalExceptionHandler
    ImageBuildException
    KafkaFaasConnectorInstanceNotFoundException
+   KafkaFaasConnectorLatestVersionNotFound
    KafkaFaasConnectorNotAllowedHereException
    KafkaFaasConnectorVersionNotFoundException
    KubernetesResourceException
@@ -24,6 +26,8 @@ io.github.ust.mico.core.exception
    MicoServiceAlreadyExistsException
    MicoServiceDeploymentInformationNotFoundException
    MicoServiceHasDependersException
+   MicoServiceInstanceDoesNotMatchShortNameAndVersionException
+   MicoServiceInstanceNotFoundException
    MicoServiceInterfaceAlreadyExistsException
    MicoServiceInterfaceNotFoundException
    MicoServiceIsDeployedException
