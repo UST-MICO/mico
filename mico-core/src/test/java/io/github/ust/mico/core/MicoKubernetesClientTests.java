@@ -629,6 +629,7 @@ public class MicoKubernetesClientTests {
             .setServices(CollectionUtils.listOf(micoService))
             .setServiceDeploymentInfos(CollectionUtils.listOf(serviceDeploymentInfo3));
 
+        // Each MICO application uses a different instance of the same MICO service
         given(serviceDeploymentInfoRepository.findByApplicationAndService(
             micoApplication1.getShortName(), micoApplication1.getVersion(), micoService.getShortName(), micoService.getVersion()))
             .willReturn(CollectionUtils.listOf(serviceDeploymentInfo1));

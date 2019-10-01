@@ -154,8 +154,8 @@ public class ServiceResource {
     }
 
     @GetMapping("/{" + PATH_VARIABLE_SHORT_NAME + "}/{" + PATH_VARIABLE_VERSION + "}" + "/status")
-    public ResponseEntity<Resources<Resource<MicoServiceStatusResponseDTO>>> getStatusOfServiceInstance(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                                                        @PathVariable(PATH_VARIABLE_VERSION) String version) {
+    public ResponseEntity<Resources<Resource<MicoServiceStatusResponseDTO>>> getStatusListOfService(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
+                                                                                                    @PathVariable(PATH_VARIABLE_VERSION) String version) {
         MicoService micoService = getServiceFromMicoServiceBroker(shortName, version);
 
         List<MicoServiceStatusResponseDTO> micoServiceStatusList = micoStatusService.getServiceStatus(micoService);
