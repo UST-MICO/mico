@@ -222,6 +222,9 @@ public class ServiceResourceIntegrationTests {
         MicoServiceDeploymentInfo micoServiceDeploymentInfo2 = new MicoServiceDeploymentInfo()
             .setService(micoService)
             .setInstanceId(INSTANCE_ID_2);
+        MicoServiceDeploymentInfo micoServiceDeploymentInfo3 = new MicoServiceDeploymentInfo()
+            .setService(micoService)
+            .setInstanceId(INSTANCE_ID_3);
 
         String nodeName = "testNode";
         String podPhase = "Running";
@@ -254,7 +257,7 @@ public class ServiceResourceIntegrationTests {
                 .setCpuLoad(cpuLoadPod2)
                 .setMemoryUsage(memoryUsagePod2));
 
-        MicoServiceStatusResponseDTO micoServiceStatus1 = new MicoServiceStatusResponseDTO()
+        MicoServiceStatusResponseDTO micoServiceInstanceStatus1 = new MicoServiceStatusResponseDTO()
             .setVersion(micoService.getVersion())
             .setName(micoService.getName())
             .setShortName(micoService.getShortName())
@@ -269,7 +272,7 @@ public class ServiceResourceIntegrationTests {
             .setInterfacesInformation(CollectionUtils.listOf(new MicoServiceInterfaceStatusResponseDTO().setName(SERVICE_INTERFACE_NAME)))
             .setPodsInformation(Collections.singletonList(kubernetesPodInfo1));
 
-        MicoServiceStatusResponseDTO micoServiceStatus2 = new MicoServiceStatusResponseDTO()
+        MicoServiceStatusResponseDTO micoServiceInstanceStatus2 = new MicoServiceStatusResponseDTO()
             .setVersion(micoService.getVersion())
             .setName(micoService.getName())
             .setShortName(micoService.getShortName())
@@ -284,10 +287,13 @@ public class ServiceResourceIntegrationTests {
             .setInterfacesInformation(CollectionUtils.listOf(new MicoServiceInterfaceStatusResponseDTO().setName(SERVICE_INTERFACE_NAME)))
             .setPodsInformation(Collections.singletonList(kubernetesPodInfo2));
 
-        given(micoStatusService.getServiceStatus(micoService)).willReturn(CollectionUtils.listOf(micoServiceStatus1, micoServiceStatus2));
+        // MicoService instance 3 ist not deployed, therefore the status should not be part of the list.
+        given(micoStatusService.getServiceStatus(micoService))
+            .willReturn(CollectionUtils.listOf(micoServiceInstanceStatus1, micoServiceInstanceStatus2));
         given(serviceDeploymentInfoRepository.findAllByService(micoService.getShortName(), micoService.getVersion()))
-            .willReturn(CollectionUtils.listOf(micoServiceDeploymentInfo1, micoServiceDeploymentInfo2));
-        given(serviceRepository.findByShortNameAndVersion(micoService.getShortName(), micoService.getVersion())).willReturn(Optional.of(micoService));
+            .willReturn(CollectionUtils.listOf(micoServiceDeploymentInfo1, micoServiceDeploymentInfo2, micoServiceDeploymentInfo3));
+        given(serviceRepository.findByShortNameAndVersion(micoService.getShortName(), micoService.getVersion()))
+            .willReturn(Optional.of(micoService));
 
         mvc.perform(get(BASE_PATH + "/" + SHORT_NAME + "/" + VERSION + "/status"))
             .andDo(print())

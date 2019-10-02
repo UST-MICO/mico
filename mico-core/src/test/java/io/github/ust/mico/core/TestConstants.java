@@ -91,6 +91,7 @@ class TestConstants {
     static final String INSTANCE_ID = "instance-id";
     static final String INSTANCE_ID_1 = "instance-id-1";
     static final String INSTANCE_ID_2 = "instance-id-2";
+    static final String INSTANCE_ID_3 = "instance-id-3";
 
     static final String INPUT_TOPIC = "input-topic";
     static final String INPUT_TOPIC_1 = "input-topic-1";

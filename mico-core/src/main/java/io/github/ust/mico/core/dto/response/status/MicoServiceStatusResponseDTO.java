@@ -146,7 +146,7 @@ public class MicoServiceStatusResponseDTO {
     @ApiModelProperty(extensions = {@Extension(
         name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
         properties = {
-            @ExtensionProperty(name = "title", value = "Other Applications Using This Service Instance"),
+            @ExtensionProperty(name = "title", value = "Applications Using This Service Instance"),
             @ExtensionProperty(name = "x-order", value = "70"),
             @ExtensionProperty(name = "description", value = "List of MicoApplicationDTOs " +
                 "representing all applications that share the MicoService instance.")

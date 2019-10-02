@@ -32,6 +32,7 @@ import io.github.ust.mico.core.dto.response.status.*;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.model.MicoMessage.Type;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceInterfaceRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
@@ -79,6 +80,8 @@ public class MicoStatusServiceTest {
     private MicoServiceRepository serviceRepository;
     @MockBean
     private MicoServiceInterfaceRepository serviceInterfaceRepository;
+    @MockBean
+    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
     @Autowired
     private MicoStatusService micoStatusService;
 
@@ -487,9 +490,9 @@ public class MicoStatusServiceTest {
                     .setName(micoApplication.getServices().get(0).getName())
                     .setInstanceId(micoApplication.getServiceDeploymentInfos().get(0).getInstanceId())
                     .setErrorMessages(CollectionUtils
-                        .listOf(new MicoMessageResponseDTO().setContent("No deployment of MicoService '" + micoService.getShortName()
+                        .listOf(new MicoMessageResponseDTO().setContent("MicoService '" + micoService.getShortName()
                             + "' '" + micoService.getVersion() + "' with instance ID '" + micoServiceDeploymentInfo.getInstanceId()
-                            + "' is available.").setType(Type.ERROR)))));
+                            + "' is not deployed.").setType(Type.INFO)))));
         given(micoKubernetesClient.getDeploymentOfMicoServiceInstance(any(MicoServiceDeploymentInfo.class))).willReturn(Optional.empty());
         given(micoKubernetesClient.getInterfaceByNameOfMicoServiceInstance(any(MicoServiceDeploymentInfo.class), anyString())).willReturn(Optional.ofNullable(kubernetesService));
         given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoServiceInstance(any(MicoServiceDeploymentInfo.class))).willReturn(podListWithOnePod.getItems());
@@ -513,8 +516,8 @@ public class MicoStatusServiceTest {
     @Test
     @SuppressWarnings({"rawtypes", "unchecked"})
     public void getServiceStatus() throws Exception {
-        MicoServiceStatusResponseDTO micoServiceStatus = new MicoServiceStatusResponseDTO();
-        micoServiceStatus
+        List<MicoServiceStatusResponseDTO> micoServiceStatusList = new ArrayList<>();
+        MicoServiceStatusResponseDTO micoServiceStatusResponseDTO = new MicoServiceStatusResponseDTO()
             .setName(micoService.getName())
             .setShortName(micoService.getShortName())
             .setVersion(micoService.getVersion())
@@ -578,22 +581,34 @@ public class MicoStatusServiceTest {
                 .setExternalIpIsAvailable(true)
                 .setExternalIp("192.168.2.112")
                 .setPort(8080)));
+        micoServiceStatusList.add(micoServiceStatusResponseDTO);
 
-        given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoServiceInstance(any(MicoServiceDeploymentInfo.class))).willReturn(podList.getItems());
+        given(serviceDeploymentInfoRepository.findAllByService(micoService.getShortName(), micoService.getVersion()))
+            .willReturn(CollectionUtils.listOf(micoServiceDeploymentInfo));
+        given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoServiceInstance(eq(micoServiceDeploymentInfo)))
+            .willReturn(podList.getItems());
         Deployment deployment = new DeploymentBuilder()
             .withNewMetadata().withName("deployment1").endMetadata()
             .withNewSpec().withReplicas(podList.getItems().size()).endSpec()
             .withNewStatus().withAvailableReplicas(podList.getItems().size()).endStatus()
             .build();
-        given(micoKubernetesClient.getDeploymentOfMicoServiceInstance(any(MicoServiceDeploymentInfo.class))).willReturn(Optional.of(deployment));
-        given(micoKubernetesClient.getInterfaceByNameOfMicoServiceInstance(any(MicoServiceDeploymentInfo.class), anyString())).willReturn(Optional.ofNullable(kubernetesService));
+        given(micoKubernetesClient.getDeploymentOfMicoServiceInstance(eq(micoServiceDeploymentInfo)))
+            .willReturn(Optional.of(deployment));
+        given(micoKubernetesClient.getInterfaceByNameOfMicoServiceInstance(
+            eq(micoServiceDeploymentInfo), eq(micoServiceInterface.getServiceInterfaceName())))
+            .willReturn(Optional.ofNullable(kubernetesService));
         given(micoKubernetesClient.isApplicationDeployed(otherMicoApplication)).willReturn(true);
-        given(micoKubernetesClient.getApplicationDeploymentStatus(otherMicoApplication)).willReturn(new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.DEPLOYED));
-        given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(micoApplication));
-        given(applicationRepository.findAllByUsedServiceInstance(INSTANCE_ID)).willReturn(CollectionUtils.listOf(otherMicoApplication));
+        given(micoKubernetesClient.getApplicationDeploymentStatus(otherMicoApplication))
+            .willReturn(new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.DEPLOYED));
+        given(applicationRepository.findByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion()))
+            .willReturn(Optional.of(micoApplication));
+        given(applicationRepository.findAllByUsedServiceInstance(micoServiceDeploymentInfo.getInstanceId()))
+            .willReturn(CollectionUtils.listOf(otherMicoApplication));
 
         given(prometheusConfig.getUri()).willReturn("http://localhost:9090/api/v1/query");
-        given(serviceInterfaceRepository.findByServiceAndName(micoService.getShortName(), micoService.getVersion(), SERVICE_INTERFACE_NAME)).willReturn(Optional.of(micoServiceInterface));
+        given(serviceInterfaceRepository.findByServiceAndName(
+            micoService.getShortName(), micoService.getVersion(), micoServiceInterface.getServiceInterfaceName()))
+            .willReturn(Optional.of(micoServiceInterface));
 
         given(micoKubernetesClient.getPublicIpOfKubernetesService(kubernetesService.getMetadata().getName(),
             kubernetesService.getMetadata().getNamespace())).willReturn(Optional.of("192.168.2.112"));
@@ -617,7 +632,38 @@ public class MicoStatusServiceTest {
             .willReturn(responseEntityCpuLoadPod3)
             .willReturn(responseEntityMemoryUsagePod4)
             .willReturn(responseEntityCpuLoadPod4);
-        assertEquals(micoServiceStatus, micoStatusService.getServiceInstanceStatus(micoServiceDeploymentInfo));
+
+        assertEquals(micoServiceStatusList, micoStatusService.getServiceStatus(micoService));
+    }
+
+    @Test
+    public void getServiceStatusWithInstanceThatIsNotDeployed() throws Exception {
+        given(micoKubernetesClient.getPodsCreatedByDeploymentOfMicoServiceInstance(eq(micoServiceDeploymentInfo)))
+            .willReturn(new ArrayList<>());
+        given(micoKubernetesClient.getDeploymentOfMicoServiceInstance(eq(micoServiceDeploymentInfo)))
+            .willReturn(Optional.empty());
+        given(micoKubernetesClient.getInterfaceByNameOfMicoServiceInstance(
+            eq(micoServiceDeploymentInfo), eq(micoServiceInterface.getServiceInterfaceName())))
+            .willReturn(Optional.empty());
+        given(micoKubernetesClient.isApplicationDeployed(otherMicoApplication)).willReturn(false);
+        given(micoKubernetesClient.getApplicationDeploymentStatus(otherMicoApplication))
+            .willReturn(new MicoApplicationDeploymentStatus(MicoApplicationDeploymentStatus.Value.UNDEPLOYED));
+        given(applicationRepository.findByShortNameAndVersion(micoApplication.getShortName(), micoApplication.getVersion()))
+            .willReturn(Optional.of(micoApplication));
+        given(applicationRepository.findAllByUsedServiceInstance(micoServiceDeploymentInfo.getInstanceId()))
+            .willReturn(CollectionUtils.listOf(otherMicoApplication));
+
+        given(prometheusConfig.getUri()).willReturn("http://localhost:9090/api/v1/query");
+        given(serviceInterfaceRepository.findByServiceAndName(
+            micoService.getShortName(), micoService.getVersion(), micoServiceInterface.getServiceInterfaceName()))
+            .willReturn(Optional.of(micoServiceInterface));
+
+        given(micoKubernetesClient.getPublicIpOfKubernetesService(kubernetesService.getMetadata().getName(),
+            kubernetesService.getMetadata().getNamespace())).willReturn(Optional.empty());
+        given(micoKubernetesClient.getPublicPortsOfKubernetesService(kubernetesService.getMetadata().getName(),
+            kubernetesService.getMetadata().getNamespace())).willReturn(new ArrayList<>());
+
+        assertEquals("Expected there is no instance included", 0, micoStatusService.getServiceStatus(micoService).size());
     }
 
     @Test
