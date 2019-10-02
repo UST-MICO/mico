@@ -125,14 +125,23 @@ public class MicoStatusService {
         List<MicoServiceStatusResponseDTO> responseDTOList = new ArrayList<>();
         for (MicoServiceDeploymentInfo serviceDeploymentInfo : serviceDeploymentInfos) {
             MicoServiceStatusResponseDTO serviceInstanceStatus = getServiceInstanceStatus(serviceDeploymentInfo);
-            responseDTOList.add(serviceInstanceStatus);
+            // Add the instance only to the list if it's considered to be relevant for the service status:
+            // Either it must be requested to be deployed (requested replicas > 0)
+            // or it must be currently deployed (available replicas > 0).
+            if (serviceInstanceStatus.getRequestedReplicas() > 0 || serviceInstanceStatus.getAvailableReplicas() > 0) {
+                responseDTOList.add(serviceInstanceStatus);
+            } else {
+                log.debug("MicoService '{}' '{}' with instance ID '{}' is considered to be not relevant for the status response." +
+                        "There are no requested or available replicas.",
+                    micoService.getShortName(), micoService.getVersion(), serviceDeploymentInfo.getInstanceId());
+            }
         }
         return responseDTOList;
     }
 
     /**
-     * Get status information for a single {@link MicoServiceDeploymentInfo}: # available replicas, # requested replicas, pod metrics
-     * (CPU load, memory usage).
+     * Get status information for a single {@link MicoServiceDeploymentInfo} if it is deployed:
+     * # available replicas, # requested replicas, pod metrics (CPU load, memory usage).
      *
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.
      * @return the {@link MicoServiceStatusResponseDTO} which contains status information
@@ -168,10 +177,10 @@ public class MicoStatusService {
                 serviceStatus.setAvailableReplicas(0);
             }
         } else {
-            message = "No deployment of MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() +
-                "' with instance ID '" + instanceId + "' is available.";
-            log.warn(message);
-            MicoMessage errorMessage = MicoMessage.error(message);
+            message = "MicoService '" + micoService.getShortName() + "' '" + micoService.getVersion() +
+                "' with instance ID '" + instanceId + "' is not deployed.";
+            log.debug(message);
+            MicoMessage errorMessage = MicoMessage.info(message);
             return serviceStatus.setErrorMessages(CollectionUtils.listOf(new MicoMessageResponseDTO(errorMessage)));
         }
 
