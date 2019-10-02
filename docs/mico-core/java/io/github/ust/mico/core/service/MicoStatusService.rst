@@ -90,7 +90,7 @@ getServiceInstanceStatus
 .. java:method:: public MicoServiceStatusResponseDTO getServiceInstanceStatus(MicoServiceDeploymentInfo serviceDeploymentInfo)
    :outertype: MicoStatusService
 
-   Get status information for a single \ :java:ref:`MicoServiceDeploymentInfo`\ : # available replicas, # requested replicas, pod metrics (CPU load, memory usage).
+   Get status information for a single \ :java:ref:`MicoServiceDeploymentInfo`\  if it is deployed: # available replicas, # requested replicas, pod metrics (CPU load, memory usage).
 
    :param serviceDeploymentInfo: the \ :java:ref:`MicoServiceDeploymentInfo`\ .
    :return: the \ :java:ref:`MicoServiceStatusResponseDTO`\  which contains status information for a specific instance of a \ :java:ref:`MicoService`\ .
