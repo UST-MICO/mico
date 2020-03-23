@@ -29,6 +29,7 @@ import { ServiceListComponent } from './service-list/service-list.component';
 import { ServiceDetailComponent } from './service-detail/service-detail.component';
 
 import { MetricChartComponent } from './metric-chart/metric-chart.component';
+import { PatternListComponent } from './pattern-list/pattern-list.component';
 
 const routes: Routes = [
     { path: 'dashboard', component: DashboardComponent },
@@ -40,6 +41,7 @@ const routes: Routes = [
     { path: 'service-detail/service-list', component: ServiceListComponent },
     { path: 'service-detail/:shortName', component: ServiceDetailComponent },
     { path: 'service-detail/:shortName/:version', component: ServiceDetailComponent },
+    { path: 'pattern-detail/pattern-list', component: PatternListComponent },
     { path: 'metrics', component: MetricChartComponent }
 ];
 
@@ -49,4 +51,5 @@ const routes: Routes = [
     imports: [RouterModule.forRoot(routes),
     ]
 })
-export class RoutingModule { }
+export class RoutingModule {
+}

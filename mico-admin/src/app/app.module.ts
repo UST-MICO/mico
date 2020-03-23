@@ -101,6 +101,7 @@ import { ServiceDetailKubeconfigComponent } from './service-detail-kubeconfig/se
 import { GraphAddEnvironmentVariableComponent } from './dialogs/graph-add-environment-variable/graph-add-environment-variable.component';
 import { GraphAddKafkaTopicComponent } from './dialogs/graph-add-kafka-topic/graph-add-kafka-topic.component';
 import { GraphUpdateFaasFunctionComponent } from './dialogs/graph-update-faas-function/graph-update-faas-function.component';
+import { PatternListComponent } from './pattern-list/pattern-list.component';
 
 @NgModule({
     declarations: [
@@ -145,6 +146,7 @@ import { GraphUpdateFaasFunctionComponent } from './dialogs/graph-update-faas-fu
         GraphAddEnvironmentVariableComponent,
         GraphAddKafkaTopicComponent,
         GraphUpdateFaasFunctionComponent,
+        PatternListComponent
     ],
     entryComponents: [
         // dialogs

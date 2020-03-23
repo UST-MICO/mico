@@ -1,0 +1,50 @@
+<h3 class="ma3">A list of all Patterns</h3>
+<mat-divider></mat-divider>
+
+<!-- Service Table -->
+<mat-card class="ma2">
+    <mat-card-title>Patterns</mat-card-title>
+    <mat-card-content>
+
+        <mat-button-toggle mat-raised-button (click)="newPattern()" class="mv2">
+            <span>
+                new Pattern
+            </span>
+            <mat-icon>add</mat-icon>
+        </mat-button-toggle>
+
+        <mat-table [dataSource]="patterns" class="mat-elevation-z2">
+            <ng-container matColumnDef="name">
+                <mat-header-cell class="ph1" *matHeaderCellDef><b>Name</b></mat-header-cell>
+                <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/pattern-detail', element.shortName]">
+                    {{element.name}}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="shortName">
+                <mat-header-cell class="ph1" *matHeaderCellDef><b>Short Name</b></mat-header-cell>
+                <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/pattern-detail', element.shortName]">
+                    {{element.shortName}}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="version">
+                <mat-header-cell class="ph1" *matHeaderCellDef><b>Version</b></mat-header-cell>
+                <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/pattern-detail', element.shortName]">
+                    {{element.version}}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="description">
+                <mat-header-cell class="ph1" *matHeaderCellDef><b>Description</b></mat-header-cell>
+                <mat-cell class="ph1" *matCellDef="let element" [routerLink]="['/pattern-detail', element.shortName]">
+                    <div class="descriptionStyle">
+                        {{element.description}}
+                    </div>
+                </mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="controls">
+                <mat-header-cell class="ph1" *matHeaderCellDef><b>Controls</b></mat-header-cell>
+                <mat-cell *matCellDef="let element" class="ph1">
+                    <button mat-raised-button color="accent" (click)="deletePattern(element)">delete</button>
+                </mat-cell>
+            </ng-container>
+            <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        </mat-table>
+    </mat-card-content>
+</mat-card>

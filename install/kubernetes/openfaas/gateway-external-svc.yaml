@@ -12,7 +12,7 @@ spec:
   loadBalancerIP: ${OPENFAAS_PORTAL_PUBLIC_IP}
   type: LoadBalancer
   ports:
-    - port: 5000
+    - port: 8080
       protocol: TCP
       targetPort: 8080
   selector:

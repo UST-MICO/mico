@@ -30,7 +30,7 @@ import { safeUnsubscribe } from '../util/utils';
 })
 export class ToolbarComponent implements OnInit, OnDestroy {
 
-  openFaaSIp;
+  openFaaSIp = "http://localhost:8080";
   subOpenFaaSIp: Subscription;
   constructor(private apiService: ApiService) {
       this.subOpenFaaSIp = this.apiService.getOpenFaaSIp().subscribe(val => this.openFaaSIp = val);
