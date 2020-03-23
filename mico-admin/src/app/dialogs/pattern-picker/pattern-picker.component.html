@@ -1,0 +1,75 @@
+<h2 mat-dialog-title>Pick a Pattern</h2>
+<mat-dialog-content style="min-width: 48rem">
+
+    <mat-form-field style="width:100%">
+        <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
+    </mat-form-field>
+
+    <table mat-table [dataSource]="dataSource" style="width: 100%">
+
+        <!-- Checkbox Column -->
+        <ng-container *ngIf="choiceModel==1" matColumnDef="select" class="pr2">
+            <!-- 1: multi - insert checkboxes -->
+            <th mat-header-cell *matHeaderCellDef>
+                <mat-checkbox (change)="$event ? masterToggle() : null"
+                              [checked]="selection.hasValue() && isAllSelected()"
+                              [indeterminate]="selection.hasValue() && !isAllSelected()">
+                </mat-checkbox>
+            </th>
+            <td mat-cell *matCellDef="let row">
+                <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? selection.toggle(row) : null"
+                              [checked]="selection.isSelected(row)">
+                </mat-checkbox>
+            </td>
+        </ng-container>
+
+        <!-- Data Columns -->
+        <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef> ID. </th>
+            <td mat-cell *matCellDef="let element"> {{element.id}} </td>
+        </ng-container>
+        <ng-container matColumnDef="icon">
+            <th mat-header-cell *matHeaderCellDef> </th>
+            <td mat-cell *matCellDef="let element">
+                <img src='assets/EIP-Icons/{{element.name}}.svg'>
+            </td>
+        </ng-container>
+        <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef> Name </th>
+            <td mat-cell *matCellDef="let element"> {{element.name}} </td>
+        </ng-container>
+        <ng-container matColumnDef="description">
+            <th mat-header-cell *matHeaderCellDef> Description </th>
+            <td mat-cell *matCellDef="let element">
+                <!-- description of the selected version -->
+                {{element.description}}
+            </td>
+        </ng-container>
+
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <ng-container *ngIf="choiceModel==1">
+            <!-- 1: multi
+            no row highlighting
+            -->
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selection.toggle(row)"
+                class="table-row" [ngClass]="{'highlight': selectedRowIndex == row.id}">
+            </tr>
+        </ng-container>
+        <ng-container *ngIf="choiceModel==0">
+            <!-- 0: single
+            selected row is highlighted
+            -->
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selection.toggle(row)"
+                class="table-row" [ngClass]="{'highlight': selectedRowIndex == row.id}" (click)="highlight(row)">
+            </tr>
+        </ng-container>
+
+
+    </table>
+</mat-dialog-content>
+<mat-dialog-actions>
+    <button mat-button mat-dialog-close>Cancel</button>
+    <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
+    <button mat-button [mat-dialog-close]="getSelectedPattern()">Ok</button>
+</mat-dialog-actions>

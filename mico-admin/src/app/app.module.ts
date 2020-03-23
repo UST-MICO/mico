@@ -102,6 +102,7 @@ import { GraphAddEnvironmentVariableComponent } from './dialogs/graph-add-enviro
 import { GraphAddKafkaTopicComponent } from './dialogs/graph-add-kafka-topic/graph-add-kafka-topic.component';
 import { GraphUpdateFaasFunctionComponent } from './dialogs/graph-update-faas-function/graph-update-faas-function.component';
 import { PatternListComponent } from './pattern-list/pattern-list.component';
+import { PatternPickerComponent } from './dialogs/pattern-picker/pattern-picker.component';
 
 @NgModule({
     declarations: [
@@ -124,6 +125,7 @@ import { PatternListComponent } from './pattern-list/pattern-list.component';
         CreateServiceDialogComponent,
         ChangeServiceVersionComponent,
         ServicePickerComponent,
+        PatternPickerComponent,
         YesNoDialogComponent,
         CreateServiceInterfaceComponent,
         UpdateServiceInterfaceComponent,
@@ -153,6 +155,7 @@ import { PatternListComponent } from './pattern-list/pattern-list.component';
         CreateServiceDialogComponent,
         ChangeServiceVersionComponent,
         ServicePickerComponent,
+        PatternPickerComponent,
         YesNoDialogComponent,
         CreateServiceInterfaceComponent,
         UpdateServiceInterfaceComponent,

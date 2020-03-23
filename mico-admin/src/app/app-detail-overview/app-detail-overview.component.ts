@@ -26,6 +26,7 @@ import { ServicePickerComponent } from '../dialogs/service-picker/service-picker
 import { Subscription } from 'rxjs';
 import { YesNoDialogComponent } from '../dialogs/yes-no-dialog/yes-no-dialog.component';
 import { safeUnsubscribe } from '../util/utils';
+import { PatternPickerComponent } from '../dialogs/pattern-picker/pattern-picker.component';
 
 @Component({
     selector: 'mico-app-detail-overview',
@@ -75,6 +76,29 @@ export class AppDetailOverviewComponent implements OnDestroy {
             });
         });
 
+    }
+
+    addPattern() {
+        const dialogRef = this.dialog.open(PatternPickerComponent, {
+            data: {
+                filter: '',
+                choice: 'multi',
+                existingDependencies: this.application.services,
+                serviceId: '',
+            }
+        });
+        this.subDependeesDialog = dialogRef.afterClosed().subscribe(result => {
+
+            if (result === '') {
+                return;
+            }
+
+            result.forEach(service => {
+                this.apiService.postApplicationServices(this.application.shortName,
+                    this.application.version, service.shortName, service.version)
+                    .subscribe();
+            });
+        });
     }
 
     addKafkaFaasConnector() {
