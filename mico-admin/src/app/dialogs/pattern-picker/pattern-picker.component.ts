@@ -82,15 +82,18 @@ export class PatternPickerComponent implements OnInit, OnDestroy {
         const tempPatternGroups: any[] = [{
             id: 1,
             name: 'Message Filter',
-            description: 'A Message Filter'
+            description: 'A Message Filter',
+            openFaaSFunctionName: 'message-filter'
         }, {
             id: 2,
             name: "Content Based Router",
-            description: " A Content-Based Router"
+            description: " A Content-Based Router",
+            openFaaSFunctionName: 'content-based-router'
         }, {
             id: 3,
             name: 'Publish-Subscribe Channel',
-            description: 'A Pub-Sub Channel'
+            description: 'A Pub-Sub Channel',
+            openFaaSFunctionName: 'publish-subscribe-channel'
         }];
         this.dataSource = new MatTableDataSource(tempPatternGroups);
     }

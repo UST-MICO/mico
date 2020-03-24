@@ -1251,6 +1251,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                         inputTopicName: connector.inputTopicName,
                         outputTopicName: connector.outputTopicName,
                         openFaaSFunctionName: connector.openFaaSFunctionName,
+                        patternIconURL: `./assets/EIP-Icons/${connector.openFaaSFunctionName}.svg`
                     }
                 };
                 if (connector.outputTopicName != null && connector.outputTopicName !== '') {
@@ -1281,6 +1282,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                     inputTopicName: connector.inputTopicName,
                     outputTopicName: connector.outputTopicName,
                     openFaaSFunctionName: connector.openFaaSFunctionName,
+                    patternIconURL: `./assets/EIP-Icons/${connector.openFaaSFunctionName}.svg`
                 };
             }
             existing.error = '';

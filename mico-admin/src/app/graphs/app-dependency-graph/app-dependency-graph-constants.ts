@@ -209,36 +209,32 @@ export const KAFKA_TOPIC_NODE_TEMPLATE = {
 
 
 
+// export const KAFKA_FAAS_CONNECTOR_NODE_TEMPLATE = {
+//     id: 'kafka-faas-connector',
+//     innerHTML: `<polygon points="-32.1,0 -32,-8 32,-8 33,0 32,8 -32,8" data-link-handles="corners"></polygon>
+//     <path d="M-38 -15 L28 -15 A 6 15 0 0 1 28 15 L-38 15 A 6 15 0 0 0 -38 -15 Z" />
+//     <text class="text title clickable" data-content="title" data-click="faas-function" width="55" x="-27" y="-3"></text>
+//     <title data-content="title"></title>
+//     <g>
+//         <text class="text version small" data-content="data.version" data-click="version" width="24" x="-27" y="10"></text>
+//         <title data-content="data.version"></title>
+//     </g>
+//     <g>
+//         <text class="text instance-id small" data-content="data.instanceId" width="24" x="0" y="10"></text>
+//         <title data-content="data.instanceId"></title>
+//     </g>
+//     <g class="warning-label" transform="scale(0.4) translate(55,-35)">
+//         <circle class="warning-background" cx="12" cy="12" r="11.5"></circle>
+//         <path class="warning-foreground" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path>
+//         <title data-content="error"></title>
+//     </g>`
+// };
+
+
 export const KAFKA_FAAS_CONNECTOR_NODE_TEMPLATE = {
     id: 'kafka-faas-connector',
-    innerHTML: `<polygon points="-32.1,0 -32,-8 32,-8 33,0 32,8 -32,8" data-link-handles="corners"></polygon>
-    <path d="M-38 -15 L28 -15 A 6 15 0 0 1 28 15 L-38 15 A 6 15 0 0 0 -38 -15 Z" />
-    <text class="text title clickable" data-content="title" data-click="faas-function" width="55" x="-27" y="-3"></text>
-    <title data-content="title"></title>
-    <g>
-        <text class="text version small" data-content="data.version" data-click="version" width="24" x="-27" y="10"></text>
-        <title data-content="data.version"></title>
-    </g>
-    <g>
-        <text class="text instance-id small" data-content="data.instanceId" width="24" x="0" y="10"></text>
-        <title data-content="data.instanceId"></title>
-    </g>
-    <g class="warning-label" transform="scale(0.4) translate(55,-35)">
-        <circle class="warning-background" cx="12" cy="12" r="11.5"></circle>
-        <path class="warning-foreground" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path>
-        <title data-content="error"></title>
-    </g>`
-};
-
-
-export const EIP_PATTERN_NODE_TEMPLATE = {
-    id: 'kafka-faas-connector',
-    innerHTML: `<img href="./assets/EIP-Icons/Message-Filter.svg" src="./assets/EIP-Icons/Message-Filter.svg" alt="Kiwi standing on oval" width="55" height="55" x="-27" y="-3"></image>
-    <title data-content="title"></title>
-    <g>
-        <text class="text version small" data-content="data.version" data-click="version" width="24" x="-27" y="10"></text>
-        <title data-content="data.version"></title>
-    </g>`
+    innerHTML: `<img  data-href="data.patternIconURL"  alt="Kiwi standing on oval" width="55" height="55" x="0" y="0"></image>
+    <title data-content="title"></title>`
 };
 
 
