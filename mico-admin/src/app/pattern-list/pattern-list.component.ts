@@ -49,6 +49,7 @@ export class PatternListComponent implements OnInit {
     displayedColumns: string[] = ['name', 'shortName', 'version', 'description', 'controls'];
 
     ngOnInit() {
+
     }
 
     ngOnDestroy() {

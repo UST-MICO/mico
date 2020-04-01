@@ -56,7 +56,8 @@ public class MicoEnvironmentVariable {
         KAFKA_TOPIC_DEAD_LETTER,
         KAFKA_TOPIC_TEST_MESSAGE_OUTPUT,
         OPENFAAS_GATEWAY,
-        OPENFAAS_FUNCTION_NAME
+        OPENFAAS_FUNCTION_NAME,
+        OPENFAAS_PATTERN_CONFIG
     }
 
     @Id

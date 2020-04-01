@@ -103,6 +103,7 @@ import { GraphAddKafkaTopicComponent } from './dialogs/graph-add-kafka-topic/gra
 import { GraphUpdateFaasFunctionComponent } from './dialogs/graph-update-faas-function/graph-update-faas-function.component';
 import { PatternListComponent } from './pattern-list/pattern-list.component';
 import { PatternPickerComponent } from './dialogs/pattern-picker/pattern-picker.component';
+import { ConfigurePatternComponent } from './dialogs/configure-pattern/configure-pattern.component';
 
 @NgModule({
     declarations: [
@@ -126,6 +127,7 @@ import { PatternPickerComponent } from './dialogs/pattern-picker/pattern-picker.
         ChangeServiceVersionComponent,
         ServicePickerComponent,
         PatternPickerComponent,
+        ConfigurePatternComponent,
         YesNoDialogComponent,
         CreateServiceInterfaceComponent,
         UpdateServiceInterfaceComponent,
@@ -156,6 +158,7 @@ import { PatternPickerComponent } from './dialogs/pattern-picker/pattern-picker.
         ChangeServiceVersionComponent,
         ServicePickerComponent,
         PatternPickerComponent,
+        ConfigurePatternComponent,
         YesNoDialogComponent,
         CreateServiceInterfaceComponent,
         UpdateServiceInterfaceComponent,

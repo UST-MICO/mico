@@ -41,6 +41,11 @@ import org.neo4j.ogm.annotation.NodeEntity;
 @NodeEntity
 public class OpenFaaSFunction {
 
+    public OpenFaaSFunction(Long id, String name){
+        this.id = id;
+        this.name = name;
+    }
+
     @Id
     @GeneratedValue
     private Long id;
@@ -49,5 +54,11 @@ public class OpenFaaSFunction {
      * Name of the OpenFaaS Function
      */
     private String name;
+
+    /**
+     * Configuration of the OpenFaaS Function as JSON string ,e.g., to configure filter critera for a function that
+     * implements a Message Filter
+     */
+    private String configuration;
 
 }

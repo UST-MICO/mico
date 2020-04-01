@@ -177,6 +177,13 @@ public class MicoKubernetesClient {
                 .setName(MicoEnvironmentVariable.DefaultNames.OPENFAAS_FUNCTION_NAME.name())
                 .setValue(serviceDeploymentInfo.getOpenFaaSFunction().getName()));
         }
+        // Add OpenFaaS function configuration as environment variable if it is defined
+        if (serviceDeploymentInfo.getOpenFaaSFunction() != null && serviceDeploymentInfo.getOpenFaaSFunction().getConfiguration() != null) {
+            micoEnvironmentVariables.add(new MicoEnvironmentVariable()
+                .setName(MicoEnvironmentVariable.DefaultNames.OPENFAAS_PATTERN_CONFIG.name())
+                .setValue(serviceDeploymentInfo.getOpenFaaSFunction().getConfiguration()));
+        }
+
 
         Deployment deployment = new DeploymentBuilder()
             .withNewMetadata()
@@ -1409,7 +1416,7 @@ public class MicoKubernetesClient {
         }
         ingresses = service.getStatus().getLoadBalancer().getIngress();
         Optional<String> ip = Optional.empty();
-        if (ingresses.size() == 1) {
+        if (ingresses.size() == 1 && ingresses.get(0).getIp() != null) {
             ip = Optional.of(ingresses.get(0).getIp());
             log.debug("Returning the ip '{}' of the Kubernetes service '{}' in the namespace '{}'", ip.get(), name, namespace);
         } else if (ingresses.size() > 1) {

@@ -104,6 +104,15 @@ public class KFConnectorDeploymentInfoRequestDTO {
     @Pattern(regexp = Patterns.OPEN_FAAS_FUNCTION_NAME_REGEX, message = Patterns.OPEN_FAAS_FUNCTION_NAME_MESSAGE)
     private String openFaaSFunctionName;
 
+    @ApiModelProperty(extensions = {@Extension(
+        name = CustomOpenApiExtentionsPlugin.X_MICO_CUSTOM_EXTENSION,
+        properties = {
+            @ExtensionProperty(name = "title", value = "OpenFaaSFunctionConfiguration"),
+            @ExtensionProperty(name = "description", value = "Name of the OpenFaaS function.")
+        }
+    )})
+    private String openFaaSFunctionConfiguration;
+
 
     // -------------------
     // -> Constructors ---
@@ -125,5 +134,6 @@ public class KFConnectorDeploymentInfoRequestDTO {
         outputTopicRoleOpt.ifPresent(micoTopicRole -> this.outputTopicName = micoTopicRole.getTopic().getName());
         OpenFaaSFunction openFaaSFunction = kfConnectorDeploymentInfo.getOpenFaaSFunction();
         if (openFaaSFunction != null) this.openFaaSFunctionName = openFaaSFunction.getName();
+        if(openFaaSFunction != null) this.openFaaSFunctionConfiguration = openFaaSFunction.getConfiguration();
     }
 }

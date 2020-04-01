@@ -59,6 +59,7 @@ export class PatternPickerComponent implements OnInit, OnDestroy {
     dataSource;
     selection;
 
+
     // used for highlighting
     selectedRowIndex: number = -1;
 
@@ -79,23 +80,17 @@ export class PatternPickerComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
-        const tempPatternGroups: any[] = [{
-            id: 1,
-            name: 'Message Filter',
-            description: 'A Message Filter',
-            openFaaSFunctionName: 'message-filter'
-        }, {
-            id: 2,
-            name: "Content Based Router",
-            description: " A Content-Based Router",
-            openFaaSFunctionName: 'content-based-router'
-        }, {
-            id: 3,
-            name: 'Publish-Subscribe Channel',
-            description: 'A Pub-Sub Channel',
-            openFaaSFunctionName: 'publish-subscribe-channel'
-        }];
-        this.dataSource = new MatTableDataSource(tempPatternGroups);
+        this.serviceSubscription = this.apiService.getOpenFaaSFunctions().subscribe(functions => {
+            const tempPatternGroups: any[] = [];
+            functions.forEach(faasFunction => {
+                tempPatternGroups.push({
+                    id: tempPatternGroups.length + 1,
+                    name: faasFunction.name,
+                    description: 'some'
+                })
+            });
+            this.dataSource = new MatTableDataSource(tempPatternGroups);
+        });
     }
 
     ngOnDestroy() {

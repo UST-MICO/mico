@@ -35,6 +35,7 @@ import { GraphAddKafkaTopicComponent } from 'src/app/dialogs/graph-add-kafka-top
 import { Router } from '@angular/router';
 import { ServicePickerComponent } from 'src/app/dialogs/service-picker/service-picker.component';
 import { GraphUpdateFaasFunctionComponent } from 'src/app/dialogs/graph-update-faas-function/graph-update-faas-function.component';
+import { ConfigurePatternComponent } from '../../dialogs/configure-pattern/configure-pattern.component';
 
 
 const ROOT_NODE_ID = 'APPLICATION';
@@ -227,6 +228,23 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         if (event.detail.node.id === ROOT_NODE_ID || event.detail.node.type === 'service-interface') {
             event.preventDefault();  // prevent selecting application node and interface nodes
             return;
+        }
+        if(event.detail.key === 'pattern-config'){
+            const dialogRef = this.dialog.open(ConfigurePatternComponent, {
+                data: {
+                    kfConnectorInfo: event.detail.node.data,
+                }
+            });
+            const dialogSub = dialogRef.afterClosed().subscribe(updatedkfConnectorInfo =>{
+                dialogSub.unsubscribe();
+                if ( updatedkfConnectorInfo.openFaaSFunctionConfiguration == null) {
+                    return;
+                }
+
+                const putSub = this.api.putApplicationKafkaFaasConnector(this.application.shortName, this.application.version, updatedkfConnectorInfo.instanceId, updatedkfConnectorInfo).subscribe(() => {
+                    safeUnsubscribe(putSub);
+                });
+            })
         }
         if (event.detail.key === 'version') {  // user clicked on service version
             event.preventDefault();
@@ -1251,6 +1269,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                         inputTopicName: connector.inputTopicName,
                         outputTopicName: connector.outputTopicName,
                         openFaaSFunctionName: connector.openFaaSFunctionName,
+                        openFaaSFunctionConfiguration: connector.openFaaSFunctionConfiguration,
                         patternIconURL: `./assets/EIP-Icons/${connector.openFaaSFunctionName}.svg`
                     }
                 };
@@ -1282,6 +1301,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                     inputTopicName: connector.inputTopicName,
                     outputTopicName: connector.outputTopicName,
                     openFaaSFunctionName: connector.openFaaSFunctionName,
+                    openFaaSFunctionConfiguration: connector.openFaaSFunctionConfiguration,
                     patternIconURL: `./assets/EIP-Icons/${connector.openFaaSFunctionName}.svg`
                 };
             }

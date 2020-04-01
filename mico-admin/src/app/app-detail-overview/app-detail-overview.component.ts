@@ -96,10 +96,9 @@ export class AppDetailOverviewComponent implements OnDestroy {
             result.forEach(pattern => {
                 const apiSup = this.apiService.postApplicationKafkaFaasConnector(this.application.shortName, this.application.version).subscribe(faaSConnector => {
                     safeUnsubscribe(apiSup);
-                    console.log(pattern);
                     // deepcopy since depl is readonly
                     const faasConnectorCopy = JSON.parse(JSON.stringify(faaSConnector));
-                    faasConnectorCopy.openFaaSFunctionName = pattern.openFaaSFunctionName;
+                    faasConnectorCopy.openFaaSFunctionName = pattern.name;
                     const apiSupInner = this.apiService.putApplicationKafkaFaasConnector(this.application.shortName, this.application.version, faaSConnector.instanceId, faasConnectorCopy).subscribe(() => {
                         safeUnsubscribe(apiSupInner)
                     })

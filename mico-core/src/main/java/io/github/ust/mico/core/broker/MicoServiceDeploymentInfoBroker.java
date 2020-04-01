@@ -306,7 +306,9 @@ public class MicoServiceDeploymentInfoBroker {
         Optional<OpenFaaSFunction> existingOpenFaaSFunctionOptional = openFaaSFunctionRepository.findByName(openFaaSFunction.getName());
         if (existingOpenFaaSFunctionOptional.isPresent()) {
             // OpenFaasFunction node with same name already exists -> Reuse it
-            serviceDeploymentInfo.setOpenFaaSFunction(existingOpenFaaSFunctionOptional.get());
+            OpenFaaSFunction existingOpenFaaSFunction = existingOpenFaaSFunctionOptional.get();
+            existingOpenFaaSFunction.setConfiguration(openFaaSFunction.getConfiguration());
+            serviceDeploymentInfo.setOpenFaaSFunction(existingOpenFaaSFunction);
         } else {
             // OpenFaasFunction node with requested name does not exist yet -> Create it
             openFaaSFunction.setId(null);

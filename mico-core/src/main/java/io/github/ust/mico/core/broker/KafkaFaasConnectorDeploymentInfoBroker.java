@@ -223,18 +223,24 @@ public class KafkaFaasConnectorDeploymentInfoBroker {
                                                   MicoServiceDeploymentInfo storedServiceDeploymentInfo) {
         OpenFaaSFunction existingOpenFaaSFunction = storedServiceDeploymentInfo.getOpenFaaSFunction();
         String newOpenFaasFunctionName = kfConnectorDeploymentInfoRequestDTO.getOpenFaaSFunctionName();
-
+        String newOpenFaasFunctionConfiguration = kfConnectorDeploymentInfoRequestDTO.getOpenFaaSFunctionConfiguration();
         if (existingOpenFaaSFunction == null && newOpenFaasFunctionName != null) {
             // Function does not exist in database yet -> create it
-            storedServiceDeploymentInfo.setOpenFaaSFunction(new OpenFaaSFunction().setName(newOpenFaasFunctionName));
+            OpenFaaSFunction openFaaSFunction = new OpenFaaSFunction();
+            openFaaSFunction.setName(newOpenFaasFunctionName);
+            openFaaSFunction.setConfiguration("");
+            storedServiceDeploymentInfo.setOpenFaaSFunction(openFaaSFunction);
         } else if (existingOpenFaaSFunction != null) {
             // Function node already exists, check if it should be updated or deleted
             if (Strings.isNullOrEmpty(newOpenFaasFunctionName)) {
                 // Function node should be deleted
                 storedServiceDeploymentInfo.setOpenFaaSFunction(null);
-            } else if (!existingOpenFaaSFunction.getName().equals(newOpenFaasFunctionName)) {
+            } else if (!existingOpenFaaSFunction.getName().equals(newOpenFaasFunctionName) || !existingOpenFaaSFunction.getConfiguration().equals(newOpenFaasFunctionConfiguration)) {
                 // Function name has changed -> recreate the function node (new id, possibly reusing existing function node)
-                storedServiceDeploymentInfo.setOpenFaaSFunction(new OpenFaaSFunction().setName(newOpenFaasFunctionName));
+                OpenFaaSFunction openFaaSFunction = new OpenFaaSFunction();
+                openFaaSFunction.setName(newOpenFaasFunctionName);
+                openFaaSFunction.setConfiguration(newOpenFaasFunctionConfiguration);
+                storedServiceDeploymentInfo.setOpenFaaSFunction(openFaaSFunction);
             }
         }
 

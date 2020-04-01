@@ -128,6 +128,9 @@ export const STYLE_TEMPLATE = {
         .warning-foreground {
             fill: red;
         }
+        .configure-foreground {
+            fill: black
+        }
         .node:not(.application):not(.selected).hovered {
             fill: #dfdfdf;
         }
@@ -233,7 +236,9 @@ export const KAFKA_TOPIC_NODE_TEMPLATE = {
 
 export const KAFKA_FAAS_CONNECTOR_NODE_TEMPLATE = {
     id: 'kafka-faas-connector',
-    innerHTML: `<img  data-href="data.patternIconURL"  alt="Kiwi standing on oval" width="55" height="55" x="0" y="0"></image>
+    innerHTML: `
+<polygon points="-32.1,0 -32,-8 32,-8 33,0 32,8 -32,8" data-link-handles="corners"></polygon>
+<img  class="clickable" data-href="data.patternIconURL" data-click="pattern-config" width="55" height="55" x="0" y="0"></image>
     <title data-content="title"></title>`
 };
 
