@@ -236,10 +236,17 @@ export const KAFKA_TOPIC_NODE_TEMPLATE = {
 
 export const KAFKA_FAAS_CONNECTOR_NODE_TEMPLATE = {
     id: 'kafka-faas-connector',
-    innerHTML: `
-<polygon points="-32.1,0 -32,-8 32,-8 33,0 32,8 -32,8" data-link-handles="corners"></polygon>
-<img  class="clickable" data-href="data.patternIconURL" data-click="pattern-config" width="55" height="55" x="0" y="0"></image>
-    <title data-content="title"></title>`
+    innerHTML: `<polygon points="0,44 0,12 55,12 55,44 55,28 0,28" fill="white" data-link-handles="corners"></polygon>
+    <img class="clickable" data-href="data.patternIconURL" data-click="pattern-config" width="55" height="55" x="0" y="0"></image>
+    <title data-content="title"></title>
+    <g>
+        <text class="text instance-id small clickable" data-content="data.configurationButtonText" data-click="pattern-config" width="55" x="0" y="50"></text>
+        <title data-content="data.configurationButtonText"></title>
+     </g>
+    <g>
+        <text class="text instance-id small clickable" data-content="data.deleteButtonText" data-click="delete-pattern" width="55" x="35" y="50"></text>
+        <title data-content="data.deleteButtonText"></title>
+     </g>`
 };
 
 

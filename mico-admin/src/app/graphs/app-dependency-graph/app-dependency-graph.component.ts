@@ -246,6 +246,10 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 });
             })
         }
+        if(event.detail.key === 'delete-pattern'){
+            this.api.deleteApplicationKafkaFaasConnector(this.application.shortName, this.application.version, event.detail.node.data.instanceId)
+                .subscribe();
+        }
         if (event.detail.key === 'version') {  // user clicked on service version
             event.preventDefault();
             if (event.detail.node.type !== 'service') {
@@ -1270,7 +1274,9 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                         outputTopicName: connector.outputTopicName,
                         openFaaSFunctionName: connector.openFaaSFunctionName,
                         openFaaSFunctionConfiguration: connector.openFaaSFunctionConfiguration,
-                        patternIconURL: `./assets/EIP-Icons/${connector.openFaaSFunctionName}.svg`
+                        patternIconURL: `./assets/EIP-Icons/${connector.openFaaSFunctionName}.svg`,
+                        configurationButtonText: 'Edit',
+                        deleteButtonText: 'Delete'
                     }
                 };
                 if (connector.outputTopicName != null && connector.outputTopicName !== '') {
@@ -1302,7 +1308,9 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                     outputTopicName: connector.outputTopicName,
                     openFaaSFunctionName: connector.openFaaSFunctionName,
                     openFaaSFunctionConfiguration: connector.openFaaSFunctionConfiguration,
-                    patternIconURL: `./assets/EIP-Icons/${connector.openFaaSFunctionName}.svg`
+                    patternIconURL: `./assets/EIP-Icons/${connector.openFaaSFunctionName}.svg`,
+                    configurationButtonText: 'Edit',
+                    deleteButtonText: 'Delete'
                 };
             }
             existing.error = '';
