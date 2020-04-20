@@ -998,7 +998,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 status: applicationStatus,
                 application: application,
             };
-            graph.addNode(node, false);
+           // graph.addNode(node, false);
         } else {
             const node: ApplicationNode = graph.getNode(ROOT_NODE_ID) as ApplicationNode;
             node.status = applicationStatus;
@@ -1061,7 +1061,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                         },
                     },
                 };
-                graph.addEdge(edge, false);
+              //  graph.addEdge(edge, false);
             }
         });
 
