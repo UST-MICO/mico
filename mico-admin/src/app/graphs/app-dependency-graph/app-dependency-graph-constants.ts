@@ -206,7 +206,7 @@ export const KAFKA_TOPIC_NODE_TEMPLATE = {
     <ellipse class="background" cx="25" cy="0" rx="4" ry="9"/>
     <rect class="background" x="-25" y="-9" width="50" height="18"></rect>
     <ellipse class="foreground" cx="-25" cy="0" rx="4" ry="9"/>
-    <text class="text title" data-content="title" data-click="title" width="42" text-anchor="middle" x="2" y="3"></text>
+    <text class="text title" data-content="title" data-click="title" width="50" text-anchor="middle" x="2" y="3"></text>
     <title data-content="title"></title>`
 };
 
