@@ -17,52 +17,31 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.service.imagebuilder.buildtypes;
+package io.github.ust.mico.core.service.imagebuilder.knativebuild.buildtypes;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * BuildStatus is the status for a Build resource
+ * ClusterSpec provides information about the on-cluster build, if applicable.
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-public class BuildStatus {
+public class ClusterSpec {
 
     /**
-     * Optional. Cluster provides additional information if the builder is Cluster.
+     * Namespace is the namespace in which the pod is running.
      */
-    private ClusterSpec cluster;
-    // private GoogleSpec google;
-    // private Time startTime;
-    // private Time completionTime;
-    // private List<ContainerState> stepStatus = new ArrayList<>();
+    private String namespace;
 
     /**
-     * Optional. StepsCompleted lists the name of build steps completed.
+     * PodName is the name of the pod responsible for executing this build's steps.
      */
-    private List<String> stepsCompleted = new ArrayList<>();
-
-    // private BuildProvider builder;
-
-    // private GoogleSpec google;
-
-    // private Time startTime;
-
-    // private Time completionTime;
-
-    // private StepStates stepStates;
-
-    // private Conditions conditions;
+    private String podName;
 }

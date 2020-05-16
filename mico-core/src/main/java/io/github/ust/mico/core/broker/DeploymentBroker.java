@@ -1,19 +1,5 @@
 package io.github.ust.mico.core.broker;
 
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.github.ust.mico.core.exception.*;
-import io.github.ust.mico.core.model.*;
-import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
-import io.github.ust.mico.core.persistence.MicoServiceRepository;
-import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
-import io.github.ust.mico.core.util.FutureUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -23,6 +9,33 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.github.ust.mico.core.exception.DeploymentRequirementsOfKafkaFaasConnectorNotMetException;
+import io.github.ust.mico.core.exception.KubernetesResourceException;
+import io.github.ust.mico.core.exception.MicoApplicationIsDeployingException;
+import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
+import io.github.ust.mico.core.exception.MicoServiceInterfaceNotFoundException;
+import io.github.ust.mico.core.exception.NotInitializedException;
+import io.github.ust.mico.core.model.KubernetesDeploymentInfo;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus;
+import io.github.ust.mico.core.model.MicoApplicationJobStatus;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceBackgroundJob;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.model.MicoTopicRole;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.service.MicoKubernetesClient;
+import io.github.ust.mico.core.service.imagebuilder.TektonPipelinesController;
+import io.github.ust.mico.core.util.FutureUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import static java.util.stream.Collectors.toList;
 
@@ -40,7 +53,7 @@ public class DeploymentBroker {
     private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
 
     @Autowired
-    private ImageBuilder imageBuilder;
+    private TektonPipelinesController imageBuilder;
 
     @Autowired
     private MicoKubernetesClient micoKubernetesClient;
@@ -186,11 +199,8 @@ public class DeploymentBroker {
     }
 
     /**
-     * Creates the build job that have to be executed
-     * for the deployment of the provided {@link MicoService}
-     * and adds it to the provided list of build jobs.
-     * The build jobs are started immediately
-     * and will be stored into the database.
+     * Creates the build job that have to be executed for the deployment of the provided {@link MicoService} and adds it
+     * to the provided list of build jobs. The build jobs are started immediately and will be stored into the database.
      *
      * @param micoApplication           the {@link MicoApplication}
      * @param micoServiceDeploymentInfo the {@link MicoServiceDeploymentInfo}
@@ -267,8 +277,8 @@ public class DeploymentBroker {
     }
 
     /**
-     * Checks if the properties of the {@link MicoServiceDeploymentInfo} are valid
-     * so the corresponding KafkaFaasConnector is considered deployable.
+     * Checks if the properties of the {@link MicoServiceDeploymentInfo} are valid so the corresponding
+     * KafkaFaasConnector is considered deployable.
      *
      * @param kfConnectorDeploymentInfo the {@link MicoServiceDeploymentInfo}
      * @throws DeploymentRequirementsOfKafkaFaasConnectorNotMetException if the requirements are not met
@@ -289,9 +299,9 @@ public class DeploymentBroker {
     }
 
     /**
-     * Builds a {@link MicoService} and sets the resulting Docker image URI to the {@link MicoService} object.
-     * This method does not save the changes to the database immediately,
-     * because it would lead to deadlock problems (Neo4j multi-threading problems).
+     * Builds a {@link MicoService} and sets the resulting Docker image URI to the {@link MicoService} object. This
+     * method does not save the changes to the database immediately, because it would lead to deadlock problems (Neo4j
+     * multi-threading problems).
      *
      * @param micoService the {@link MicoService}
      * @return the {@link MicoService} with the updated Docker image URI
@@ -310,7 +320,7 @@ public class DeploymentBroker {
                 String errorMessage = "Build of service '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' didn't return a Docker image URI.";
                 throw new CompletionException(new RuntimeException(errorMessage));
             }
-        } catch (InterruptedException | ExecutionException | NotInitializedException | TimeoutException e) {
+        } catch (InterruptedException | ExecutionException | NotInitializedException | TimeoutException | KubernetesResourceException e) {
             throw new RuntimeException(e);
         }
     }

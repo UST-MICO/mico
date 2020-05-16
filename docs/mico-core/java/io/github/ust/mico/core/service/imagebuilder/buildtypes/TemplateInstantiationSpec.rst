@@ -13,7 +13,7 @@
 TemplateInstantiationSpec
 =========================
 
-.. java:package:: io.github.ust.mico.core.service.imagebuilder.buildtypes
+.. java:package:: io.github.ust.mico.core.service.imagebuilder.knativebuild.buildtypes
    :noindex:
 
 .. java:type:: @JsonInclude @Data @NoArgsConstructor @AllArgsConstructor @Accessors public class TemplateInstantiationSpec

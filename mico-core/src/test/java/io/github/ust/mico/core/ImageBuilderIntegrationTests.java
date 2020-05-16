@@ -23,7 +23,7 @@ import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.exception.NotInitializedException;
 import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
+import io.github.ust.mico.core.service.imagebuilder.knativebuild.KnativeBuildController;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
@@ -55,7 +55,7 @@ import static org.junit.Assert.assertNotNull;
 public class ImageBuilderIntegrationTests {
 
     @Autowired
-    private ImageBuilder imageBuilder;
+    private KnativeBuildController imageBuilder;
 
     @Autowired
     private IntegrationTestsUtils integrationTestsUtils;

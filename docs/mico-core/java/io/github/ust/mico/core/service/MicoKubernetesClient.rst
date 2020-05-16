@@ -32,7 +32,7 @@
 
 .. java:import:: io.github.ust.mico.core.service.imagebuilder ImageBuilder
 
-.. java:import:: io.github.ust.mico.core.service.imagebuilder.buildtypes Build
+.. java:import:: io.github.ust.mico.core.service.imagebuilder.knativebuild.buildtypes Build
 
 .. java:import:: io.github.ust.mico.core.util CollectionUtils
 

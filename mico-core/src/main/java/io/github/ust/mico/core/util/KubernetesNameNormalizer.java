@@ -25,7 +25,7 @@ import java.text.Normalizer;
 import io.github.ust.mico.core.model.MicoApplication;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceInterface;
-import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
+import io.github.ust.mico.core.service.imagebuilder.knativebuild.buildtypes.Build;
 
 import org.springframework.stereotype.Component;
 

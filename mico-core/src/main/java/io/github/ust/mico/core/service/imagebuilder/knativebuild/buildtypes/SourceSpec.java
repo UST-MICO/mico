@@ -17,13 +17,26 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.service.imagebuilder;
+package io.github.ust.mico.core.service.imagebuilder.knativebuild.buildtypes;
 
-import io.fabric8.kubernetes.client.CustomResourceList;
-import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
-public class BuildList extends CustomResourceList<Build> {
+/**
+ * SourceSpec defines the input to the Build
+ */
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Accessors(chain = true)
+public class SourceSpec {
 
-    private static final long serialVersionUID = 3524519220752406464L;
-
+    /**
+     * Optional. Git represents source in a Git repository.
+     */
+    private GitSourceSpec git;
 }

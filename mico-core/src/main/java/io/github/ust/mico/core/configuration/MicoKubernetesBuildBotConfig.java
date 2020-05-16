@@ -19,6 +19,7 @@
 
 package io.github.ust.mico.core.configuration;
 
+import io.github.ust.mico.core.service.imagebuilder.knativebuild.KnativeBuildController;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -29,7 +30,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 /**
- * Configuration of the build bot ({@link io.github.ust.mico.core.service.imagebuilder.ImageBuilder})
+ * Configuration of the build bot ({@link KnativeBuildController})
  */
 @Component
 @Setter
@@ -38,7 +39,7 @@ import javax.validation.constraints.NotNull;
 public class MicoKubernetesBuildBotConfig {
 
     /**
-     * The name of the namespace in which the {@link io.github.ust.mico.core.service.imagebuilder.ImageBuilder}
+     * The name of the namespace in which the {@link KnativeBuildController}
      * builds the images.
      */
     @NotBlank
@@ -46,7 +47,7 @@ public class MicoKubernetesBuildBotConfig {
 
     /**
      * The Docker image repository that is used by MICO to store the images
-     * that are build by {@link io.github.ust.mico.core.service.imagebuilder.ImageBuilder}.
+     * that are build by {@link KnativeBuildController}.
      */
     @NotBlank
     private String dockerImageRepositoryUrl;
@@ -59,7 +60,7 @@ public class MicoKubernetesBuildBotConfig {
 
     /**
      * The url to the kaniko executor image that is used by
-     * {@link io.github.ust.mico.core.service.imagebuilder.ImageBuilder}
+     * {@link KnativeBuildController}
      */
     @NotBlank
     private String kanikoExecutorImageUrl;

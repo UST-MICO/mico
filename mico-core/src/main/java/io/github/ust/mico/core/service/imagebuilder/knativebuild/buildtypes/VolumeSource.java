@@ -17,31 +17,28 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.service.imagebuilder.buildtypes;
+package io.github.ust.mico.core.service.imagebuilder.knativebuild.buildtypes;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AllArgsConstructor;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * ClusterSpec provides information about the on-cluster build, if applicable.
+ * Represents the source of a volume to mount.
+ * Only one of its members may be specified.
  */
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 @Accessors(chain = true)
-public class ClusterSpec {
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+public class VolumeSource {
 
-    /**
-     * Namespace is the namespace in which the pod is running.
-     */
-    private String namespace;
+    // Not implemented yet.
+    // See https://github.com/knative/build/blob/release-0.4/vendor/k8s.io/api/core/v1/types.go
 
-    /**
-     * PodName is the name of the pod responsible for executing this build's steps.
-     */
-    private String podName;
+    // Note: as soon as someone adds fields to this class, please add
+    // @AllArgsConstructor to this class in order
+    // to conform to the other build types.
 }

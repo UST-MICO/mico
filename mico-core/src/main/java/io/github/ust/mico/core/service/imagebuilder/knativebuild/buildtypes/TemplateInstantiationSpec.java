@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.service.imagebuilder.buildtypes;
+package io.github.ust.mico.core.service.imagebuilder.knativebuild.buildtypes;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.fabric8.kubernetes.api.model.EnvVar;

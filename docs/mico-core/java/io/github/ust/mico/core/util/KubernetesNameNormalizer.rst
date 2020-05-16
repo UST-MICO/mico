@@ -8,7 +8,7 @@
 
 .. java:import:: io.github.ust.mico.core.model MicoServiceInterface
 
-.. java:import:: io.github.ust.mico.core.service.imagebuilder.buildtypes Build
+.. java:import:: io.github.ust.mico.core.service.imagebuilder.knativebuild.buildtypes Build
 
 .. java:import:: org.springframework.stereotype Component
 

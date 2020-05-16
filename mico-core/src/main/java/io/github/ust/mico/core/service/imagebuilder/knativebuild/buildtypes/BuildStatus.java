@@ -17,33 +17,52 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.service.imagebuilder.buildtypes;
+package io.github.ust.mico.core.service.imagebuilder.knativebuild.buildtypes;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- * GitSourceSpec describes a Git repo source input to the Build.
+ * BuildStatus is the status for a Build resource
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-public class GitSourceSpec {
+public class BuildStatus {
 
     /**
-     * URL of the Git repository to clone from.
+     * Optional. Cluster provides additional information if the builder is Cluster.
      */
-    private String url;
+    private ClusterSpec cluster;
+    // private GoogleSpec google;
+    // private Time startTime;
+    // private Time completionTime;
+    // private List<ContainerState> stepStatus = new ArrayList<>();
 
     /**
-     * Git revision (branch, tag, commit SHA or ref) to clone.
-     * See https://git-scm.com/docs/gitrevisions#_specifying_revisions for more information.
+     * Optional. StepsCompleted lists the name of build steps completed.
      */
-    private String revision;
+    private List<String> stepsCompleted = new ArrayList<>();
+
+    // private BuildProvider builder;
+
+    // private GoogleSpec google;
+
+    // private Time startTime;
+
+    // private Time completionTime;
+
+    // private StepStates stepStates;
+
+    // private Conditions conditions;
 }

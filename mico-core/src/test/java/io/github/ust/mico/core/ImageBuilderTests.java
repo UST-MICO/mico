@@ -24,7 +24,7 @@ import io.github.ust.mico.core.TestConstants.*;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.exception.NotInitializedException;
 import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
+import io.github.ust.mico.core.service.imagebuilder.knativebuild.KnativeBuildController;
 import io.github.ust.mico.core.util.KubernetesNameNormalizer;
 import org.junit.After;
 import org.junit.Before;
@@ -48,7 +48,7 @@ public class ImageBuilderTests {
     @Rule
     public KubernetesServer mockServer = new KubernetesServer(false, true);
 
-    private ImageBuilder imageBuilder;
+    private KnativeBuildController imageBuilder;
 
     @Before
     public void setUp() {
@@ -59,7 +59,7 @@ public class ImageBuilderTests {
         buildBotConfig.setDockerImageRepositoryUrl("image-repository-url");
 
         KubernetesNameNormalizer kubernetesNameNormalizer = new KubernetesNameNormalizer();
-        imageBuilder = new ImageBuilder(mockServer.getClient(), buildBotConfig, kubernetesNameNormalizer);
+        imageBuilder = new KnativeBuildController(mockServer.getClient(), buildBotConfig, kubernetesNameNormalizer);
     }
 
     @After

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,22 +17,18 @@
  * under the License.
  */
 
-// This file can be replaced during build by using the `fileReplacements` array.
-// `ng build --prod` replaces `environment.ts` with `environment.prod.ts`.
-// The list of file replacements can be found in `angular.json`.
+package io.github.ust.mico.core.service.imagebuilder.knativebuild;
 
-export const environment = {
-    production: false,
-    settings: {
-        api: 'http://localhost:5000',
+import io.fabric8.kubernetes.api.builder.Function;
+import io.fabric8.kubernetes.client.CustomResourceDoneable;
+import io.github.ust.mico.core.service.imagebuilder.knativebuild.buildtypes.Build;
+
+@SuppressWarnings("rawtypes")
+public class DoneableBuild extends CustomResourceDoneable<Build> {
+
+	@SuppressWarnings("unchecked")
+	public DoneableBuild(Build resource, Function function) {
+        super(resource, function);
     }
-};
 
-/*
- * For easier debugging in development mode, you can import the following file
- * to ignore zone related error stack frames such as `zone.run`, `zoneDelegate.invokeTask`.
- *
- * This import should be commented out in production mode because it will have a negative impact
- * on performance if an error is thrown.
- */
-// import 'zone.js/dist/zone-error';  // Included with Angular CLI.
+}

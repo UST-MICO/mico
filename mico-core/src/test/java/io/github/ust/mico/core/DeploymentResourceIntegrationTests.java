@@ -28,7 +28,7 @@ import io.github.ust.mico.core.configuration.KafkaFaasConnectorConfig;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.model.*;
 import io.github.ust.mico.core.persistence.*;
-import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
+import io.github.ust.mico.core.service.imagebuilder.knativebuild.KnativeBuildController;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.EmbeddedRedisServer;
 import lombok.extern.slf4j.Slf4j;
@@ -113,7 +113,7 @@ public class DeploymentResourceIntegrationTests {
     KafkaFaasConnectorConfig kafkaFaasConnectorConfig;
 
     @Autowired
-    private ImageBuilder imageBuilder;
+    private KnativeBuildController imageBuilder;
 
     private String namespace;
     private MicoService service;

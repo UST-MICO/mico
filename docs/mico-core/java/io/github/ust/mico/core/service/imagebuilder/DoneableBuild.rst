@@ -2,7 +2,7 @@
 
 .. java:import:: io.fabric8.kubernetes.client CustomResourceDoneable
 
-.. java:import:: io.github.ust.mico.core.service.imagebuilder.buildtypes Build
+.. java:import:: io.github.ust.mico.core.service.imagebuilder.knativebuild.buildtypes Build
 
 DoneableBuild
 =============

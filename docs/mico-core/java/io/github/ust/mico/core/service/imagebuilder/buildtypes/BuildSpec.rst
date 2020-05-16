@@ -17,7 +17,7 @@
 BuildSpec
 =========
 
-.. java:package:: io.github.ust.mico.core.service.imagebuilder.buildtypes
+.. java:package:: io.github.ust.mico.core.service.imagebuilder.knativebuild.buildtypes
    :noindex:
 
 .. java:type:: @JsonInclude @JsonIgnoreProperties @Data @NoArgsConstructor @AllArgsConstructor @Accessors public class BuildSpec

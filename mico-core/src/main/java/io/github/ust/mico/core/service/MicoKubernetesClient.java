@@ -37,8 +37,8 @@ import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus.Value;
 import io.github.ust.mico.core.persistence.KubernetesDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
-import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
-import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
+import io.github.ust.mico.core.service.imagebuilder.knativebuild.KnativeBuildController;
+import io.github.ust.mico.core.service.imagebuilder.knativebuild.buildtypes.Build;
 import io.github.ust.mico.core.util.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -122,7 +122,7 @@ public class MicoKubernetesClient {
     private final MicoKubernetesConfig micoKubernetesConfig;
     private final MicoKubernetesBuildBotConfig buildBotConfig;
     private final KubernetesClient kubernetesClient;
-    private final ImageBuilder imageBuilder;
+    private final KnativeBuildController imageBuilder;
     private final BackgroundJobBroker backgroundJobBroker;
     private final MicoApplicationRepository applicationRepository;
     private final MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
@@ -130,7 +130,7 @@ public class MicoKubernetesClient {
 
     @Autowired
     public MicoKubernetesClient(MicoKubernetesConfig micoKubernetesConfig, MicoKubernetesBuildBotConfig buildBotConfig,
-                                KubernetesClient kubernetesClient, ImageBuilder imageBuilder,
+                                KubernetesClient kubernetesClient, KnativeBuildController imageBuilder,
                                 BackgroundJobBroker backgroundJobBroker, MicoApplicationRepository applicationRepository,
                                 MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository,
                                 KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository) {
@@ -1339,7 +1339,7 @@ public class MicoKubernetesClient {
                 kubernetesClient
                     .pods()
                     .inNamespace(buildBotConfig.getNamespaceBuildExecution())
-                    .withLabel(ImageBuilder.BUILD_CRD_GROUP + "/buildName", imageBuilder.createBuildName(micoService))
+                    .withLabel(KnativeBuildController.BUILD_CRD_GROUP + "/buildName", imageBuilder.createBuildName(micoService))
                     .delete();
             } catch (Exception e) {
                 log.warn("Failed to clean up build resources for MicoService '{}' '{}'. Caused by: {}",

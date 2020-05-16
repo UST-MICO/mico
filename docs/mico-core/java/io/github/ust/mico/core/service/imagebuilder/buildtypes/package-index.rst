@@ -1,7 +1,7 @@
-io.github.ust.mico.core.service.imagebuilder.buildtypes
+io.github.ust.mico.core.service.imagebuilder.knativebuild.buildtypes
 =======================================================
 
-.. java:package:: io.github.ust.mico.core.service.imagebuilder.buildtypes
+.. java:package:: io.github.ust.mico.core.service.imagebuilder.knativebuild.buildtypes
 
 .. toctree::
    :maxdepth: 1

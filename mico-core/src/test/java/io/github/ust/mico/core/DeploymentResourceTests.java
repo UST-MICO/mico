@@ -33,7 +33,7 @@ import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
+import io.github.ust.mico.core.service.imagebuilder.knativebuild.KnativeBuildController;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.EmbeddedRedisServer;
 import org.hamcrest.Matchers;
@@ -109,7 +109,7 @@ public class DeploymentResourceTests {
     private BackgroundJobBroker backgroundJobBroker;
 
     @MockBean
-    private ImageBuilder imageBuilder;
+    private KnativeBuildController imageBuilder;
 
     @MockBean
     private MicoKubernetesClient micoKubernetesClient;

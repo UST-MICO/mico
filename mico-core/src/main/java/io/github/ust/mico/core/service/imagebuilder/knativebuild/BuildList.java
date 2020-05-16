@@ -17,28 +17,13 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.service.imagebuilder.buildtypes;
+package io.github.ust.mico.core.service.imagebuilder.knativebuild;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import io.fabric8.kubernetes.client.CustomResourceList;
+import io.github.ust.mico.core.service.imagebuilder.knativebuild.buildtypes.Build;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.Accessors;
+public class BuildList extends CustomResourceList<Build> {
 
-/**
- * Represents the source of a volume to mount.
- * Only one of its members may be specified.
- */
-@Data
-@NoArgsConstructor
-@Accessors(chain = true)
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class VolumeSource {
+    private static final long serialVersionUID = 3524519220752406464L;
 
-    // Not implemented yet.
-    // See https://github.com/knative/build/blob/release-0.4/vendor/k8s.io/api/core/v1/types.go
-
-    // Note: as soon as someone adds fields to this class, please add
-    // @AllArgsConstructor to this class in order
-    // to conform to the other build types.
 }

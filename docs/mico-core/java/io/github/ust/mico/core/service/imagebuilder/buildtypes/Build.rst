@@ -13,7 +13,7 @@
 Build
 =====
 
-.. java:package:: io.github.ust.mico.core.service.imagebuilder.buildtypes
+.. java:package:: io.github.ust.mico.core.service.imagebuilder.knativebuild.buildtypes
    :noindex:
 
 .. java:type:: @JsonInclude @Data @Accessors @EqualsAndHashCode @ToString public class Build extends CustomResource

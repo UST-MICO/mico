@@ -28,7 +28,7 @@ import io.github.ust.mico.core.exception.DeploymentException;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
+import io.github.ust.mico.core.service.imagebuilder.knativebuild.KnativeBuildController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
@@ -92,7 +92,7 @@ public class IntegrationTestsUtils {
 
     /**
      * Set up the connection to the docker registry.
-     * Docker registry is required for pushing the images that are build by {@link ImageBuilder}.
+     * Docker registry is required for pushing the images that are build by {@link KnativeBuildController}.
      *
      * @param namespace the Kubernetes namespace
      */

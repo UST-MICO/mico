@@ -17,18 +17,33 @@
  * under the License.
  */
 
-package io.github.ust.mico.core.service.imagebuilder;
+package io.github.ust.mico.core.service.imagebuilder.knativebuild.buildtypes;
 
-import io.fabric8.kubernetes.api.builder.Function;
-import io.fabric8.kubernetes.client.CustomResourceDoneable;
-import io.github.ust.mico.core.service.imagebuilder.buildtypes.Build;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
-@SuppressWarnings("rawtypes")
-public class DoneableBuild extends CustomResourceDoneable<Build> {
-	
-	@SuppressWarnings("unchecked")
-	public DoneableBuild(Build resource, Function function) {
-        super(resource, function);
-    }
-	
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
+
+/**
+ * GitSourceSpec describes a Git repo source input to the Build.
+ */
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Accessors(chain = true)
+public class GitSourceSpec {
+
+    /**
+     * URL of the Git repository to clone from.
+     */
+    private String url;
+
+    /**
+     * Git revision (branch, tag, commit SHA or ref) to clone.
+     * See https://git-scm.com/docs/gitrevisions#_specifying_revisions for more information.
+     */
+    private String revision;
 }

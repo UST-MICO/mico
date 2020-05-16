@@ -48,6 +48,10 @@ kubectl apply -f mico-build-bot.yaml
 cd ../
 rm -rf tmp/
 
+kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml
+
+kubectl apply -f knative-build.yaml
+
 echo -e "\nScript execution finished!"
 
 # To delete the test namespace use:

@@ -9,7 +9,7 @@
 VolumeSource
 ============
 
-.. java:package:: io.github.ust.mico.core.service.imagebuilder.buildtypes
+.. java:package:: io.github.ust.mico.core.service.imagebuilder.knativebuild.buildtypes
    :noindex:
 
 .. java:type:: @Data @NoArgsConstructor @Accessors @JsonInclude public class VolumeSource
