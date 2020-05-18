@@ -1,6 +1,6 @@
 ---
 ---
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: faas-idler
@@ -9,6 +9,9 @@ metadata:
     app: openfaas
     component: faas-idler
 spec:
+  selector:
+    matchLabels:
+      app: faas-idler
   replicas: 1
   template:
     metadata:

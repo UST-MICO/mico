@@ -1,6 +1,7 @@
 package io.github.ust.mico.core.service.imagebuilder;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -84,11 +85,7 @@ public class TektonPipelinesController implements ImageBuilder {
         this.buildBotConfig = buildBotConfig;
         this.kubernetesNameNormalizer = kubernetesNameNormalizer;
         this.kubernetesClient = kubernetesClient;
-        if (kubernetesClient.isAdaptable(TektonClient.class)) {
-            this.tektonClient = kubernetesClient.adapt(TektonClient.class);
-        } else {
-            tektonClient = new DefaultTektonClient();
-        }
+        this.tektonClient = new DefaultTektonClient();
     }
 
     /**
@@ -132,7 +129,13 @@ public class TektonPipelinesController implements ImageBuilder {
             throw new NotInitializedException("Service account not configured in the cluster: images cannot be pushed to DockerHub!");
         }
 
-        initilizeBuildPipeline(namespace);
+        try {
+            initilizeBuildPipeline(namespace);
+        } catch (IOException e) {
+            e.printStackTrace();
+            log.error("Failed to initialize the build-and-push pipeline: {}", e.getMessage());
+            throw new NotInitializedException("Failed to initialize the build-and-push pipeline: " + e.getMessage());
+        }
 
         scheduledBuildStatusCheckService = Executors.newSingleThreadScheduledExecutor();
         isInitialized = true;
@@ -141,34 +144,30 @@ public class TektonPipelinesController implements ImageBuilder {
 
     /**
      * Initialize the Tekton build-and-push pipeline. This is required to be able to use the image builder.
-     *
-     * @throws NotInitializedException if there are errors during pipeline initialization
      */
-    public void initilizeBuildPipeline(String namespace) throws NotInitializedException {
-        try {
-            log.info("Initializing the Tekton build-and-push pipeline");
-            File cloneTaskFile = new ClassPathResource("tekton/git-clone.yml").getFile();
-            File buildTaskFile = new ClassPathResource("tekton/kaniko.yml").getFile();
-            File pipelineFile = new ClassPathResource("tekton/build-and-push.yml").getFile();
+    public void initilizeBuildPipeline(String namespace) throws IOException {
+        log.info("Initializing the Tekton build-and-push pipeline");
+        File cloneTaskFile = new ClassPathResource("tekton/git-clone.yml").getFile();
+        File buildTaskFile = new ClassPathResource("tekton/kaniko.yml").getFile();
+        File pipelineFile = new ClassPathResource("tekton/build-and-push.yml").getFile();
 
-            Task cloneTask = tektonClient.v1beta1().tasks().load(cloneTaskFile).get();
-            Task buildTask = tektonClient.v1beta1().tasks().load(buildTaskFile).get();
-            Pipeline pipeline = tektonClient.v1beta1().pipelines().load(pipelineFile).get();
+        Task cloneTask = tektonClient.v1beta1().tasks().load(cloneTaskFile).get();
+        Task buildTask = tektonClient.v1beta1().tasks().load(buildTaskFile).get();
+        Pipeline pipeline = tektonClient.v1beta1().pipelines().load(pipelineFile).get();
 
-            tektonClient.v1beta1().tasks().inNamespace(namespace).createOrReplace(cloneTask);
-            tektonClient.v1beta1().tasks().inNamespace(namespace).createOrReplace(buildTask);
-            tektonClient.v1beta1().pipelines().inNamespace(namespace).createOrReplace(pipeline);
+        tektonClient.v1beta1().tasks().inNamespace(namespace).createOrReplace(cloneTask);
+        tektonClient.v1beta1().tasks().inNamespace(namespace).createOrReplace(buildTask);
+        tektonClient.v1beta1().pipelines().inNamespace(namespace).createOrReplace(pipeline);
 
-            log.info("Successfully initialized Tekton build-and-push pipeline");
-        } catch (Exception e) {
-            e.printStackTrace();
-            log.error("Failed to initialize the build-and-push pipeline: {}", e.getMessage());
-            throw new NotInitializedException("Failed to initialize the build-and-push pipeline.");
-        }
+        log.info("Successfully initialized Tekton build-and-push pipeline");
     }
 
     @Override
-    public CompletableFuture<String> build(MicoService micoService) throws NotInitializedException, InterruptedException, ExecutionException, TimeoutException, KubernetesResourceException {
+    public CompletableFuture<String> build(MicoService micoService) throws InterruptedException, ExecutionException, TimeoutException, KubernetesResourceException, NotInitializedException {
+        if (!isInitialized) {
+            throw new NotInitializedException("Cannot trigger the build pipeline: tthe image builder is not initialized");
+        }
+
         if (StringUtils.isEmpty(micoService.getGitCloneUrl())) {
             throw new IllegalArgumentException("Git clone url is missing");
         }

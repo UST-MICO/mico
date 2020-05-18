@@ -20,7 +20,7 @@
 package io.github.ust.mico.core.service;
 
 import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
-import io.github.ust.mico.core.service.imagebuilder.knativebuild.KnativeBuildController;
+import io.github.ust.mico.core.service.imagebuilder.TektonPipelinesController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
@@ -32,7 +32,7 @@ public class ImageBuilderHealthIndicator implements HealthIndicator {
     private final ImageBuilder imageBuilder;
 
     @Autowired
-    public ImageBuilderHealthIndicator(KnativeBuildController imageBuilder) {
+    public ImageBuilderHealthIndicator(TektonPipelinesController imageBuilder) {
         this.imageBuilder = imageBuilder;
     }
 

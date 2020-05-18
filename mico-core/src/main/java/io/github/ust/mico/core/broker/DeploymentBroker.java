@@ -320,7 +320,7 @@ public class DeploymentBroker {
                 String errorMessage = "Build of service '" + micoService.getShortName() + "' '" + micoService.getVersion() + "' didn't return a Docker image URI.";
                 throw new CompletionException(new RuntimeException(errorMessage));
             }
-        } catch (InterruptedException | ExecutionException | NotInitializedException | TimeoutException | KubernetesResourceException e) {
+        } catch (InterruptedException | ExecutionException | TimeoutException | KubernetesResourceException | NotInitializedException e) {
             throw new RuntimeException(e);
         }
     }

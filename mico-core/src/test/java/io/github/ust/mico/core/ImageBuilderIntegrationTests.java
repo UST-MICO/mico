@@ -19,11 +19,15 @@
 
 package io.github.ust.mico.core;
 
-import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
+import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.NotInitializedException;
 import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.service.imagebuilder.knativebuild.KnativeBuildController;
+import io.github.ust.mico.core.service.imagebuilder.TektonPipelinesController;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
@@ -35,11 +39,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -55,7 +54,7 @@ import static org.junit.Assert.assertNotNull;
 public class ImageBuilderIntegrationTests {
 
     @Autowired
-    private KnativeBuildController imageBuilder;
+    private TektonPipelinesController imageBuilder;
 
     @Autowired
     private IntegrationTestsUtils integrationTestsUtils;
@@ -84,20 +83,20 @@ public class ImageBuilderIntegrationTests {
         integrationTestsUtils.cleanUpEnvironment(namespace);
     }
 
+    // TODO refactor for tekton-based image builder
     /**
      * Test if the connected Kubernetes cluster has the required Build CRD defined.
      */
-    @Test
+    /*@Test
     public void checkBuildCustomResourceDefinition() {
         Optional<CustomResourceDefinition> buildCRD = imageBuilder.getBuildCRD();
         log.info("Build CRD: {}" + buildCRD);
         assertNotNull("No Build CRD defined", buildCRD);
-    }
+    }*/
 
     /**
-     * Test the ImageBuilder if the build and push of an image works.
-     * It uses the provided Git repository that contains a Dockerfile to build a Docker image.
-     * Afterwards it pushes it to the provided Docker registry (e.g. DockerHub).
+     * Test the ImageBuilder if the build and push of an image works. It uses the provided Git repository that contains
+     * a Dockerfile to build a Docker image. Afterwards it pushes it to the provided Docker registry (e.g. DockerHub).
      *
      * @throws NotInitializedException if ImageBuilder was not initialized
      * @throws InterruptedException    if the build process is interrupted unexpectedly
@@ -105,7 +104,7 @@ public class ImageBuilderIntegrationTests {
      * @throws ExecutionException      if the build process fails unexpectedly
      */
     @Test
-    public void buildAndPushImageWorks() throws NotInitializedException, InterruptedException, TimeoutException, ExecutionException {
+    public void buildAndPushImageWorks() throws NotInitializedException, InterruptedException, TimeoutException, ExecutionException, KubernetesResourceException {
 
         // Manual initialization is necessary so it will use the provided namespace (see setup method).
         imageBuilder.init();
@@ -123,5 +122,4 @@ public class ImageBuilderIntegrationTests {
         String dockerImageURI = buildJob.get();
         assertNotNull("Build failed!", dockerImageURI);
     }
-
 }

@@ -8,8 +8,8 @@ metadata:
     tekton.dev/docker-0: https://index.docker.io/v1/
 type: kubernetes.io/basic-auth
 stringData:
-  username: ${DOCKERHUB_USERNAME_BASE64}
-  password: ${DOCKERHUB_PASSWORD_BASE64}
+  username: ${DOCKERHUB_USERNAME}
+  password: ${DOCKERHUB_PASSWORD}
 ---
 apiVersion: v1
 kind: ServiceAccount

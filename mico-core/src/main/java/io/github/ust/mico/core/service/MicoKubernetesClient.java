@@ -19,8 +19,32 @@
 
 package io.github.ust.mico.core.service;
 
+import java.net.PasswordAuthentication;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.ContainerPort;
+import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
+import io.fabric8.kubernetes.api.model.DoneableSecret;
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.EnvVarBuilder;
+import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.SecretList;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.ServicePort;
+import io.fabric8.kubernetes.api.model.ServicePortBuilder;
+import io.fabric8.kubernetes.api.model.ServiceStatus;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -32,21 +56,29 @@ import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
 import io.github.ust.mico.core.configuration.MicoKubernetesConfig;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
-import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.model.KubernetesDeploymentInfo;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus;
 import io.github.ust.mico.core.model.MicoApplicationDeploymentStatus.Value;
+import io.github.ust.mico.core.model.MicoApplicationJobStatus;
+import io.github.ust.mico.core.model.MicoEnvironmentVariable;
+import io.github.ust.mico.core.model.MicoInterfaceConnection;
+import io.github.ust.mico.core.model.MicoLabel;
+import io.github.ust.mico.core.model.MicoMessage;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceBackgroundJob;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.model.MicoServicePort;
+import io.github.ust.mico.core.model.MicoTopicRole;
 import io.github.ust.mico.core.persistence.KubernetesDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
-import io.github.ust.mico.core.service.imagebuilder.knativebuild.KnativeBuildController;
-import io.github.ust.mico.core.service.imagebuilder.knativebuild.buildtypes.Build;
+import io.github.ust.mico.core.service.imagebuilder.TektonPipelinesController;
 import io.github.ust.mico.core.util.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.net.PasswordAuthentication;
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Provides accessor methods for creating deployments and services in Kubernetes as well as getter methods to retrieve
@@ -57,72 +89,61 @@ import java.util.stream.Collectors;
 public class MicoKubernetesClient {
 
     /**
-     * Prefix that is used for all MICO specific labels.
-     * Kubernetes recommends to use such a common prefix.
-     *
-     * @see <a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels">Recommended Labels</a>
-     */
-    private static final String LABEL_PREFIX = "ust.mico/";
-    /**
-     * The label to get the name of the {@link MicoService}.
-     * It is used in conjunction with the version label to select all Kubernetes resources
-     * that belong to a specific version of a {@link MicoService}.
-     * It is set to the value of the `shortName` property of the {@link MicoService}.
-     */
-    private static final String LABEL_NAME_KEY = LABEL_PREFIX + "name";
-    /**
-     * The label to get the current version of the {@link MicoService} (semantic version).
-     * It is used in conjunction with the name label to select all Kubernetes resources
-     * that belong to a specific version of a {@link MicoService}.
-     * It is set to the value of the `version` property of the {@link MicoService}.
-     */
-    private static final String LABEL_VERSION_KEY = LABEL_PREFIX + "version";
-    /**
-     * The label to get the name of the {@link MicoServiceInterface}.
-     * It is used in conjunction with the name and version label to select the Kubernetes {@link Service} resource
-     * that belong to a specific version of a {@link MicoServiceInterface}.
-     * It is set to the value of the name property of the {@link MicoServiceInterface}.
-     */
-    private static final String LABEL_INTERFACE_KEY = LABEL_PREFIX + "interface";
-    /**
-     * The label to identify the instance of the MICO resource ({@link MicoService} or {@link MicoServiceInterface}).
-     * {@link MicoService}:
-     * Label is used for the selector field of Kubernetes Deployments to find the Pods to manage.
-     * {@link MicoServiceInterface}:
-     * Label is used for the selector field of Kubernetes Services to find the Pods to target.
-     * <p>
-     * It is a unique name (UID) created for each {@link MicoService}.
-     */
-    private static final String LABEL_INSTANCE_KEY = LABEL_PREFIX + "instance";
-
-
-    /**
-     * The revision history limit specifies the number of old ReplicaSets to retain to allow rollback.
-     * Setting this field to zero means that all old ReplicaSets with 0 replicas will be cleaned up.
-     * For more information see https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#revision-history-limit
-     */
-    private static final Integer REVISION_HISTORY_LIMIT = 0;
-
-
-    /**
      * The name of the secret which holds the OpenFaaS username and password.
      */
     public static final String OPEN_FAAS_SECRET_NAME = "basic-auth";
-
     /**
      * The name of the data element which holds the OpenFaaS password inside the secret.
      */
     public static final String OPEN_FAAS_SECRET_DATA_PASSWORD_NAME = "basic-auth-password";
-
     /**
      * The name of the data element which holds the OpenFaaS username inside the secret
      */
     public static final String OPEN_FAAS_SECRET_DATA_USERNAME_NAME = "basic-auth-user";
-
+    /**
+     * Prefix that is used for all MICO specific labels. Kubernetes recommends to use such a common prefix.
+     *
+     * @see <a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels">Recommended
+     * Labels</a>
+     */
+    private static final String LABEL_PREFIX = "ust.mico/";
+    /**
+     * The label to get the name of the {@link MicoService}. It is used in conjunction with the version label to select
+     * all Kubernetes resources that belong to a specific version of a {@link MicoService}. It is set to the value of
+     * the `shortName` property of the {@link MicoService}.
+     */
+    private static final String LABEL_NAME_KEY = LABEL_PREFIX + "name";
+    /**
+     * The label to get the current version of the {@link MicoService} (semantic version). It is used in conjunction
+     * with the name label to select all Kubernetes resources that belong to a specific version of a {@link
+     * MicoService}. It is set to the value of the `version` property of the {@link MicoService}.
+     */
+    private static final String LABEL_VERSION_KEY = LABEL_PREFIX + "version";
+    /**
+     * The label to get the name of the {@link MicoServiceInterface}. It is used in conjunction with the name and
+     * version label to select the Kubernetes {@link Service} resource that belong to a specific version of a {@link
+     * MicoServiceInterface}. It is set to the value of the name property of the {@link MicoServiceInterface}.
+     */
+    private static final String LABEL_INTERFACE_KEY = LABEL_PREFIX + "interface";
+    /**
+     * The label to identify the instance of the MICO resource ({@link MicoService} or {@link MicoServiceInterface}).
+     * {@link MicoService}: Label is used for the selector field of Kubernetes Deployments to find the Pods to manage.
+     * {@link MicoServiceInterface}: Label is used for the selector field of Kubernetes Services to find the Pods to
+     * target.
+     * <p>
+     * It is a unique name (UID) created for each {@link MicoService}.
+     */
+    private static final String LABEL_INSTANCE_KEY = LABEL_PREFIX + "instance";
+    /**
+     * The revision history limit specifies the number of old ReplicaSets to retain to allow rollback. Setting this
+     * field to zero means that all old ReplicaSets with 0 replicas will be cleaned up. For more information see
+     * https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#revision-history-limit
+     */
+    private static final Integer REVISION_HISTORY_LIMIT = 0;
     private final MicoKubernetesConfig micoKubernetesConfig;
     private final MicoKubernetesBuildBotConfig buildBotConfig;
     private final KubernetesClient kubernetesClient;
-    private final KnativeBuildController imageBuilder;
+    private final TektonPipelinesController imageBuilder;
     private final BackgroundJobBroker backgroundJobBroker;
     private final MicoApplicationRepository applicationRepository;
     private final MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
@@ -130,7 +151,7 @@ public class MicoKubernetesClient {
 
     @Autowired
     public MicoKubernetesClient(MicoKubernetesConfig micoKubernetesConfig, MicoKubernetesBuildBotConfig buildBotConfig,
-                                KubernetesClient kubernetesClient, KnativeBuildController imageBuilder,
+                                KubernetesClient kubernetesClient, TektonPipelinesController imageBuilder,
                                 BackgroundJobBroker backgroundJobBroker, MicoApplicationRepository applicationRepository,
                                 MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository,
                                 KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository) {
@@ -316,8 +337,8 @@ public class MicoKubernetesClient {
     }
 
     /**
-     * Creates the name of the Kubernetes service
-     * based on the {@code serviceDeploymentInfo} and the {@code serviceInterfaceName}.
+     * Creates the name of the Kubernetes service based on the {@code serviceDeploymentInfo} and the {@code
+     * serviceInterfaceName}.
      *
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}
      * @param serviceInterface      the {@link MicoServiceInterface}
@@ -470,8 +491,8 @@ public class MicoKubernetesClient {
     /**
      * Indicates whether a {@code MicoApplication} is currently deployed.
      * <p>
-     * In order to determine the application deployment status of the given
-     * {@code MicoApplication} the following points are checked:
+     * In order to determine the application deployment status of the given {@code MicoApplication} the following points
+     * are checked:
      * <ul>
      * <li>the current {@link MicoApplicationJobStatus} (deployment may be scheduled,
      * running or finished with an error</li>
@@ -702,9 +723,8 @@ public class MicoKubernetesClient {
      * Checks whether a given {@code MicoApplication} is currently deployed.
      *
      * @param micoApplication the {@link MicoApplication}.
-     * @return {@code true} if and only if {@link #getApplicationDeploymentStatus(MicoApplication)}
-     * returns a {@link MicoApplicationDeploymentStatus} with {@link Value#DEPLOYED Deployed};
-     * {@code false} otherwise.
+     * @return {@code true} if and only if {@link #getApplicationDeploymentStatus(MicoApplication)} returns a {@link
+     * MicoApplicationDeploymentStatus} with {@link Value#DEPLOYED Deployed}; {@code false} otherwise.
      */
     public boolean isApplicationDeployed(MicoApplication micoApplication) {
         boolean result = getApplicationDeploymentStatus(micoApplication).getValue() == Value.DEPLOYED;
@@ -719,9 +739,8 @@ public class MicoKubernetesClient {
      * Checks whether a given {@code MicoApplication} is currently undeployed.
      *
      * @param micoApplication the {@link MicoApplication}.
-     * @return {@code true} if and only if {@link #getApplicationDeploymentStatus(MicoApplication)}
-     * returns a {@link MicoApplicationDeploymentStatus} with {@link Value#UNDEPLOYED Undeployed};
-     * {@code false} otherwise.
+     * @return {@code true} if and only if {@link #getApplicationDeploymentStatus(MicoApplication)} returns a {@link
+     * MicoApplicationDeploymentStatus} with {@link Value#UNDEPLOYED Undeployed}; {@code false} otherwise.
      */
     public boolean isApplicationUndeployed(MicoApplication micoApplication) {
         boolean result = getApplicationDeploymentStatus(micoApplication).getValue() == Value.UNDEPLOYED;
@@ -733,8 +752,8 @@ public class MicoKubernetesClient {
     }
 
     /**
-     * Checks if the current {@link KubernetesDeploymentInfo} of the provided {@link MicoServiceDeploymentInfo}
-     * is up to date, stores the updated deployment information in the database and returns it.
+     * Checks if the current {@link KubernetesDeploymentInfo} of the provided {@link MicoServiceDeploymentInfo} is up to
+     * date, stores the updated deployment information in the database and returns it.
      *
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}
      * @return the updated {@link KubernetesDeploymentInfo}. Is {@code empty} if there is no deployment anymore.
@@ -857,14 +876,12 @@ public class MicoKubernetesClient {
     }
 
     /**
-     * Returns a Kubernetes {@link Deployment} instance
-     * that corresponds to the provided {@link MicoServiceDeploymentInfo},
-     * if it is already deployed to the Kubernetes cluster.
-     * Labels are used for the lookup.
+     * Returns a Kubernetes {@link Deployment} instance that corresponds to the provided {@link
+     * MicoServiceDeploymentInfo}, if it is already deployed to the Kubernetes cluster. Labels are used for the lookup.
      *
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}
-     * @return an {@link Optional<Deployment>} with the {@link Deployment} of the Kubernetes service,
-     * or an empty {@link Optional<Deployment>} if there is no Kubernetes deployment of the {@link MicoService}.
+     * @return an {@link Optional<Deployment>} with the {@link Deployment} of the Kubernetes service, or an empty {@link
+     * Optional<Deployment>} if there is no Kubernetes deployment of the {@link MicoService}.
      */
     public Optional<Deployment> getDeploymentOfMicoServiceInstance(MicoServiceDeploymentInfo serviceDeploymentInfo) {
 
@@ -887,13 +904,12 @@ public class MicoKubernetesClient {
     }
 
     /**
-     * Returns a list of Kubernetes {@link Deployment} instances
-     * that corresponds to the {@link MicoService}
-     * Labels are used for the lookup.
+     * Returns a list of Kubernetes {@link Deployment} instances that corresponds to the {@link MicoService} Labels are
+     * used for the lookup.
      *
      * @param micoService the {@link MicoService}
-     * @return a list of Kubernetes {@link Deployment Deployments}.
-     * It is empty if there is no Kubernetes deployment of the {@link MicoService}.
+     * @return a list of Kubernetes {@link Deployment Deployments}. It is empty if there is no Kubernetes deployment of
+     * the {@link MicoService}.
      */
     public List<Deployment> getDeploymentsOfMicoService(MicoService micoService) {
         Map<String, String> labels = CollectionUtils.mapOf(
@@ -921,8 +937,8 @@ public class MicoKubernetesClient {
      *
      * @param serviceDeploymentInfo    the {@link MicoServiceDeploymentInfo}
      * @param micoServiceInterfaceName the name of a {@link MicoServiceInterface}
-     * @return an {@link Optional<Service>} with the Kubernetes {@link Service},
-     * or an empty {@link Optional<Service>} if there is no Kubernetes {@link Service} for this {@link MicoServiceInterface}.
+     * @return an {@link Optional<Service>} with the Kubernetes {@link Service}, or an empty {@link Optional<Service>}
+     * if there is no Kubernetes {@link Service} for this {@link MicoServiceInterface}.
      */
     public Optional<Service> getInterfaceByNameOfMicoServiceInstance(MicoServiceDeploymentInfo serviceDeploymentInfo, String micoServiceInterfaceName) {
         MicoService micoService = serviceDeploymentInfo.getService();
@@ -969,8 +985,8 @@ public class MicoKubernetesClient {
     }
 
     /**
-     * Looks up if there are any interfaces created for the {@link MicoServiceDeploymentInfo} in the Kubernetes cluster. If so, it
-     * returns them as a list of Kubernetes {@link Service} objects. Labels are used for the lookup.
+     * Looks up if there are any interfaces created for the {@link MicoServiceDeploymentInfo} in the Kubernetes cluster.
+     * If so, it returns them as a list of Kubernetes {@link Service} objects. Labels are used for the lookup.
      *
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}
      * @return the list of Kubernetes {@link Service} objects
@@ -987,8 +1003,9 @@ public class MicoKubernetesClient {
     }
 
     /**
-     * Looks up if the {@link MicoServiceDeploymentInfo} is already deployed to the Kubernetes cluster. If so, it returns the list of
-     * Kubernetes {@link Pod} objects that belongs to the {@link Deployment}. Labels are used for the lookup.
+     * Looks up if the {@link MicoServiceDeploymentInfo} is already deployed to the Kubernetes cluster. If so, it
+     * returns the list of Kubernetes {@link Pod} objects that belongs to the {@link Deployment}. Labels are used for
+     * the lookup.
      *
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}
      * @return the list of Kubernetes {@link Pod} objects
@@ -1005,8 +1022,8 @@ public class MicoKubernetesClient {
     }
 
     /**
-     * Retrieves the yaml(s) for all Kubernetes deployments of a MicoService
-     * and the yaml(s) for all Kubernetes services of the including interfaces (if there are any).
+     * Retrieves the yaml(s) for all Kubernetes deployments of a MicoService and the yaml(s) for all Kubernetes services
+     * of the including interfaces (if there are any).
      *
      * @param micoService the {@link MicoService}
      * @return the kubernetes YAML for the {@link MicoService}.
@@ -1046,8 +1063,8 @@ public class MicoKubernetesClient {
     }
 
     /**
-     * Creates a list of ports based on the service interfaces.
-     * This list of ports is intended for use with a container inside a Kubernetes deployment.
+     * Creates a list of ports based on the service interfaces. This list of ports is intended for use with a container
+     * inside a Kubernetes deployment.
      *
      * @param serviceInterfaces the {@link MicoServiceInterface MicoServiceInterfaces}.
      * @return an {@link ArrayList} with the {@link ContainerPort} instances.
@@ -1089,10 +1106,9 @@ public class MicoKubernetesClient {
     }
 
     /**
-     * Undeploys an application. Note that {@link MicoService MicoServices}
-     * included in this application will not be undeployed, if and only if
-     * they are included in at least one other application. In this case
-     * the corresponding Kubernetes deployment will be scaled in.
+     * Undeploys an application. Note that {@link MicoService MicoServices} included in this application will not be
+     * undeployed, if and only if they are included in at least one other application. In this case the corresponding
+     * Kubernetes deployment will be scaled in.
      *
      * @param application the {@link MicoApplication}.
      */
@@ -1130,9 +1146,10 @@ public class MicoKubernetesClient {
 
                 // Nevertheless check if the micoService is used by other applications.
                 // If not clean up the build resources that was maybe already created.
-                if (otherDeployedApplicationsUsingThisServiceInstance.isEmpty()) {
+                // TODO: refactor for tekton-based imageBuilder
+                /*if (otherDeployedApplicationsUsingThisServiceInstance.isEmpty()) {
                     cleanUpBuildResources(micoService);
-                }
+                }*/
                 continue;
             }
 
@@ -1181,8 +1198,8 @@ public class MicoKubernetesClient {
     }
 
     /**
-     * Performs a scale out of a Kubernetes deployment based on some service
-     * deployment information by a given number of replicas to add.
+     * Performs a scale out of a Kubernetes deployment based on some service deployment information by a given number of
+     * replicas to add.
      *
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.
      * @param numberOfReplicas      the number of replicas to add.
@@ -1200,11 +1217,11 @@ public class MicoKubernetesClient {
     }
 
     /**
-     * Performs a scale in of a Kubernetes deployment based on some service
-     * deployment information by a given number of replicas to remove.
+     * Performs a scale in of a Kubernetes deployment based on some service deployment information by a given number of
+     * replicas to remove.
      * <p>
-     * Note that the Kubernetes deployment will be undeployed if and only if
-     * the given number of replicas is less than or equal to 0.
+     * Note that the Kubernetes deployment will be undeployed if and only if the given number of replicas is less than
+     * or equal to 0.
      *
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.
      * @param numberOfReplicas      the number of replicas to remove.
@@ -1228,13 +1245,12 @@ public class MicoKubernetesClient {
     }
 
     /**
-     * Scales a Kubernetes deployment for a {@code MicoService} to
-     * a given number of replicas. If the specified number of replicas
-     * is {@code 0}, the {@code MicoService} will be undeployed.
+     * Scales a Kubernetes deployment for a {@code MicoService} to a given number of replicas. If the specified number
+     * of replicas is {@code 0}, the {@code MicoService} will be undeployed.
      *
      * @param serviceDeploymentInfo   the {@link MicoServiceDeploymentInfo}.
-     * @param scaleToNumberOfReplicas the updated number of requested replicas
-     *                                for the Kubernetes deployment for the {@link MicoService}.
+     * @param scaleToNumberOfReplicas the updated number of requested replicas for the Kubernetes deployment for the
+     *                                {@link MicoService}.
      */
     private Optional<Deployment> scale(MicoServiceDeploymentInfo serviceDeploymentInfo, int scaleToNumberOfReplicas) {
         if (scaleToNumberOfReplicas < 0) {
@@ -1261,8 +1277,8 @@ public class MicoKubernetesClient {
     }
 
     /**
-     * Retrieves the specified number of replicas for a Kubernetes deployment
-     * based on some service deployment information.
+     * Retrieves the specified number of replicas for a Kubernetes deployment based on some service deployment
+     * information.
      *
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}.
      * @return the number of replicas as {@code int}.
@@ -1277,8 +1293,8 @@ public class MicoKubernetesClient {
     }
 
     /**
-     * Undeploys a {@link MicoServiceDeploymentInfo} by deleting all associated Kubernetes
-     * resources: {@link Deployment}, {@link Service}, {@link Build}.
+     * Undeploys a {@link MicoServiceDeploymentInfo} by deleting all associated Kubernetes resources: {@link
+     * Deployment}, {@link Service}, //@link //Build.
      *
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}
      */
@@ -1312,8 +1328,8 @@ public class MicoKubernetesClient {
                 .withName(kubernetesServiceName)
                 .delete();
         }
-
-        cleanUpBuildResources(micoService);
+        // TODO: refactor for tekton-based imageBuilder
+        //cleanUpBuildResources(micoService);
 
         // Delete Kubernetes deployment info in database
         log.debug("Delete Kubernetes deployment info in database for MicoService '{}' '{}' with instance ID '{}'.",
@@ -1324,11 +1340,13 @@ public class MicoKubernetesClient {
             micoService.getShortName(), micoService.getVersion(), instanceId);
     }
 
+    // TODO: refactor for tekton-based imageBuilder
     /**
      * Cleans up all Kubernetes Build resources (Build themselves + Build pods).
      *
      * @param micoService the {@link MicoService}
      */
+    /*
     private void cleanUpBuildResources(MicoService micoService) {
         if (buildBotConfig.isBuildCleanUpByUndeploy()) {
             try {
@@ -1346,13 +1364,12 @@ public class MicoKubernetesClient {
                     micoService.getShortName(), micoService.getVersion(), e.getMessage());
             }
         }
-    }
+    }*/
 
     /**
-     * Retrieves the {@link MicoServiceDeploymentInfo MicoServiceDeploymentInfos} that are used for the deployment
-     * of the requested {link MicoService} as part of a {@link MicoApplication}.
-     * There must not be zero service deployment information stored.
-     * If that's the case, an {@link IllegalStateException} will be thrown.
+     * Retrieves the {@link MicoServiceDeploymentInfo MicoServiceDeploymentInfos} that are used for the deployment of
+     * the requested {link MicoService} as part of a {@link MicoApplication}. There must not be zero service deployment
+     * information stored. If that's the case, an {@link IllegalStateException} will be thrown.
      *
      * @param application the {@link MicoApplication}
      * @param service     the {@link MicoService}
@@ -1390,8 +1407,8 @@ public class MicoKubernetesClient {
     }
 
     /**
-     * Requests the public IP of a Kubernetes service and returns it or an empty {@code Optional} if the
-     * service has no public IP.
+     * Requests the public IP of a Kubernetes service and returns it or an empty {@code Optional} if the service has no
+     * public IP.
      *
      * @param name      the name of the service.
      * @param namespace the namespace which contains the service.
@@ -1421,7 +1438,6 @@ public class MicoKubernetesClient {
                 "to get an external ip of the kubernetes service.", name, namespace);
         }
         return ip;
-
     }
 
     /**
@@ -1470,5 +1486,4 @@ public class MicoKubernetesClient {
         return getService(name, namespace).orElseThrow(() -> new KubernetesResourceException(
             "There is no Kubernetes service with the name '" + name + "' in the namespace '" + namespace + "' deployed"));
     }
-
 }

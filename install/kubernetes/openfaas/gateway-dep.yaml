@@ -1,5 +1,5 @@
 ---
-apiVersion: apps/v1beta1 # for versions before 1.6.0 use extensions/v1beta1
+apiVersion: apps/v1 # for versions before 1.6.0 use extensions/v1beta1
 kind: Deployment
 metadata:
   labels:
@@ -8,6 +8,9 @@ metadata:
   name: gateway
   namespace: openfaas
 spec:
+  selector:
+    matchLabels:
+      app: gateway
   replicas: 1
   template:
     metadata:
