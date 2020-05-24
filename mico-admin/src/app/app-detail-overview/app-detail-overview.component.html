@@ -53,6 +53,19 @@
                         </div>
                         <mat-divider></mat-divider>
                     </div>
+                    <mat-divider></mat-divider>
+                    <div class="flex" (click)="addPattern()">
+                        <div class="flex-grow-1">
+                            <mat-list-item>
+                                <span mat-line><b>Patterns</b></span>
+                            </mat-list-item>
+                        </div>
+                        <div class="w-20">
+                            <mat-list-item>
+                                <mat-icon>add</mat-icon>
+                            </mat-list-item>
+                        </div>
+                    </div>
 
                     <mat-divider></mat-divider>
                     <div class="flex" (click)="addKafkaFaasConnector()">

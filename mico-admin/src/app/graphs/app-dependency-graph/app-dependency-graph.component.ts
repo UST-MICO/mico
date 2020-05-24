@@ -228,6 +228,10 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             event.preventDefault();  // prevent selecting application node and interface nodes
             return;
         }
+        if(event.detail.key === 'delete-pattern'){
+            this.api.deleteApplicationKafkaFaasConnector(this.application.shortName, this.application.version, event.detail.node.data.instanceId)
+                .subscribe();
+        }
         if (event.detail.key === 'version') {  // user clicked on service version
             event.preventDefault();
             if (event.detail.node.type !== 'service') {
@@ -1251,6 +1255,9 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                         inputTopicName: connector.inputTopicName,
                         outputTopicName: connector.outputTopicName,
                         openFaaSFunctionName: connector.openFaaSFunctionName,
+                        patternIconURL: `./assets/EIP-Icons/${connector.openFaaSFunctionName}.svg`,
+                        configurationButtonText: 'Edit',
+                        deleteButtonText: 'Delete'
                     }
                 };
                 if (connector.outputTopicName != null && connector.outputTopicName !== '') {
@@ -1281,6 +1288,9 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                     inputTopicName: connector.inputTopicName,
                     outputTopicName: connector.outputTopicName,
                     openFaaSFunctionName: connector.openFaaSFunctionName,
+                    patternIconURL: `./assets/EIP-Icons/${connector.openFaaSFunctionName}.svg`,
+                    configurationButtonText: 'Edit',
+                    deleteButtonText: 'Delete'
                 };
             }
             existing.error = '';

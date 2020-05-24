@@ -128,6 +128,9 @@ export const STYLE_TEMPLATE = {
         .warning-foreground {
             fill: red;
         }
+        .configure-foreground {
+            fill: black
+        }
         .node:not(.application):not(.selected).hovered {
             fill: #dfdfdf;
         }
@@ -203,30 +206,49 @@ export const KAFKA_TOPIC_NODE_TEMPLATE = {
     <ellipse class="background" cx="25" cy="0" rx="4" ry="9"/>
     <rect class="background" x="-25" y="-9" width="50" height="18"></rect>
     <ellipse class="foreground" cx="-25" cy="0" rx="4" ry="9"/>
-    <text class="text title" data-content="title" data-click="title" width="42" text-anchor="middle" x="2" y="3"></text>
+    <text class="text title" data-content="title" data-click="title" width="50" text-anchor="middle" x="2" y="3"></text>
     <title data-content="title"></title>`
 };
 
+
+
+// export const KAFKA_FAAS_CONNECTOR_NODE_TEMPLATE = {
+//     id: 'kafka-faas-connector',
+//     innerHTML: `<polygon points="-32.1,0 -32,-8 32,-8 33,0 32,8 -32,8" data-link-handles="corners"></polygon>
+//     <path d="M-38 -15 L28 -15 A 6 15 0 0 1 28 15 L-38 15 A 6 15 0 0 0 -38 -15 Z" />
+//     <text class="text title clickable" data-content="title" data-click="faas-function" width="55" x="-27" y="-3"></text>
+//     <title data-content="title"></title>
+//     <g>
+//         <text class="text version small" data-content="data.version" data-click="version" width="24" x="-27" y="10"></text>
+//         <title data-content="data.version"></title>
+//     </g>
+//     <g>
+//         <text class="text instance-id small" data-content="data.instanceId" width="24" x="0" y="10"></text>
+//         <title data-content="data.instanceId"></title>
+//     </g>
+//     <g class="warning-label" transform="scale(0.4) translate(55,-35)">
+//         <circle class="warning-background" cx="12" cy="12" r="11.5"></circle>
+//         <path class="warning-foreground" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path>
+//         <title data-content="error"></title>
+//     </g>`
+// };
+
+
 export const KAFKA_FAAS_CONNECTOR_NODE_TEMPLATE = {
     id: 'kafka-faas-connector',
-    innerHTML: `<polygon points="-32.1,0 -32,-8 32,-8 33,0 32,8 -32,8" data-link-handles="corners"></polygon>
-    <path d="M-38 -15 L28 -15 A 6 15 0 0 1 28 15 L-38 15 A 6 15 0 0 0 -38 -15 Z" />
-    <text class="text title clickable" data-content="title" data-click="faas-function" width="55" x="-27" y="-3"></text>
+    innerHTML: `<polygon points="0,44 0,12 55,12 55,44 55,28 0,28" fill="white" data-link-handles="corners"></polygon>
+    <img class="clickable" data-href="data.patternIconURL" data-click="pattern-config" width="55" height="55" x="0" y="0"></image>
     <title data-content="title"></title>
     <g>
-        <text class="text version small" data-content="data.version" data-click="version" width="24" x="-27" y="10"></text>
-        <title data-content="data.version"></title>
-    </g>
+        <text class="text instance-id small clickable" data-content="data.configurationButtonText" data-click="pattern-config" width="55" x="0" y="50"></text>
+        <title data-content="data.configurationButtonText"></title>
+     </g>
     <g>
-        <text class="text instance-id small" data-content="data.instanceId" width="24" x="0" y="10"></text>
-        <title data-content="data.instanceId"></title>
-    </g>
-    <g class="warning-label" transform="scale(0.4) translate(55,-35)">
-        <circle class="warning-background" cx="12" cy="12" r="11.5"></circle>
-        <path class="warning-foreground" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path>
-        <title data-content="error"></title>
-    </g>`
+        <text class="text instance-id small clickable" data-content="data.deleteButtonText" data-click="delete-pattern" width="55" x="35" y="50"></text>
+        <title data-content="data.deleteButtonText"></title>
+     </g>`
 };
+
 
 export const SERVICE_NODE_TEMPLATE = {
     id: 'default',
@@ -266,4 +288,3 @@ export interface ApplicationNode extends Node {
     description: string;
     status?: any;
 }
-
