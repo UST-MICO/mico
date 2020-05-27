@@ -7,6 +7,8 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -82,14 +84,18 @@ public class DeploymentBroker {
 
         // Add the included MicoServices and KafkaFaasConnector instances (distinct by version)
         // to a list of services that should be build.
-        List<MicoServiceDeploymentInfo> serviceInstancesToBuild = new ArrayList<>();
-        serviceInstancesToBuild.addAll(micoApplication.getServiceDeploymentInfos());
-        serviceInstancesToBuild.addAll(micoApplication.getKafkaFaasConnectorDeploymentInfos());
+        List<MicoServiceDeploymentInfo> serviceInstancesToBuild = new ArrayList<>(micoApplication.getServiceDeploymentInfos());
+        if (!micoApplication.getKafkaFaasConnectorDeploymentInfos().isEmpty()) {
+            serviceInstancesToBuild.add(micoApplication.getKafkaFaasConnectorDeploymentInfos().get(0));
+        }
+
+        // TODO: avoid building images if the docker image is already available in the registry
+        // TODO: decouple image building from MicoServices to avoid running duplicate image builds
 
         // Create the build jobs for each MicoService instance and start them immediately.
         List<CompletableFuture<MicoService>> buildJobs = new ArrayList<>();
-        for (MicoServiceDeploymentInfo serviceDeploymentInfo : serviceInstancesToBuild) {
-            createBuildJobForMicoServiceInstance(micoApplication, serviceDeploymentInfo, buildJobs);
+        for (MicoServiceDeploymentInfo info : serviceInstancesToBuild) {
+            createBuildJobForMicoServiceInstance(micoApplication, info, buildJobs);
         }
 
         // When all build jobs are finished, create the Kubernetes resources for the deployment of a MicoService
@@ -116,6 +122,14 @@ public class DeploymentBroker {
                 MicoService updatedService = serviceRepository.save(service, 0);
                 log.debug("Saved docker image uri of MicoService '{}' '{}' to database successfully: {}",
                     updatedService.getShortName(), updatedService.getVersion(), updatedService.getDockerImageUri());
+
+                // quick hack
+                if ("kafka-faas-connector".equals(service.getName())) {
+                    micoApplication.getServices().stream().filter(s -> s.getName().equals("kafka-faas-connector")).forEach(s -> {
+                        s.setDockerImageUri(service.getDockerImageUri());
+                        serviceRepository.save(s, 0);
+                    });
+                }
             }
 
             List<MicoServiceDeploymentInfo> serviceDeploymentInfos = new ArrayList<>();
@@ -237,7 +251,10 @@ public class DeploymentBroker {
         backgroundJobBroker.saveJob(job);
 
         log.info("Start build of service '{}' '{}'.", micoService.getShortName(), micoService.getVersion());
-        CompletableFuture<MicoService> buildJob = CompletableFuture.supplyAsync(() -> buildMicoService(micoService))
+
+        // avoid running all build jobs at once
+        ExecutorService pool = Executors.newFixedThreadPool(1);
+        CompletableFuture<MicoService> buildJob = CompletableFuture.supplyAsync(() -> buildMicoService(micoService), pool)
             .exceptionally(ex -> {
                 // Build failed
                 backgroundJobBroker.saveNewStatus(micoServiceDeploymentInfo, MicoServiceBackgroundJob.Type.BUILD,
