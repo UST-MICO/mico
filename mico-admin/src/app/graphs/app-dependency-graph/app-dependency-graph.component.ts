@@ -224,7 +224,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
      * Handle node click events.
      */
     onNodeClick = (event: CustomEvent) => {
-        if (event.detail.node.id === ROOT_NODE_ID || event.detail.node.type === 'service-interface') {
+        if (/*event.detail.node.id === ROOT_NODE_ID ||*/ event.detail.node.type === 'service-interface') {
             event.preventDefault();  // prevent selecting application node and interface nodes
             return;
         }
@@ -300,9 +300,9 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
      * Handle node move events.
      */
     onNodeMove = (event: CustomEvent) => {
-        if (event.detail.node.id === ROOT_NODE_ID) {
+        /*if (event.detail.node.id === ROOT_NODE_ID) {
             return;
-        }
+        }*/
         if (event.detail.node.type === 'service') {  // user moved a service node
             const serviceNode: ServiceNode = event.detail.node;
 
@@ -364,12 +364,12 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         }
 
         edge.markerEnd = { template: 'arrow', positionOnLine: 1, lineOffset: 4, scale: 0.5, rotate: { relativeAngle: 0 } };
-        if (edge.source === ROOT_NODE_ID) {
+        /*if (edge.source === ROOT_NODE_ID) {
             edge.type = 'includes';
             edge.markerEnd.lineOffset = 8;
             edge.markerEnd.scale = 1;
             edge.validTargets.clear();
-        }
+        }*/
         if (this.serviceNodeMap.has(edge.source.toString())) {
             // if the source of the edge was a service node
             edge.type = 'interface-connection';
@@ -561,7 +561,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
      * Handle edge drop events.
      */
     onEdgeDrop = (event: CustomEvent) => {
-        if (event.detail.sourceNode.id === ROOT_NODE_ID) {
+        /*if (event.detail.sourceNode.id === ROOT_NODE_ID) {
             const edge: Edge = event.detail.edge;
             if (edge.createdFrom != null && edge.createdFrom !== '') {
                 // do not handle edges that were created from an existing edge here
@@ -589,7 +589,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                         .subscribe();
                 });
             });
-        }
+        }*/
         if (event.detail.sourceNode.type === 'service') {
             const edge: Edge = event.detail.edge;
             if (edge.createdFrom != null && edge.createdFrom !== '') {
@@ -961,7 +961,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             toDelete.add(node.id as string);
         });
 
-        if (graph.getNode(ROOT_NODE_ID) == null) {
+        /*if (graph.getNode(ROOT_NODE_ID) == null) {
             // create new application root node if node does not exist
             const node: ApplicationNode = {
                 id: ROOT_NODE_ID,
@@ -980,8 +980,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         } else {
             const node: ApplicationNode = graph.getNode(ROOT_NODE_ID) as ApplicationNode;
             node.status = applicationStatus;
-        }
-
+        }*/
 
         // map services to graph nodes
         application.services.forEach((service) => {
@@ -1025,7 +1024,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 nodeMap.set(serviceId, node);
                 graph.addNode(node, false);
                 // add edge from root to service node
-                const edge: Edge = {
+                /*const edge: Edge = {
                     source: ROOT_NODE_ID,
                     target: serviceId,
                     type: 'includes',
@@ -1039,7 +1038,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                         },
                     },
                 };
-                graph.addEdge(edge, false);
+                graph.addEdge(edge, false);*/
             }
         });
 
