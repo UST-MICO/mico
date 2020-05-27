@@ -95,7 +95,9 @@ public class DeploymentBroker {
         // Create the build jobs for each MicoService instance and start them immediately.
         List<CompletableFuture<MicoService>> buildJobs = new ArrayList<>();
         for (MicoServiceDeploymentInfo info : serviceInstancesToBuild) {
-            createBuildJobForMicoServiceInstance(micoApplication, info, buildJobs);
+            if (Objects.isNull(info.getService().getDockerImageUri()) || info.getService().getDockerImageUri().isEmpty()) {
+                createBuildJobForMicoServiceInstance(micoApplication, info, buildJobs);
+            }
         }
 
         // When all build jobs are finished, create the Kubernetes resources for the deployment of a MicoService
@@ -252,8 +254,7 @@ public class DeploymentBroker {
 
         log.info("Start build of service '{}' '{}'.", micoService.getShortName(), micoService.getVersion());
 
-        // avoid running all build jobs at once
-        ExecutorService pool = Executors.newFixedThreadPool(1);
+        ExecutorService pool = Executors.newFixedThreadPool(3);
         CompletableFuture<MicoService> buildJob = CompletableFuture.supplyAsync(() -> buildMicoService(micoService), pool)
             .exceptionally(ex -> {
                 // Build failed

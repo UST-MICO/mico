@@ -34,5 +34,6 @@ public interface MicoTopicRepository extends Neo4jRepository<MicoTopic, Long> {
     void cleanUp();
 
     Optional<MicoTopic> findByName(String name);
+    MicoTopic findFirstByName(String name);
     List<MicoTopic> findAllByName(String name);
 }

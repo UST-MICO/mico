@@ -19,20 +19,41 @@
 
 package io.github.ust.mico.core.broker;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import io.github.ust.mico.core.configuration.KafkaConfig;
 import io.github.ust.mico.core.configuration.OpenFaaSConfig;
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoTopicRequestDTO;
-import io.github.ust.mico.core.exception.*;
-import io.github.ust.mico.core.model.*;
-import io.github.ust.mico.core.persistence.*;
+import io.github.ust.mico.core.exception.KubernetesResourceException;
+import io.github.ust.mico.core.exception.MicoApplicationDoesNotIncludeMicoServiceException;
+import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
+import io.github.ust.mico.core.exception.MicoServiceDeploymentInformationNotFoundException;
+import io.github.ust.mico.core.exception.MicoTopicRoleUsedMultipleTimesException;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoEnvironmentVariable;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.model.MicoTopic;
+import io.github.ust.mico.core.model.MicoTopicRole;
+import io.github.ust.mico.core.model.OpenFaaSFunction;
+import io.github.ust.mico.core.persistence.KubernetesDeploymentInfoRepository;
+import io.github.ust.mico.core.persistence.MicoEnvironmentVariableRepository;
+import io.github.ust.mico.core.persistence.MicoInterfaceConnectionRepository;
+import io.github.ust.mico.core.persistence.MicoLabelRepository;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
+import io.github.ust.mico.core.persistence.MicoTopicRepository;
+import io.github.ust.mico.core.persistence.OpenFaaSFunctionRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -78,9 +99,12 @@ public class MicoServiceDeploymentInfoBroker {
      * @param applicationVersion   the version of the {@link MicoApplication}
      * @param serviceShortName     the short name of the {@link MicoService}
      * @return the {@link MicoServiceDeploymentInfo} stored in the database
-     * @throws MicoServiceDeploymentInformationNotFoundException if there is no {@code MicoServiceDeploymentInfo} stored in the database
-     * @throws MicoApplicationNotFoundException                  if there is no {@code MicoApplication} with the specified short name and version
-     * @throws MicoApplicationDoesNotIncludeMicoServiceException if there is no service included in the specified {@code MicoApplication} with the particular short name
+     * @throws MicoServiceDeploymentInformationNotFoundException if there is no {@code MicoServiceDeploymentInfo} stored
+     *                                                           in the database
+     * @throws MicoApplicationNotFoundException                  if there is no {@code MicoApplication} with the
+     *                                                           specified short name and version
+     * @throws MicoApplicationDoesNotIncludeMicoServiceException if there is no service included in the specified {@code
+     *                                                           MicoApplication} with the particular short name
      */
     public MicoServiceDeploymentInfo getMicoServiceDeploymentInformation(String applicationShortName, String applicationVersion, String serviceShortName) throws MicoServiceDeploymentInformationNotFoundException, MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException {
         applicationBroker.getMicoApplicationForMicoService(applicationShortName, applicationVersion, serviceShortName);
@@ -93,10 +117,9 @@ public class MicoServiceDeploymentInfoBroker {
     }
 
     /**
-     * Retrieves the {@link MicoServiceDeploymentInfo} that is used for the deployment
-     * of the requested {@link MicoService} as part of a {@link MicoApplication}.
-     * There must not be zero or more than one service deployment information stored.
-     * If that's the case, an {@link IllegalStateException} will be thrown.
+     * Retrieves the {@link MicoServiceDeploymentInfo} that is used for the deployment of the requested {@link
+     * MicoService} as part of a {@link MicoApplication}. There must not be zero or more than one service deployment
+     * information stored. If that's the case, an {@link IllegalStateException} will be thrown.
      *
      * @param micoApplication the {@link MicoApplication}
      * @param micoService     the {@link MicoService}
@@ -125,18 +148,22 @@ public class MicoServiceDeploymentInfoBroker {
     }
 
     /**
-     * Updates an existing {@link MicoServiceDeploymentInfo} in the database
-     * based on the values of a {@link MicoServiceDeploymentInfoRequestDTO} object.
+     * Updates an existing {@link MicoServiceDeploymentInfo} in the database based on the values of a {@link
+     * MicoServiceDeploymentInfoRequestDTO} object.
      *
      * @param applicationShortName     the short name of the {@link MicoApplication}
      * @param applicationVersion       the version of the {@link MicoApplication}
      * @param serviceShortName         the short name of the {@link MicoService}
      * @param serviceDeploymentInfoDTO the {@link MicoServiceDeploymentInfoRequestDTO}
      * @return the new {@link MicoServiceDeploymentInfo} stored in the database
-     * @throws MicoApplicationNotFoundException                  if there is no {@code MicoApplication} with the specified short name and version
-     * @throws MicoApplicationDoesNotIncludeMicoServiceException if there is no service included in the specified {@code MicoApplication} with the particular short name
-     * @throws MicoServiceDeploymentInformationNotFoundException if there is no {@code MicoServiceDeploymentInfo} stored in the database
-     * @throws KubernetesResourceException                       if there are problems with retrieving Kubernetes resource information
+     * @throws MicoApplicationNotFoundException                  if there is no {@code MicoApplication} with the
+     *                                                           specified short name and version
+     * @throws MicoApplicationDoesNotIncludeMicoServiceException if there is no service included in the specified {@code
+     *                                                           MicoApplication} with the particular short name
+     * @throws MicoServiceDeploymentInformationNotFoundException if there is no {@code MicoServiceDeploymentInfo} stored
+     *                                                           in the database
+     * @throws KubernetesResourceException                       if there are problems with retrieving Kubernetes
+     *                                                           resource information
      * @throws MicoTopicRoleUsedMultipleTimesException           if a {@link MicoTopicRole} is used multiple times
      */
     public MicoServiceDeploymentInfo updateMicoServiceDeploymentInformation(String applicationShortName, String applicationVersion,
@@ -168,8 +195,8 @@ public class MicoServiceDeploymentInfoBroker {
     }
 
     /**
-     * Scales a deployment of a {@link MicoService} by calculating the required replicas
-     * based on the requested and the old replicas.
+     * Scales a deployment of a {@link MicoService} by calculating the required replicas based on the requested and the
+     * old replicas.
      *
      * @param requestedReplicas     the requested replicas
      * @param oldReplicas           the old replicas
@@ -192,9 +219,8 @@ public class MicoServiceDeploymentInfoBroker {
     }
 
     /**
-     * Saves the values of a {@link MicoServiceDeploymentInfoRequestDTO} to the database.
-     * A workaround is required to save the topics correctly:
-     * Delete all relationships of this {@link MicoServiceDeploymentInfo} and recreate them.
+     * Saves the values of a {@link MicoServiceDeploymentInfoRequestDTO} to the database. A workaround is required to
+     * save the topics correctly: Delete all relationships of this {@link MicoServiceDeploymentInfo} and recreate them.
      *
      * @param serviceDeploymentInfoDTO    the {@link MicoServiceDeploymentInfoRequestDTO} that includes the new values
      * @param storedServiceDeploymentInfo the {@link MicoServiceDeploymentInfo} that is already stored in the database
@@ -230,10 +256,10 @@ public class MicoServiceDeploymentInfoBroker {
     /**
      * Cleans up tangling nodes related to a {@link MicoServiceDeploymentInfo} in the database.
      *
-     * In case addition properties (stored as separate node entity) such as labels, environment variables
-     * have been removed from a service deployment information,
-     * the standard {@code save()} function of the service deployment information repository will not delete those
-     * "tangling" (without relationships) labels (nodes), hence the manual clean up.
+     * In case addition properties (stored as separate node entity) such as labels, environment variables have been
+     * removed from a service deployment information, the standard {@code save()} function of the service deployment
+     * information repository will not delete those "tangling" (without relationships) labels (nodes), hence the manual
+     * clean up.
      */
     public void cleanUpTanglingNodes() {
 
@@ -246,14 +272,14 @@ public class MicoServiceDeploymentInfoBroker {
     }
 
     /**
-     * Validates the topics.
-     * Throws an error if there are multiple topics with the same role.
+     * Validates the topics. Throws an error if there are multiple topics with the same role.
      *
      * @param serviceDeploymentInfoDTO the {@link MicoServiceDeploymentInfoRequestDTO}
      * @throws MicoTopicRoleUsedMultipleTimesException if an {@code MicoTopicRole.Role} is not unique
      */
     private void validateTopics(MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO) throws MicoTopicRoleUsedMultipleTimesException {
         List<MicoTopicRequestDTO> newTopics = serviceDeploymentInfoDTO.getTopics();
+        log.info(newTopics.toString());
         Set<MicoTopicRole.Role> usedRoles = new HashSet<>();
         for (MicoTopicRequestDTO requestDTO : newTopics) {
             if (!usedRoles.add(requestDTO.getRole())) {
@@ -264,9 +290,8 @@ public class MicoServiceDeploymentInfoBroker {
     }
 
     /**
-     * Checks if topics with the same name already exists in the database.
-     * If so reuse them by setting the id of the existing Neo4j node and save them.
-     * If not create them in the database.
+     * Checks if topics with the same name already exists in the database. If so reuse them by setting the id of the
+     * existing Neo4j node and save them. If not create them in the database.
      *
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo} containing topics
      */
@@ -275,10 +300,10 @@ public class MicoServiceDeploymentInfoBroker {
 
         for (MicoTopicRole topicRole : topicRoles) {
             MicoTopic topic = topicRole.getTopic();
-            Optional<MicoTopic> existingTopicOptional = micoTopicRepository.findByName(topic.getName());
-            if (existingTopicOptional.isPresent()) {
+            MicoTopic existingTopic = micoTopicRepository.findFirstByName(topic.getName());
+            if (Objects.nonNull(existingTopic)) {
                 // Topic node with same name already exists -> Reuse it
-                topicRole.setTopic(existingTopicOptional.get());
+                topicRole.setTopic(existingTopic);
             } else {
                 // Topic node with requested name does not exist yet -> Create it
                 topic.setId(null);
@@ -290,8 +315,8 @@ public class MicoServiceDeploymentInfoBroker {
     }
 
     /**
-     * Checks if the given OpenFaaS function name is already present in the database.
-     * If so it will be reused. Otherwise a new node will be created.
+     * Checks if the given OpenFaaS function name is already present in the database. If so it will be reused. Otherwise
+     * a new node will be created.
      *
      * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}
      * @return the updated {@link MicoServiceDeploymentInfo}
@@ -317,8 +342,8 @@ public class MicoServiceDeploymentInfoBroker {
     }
 
     /**
-     * Sets the default environment variables for Kafka-enabled MicoServices. See {@link MicoEnvironmentVariable.DefaultNames}
-     * for a complete list.
+     * Sets the default environment variables for Kafka-enabled MicoServices. See {@link
+     * MicoEnvironmentVariable.DefaultNames} for a complete list.
      *
      * @param micoServiceDeploymentInfo The {@link MicoServiceDeploymentInfo} with an corresponding MicoService
      */
@@ -344,5 +369,4 @@ public class MicoServiceDeploymentInfoBroker {
         List<MicoTopicRole> topics = micoServiceDeploymentInfo.getTopics();
         topics.addAll(kafkaConfig.getDefaultTopics(micoServiceDeploymentInfo));
     }
-
 }
