@@ -34,6 +34,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -44,16 +45,18 @@ import static io.github.ust.mico.core.resource.ApplicationResource.PATH_APPLICAT
 public class DeploymentResource {
     private static final String PATH_VARIABLE_SHORT_NAME = "shortName";
     private static final String PATH_VARIABLE_VERSION = "version";
+    private static final String REQUEST_PARAMETER_REBUILD = "rebuildImages";
 
     @Autowired
     private DeploymentBroker deploymentBroker;
 
     @PostMapping("/deploy")
     public ResponseEntity<Resource<MicoApplicationJobStatusResponseDTO>> deploy(@PathVariable(PATH_VARIABLE_SHORT_NAME) String shortName,
-                                                                                @PathVariable(PATH_VARIABLE_VERSION) String version) {
+                                                                                @PathVariable(PATH_VARIABLE_VERSION) String version,
+                                                                                @RequestParam(value = REQUEST_PARAMETER_REBUILD, defaultValue = "false") boolean rebuildImages) {
         MicoApplicationJobStatus micoApplicationJobStatus;
         try {
-            micoApplicationJobStatus = deploymentBroker.deployApplication(shortName, version);
+            micoApplicationJobStatus = deploymentBroker.deployApplication(shortName, version, rebuildImages);
         } catch (MicoApplicationNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (MicoServiceInterfaceNotFoundException | DeploymentRequirementsOfKafkaFaasConnectorNotMetException e) {

@@ -72,7 +72,7 @@ public class DeploymentBroker {
      * @throws MicoApplicationNotFoundException      if the {@link MicoApplication} does not exist
      * @throws MicoServiceInterfaceNotFoundException if the {@link MicoServiceInterface} does not exist
      */
-    public MicoApplicationJobStatus deployApplication(String shortName, String version)
+    public MicoApplicationJobStatus deployApplication(String shortName, String version, boolean rebuildImages)
         throws MicoApplicationNotFoundException, MicoServiceInterfaceNotFoundException, DeploymentRequirementsOfKafkaFaasConnectorNotMetException {
 
         MicoApplication micoApplication = micoApplicationBroker.getMicoApplicationByShortNameAndVersion(shortName, version);
@@ -95,7 +95,9 @@ public class DeploymentBroker {
         // Create the build jobs for each MicoService instance and start them immediately.
         List<CompletableFuture<MicoService>> buildJobs = new ArrayList<>();
         for (MicoServiceDeploymentInfo info : serviceInstancesToBuild) {
-            if (Objects.isNull(info.getService().getDockerImageUri()) || info.getService().getDockerImageUri().isEmpty()) {
+            if (rebuildImages) {
+                createBuildJobForMicoServiceInstance(micoApplication, info, buildJobs);
+            } else if (Objects.isNull(info.getService().getDockerImageUri()) || info.getService().getDockerImageUri().isEmpty()) {
                 createBuildJobForMicoServiceInstance(micoApplication, info, buildJobs);
             }
         }

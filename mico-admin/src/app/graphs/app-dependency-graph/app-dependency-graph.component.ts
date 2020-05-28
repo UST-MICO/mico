@@ -17,14 +17,17 @@
  * under the License.
  */
 
-import { Component, OnInit, ViewChild, Input, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
+import { Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild } from '@angular/core';
 import GraphEditor from '@ustutt/grapheditor-webcomponent/lib/grapheditor';
-import { Edge, DraggedEdge, edgeId, TextComponent } from '@ustutt/grapheditor-webcomponent/lib/edge';
+import { DraggedEdge, Edge, edgeId, TextComponent } from '@ustutt/grapheditor-webcomponent/lib/edge';
 import { Node } from '@ustutt/grapheditor-webcomponent/lib/node';
 import { ApiObject } from 'src/app/api/apiobject';
 import { ApiService } from 'src/app/api/api.service';
-import { Subscription, Subject } from 'rxjs';
-import { STYLE_TEMPLATE, APPLICATION_NODE_TEMPLATE, SERVICE_NODE_TEMPLATE, ARROW_TEMPLATE, ServiceNode, ApplicationNode, ServiceInterfaceNode, SERVICE_INTERFACE_NODE_TEMPLATE, KAFKA_TOPIC_NODE_TEMPLATE, KAFKA_FAAS_CONNECTOR_NODE_TEMPLATE } from './app-dependency-graph-constants';
+import { Subject, Subscription } from 'rxjs';
+import {
+    APPLICATION_NODE_TEMPLATE, ARROW_TEMPLATE, KAFKA_FAAS_CONNECTOR_NODE_TEMPLATE, KAFKA_TOPIC_NODE_TEMPLATE,
+    SERVICE_INTERFACE_NODE_TEMPLATE, SERVICE_NODE_TEMPLATE, ServiceInterfaceNode, ServiceNode, STYLE_TEMPLATE
+} from './app-dependency-graph-constants';
 import { MatDialog } from '@angular/material';
 import { ChangeServiceVersionComponent } from 'src/app/dialogs/change-service-version/change-service-version.component';
 import { debounceTime, take, takeLast } from 'rxjs/operators';
@@ -33,12 +36,10 @@ import { YesNoDialogComponent } from 'src/app/dialogs/yes-no-dialog/yes-no-dialo
 import { GraphAddEnvironmentVariableComponent } from 'src/app/dialogs/graph-add-environment-variable/graph-add-environment-variable.component';
 import { GraphAddKafkaTopicComponent } from 'src/app/dialogs/graph-add-kafka-topic/graph-add-kafka-topic.component';
 import { Router } from '@angular/router';
-import { ServicePickerComponent } from 'src/app/dialogs/service-picker/service-picker.component';
+// import { ServicePickerComponent } from 'src/app/dialogs/service-picker/service-picker.component';
 import { GraphUpdateFaasFunctionComponent } from 'src/app/dialogs/graph-update-faas-function/graph-update-faas-function.component';
 
-
 const ROOT_NODE_ID = 'APPLICATION';
-
 
 @Component({
     selector: 'mico-app-dependency-graph',
@@ -82,7 +83,8 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         private api: ApiService,
         private dialog: MatDialog,
         private router: Router,
-    ) { }
+    ) {
+    }
 
     ngOnInit() {
         this.updateSubject.pipe(debounceTime(300)).subscribe(this.updateGraph);
@@ -140,7 +142,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 }
                 if (edge.target != null &&
                     ((edge.role === 'OUTPUT' && this.kafkaTopicNodes.has(edge.target.toString())) ||
-                    (edge.role === 'INPUT' && this.kafkaFaasConnectorNodes.has(edge.target.toString())))) {
+                        (edge.role === 'INPUT' && this.kafkaFaasConnectorNodes.has(edge.target.toString())))) {
                     newTargetHandles = targetHandles.filter(handle => handle.x < 0);
                 }
                 return {
@@ -363,7 +365,9 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             return edge;
         }
 
-        edge.markerEnd = { template: 'arrow', positionOnLine: 1, lineOffset: 4, scale: 0.5, rotate: { relativeAngle: 0 } };
+        edge.markerEnd = {
+            template: 'arrow', positionOnLine: 1, lineOffset: 4, scale: 0.5, rotate: { relativeAngle: 0 }
+        };
         /*if (edge.source === ROOT_NODE_ID) {
             edge.type = 'includes';
             edge.markerEnd.lineOffset = 8;
@@ -434,7 +438,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 }
             });
         }
-        if  (sourceNode.type === 'kafka-faas-connector') {
+        if (sourceNode.type === 'kafka-faas-connector') {
             if (sourceNode.data.outputTopicName == null || sourceNode.data.outputTopicName === '') {
                 edge.role = 'OUTPUT';
                 edge.texts[0].value = 'OUTPUT';
@@ -462,7 +466,9 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
         if (source.type === 'service') {
             if (target == null || target.type === 'service-interface') {
                 edge.type = 'interface-connection';
-                edge.markerEnd = { template: 'arrow', positionOnLine: 1, lineOffset: 4, scale: 0.5, rotate: { relativeAngle: 0 } };
+                edge.markerEnd = {
+                    template: 'arrow', positionOnLine: 1, lineOffset: 4, scale: 0.5, rotate: { relativeAngle: 0 }
+                };
                 edge.markers = [];
                 edge.texts = [];
                 return;
@@ -863,20 +869,20 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             } else {
                 // delete all matching interface connections
                 this.api.getServiceDeploymentInformation(this.shortName, this.version, sourceNode.shortName)
-                .pipe(take(2), takeLast(1))
-                .subscribe(deplInf => {
-                    const tempDeplInf = JSON.parse(JSON.stringify(deplInf));
-                    tempDeplInf.interfaceConnections = tempDeplInf.interfaceConnections.filter(conn => {
-                        return (conn.micoServiceInterfaceName !== targetInterface.name) ||
-                               (conn.micoServiceShortName !== targetService.shortName);
-                    });
-
-                    const subPutDeplInf = this.api.putServiceDeploymentInformation(this.shortName, this.version, sourceNode.shortName,
-                        tempDeplInf)
-                        .subscribe(() => {
-                            safeUnsubscribe(subPutDeplInf);
+                    .pipe(take(2), takeLast(1))
+                    .subscribe(deplInf => {
+                        const tempDeplInf = JSON.parse(JSON.stringify(deplInf));
+                        tempDeplInf.interfaceConnections = tempDeplInf.interfaceConnections.filter(conn => {
+                            return (conn.micoServiceInterfaceName !== targetInterface.name) ||
+                                (conn.micoServiceShortName !== targetService.shortName);
                         });
-                });
+
+                        const subPutDeplInf = this.api.putServiceDeploymentInformation(this.shortName, this.version, sourceNode.shortName,
+                            tempDeplInf)
+                            .subscribe(() => {
+                                safeUnsubscribe(subPutDeplInf);
+                            });
+                    });
             }
             dialogSub.unsubscribe();
         });
@@ -1163,8 +1169,6 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             graph.removeEdge(edge, false);
         });
     }
-
-
 
     /**
      * Update the topic connection edges based on the deployment info of a service.

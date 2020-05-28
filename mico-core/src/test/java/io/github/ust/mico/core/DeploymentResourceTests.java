@@ -13,7 +13,7 @@
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
  * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
+ * specific language governing permissions and limitationsN
  * under the License.
  */
 
@@ -159,7 +159,7 @@ public class DeploymentResourceTests {
 
         setupDeploymentResources(application, service);
 
-        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/deploy"))
+        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/deploy?rebuildImages=true"))
             .andDo(print())
             .andExpect(status().isAccepted());
 
@@ -223,7 +223,7 @@ public class DeploymentResourceTests {
             .setInstanceId(INSTANCE_ID));
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
 
-        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/deploy"))
+        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/deploy?rebuildImages=true"))
             .andDo(print())
             .andExpect(status().isUnprocessableEntity())
             .andExpect(status().reason(Matchers.containsString("interfaces")));
@@ -247,7 +247,7 @@ public class DeploymentResourceTests {
 
         setupDeploymentResources(application, service);
 
-        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/deploy"))
+        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/deploy?rebuildImages=true"))
             .andDo(print())
             .andExpect(status().isAccepted());
     }
