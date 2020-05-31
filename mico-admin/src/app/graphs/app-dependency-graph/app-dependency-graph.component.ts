@@ -113,11 +113,11 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             }
             if (className === 'error') {
                 if (node.type === 'kafka-faas-connector') {
-                    if (node.data.inputTopicName == null || node.data.inputTopicName === '') {
+                    if (node.data.inputTopicNames == null || node.data.inputTopicNames.length === 0) {
                         // node has no input
                         return true;
                     }
-                    if ((node.data.outputTopicName == null || node.data.outputTopicName === '') &&
+                    if ((node.data.outputTopicNames == null || node.data.outputTopicNames.length === 0) &&
                         (node.data.openFaaSFunctionName == null || node.data.openFaaSFunctionName === '')) {
                         // node has no possible output
                         return true;
@@ -438,14 +438,14 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 }
             });
         }
-        if (sourceNode.type === 'kafka-faas-connector') {
-            if (sourceNode.data.outputTopicName == null || sourceNode.data.outputTopicName === '') {
+        /*if (sourceNode.type === 'kafka-faas-connector') {
+            if (sourceNode.data.outputTopicNames == null || sourceNode.data.outputTopicNames.length === 0) {
                 edge.role = 'OUTPUT';
                 edge.texts[0].value = 'OUTPUT';
                 this.kafkaTopicNodes.forEach(topicId => {
                     edge.validTargets.add(topicId);
                 });
-            } else if (sourceNode.data.inputTopicName == null || sourceNode.data.inputTopicName === '') {
+            } else if (sourceNode.data.inputTopicNames == null || sourceNode.data.inputTopicNames.length === 0) {
                 edge.role = 'INPUT';
                 edge.texts[0].value = 'INPUT';
                 edge.texts[0].positionOnLine = 0.45;
@@ -455,7 +455,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 // all topic edges present
                 return null;
             }
-        }
+        }*/
         return edge;
     }
 
@@ -531,9 +531,17 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 const deplCopy = JSON.parse(JSON.stringify(depl));
 
                 if (edge.role === 'INPUT') {
-                    deplCopy.inputTopicName = topic.data.topicName;
+                    if (deplCopy.inputTopicNames) {
+                        deplCopy.inputTopicNames.push(topic.data.topicName);
+                    } else {
+                        deplCopy.inputTopicNames = [topic.data.topicName];
+                    }
                 } else if (edge.role === 'OUTPUT') {
-                    deplCopy.outputTopicName = topic.data.topicName;
+                    if (deplCopy.outputTopicNames) {
+                        deplCopy.outputTopicNames.push(topic.data.topicName);
+                    } else {
+                        deplCopy.outputTopicNames = [topic.data.topicName];
+                    }
                 } else {
                     return;
                 }
@@ -651,7 +659,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 return;
             }
 
-            const existingRoles = [];
+            /*const existingRoles = [];
 
             if (connector.inputTopicName != null && connector.inputTopicName !== '') {
                 existingRoles.push('INPUT');
@@ -659,12 +667,12 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
 
             if (connector.outputTopicName != null && connector.outputTopicName !== '') {
                 existingRoles.push('OUTPUT');
-            }
+            }*/
 
             const dialogRef = this.dialog.open(GraphAddKafkaTopicComponent, {
                 data: {
                     serviceShortName: connector.instanceId,
-                    existingRoles: existingRoles,
+                    existingRoles: [],
                 }
             });
 
@@ -677,10 +685,18 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
 
                 const connCopy = JSON.parse(JSON.stringify(connector));
                 if (result.role === 'OUTPUT') {
-                    connCopy.outputTopicName = result.kafkaTopicName;
+                    if (connCopy.outputTopicNames) {
+                        connCopy.outputTopicNames.push(result.kafkaTopicName);
+                    } else {
+                        connCopy.outputTopicNames = [result.kafkaTopicName];
+                    }
                 }
                 if (result.role === 'INPUT') {
-                    connCopy.inputTopicName = result.kafkaTopicName;
+                    if (connCopy.inputTopicNames) {
+                        connCopy.inputTopicNames.push(result.kafkaTopicName);
+                    } else {
+                        connCopy.inputTopicNames = [result.kafkaTopicName];
+                    }
                 }
                 const putSub = this.api.putApplicationKafkaFaasConnector(this.application.shortName, this.application.version, connector.instanceId, connCopy).subscribe(() => {
                     safeUnsubscribe(putSub);
@@ -698,7 +714,9 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             const apiSub = this.api.postApplicationKafkaFaasConnector(this.shortName, this.version).subscribe(connector => {
                 apiSub.unsubscribe();
                 const connCopy = JSON.parse(JSON.stringify(connector));
-                connCopy.inputTopicName = event.detail.sourceNode.data.topicName;
+                // new connector has no input topics yet
+                connCopy.inputTopicNames = [event.detail.sourceNode.data.topicName];
+
                 const apiSub2 = this.api.putApplicationKafkaFaasConnector(this.shortName, this.version, connector.instanceId, connCopy).subscribe(conn => {
                     apiSub2.unsubscribe();
                 });
@@ -911,10 +929,10 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
      * Update the graph based on all currently available data in the cache.
      */
     updateGraph = (withZoom: boolean = false) => {
-        const graph: GraphEditor = this.graph.nativeElement;
+        let graph: GraphEditor = this.graph.nativeElement;
         // local cache that is not affected by subsequent updates from observables
-        const application = this.application;
-        const applicationStatus = this.applicationStatus;
+        let application = this.application;
+        let applicationStatus = this.applicationStatus;
         const serviceInterfaces = new Map<string, Readonly<ApiObject[]>>();
         const deployInfo = new Map<string, ApiObject>();
 
@@ -1220,9 +1238,9 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
     }
 
     updateKFConnectors(kafkaFaasConnectors) {
-        const graph: GraphEditor = this.graph.nativeElement;
+        let graph: GraphEditor = this.graph.nativeElement;
 
-        const toRemove = new Set<string>();
+        let toRemove = new Set<string>();
 
         let lastX = 0;
 
@@ -1235,7 +1253,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             }
         });
 
-        const kafkaFaasConnectorNodes = new Set<string>();
+        let kafkaFaasConnectorNodes = new Set<string>();
 
         kafkaFaasConnectors.forEach(connector => {
             kafkaFaasConnectorNodes.add(connector.instanceId)
@@ -1251,46 +1269,76 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                         instanceId: connector.instanceId,
                         shortName: connector.shortName,
                         version: connector.version,
-                        inputTopicName: connector.inputTopicName,
-                        outputTopicName: connector.outputTopicName,
+                        inputTopicNames: connector.inputTopicNames,
+                        outputTopicNames: connector.outputTopicNames,
                         openFaaSFunctionName: connector.openFaaSFunctionName,
                     }
                 };
-                if (connector.outputTopicName != null && connector.outputTopicName !== '') {
-                    const topicId = `TOPIC/${connector.outputTopicName}`;
-                    const existingTopic = graph.getNode(topicId);
-                    if (existingTopic != null) {
-                        connectorNode.x = existingTopic.x - 40;
-                    } else {
-                        this.addTopicNode(topicId, connectorNode, connector.outputTopicName, 'OUTPUT', graph);
-                    }
+                if (connector.outputTopicNames != null && connector.outputTopicNames.length > 0) {
+                    connector.outputTopicNames.forEach(outputTopicName => {
+                        if (outputTopicName !== '') {
+                            const topicId = `TOPIC/${outputTopicName}`;
+                            const existingTopic = graph.getNode(topicId);
+                            if (existingTopic != null) {
+                                connectorNode.x = existingTopic.x - 40;
+                            } else {
+                                this.addTopicNode(topicId, connectorNode, outputTopicName, 'OUTPUT', graph);
+                            }
+                        }
+                    });
                 }
-                if (connector.inputTopicName != null && connector.inputTopicName !== '') {
-                    const topicId = `TOPIC/${connector.inputTopicName}`;
-                    const existingTopic = graph.getNode(topicId);
-                    if (existingTopic != null) {
-                        connectorNode.x = existingTopic.x + 40;
-                    } else {
-                        this.addTopicNode(topicId, connectorNode, connector.inputTopicName, 'INPUT', graph);
-                    }
+                if (connector.inputTopicNames != null && connector.inputTopicNames.length > 0) {
+                    connector.inputTopicNames.forEach(inputTopicName => {
+                        if (inputTopicName !== '') {
+                            const topicId = `TOPIC/${inputTopicName}`;
+                            const existingTopic = graph.getNode(topicId);
+                            if (existingTopic != null) {
+                                connectorNode.x = existingTopic.x + 40;
+                            } else {
+                                this.addTopicNode(topicId, connectorNode, inputTopicName, 'INPUT', graph);
+                            }
+                        }
+                    });
                 }
                 graph.addNode(connectorNode, false);
                 existing = connectorNode;
             } else {
+                let inputTopics, outputTopics;
+
+                if (existing.data.inputTopicNames) {
+                    inputTopics = existing.data.inputTopicNames.concat(
+                        connector.inputTopicNames.filter(
+                            (item) => existing.data.inputTopicNames.indexOf(item) < 0
+                        )
+                    );
+                } else {
+                    inputTopics = connector.inputTopicNames;
+                }
+
+                if (existing.data.outputTopicNames) {
+                    outputTopics = existing.data.outputTopicNames.concat(
+                        connector.outputTopicNames.filter(
+                            (item) => existing.data.outputTopicNames.indexOf(item) < 0
+                        )
+                    );
+                } else {
+                    outputTopics = connector.outputTopicNames;
+                }
+
                 existing.data = {
                     instanceId: connector.instanceId,
                     shortName: connector.shortName,
                     version: connector.version,
-                    inputTopicName: connector.inputTopicName,
-                    outputTopicName: connector.outputTopicName,
+                    inputTopicNames: inputTopics,
+                    outputTopicNames: outputTopics,
                     openFaaSFunctionName: connector.openFaaSFunctionName,
                 };
             }
             existing.error = '';
-            if (connector.inputTopicName == null || connector.inputTopicName === '') {
-                existing.error = 'No input topic specified!\n';
+            if (connector.inputTopicNames == null || connector.inputTopicNames.length === 0) {
+                existing.error = 'No input topics specified!\n';
             }
-            if ((connector.outputTopicName == null || connector.outputTopicName === '') &&
+            if ((connector.outputTopicNames == null || connector.outputTopicNames.length === 0) &&
                 (connector.openFaaSFunctionName == null || connector.openFaaSFunctionName === '')) {
                 existing.error += 'Either a FaaS function or an output topic need to be specified!';
             }
@@ -1300,56 +1348,44 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                 existing.title = connector.shortName;
             }
             toRemove.delete(connector.instanceId);
+
             // update edges...
             const edgesToRemove = new Set<Edge>();
+
             const inputEdges = graph.getEdgesByTarget(connector.instanceId);
-            let needInputTopicEdge = connector.inputTopicName != null && connector.inputTopicName !== '';
-            if (!needInputTopicEdge) {
-                // delete all input topics
+            if (connector.inputTopicNames != null && connector.inputTopicNames.length > 0) {
+                inputEdges.forEach(e => graph.removeEdge(e, false));
+                connector.inputTopicNames.forEach(inputTopicName => {
+                    const topicId = `TOPIC/${inputTopicName}`;
+                    const existingTopic = graph.getNode(topicId);
+                    if (existingTopic == null) {
+                        this.addTopicNode(topicId, existing, inputTopicName, 'INPUT', graph);
+                    }
+                    const edge = this.newTopicEdge('INPUT', topicId, connector.instanceId);
+                    edge.texts[0].offsetX = -20;
+                    edge.texts[0].offsetY = -3;
+                    graph.addEdge(edge, false);
+                });
+            } else {
+                // no input edges are needed
                 inputEdges.forEach(e => edgesToRemove.add(e));
-            } else {
-                // search for existing input topic edge
-                inputEdges.forEach(e => {
-                    if (e.source === `TOPIC/${connector.inputTopicName}`) {
-                        // topic edge already in graph
-                        needInputTopicEdge = false;
-                    }
-                });
             }
+
             const outputEdges = graph.getEdgesBySource(connector.instanceId);
-            let needOutputTopicEdge = connector.outputTopicName != null && connector.outputTopicName !== '';
-            if (!needOutputTopicEdge) {
-                // delete all output topics
-                outputEdges.forEach(e => edgesToRemove.add(e));
-            } else {
-                // search for existing output topic edge
-                outputEdges.forEach(e => {
-                    if (e.target === `TOPIC/${connector.outputTopicName}`) {
-                        // topic edge already in graph
-                        needOutputTopicEdge = false;
+            if (connector.outputTopicNames != null && connector.outputTopicNames.length > 0) {
+                outputEdges.forEach(e => graph.removeEdge(e, false));
+                connector.outputTopicNames.forEach(outputTopicName => {
+                    const topicId = `TOPIC/${outputTopicName}`;
+                    const existingTopic = graph.getNode(topicId);
+                    if (existingTopic == null) {
+                        this.addTopicNode(topicId, existing, outputTopicName, 'OUTPUT', graph);
                     }
+                    const edge = this.newTopicEdge('OUTPUT', topicId, connector.instanceId);
+                    edge.texts[0].offsetY = 5;
+                    graph.addEdge(edge, false);
                 });
-            }
-            if (needInputTopicEdge) {
-                const topicId = `TOPIC/${connector.inputTopicName}`;
-                const existingTopic = graph.getNode(topicId);
-                if (existingTopic == null) {
-                    this.addTopicNode(topicId, existing, connector.inputTopicName, 'INPUT', graph);
-                }
-                const edge = this.newTopicEdge('INPUT', topicId, connector.instanceId);
-                edge.texts[0].offsetX = -20;
-                edge.texts[0].offsetY = -3;
-                graph.addEdge(edge, false);
-            }
-            if (needOutputTopicEdge) {
-                const topicId = `TOPIC/${connector.outputTopicName}`;
-                const existingTopic = graph.getNode(topicId);
-                if (existingTopic == null) {
-                    this.addTopicNode(topicId, existing, connector.outputTopicName, 'OUTPUT', graph);
-                }
-                const edge = this.newTopicEdge('OUTPUT', topicId, connector.instanceId);
-                edge.texts[0].offsetY = 5;
-                graph.addEdge(edge, false);
+            } else {
+                outputEdges.forEach(e => edgesToRemove.add(e));
             }
 
             edgesToRemove.forEach((edge) => {

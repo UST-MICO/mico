@@ -93,6 +93,7 @@ public class MicoApplicationBroker {
 
         // Delete actual application
         applicationRepository.delete(micoApplication);
+        serviceDeploymentInfoBroker.cleanUpTanglingNodes();
     }
 
     public void deleteMicoApplicationsByShortName(String shortName) throws MicoApplicationIsNotUndeployedException {
@@ -112,6 +113,7 @@ public class MicoApplicationBroker {
 
         // No version of the application is deployed -> delete all
         applicationRepository.deleteAll(micoApplicationList);
+        serviceDeploymentInfoBroker.cleanUpTanglingNodes();
     }
 
     public MicoApplication createMicoApplication(MicoApplication micoApplication) throws MicoApplicationAlreadyExistsException {

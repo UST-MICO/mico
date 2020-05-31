@@ -248,6 +248,7 @@ public class MicoKubernetesClient {
         return createdDeployment;
     }
 
+    // TODO this has to be changed for creating multiple input/output topics for example, by concatenating values with ; as a delimeter
     private MicoEnvironmentVariable createEnvVarBasedOnTopic(MicoTopicRole t) {
         String envVarName;
         switch (t.getRole()) {

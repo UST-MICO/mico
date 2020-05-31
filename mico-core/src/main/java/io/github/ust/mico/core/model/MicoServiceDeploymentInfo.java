@@ -126,7 +126,7 @@ public class MicoServiceDeploymentInfo {
      * The list of topics that are used in the deployment of this {@link MicoService}.
      */
 
-    @Relationship(type = "HAS")
+    @Relationship(type = "COMMUNICATES_USING")
     private List<MicoTopicRole> topics = new ArrayList<>();
 
 

@@ -171,13 +171,14 @@ public class MicoServiceDeploymentInfoBroker {
         MicoApplicationNotFoundException, MicoApplicationDoesNotIncludeMicoServiceException,
         MicoServiceDeploymentInformationNotFoundException, KubernetesResourceException, MicoTopicRoleUsedMultipleTimesException {
 
-        validateTopics(serviceDeploymentInfoDTO);
+        //validateTopics(serviceDeploymentInfoDTO);
 
         MicoApplication micoApplication = applicationBroker.getMicoApplicationByShortNameAndVersion(applicationShortName, applicationVersion);
         MicoServiceDeploymentInfo storedServiceDeploymentInfo = getMicoServiceDeploymentInformation(applicationShortName, applicationVersion, serviceShortName);
 
         int oldReplicas = storedServiceDeploymentInfo.getReplicas();
         MicoServiceDeploymentInfo updatedServiceDeploymentInfo = saveValuesToDatabase(serviceDeploymentInfoDTO, storedServiceDeploymentInfo);
+        cleanUpTanglingNodes();
 
         // FIXME: Currently we only supported scale in / scale out.
         // 		  If the MICO service is already deployed, we only update the replicas.
@@ -222,35 +223,36 @@ public class MicoServiceDeploymentInfoBroker {
      * Saves the values of a {@link MicoServiceDeploymentInfoRequestDTO} to the database. A workaround is required to
      * save the topics correctly: Delete all relationships of this {@link MicoServiceDeploymentInfo} and recreate them.
      *
-     * @param serviceDeploymentInfoDTO    the {@link MicoServiceDeploymentInfoRequestDTO} that includes the new values
-     * @param storedServiceDeploymentInfo the {@link MicoServiceDeploymentInfo} that is already stored in the database
+     * @param requestDTO           the {@link MicoServiceDeploymentInfoRequestDTO} that includes the new values
+     * @param storedDeploymentInfo the {@link MicoServiceDeploymentInfo} that is already stored in the database
      * @return the new {@link MicoServiceDeploymentInfo} stored in the database
      */
-    private MicoServiceDeploymentInfo saveValuesToDatabase(MicoServiceDeploymentInfoRequestDTO serviceDeploymentInfoDTO, MicoServiceDeploymentInfo storedServiceDeploymentInfo) {
-        MicoServiceDeploymentInfo sdiWithAppliedValues = storedServiceDeploymentInfo.applyValuesFrom(serviceDeploymentInfoDTO);
+    private MicoServiceDeploymentInfo saveValuesToDatabase(MicoServiceDeploymentInfoRequestDTO requestDTO, MicoServiceDeploymentInfo storedDeploymentInfo) {
+        // TODO: refactor to use newer neo4j and ogm versions (requires using newer spring boot too)
         // At first save the service deployment information with the new values without topics.
         // This is a workaround to save them later with new relationships. Otherwise Neo4j sometimes deletes the relationships!?
         // FIXME https://community.neo4j.com/t/neo4jrepository-save-does-not-persist-updated-relation/5163/6
 
-        sdiWithAppliedValues.setTopics(new ArrayList<>());
-        final MicoServiceDeploymentInfo updatedServiceDeploymentInfoWithoutTopics = serviceDeploymentInfoRepository.save(sdiWithAppliedValues);
+        MicoServiceDeploymentInfo updatedDeploymentInfo = storedDeploymentInfo.applyValuesFrom(requestDTO);
+        updatedDeploymentInfo.getTopics().clear();
 
-        final MicoServiceDeploymentInfo finalUpdatedServiceDeploymentInfo;
+        List<MicoTopicRole> rolesWithReusedTopics = new ArrayList<>();
+        requestDTO.getTopics().forEach(topicRequest -> {
+            Optional<MicoTopic> topic = createOrReuseTopic(topicRequest.getName());
+            if (topic.isPresent() && (topicRequest.getRole().equals(MicoTopicRole.Role.INPUT) || topicRequest.getRole().equals(MicoTopicRole.Role.OUTPUT))) {
+                rolesWithReusedTopics.add(new MicoTopicRole().setTopic(topic.get())
+                    .setRole(topicRequest.getRole())
+                    .setServiceDeploymentInfo(updatedDeploymentInfo));
+            } else {
+                rolesWithReusedTopics.add(new MicoTopicRole().setTopic(new MicoTopic()
+                    .setName(topicRequest.getName()))
+                    .setRole(topicRequest.getRole())
+                    .setServiceDeploymentInfo(updatedDeploymentInfo));
+            }
+        });
+        updatedDeploymentInfo.getTopics().addAll(rolesWithReusedTopics);
 
-        if (serviceDeploymentInfoDTO.getTopics().isEmpty()) {
-            finalUpdatedServiceDeploymentInfo = updatedServiceDeploymentInfoWithoutTopics;
-        } else {
-            // If there are topics, apply them and save the service deployment information again.
-            MicoServiceDeploymentInfo sdiWithTopics = updatedServiceDeploymentInfoWithoutTopics.setTopics(
-                serviceDeploymentInfoDTO.getTopics().stream().map(t -> MicoTopicRole.valueOf(t, updatedServiceDeploymentInfoWithoutTopics)).collect(Collectors.toList()));
-
-            // Check if topics with the same names already exist, if so reuse them.
-            MicoServiceDeploymentInfo sdiWithReusedTopics = createOrReuseTopicsInDatabase(sdiWithTopics);
-            finalUpdatedServiceDeploymentInfo = serviceDeploymentInfoRepository.save(sdiWithReusedTopics);
-        }
-        cleanUpTanglingNodes();
-
-        return finalUpdatedServiceDeploymentInfo;
+        return serviceDeploymentInfoRepository.save(updatedDeploymentInfo);
     }
 
     /**
@@ -262,7 +264,6 @@ public class MicoServiceDeploymentInfoBroker {
      * clean up.
      */
     public void cleanUpTanglingNodes() {
-
         micoLabelRepository.cleanUp();
         micoTopicRepository.cleanUp();
         micoEnvironmentVariableRepository.cleanUp();
@@ -287,6 +288,31 @@ public class MicoServiceDeploymentInfoBroker {
                 throw new MicoTopicRoleUsedMultipleTimesException(requestDTO.getRole());
             }
         }
+    }
+
+    List<MicoTopic> createOrReuseTopics(List<String> topicNames) {
+        List<MicoTopic> result = new ArrayList<>();
+        if (Objects.nonNull(topicNames)) {
+            topicNames.forEach(topicName -> {
+                Optional<MicoTopic> topic = createOrReuseTopic(topicName);
+                topic.ifPresent(result::add);
+            });
+        }
+        return result;
+    }
+
+    Optional<MicoTopic> createOrReuseTopic(String topicName) {
+        if (Objects.nonNull(topicName) && !topicName.isEmpty()) {
+            List<MicoTopic> existingTopic = micoTopicRepository.findAllByName(topicName);
+            if (Objects.nonNull(existingTopic) && existingTopic.size() > 0) {
+                return Optional.of(existingTopic.get(0));
+            } else {
+                //return Optional.empty();
+                MicoTopic topic = micoTopicRepository.save(new MicoTopic().setName(topicName));
+                return Optional.of(topic);
+            }
+        }
+        return Optional.empty();
     }
 
     /**
@@ -366,7 +392,6 @@ public class MicoServiceDeploymentInfoBroker {
             .setName(MicoEnvironmentVariable.DefaultNames.KAFKA_GROUP_ID.name())
             .setValue(micoServiceDeploymentInfo.getInstanceId()));
         micoEnvironmentVariables.addAll(openFaaSConfig.getDefaultEnvironmentVariablesForOpenFaaS());
-        List<MicoTopicRole> topics = micoServiceDeploymentInfo.getTopics();
-        topics.addAll(kafkaConfig.getDefaultTopics(micoServiceDeploymentInfo));
+        micoServiceDeploymentInfo.getTopics().addAll(kafkaConfig.getDefaultTopics(micoServiceDeploymentInfo));
     }
 }

@@ -172,16 +172,10 @@ public class ServiceDeploymentInfoIntegrationTests {
 
     @Test
     public void updateServiceDeploymentInformation() throws Exception {
-        MicoApplication application = new MicoApplication()
-            .setId(ID)
-            .setShortName(SHORT_NAME).setVersion(VERSION);
+        MicoApplication application = new MicoApplication().setId(ID).setShortName(SHORT_NAME).setVersion(VERSION);
+        MicoApplication expectedApplication = new MicoApplication().setId(ID) .setShortName(SHORT_NAME).setVersion(VERSION);
 
-        MicoApplication expectedApplication = new MicoApplication()
-            .setId(ID)
-            .setShortName(SHORT_NAME).setVersion(VERSION);
-
-        MicoService service = new MicoService()
-            .setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
+        MicoService service = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
 
         MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
             .setId(ID_1)
@@ -233,64 +227,20 @@ public class ServiceDeploymentInfoIntegrationTests {
     }
 
     @Test
-    public void updateServiceDeploymentInformationWithDuplicatedTopicRoles() throws Exception {
-        MicoApplication application = new MicoApplication()
-            .setId(ID)
-            .setShortName(SHORT_NAME).setVersion(VERSION);
-
-        MicoService service = new MicoService()
-            .setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
-
-        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
-            .setId(ID_1)
-            .setInstanceId(INSTANCE_ID)
-            .setService(service);
-
-        MicoServiceDeploymentInfoRequestDTO updatedServiceDeploymentInfoDTO = new MicoServiceDeploymentInfoRequestDTO()
-            .setTopics(CollectionUtils.listOf(
-                new MicoTopicRequestDTO().setName("topic-1").setRole(MicoTopicRole.Role.INPUT),
-                new MicoTopicRequestDTO().setName("topic-2").setRole(MicoTopicRole.Role.INPUT)));
-
-        application.getServices().add(service);
-        application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
-
-        given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion())).willReturn(Optional.of(application));
-        given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName())).willReturn(CollectionUtils.listOf(serviceDeploymentInfo));
-
-        mvc.perform(put(PATH_APPLICATIONS + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName())
-            .content(mapper.writeValueAsBytes(updatedServiceDeploymentInfoDTO))
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print())
-            .andExpect(status().isUnprocessableEntity());
-    }
-
-    @Test
     public void updateServiceDeploymentInformationReusesExistingTopics() throws Exception {
-        MicoApplication application = new MicoApplication()
-            .setId(ID)
-            .setShortName(SHORT_NAME).setVersion(VERSION);
+        MicoApplication application = new MicoApplication().setId(ID).setShortName(SHORT_NAME).setVersion(VERSION);
+        MicoApplication expectedApplication = new MicoApplication().setId(ID).setShortName(SHORT_NAME).setVersion(VERSION);
 
-        MicoApplication expectedApplication = new MicoApplication()
-            .setId(ID)
-            .setShortName(SHORT_NAME).setVersion(VERSION);
-
-        MicoService service = new MicoService()
-            .setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
-
+        MicoService service = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
         MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
             .setId(ID_1)
             .setInstanceId(INSTANCE_ID)
             .setService(service);
 
-        MicoTopic existingTopic1 = new MicoTopic()
-            .setId(ID_2)
-            .setName("topic-name-1");
+        MicoTopic existingTopic1 = new MicoTopic().setName("topic-name-1-existing");
+        MicoTopic existingTopic2 = new MicoTopic().setName("topic-name-2");
 
-        MicoTopic existingTopic2 = new MicoTopic()
-            .setId(ID_3)
-            .setName("topic-name-2");
-
-        String newTopicName = "new-topic";
+        String newTopicName = "new-topic-save";
         MicoServiceDeploymentInfoRequestDTO updatedServiceDeploymentInfoDTO = new MicoServiceDeploymentInfoRequestDTO()
             .setTopics(CollectionUtils.listOf(
                 new MicoTopicRequestDTO().setName(existingTopic1.getName()).setRole(MicoTopicRole.Role.INPUT),
@@ -371,4 +321,37 @@ public class ServiceDeploymentInfoIntegrationTests {
 
         result.andExpect(status().isUnprocessableEntity());
     }
+
+    // TODO: modify to test if multiple duplicate roles are allowed
+    /*@Test
+    public void updateServiceDeploymentInformationWithDuplicatedTopicRoles() throws Exception {
+        MicoApplication application = new MicoApplication()
+            .setId(ID)
+            .setShortName(SHORT_NAME).setVersion(VERSION);
+
+        MicoService service = new MicoService()
+            .setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
+
+        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
+            .setId(ID_1)
+            .setInstanceId(INSTANCE_ID)
+            .setService(service);
+
+        MicoServiceDeploymentInfoRequestDTO updatedServiceDeploymentInfoDTO = new MicoServiceDeploymentInfoRequestDTO()
+            .setTopics(CollectionUtils.listOf(
+                new MicoTopicRequestDTO().setName("topic-1").setRole(MicoTopicRole.Role.INPUT),
+                new MicoTopicRequestDTO().setName("topic-2").setRole(MicoTopicRole.Role.INPUT)));
+
+        application.getServices().add(service);
+        application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
+
+        given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion())).willReturn(Optional.of(application));
+        given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName())).willReturn(CollectionUtils.listOf(serviceDeploymentInfo));
+
+        mvc.perform(put(PATH_APPLICATIONS + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName())
+            .content(mapper.writeValueAsBytes(updatedServiceDeploymentInfoDTO))
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isUnprocessableEntity());
+    }*/
 }
