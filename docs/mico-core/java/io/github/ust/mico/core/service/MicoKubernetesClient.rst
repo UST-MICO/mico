@@ -1,4 +1,52 @@
+.. java:import:: java.net PasswordAuthentication
+
+.. java:import:: java.util ArrayList
+
+.. java:import:: java.util Base64
+
+.. java:import:: java.util LinkedList
+
+.. java:import:: java.util List
+
+.. java:import:: java.util Map
+
+.. java:import:: java.util Optional
+
+.. java:import:: java.util.stream Collectors
+
 .. java:import:: com.fasterxml.jackson.core JsonProcessingException
+
+.. java:import:: io.fabric8.kubernetes.api.model Container
+
+.. java:import:: io.fabric8.kubernetes.api.model ContainerBuilder
+
+.. java:import:: io.fabric8.kubernetes.api.model ContainerPort
+
+.. java:import:: io.fabric8.kubernetes.api.model ContainerPortBuilder
+
+.. java:import:: io.fabric8.kubernetes.api.model DoneableSecret
+
+.. java:import:: io.fabric8.kubernetes.api.model EnvVar
+
+.. java:import:: io.fabric8.kubernetes.api.model EnvVarBuilder
+
+.. java:import:: io.fabric8.kubernetes.api.model LoadBalancerIngress
+
+.. java:import:: io.fabric8.kubernetes.api.model Pod
+
+.. java:import:: io.fabric8.kubernetes.api.model Secret
+
+.. java:import:: io.fabric8.kubernetes.api.model SecretList
+
+.. java:import:: io.fabric8.kubernetes.api.model Service
+
+.. java:import:: io.fabric8.kubernetes.api.model ServiceBuilder
+
+.. java:import:: io.fabric8.kubernetes.api.model ServicePort
+
+.. java:import:: io.fabric8.kubernetes.api.model ServicePortBuilder
+
+.. java:import:: io.fabric8.kubernetes.api.model ServiceStatus
 
 .. java:import:: io.fabric8.kubernetes.api.model.apps Deployment
 
@@ -22,7 +70,35 @@
 
 .. java:import:: io.github.ust.mico.core.exception MicoApplicationNotFoundException
 
+.. java:import:: io.github.ust.mico.core.model KubernetesDeploymentInfo
+
+.. java:import:: io.github.ust.mico.core.model MicoApplication
+
+.. java:import:: io.github.ust.mico.core.model MicoApplicationDeploymentStatus
+
 .. java:import:: io.github.ust.mico.core.model MicoApplicationDeploymentStatus.Value
+
+.. java:import:: io.github.ust.mico.core.model MicoApplicationJobStatus
+
+.. java:import:: io.github.ust.mico.core.model MicoEnvironmentVariable
+
+.. java:import:: io.github.ust.mico.core.model MicoInterfaceConnection
+
+.. java:import:: io.github.ust.mico.core.model MicoLabel
+
+.. java:import:: io.github.ust.mico.core.model MicoMessage
+
+.. java:import:: io.github.ust.mico.core.model MicoService
+
+.. java:import:: io.github.ust.mico.core.model MicoServiceBackgroundJob
+
+.. java:import:: io.github.ust.mico.core.model MicoServiceDeploymentInfo
+
+.. java:import:: io.github.ust.mico.core.model MicoServiceInterface
+
+.. java:import:: io.github.ust.mico.core.model MicoServicePort
+
+.. java:import:: io.github.ust.mico.core.model MicoTopicRole
 
 .. java:import:: io.github.ust.mico.core.persistence KubernetesDeploymentInfoRepository
 
@@ -30,9 +106,7 @@
 
 .. java:import:: io.github.ust.mico.core.persistence MicoServiceDeploymentInfoRepository
 
-.. java:import:: io.github.ust.mico.core.service.imagebuilder ImageBuilder
-
-.. java:import:: io.github.ust.mico.core.service.imagebuilder.knativebuild.buildtypes Build
+.. java:import:: io.github.ust.mico.core.service.imagebuilder TektonPipelinesController
 
 .. java:import:: io.github.ust.mico.core.util CollectionUtils
 
@@ -41,10 +115,6 @@
 .. java:import:: org.springframework.beans.factory.annotation Autowired
 
 .. java:import:: org.springframework.stereotype Component
-
-.. java:import:: java.net PasswordAuthentication
-
-.. java:import:: java.util.stream Collectors
 
 MicoKubernetesClient
 ====================
@@ -87,7 +157,7 @@ Constructors
 MicoKubernetesClient
 ^^^^^^^^^^^^^^^^^^^^
 
-.. java:constructor:: @Autowired public MicoKubernetesClient(MicoKubernetesConfig micoKubernetesConfig, MicoKubernetesBuildBotConfig buildBotConfig, KubernetesClient kubernetesClient, ImageBuilder imageBuilder, BackgroundJobBroker backgroundJobBroker, MicoApplicationRepository applicationRepository, MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository, KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository)
+.. java:constructor:: @Autowired public MicoKubernetesClient(MicoKubernetesConfig micoKubernetesConfig, MicoKubernetesBuildBotConfig buildBotConfig, KubernetesClient kubernetesClient, TektonPipelinesController imageBuilder, BackgroundJobBroker backgroundJobBroker, MicoApplicationRepository applicationRepository, MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository, KubernetesDeploymentInfoRepository kubernetesDeploymentInfoRepository)
    :outertype: MicoKubernetesClient
 
 Methods

@@ -131,10 +131,9 @@ public class TektonPipelinesController implements ImageBuilder {
 
     /**
      * Initialize the image builder. This is required to be able to use the image builder. It's not required to trigger
-     * the initialization manually, because at every application context refresh the method is called by the {@code
+     * the initialization manually, because the method is triggered by application context refresh events.
      *
      * @throws NotInitializedException if there are errors during initialization
-     * @EventListener init} method.
      */
     @Override
     public void init() throws NotInitializedException {

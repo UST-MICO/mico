@@ -1,3 +1,7 @@
+.. java:import:: java.util List
+
+.. java:import:: java.util Optional
+
 .. java:import:: com.google.common.base Strings
 
 .. java:import:: io.github.ust.mico.core.dto.request KFConnectorDeploymentInfoRequestDTO
@@ -5,6 +9,16 @@
 .. java:import:: io.github.ust.mico.core.exception KafkaFaasConnectorInstanceNotFoundException
 
 .. java:import:: io.github.ust.mico.core.exception MicoApplicationNotFoundException
+
+.. java:import:: io.github.ust.mico.core.model MicoApplication
+
+.. java:import:: io.github.ust.mico.core.model MicoServiceDeploymentInfo
+
+.. java:import:: io.github.ust.mico.core.model MicoTopic
+
+.. java:import:: io.github.ust.mico.core.model MicoTopicRole
+
+.. java:import:: io.github.ust.mico.core.model OpenFaaSFunction
 
 .. java:import:: io.github.ust.mico.core.persistence MicoServiceDeploymentInfoRepository
 
@@ -17,12 +31,6 @@
 .. java:import:: org.springframework.beans.factory.annotation Autowired
 
 .. java:import:: org.springframework.stereotype Service
-
-.. java:import:: java.util List
-
-.. java:import:: java.util Optional
-
-.. java:import:: java.util.stream Collectors
 
 KafkaFaasConnectorDeploymentInfoBroker
 ======================================

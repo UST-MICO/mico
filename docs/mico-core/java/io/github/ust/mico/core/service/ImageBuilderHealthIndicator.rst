@@ -1,5 +1,7 @@
 .. java:import:: io.github.ust.mico.core.service.imagebuilder ImageBuilder
 
+.. java:import:: io.github.ust.mico.core.service.imagebuilder TektonPipelinesController
+
 .. java:import:: org.springframework.beans.factory.annotation Autowired
 
 .. java:import:: org.springframework.boot.actuate.health Health
@@ -21,7 +23,7 @@ Constructors
 ImageBuilderHealthIndicator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. java:constructor:: @Autowired public ImageBuilderHealthIndicator(ImageBuilder imageBuilder)
+.. java:constructor:: @Autowired public ImageBuilderHealthIndicator(TektonPipelinesController imageBuilder)
    :outertype: ImageBuilderHealthIndicator
 
 Methods

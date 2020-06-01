@@ -38,3 +38,9 @@ findByName
 .. java:method::  Optional<MicoTopic> findByName(String name)
    :outertype: MicoTopicRepository
 
+findFirstByName
+^^^^^^^^^^^^^^^
+
+.. java:method::  MicoTopic findFirstByName(String name)
+   :outertype: MicoTopicRepository
+

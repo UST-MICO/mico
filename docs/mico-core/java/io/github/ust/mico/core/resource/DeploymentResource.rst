@@ -28,6 +28,8 @@
 
 .. java:import:: org.springframework.web.bind.annotation RequestMapping
 
+.. java:import:: org.springframework.web.bind.annotation RequestParam
+
 .. java:import:: org.springframework.web.bind.annotation RestController
 
 .. java:import:: org.springframework.web.server ResponseStatusException
@@ -45,7 +47,7 @@ Methods
 deploy
 ^^^^^^
 
-.. java:method:: @PostMapping public ResponseEntity<Resource<MicoApplicationJobStatusResponseDTO>> deploy(String shortName, String version)
+.. java:method:: @PostMapping public ResponseEntity<Resource<MicoApplicationJobStatusResponseDTO>> deploy(String shortName, String version, boolean rebuildImages)
    :outertype: DeploymentResource
 
 undeploy
