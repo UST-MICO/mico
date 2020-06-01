@@ -1334,6 +1334,7 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
                     openFaaSFunctionName: connector.openFaaSFunctionName,
                 };
             }
+
             existing.error = '';
             if (connector.inputTopicNames == null || connector.inputTopicNames.length === 0) {
                 existing.error = 'No input topics specified!\n';
@@ -1347,6 +1348,15 @@ export class AppDependencyGraphComponent implements OnInit, OnChanges, OnDestroy
             } else {
                 existing.title = connector.shortName;
             }
+
+            if (existing.data.openFaaSFunctionName && existing.data.openFaaSFunctionName.includes('filter')) {
+                existing.data.patternIconURL = "./assets/EIP-icons/message-filter.svg";
+            } else if (existing.data.openFaaSFunctionName && existing.data.openFaaSFunctionName.includes('router')) {
+                existing.data.patternIconURL = "./assets/EIP-icons/content-based-router.svg";
+            } else {
+                existing.data.patternIconURL = "";
+            }
+
             toRemove.delete(connector.instanceId);
 
             // update edges...

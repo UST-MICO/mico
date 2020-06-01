@@ -20,7 +20,6 @@
 import { Node } from '@ustutt/grapheditor-webcomponent/lib/node';
 import { ApiObject } from 'src/app/api/apiobject';
 
-
 export const STYLE_TEMPLATE = {
     id: 'style',
     innerHTML: `
@@ -102,6 +101,9 @@ export const STYLE_TEMPLATE = {
         }
         .text.small {
             font-size: 5pt;
+        }
+        .text.tiny {
+            font-size: 4pt;
         }
         .text.version {
             word-break: break-all;
@@ -209,23 +211,23 @@ export const KAFKA_TOPIC_NODE_TEMPLATE = {
 
 export const KAFKA_FAAS_CONNECTOR_NODE_TEMPLATE = {
     id: 'kafka-faas-connector',
-    innerHTML: `<polygon points="-32.1,0 -32,-8 32,-8 33,0 32,8 -32,8" data-link-handles="corners"></polygon>
-    <path d="M-38 -15 L28 -15 A 6 15 0 0 1 28 15 L-38 15 A 6 15 0 0 0 -38 -15 Z" />
-    <text class="text title clickable" data-content="title" data-click="faas-function" width="55" x="-27" y="-3"></text>
-    <title data-content="title"></title>
-    <g>
-        <text class="text version small" data-content="data.version" data-click="version" width="24" x="-27" y="10"></text>
-        <title data-content="data.version"></title>
-    </g>
-    <g>
-        <text class="text instance-id small" data-content="data.instanceId" width="24" x="0" y="10"></text>
-        <title data-content="data.instanceId"></title>
-    </g>
-    <g class="warning-label" transform="scale(0.4) translate(55,-35)">
+    innerHTML: `<rect width="90" height="50" x="-50" y="-30" rx="10" ry="10"></rect>
+    <text class="text small title clickable" data-content="title" data-click="faas-function" width="65" x="-46" y="-18"></text>
+    <text class="text version tiny" data-content="data.version" data-click="version" width="24" x="20" y="8"></text>
+    <!--<title data-content="title"></title>-->
+    <title data-content="data.version"></title>
+    <g class="warning-label" transform="scale(0.4) translate(55,-25)">
         <circle class="warning-background" cx="12" cy="12" r="11.5"></circle>
         <path class="warning-foreground" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path>
         <title data-content="error"></title>
-    </g>`
+    </g>
+
+    <image data-href="data.patternIconURL" width="50" height="50" x="-40" y="-22"/>
+    <!--<g>
+        <text class="text instance-id small" data-content="data.instanceId" width="24" x="0" y="10"></text>
+        <title data-content="data.instanceId"></title>
+    </g>-->
+    `
 };
 
 export const SERVICE_NODE_TEMPLATE = {
