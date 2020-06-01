@@ -1,3 +1,22 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package io.github.ust.mico.core.service.imagebuilder;
 
 import java.io.File;
@@ -110,6 +129,13 @@ public class TektonPipelinesController implements ImageBuilder {
         }
     }
 
+    /**
+     * Initialize the image builder. This is required to be able to use the image builder. It's not required to trigger
+     * the initialization manually, because at every application context refresh the method is called by the {@code
+     *
+     * @throws NotInitializedException if there are errors during initialization
+     * @EventListener init} method.
+     */
     @Override
     public void init() throws NotInitializedException {
         log.info("Initializing image builder...");
@@ -144,6 +170,9 @@ public class TektonPipelinesController implements ImageBuilder {
 
     /**
      * Initialize the Tekton build-and-push pipeline. This is required to be able to use the image builder.
+     *
+     * @param namespace the namespace for Tekton pipeline resources.
+     * @throws IOException if there are errors when reading Tekton definition files
      */
     public void initilizeBuildPipeline(String namespace) throws IOException {
         log.info("Initializing the Tekton build-and-push pipeline");
@@ -162,6 +191,14 @@ public class TektonPipelinesController implements ImageBuilder {
         log.info("Successfully initialized Tekton build-and-push pipeline");
     }
 
+    /**
+     * Builds an OCI image based on a Git repository provided by a {@code MicoService}. The result of the returned
+     * {@code CompletableFuture} is the Docker image URI.
+     *
+     * @param micoService the MICO service for which the image should be build
+     * @return the {@link CompletableFuture} that executes the build. The result is the Docker image URI.
+     * @throws NotInitializedException if the image builder was not initialized
+     */
     @Override
     public CompletableFuture<String> build(MicoService micoService) throws InterruptedException, ExecutionException, TimeoutException, KubernetesResourceException, NotInitializedException {
         if (!isInitialized) {
@@ -188,6 +225,15 @@ public class TektonPipelinesController implements ImageBuilder {
         return completionFuture;
     }
 
+    /**
+     * Run a Tekton PipelineRun for a given {@code MicoService}. The result of the returned {@code CompletableFuture} is
+     * the Docker image URI.
+     *
+     * @param micoService     the MICO service for which the image should be build
+     * @param pipelineRunName the name of the {@link PipelineRun} to complete
+     * @param namespace       the namespace in which to run the build pipeline
+     * @return the {@link CompletableFuture} that executes the build. The result is the Docker image URI.
+     */
     private CompletableFuture<String> completePipelineRun(MicoService micoService, String pipelineRunName, String namespace) throws InterruptedException, ExecutionException, TimeoutException {
         CompletableFuture<String> completionFuture = new CompletableFuture<>();
 
