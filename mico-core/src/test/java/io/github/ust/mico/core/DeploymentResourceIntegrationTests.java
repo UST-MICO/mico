@@ -19,6 +19,12 @@
 
 package io.github.ust.mico.core;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.github.ust.mico.core.broker.MicoApplicationBroker;
@@ -26,13 +32,27 @@ import io.github.ust.mico.core.broker.MicoServiceBroker;
 import io.github.ust.mico.core.broker.MicoServiceDeploymentInfoBroker;
 import io.github.ust.mico.core.configuration.KafkaFaasConnectorConfig;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
-import io.github.ust.mico.core.model.*;
-import io.github.ust.mico.core.persistence.*;
-import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.model.MicoServicePort;
+import io.github.ust.mico.core.model.MicoTopic;
+import io.github.ust.mico.core.model.MicoTopicRole;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoBackgroundJobRepository;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.persistence.MicoTopicRepository;
+import io.github.ust.mico.core.service.imagebuilder.TektonPipelinesController;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.EmbeddedRedisServer;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
@@ -44,14 +64,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
-
 import static io.github.ust.mico.core.resource.ApplicationResource.PATH_APPLICATIONS;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -68,52 +84,38 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // Only works with local Neo4j database (embedded database has threading problems)
 public class DeploymentResourceIntegrationTests {
 
-    // Build timeout in seconds.
-    private static int TIMEOUT_BUILD = 60;
     // Deployment timeout in seconds.
     private static final int TIMEOUT_DEPLOYMENT = 10;
-
     @ClassRule
     public static RuleChain rules = RuleChain.outerRule(EmbeddedRedisServer.runningAt(6379).suppressExceptions());
-
-    @Autowired
-    private MockMvc mvc;
-
-    @Autowired
-    private IntegrationTestsUtils integrationTestsUtils;
-
-    @Autowired
-    private MicoKubernetesBuildBotConfig micoKubernetesBuildBotConfig;
-
-    @Autowired
-    private MicoApplicationRepository applicationRepository;
-
-    @Autowired
-    private MicoServiceRepository serviceRepository;
-
-    @Autowired
-    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
-
-    @Autowired
-    private MicoTopicRepository micoTopicRepository;
-
-    @Autowired
-    private MicoBackgroundJobRepository jobRepository;
-
-    @Autowired
-    private MicoApplicationBroker micoApplicationBroker;
-
-    @Autowired
-    private MicoServiceBroker serviceBroker;
-
-    @Autowired
-    private MicoServiceDeploymentInfoBroker serviceDeploymentInfoBroker;
-
+    // Build timeout in seconds.
+    private static int TIMEOUT_BUILD = 60;
     @Autowired
     KafkaFaasConnectorConfig kafkaFaasConnectorConfig;
-
     @Autowired
-    private ImageBuilder imageBuilder;
+    private MockMvc mvc;
+    @Autowired
+    private IntegrationTestsUtils integrationTestsUtils;
+    @Autowired
+    private MicoKubernetesBuildBotConfig micoKubernetesBuildBotConfig;
+    @Autowired
+    private MicoApplicationRepository applicationRepository;
+    @Autowired
+    private MicoServiceRepository serviceRepository;
+    @Autowired
+    private MicoServiceDeploymentInfoRepository serviceDeploymentInfoRepository;
+    @Autowired
+    private MicoTopicRepository micoTopicRepository;
+    @Autowired
+    private MicoBackgroundJobRepository jobRepository;
+    @Autowired
+    private MicoApplicationBroker micoApplicationBroker;
+    @Autowired
+    private MicoServiceBroker serviceBroker;
+    @Autowired
+    private MicoServiceDeploymentInfoBroker serviceDeploymentInfoBroker;
+    @Autowired
+    private TektonPipelinesController imageBuilder;
 
     private String namespace;
     private MicoService service;
@@ -139,10 +141,8 @@ public class DeploymentResourceIntegrationTests {
     }
 
     /**
-     * Deletion of namespace cleans up everything in Kubernetes.
-     * However not in the local Neo4j database.
-     * To delete everything in the database use Cypher:
-     * {@code MATCH (n) DETACH DELETE n;}
+     * Deletion of namespace cleans up everything in Kubernetes. However not in the local Neo4j database. To delete
+     * everything in the database use Cypher: {@code MATCH (n) DETACH DELETE n;}
      */
     @After
     public void tearDown() {

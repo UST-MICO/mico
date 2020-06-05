@@ -18,6 +18,5 @@ Javadoc
    io/github/ust/mico/core/resource/package-index
    io/github/ust/mico/core/service/package-index
    io/github/ust/mico/core/service/imagebuilder/package-index
-   io/github/ust/mico/core/service/imagebuilder/buildtypes/package-index
    io/github/ust/mico/core/util/package-index
 

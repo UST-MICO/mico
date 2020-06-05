@@ -19,15 +19,31 @@
 
 package io.github.ust.mico.core;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ust.mico.core.dto.request.MicoLabelRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoServiceDeploymentInfoRequestDTO;
 import io.github.ust.mico.core.dto.request.MicoTopicRequestDTO;
 import io.github.ust.mico.core.dto.response.MicoLabelResponseDTO;
 import io.github.ust.mico.core.dto.response.MicoServiceDeploymentInfoResponseDTO;
-import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoLabel;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo.ImagePullPolicy;
-import io.github.ust.mico.core.persistence.*;
+import io.github.ust.mico.core.model.MicoTopic;
+import io.github.ust.mico.core.model.MicoTopicRole;
+import io.github.ust.mico.core.persistence.KubernetesDeploymentInfoRepository;
+import io.github.ust.mico.core.persistence.MicoApplicationRepository;
+import io.github.ust.mico.core.persistence.MicoEnvironmentVariableRepository;
+import io.github.ust.mico.core.persistence.MicoInterfaceConnectionRepository;
+import io.github.ust.mico.core.persistence.MicoLabelRepository;
+import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
+import io.github.ust.mico.core.persistence.MicoServiceRepository;
+import io.github.ust.mico.core.persistence.MicoTopicRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
 import io.github.ust.mico.core.service.MicoStatusService;
 import io.github.ust.mico.core.util.CollectionUtils;
@@ -45,16 +61,26 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import static io.github.ust.mico.core.TestConstants.*;
+import static io.github.ust.mico.core.TestConstants.ID;
+import static io.github.ust.mico.core.TestConstants.ID_1;
+import static io.github.ust.mico.core.TestConstants.ID_2;
+import static io.github.ust.mico.core.TestConstants.ID_3;
+import static io.github.ust.mico.core.TestConstants.INSTANCE_ID;
+import static io.github.ust.mico.core.TestConstants.SDI_IMAGE_PULLPOLICY_PATH;
+import static io.github.ust.mico.core.TestConstants.SDI_LABELS_PATH;
+import static io.github.ust.mico.core.TestConstants.SDI_REPLICAS_PATH;
+import static io.github.ust.mico.core.TestConstants.SDI_TOPICS_PATH;
+import static io.github.ust.mico.core.TestConstants.SERVICE_SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.SERVICE_VERSION;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.VERSION;
 import static io.github.ust.mico.core.resource.ApplicationResource.PATH_APPLICATIONS;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.verify;
@@ -146,16 +172,10 @@ public class ServiceDeploymentInfoIntegrationTests {
 
     @Test
     public void updateServiceDeploymentInformation() throws Exception {
-        MicoApplication application = new MicoApplication()
-            .setId(ID)
-            .setShortName(SHORT_NAME).setVersion(VERSION);
+        MicoApplication application = new MicoApplication().setId(ID).setShortName(SHORT_NAME).setVersion(VERSION);
+        MicoApplication expectedApplication = new MicoApplication().setId(ID) .setShortName(SHORT_NAME).setVersion(VERSION);
 
-        MicoApplication expectedApplication = new MicoApplication()
-            .setId(ID)
-            .setShortName(SHORT_NAME).setVersion(VERSION);
-
-        MicoService service = new MicoService()
-            .setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
+        MicoService service = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
 
         MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
             .setId(ID_1)
@@ -207,64 +227,20 @@ public class ServiceDeploymentInfoIntegrationTests {
     }
 
     @Test
-    public void updateServiceDeploymentInformationWithDuplicatedTopicRoles() throws Exception {
-        MicoApplication application = new MicoApplication()
-            .setId(ID)
-            .setShortName(SHORT_NAME).setVersion(VERSION);
-
-        MicoService service = new MicoService()
-            .setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
-
-        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
-            .setId(ID_1)
-            .setInstanceId(INSTANCE_ID)
-            .setService(service);
-
-        MicoServiceDeploymentInfoRequestDTO updatedServiceDeploymentInfoDTO = new MicoServiceDeploymentInfoRequestDTO()
-            .setTopics(CollectionUtils.listOf(
-                new MicoTopicRequestDTO().setName("topic-1").setRole(MicoTopicRole.Role.INPUT),
-                new MicoTopicRequestDTO().setName("topic-2").setRole(MicoTopicRole.Role.INPUT)));
-
-        application.getServices().add(service);
-        application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
-
-        given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion())).willReturn(Optional.of(application));
-        given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName())).willReturn(CollectionUtils.listOf(serviceDeploymentInfo));
-
-        mvc.perform(put(PATH_APPLICATIONS + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName())
-            .content(mapper.writeValueAsBytes(updatedServiceDeploymentInfoDTO))
-            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
-            .andDo(print())
-            .andExpect(status().isUnprocessableEntity());
-    }
-
-    @Test
     public void updateServiceDeploymentInformationReusesExistingTopics() throws Exception {
-        MicoApplication application = new MicoApplication()
-            .setId(ID)
-            .setShortName(SHORT_NAME).setVersion(VERSION);
+        MicoApplication application = new MicoApplication().setId(ID).setShortName(SHORT_NAME).setVersion(VERSION);
+        MicoApplication expectedApplication = new MicoApplication().setId(ID).setShortName(SHORT_NAME).setVersion(VERSION);
 
-        MicoApplication expectedApplication = new MicoApplication()
-            .setId(ID)
-            .setShortName(SHORT_NAME).setVersion(VERSION);
-
-        MicoService service = new MicoService()
-            .setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
-
+        MicoService service = new MicoService().setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
         MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
             .setId(ID_1)
             .setInstanceId(INSTANCE_ID)
             .setService(service);
 
-        MicoTopic existingTopic1 = new MicoTopic()
-            .setId(ID_2)
-            .setName("topic-name-1");
+        MicoTopic existingTopic1 = new MicoTopic().setName("topic-name-1-existing");
+        MicoTopic existingTopic2 = new MicoTopic().setName("topic-name-2");
 
-        MicoTopic existingTopic2 = new MicoTopic()
-            .setId(ID_3)
-            .setName("topic-name-2");
-
-        String newTopicName = "new-topic";
+        String newTopicName = "new-topic-save";
         MicoServiceDeploymentInfoRequestDTO updatedServiceDeploymentInfoDTO = new MicoServiceDeploymentInfoRequestDTO()
             .setTopics(CollectionUtils.listOf(
                 new MicoTopicRequestDTO().setName(existingTopic1.getName()).setRole(MicoTopicRole.Role.INPUT),
@@ -280,8 +256,8 @@ public class ServiceDeploymentInfoIntegrationTests {
         given(applicationRepository.save(eq(expectedApplication))).willReturn(expectedApplication);
         given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName())).willReturn(CollectionUtils.listOf(serviceDeploymentInfo));
         given(serviceDeploymentInfoRepository.save(any(MicoServiceDeploymentInfo.class))).willReturn(serviceDeploymentInfo.applyValuesFrom(updatedServiceDeploymentInfoDTO));
-        given(micoTopicRepository.findByName(existingTopic1.getName())).willReturn(Optional.of(existingTopic1));
-        given(micoTopicRepository.findByName(existingTopic2.getName())).willReturn(Optional.of(existingTopic2));
+        given(micoTopicRepository.findFirstByName(existingTopic1.getName())).willReturn(existingTopic1);
+        given(micoTopicRepository.findFirstByName(existingTopic2.getName())).willReturn(existingTopic2);
         given(micoTopicRepository.save(eq(existingTopic1))).willReturn(existingTopic1);
         given(micoTopicRepository.save(eq(expectedTopicNew))).willReturn(expectedTopicNew);
 
@@ -346,4 +322,36 @@ public class ServiceDeploymentInfoIntegrationTests {
         result.andExpect(status().isUnprocessableEntity());
     }
 
+    // TODO: modify to test if multiple duplicate roles are allowed
+    /*@Test
+    public void updateServiceDeploymentInformationWithDuplicatedTopicRoles() throws Exception {
+        MicoApplication application = new MicoApplication()
+            .setId(ID)
+            .setShortName(SHORT_NAME).setVersion(VERSION);
+
+        MicoService service = new MicoService()
+            .setShortName(SERVICE_SHORT_NAME).setVersion(SERVICE_VERSION);
+
+        MicoServiceDeploymentInfo serviceDeploymentInfo = new MicoServiceDeploymentInfo()
+            .setId(ID_1)
+            .setInstanceId(INSTANCE_ID)
+            .setService(service);
+
+        MicoServiceDeploymentInfoRequestDTO updatedServiceDeploymentInfoDTO = new MicoServiceDeploymentInfoRequestDTO()
+            .setTopics(CollectionUtils.listOf(
+                new MicoTopicRequestDTO().setName("topic-1").setRole(MicoTopicRole.Role.INPUT),
+                new MicoTopicRequestDTO().setName("topic-2").setRole(MicoTopicRole.Role.INPUT)));
+
+        application.getServices().add(service);
+        application.getServiceDeploymentInfos().add(serviceDeploymentInfo);
+
+        given(applicationRepository.findByShortNameAndVersion(application.getShortName(), application.getVersion())).willReturn(Optional.of(application));
+        given(serviceDeploymentInfoRepository.findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName())).willReturn(CollectionUtils.listOf(serviceDeploymentInfo));
+
+        mvc.perform(put(PATH_APPLICATIONS + "/" + application.getShortName() + "/" + application.getVersion() + "/" + PATH_DEPLOYMENT_INFORMATION + "/" + service.getShortName())
+            .content(mapper.writeValueAsBytes(updatedServiceDeploymentInfoDTO))
+            .contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+            .andDo(print())
+            .andExpect(status().isUnprocessableEntity());
+    }*/
 }

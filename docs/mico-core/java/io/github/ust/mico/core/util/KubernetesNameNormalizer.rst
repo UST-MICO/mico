@@ -8,8 +8,6 @@
 
 .. java:import:: io.github.ust.mico.core.model MicoServiceInterface
 
-.. java:import:: io.github.ust.mico.core.service.imagebuilder.buildtypes Build
-
 .. java:import:: org.springframework.stereotype Component
 
 KubernetesNameNormalizer
@@ -44,7 +42,7 @@ createBuildName
 
    :param serviceShortName: the short name of the \ :java:ref:`MicoService`\ .
    :param serviceVersion: the version of the \ :java:ref:`MicoService`\ .
-   :return: the name of the \ :java:ref:`Build`\ .
+   :return: the name of the //@link Build.
 
 createBuildName
 ^^^^^^^^^^^^^^^
@@ -55,7 +53,7 @@ createBuildName
    Creates a build name based on a service.
 
    :param service: the \ :java:ref:`MicoService`\ .
-   :return: the name of the \ :java:ref:`Build`\ .
+   :return: the name of the //@link Build.
 
 normalizeName
 ^^^^^^^^^^^^^

@@ -13,27 +13,45 @@
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
  * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
+ * specific language governing permissions and limitationsN
  * under the License.
  */
 
 package io.github.ust.mico.core;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
-import io.github.ust.mico.core.TestConstants.*;
+import io.github.ust.mico.core.TestConstants.IntegrationTest;
 import io.github.ust.mico.core.broker.BackgroundJobBroker;
 import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.MicoApplicationNotFoundException;
 import io.github.ust.mico.core.exception.NotInitializedException;
-import io.github.ust.mico.core.model.*;
+import io.github.ust.mico.core.model.KubernetesDeploymentInfo;
+import io.github.ust.mico.core.model.MicoApplication;
+import io.github.ust.mico.core.model.MicoApplicationJobStatus;
+import io.github.ust.mico.core.model.MicoService;
+import io.github.ust.mico.core.model.MicoServiceBackgroundJob;
+import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
+import io.github.ust.mico.core.model.MicoServiceInterface;
+import io.github.ust.mico.core.model.MicoServicePort;
+import io.github.ust.mico.core.model.MicoTopic;
+import io.github.ust.mico.core.model.MicoTopicRole;
 import io.github.ust.mico.core.persistence.MicoApplicationRepository;
 import io.github.ust.mico.core.persistence.MicoServiceDeploymentInfoRepository;
 import io.github.ust.mico.core.persistence.MicoServiceRepository;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
+import io.github.ust.mico.core.service.imagebuilder.TektonPipelinesController;
 import io.github.ust.mico.core.util.CollectionUtils;
 import io.github.ust.mico.core.util.EmbeddedRedisServer;
 import org.hamcrest.Matchers;
@@ -53,16 +71,18 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
-
-import static io.github.ust.mico.core.TestConstants.*;
+import static io.github.ust.mico.core.TestConstants.DESCRIPTION;
+import static io.github.ust.mico.core.TestConstants.ID;
+import static io.github.ust.mico.core.TestConstants.ID_1;
+import static io.github.ust.mico.core.TestConstants.INSTANCE_ID;
+import static io.github.ust.mico.core.TestConstants.SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.VERSION;
 import static io.github.ust.mico.core.resource.ApplicationResource.PATH_APPLICATIONS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -77,13 +97,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("unit-testing")
 public class DeploymentResourceTests {
 
-    @ClassRule
-    public static RuleChain rules = RuleChain.outerRule(EmbeddedRedisServer.runningAt(6379).suppressExceptions());
-
     private static final String DEPLOYMENT_NAME = "deployment-name";
     private static final String SERVICE_NAME = "service-name";
     private static final String NAMESPACE_NAME = "namespace-name";
-
+    @ClassRule
+    public static RuleChain rules = RuleChain.outerRule(EmbeddedRedisServer.runningAt(6379).suppressExceptions());
     @Captor
     private ArgumentCaptor<MicoService> micoServiceArgumentCaptor;
 
@@ -109,7 +127,7 @@ public class DeploymentResourceTests {
     private BackgroundJobBroker backgroundJobBroker;
 
     @MockBean
-    private ImageBuilder imageBuilder;
+    private TektonPipelinesController imageBuilder;
 
     @MockBean
     private MicoKubernetesClient micoKubernetesClient;
@@ -141,7 +159,7 @@ public class DeploymentResourceTests {
 
         setupDeploymentResources(application, service);
 
-        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/deploy"))
+        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/deploy?rebuildImages=true"))
             .andDo(print())
             .andExpect(status().isAccepted());
 
@@ -205,7 +223,7 @@ public class DeploymentResourceTests {
             .setInstanceId(INSTANCE_ID));
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
 
-        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/deploy"))
+        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/deploy?rebuildImages=true"))
             .andDo(print())
             .andExpect(status().isUnprocessableEntity())
             .andExpect(status().reason(Matchers.containsString("interfaces")));
@@ -229,12 +247,12 @@ public class DeploymentResourceTests {
 
         setupDeploymentResources(application, service);
 
-        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/deploy"))
+        mvc.perform(post(PATH_APPLICATIONS + "/" + SHORT_NAME + "/" + VERSION + "/deploy?rebuildImages=true"))
             .andDo(print())
             .andExpect(status().isAccepted());
     }
 
-    private void setupDeploymentResources(MicoApplication application, MicoService service) throws NotInitializedException, InterruptedException, ExecutionException, TimeoutException, MicoApplicationNotFoundException {
+    private void setupDeploymentResources(MicoApplication application, MicoService service) throws NotInitializedException, InterruptedException, ExecutionException, TimeoutException, MicoApplicationNotFoundException, KubernetesResourceException {
         given(applicationRepository.findByShortNameAndVersion(SHORT_NAME, VERSION)).willReturn(Optional.of(application));
         given(serviceDeploymentInfoRepository
             .findByApplicationAndService(application.getShortName(), application.getVersion(), service.getShortName(), service.getVersion()))
@@ -301,5 +319,4 @@ public class DeploymentResourceTests {
 
         return service;
     }
-
 }

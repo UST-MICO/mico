@@ -36,7 +36,7 @@ import org.neo4j.ogm.annotation.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@RelationshipEntity(type = "HAS")
+@RelationshipEntity(type = "COMMUNICATES_USING")
 public class MicoTopicRole {
 
     /**

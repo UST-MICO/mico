@@ -15,6 +15,7 @@ data:
     openfaas.gateway-uri-used-for-kafka-faas-connectors=http://gateway.openfaas:8080
     openfaas.gateway-uri-used-for-functions-endpoint=http://gateway.openfaas:8080
     openfaas.gateway-external-service-name=gateway-external
+    kubernetes.build-bot.docker-image-repository-url=docker.io/ustmico
 ---
 apiVersion: v1
 kind: Service
@@ -26,7 +27,7 @@ metadata:
 spec:
   ports:
     - port: 8080
-      targetPort: 8080
+      targetPort: 5000
   selector:
     run: mico-core
 ---
@@ -66,7 +67,7 @@ spec:
           readinessProbe:
             httpGet:
               path: /actuator/health
-              port: 8080
+              port: 5000
             initialDelaySeconds: 15
             periodSeconds: 3
             failureThreshold: 3

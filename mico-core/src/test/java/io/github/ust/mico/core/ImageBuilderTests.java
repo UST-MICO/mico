@@ -19,12 +19,16 @@
 
 package io.github.ust.mico.core;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
-import io.github.ust.mico.core.TestConstants.*;
+import io.github.ust.mico.core.TestConstants.IntegrationTest;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
+import io.github.ust.mico.core.exception.KubernetesResourceException;
 import io.github.ust.mico.core.exception.NotInitializedException;
 import io.github.ust.mico.core.model.MicoService;
-import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
+import io.github.ust.mico.core.service.imagebuilder.TektonPipelinesController;
 import io.github.ust.mico.core.util.KubernetesNameNormalizer;
 import org.junit.After;
 import org.junit.Before;
@@ -35,10 +39,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
-
-import static io.github.ust.mico.core.TestConstants.*;
+import static io.github.ust.mico.core.TestConstants.NAME;
+import static io.github.ust.mico.core.TestConstants.SERVICE_SHORT_NAME;
+import static io.github.ust.mico.core.TestConstants.SERVICE_VERSION;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -48,7 +51,7 @@ public class ImageBuilderTests {
     @Rule
     public KubernetesServer mockServer = new KubernetesServer(false, true);
 
-    private ImageBuilder imageBuilder;
+    private TektonPipelinesController imageBuilder;
 
     @Before
     public void setUp() {
@@ -59,7 +62,7 @@ public class ImageBuilderTests {
         buildBotConfig.setDockerImageRepositoryUrl("image-repository-url");
 
         KubernetesNameNormalizer kubernetesNameNormalizer = new KubernetesNameNormalizer();
-        imageBuilder = new ImageBuilder(mockServer.getClient(), buildBotConfig, kubernetesNameNormalizer);
+        imageBuilder = new TektonPipelinesController(mockServer.getClient(), buildBotConfig, kubernetesNameNormalizer);
     }
 
     @After
@@ -68,7 +71,7 @@ public class ImageBuilderTests {
     }
 
     @Test(expected = NotInitializedException.class)
-    public void withoutInitializingAnErrorIsThrown() throws NotInitializedException, InterruptedException, ExecutionException, TimeoutException {
+    public void withoutInitializingAnErrorIsThrown() throws NotInitializedException, InterruptedException, ExecutionException, TimeoutException, KubernetesResourceException {
 
         MicoService micoService = new MicoService()
             .setShortName(SERVICE_SHORT_NAME)

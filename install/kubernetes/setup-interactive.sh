@@ -3,11 +3,39 @@
 # This script installs MICO with all its dependencies.
 echo -e "MICO Setup\n----------"
 
+# Read in public IP for MICO, if none is provided don't set the field loadBalancerIP
+if [[ -z "${MICO_PUBLIC_IP}" ]]; then
+    echo "Public IP address for MICO Dashboard (optional, leave it blank to get an random IP address from your provider):"
+    read MICO_PUBLIC_IP
+fi
+
+# Read in public IP for OpenFaaS Portal, if none is provided don't set the field loadBalancerIP
+if [[ -z "${OPENFAAS_PORTAL_PUBLIC_IP}" ]]; then
+    echo "Public IP address for OpenFaaS Portal (optional, leave it blank to get an random IP address from your provider):"
+    read OPENFAAS_PORTAL_PUBLIC_IP
+fi
+
 # Check if DockerHub credentials are already provided
-if [[ -z "${DOCKERHUB_USERNAME}" || -z "${DOCKERHUB_PASSWORD}" || -z "${DOCKERHUB_URL}" ]]; then
-    echo "ERROR: One or more environment variables for DockerHub are not specified. Please, specify DOCKERHUB_USERNAME, DOCKERHUB_PASSWORD for accessing DockerHub."
-    echo "Additionally, specify the Docker registry URL in DOCKERHUB_URL variable. If not specified, the default value is 'docker.io/ustmico'."
-    exit 1
+if [[ -z "${DOCKERHUB_USERNAME_BASE64}" || -z "${DOCKERHUB_PASSWORD_BASE64}" ]]; then
+    # Read in DockerHub username
+    echo "DockerHub username:"
+    read DOCKERHUB_USERNAME
+    if [[ -z "$DOCKERHUB_USERNAME" ]]; then
+        echo "ERROR: No username provided"
+        exit 1
+    fi
+    export DOCKERHUB_USERNAME_BASE64=$(echo -n $DOCKERHUB_USERNAME | base64 | tr -d \\n)
+
+    # Read in DockerHub password
+    echo "DockerHub password:"
+    read -s DOCKERHUB_PASSWORD
+    if [[ -z "$DOCKERHUB_PASSWORD" ]]; then
+        echo "ERROR: No password provided"
+        exit 1
+    fi
+    export DOCKERHUB_PASSWORD_BASE64=$(echo -n $DOCKERHUB_PASSWORD | base64 | tr -d \\n)
+else
+    echo "Info: Using DockerHub credentials provided by environment variables."
 fi
 
 # Change directory so Kubernetes configurations can be applied with relative path
@@ -28,19 +56,15 @@ envsubst < mico-build-bot.yaml | kubectl apply -f -
 # Install MICO components
 kubectl apply -f neo4j.yaml
 kubectl apply -f redis.yaml
-
-if [[ -z "DOCKERHUB_URL" ]]; then
-    kubectl apply -f mico-core.yaml
-else
-    cp mico-core.yaml mico-core-non-default-registry.yaml
-    sed -i -- "s#docker.io/ustmico#"${DOCKERHUB_URL}"#g" mico-core-non-default-registry.yaml
-    kubectl apply -f mico-core-non-default-registry.yaml
-    rm mico-core-non-default-registry.yaml
-fi
+kubectl apply -f mico-core.yaml
 
 # Set public IP address for MICO dashboard
-export MICO_PUBLIC_IP
-envsubst < mico-admin.yaml | kubectl apply -f -
+if [[ -z "$MICO_PUBLIC_IP" ]]; then
+    sed '/${MICO_PUBLIC_IP}/d' mico-admin.yaml | kubectl apply -f -
+else
+    export MICO_PUBLIC_IP
+    envsubst < mico-admin.yaml | kubectl apply -f -
+fi
 
 # Install external components
 kubectl apply -f ./kube-state-metrics

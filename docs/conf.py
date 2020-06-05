@@ -105,7 +105,7 @@ doclets.relpath = new_relpath
 # -- Project information -----------------------------------------------------
 
 project = 'MICO Developer Documentation'
-copyright = '2018, MICO Authors'
+copyright = '2020, MICO Authors'
 author = 'MICO Authors'
 
 # The short X.Y version

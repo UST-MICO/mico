@@ -19,6 +19,14 @@
 
 package io.github.ust.mico.core.dto.request;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
+
 import io.github.ust.mico.core.configuration.extension.CustomOpenApiExtentionsPlugin;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.model.MicoTopicRole;
@@ -31,11 +39,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
-
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
-import java.util.Optional;
 
 /**
  * DTO for {@link MicoServiceDeploymentInfo} specialised for a KafkaFaasConnector intended to use with requests only.
@@ -71,7 +74,7 @@ public class KFConnectorDeploymentInfoRequestDTO {
             @ExtensionProperty(name = "description", value = "Name of the input topic.")
         }
     )})
-    private String inputTopicName;
+    private List<String> inputTopicNames;
 
     /**
      * Name of the output topic.
@@ -84,7 +87,7 @@ public class KFConnectorDeploymentInfoRequestDTO {
             @ExtensionProperty(name = "description", value = "Name of the output topic.")
         }
     )})
-    private String outputTopicName;
+    private List<String> outputTopicNames;
 
     /**
      * Name of the OpenFaaS function.
@@ -104,25 +107,32 @@ public class KFConnectorDeploymentInfoRequestDTO {
     @Pattern(regexp = Patterns.OPEN_FAAS_FUNCTION_NAME_REGEX, message = Patterns.OPEN_FAAS_FUNCTION_NAME_MESSAGE)
     private String openFaaSFunctionName;
 
-
     // -------------------
     // -> Constructors ---
     // -------------------
 
     /**
-     * Creates an instance of {@code KFConnectorDeploymentInfoRequestDTO} based on a
-     * {@code MicoServiceDeploymentInfo}.
+     * Creates an instance of {@code KFConnectorDeploymentInfoRequestDTO} based on a {@code MicoServiceDeploymentInfo}.
      *
      * @param kfConnectorDeploymentInfo the {@link MicoServiceDeploymentInfo}.
      */
     public KFConnectorDeploymentInfoRequestDTO(MicoServiceDeploymentInfo kfConnectorDeploymentInfo) {
         this.instanceId = kfConnectorDeploymentInfo.getInstanceId();
-        Optional<MicoTopicRole> inputTopicRoleOpt = kfConnectorDeploymentInfo.getTopics().stream()
-            .filter(t -> t.getRole().equals(MicoTopicRole.Role.INPUT)).findFirst();
-        inputTopicRoleOpt.ifPresent(micoTopicRole -> this.inputTopicName = micoTopicRole.getTopic().getName());
-        Optional<MicoTopicRole> outputTopicRoleOpt = kfConnectorDeploymentInfo.getTopics().stream()
-            .filter(t -> t.getRole().equals(MicoTopicRole.Role.OUTPUT)).findFirst();
-        outputTopicRoleOpt.ifPresent(micoTopicRole -> this.outputTopicName = micoTopicRole.getTopic().getName());
+
+        List<MicoTopicRole> inputTopicRoles = kfConnectorDeploymentInfo.getTopics().stream()
+            .filter(t -> t.getRole().equals(MicoTopicRole.Role.INPUT)).collect(Collectors.toList());
+        if (!inputTopicRoles.isEmpty()) {
+            this.inputTopicNames = new ArrayList<>();
+            inputTopicRoles.forEach(role -> this.inputTopicNames.add(role.getTopic().getName()));
+        }
+
+        List<MicoTopicRole> outputTopicRoles = kfConnectorDeploymentInfo.getTopics().stream()
+            .filter(t -> t.getRole().equals(MicoTopicRole.Role.OUTPUT)).collect(Collectors.toList());
+        if (!outputTopicRoles.isEmpty()) {
+            this.outputTopicNames = new ArrayList<>();
+            outputTopicRoles.forEach(role -> this.outputTopicNames.add(role.getTopic().getName()));
+        }
+
         OpenFaaSFunction openFaaSFunction = kfConnectorDeploymentInfo.getOpenFaaSFunction();
         if (openFaaSFunction != null) this.openFaaSFunctionName = openFaaSFunction.getName();
     }

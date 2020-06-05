@@ -19,17 +19,18 @@
 
 package io.github.ust.mico.core.configuration;
 
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
+import io.github.ust.mico.core.service.imagebuilder.TektonPipelinesController;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-
 /**
- * Configuration of the build bot ({@link io.github.ust.mico.core.service.imagebuilder.ImageBuilder})
+ * Configuration of the build bot ({@link TektonPipelinesController})
  */
 @Component
 @Setter
@@ -38,15 +39,14 @@ import javax.validation.constraints.NotNull;
 public class MicoKubernetesBuildBotConfig {
 
     /**
-     * The name of the namespace in which the {@link io.github.ust.mico.core.service.imagebuilder.ImageBuilder}
-     * builds the images.
+     * The name of the namespace in which the {@link TektonPipelinesController} builds the images.
      */
     @NotBlank
     private String namespaceBuildExecution;
 
     /**
-     * The Docker image repository that is used by MICO to store the images
-     * that are build by {@link io.github.ust.mico.core.service.imagebuilder.ImageBuilder}.
+     * The Docker image repository that is used by MICO to store the images that are build by {@link
+     * TektonPipelinesController}.
      */
     @NotBlank
     private String dockerImageRepositoryUrl;
@@ -58,25 +58,22 @@ public class MicoKubernetesBuildBotConfig {
     private String dockerRegistryServiceAccountName;
 
     /**
-     * The url to the kaniko executor image that is used by
-     * {@link io.github.ust.mico.core.service.imagebuilder.ImageBuilder}
+     * The url to the kaniko executor image that is used by {@link TektonPipelinesController}
      */
     @NotBlank
     private String kanikoExecutorImageUrl;
 
     /**
-     * The timeout in seconds after which the build is stopped.
-     * Minimum is set to 30 seconds because that is the minimum time for a build.
-     * Defaults to 10 minutes (600 seconds).
+     * The timeout in seconds after which the build is stopped. Minimum is set to 30 seconds because that is the minimum
+     * time for a build. Defaults to 10 minutes (600 seconds).
      */
     @NotNull
     @Min(value = 30, message = "must be at least set to 30 seconds")
     private int buildTimeout = 600;
 
     /**
-     * Boolean value to set whether an undeployment of a MicoApplication
-     * should also clean up all build resources associated with the MicoServices
-     * included by the MicoApplication.
+     * Boolean value to set whether an undeployment of a MicoApplication should also clean up all build resources
+     * associated with the MicoServices included by the MicoApplication.
      */
     @NotNull
     private boolean buildCleanUpByUndeploy = false;

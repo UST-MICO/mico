@@ -19,7 +19,27 @@
 
 package io.github.ust.mico.core;
 
-import io.fabric8.kubernetes.api.model.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import io.fabric8.kubernetes.api.model.ContainerStatus;
+import io.fabric8.kubernetes.api.model.NamespaceBuilder;
+import io.fabric8.kubernetes.api.model.ObjectReferenceBuilder;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodList;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.SecretBuilder;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceAccount;
+import io.fabric8.kubernetes.api.model.ServiceAccountBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.github.ust.mico.core.configuration.MicoKubernetesBuildBotConfig;
@@ -28,7 +48,7 @@ import io.github.ust.mico.core.exception.DeploymentException;
 import io.github.ust.mico.core.model.MicoService;
 import io.github.ust.mico.core.model.MicoServiceDeploymentInfo;
 import io.github.ust.mico.core.service.MicoKubernetesClient;
-import io.github.ust.mico.core.service.imagebuilder.ImageBuilder;
+import io.github.ust.mico.core.service.imagebuilder.TektonPipelinesController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
@@ -36,11 +56,6 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Component
@@ -91,8 +106,8 @@ public class IntegrationTestsUtils {
     }
 
     /**
-     * Set up the connection to the docker registry.
-     * Docker registry is required for pushing the images that are build by {@link ImageBuilder}.
+     * Set up the connection to the docker registry. Docker registry is required for pushing the images that are build
+     * by {@link TektonPipelinesController}.
      *
      * @param namespace the Kubernetes namespace
      */
@@ -219,7 +234,6 @@ public class IntegrationTestsUtils {
             } catch (DeploymentException e) {
                 completionFuture.cancel(true);
             }
-
         }, initialDelay, period, TimeUnit.SECONDS);
 
         // Waits until timeout is reached or the future completes.
@@ -264,10 +278,10 @@ public class IntegrationTestsUtils {
     /**
      * Create a future that polls the deployment until it is created.
      *
-     * @param serviceDeploymentInfo  the {@link MicoServiceDeploymentInfo}
-     * @param initialDelay the initial delay in seconds
-     * @param period       the period in seconds
-     * @param timeout      the timeout in seconds
+     * @param serviceDeploymentInfo the {@link MicoServiceDeploymentInfo}
+     * @param initialDelay          the initial delay in seconds
+     * @param period                the period in seconds
+     * @param timeout               the timeout in seconds
      * @return CompletableFuture with a boolean. True indicates that it finished successful.
      * @throws InterruptedException if the build process is interrupted unexpectedly
      * @throws TimeoutException     if the build does not finish or fail in the expected time
@@ -322,5 +336,4 @@ public class IntegrationTestsUtils {
         }
         return false;
     }
-
 }

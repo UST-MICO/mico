@@ -1,3 +1,17 @@
+.. java:import:: java.util ArrayList
+
+.. java:import:: java.util HashSet
+
+.. java:import:: java.util List
+
+.. java:import:: java.util Objects
+
+.. java:import:: java.util Optional
+
+.. java:import:: java.util Set
+
+.. java:import:: java.util.stream Collectors
+
 .. java:import:: io.github.ust.mico.core.configuration KafkaConfig
 
 .. java:import:: io.github.ust.mico.core.configuration OpenFaaSConfig
@@ -6,6 +20,44 @@
 
 .. java:import:: io.github.ust.mico.core.dto.request MicoTopicRequestDTO
 
+.. java:import:: io.github.ust.mico.core.exception KubernetesResourceException
+
+.. java:import:: io.github.ust.mico.core.exception MicoApplicationDoesNotIncludeMicoServiceException
+
+.. java:import:: io.github.ust.mico.core.exception MicoApplicationNotFoundException
+
+.. java:import:: io.github.ust.mico.core.exception MicoServiceDeploymentInformationNotFoundException
+
+.. java:import:: io.github.ust.mico.core.exception MicoTopicRoleUsedMultipleTimesException
+
+.. java:import:: io.github.ust.mico.core.model MicoApplication
+
+.. java:import:: io.github.ust.mico.core.model MicoEnvironmentVariable
+
+.. java:import:: io.github.ust.mico.core.model MicoService
+
+.. java:import:: io.github.ust.mico.core.model MicoServiceDeploymentInfo
+
+.. java:import:: io.github.ust.mico.core.model MicoTopic
+
+.. java:import:: io.github.ust.mico.core.model MicoTopicRole
+
+.. java:import:: io.github.ust.mico.core.model OpenFaaSFunction
+
+.. java:import:: io.github.ust.mico.core.persistence KubernetesDeploymentInfoRepository
+
+.. java:import:: io.github.ust.mico.core.persistence MicoEnvironmentVariableRepository
+
+.. java:import:: io.github.ust.mico.core.persistence MicoInterfaceConnectionRepository
+
+.. java:import:: io.github.ust.mico.core.persistence MicoLabelRepository
+
+.. java:import:: io.github.ust.mico.core.persistence MicoServiceDeploymentInfoRepository
+
+.. java:import:: io.github.ust.mico.core.persistence MicoTopicRepository
+
+.. java:import:: io.github.ust.mico.core.persistence OpenFaaSFunctionRepository
+
 .. java:import:: io.github.ust.mico.core.service MicoKubernetesClient
 
 .. java:import:: lombok.extern.slf4j Slf4j
@@ -13,8 +65,6 @@
 .. java:import:: org.springframework.beans.factory.annotation Autowired
 
 .. java:import:: org.springframework.stereotype Service
-
-.. java:import:: java.util.stream Collectors
 
 MicoServiceDeploymentInfoBroker
 ===============================
@@ -44,6 +94,18 @@ createOrReuseOpenFaaSFunctionsInDatabase
 
    :param serviceDeploymentInfo: the \ :java:ref:`MicoServiceDeploymentInfo`\
    :return: the updated \ :java:ref:`MicoServiceDeploymentInfo`\
+
+createOrReuseTopic
+^^^^^^^^^^^^^^^^^^
+
+.. java:method::  Optional<MicoTopic> createOrReuseTopic(String topicName)
+   :outertype: MicoServiceDeploymentInfoBroker
+
+createOrReuseTopics
+^^^^^^^^^^^^^^^^^^^
+
+.. java:method::  List<MicoTopic> createOrReuseTopics(List<String> topicNames)
+   :outertype: MicoServiceDeploymentInfoBroker
 
 createOrReuseTopicsInDatabase
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

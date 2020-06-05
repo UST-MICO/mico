@@ -30,9 +30,10 @@ public interface MicoTopicRepository extends Neo4jRepository<MicoTopic, Long> {
     /**
      * Deletes all topics that do <b>not</b> have any relationship to another node.
      */
-    @Query("MATCH (topic:MicoTopic) WHERE size((topic)--()) = 0 DELETE topic")
+    @Query("MATCH (topic:MicoTopic) WHERE not ((topic)--()) DELETE topic")
     void cleanUp();
 
     Optional<MicoTopic> findByName(String name);
+    MicoTopic findFirstByName(String name);
     List<MicoTopic> findAllByName(String name);
 }
